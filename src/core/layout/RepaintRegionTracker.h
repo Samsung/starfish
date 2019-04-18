@@ -47,10 +47,8 @@ public:
         }
 
         if (rootFrame->needsPainting()) {
-            LayoutRect r = rootFrame->frameVisibleRect();
-            r.setX(r.x() + sx);
-            r.setY(r.y() + sy);
-            m_repaintRegionPerGraphicsLayer[nullptr].unite(r);
+            m_repaintRegionPerGraphicsLayer[nullptr].unite(
+                rootFrame->frameVisibleRect());
             m_needsFullPainting = true;
             rootFrame->clearNeedsPainting();
         }

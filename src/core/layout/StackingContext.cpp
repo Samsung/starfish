@@ -27,6 +27,7 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/Scrolling.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -896,7 +897,7 @@ void StackingContext::computeTransformMatrix()
 static void gatherGraphicsBufferOwners(StackingContext* ctx,
                                        GCVector<StackingContext*>& v)
 {
-    if (ctx->needsGraphicsBufferReason() || ctx->needsGraphicsBuffer()) {
+    if (ctx->needsComposite()) {
         v.push_back(ctx);
     }
 
@@ -2524,7 +2525,8 @@ void StackingContext::paintScrollbar(Canvas* canvas)
         }
     } else if (!isRootContext()) {
         if (m_owner->shouldApplyOverflow() && m_owner->node() &&
-            m_owner->node()->isElement() && m_owner->isFrameBlockBox()) {
+            m_owner->node()->isElement() && m_owner->isFrameBlockBox() &&
+            !needsComposite()) {
             Scrolling::paintScrollbars<Canvas*>(
                 m_owner->node()->asElement()->rareMembers()
                     ? m_owner->node()->asElement()->rareMembers()->m_scrolling
@@ -2580,7 +2582,7 @@ void StackingContext::compositeScrollbar(Compositor* compositor)
 void StackingContext::compositeStackingContext(Compositor* compositor)
 {
     STARFISH_ASSERT(compositor != nullptr);
-    STARFISH_ASSERT(needsGraphicsBufferReason());
+    STARFISH_ASSERT(needsComposite());
 
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();

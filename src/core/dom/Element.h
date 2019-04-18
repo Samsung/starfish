@@ -22,7 +22,6 @@
 
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
-#include "core/dom/Scrolling.h"
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
 
@@ -34,6 +33,7 @@ class HTMLElement;
 class NamedNodeMap;
 class PseudoElement;
 class DOMStringMap;
+class Scrolling;
 
 class PseudoElementMap : public gc {
 public:
@@ -90,6 +90,8 @@ public:
         }
         return m_pseudoElementMap;
     }
+
+    Scrolling* ensureScrolling(Element* self);
 
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;

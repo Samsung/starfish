@@ -43,6 +43,7 @@
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/CompositionEvent.h"
+#include "core/dom/Scrolling.h"
 #include "core/page/Location.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleSheet.h"

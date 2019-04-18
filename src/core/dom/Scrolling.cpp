@@ -25,7 +25,9 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/TouchList.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -38,6 +40,7 @@
 #define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE \
     (STARFISH_SCROLL_START_FLING_THRESHOLD * 5)
 #define STARFISH_SCROLL_FLING_BASE_TIME_IN_MS 1000
+#define STARFISH_SCROLL_ACTIVE_TIME_IN_MS 500
 
 namespace Starfish {
 
@@ -132,8 +135,14 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                     m_isScrollTarget = true;
                     m_pointingEventX = m_lastPointingEventX = x;
                     m_pointingEventY = m_lastPointingEventY = y;
-                    window->webView()->timer()->requestAnimationFrame(
-                        window, onAnimationFrameHandler, this);
+                    if (!m_inAnimation) {
+                        Window* window = m_target->isWindow()
+                                             ? m_target->asWindow()
+                                             : m_target->asElement()->window();
+                        m_inAnimation = true;
+                        window->webView()->timer()->requestAnimationFrame(
+                            window, onAnimationFrameHandler, this);
+                    }
 
                     window->webView()->activeScrollingSet().insert(this);
                 }
@@ -154,11 +163,19 @@ void Scrolling::onAnimationFrameHandler(void* data)
     Scrolling* self = (Scrolling*)data;
 
     if (!self->m_isScrollTarget) {
-        return;
-    }
+        // set repaint or recomposite
+        self->giveDamageToTarget(true);
 
-    // do fling
-    if (self->m_inHorizontalFling || self->m_inVerticalFling) {
+        auto currentTime = longTickCount();
+        if (currentTime - self->m_lastActiveTime <
+            STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000) {
+            // we can continue
+        } else {
+            // end animation
+            self->m_inAnimation = false;
+            return;
+        }
+    } else if (self->m_inHorizontalFling || self->m_inVerticalFling) {
         auto currentTime = longTickCount();
         auto flingLength = STARFISH_SCROLL_FLING_BASE_TIME_IN_MS;
 
@@ -185,38 +202,45 @@ void Scrolling::onAnimationFrameHandler(void* data)
             // end
             self->stopFling();
             self->stopScrolling();
-            return;
-        }
-        float speed = self->m_flingStartSpeed * (1 - progress);
-        float distance = speed * ((currentTime - self->m_flingProcessingTime) /
-                                  (1000.f * 1000.f));
-
-        bool isScrollEffective = false;
-        if (self->m_target->isElement()) {
-            if (self->m_inVerticalScrolling) {
-                isScrollEffective = self->m_target->asElement()->setScrollTop(
-                    self->m_target->asElement()->scrollTop() + distance);
-            } else if (self->m_inHorizontalScrolling) {
-                isScrollEffective = self->m_target->asElement()->setScrollLeft(
-                    self->m_target->asElement()->scrollLeft() + distance);
-            }
         } else {
-            if (self->m_inVerticalScrolling) {
-                isScrollEffective = self->m_target->asWindow()->scrollTo(
-                    self->m_target->asWindow()->scrollX(),
-                    self->m_target->asWindow()->scrollY() + distance);
-            } else if (self->m_inHorizontalScrolling) {
-                isScrollEffective = self->m_target->asWindow()->scrollTo(
-                    self->m_target->asWindow()->scrollX() + distance,
-                    self->m_target->asWindow()->scrollY());
+            float speed = self->m_flingStartSpeed * (1 - progress);
+            float distance =
+                speed * ((currentTime - self->m_flingProcessingTime) /
+                         (1000.f * 1000.f));
+
+            bool isScrollEffective = false;
+            if (self->m_target->isElement()) {
+                if (self->m_inVerticalScrolling) {
+                    isScrollEffective =
+                        self->m_target->asElement()->setScrollTop(
+                            self->m_target->asElement()->scrollTop() +
+                            distance);
+                } else if (self->m_inHorizontalScrolling) {
+                    isScrollEffective =
+                        self->m_target->asElement()->setScrollLeft(
+                            self->m_target->asElement()->scrollLeft() +
+                            distance);
+                }
+            } else {
+                if (self->m_inVerticalScrolling) {
+                    isScrollEffective = self->m_target->asWindow()->scrollTo(
+                        self->m_target->asWindow()->scrollX(),
+                        self->m_target->asWindow()->scrollY() + distance);
+                } else if (self->m_inHorizontalScrolling) {
+                    isScrollEffective = self->m_target->asWindow()->scrollTo(
+                        self->m_target->asWindow()->scrollX() + distance,
+                        self->m_target->asWindow()->scrollY());
+                }
             }
-        }
 
-        self->m_flingProcessingTime = currentTime;
+            self->m_flingProcessingTime = currentTime;
 
-        if (!isScrollEffective) {
-            self->stopFling();
-            self->stopScrolling();
+            if (!isScrollEffective) {
+                self->stopFling();
+                self->stopScrolling();
+            } else {
+                self->m_lastActiveTime = currentTime;
+            }
         }
     } else {
         float dx = self->m_lastPointingEventX - self->m_pointingEventX;
@@ -279,8 +303,11 @@ void Scrolling::onAnimationFrameHandler(void* data)
 
         self->m_lastPointingEventX = self->m_pointingEventX;
         self->m_lastPointingEventY = self->m_pointingEventY;
+
+        self->m_lastActiveTime = currentTime;
     }
 
+    self->m_inAnimation = true;
     Window* window = self->m_target->executionContext()->document()->window();
     window->browsingContext()->webView()->timer()->requestAnimationFrame(
         window, onAnimationFrameHandler, self);
@@ -366,6 +393,69 @@ void Scrolling::stopFling()
     m_inHorizontalFling = m_inVerticalFling = false;
 }
 
+void Scrolling::markAsActive()
+{
+    if (!m_target->isWindow()) {
+        Frame* frame = m_target->asElement()->frame();
+        bool hasVerticalScroll =
+            frame && frame->appliedOverflowX() >= OverflowValue::AutoOverflow;
+        bool hasHorizontalScroll =
+            frame && frame->appliedOverflowY() >= OverflowValue::AutoOverflow;
+        if (!hasVerticalScroll && !hasHorizontalScroll) {
+            return;
+        }
+    }
+
+    m_lastActiveTime = longTickCount();
+
+    if (!m_inAnimation) {
+        Window* window = m_target->isWindow() ? m_target->asWindow()
+                                              : m_target->asElement()->window();
+        m_inAnimation = true;
+        window->webView()->timer()->requestAnimationFrame(
+            window, onAnimationFrameHandler, this);
+    }
+}
+
+void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
+{
+    if (m_target->isWindow()) {
+        StackingContext* ctx = m_target->asWindow()
+                                   ->document()
+                                   ->html()
+                                   ->frame()
+                                   ->asFrameBox()
+                                   ->stackingContext();
+        if (ctx && ctx->needsGraphicsBuffer()) {
+            m_target->asWindow()
+                ->webView()
+                ->markNeedsCompositeConsiderInRendering();
+        } else {
+            m_target->asWindow()->document()->setNeedsPainting();
+
+            if (!m_target->asWindow()
+                     ->browsingContext()
+                     ->isTopLevelBrowsingContext()) {
+                m_target->asWindow()
+                    ->browsingContext()
+                    ->sourceElement()
+                    ->setNeedsPainting();
+            }
+        }
+    } else {
+        if (inScrollbarDisappearing) {
+            m_target->asElement()->setNeedsPainting();
+        } else {
+            // just set needs layout flag solo
+            // this will trigger only layout painting dirty check
+            m_target->asElement()
+                ->document()
+                ->browsingContext()
+                ->setNeedsLayout();
+        }
+    }
+}
+
 template <typename T>
 void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                                 FrameBlockBox* frame, OverflowValue ox,
@@ -387,70 +477,94 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
     }
 #endif
 
-    canvas->save();
-    bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
-                             oy >= OverflowValue::AutoOverflow &&
-                             frame->height();
-    bool hasHorizontalScroll = frame->hasBiggerContentThanFrameWidth() &&
-                               ox >= OverflowValue::AutoOverflow &&
-                               frame->width();
+    if (scrolling) {
+        canvas->save();
+        bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
+                                 oy >= OverflowValue::AutoOverflow &&
+                                 frame->height();
+        bool hasHorizontalScroll = frame->hasBiggerContentThanFrameWidth() &&
+                                   ox >= OverflowValue::AutoOverflow &&
+                                   frame->width();
 
-    if (hasVerticalScroll) {
-        canvas->setColor(Unit::Color(64, 64, 64, 192));
-        float scrollMoveRatio = ((float)frame->scrollTop() /
-                                 (frame->scrollHeight() -
-                                  (frame->height() - frame->borderHeight())));
-        LayoutUnit scrollMovableArea = frame->height() - frame->borderHeight();
-        LayoutUnit scrollBarHeight =
-            scrollMovableArea *
-            ((frame->height() - frame->borderHeight()) / frame->scrollHeight());
-        LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS;
-        ;
-        if (hasHorizontalScroll) {
-            scrollMovableArea -= scrollBarWidth;
-        }
-        LayoutRect rr(0, 0, 0, 0);
-
-        rr.setWidth(scrollBarWidth);
-        rr.setHeight(scrollBarHeight);
-
-        if (frame->style()->direction() == DirectionValue::LtrDirectionValue) {
-            rr.setX(frame->width() - scrollBarWidth - frame->borderRight());
-        } else {
-            rr.setX(frame->borderLeft());
+        bool needsToDrawScrollbar = false;
+        float scrollbarOpacity = 0;
+        if (hasVerticalScroll || hasHorizontalScroll) {
+            auto currentTime = longTickCount();
+            if (currentTime - scrolling->m_lastActiveTime <
+                STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000) {
+                needsToDrawScrollbar = true;
+                scrollbarOpacity =
+                    1 -
+                    float(currentTime - scrolling->m_lastActiveTime) /
+                        float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000);
+            }
         }
 
-        rr.setY(frame->borderTop() +
-                scrollMoveRatio * (scrollMovableArea - scrollBarHeight));
+        canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f));
 
-        canvas->drawRect(rr);
+        if (hasVerticalScroll && needsToDrawScrollbar) {
+            canvas->setColor(Unit::Color(64, 64, 64, 255));
+            float scrollMoveRatio =
+                ((float)frame->scrollTop() /
+                 (frame->scrollHeight() -
+                  (frame->height() - frame->borderHeight())));
+            LayoutUnit scrollMovableArea =
+                frame->height() - frame->borderHeight();
+            LayoutUnit scrollBarHeight =
+                scrollMovableArea * ((frame->height() - frame->borderHeight()) /
+                                     frame->scrollHeight());
+            LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS;
+            ;
+            if (hasHorizontalScroll) {
+                scrollMovableArea -= scrollBarWidth;
+            }
+            LayoutRect rr(0, 0, 0, 0);
+
+            rr.setWidth(scrollBarWidth);
+            rr.setHeight(scrollBarHeight);
+
+            if (frame->style()->direction() ==
+                DirectionValue::LtrDirectionValue) {
+                rr.setX(frame->width() - scrollBarWidth - frame->borderRight());
+            } else {
+                rr.setX(frame->borderLeft());
+            }
+
+            rr.setY(frame->borderTop() +
+                    scrollMoveRatio * (scrollMovableArea - scrollBarHeight));
+
+            canvas->drawRect(rr);
+        }
+        if (hasHorizontalScroll && needsToDrawScrollbar) {
+            canvas->setColor(Unit::Color(64, 64, 64, 255));
+            float scrollMoveRatio = ((float)frame->scrollLeft() /
+                                     (frame->scrollWidth() -
+                                      (frame->width() - frame->borderWidth())));
+            LayoutUnit scrollMovableArea =
+                frame->width() - frame->borderWidth();
+            LayoutUnit scrollBarHeight = STARFISH_SCROLLBAR_THICKNESS;
+            LayoutUnit scrollBarWidth =
+                scrollMovableArea * ((frame->width() - frame->borderWidth()) /
+                                     frame->scrollWidth());
+            if (hasVerticalScroll) {
+                scrollMovableArea -= scrollBarHeight;
+            }
+
+            LayoutRect rr(0, 0, 0, 0);
+
+            rr.setWidth(scrollBarWidth);
+            rr.setHeight(scrollBarHeight);
+
+            rr.setY(frame->height() - frame->borderBottom() - scrollBarHeight);
+            rr.setX(frame->borderLeft() +
+                    scrollMoveRatio * (scrollMovableArea - scrollBarWidth));
+
+            canvas->drawRect(rr);
+        }
+
+        canvas->endOpacityLayer();
+        canvas->restore();
     }
-    if (hasHorizontalScroll) {
-        canvas->setColor(Unit::Color(64, 64, 64, 192));
-        float scrollMoveRatio =
-            ((float)frame->scrollLeft() /
-             (frame->scrollWidth() - (frame->width() - frame->borderWidth())));
-        LayoutUnit scrollMovableArea = frame->width() - frame->borderWidth();
-        LayoutUnit scrollBarHeight = STARFISH_SCROLLBAR_THICKNESS;
-        LayoutUnit scrollBarWidth =
-            scrollMovableArea *
-            ((frame->width() - frame->borderWidth()) / frame->scrollWidth());
-        if (hasVerticalScroll) {
-            scrollMovableArea -= scrollBarHeight;
-        }
-
-        LayoutRect rr(0, 0, 0, 0);
-
-        rr.setWidth(scrollBarWidth);
-        rr.setHeight(scrollBarHeight);
-
-        rr.setY(frame->height() - frame->borderBottom() - scrollBarHeight);
-        rr.setX(frame->borderLeft() +
-                scrollMoveRatio * (scrollMovableArea - scrollBarWidth));
-
-        canvas->drawRect(rr);
-    }
-    canvas->restore();
 }
 
 template void Scrolling::paintScrollbars<Canvas*>(Scrolling* scrolling, Canvas*,

@@ -22,6 +22,7 @@
 #include "core/dom/CharacterData.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/dom/Scrolling.h"
 #include "core/page/Window.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBlockBoxInlineLayout.h"

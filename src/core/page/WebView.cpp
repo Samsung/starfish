@@ -61,6 +61,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/Scrolling.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
