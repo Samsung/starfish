@@ -36,6 +36,7 @@
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/WebOrigin.h"
+#include "core/dom/Scrolling.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
@@ -451,18 +452,8 @@ bool Window::scrollToWithoutLayout(double x, double y)
     if (document()->frame()) {
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
                 x, y)) {
-            StackingContext* ctx =
-                document()->html()->frame()->asFrameBox()->stackingContext();
-            if (ctx && ctx->needsGraphicsBuffer()) {
-                webView()->markNeedsCompositeConsiderInRendering();
-            } else {
-                document()->setNeedsLayout();
-                document()->setNeedsPainting();
-
-                if (!browsingContext()->isTopLevelBrowsingContext()) {
-                    browsingContext()->sourceElement()->setNeedsPainting();
-                }
-            }
+            m_scrolling->markAsActive();
+            m_scrolling->giveDamageToTarget();
 
             String* eventType = staticStrings()->m_scroll.localName();
             UIEvent* e = new UIEvent(document()->executionContext(), eventType);

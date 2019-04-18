@@ -43,6 +43,7 @@ public:
         , m_inHorizontalScrollingRight(false)
         , m_inVerticalFling(false)
         , m_inHorizontalFling(false)
+        , m_inAnimation(false)
         , m_pointingEventX(0)
         , m_pointingEventY(0)
         , m_lastPointingEventX(0)
@@ -50,6 +51,7 @@ public:
         , m_flingStartSpeed(0)
         , m_flingStartTime(0)
         , m_flingProcessingTime(0)
+        , m_lastActiveTime(0)
         , m_target(target)
     {
     }
@@ -89,8 +91,8 @@ public:
         return m_inHorizontalScrollingRight;
     }
 
-    void stopScrolling();
-    void stopFling();
+    void markAsActive(); // call this method just after layout
+    void giveDamageToTarget(bool inScrollbarDisappearing = false);
 
     EventTarget* target()
     {
@@ -98,6 +100,9 @@ public:
     }
 
 protected:
+    void stopScrolling();
+    void stopFling();
+
     bool m_gotPointingDownEvent : 1;
     bool m_isScrollTarget : 1;
     bool m_inVerticalScrolling : 1;
@@ -108,6 +113,7 @@ protected:
     bool m_inHorizontalScrollingRight : 1;
     bool m_inVerticalFling : 1;
     bool m_inHorizontalFling : 1;
+    bool m_inAnimation : 1;
     float m_pointingEventX;
     float m_pointingEventY;
     float m_lastPointingEventX;
@@ -116,6 +122,8 @@ protected:
 
     uint64_t m_flingStartTime;
     uint64_t m_flingProcessingTime;
+
+    uint64_t m_lastActiveTime;
 
     EventTarget* m_target;
 

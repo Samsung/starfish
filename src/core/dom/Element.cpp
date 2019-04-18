@@ -41,6 +41,7 @@
 #include "core/dom/parser/HTMLParserIdioms.h"
 #include "core/dom/xml/XMLSerializer.h"
 #include "core/dom/UIEvent.h"
+#include "core/dom/Scrolling.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -98,6 +99,14 @@ static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
                               : QualifiedName(AtomicString::createAtomicString(
                                     e->starfish(), name))),
                          AttributeName::MatchNS);
+}
+
+Scrolling* RareElementMembers::ensureScrolling(Element* self)
+{
+    if (m_scrolling == nullptr) {
+        m_scrolling = new Scrolling(self);
+    }
+    return m_scrolling;
 }
 
 String* Element::tagName()
@@ -747,14 +756,17 @@ bool Element::handleDefaultEvent(Event* event)
 
     if (frame() && frame()->isFrameBlockBox() &&
         frame()->shouldApplyOverflow()) {
-        if (!ensureRareElementMembers()->m_scrolling) {
-            ensureRareElementMembers()->m_scrolling = new Scrolling(this);
-        }
+        bool isDownEvent =
+            (event->isMouseEvent() && event->type()->equals("mousedown")) ||
+            (event->isTouchEvent() && event->type()->equals("touchstart"));
         auto ox = frame()->appliedOverflowX();
         auto oy = frame()->appliedOverflowY();
 
-        if (rareMembers()->m_scrolling->handleDefaultEvent(
-                event, window(), frame()->asFrameBlockBox(), ox, oy)) {
+        if (isDownEvent &&
+            ensureRareElementMembers()
+                ->ensureScrolling(this)
+                ->handleDefaultEvent(event, window(),
+                                     frame()->asFrameBlockBox(), ox, oy)) {
             return true;
         }
     }
@@ -946,9 +958,12 @@ void Element::setScrollLeftProperty(double s, bool layoutIfNeeds)
 
 static void elementScrollPropertyChanged(Element* element)
 {
-    // just set needs layout flag solo
-    // this will trigger only layout painting dirty check
-    element->document()->browsingContext()->setNeedsLayout();
+    element->ensureRareElementMembers()
+        ->ensureScrolling(element)
+        ->markAsActive();
+    element->ensureRareElementMembers()
+        ->ensureScrolling(element)
+        ->giveDamageToTarget();
 
     String* eventType =
         element->starfish()->staticStrings()->m_scroll.localName();

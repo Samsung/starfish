@@ -191,6 +191,11 @@ public:
         return m_needsGraphicsBufferReason;
     }
 
+    bool needsComposite()
+    {
+        return needsGraphicsBufferReason() || needsGraphicsBuffer();
+    }
+
     const LayoutRect& screenExtent()
     {
         return m_screenExtent;
