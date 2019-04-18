@@ -1396,6 +1396,57 @@ std::string StringUtils::toBase64(const std::string& src)
     return output;
 }
 
+std::string StringUtils::toBase64(const std::vector<uint8_t>& src)
+{
+    auto iter = src.begin();
+
+    std::string output;
+    std::string base64Chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    int i = 0, j = 0;
+    unsigned char charArray3[3];
+    unsigned char charArray4[4];
+
+    while (iter != src.end()) {
+        charArray3[i++] = *(iter++);
+        if (i == 3) {
+            charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+            charArray4[1] =
+                ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+            charArray4[2] =
+                ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+            charArray4[3] = charArray3[2] & 0x3f;
+
+            for (i = 0; (i < 4); i++) {
+                output += base64Chars[charArray4[i]];
+            }
+            i = 0;
+        }
+    }
+
+    if (i) {
+        for (j = i; j < 3; j++) {
+            charArray3[j] = '\0';
+        }
+
+        charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+        charArray4[1] =
+            ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+        charArray4[2] =
+            ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+        charArray4[3] = charArray3[2] & 0x3f;
+
+        for (j = 0; (j < i + 1); j++) {
+            output += base64Chars[charArray4[j]];
+        }
+
+        while ((i++ < 3)) {
+            output += '=';
+        }
+    }
+    return output;
+}
+
 std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
                                              const std::string& type)
 {
