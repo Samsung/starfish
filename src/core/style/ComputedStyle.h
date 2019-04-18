@@ -2846,16 +2846,12 @@ public:
 
     GCVector<GridTrackSize>* gridTemplateColumns()
     {
-        GCVector<GridTrackSize>* gridTemplate =
-            m_rareComputedStyleData.gridTemplateColumns();
-        return gridTemplate;
+        return m_rareComputedStyleData.gridTemplateColumns();
     }
 
     GCVector<GridTrackSize>* gridTemplateRows()
     {
-        GCVector<GridTrackSize>* gridTemplate =
-            m_rareComputedStyleData.gridTemplateRows();
-        return gridTemplate;
+        return m_rareComputedStyleData.gridTemplateRows();
     }
 
     TextOverflowData textOverflow()
