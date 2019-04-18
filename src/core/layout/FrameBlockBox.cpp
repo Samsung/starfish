@@ -912,6 +912,12 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                           HitTestStage s)
 {
+    if (shouldApplyOverflow()) {
+        if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
+            return nullptr;
+        }
+    }
+
     Frame* result = nullptr;
     if (hasBlockFlow()) {
         Frame* child = lastChild();
@@ -1000,6 +1006,11 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         }
     } else {
         if (stage == HitTestNormalFlowBlock) {
+            if (shouldApplyOverflow()) {
+                if (FrameBox::hitTest(x, y, HitTestStageEnd) == nullptr) {
+                    return nullptr;
+                }
+            }
             if (hasBlockFlow()) {
                 Frame* result = nullptr;
                 Frame* child = lastChild();
