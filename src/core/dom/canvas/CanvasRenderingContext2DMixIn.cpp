@@ -386,10 +386,10 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
         if (value->equals(CanvasCompositing::canvasBlendModeNames[i])) {
             cbm = static_cast<CanvasBlendMode>(i);
             cco = CanvasCompositeOperator::SourceOver;
-            break;
+            m_canvas->setCompositeOperator(cco, cbm);
+            return;
         }
     }
-    m_canvas->setCompositeOperator(cco, cbm);
 }
 
 DOMStringOrCanvasGradientOrCanvasPattern

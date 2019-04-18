@@ -571,7 +571,7 @@ public:
                 newOperator = CAIRO_OPERATOR_DEST_ATOP;
                 break;
             case CanvasCompositeOperator::Lighter:
-                newOperator = CAIRO_OPERATOR_DIFFERENCE;
+                newOperator = CAIRO_OPERATOR_ADD;
                 break;
             case CanvasCompositeOperator::XOR:
                 newOperator = CAIRO_OPERATOR_XOR;
