@@ -75,6 +75,8 @@ Default values are in **bold**.
   Compile Starfish for either x64 or arm target
 * -DTOUCH_UI=[ 0 | **1** ]<br>
   Enable a touch UI.
+* -DLTO=[ **0** | 1 ]<br>
+  Enable complier link time optimization
 * -DTARGETNAME=[ Starfish | **lightweight-web-engine** ]<br>
   Define target output name
 
