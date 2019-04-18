@@ -9899,11 +9899,15 @@ static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
     // TODO : Add the GridLine, GridArea and Repeat
     // Create GridTrack and push back into vector.
     if (str1 == "fr") {
-        min = number;
+        return false;
     } else if (CSSPropertyParser::isLengthUnit(str1)) {
         min = CSSLength(str1, number).toLength();
     } else {
-        min = number / 100;
+        if (number == 0) {
+            min = CSSLength("px", 0).toLength();
+        } else {
+            return false;
+        }
     }
 
     parser.consumeWhitespaces();
@@ -9933,7 +9937,11 @@ static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
     } else if (CSSPropertyParser::isLengthUnit(str2)) {
         max = CSSLength(str2, number).toLength();
     } else {
-        max = number / 100;
+        if (number == 0) {
+            max = CSSLength("px", 0).toLength();
+        } else {
+            return false;
+        }
     }
 
     parser.consumeWhitespaces();
@@ -10005,8 +10013,13 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                 GridTrackSize(CSSLength(str, number).toLength(),
                               GridTrackSize::GridTrackType::LengthType));
         } else {
-            v->push_back(GridTrackSize(GridLength(number / 100),
-                                       GridTrackSize::GridTrackType::FrType));
+            if (number == 0) {
+                v->push_back(
+                    GridTrackSize(CSSLength("px", 0).toLength(),
+                                  GridTrackSize::GridTrackType::LengthType));
+            } else {
+                return false;
+            }
         }
     }
 

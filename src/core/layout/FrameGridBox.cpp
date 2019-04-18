@@ -164,12 +164,24 @@ void GridFormattingContext::applyFrUnitsWithColumns()
 {
     LayoutUnit computedSum(0);
     LayoutUnit frOfSum(0);
+    bool hasMinMax = false;
+    bool isMinMaxComputed = false;
     for (size_t i = 1; i < m_gridLineColumns.size(); i++) {
         GridLine line = m_gridLineColumns[i];
-        if (!line.isFr()) {
+        // fixed, percentage, auto, fr, minmax, etc.
+        if (line.isLength()) {
             computedSum += line.offset();
-        } else {
+        } else if (line.isFr()) {
             frOfSum += line.fr();
+        } else if (line.isMinMax()) {
+            computedSum += line.offset();
+            hasMinMax = true;
+            if (line.isComputed()) {
+                isMinMaxComputed = true;
+            }
+            if (line.max().isFr()) {
+                frOfSum += (LayoutUnit)line.max().fr();
+            }
         }
     }
 
@@ -187,8 +199,23 @@ void GridFormattingContext::applyFrUnitsWithColumns()
         if (line.isFr()) {
             if (remainingSpace > 0) {
                 LayoutUnit offset = (line.fr() * remainingSpace) / frOfSum;
-                double value = round(offset.toDouble());
-                line.setOffset(value, true);
+                if (offset > line.offset()) {
+                    double value = round(offset.toDouble());
+                    line.setOffset(value, true);
+                }
+            } else {
+                if (!line.isComputed()) {
+                    line.setOffset(0, true);
+                }
+            }
+        } else if (line.isMinMax() && line.max().isFr()) {
+            if (remainingSpace > 0) {
+                LayoutUnit offset =
+                    (line.max().fr() * remainingSpace) / frOfSum;
+                if (offset > line.offset()) {
+                    double value = round(offset.toDouble());
+                    line.setOffset(value, true);
+                }
             } else {
                 if (!line.isComputed()) {
                     line.setOffset(0, true);
@@ -342,6 +369,7 @@ static void adaptStartAndEndValueForColumn(GridFormattingContext& ctx,
                 line.setFixed(false);
             } else {
                 line.setAuto(true);
+                line.setFixed(false);
             }
 
             line.setNewLine(true);
@@ -983,116 +1011,198 @@ void GridFormattingContext::parsingGridTemplateAreasAndStoreInformation()
     }
 }
 
-void GridFormattingContext::buildGridLineTemplate()
+void GridFormattingContext::initializeGridLineColumns(
+    const GCVector<GridTrackSize>* columns)
 {
-    const GCVector<GridTrackSize>* columns =
-        m_container->style()->gridTemplateColumns();
+    STARFISH_ASSERT(columns);
 
-    m_gridLineColumns.push_back(GridLine(0));
-    m_gridLineRows.push_back(GridLine(0));
+    size_t colSize = columns->size();
+    for (size_t i = 0; i < colSize; i++) {
+        GridTrackSize trackSize = (*columns)[i];
+        GridLength gridLength = trackSize.min();
+        LayoutUnit baseSize = intMaxForLayoutUnit;
 
-    if (columns) {
-        for (size_t i = 0; i < columns->size(); i++) {
-            GridTrackSize trackSize = (*columns)[i];
-            GridLength gridLength = trackSize.min();
-
-            if (trackSize.isLength()) {
-                if (gridLength.isLength() && gridLength.length().isFixed()) {
-                    Length length = gridLength.length();
-                    GridLine line = GridLine(length.numberData());
-                    m_gridLineColumns.push_back(line);
-                } else if (gridLength.isAuto()) {
-                    GridLine line = GridLine(0);
-                    line.setAuto(true);
-                    m_gridLineColumns.push_back(line);
-                }
-            } else if (trackSize.isFr()) {
-                double value = gridLength.fr();
-                GridLine line = GridLine(value, false);
+        if (trackSize.isLength()) {
+            if (gridLength.isLength() &&
+                gridLength.length().isDefinite(m_availableWidth !=
+                                               intMaxForLayoutUnit)) {
+                baseSize = gridLength.length().specifiedValue(m_availableWidth,
+                                                              m_container);
+                GridLine line = GridLine(baseSize);
                 m_gridLineColumns.push_back(line);
-            } else if (trackSize.isMinMax()) {
-                GridLength min = trackSize.min();
-                if (min.isLength() && min.length().isFixed()) {
-                    Length length = min.length();
-                    GridLine line = GridLine(length.numberData());
-                    m_gridLineColumns.push_back(line);
-                } else if (min.isFr()) {
-                    double value = min.fr();
-                    GridLine line = GridLine(value, false);
-                    m_gridLineColumns.push_back(line);
-                }
-
-                GridLength max = trackSize.max();
-                /*if (max.isLength() && max.length().isFixed()) {
-                    Length length = max.length();
-                    GridLine line = GridLine(length.numberData());
-                    m_gridLineColumns.push_back(line);
-                } else if (max.isFr()) {
-                    double value = max.fr();
-                    GridLine line = GridLine(value, false);
-                    m_gridLineColumns.push_back(line);
-                }
-                */
-
-                // TODO: consider max length;
+            } else if (gridLength.isAuto()) {
+                GridLine line = GridLine(0);
+                line.setAuto(true);
+                line.setFixed(false);
+                m_gridLineColumns.push_back(line);
             }
+        } else if (trackSize.isFr()) {
+            GridLine line = GridLine(gridLength.fr(), false);
+            m_gridLineColumns.push_back(line);
+        } else if (trackSize.isMinMax()) {
+            // TODO: when min or max is fr or auto, we should treat it.
+            GridLine line = GridLine(trackSize.min(), trackSize.max());
+            m_gridLineColumns.push_back(line);
         }
     }
+}
 
-    if (!columns) {
-        GridLine line = GridLine(0);
-        line.setAuto(true);
-        m_gridLineColumns.push_back(line);
-    }
+void GridFormattingContext::initializeGridLineRows(
+    const GCVector<GridTrackSize>* rows)
+{
+    STARFISH_ASSERT(rows);
 
-    const GCVector<GridTrackSize>* rows =
-        m_container->style()->gridTemplateRows();
+    size_t rowSize = rows->size();
+    for (size_t i = 0; i < rowSize; i++) {
+        GridTrackSize trackSize = (*rows)[i];
+        GridLength gridLength = trackSize.min();
 
-    if (rows) {
-        for (size_t i = 0; i < rows->size(); i++) {
-            GridTrackSize trackSize = (*rows)[i];
-            GridLength gridLength = trackSize.min();
-
-            if (trackSize.isLength()) {
-                if (gridLength.isLength() && gridLength.length().isFixed()) {
-                    Length length = gridLength.length();
-                    GridLine line = GridLine(length.numberData());
-                    m_gridLineRows.push_back(line);
-                }
-            } else if (trackSize.isFr()) {
-                double value = gridLength.fr();
-
-                GridLine line = GridLine(value, false);
+        if (trackSize.isLength()) {
+            if (gridLength.isLength() && gridLength.length().isFixed()) {
+                Length length = gridLength.length();
+                GridLine line = GridLine(length.numberData());
+                m_gridLineRows.push_back(line);
+            } else if (gridLength.isAuto()) {
+                GridLine line = GridLine(0);
+                line.setAuto(true);
+                line.setFixed(false);
                 m_gridLineRows.push_back(line);
             }
+        } else if (trackSize.isFr()) {
+            GridLine line = GridLine(gridLength.fr(), false);
+            m_gridLineRows.push_back(line);
+        } else if (trackSize.isMinMax()) {
+            GridLine line = GridLine(trackSize.min(), trackSize.max());
+            m_gridLineColumns.push_back(line);
         }
     }
+}
 
-    // parsing grid template areas and store this information.
-    parsingGridTemplateAreasAndStoreInformation();
-
-    // ordering item and make line.
-    buildGridAreaAndOrdering();
-
-    applyFrUnitsWithColumns();
-
-    arrangeGridLinesWithGridAreas(true, false);
-
+void GridFormattingContext::applyMinMaxGridLineColumns()
+{
     // Distribute 'auto' size;
     LayoutUnit sumOfColumn = 0;
     size_t numberOfAuto = 0;
+
+    size_t numberOfMinMax = 0;
+    size_t numberOfFr = 0;
+    std::vector<GridLine*> minMaxLines;
+    bool hasFrInMinMax = false;
     for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
+        // TODO: we need to consider an auto case.
+        /*
         sumOfColumn += m_gridLineColumns[i].offset();
         if (m_gridLineColumns[i].isAuto()) {
             numberOfAuto++;
+        } else
+        */
+        if (m_gridLineColumns[i].isMinMax()) {
+            m_gridLineColumns[i].setOffset(
+                m_gridLineColumns[i].min().length().numberData(), true);
+            numberOfMinMax++;
+            minMaxLines.push_back(&m_gridLineColumns[i]);
+            if (m_gridLineColumns[i].max().isFr()) {
+                numberOfFr++;
+                hasFrInMinMax = true;
+            }
+        } else if (m_gridLineColumns[i].isFr()) {
+            numberOfFr++;
+        }
+    }
+
+    if (numberOfMinMax > 0) {
+        for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
+            sumOfColumn += m_gridLineColumns[i].offset();
         }
     }
 
     sumOfColumn += (m_gridLineColumns.size() - 2) * m_columnGap;
+    LayoutUnit availableWidth = m_availableWidth - sumOfColumn;
+    LayoutUnit totalMinMaxGap = 0.0;
+    if (numberOfMinMax && availableWidth > 0) {
+        std::stable_sort(
+            minMaxLines.begin(), minMaxLines.end(),
+            [](const GridLine* a, const GridLine* b) {
+                float maxA = a->max().isFr() ? a->offset().toFloat()
+                                             : a->max().length().numberData();
+                float minA = a->min().isFr() ? a->offset().toFloat()
+                                             : a->min().length().numberData();
+                float maxB = b->max().isFr() ? b->offset().toFloat()
+                                             : b->max().length().numberData();
+                float minB = b->min().isFr() ? b->offset().toFloat()
+                                             : b->min().length().numberData();
+                return (maxA - minA) < (maxB - minB);
+            });
 
-    if (numberOfAuto) {
+        for (size_t i = 0; i < minMaxLines.size(); i++) {
+            GridLine* line = (minMaxLines[i]);
+            float maxLine = line->max().isFr()
+                                ? line->offset().toFloat()
+                                : line->max().length().numberData();
+            float minLine = line->min().isFr()
+                                ? line->offset().toFloat()
+                                : line->min().length().numberData();
+
+            LayoutUnit minmaxGap = maxLine - minLine;
+            LayoutUnit totalMinMaxWidth = minmaxGap * numberOfMinMax;
+
+            if (totalMinMaxWidth <= availableWidth) {
+                line->setOffset(line->offset() + minmaxGap, true);
+                availableWidth -= minmaxGap;
+                totalMinMaxGap += minmaxGap;
+            } else {
+                LayoutUnit dividedWidth = availableWidth / numberOfMinMax;
+                for (size_t j = i; j < minMaxLines.size(); j++) {
+                    GridLine* line = (minMaxLines[j]);
+                    line->setOffset(line->offset() + dividedWidth, true);
+                    totalMinMaxGap += dividedWidth;
+                }
+                break;
+            }
+            numberOfMinMax--;
+        }
+    }
+}
+
+void GridFormattingContext::buildGridLineTemplate()
+{
+    m_gridLineColumns.push_back(GridLine(0));
+    const GCVector<GridTrackSize>* columns =
+        m_container->style()->gridTemplateColumns();
+    if (columns) {
+        // initializing grid lines for columns
+        initializeGridLineColumns(columns);
+    } else {
+        GridLine line = GridLine(0);
+        line.setAuto(true);
+        line.setFixed(false);
+        m_gridLineColumns.push_back(line);
+    }
+
+    m_gridLineRows.push_back(GridLine(0));
+    const GCVector<GridTrackSize>* rows =
+        m_container->style()->gridTemplateRows();
+    if (rows) {
+        initializeGridLineRows(rows);
+    }
+
+    // parse grid template areas and store this information.
+    parsingGridTemplateAreasAndStoreInformation();
+
+    // add implicit grid lines, make grid areas, and order the areas.
+    buildGridAreaAndOrdering();
+
+    // adjust grid-lines' offset and grid-area's width using grid areas/lines
+    arrangeGridLinesWithGridAreas(true, false);
+
+    // compute minmax size for grid lines
+    applyMinMaxGridLineColumns();
+
+    // TODO : we need to consider an auto case.
+    /*
+    if (numberOfAuto && !numberOfFr) {
         LayoutUnit remainingWidth =
-            (m_availableWidth - sumOfColumn) / numberOfAuto;
+            (m_availableWidth - sumOfColumn - totalMinMaxGap) / numberOfAuto;
         if (remainingWidth > 0) {
             for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
                 if (m_gridLineColumns[i].isAuto()) {
@@ -1103,9 +1213,10 @@ void GridFormattingContext::buildGridLineTemplate()
             }
         }
     }
+    */
 
+    // update offset using flex factor
     applyFrUnitsWithColumns();
-
     applyFrUnitsWithRows();
 
     arrangeGridLinesWithGridAreas(true, true);
@@ -1454,21 +1565,24 @@ void GridFormattingContext::alignGridLinesForColumns(GridArea& area,
                     }
                 }
             } else {
-                std::vector<GridLine*> noneFixed;
+                std::vector<GridLine*> noneFixed; // fr grid line for column
                 LayoutUnit sumOfFixed(0);
 
                 for (size_t i = start; i <= end - 1; i++) {
-                    if (m_gridLineColumns[i].isFixed() &&
-                        !m_gridLineColumns[i].isFr()) {
+                    if (m_gridLineColumns[i].isLength() &&
+                        m_gridLineColumns[i].isFixed()) {
                         sumOfFixed += m_gridLineColumns[i].offset();
-                    } else {
+                    } else if (m_gridLineColumns[i].isFr()) {
                         noneFixed.push_back(&m_gridLineColumns[i]);
                     }
                 }
 
+                // If a grid area has multiple grid lines with fr unit,
+                // each grid line should have a value of (contentWidth -
+                // (gridlines' offset + fixedSum) /n-fr))
                 if (noneFixed.size()) {
                     LayoutUnit dividedWidth =
-                        (contentWidth - (sumWidth - sumOfFixed)) /
+                        (contentWidth - (sumWidth + sumOfFixed)) /
                         noneFixed.size();
                     for (size_t i = 0; i < noneFixed.size(); i++) {
                         GridLine* line = noneFixed[i];
@@ -1771,6 +1885,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
         }
 
         // This part relies on calculating 'width'.
+        // grid lines' offset is updated.
         if (layoutLines) {
             alignGridLinesForColumns(area, width, contentWidth, isFixed);
         }

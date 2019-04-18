@@ -51,7 +51,7 @@ public:
 
 class GridLine : public gc {
 public:
-    LayoutUnit offset()
+    LayoutUnit offset() const
     {
         return m_offset;
     }
@@ -61,12 +61,12 @@ public:
         return m_fr;
     }
 
-    LayoutUnit min()
+    const GridLength& min() const
     {
         return m_min;
     }
 
-    LayoutUnit max()
+    const GridLength& max() const
     {
         return m_max;
     }
@@ -87,7 +87,7 @@ public:
         m_fr = fr;
     }
 
-    void setMinMax(LayoutUnit min, LayoutUnit max)
+    void setMinMax(GridLength min, GridLength max)
     {
         m_min = min;
         m_max = max;
@@ -128,14 +128,19 @@ public:
         return m_computed;
     }
 
+    bool isLength()
+    {
+        return m_type == GridLineType::Length;
+    }
+
     bool isFr()
     {
-        return m_state == Fr;
+        return m_type == GridLineType::Fr;
     }
 
     bool isMinMax()
     {
-        return m_state == MinMax;
+        return m_type == GridLineType::MinMax;
     }
 
     bool isAuto()
@@ -148,64 +153,68 @@ public:
         return m_containing;
     }
 
+    GridLine(LayoutUnit offset)
+        : m_offset(offset)
+        , m_fr(0)
+        , m_min(GridLength())
+        , m_max(GridLength())
+        , m_computed(true)
+        , m_isAuto(false)
+        , m_fixed(true)
+        , m_newLine(false)
+        , m_type(GridLineType::Length)
+        , m_containing(false)
+    {
+    }
+
     // The 'computed' is for the 'fr' unit.
     GridLine(LayoutUnit fr, bool computed)
         : m_offset(0)
         , m_fr(fr)
-        , m_min(0)
-        , m_max(0)
+        , m_min(GridLength())
+        , m_max(GridLength())
         , m_computed(computed)
         , m_isAuto(false)
         , m_fixed(true)
         , m_newLine(false)
-        , m_state(Fr)
+        , m_type(GridLineType::Fr)
         , m_containing(false)
     {
     }
 
-    GridLine(LayoutUnit offset)
-        : m_offset(offset)
-        , m_fr(0)
-        , m_min(0)
-        , m_max(0)
-        , m_computed(true)
+    GridLine(GridLength min, GridLength max)
+        : m_fr(0)
+        , m_min(min)
+        , m_max(max)
+        , m_computed(false)
         , m_isAuto(false)
         , m_fixed(true)
         , m_newLine(false)
-        , m_state(Fixed)
+        , m_type(GridLineType::MinMax)
         , m_containing(false)
     {
-    }
-
-    GridLine(LayoutUnit min, LayoutUnit max)
-        : m_offset(0)
-        , m_fr(0)
-        , m_min(min)
-        , m_max(max)
-        , m_computed(true)
-        , m_isAuto(false)
-        , m_fixed(false)
-        , m_newLine(false)
-        , m_state(MinMax)
-        , m_containing(false)
-    {
+        if (min.isLength() && min.length().isFixed()) {
+            m_offset = min.length().numberData();
+        } else if (min.isAuto()) {
+            m_offset = 0;
+        }
     }
 
 private:
     LayoutUnit m_offset;
     LayoutUnit m_fr;
-    LayoutUnit m_min;
-    LayoutUnit m_max;
+    GridLength m_min;
+    GridLength m_max;
     bool m_computed;
     bool m_isAuto;
     bool m_fixed;
     bool m_newLine;
-    enum GridLineState {
-        Fixed,
+    enum GridLineType {
+        Length,
         Fr,
         MinMax,
     };
-    GridLineState m_state;
+    GridLineType m_type;
     bool m_containing;
 };
 
@@ -266,6 +275,10 @@ public:
     size_t convertToRealLine(String*, size_t, ConvertType);
     void convertToStartEndForRow(ComputedStyle*, size_t&, size_t&);
     void convertToStartEndForColumn(ComputedStyle*, size_t&, size_t&);
+
+    void initializeGridLineColumns(const GCVector<GridTrackSize>* columns);
+    void initializeGridLineRows(const GCVector<GridTrackSize>* rows);
+    void applyMinMaxGridLineColumns();
 
     LayoutUnit preferredWidth();
 
