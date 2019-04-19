@@ -26,7 +26,7 @@ class Thread;
 class ThreadPool;
 class IRunnable;
 
-class IThread {
+class IThread : public gc {
 public:
     virtual ~IThread()
     {
@@ -36,7 +36,7 @@ public:
     virtual void join() = 0;
 };
 
-class AdaptedThread : public IThread, public gc {
+class AdaptedThread : public IThread {
 public:
     AdaptedThread(ThreadPool* threadPool);
     virtual ~AdaptedThread();

@@ -48,7 +48,7 @@
 
 #include "core/util/Archiver.h"
 #include "core/modules/serviceworker/Message.h"
-
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -74,6 +74,22 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
     m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
 }
 
+void ServiceWorkerClientConnection::matchRegistration(
+    ServiceWorkerRequest* request, String* clientURL)
+{
+    STARFISH_ASSERT(request != nullptr);
+    STARFISH_ASSERT(clientURL != nullptr);
+
+    // marshalling
+    JsonWriter writer;
+    Message msg("matchRegistration");
+    msg.addParam(request);
+    msg.addParam(new GenericArchivable<String*>(TypeName::String, clientURL));
+    msg.archive(writer);
+
+    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+}
+
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
 {
     STARFISH_ASSERT(data != nullptr);
@@ -82,16 +98,16 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
     Message msg;
     msg.archive(reader);
 
-    if (msg.name == "resolveJobPromise") {
-        auto jobData = static_cast<ServiceWorkerJobData*>(msg.params[0]);
+    auto msgName = msg.name();
+
+    if (msgName == "resolveJobPromise") {
+        auto jobData = downcast<ServiceWorkerJobData>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
         STARFISH_ASSERT(job != nullptr);
 
-        job->setHostConnection(this);
-
         auto registration =
-            static_cast<ServiceWorkerRegistrationData*>(msg.params[1]);
+            downcast<ServiceWorkerRegistrationData>(msg.param(1));
         resolveJobPromise(job, registration);
     }
 }

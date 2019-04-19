@@ -36,19 +36,25 @@
 
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
 namespace Starfish {
 
 Message::Message(const char* msgname)
 {
     STARFISH_ASSERT(msgname != nullptr);
-    name = msgname;
+    m_name = msgname;
+}
+
+std::string Message::name()
+{
+    return m_name;
 }
 
 void Message::addParam(Archivable* param)
 {
     STARFISH_ASSERT(param != nullptr);
-    params.push_back(param);
+    m_params.push_back(param);
 }
 
 void Message::archive(Archiver& ar)
@@ -64,21 +70,21 @@ void Message::archive(Archiver& ar)
      */
     ar.StartObject();
 
-    ar.Member("name") & name;
+    ar.Member("name") & m_name;
 
     // array
     ar.Member("params");
     {
-        size_t nParams = params.size();
+        size_t nParams = m_params.size();
 
         ar.StartArray(&nParams);
 
         if (ar.IsReader()) {
-            params.resize(nParams);
+            m_params.resize(nParams);
         }
 
         for (size_t i = 0; i < nParams; i++) {
-            archive(ar, params[i]);
+            archive(ar, m_params[i]);
         }
 
         ar.EndArray();
@@ -92,6 +98,16 @@ void Message::init()
     // NOTE: Registering a pair of a key string and a factory
     // method per an archivable is worth considering.
     Archiver::setArchivableHandler(Message::archive);
+}
+
+Archivable* Message::param(size_t index)
+{
+    STARFISH_ASSERT(m_params.size() > index);
+
+    auto archivable = m_params[index];
+    STARFISH_ASSERT(archivable != nullptr);
+
+    return archivable;
 }
 
 void Message::archive(Archiver& ar, Archivable*& archivable)
@@ -109,6 +125,8 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
 
     ar.Member("_archiveId") & id;
 
+    // TODO: replace each raw string with a TypeName member
+    // NOTE: consider using macro to cover the same code
     if (id == "ServiceWorkerJobData") {
         if (ar.IsReader()) {
             archivable = new ServiceWorkerJobData;
@@ -124,6 +142,19 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
     } else if (id == "ServiceWorkerData") {
         if (ar.IsReader()) {
             archivable = new ServiceWorkerData;
+            STARFISH_ASSERT(archivable != nullptr);
+        }
+        archivable->archive(ar);
+    } else if (id == "ServiceWorkerRequest") {
+        if (ar.IsReader()) {
+            archivable = new ServiceWorkerRequest;
+            STARFISH_ASSERT(archivable != nullptr);
+        }
+        archivable->archive(ar);
+    } else if (id == TypeName::String) {
+        if (ar.IsReader()) {
+            archivable =
+                new GenericArchivable<String*>(id.c_str(), String::emptyString);
             STARFISH_ASSERT(archivable != nullptr);
         }
         archivable->archive(ar);

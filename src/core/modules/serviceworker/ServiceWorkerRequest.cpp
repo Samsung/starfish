@@ -17,19 +17,29 @@
  *  USA
  */
 
-#ifndef __StarfishIRunnable__
-#define __StarfishIRunnable__
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
 namespace Starfish {
 
-class IRunnable : public gc {
-public:
-    virtual ~IRunnable(){};
-    virtual void run() = 0;
-    virtual void stop() = 0;
-    virtual void setStopper(std::future<void>&& stopper) = 0;
-};
+const char* ServiceWorkerRequest::archiveId() const
+{
+    return "ServiceWorkerRequest";
+}
 
-} // namespace Starfish
+void ServiceWorkerRequest::archive(Archiver& ar)
+{
+    ar.MemberId("id", id);
+    ar.MemberId("contextId", contextId);
+    ar.Member("origin") & origin;
+}
+}
 
 #endif

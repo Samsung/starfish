@@ -54,6 +54,8 @@ public:
     void start(ProgramOptions* programOptions);
 
     void scheduleJob(ServiceWorkerJob* job) override;
+    void matchRegistration(ServiceWorkerRequest* request,
+                           String* clientURL) override;
 
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
 

@@ -25,7 +25,7 @@ namespace Starfish {
 
 class Socket;
 
-class Connection : public gc, public IORunnable::Client {
+class Connection : public IORunnable::Client {
 public:
     Connection();
 

@@ -17,19 +17,27 @@
  *  USA
  */
 
-#ifndef __StarfishIRunnable__
-#define __StarfishIRunnable__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    !defined(__StarfishServiceWorkerRequest__)
+#define __StarfishServiceWorkerRequest__
 
 namespace Starfish {
 
-class IRunnable : public gc {
-public:
-    virtual ~IRunnable(){};
-    virtual void run() = 0;
-    virtual void stop() = 0;
-    virtual void setStopper(std::future<void>&& stopper) = 0;
-};
+class Promise;
 
-} // namespace Starfish
+class ServiceWorkerRequest : public Archivable {
+public:
+    RequestId id;
+    ServiceWorkerContextId contextId;
+    String* origin{ nullptr };
+
+    // serialize/deserialize
+    const char* archiveId() const override;
+    void archive(Archiver& ar) override;
+
+private:
+    Promise* m_promise{ nullptr };
+};
+}
 
 #endif

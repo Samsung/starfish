@@ -28,9 +28,9 @@ class IRunnable;
 class MessageLoop;
 class Client;
 
-class IORunnable : public IRunnable, public gc {
+class IORunnable : public IRunnable {
 public:
-    class Client {
+    class Client : public gc {
     public:
         virtual ~Client()
         {
