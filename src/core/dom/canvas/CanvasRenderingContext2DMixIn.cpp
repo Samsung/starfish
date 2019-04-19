@@ -124,6 +124,8 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
+    , m_dashList()
+    , m_lineDashOffset(0.0)
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -155,7 +157,10 @@ void CanvasRenderingContext2DMixIn::initialize()
     setLineJoin(CanvasLineJoin::Miter); // default "miter"
     setMiterLimit(10.0f);
 
-    m_canvas->setColor(black);
+    setLineDash(GCVector<double>()); // default empty
+    setLineDashOffset(0.0f);         // default 0.0
+
+    m_canvas->setFillColor(black);
     m_canvas->setStrokeColor(black);
     m_canvas->setGlobalAlpha(1.0f);
 }
@@ -248,6 +253,56 @@ void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
         return;
     }
     m_canvas->setMiterLimit(limit);
+}
+
+void CanvasRenderingContext2DMixIn::setLineDash(GCVector<double> segments)
+{
+    for (auto& segment : segments) {
+        if (isInfOrNan(segment) || segment < 0) {
+            return;
+        }
+    }
+
+    m_dashList = segments;
+    if (segments.size() % 2 != 0) {
+        for (auto& segment : segments) {
+            m_dashList.emplace_back(segment);
+        }
+    }
+    setLineDashToCanvas();
+}
+
+GCVector<double> CanvasRenderingContext2DMixIn::getLineDash()
+{
+    return m_dashList;
+}
+
+double CanvasRenderingContext2DMixIn::lineDashOffset()
+{
+    return m_lineDashOffset;
+}
+
+void CanvasRenderingContext2DMixIn::setLineDashOffset(double offset)
+{
+    if (isInfOrNan(offset)) {
+        return;
+    }
+    m_lineDashOffset = offset;
+    setLineDashToCanvas();
+}
+
+void CanvasRenderingContext2DMixIn::setLineDashToCanvas()
+{
+    auto size = m_dashList.size();
+    if (size) {
+        double* dashes = new double[size];
+        for (size_t i = 0; i < size; ++i) {
+            dashes[i] = m_dashList[i];
+        }
+
+        m_canvas->setDash(dashes, static_cast<int>(size), m_lineDashOffset);
+        delete[] dashes;
+    }
 }
 
 void CanvasRenderingContext2DMixIn::save()
@@ -416,7 +471,7 @@ void CanvasRenderingContext2DMixIn::setFillStyle(
                 fillColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
-            m_canvas->setColor(fillColor);
+            m_canvas->setFillColor(fillColor);
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -500,8 +555,18 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
 void CanvasRenderingContext2DMixIn::strokeRect(float x, float y, float w,
                                                float h)
 {
-    rect(x, y, w, h);
-    stroke();
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokerect
+    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+        return;
+    }
+    if (!w && !h) {
+        return;
+    }
+    m_canvas->strokeRect(Unit::Rect(x, y, w, h));
 }
 
 void CanvasRenderingContext2DMixIn::beginPath()

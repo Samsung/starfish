@@ -66,7 +66,7 @@ public:
     // reset transform clip
     virtual void resetClip() = 0;
 
-    virtual void setColor(const Unit::Color& clr) = 0;
+    virtual void setFillColor(const Unit::Color& clr) = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
 

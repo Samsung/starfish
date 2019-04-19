@@ -300,7 +300,7 @@ void FrameInputBox::paintCaret(Canvas* canvas)
     x = textEditable->currentCaretLayoutLocation().x();
     y = textEditable->currentCaretLayoutLocation().y();
     canvas->save();
-    canvas->setColor(node()->style()->caretColor());
+    canvas->setFillColor(node()->style()->caretColor());
     canvas->drawRect(LayoutRect(x, y, caretThickness,
                                 style()->font()->metrics().m_fontHeight));
     canvas->restore();

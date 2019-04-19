@@ -64,7 +64,7 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
     ctx.m_canvas->arc(cx, cy, r, 0.0, 2 * M_PI);
 
     ctx.m_canvas->setFillRule(style()->fillRule());
-    ctx.m_canvas->setColor(style()->fill().color());
+    ctx.m_canvas->setFillColor(style()->fill().color());
     ctx.m_canvas->fillPreserve();
 
     ctx.m_canvas->setLineWidth(

@@ -121,7 +121,7 @@ public:
     {
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
     }
 
@@ -164,6 +164,14 @@ public:
     }
 
     virtual void drawRect(const Unit::Rect& rt)
+    {
+    }
+
+    virtual void strokeRect(const Unit::Rect& rt)
+    {
+    }
+
+    virtual void strokeRect(const LayoutRect& rt)
     {
     }
 

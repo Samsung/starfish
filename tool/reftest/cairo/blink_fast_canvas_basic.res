@@ -45,7 +45,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-bezier-same-endpoint
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-transforms.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-solid.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clearRect.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clip-rule.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clip-rule.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-closePath-single-point.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite-canvas.html
@@ -58,7 +58,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-closePath-single-poi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite-video.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-context-attributes-default-value.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-context-gc-custom-properties.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-copyPixels.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-copyPixels.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-createImageBitmap-animated.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-createImageBitmap-createPattern.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-createImageBitmap-data-in-workers.html
@@ -156,7 +156,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-constructo
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-largedraws.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-large-fills.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-large-pattern.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash-input-sequence.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash-invalid.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineWidth.html
@@ -240,8 +240,8 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-transparency-and-composite.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-webkitLineDash.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-webkitLineDash-invalid.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-with-illegal-args.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-with-incorrect-args.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-with-illegal-args.html
+test/cairo/reftest/vendor/blink/fast/canvas/canvas-with-incorrect-args.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/change-context.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/draw-focus-if-needed.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/draw-focus-if-needed-invisible-crash.html

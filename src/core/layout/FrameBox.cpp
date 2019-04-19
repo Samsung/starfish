@@ -501,7 +501,7 @@ void FrameBox::paintOutline(Canvas* canvas)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
 
-        canvas->setColor(style()->outlineColor());
+        canvas->setFillColor(style()->outlineColor());
 
         canvas->beginPath();
 
@@ -916,7 +916,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     auto shadowColor =
                         shadow->hasColor() ? shadow->color() : s->color();
-                    canvas->setColor(shadowColor);
+                    canvas->setFillColor(shadowColor);
 
                     xx = rx.floor();
                     yy = ry.floor();
@@ -1009,7 +1009,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     cv->unsetDevicePixelRatio();
                     auto shadowColor =
                         shadow->hasColor() ? shadow->color() : s->color();
-                    cv->setColor(shadowColor);
+                    cv->setFillColor(shadowColor);
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                     cv->translate(ceil(radiusOffset / 2),
@@ -1035,7 +1035,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     float pieceSize = bufImageSize;
                     // center
-                    canvas->setColor(shadowColor);
+                    canvas->setFillColor(shadowColor);
                     canvas->drawRect(Unit::Rect(
                         imageRect.x() + pieceSize, imageRect.y() + pieceSize,
                         imageRect.width() - pieceSize * 2,
@@ -1154,9 +1154,9 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                     if (shadow->hasColor()) {
-                        cv->setColor(shadow->color());
+                        cv->setFillColor(shadow->color());
                     } else {
-                        cv->setColor(s->color());
+                        cv->setFillColor(s->color());
                     }
 
                     cv->translate(ceil(radiusOffset / 2),
@@ -1251,9 +1251,9 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                 if (shadow->hasColor()) {
-                    cv->setColor(shadow->color());
+                    cv->setFillColor(shadow->color());
                 } else {
-                    cv->setColor(s->color());
+                    cv->setFillColor(s->color());
                 }
                 // Draw an outline of Image
                 cv->beginPath();
@@ -1421,7 +1421,7 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
                 unsigned int idx = style->backgroundLayerSize() - 1;
                 paintingRect = box->makeRect(style->backgroundClip(idx));
             }
-            canvas->setColor(style->backgroundColor());
+            canvas->setFillColor(style->backgroundColor());
             if (box->hasFrameBorderRadius()) {
                 box->applyBorderRadius(
                     canvas,
@@ -2120,7 +2120,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
             float x, y, arcR;
 
             {
-                canvas->setColor(border.left().color());
+                canvas->setFillColor(border.left().color());
 
                 if (topLeftHorizontal && topLeftVertical) {
                     canvas->save();
@@ -2224,7 +2224,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // draw border-top
             {
-                canvas->setColor(border.top().color());
+                canvas->setFillColor(border.top().color());
 
                 if (topLeftHorizontal && topLeftVertical) {
                     if (topLeftHorizontal > borderLeft() &&
@@ -2327,7 +2327,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // draw border-right
             {
-                canvas->setColor(border.right().color());
+                canvas->setFillColor(border.right().color());
 
                 if (topRightHorizontal && topRightVertical) {
                     if (topRightHorizontal > borderRight() &&
@@ -2438,7 +2438,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
             // border-bottom
             {
-                canvas->setColor(border.bottom().color());
+                canvas->setFillColor(border.bottom().color());
                 if (bottomRightHorizontal && bottomRightVertical) {
                     if (bottomRightHorizontal > borderRight() &&
                         bottomRightVertical > borderBottom()) {
@@ -2545,7 +2545,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 (border.top().color() == border.right().color()) &&
                 (border.right().color() == border.bottom().color()) &&
                 (border.bottom().color() == border.left().color())) {
-                canvas->setColor(border.top().color());
+                canvas->setFillColor(border.top().color());
                 canvas->beginPath();
 
                 canvas->moveTo(rect.x().floor(), rect.y().floor());
@@ -2582,18 +2582,18 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 // top
                 if (border.top().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
-                    canvas->setColor(border.top().color().getDarkerColor());
+                    canvas->setFillColor(border.top().color().getDarkerColor());
                     canvas->setStrokeColor(
                         border.top().color().getDarkerColor());
                 } else if ((border.top().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
                            (border.top().color() == black)) {
-                    canvas->setColor(
+                    canvas->setFillColor(
                         Unit::Color(238, 238, 238, border.top().color().a()));
                     canvas->setStrokeColor(
                         Unit::Color(238, 238, 238, border.top().color().a()));
                 } else {
-                    canvas->setColor(border.top().color());
+                    canvas->setFillColor(border.top().color());
                     canvas->setStrokeColor(border.top().color());
                 }
 
@@ -2650,9 +2650,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                             BorderStyleValue::RidgeBorderStyleValue)) {
                     if ((border.top().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     } else {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x(), rect.y()),
@@ -2665,9 +2665,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                     if ((border.top().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     } else {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x() + (borderLeft() / 2),
@@ -2694,13 +2694,13 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 if ((border.right().style() ==
                      BorderStyleValue::InsetBorderStyleValue) &&
                     (border.right().color() == black)) {
-                    canvas->setColor(
+                    canvas->setFillColor(
                         Unit::Color(238, 238, 238, border.right().color().a()));
                 } else if (border.right().style() ==
                            BorderStyleValue::OutsetBorderStyleValue) {
-                    canvas->setColor(border.right().color().getDarkerColor());
+                    canvas->setFillColor(border.right().color().getDarkerColor());
                 } else {
-                    canvas->setColor(border.right().color());
+                    canvas->setFillColor(border.right().color());
                 }
 
                 if ((border.right().style() ==
@@ -2770,9 +2770,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                             BorderStyleValue::RidgeBorderStyleValue)) {
                     if ((border.right().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     } else {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x() + rect.width() -
@@ -2787,9 +2787,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                     if ((border.right().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     } else {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x() + rect.width() - borderRight(),
@@ -2820,13 +2820,13 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 if ((border.bottom().style() ==
                      BorderStyleValue::InsetBorderStyleValue) &&
                     (border.bottom().color() == black)) {
-                    canvas->setColor(Unit::Color(238, 238, 238,
+                    canvas->setFillColor(Unit::Color(238, 238, 238,
                                                  border.bottom().color().a()));
                 } else if (border.bottom().style() ==
                            BorderStyleValue::OutsetBorderStyleValue) {
-                    canvas->setColor(border.bottom().color().getDarkerColor());
+                    canvas->setFillColor(border.bottom().color().getDarkerColor());
                 } else {
-                    canvas->setColor(border.bottom().color());
+                    canvas->setFillColor(border.bottom().color());
                 }
                 if ((border.bottom().style() ==
                      BorderStyleValue::DashedBorderStyleValue)) {
@@ -2896,9 +2896,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                             BorderStyleValue::RidgeBorderStyleValue)) {
                     if ((border.bottom().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     } else {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x() + borderLeft() / 2,
@@ -2913,9 +2913,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                     if ((border.bottom().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     } else {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x() + borderLeft(),
@@ -2947,14 +2947,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 // left
                 if (border.left().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
-                    canvas->setColor(border.left().color().getDarkerColor());
+                    canvas->setFillColor(border.left().color().getDarkerColor());
                 } else if ((border.left().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
                            (border.left().color() == black)) {
-                    canvas->setColor(
+                    canvas->setFillColor(
                         Unit::Color(238, 238, 238, border.left().color().a()));
                 } else {
-                    canvas->setColor(border.left().color());
+                    canvas->setFillColor(border.left().color());
                 }
 
                 if (border.left().style() ==
@@ -3013,9 +3013,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                             BorderStyleValue::RidgeBorderStyleValue)) {
                     if ((border.bottom().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     } else {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     }
                     canvas->drawRect(
                         LayoutLocation(rect.x(), rect.y()),
@@ -3028,9 +3028,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                     if ((border.bottom().style() ==
                          BorderStyleValue::GrooveBorderStyleValue)) {
-                        canvas->setColor(border.top().color());
+                        canvas->setFillColor(border.top().color());
                     } else {
-                        canvas->setColor(border.top().color().getDarkerColor());
+                        canvas->setFillColor(border.top().color().getDarkerColor());
                     }
                     canvas->drawRect(LayoutLocation(rect.x() + borderLeft() / 2,
                                                     rect.y() + borderTop() / 2),

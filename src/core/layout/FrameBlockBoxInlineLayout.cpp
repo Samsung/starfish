@@ -4953,7 +4953,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         }
 
         canvas->setFont(s->font());
-        canvas->setColor(s->color());
+        canvas->setFillColor(s->color());
 
         bool hasShadow = s->textShadow() ? true : false;
 
@@ -4985,11 +4985,11 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 cv->setFont(s->font());
                 auto tdc = canvas->textDecorationData();
                 if (shadow->hasColor()) {
-                    cv->setColor(shadow->color());
+                    cv->setFillColor(shadow->color());
                     tdc.setUnderLineColor(shadow->color());
                     tdc.setLineThroughColor(shadow->color());
                 } else {
-                    cv->setColor(s->color());
+                    cv->setFillColor(s->color());
                 }
                 cv->setTextDecorationData(tdc);
                 cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));

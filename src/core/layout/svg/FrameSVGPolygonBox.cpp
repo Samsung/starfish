@@ -58,7 +58,7 @@ void FrameSVGPolygonBox::paintSVG(PaintingContext& ctx)
         FrameBox* cb = layoutParent()->asFrameBox();
 
         ctx.m_canvas->setFillRule(style()->fillRule());
-        ctx.m_canvas->setColor(style()->fill().color());
+        ctx.m_canvas->setFillColor(style()->fill().color());
         ctx.m_canvas->fillPreserve();
 
         ctx.m_canvas->setLineWidth(

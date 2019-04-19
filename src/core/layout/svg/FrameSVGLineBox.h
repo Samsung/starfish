@@ -86,7 +86,7 @@ public:
         ctx.m_canvas->moveTo(m_x1, m_y1);
         ctx.m_canvas->lineTo(m_x2, m_y2);
 
-        ctx.m_canvas->setColor(style()->fill().color());
+        ctx.m_canvas->setFillColor(style()->fill().color());
         ctx.m_canvas->fillPreserve();
 
         ctx.m_canvas->setLineWidth(

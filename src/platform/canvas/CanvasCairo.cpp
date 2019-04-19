@@ -278,7 +278,7 @@ public:
         CanvasStateCairo state;
         if (m_state.size()) {
             auto& lastState = m_state.back();
-            state.m_color = lastState.m_color;
+            state.m_fillColor = lastState.m_fillColor;
             state.m_strokeColor = lastState.m_strokeColor;
             state.m_layerOpacity = lastState.m_layerOpacity;
             state.m_font = lastState.m_font;
@@ -442,10 +442,10 @@ public:
               m_webView->screenInfo().devicePixelRatio);
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_color = clr;
+        lastState().m_fillColor = clr;
         m_shouldApplyColor = true;
     }
 
@@ -464,7 +464,7 @@ public:
 
     virtual Unit::Color color()
     {
-        return lastState().m_color;
+        return lastState().m_fillColor;
     }
 
     virtual Unit::Color strokeColor()
@@ -679,6 +679,15 @@ public:
         cairo_restore(m_canvas);
     }
 
+    void strokeCairoRect(float xx, float yy, float ww, float hh)
+    {
+        cairo_save(m_canvas);
+        applySourceColorIfNeeds(true);
+        cairo_rectangle(m_canvas, xx, yy, ww, hh);
+        cairo_stroke(m_canvas);
+        cairo_restore(m_canvas);
+    }
+
     virtual void drawRect(const Unit::Rect& rt)
     {
         STARFISH_ASSERT(m_canvas);
@@ -697,6 +706,26 @@ public:
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         drawCairoRect(xx, yy, ww, hh);
+    }
+
+    virtual void strokeRect(const Unit::Rect& rt)
+    {
+        STARFISH_ASSERT(m_canvas);
+        if (!lastState().m_visible) {
+            return;
+        }
+        float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
+        strokeCairoRect(xx, yy, ww, hh);
+    }
+
+    virtual void strokeRect(const LayoutRect& rt)
+    {
+        STARFISH_ASSERT(m_canvas);
+        if (!lastState().m_visible) {
+            return;
+        }
+        int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
+        strokeCairoRect(xx, yy, ww, hh);
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
@@ -1297,6 +1326,13 @@ public:
 
     virtual void setDash(double* dashes, int dashCnt, double offset)
     {
+        STARFISH_ASSERT(dashes != nullptr);
+        for (int i = 0; i < dashCnt; ++i) {
+            if (!dashes[i]) {
+                cairo_set_dash(m_canvas, 0, 0, 0);
+                return;
+            }
+        }
         cairo_set_dash(m_canvas, dashes, dashCnt, offset);
     }
 
