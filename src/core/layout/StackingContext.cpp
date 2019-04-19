@@ -1417,7 +1417,7 @@ public:
             m_canvasToApplyFilter->clearColor(Unit::Color(0, 0, 0, 0));
 
             m_canvasToApplyFilter->setFont(style->font());
-            m_canvasToApplyFilter->setColor(style->color());
+            m_canvasToApplyFilter->setFillColor(style->color());
             m_canvasToApplyFilter->setTextDecorationData(
                 m_originCanvas->textDecorationData());
 
@@ -2294,7 +2294,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     {
         // draw debug rect
         // canvas->save();
-        // canvas->setColor(Color(0, 0, 255, 64));
+        // canvas->setFillColor(Color(0, 0, 255, 64));
         // canvas->drawRect(visibleRect);
         // canvas->restore();
     }
@@ -2619,7 +2619,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                               parent()->owner());
 
                     compositor->save();
-                    compositor->setColor(bgColor.second);
+                    compositor->setFillColor(bgColor.second);
                     compositor->drawRect(LayoutRect(
                         m_owner->borderLeft() + m_owner->paddingLeft(),
                         m_owner->borderTop() + m_owner->paddingTop(),
@@ -2752,19 +2752,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             // debug compositing method
             switch (m_needsGraphicsBufferReason) {
             case NeedsGraphicsLayerReasonNone:
-                compositor->setColor(Unit::Color(255, 64, 0, 64));
+                compositor->setFillColor(Unit::Color(255, 64, 0, 64));
                 break;
             case NeedsGraphicsLayerReasonBySelf:
-                compositor->setColor(Unit::Color(255, 0, 0, 64));
+                compositor->setFillColor(Unit::Color(255, 0, 0, 64));
                 break;
             case NeedsGraphicsLayerReasonNotCoveredByParent:
-                compositor->setColor(Unit::Color(0, 255, 0, 64));
+                compositor->setFillColor(Unit::Color(0, 255, 0, 64));
                 break;
             case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
-                compositor->setColor(Unit::Color(0, 0, 255, 64));
+                compositor->setFillColor(Unit::Color(0, 0, 255, 64));
                 break;
             case NeedsGraphicsLayerReasonSiblingLayerNeedsComposite:
-                compositor->setColor(Unit::Color(0, 255, 255, 64));
+                compositor->setFillColor(Unit::Color(0, 255, 255, 64));
                 break;
             default:
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -2784,7 +2784,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             if (iter !=
                 owner()->node()->webView()->repaintRegionInRendering().end()) {
                 compositor->beginOpacityLayer(0.5);
-                compositor->setColor(Unit::Color(0, 255, 0, 64));
+                compositor->setFillColor(Unit::Color(0, 255, 0, 64));
                 compositor->drawRect(iter->second);
                 compositor->endOpacityLayer();
             }

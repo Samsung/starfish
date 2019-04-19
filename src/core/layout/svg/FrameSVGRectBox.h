@@ -110,7 +110,7 @@ public:
                                 0);
         }
 
-        ctx.m_canvas->setColor(style()->fill().color());
+        ctx.m_canvas->setFillColor(style()->fill().color());
         ctx.m_canvas->fillPreserve();
 
         ctx.m_canvas->setStrokeColor(style()->stroke().color());

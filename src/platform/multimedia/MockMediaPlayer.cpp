@@ -320,7 +320,8 @@ void MockMediaPlayer::prepare(ResourceURL* url)
 void MockMediaPlayer::willDrawVideo(Compositor* canvas,
                                     const LayoutRect& videoRect)
 {
-    canvas->setColor(Unit::Color(0, 0, 0, 255));
+    STARFISH_ASSERT(canvas != nullptr);
+    canvas->setFillColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
 }
 

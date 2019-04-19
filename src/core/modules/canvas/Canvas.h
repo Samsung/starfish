@@ -101,7 +101,7 @@ namespace CanvasCompositing {
 }
 class CanvasState {
 public:
-    Unit::Color m_color;
+    Unit::Color m_fillColor;
     float m_layerOpacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
@@ -115,15 +115,18 @@ public:
     bool m_hasNonInvertableCTM;
 
     CanvasState()
+        : m_fillColor()
+        , m_layerOpacity(1.0f)
+        , m_font(nullptr)
+        , m_textDecorationData()
+        , m_strokeColor()
+        , m_pathTM(SkMatrix::I())
+        , m_globalAlpha(1.0f)
+        , m_compositeOperator(CanvasCompositeOperator::SourceOver)
+        , m_blendMode(CanvasBlendMode::Normal)
+        , m_visible(true)
+        , m_hasNonInvertableCTM(false)
     {
-        m_layerOpacity = 1;
-        m_font = nullptr;
-        m_visible = true;
-        m_hasNonInvertableCTM = false;
-        m_pathTM.reset();
-        m_globalAlpha = 1;
-        m_compositeOperator = CanvasCompositeOperator::SourceOver;
-        m_blendMode = CanvasBlendMode::Normal;
     }
 };
 
@@ -296,7 +299,7 @@ public:
     // reset transform clip
     virtual void resetClip() = 0;
 
-    virtual void setColor(const Unit::Color& clr) = 0;
+    virtual void setFillColor(const Unit::Color& clr) = 0;
     virtual void setStrokeColor(const Unit::Color& clr) = 0;
     virtual void setGlobalAlpha(float c) = 0;
     virtual Unit::Color color() = 0;
@@ -317,6 +320,8 @@ public:
     virtual void setTextDecorationData(TextDecorationData d) = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
+    virtual void strokeRect(const Unit::Rect& rt) = 0;
+    virtual void strokeRect(const LayoutRect& rt) = 0;
     void drawPixelSnappedRect(const LayoutRect& rt)
     {
         LayoutUnit rx = rt.x();

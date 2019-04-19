@@ -168,6 +168,11 @@ public:
     float miterLimit();
     void setMiterLimit(float limit);
 
+    void setLineDash(GCVector<double> segments);
+    GCVector<double> getLineDash();
+    double lineDashOffset();
+    void setLineDashOffset(double offset);
+
     // TODO : CanvasTextDrawingStyles
 
     void* operator new(size_t size)
@@ -197,6 +202,8 @@ protected:
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvas));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvasPath));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_dashList));
     }
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
 
@@ -213,10 +220,13 @@ private:
     void setLineJoin(CanvasLineJoin lineJoin);
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
+    void setLineDashToCanvas();
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;
+    GCVector<double> m_dashList;
+    double m_lineDashOffset;
 };
 }
 #endif

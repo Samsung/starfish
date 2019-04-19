@@ -237,7 +237,7 @@ public:
         CanvasStateSkia state;
         if (m_state.size()) {
             auto& lastState = m_state.back();
-            state.m_color = lastState.m_color;
+            state.m_fillColor = lastState.m_fillColor;
             state.m_strokeColor = lastState.m_strokeColor;
             state.m_layerOpacity = lastState.m_layerOpacity;
             state.m_font = lastState.m_font;
@@ -399,10 +399,10 @@ public:
                         1 / m_webView->screenInfo().devicePixelRatio);
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_color = clr;
+        lastState().m_fillColor = clr;
     }
 
     virtual void setStrokeColor(const Unit::Color& clr)
@@ -437,7 +437,7 @@ public:
 
     virtual Unit::Color color()
     {
-        return lastState().m_color;
+        return lastState().m_fillColor;
     }
 
     virtual Unit::Color strokeColor()
@@ -521,6 +521,16 @@ public:
                  { xx, yy + hh });
     }
 
+    virtual void strokeRect(const Unit::Rect& rt)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual void strokeRect(const LayoutRect& rt)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3, LayoutLocation p4)
     {
@@ -597,9 +607,11 @@ public:
                         fontFace = lastFontFace;
                         paint = g.first.first->skPaint();
                         paint.setTextSize(size);
-                        paint.setColor(SkColorSetARGB(
-                            lastState().m_color.a(), lastState().m_color.r(),
-                            lastState().m_color.g(), lastState().m_color.b()));
+                        paint.setColor(
+                            SkColorSetARGB(lastState().m_fillColor.a(),
+                                           lastState().m_fillColor.r(),
+                                           lastState().m_fillColor.g(),
+                                           lastState().m_fillColor.b()));
                     }
 
                     (glyphs)[glyphCount] = SkToU16(g.second.first);
@@ -621,9 +633,11 @@ public:
                     SkPaint tempPaint;
                     tempPaint.setStrokeWidth(1);
                     tempPaint.setStyle(SkPaint::kStroke_Style);
-                    tempPaint.setColor(SkColorSetARGB(
-                        lastState().m_color.a(), lastState().m_color.r(),
-                        lastState().m_color.g(), lastState().m_color.b()));
+                    tempPaint.setColor(
+                        SkColorSetARGB(lastState().m_fillColor.a(),
+                                       lastState().m_fillColor.r(),
+                                       lastState().m_fillColor.g(),
+                                       lastState().m_fillColor.b()));
                     path.addRect(SkRect::MakeXYWH(
                         xBias, -fontMetrics.m_ascender, f->spaceWidth(),
                         fontMetrics.m_fontHeight));
@@ -653,9 +667,11 @@ public:
                         SkPaint tempPaint;
                         tempPaint.setStrokeWidth(1);
                         tempPaint.setStyle(SkPaint::kStroke_Style);
-                        tempPaint.setColor(SkColorSetARGB(
-                            lastState().m_color.a(), lastState().m_color.r(),
-                            lastState().m_color.g(), lastState().m_color.b()));
+                        tempPaint.setColor(
+                            SkColorSetARGB(lastState().m_fillColor.a(),
+                                           lastState().m_fillColor.r(),
+                                           lastState().m_fillColor.g(),
+                                           lastState().m_fillColor.b()));
 
                         for (size_t j = 0; j < run.m_text.length(); j++) {
                             path.reset();
@@ -685,10 +701,10 @@ public:
                             paint = FontFaceImplSkia::skPaint(fontFace);
                             paint.setTextSize(size);
                             paint.setColor(
-                                SkColorSetARGB(lastState().m_color.a(),
-                                               lastState().m_color.r(),
-                                               lastState().m_color.g(),
-                                               lastState().m_color.b()));
+                                SkColorSetARGB(lastState().m_fillColor.a(),
+                                               lastState().m_fillColor.r(),
+                                               lastState().m_fillColor.g(),
+                                               lastState().m_fillColor.b()));
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -1110,9 +1126,9 @@ public:
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(lastState().m_strokeWidth);
-        paint.setColor(
-            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
-                           lastState().m_color.g(), lastState().m_color.b()));
+        paint.setColor(SkColorSetARGB(
+            lastState().m_fillColor.a(), lastState().m_fillColor.r(),
+            lastState().m_fillColor.g(), lastState().m_fillColor.b()));
 
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
@@ -1158,9 +1174,9 @@ public:
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(
-            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
-                           lastState().m_color.g(), lastState().m_color.b()));
+        paint.setColor(SkColorSetARGB(
+            lastState().m_fillColor.a(), lastState().m_fillColor.r(),
+            lastState().m_fillColor.g(), lastState().m_fillColor.b()));
 
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();

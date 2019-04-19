@@ -147,7 +147,7 @@ public:
             SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
         Unit::Color c = clr;
         c.m_a = c.m_a * m_opacityVector.back();

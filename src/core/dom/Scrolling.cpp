@@ -503,7 +503,7 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
         canvas->beginOpacityLayer(scrollbarOpacity * (192 / 255.f));
 
         if (hasVerticalScroll && needsToDrawScrollbar) {
-            canvas->setColor(Unit::Color(64, 64, 64, 255));
+            canvas->setFillColor(Unit::Color(64, 64, 64, 255));
             float scrollMoveRatio =
                 ((float)frame->scrollTop() /
                  (frame->scrollHeight() -
@@ -536,7 +536,7 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
             canvas->drawRect(rr);
         }
         if (hasHorizontalScroll && needsToDrawScrollbar) {
-            canvas->setColor(Unit::Color(64, 64, 64, 255));
+            canvas->setFillColor(Unit::Color(64, 64, 64, 255));
             float scrollMoveRatio = ((float)frame->scrollLeft() /
                                      (frame->scrollWidth() -
                                       (frame->width() - frame->borderWidth())));

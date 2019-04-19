@@ -170,6 +170,9 @@ section are supported.
 |  | attribute | lineCap | Determines the shape used to draw the end points of lines. |
 |  | attribute | lineJoin | Determines the shape used to join two line segments where they meet. |
 |  | attribute | miterLimit | Sets/Gets the miter limit ratio. |
+|  | method | void setLineDash(sequence\<unrestricted double\> segments) | Sets the line dash pattern used when stroking lines. |
+|  | method | sequence\<unrestricted double\> getLineDash() | Returns the current line dash pattern. |
+|  | attribute | lineDashOffset | Sets/Gets the line dash offset, or "phase." |
 | [CanvasTransform](https://html.spec.whatwg.org/multipage/canvas.html#canvastransform) | interface mixin | CanvasTransform |  |
 |  | method | void scale(unrestricted double x, unrestricted double y) | Add the scaling transformation to the current transformation matrix. |
 |  | method | void rotate(unrestricted double angle) | Add the rotation transformation to the current transformation matrix. |

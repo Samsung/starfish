@@ -81,7 +81,7 @@ public:
     {
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
     }
 

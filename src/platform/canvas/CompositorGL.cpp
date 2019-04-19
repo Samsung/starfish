@@ -2411,7 +2411,7 @@ public:
         lastState.clipPaths.get()->push_back(path);
     }
 
-    virtual void setColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr)
     {
         m_state.back().color = clr;
     }
@@ -2419,7 +2419,7 @@ public:
     virtual void punchHole(const Unit::Rect& rt)
     {
         save();
-        setColor(Unit::Color(0, 0, 0, 0));
+        setFillColor(Unit::Color(0, 0, 0, 0));
         glBlendFunc(GL_ONE, GL_ZERO);
         drawRect(rt);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
