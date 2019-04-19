@@ -202,6 +202,7 @@ typedef unsigned int uint;
 #include <numeric>
 #include <stdarg.h>
 #include <future>
+#include <type_traits>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil
@@ -644,6 +645,21 @@ inline T2 narrow_cast(T1 v)
                   "Wrong type cast");
     return static_cast<T2>(
         v % (static_cast<T1>(std::numeric_limits<T2>::max()) + 1));
+}
+
+template <typename Target, typename Source>
+inline Target* downcast(Source* source)
+{
+    STARFISH_ASSERT(source != nullptr);
+    static_assert(std::is_base_of<Source, Target>::value == true,
+                  "Wrong type cast");
+#if defined(__GXX_RTTI) || defined(_CPPRTTI)
+    auto casted = dynamic_cast<Target*>(source);
+    STARFISH_ASSERT(casted != nullptr);
+    return casted;
+#else
+    return static_cast<Target*>(source);
+#endif
 }
 
 template <typename Type>

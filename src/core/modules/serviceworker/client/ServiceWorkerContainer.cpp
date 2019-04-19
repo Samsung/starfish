@@ -44,6 +44,7 @@
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
 #include <EscargotPublic.h>
 
@@ -364,13 +365,30 @@ void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
     m_jobMap.erase(job->data()->id);
 }
 
-ServiceWorkerJob* ServiceWorkerContainer::findJob(Id<ServiceWorkerJob> id)
+NullableServiceWorkerJob* ServiceWorkerContainer::findJob(
+    Id<ServiceWorkerJob> id)
 {
     auto it = m_jobMap.find(id);
     if (it == m_jobMap.end()) {
         return nullptr;
     }
     return it->second;
+}
+
+NullableServiceWorkerRequest* ServiceWorkerContainer::findRequest(
+    Id<ServiceWorkerRequest> id)
+{
+    auto it = m_requestMap.find(id);
+    if (it == m_requestMap.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+void ServiceWorkerContainer::finishRequest(ServiceWorkerRequest* request)
+{
+    STARFISH_ASSERT(request != nullptr);
+    m_requestMap.erase(request->id);
 }
 
 } // namespace Starfish

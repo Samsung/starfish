@@ -28,11 +28,17 @@ public:
     void addParam(Archivable* param);
     void archive(Archiver& arch);
 
+    // getter
+    Archivable* param(size_t index);
+    std::string name();
+
+    // statics
     static void init();
     static void archive(Archiver& arch, Archivable*& param);
 
-    std::string name;
-    GCVector<Archivable*> params;
+private:
+    std::string m_name;
+    GCVector<Archivable*> m_params;
 };
 
 } // namespace Starfish

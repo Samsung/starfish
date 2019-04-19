@@ -29,19 +29,19 @@ class ServiceWorkerRegistrationData;
 
 class ServiceWorkerClientConnection final
     : public Connection,
-      public ServiceWorkerHostProcessInterface,
-      public ServiceWorkerClientProcessInterface {
+      public ServiceWorkerHostProcessInterface {
 public:
     ServiceWorkerClientConnection();
 
     // send
     void scheduleJob(ServiceWorkerJob* job) override;
+    void matchRegistration(ServiceWorkerRequest* request,
+                           String* clientURL) override;
 
     // receive
     void onReceived(Socket* socket, const char* data) override;
-    void resolveJobPromise(
-        ServiceWorkerJob* job,
-        ServiceWorkerRegistrationData* registration) override;
+    void resolveJobPromise(ServiceWorkerJob* job,
+                           ServiceWorkerRegistrationData* registration);
 };
 } // namespace Starfish
 

@@ -20,9 +20,10 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishArchivable__)
 #define __StarfishArchivable__
 
-namespace Starfish {
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
 
-class Archiver;
+namespace Starfish {
 
 class Archivable : public gc {
 public:
@@ -31,6 +32,41 @@ public:
     }
     virtual const char* archiveId() const = 0;
     virtual void archive(Archiver& ar) = 0;
+};
+
+struct TypeName {
+    static const char String[];
+};
+
+template <typename T>
+class GenericArchivable : public Archivable {
+public:
+    GenericArchivable(const char* archiveId)
+        : m_archiveId(archiveId)
+    {
+    }
+
+    GenericArchivable(const char* archiveId, T value)
+    {
+        m_archiveId = archiveId;
+        m_value = value;
+    }
+
+    const char* archiveId() const override
+    {
+        return m_archiveId.c_str();
+    }
+
+    void archive(Archiver& ar) override
+    {
+        ar.Member("value") & m_value;
+    }
+
+    DEFINE_GETTER_SETTER(T, value, Value);
+
+private:
+    T m_value{};
+    std::string m_archiveId;
 };
 
 } // namespace Starfish

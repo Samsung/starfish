@@ -26,6 +26,7 @@ namespace Starfish {
 class GlobalScope;
 class ServiceWorkerJob;
 class ExecutionContext;
+class ServiceWorkerRequest;
 
 enum class ServiceWorkerUpdateViaCache : unsigned {
     Imports,
@@ -49,6 +50,7 @@ using ServiceWorkerRegistrationKey = String*;
 
 using ServiceWorkerJobId = Id<ServiceWorkerJob>;
 using ServiceWorkerContextId = Id<GlobalScope>;
+using RequestId = Id<ServiceWorkerRequest>;
 
 #ifdef SERVICE_WORKER_USE_MULTI_PROCESS
 #define IPC_PROTOCOL "ipc://"

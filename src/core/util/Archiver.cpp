@@ -62,6 +62,7 @@ struct JsonReaderStackItem {
         , state(state)
         , index()
     {
+        STARFISH_ASSERT(value != nullptr);
     }
 
     const rapidjson::Value* value;
@@ -126,6 +127,8 @@ JsonReader& JsonReader::EndObject()
 
 JsonReader& JsonReader::Member(const char* name)
 {
+    STARFISH_ASSERT(name != nullptr);
+
     if (!mError) {
         if (CURRENT.IsObject() && TOP.state == JsonReaderStackItem::Started) {
             rapidjson::Value::ConstMemberIterator memberItr =
@@ -145,6 +148,8 @@ JsonReader& JsonReader::Member(const char* name)
 
 bool JsonReader::HasMember(const char* name) const
 {
+    STARFISH_ASSERT(name != nullptr);
+
     if (!mError && CURRENT.IsObject() &&
         TOP.state == JsonReaderStackItem::Started) {
         return CURRENT.HasMember(name);
@@ -276,7 +281,7 @@ JsonReader& JsonReader::SetNull()
 void JsonReader::Next()
 {
     if (!mError) {
-        assert(!STACK->empty());
+        STARFISH_ASSERT(!STACK->empty());
         STACK->pop();
 
         if (!STACK->empty() && CURRENT.IsArray()) {
@@ -347,6 +352,7 @@ JsonWriter& JsonWriter::EndObject()
 
 JsonWriter& JsonWriter::Member(const char* name)
 {
+    STARFISH_ASSERT(name != nullptr);
     WRITER->String(name, static_cast<rapidjson::SizeType>(strlen(name)));
     return *this;
 }
@@ -354,7 +360,7 @@ JsonWriter& JsonWriter::Member(const char* name)
 bool JsonWriter::HasMember(const char*) const
 {
     // This function is for JsonReader only.
-    assert(false);
+    STARFISH_ASSERT(false);
     return false;
 }
 
@@ -402,7 +408,12 @@ JsonWriter& JsonWriter::operator&(std::string& s)
 
 JsonWriter& JsonWriter::operator&(String*& s)
 {
-    WRITER->String(CSTR(s), static_cast<rapidjson::SizeType>(s->length()));
+    if (s) {
+        WRITER->String(CSTR(s), static_cast<rapidjson::SizeType>(s->length()));
+    } else {
+        WRITER->String("", static_cast<rapidjson::SizeType>(0));
+    }
+
     return *this;
 }
 

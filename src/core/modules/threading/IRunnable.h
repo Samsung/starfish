@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class IRunnable {
+class IRunnable : public gc {
 public:
     virtual ~IRunnable(){};
     virtual void run() = 0;

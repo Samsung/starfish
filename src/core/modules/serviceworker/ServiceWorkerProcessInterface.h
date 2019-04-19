@@ -23,7 +23,8 @@
 
 namespace Starfish {
 
-struct ServiceWorkerJob;
+class ServiceWorkerJob;
+class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
 
 class ServiceWorkerClientProcessInterface {
@@ -41,6 +42,8 @@ public:
     {
     }
     virtual void scheduleJob(ServiceWorkerJob* job) = 0;
+    virtual void matchRegistration(ServiceWorkerRequest* request,
+                                   String* clientURL) = 0;
 };
 }
 #endif

@@ -126,6 +126,13 @@ void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
     m_jobHandler->scheduleJob(job);
 }
 
+void ServiceWorkerHostProcess::matchRegistration(ServiceWorkerRequest* request,
+                                                 String* clientURL)
+{
+    STARFISH_ASSERT(request != nullptr);
+    STARFISH_ASSERT(clientURL != nullptr);
+}
+
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

@@ -36,8 +36,12 @@ class Document;
 class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerJob;
+class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
 class ServiceWorkerRegistrationData;
+
+typedef ServiceWorkerRequest NullableServiceWorkerRequest;
+typedef ServiceWorkerJob NullableServiceWorkerJob;
 
 class ServiceWorkerContainer : public EventTarget {
 public:
@@ -61,7 +65,7 @@ public:
     void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
                        Promise* p, ExecutionContext* client);
 
-    ServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
+    NullableServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
     ServiceWorkerJob* createJob(ServiceWorkerJobType type, String* scopeURL,
                                 String* scriptURL, Promise* p,
                                 ExecutionContext* client);
@@ -71,9 +75,14 @@ public:
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
 
+    NullableServiceWorkerRequest* findRequest(Id<ServiceWorkerRequest> id);
+    void finishRequest(ServiceWorkerRequest* request);
+
 private:
     ExecutionContext* m_executionContext;
     GCUnorderedMap<Id<ServiceWorkerJob>, ServiceWorkerJob*, IdHash> m_jobMap;
+    GCUnorderedMap<Id<ServiceWorkerRequest>, ServiceWorkerRequest*, IdHash>
+        m_requestMap;
 };
 } // namespace Starfish
 
