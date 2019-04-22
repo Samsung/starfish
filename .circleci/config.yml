@@ -60,7 +60,7 @@ jobs:
       - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.231,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge 
     steps:
       - add_ssh_keys:
@@ -69,18 +69,18 @@ jobs:
       - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
       - run:
             name: Add hosts
-            command: echo "10.113.164.231	xn--lve-6lad.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	xn--lve-6lad.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	xn--n8j6ds53lwwkrqhv28a.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www1.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www2.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www2.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www1.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	www.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.231	xn--n8j6ds53lwwkrqhv28a.web-platform.test" >> /etc/hosts |
+            command: echo "10.113.164.251	xn--lve-6lad.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	xn--lve-6lad.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	xn--n8j6ds53lwwkrqhv28a.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www1.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www2.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www2.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www1.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	www.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.251	xn--n8j6ds53lwwkrqhv28a.web-platform.test" >> /etc/hosts |
               cat /etc/hosts
       - run:
             name: Restart network
@@ -101,7 +101,7 @@ jobs:
       - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.231,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge 
     steps:
       - add_ssh_keys:
