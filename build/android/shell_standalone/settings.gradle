@@ -1,0 +1,3 @@
+include ':app'
+include ':lwe'
+project(':lwe').projectDir=new File('../aar/app')

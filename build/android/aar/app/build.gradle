@@ -1,10 +1,8 @@
-//apply plugin: 'com.android.application'
 apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 28
     defaultConfig {
-//        applicationId "com.samsung.android.lwe"
         minSdkVersion 28
         targetSdkVersion 28
         versionCode 1
@@ -18,7 +16,6 @@ android {
         ndk {
             abiFilters "arm64-v8a","armeabi-v7a"
         }
-
     }
     buildTypes {
         debug {
@@ -29,6 +26,8 @@ android {
 
         release {
             debuggable = false
+            jniDebuggable true
+            renderscriptDebuggable true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -40,16 +39,19 @@ android {
     sourceSets {
         main {
             java {
-                srcDir '../../../../../src/public/bridge/android/java'
+                srcDir '../../../../src/public/bridge/android/java'
             }
-            res.srcDirs = ['../../../../../src/public/bridge/android/res']
+            res.srcDirs = ['../../../../src/public/bridge/android/res']
         }
     }
-     libraryVariants.all { variant ->
-         variant.outputs.all { output ->
-             if (outputFile != null && outputFileName.endsWith('.aar')) {
-                 outputFileName = "lightweight-web-engine.aar"
-             }
-         }
-     }
+    lintOptions {
+        abortOnError false
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            if (outputFile != null && outputFileName.endsWith('.aar')) {
+                outputFileName = "LightweightWebEngine.aar"
+            }
+        }
+    }
 }

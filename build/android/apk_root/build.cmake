@@ -12,7 +12,6 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set (CMAKE_CXX_STANDARD 11)
 
-set (STARFISH_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../../ )
 set (ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
 
 IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
@@ -52,22 +51,15 @@ include_directories(${STARFISH_ROOT_PATH} ${STARFISH_ROOT_PATH}/inc ${STARFISH_R
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/src)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/src/api)
+include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/checked_arithmetic)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/rapidjson/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr)
 include_directories(${STARFISH_ROOT_PATH}/third_party/clipper/cpp)
 include_directories(${STARFISH_ROOT_PATH}/third_party/rapidxml)
-include_directories(${STARFISH_ROOT_PATH}/third_party/webm)
-include_directories(${STARFISH_ROOT_PATH}/third_party/libav)
-include_directories(${STARFISH_ROOT_PATH}/third_party/MP4Parse/source/include)
-include_directories(${STARFISH_ROOT_PATH}/third_party/libav/out/linux/x64/release)
-include_directories(${STARFISH_ROOT_PATH}/third_party/nanomsg/dist/include)
-include_directories(${STARFISH_ROOT_PATH}/third_party/nanomsgcpp)
 include_directories(${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox)
 include_directories(${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp)
-
 include_directories(${STARFISH_ROOT_PATH}/third_party/libtuv/include)
 
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include)
