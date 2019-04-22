@@ -1,5 +1,6 @@
 package com.samsung.lwe.shell;
 
+import android.graphics.Bitmap;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -15,11 +16,21 @@ import com.samsung.android.lwe.SemWebViewClient;
 
 import java.lang.ref.WeakReference;
 
-
 public class ShellActivity extends AppCompatActivity {
+    private static final String mTag = "Shell";
 
     private static final class ActionListener implements TextView.OnEditorActionListener {
         private final WeakReference<ShellActivity> mShellActivityWeakReference;
+
+        public class MyWebViewClient extends SemWebViewClient {
+            public void onPageStarted(SemWebView view, String url, Bitmap favicon) {
+                Log.d(mTag, "SemWebViewClient::OnPageStarted: " + url);
+            }
+
+            public void onPageFinished(SemWebView view, String url) {
+                Log.d(mTag, "SemWebViewClient:OnPageFinished: " + url);
+            }
+        }
 
         public static ActionListener newInstance(ShellActivity activity) {
             WeakReference<ShellActivity> shellActivityWeakReference = new WeakReference<>(activity);
@@ -33,13 +44,14 @@ public class ShellActivity extends AppCompatActivity {
         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
             ShellActivity shell = mShellActivityWeakReference.get();
 
-            if (shell != null ) {
+            if (shell != null) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
                     if (v.getText() != null) {
-                        Log.i("Shell", "try loadurl : " + v.getText().toString());
-                        shell.mWebView.loadUrl(v.getText().toString());
+                        String url = v.getText().toString();
+                        Log.d(mTag, "loadUrl : " + url);
+                        shell.mWebView.setWebViewClient(new MyWebViewClient());
+                        shell.mWebView.loadUrl(url);
                     }
-
                 }
             }
             return true;
@@ -64,7 +76,7 @@ public class ShellActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        Log.i("Shell", "keyCode : " + keyCode);
+        Log.d(mTag, "keyCode : " + keyCode);
         if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {
             mWebView.goBack();
             return true;

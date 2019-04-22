@@ -47,13 +47,13 @@ jobs:
       - run:
           name: Prepare binding
           command: python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
-      - run: 
+      - run:
           name: Build Debug Apk
-          working_directory: build/android/build_shell/
+          working_directory: build/android/shell_standalone/
           command: ./gradlew :app:assembleDebug
       - run:
           name: Build Release Apk
-          working_directory: build/android/build_shell/
+          working_directory: build/android/shell_standalone/
           command: ./gradlew :app:assembleRelease
   build_x64_debug:
     docker:
@@ -61,7 +61,7 @@ jobs:
     working_directory: ~/starfish-workflows
     environment:
         no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
-    resource_class: xlarge 
+    resource_class: xlarge
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -102,7 +102,7 @@ jobs:
     working_directory: ~/starfish-workflows
     environment:
         no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
-    resource_class: xlarge 
+    resource_class: xlarge
     steps:
       - add_ssh_keys:
           fingerprints:

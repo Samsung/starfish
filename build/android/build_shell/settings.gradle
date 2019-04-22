@@ -1,3 +1,0 @@
-include ':app'
-include ':lwe'
-project(':lwe').projectDir=new File('../build_aar/app/app')
