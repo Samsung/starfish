@@ -1987,7 +1987,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                             m_owner->node()
                                                 ->webView()
                                                 ->lastRenderingTick() >
-                                        WebView::
+                                        (uint64_t) WebView::
                                                 g_fillingGraphicsBufferTileFrameTimeLimitInMS *
                                             1000) {
                                         STARFISH_LOG_INFO(
