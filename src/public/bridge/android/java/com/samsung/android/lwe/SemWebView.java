@@ -23,7 +23,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -63,7 +66,7 @@ import dalvik.system.PathClassLoader;
  *
  * @since SEP 10.2
  */
-public class SemWebView extends AbsoluteLayout {
+public class SemWebView extends SurfaceView {
 
     private static PathClassLoader pcl = null;
     /**
@@ -71,7 +74,7 @@ public class SemWebView extends AbsoluteLayout {
      */
     public static final String PACKAGE_NAME = "com.samsung.android.lwe";
     private static final String LweWebViewImplName = "com.samsung.android.lwe.LweWebViewImpl";
-    private static boolean USE_LWE = false;
+    private static boolean USE_LWE = true;
 
     /**
      * @hide
@@ -97,39 +100,30 @@ public class SemWebView extends AbsoluteLayout {
             USE_LWE = true;
         }catch (Exception e){}
         */
-        USE_LWE = true;
         return USE_LWE;
     }
 
     private LweWebView getLWEWebViewInstance(Context context, AttributeSet attrs, int defStyle) {
-        if (mLWEWebView == null) {
-            LweWebView result = null;
-            // Should uncomment following code for downloadable mode.
-            /*
-            try {
-                if (pcl == null) {
-                    String path = getContext().getPackageManager().getPackageInfo(PACKAGE_NAME, 0).applicationInfo.nativeLibraryDir;
-                    String dexpath = getContext().getPackageManager().getPackageInfo(PACKAGE_NAME, 0).applicationInfo.publicSourceDir;
-                    pcl = new PathClassLoader(dexpath, path, getContext().getClassLoader());
-                }
-                Class<?> cls = pcl.loadClass(LweWebViewImplName);
-                Constructor<?> cons = cls.getConstructor();
-                result = (LweWebView)cons.newInstance();
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.e(sTag, "apk is not installed");
-                e.printStackTrace();
-            } catch (Exception e) {
-                Log.e(sTag, "apk cannot be loaded");
-                e.printStackTrace();
-            }
-            */
-            if (result == null) {
-                result = new LweWebViewImpl(context, attrs, defStyle);
-            }
-            return result;
+        if (mLWEWebView != null) {
+            return mLWEWebView;
         }
 
-        return mLWEWebView;
+        return new LweWebViewImpl();
+    }
+
+
+    /**
+     * Creates a new InputConnection for an InputMethod to interact with the WebView.
+     *
+     * @param outAttrs Fill in with attribute information about the connection.
+     * @return InputConnection
+     * @since Lightweight Web Engine 1.0
+     */
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        if (mLWEWebView != null) {
+            return mLWEWebView.getInputConnectionInstance(this);
+        }
+        return null;
     }
 
     /**
@@ -167,10 +161,9 @@ public class SemWebView extends AbsoluteLayout {
         super(context, attrs, defStyle);
         if (checkLWEInstallation()) {
             mLWEWebView = getLWEWebViewInstance(context, attrs, defStyle);
-            if (mLWEWebView != null)
+            if (mLWEWebView != null) {
                 mLWEWebView.initWebView(this);
-
-            addView((View)mLWEWebView);
+            }
         } else {
             mAndroidWebView = new WebView(context, attrs, defStyle);
             mAndroidWebView.getSettings().setJavaScriptEnabled(true);
@@ -179,7 +172,6 @@ public class SemWebView extends AbsoluteLayout {
                                              public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                                                  return false;
                                              }});
-            addView(mAndroidWebView);
         }
     }
 
@@ -446,7 +438,9 @@ public class SemWebView extends AbsoluteLayout {
 
                 @Override
                 public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                    mSemWebViewClient.onReceivedError(mSemWebview, new WebResourceRequestImpl(request.getUrl().toString()), new SemWebResourceError(error.getErrorCode(), error.getDescription()));
+                    mSemWebViewClient.onReceivedError(
+                        mSemWebview, new WebResourceRequestImpl(request.getUrl().toString()),
+                        new SemWebResourceError(error.getErrorCode(), error.getDescription()));
                 }
 
                 @Override

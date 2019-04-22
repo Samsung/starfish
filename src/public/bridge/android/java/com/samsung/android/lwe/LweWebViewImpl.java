@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.ArrayList;
 
-public class LweWebViewImpl extends SurfaceView implements LweWebView {
+public class LweWebViewImpl implements LweWebView {
     private static String sTag = "LweWebViewImpl";
 
     static {
@@ -166,37 +166,21 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                     return "ERROR_UNKNOWN";
             }
         }
-
     }
 
     public long getWebViewInternalHandle() {
         return mWebViewInternalHandle;
     }
 
-    /**
-     * Creates a new InputConnection for an InputMethod to interact with the WebView.
-     *
-     * @param outAttrs Fill in with attribute information about the connection.
-     * @return InputConnection
-     * @since Lightweight Web Engine 1.0
-     */
-    @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        return new ImeInputConnection(this);
+    public LweWebViewImpl() {
     }
 
-    public LweWebViewImpl(Context context, AttributeSet attrs) {
-        super(context, attrs);
-
+    public InputConnection getInputConnectionInstance(View view){
+        return onCreateInputConnection(view);
     }
 
-    public LweWebViewImpl(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-
-    }
-
-    public LweWebViewImpl(Context context) {
-        super(context);
+    public InputConnection onCreateInputConnection(View view) {
+        return new ImeInputConnection(view);
     }
 
     @Override
@@ -259,7 +243,6 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
             }
             return super.finishComposingText();
         }
-
     }
 
     public String getDefaultUserAgent(Context context) {
@@ -288,7 +271,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
     public void setCacheMode(int mode) {
         if (mode == SemWebSettings.LOAD_DEFAULT ||
-                mode == SemWebSettings.LOAD_NO_CACHE) {
+            mode == SemWebSettings.LOAD_NO_CACHE) {
             if (mWebViewInternalHandle != 0) {
                 setCacheMode(mWebViewInternalHandle, mode);
             }
@@ -327,14 +310,15 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     public void initWebView(final View appView) {
         mSurfaceIsReady = false;
         if (appView instanceof SemWebView) {
-            mLWEView = (SemWebView) appView;
+            mLWEView = (SemWebView)appView;
         } else {
             return;
         }
-        Context appContext = getContext();
 
-        setFocusable(true);
-        setFocusableInTouchMode(true);
+        Context appContext = mLWEView.getContext();
+
+        mLWEView.setFocusable(true);
+        mLWEView.setFocusableInTouchMode(true);
 
         mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
@@ -354,7 +338,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 create(mWindowWidth, mWindowHeight, sDpr,
                         initialUAString, sLocale, sTimezone,
                         localStoragePath, cookiePath, cachePath);
-        getHolder().addCallback(
+        mLWEView.getHolder().addCallback(
                 new SurfaceHolder.Callback() {
                     @Override
                     public void surfaceCreated(SurfaceHolder holder) {
@@ -394,7 +378,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 }
         );
 
-        setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (mWebViewInternalHandle != 0) {
@@ -407,7 +391,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
             }
         });
 
-        setOnKeyListener(new View.OnKeyListener() {
+        mLWEView.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 char keyValue = (char) event.getUnicodeChar();
@@ -457,7 +441,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
             }
         });
 
-        setOnTouchListener(new View.OnTouchListener() {
+        mLWEView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, final MotionEvent motionEvent) {
                 view.performClick();
@@ -468,8 +452,8 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 final float viewX = screenX - location[0];
                 final float viewY = screenY - location[1];
 
-                if (hasFocus() == false) {
-                    requestFocus();
+                if (mLWEView.hasFocus() == false) {
+                    mLWEView.requestFocus();
                 }
 
 
@@ -487,15 +471,15 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 return true;
             }
         });
-        addOnAttachStateChangeListener(new StateChangeListener());
+        mLWEView.addOnAttachStateChangeListener(new StateChangeListener());
     }
 
     private void showDropdownMenu(final String[] list, final int checkedPosition) {
-        Handler handler = new Handler(getContext().getMainLooper());
+        Handler handler = new Handler(mLWEView.getContext().getMainLooper());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
                 builder.setSingleChoiceItems(list, checkedPosition,
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -515,11 +499,11 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     }
 
     private void showAlert(final String title, final String message) {
-        Handler handler = new Handler(getContext().getMainLooper());
+        Handler handler = new Handler(mLWEView.getContext().getMainLooper());
         handler.post(new Runnable() {
             @Override
             public void run() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
                 builder.setTitle(title);
                 builder.setMessage(message);
                 builder.setPositiveButton("OK", null);
@@ -540,7 +524,8 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     private void onReceivedError(int errorCode, String url) {
         if (mWebViewClient != null) {
             mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(url),
-                    new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode), ErrorConverter.covertErrorDescription(errorCode)));
+                    new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode),
+                                            ErrorConverter.covertErrorDescription(errorCode)));
         }
     }
 
@@ -583,17 +568,17 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     private void showSoftKeyboard() {
         if (mLWEView != null) {
             if (mIMM == null) {
-                mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                mIMM = (InputMethodManager)mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             }
-            mIMM.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
+            mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
             mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
         }
     }
 
     private void hideSoftKeyboard() {
         if (mLWEView != null && mIMM != null) {
-            mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            mIMM.hideSoftInputFromWindow(getWindowToken(), 0);
+            mIMM = (InputMethodManager)mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(), 0);
             mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
         }
     }
@@ -799,7 +784,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         if (mSurfaceIsReady) {
             Canvas canvas = null;
             try {
-                canvas = getHolder().lockCanvas();
+                canvas = mLWEView.getHolder().lockCanvas();
                 if (canvas != null) {
                     Paint paint = new Paint();
                     paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
@@ -810,8 +795,9 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 Log.e(sTag, "failed to onRendered");
                 e.printStackTrace();
             } finally {
-                if (canvas != null)
-                    getHolder().unlockCanvasAndPost(canvas);
+                if (canvas != null) {
+                    mLWEView.getHolder().unlockCanvasAndPost(canvas);
+                }
             }
         }
     }
