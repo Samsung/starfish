@@ -668,11 +668,33 @@ void LayoutContext::registerFirstLineAscender(FrameBlockBox* owner,
                 // TODO: Because of the table's specific implementation,
                 // we can't make use of line ascender in share.
                 // So here we make different version of saving ascender only.
+
+                size_t index = 0;
+                for (size_t i = 0; i < owner->lineBoxes().size(); i++) {
+                    if (owner->lineBoxes()[i] == lineBox) {
+                        index = i;
+                        break;
+                    }
+                }
+
+                AscenderInfo info;
+                info.m_block = owner;
+                info.m_lineIndex = index;
+
                 (*c.m_firstLineAscenders)[blockBox] =
-                    std::make_pair(lineBox, ascender);
+                    std::make_pair(info, ascender);
             }
         }
     }
+}
+
+static LineBox* findLineBox(FrameBlockBox* fb, size_t index)
+{
+    const auto& lb = fb->lineBoxes();
+    if (index < lb.size()) {
+        return lb[index];
+    }
+    return nullptr;
 }
 
 Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
@@ -688,7 +710,15 @@ Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::firstLineAscender(
 
     auto l = iter->second;
     c.m_firstLineAscenders->erase(iter);
-    return l;
+
+    LineBox* lb = findLineBox(l.first.m_block, l.first.m_lineIndex);
+
+    if (lb) {
+        return Nullable<std::pair<LineBox*, LayoutUnit>>(
+            std::make_pair(lb, l.second));
+    }
+
+    return Nullable<std::pair<LineBox*, LayoutUnit>>();
 }
 
 void LayoutContext::tempReigsterFirstLineAscender(
@@ -702,7 +732,23 @@ void LayoutContext::tempReigsterFirstLineAscender(
         (*c.m_tempAscenders).erase(iter);
     }
 
-    (*c.m_tempAscenders).insert(std::make_pair(cellBox, ascenderInfo));
+    FrameBlockBox* owner =
+        ascenderInfo.first->layoutParent()->asFrameBlockBox();
+    size_t index = 0;
+    for (size_t i = 0; i < owner->lineBoxes().size(); i++) {
+        if (owner->lineBoxes()[i] == ascenderInfo.first) {
+            index = i;
+            break;
+        }
+    }
+
+    AscenderInfo info;
+    info.m_block = owner;
+    info.m_lineIndex = index;
+
+    (*c.m_tempAscenders)
+        .insert(
+            std::make_pair(cellBox, std::make_pair(info, ascenderInfo.second)));
 }
 
 Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::tempFirstLineAscender(
@@ -714,7 +760,15 @@ Nullable<std::pair<LineBox*, LayoutUnit>> LayoutContext::tempFirstLineAscender(
         return Nullable<std::pair<LineBox*, LayoutUnit>>();
     }
 
-    return it->second;
+    LineBox* lb =
+        findLineBox(it->second.first.m_block, it->second.first.m_lineIndex);
+
+    if (lb) {
+        return Nullable<std::pair<LineBox*, LayoutUnit>>(
+            std::make_pair(lb, it->second.second));
+    }
+
+    return Nullable<std::pair<LineBox*, LayoutUnit>>();
 }
 
 Nullable<PreferredWidthValue> LayoutContext::preferredWidthInfo(
@@ -889,19 +943,10 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
     , result(result)
 {
     if (sourceStackingContext->owner()->shouldApplyOverflow()) {
-        ComputedStyle* cs = sourceStackingContext->owner()->style();
-        bool overflowXWasApplyed =
-            cs->overflowX() != OverflowValue::VisibleOverflow;
-        bool overflowYWasApplyed =
-            cs->overflowY() != OverflowValue::VisibleOverflow;
+        LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
 
-        if (overflowXWasApplyed || overflowYWasApplyed) {
-            LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
-
-            boundMaxExtentDueToOverflow.push_back(
-                std::make_tuple(computeBoxExtent(rt, SkMatrix::I()),
-                                overflowXWasApplyed, overflowYWasApplyed));
-        }
+        boundMaxExtentDueToOverflow.push_back(
+            std::make_tuple(computeBoxExtent(rt, SkMatrix::I()), true));
     }
 }
 
@@ -910,28 +955,9 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
     LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
 
     for (size_t i = 0; i < boundMaxExtentDueToOverflow.size(); i++) {
-        LayoutRect rt = std::get<0>(boundMaxExtentDueToOverflow[i]);
-
-        if (std::get<1>(boundMaxExtentDueToOverflow[i])) { // x
-            if (tmp.x() < rt.x()) {
-                tmp =
-                    LayoutRect(rt.x(), tmp.y(),
-                               tmp.width() - (rt.x() - tmp.x()), tmp.height());
-            }
-
-            if (tmp.maxX() > rt.maxX()) {
-                tmp.setWidth(tmp.width() - (tmp.maxX() - rt.maxX()));
-            }
-        }
-
-        if (std::get<2>(boundMaxExtentDueToOverflow[i])) { // y
-            if (tmp.y() < rt.y()) {
-                tmp = LayoutRect(tmp.x(), rt.y(), tmp.width(),
-                                 tmp.height() - (rt.y() - tmp.y()));
-            }
-            if (tmp.maxY() > rt.maxY()) {
-                tmp.setHeight(tmp.height() - (tmp.maxY() - rt.maxY()));
-            }
+        if (std::get<1>(boundMaxExtentDueToOverflow[i])) {
+            tmp = LayoutRect::overlappedRect(
+                tmp, std::get<0>(boundMaxExtentDueToOverflow[i]));
         }
     }
 
@@ -955,8 +981,7 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
     , fragmentBox(fragmentBox)
     , transformMatrixBefore(ctx.tranformMatrix)
     , shouldStopComputingBecauseMatrixInvalidFromHere(false)
-    , overflowXWasApplyed(false)
-    , overflowYWasApplyed(false)
+    , overflowWasApplyed(false)
 {
     if (ctx.fragmentBoxStack.size() &&
         ctx.fragmentBoxStack.back()->isFrameBlockBox()) {
@@ -1019,16 +1044,11 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
     }
 
     if (fragmentBox->shouldApplyOverflow()) {
-        overflowXWasApplyed = cs->overflowX() != OverflowValue::VisibleOverflow;
-        overflowYWasApplyed = cs->overflowY() != OverflowValue::VisibleOverflow;
-
-        if (overflowXWasApplyed || overflowYWasApplyed) {
-            LayoutRect rt = fragmentBox->frameVisibleRect();
-
-            ctx.boundMaxExtentDueToOverflow.push_back(
-                std::make_tuple(computeBoxExtent(rt, ctx.tranformMatrix),
-                                overflowXWasApplyed, overflowYWasApplyed));
-        }
+        overflowWasApplyed = true;
+        ctx.boundMaxExtentDueToOverflow.push_back(
+            std::make_tuple(computeBoxExtent(fragmentBox->frameVisibleRect(),
+                                             ctx.tranformMatrix),
+                            true));
     }
 }
 Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
@@ -1036,7 +1056,7 @@ Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
     ctx.fragmentBoxStack.pop_back();
 
     ctx.tranformMatrix = transformMatrixBefore;
-    if (overflowXWasApplyed || overflowYWasApplyed) {
+    if (overflowWasApplyed) {
         ctx.boundMaxExtentDueToOverflow.pop_back();
     }
 }
@@ -1156,7 +1176,10 @@ void Frame::computeShouldApplyOverflow()
             (cs->overflowY() != OverflowValue::VisibleOverflow);
     } else {
         m_flags.m_shouldApplyOverflow = false;
-        ;
+    }
+
+    if (cs && cs->display() == DisplayValue::InlineDisplayValue) {
+        m_flags.m_shouldApplyOverflow = false;
     }
 }
 

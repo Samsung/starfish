@@ -457,6 +457,8 @@ private:
         }
     }
 
+    void computeLayoutPaintingDirty();
+
     void initStorage();
 
     PlatformWindow* m_platformWindow;
@@ -495,6 +497,7 @@ private:
     bool m_didFirstRenderingAfterWakeup;
 
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
+    GCVector<BrowsingContext*> m_browsingContextsDidLayout;
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
 

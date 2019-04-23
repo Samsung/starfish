@@ -64,7 +64,7 @@ def _gen_diff(outs):
     subprocess.call(diff_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
     print "Check 'diff.png'"
 
-def wpt_tc_handler(tc_file, output, show_progress=True):
+def wpt_tc_handler(tc_file, output, err, show_progress=True):
     is_pass = False
     result = ""
     tc_expected_file = wpt_exp_namer(tc_file) + ".txt"

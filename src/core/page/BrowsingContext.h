@@ -292,7 +292,12 @@ private:
 
     void setNeedsRendering();
     void registerNeedsLayoutInWebView();
-    void unRegisterNeedsLayoutInWebView();
+    void unregisterNeedsLayoutInWebView();
+
+    void registerDidLayoutInWebView();
+    void unregisterDidLayoutInWebView();
+
+    void computeLayoutPaintingDirty();
 
     WebView* m_webView;
     Window* m_window;

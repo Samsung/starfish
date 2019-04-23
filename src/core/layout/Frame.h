@@ -266,6 +266,11 @@ struct PreferredWidthValue {
 
 class LayoutContext {
 public:
+    struct AscenderInfo {
+        FrameBlockBox* m_block;
+        size_t m_lineIndex;
+    };
+
     LayoutContext(Starfish* starfish, FrameDocument* frameDocument)
         : m_starfish(starfish)
         , m_frameDocument(frameDocument)
@@ -305,13 +310,14 @@ public:
             std::unordered_map<Frame*, FrameBlockBox*>* s4 =
                 new std::unordered_map<Frame*, FrameBlockBox*>();
             std::vector<FrameBlockBox*>* s5 = new std::vector<FrameBlockBox*>();
-            std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
-                s6 = new std::unordered_map<FrameBlockBox*,
-                                            std::pair<LineBox*, LayoutUnit>>();
+            std::unordered_map<FrameBlockBox*,
+                               std::pair<AscenderInfo, LayoutUnit>>* s6 =
+                new std::unordered_map<FrameBlockBox*,
+                                       std::pair<AscenderInfo, LayoutUnit>>();
             std::unordered_map<FrameTableCellBox*,
-                               std::pair<LineBox*, LayoutUnit>>* s7 =
+                               std::pair<AscenderInfo, LayoutUnit>>* s7 =
                 new std::unordered_map<FrameTableCellBox*,
-                                       std::pair<LineBox*, LayoutUnit>>();
+                                       std::pair<AscenderInfo, LayoutUnit>>();
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>* s8 =
                 new std::unordered_map<PreferredWidthKey,
                                        PreferredWidthValue>();
@@ -587,10 +593,12 @@ private:
             std::unordered_map<FrameBlockBox*, LayoutUnit>* lineBoxAscenders,
             std::unordered_map<Frame*, FrameBlockBox*>* firstLineCandidates,
             std::vector<FrameBlockBox*>* blockBoxAligningFirstLineStack,
-            std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
+            std::unordered_map<FrameBlockBox*,
+                               std::pair<AscenderInfo, LayoutUnit>>*
                 firstLineAscenders,
             std::unordered_map<FrameTableCellBox*,
-                               std::pair<LineBox*, LayoutUnit>>* tempAscenders,
+                               std::pair<AscenderInfo, LayoutUnit>>*
+                tempAscenders,
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
                 preferredWidthValues,
             std::unordered_map<FrameBox*, LayoutUnit>* contentHeights)
@@ -621,9 +629,10 @@ private:
         std::unordered_map<FrameBlockBox*, LayoutUnit>* m_lineBoxAscenders;
         std::unordered_map<Frame*, FrameBlockBox*>* m_firstLineCandidates;
         std::vector<FrameBlockBox*>* m_blockBoxAligningAtFirstBaselineStack;
-        std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
+        std::unordered_map<FrameBlockBox*, std::pair<AscenderInfo, LayoutUnit>>*
             m_firstLineAscenders;
-        std::unordered_map<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
+        std::unordered_map<FrameTableCellBox*,
+                           std::pair<AscenderInfo, LayoutUnit>>*
             m_tempAscenders;
         std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
             m_preferredWidthValues;
@@ -1663,8 +1672,7 @@ public:
         SkMatrix& tranformMatrix;
         LayoutRect& result;
         std::vector<FrameBox*> fragmentBoxStack;
-        std::vector<std::tuple<LayoutRect, bool, bool>>
-            boundMaxExtentDueToOverflow;
+        std::vector<std::tuple<LayoutRect, bool>> boundMaxExtentDueToOverflow;
 
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   StackingContext* sourceStackingContext,
@@ -1692,8 +1700,7 @@ public:
         FrameBox* fragmentBox;
         SkMatrix transformMatrixBefore;
         bool shouldStopComputingBecauseMatrixInvalidFromHere;
-        bool overflowXWasApplyed;
-        bool overflowYWasApplyed;
+        bool overflowWasApplyed;
         ComputeVisibleRectContextFragment(ComputeVisibleRectContext& ctx,
                                           FrameBox* fragmentBox);
         ~ComputeVisibleRectContextFragment();

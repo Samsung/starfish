@@ -29,6 +29,20 @@ class FrameDocument;
 
 class LayoutRepaintTracker {
 public:
+    class ComputeOverflow {
+    public:
+        ComputeOverflow(LayoutRepaintTracker& tracker, Frame* frame,
+                        FrameBox* stackingContextOwner);
+        ~ComputeOverflow();
+
+        static void reduceRect(LayoutRepaintTracker& tracker, LayoutRect& rt,
+                               FrameBox* stackingContextOwner);
+
+    private:
+        LayoutRepaintTracker& tracker;
+        Frame* frame;
+    };
+
     struct InlineLayoutResultItem : public gc {
         LayoutRect m_frameRect;
         size_t m_textStartEndValue;
@@ -81,6 +95,9 @@ protected:
 
     // computed dirty areas
     std::unordered_map<Node*, LayoutRect> m_dirtyAreaPerStackingContextOwners;
+
+    std::vector<std::tuple<LayoutRect, FrameBox*>>
+        m_boundMaxExtentDueToOverflow;
 };
 }
 
