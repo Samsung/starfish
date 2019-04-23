@@ -71,7 +71,7 @@ def case_runner(tc):
         print "stderr=>"
         print starfish_err
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
-    return __opts.tc_handler(tc_file, starfish_output, __opts.show_progress)
+    return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress)
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
@@ -90,7 +90,7 @@ def run_parallel(list_file, nproc=None, width=None, height=None, regression=None
                                   result_handler=result_handler)
 
 
-def default_tc_handler(tc_file, output, show_progress=True):
+def default_tc_handler(tc_file, output, err, show_progress=True):
     word_pass = len(RE_PASS.findall(output))
     word_fail = len(RE_FAIL.findall(output))
     if word_pass != 0 and word_fail == 0:

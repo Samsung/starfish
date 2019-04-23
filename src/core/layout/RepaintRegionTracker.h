@@ -30,6 +30,46 @@ namespace Starfish {
 
 class RepaintRegionTracker {
 public:
+    class ComputeOverflow {
+    public:
+        ComputeOverflow(RepaintRegionTracker& tracker, FrameBox* frame,
+                        const SkMatrix& matrix)
+            : tracker(tracker)
+            , frame(frame)
+        {
+            if (frame->shouldApplyOverflow()) {
+                if (tracker.m_willCompositing) {
+                    tracker.m_boundMaxExtentDueToOverflow.push_back(
+                        std::make_tuple(
+                            computeBoxExtent(
+                                LayoutRect(0, 0, frame->width(),
+                                           frame->height()),
+                                frame->computeMatrixOnGraphicsBuffer()),
+                            tracker.findNearestStackingContextOwner(frame)
+                                ->stackingContext()));
+                } else {
+                    tracker.m_boundMaxExtentDueToOverflow.push_back(
+                        std::make_tuple(
+                            computeBoxExtent(LayoutRect(0, 0, frame->width(),
+                                                        frame->height()),
+                                             matrix),
+                            nullptr));
+                }
+            }
+        }
+
+        ~ComputeOverflow()
+        {
+            if (frame->shouldApplyOverflow()) {
+                tracker.m_boundMaxExtentDueToOverflow.pop_back();
+            }
+        }
+
+    private:
+        RepaintRegionTracker& tracker;
+        FrameBox* frame;
+    };
+
     RepaintRegionTracker(
         FrameBox* rootFrame, bool needsFullPainting,
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
@@ -116,8 +156,15 @@ public:
     void notifyDirty(FrameBox* frame, StackingContext* sc,
                      const SkMatrix& currentMatrix, LayoutRect r)
     {
-        LayoutRect r2 = computeBoxExtent(r, currentMatrix);
-        m_repaintRegionPerGraphicsLayer[nullptr].unite(r2);
+        LayoutRect tmp = computeBoxExtent(r, currentMatrix);
+
+        for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
+            tmp = LayoutRect::overlappedRect(
+                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
+        }
+
+        m_repaintRegionPerGraphicsLayer[nullptr].unite(tmp);
+
         if (m_willCompositing) {
             if (sc && sc->needsGraphicsBuffer()) {
                 m_repaintRegionPerGraphicsLayer[frame->node()].unite(
@@ -131,6 +178,22 @@ public:
                 } else {
                     r = computeBoxExtent(
                         r, frame->computeMatrixOnGraphicsBuffer());
+
+                    if (frame->layoutParent() != nullptr) {
+                        StackingContext* s =
+                            findNearestStackingContextOwner(frame)
+                                ->stackingContext();
+                        for (size_t i = 0;
+                             i < m_boundMaxExtentDueToOverflow.size(); i++) {
+                            if (std::get<1>(m_boundMaxExtentDueToOverflow[i]) ==
+                                s) {
+                                r = LayoutRect::overlappedRect(
+                                    r, std::get<0>(
+                                           m_boundMaxExtentDueToOverflow[i]));
+                            }
+                        }
+                    }
+
                     m_repaintRegionPerGraphicsLayer
                         [findNearestStackingContextOwner(frame)->node()]
                             .unite(r);
@@ -155,8 +218,11 @@ protected:
     bool m_willCompositing;
     bool m_needsFullPainting;
     std::unordered_map<Node*, LayoutRect> m_repaintRegionPerGraphicsLayer;
+    std::vector<std::tuple<LayoutRect, StackingContext*>>
+        m_boundMaxExtentDueToOverflow;
     LayoutRect m_screenRect;
     PrevDrawnStackingContextInfoMap& m_prevDrawnStackingContextInfoMap;
+
     void trackRepaintRegion(FrameBox* frame, SkMatrix currentMatrix)
     {
         bool needsRepainting = frame->needsPainting();
@@ -352,6 +418,8 @@ protected:
                 notifyDirty(frame, sc, currentMatrix, r);
             }
         }
+
+        ComputeOverflow o(*this, frame, currentMatrix);
 
         if (frame->isFrameReplaced() &&
             frame->asFrameReplaced()->isFrameReplacedIFrame()) {

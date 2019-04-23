@@ -28,6 +28,39 @@
 
 namespace Starfish {
 
+LayoutRepaintTracker::ComputeOverflow::ComputeOverflow(
+    LayoutRepaintTracker& tracker, Frame* frame, FrameBox* stackingContextOwner)
+    : tracker(tracker)
+    , frame(frame)
+{
+    if (frame->shouldApplyOverflow()) {
+        tracker.m_boundMaxExtentDueToOverflow.push_back(
+            std::make_tuple(frame->asFrameBox()->absoluteRectIncludingScroll(
+                                stackingContextOwner),
+                            stackingContextOwner));
+    }
+}
+
+LayoutRepaintTracker::ComputeOverflow::~ComputeOverflow()
+{
+    if (frame->shouldApplyOverflow()) {
+        tracker.m_boundMaxExtentDueToOverflow.pop_back();
+    }
+}
+
+void LayoutRepaintTracker::ComputeOverflow::reduceRect(
+    LayoutRepaintTracker& tracker, LayoutRect& rt,
+    FrameBox* stackingContextOwner)
+{
+    for (size_t i = 0; i < tracker.m_boundMaxExtentDueToOverflow.size(); i++) {
+        if (std::get<1>(tracker.m_boundMaxExtentDueToOverflow[i]) ==
+            stackingContextOwner) {
+            rt = LayoutRect::overlappedRect(
+                rt, std::get<0>(tracker.m_boundMaxExtentDueToOverflow[i]));
+        }
+    }
+}
+
 static void collectInlineBoxes(
     InlineBoxLayoutParentBox* parent,
     LayoutRepaintTracker::InlineLayoutResult* oldResult,
@@ -81,7 +114,8 @@ static void collectInlineBoxes(
 }
 
 static void traceRepaintRegionJob(
-    Frame* currentFrame, FrameBox* lastStackingContextOwner,
+    LayoutRepaintTracker& tracker, Frame* currentFrame,
+    FrameBox* lastStackingContextOwner,
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>>& oldResultMap,
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>>& newLayoutResultMap,
     GCVector<std::tuple<FrameBlockBox*, FrameBox*,
@@ -124,6 +158,14 @@ static void traceRepaintRegionJob(
             if (iter != oldResultMap.end()) {
                 rt.unite(iter->second.first);
             }
+
+            if (frameRectChanged) {
+                iter->second.first.setX(LayoutUnit::min());
+                iter->second.first.setY(LayoutUnit::min());
+            }
+
+            LayoutRepaintTracker::ComputeOverflow::reduceRect(
+                tracker, rt, lastStackingContextOwner);
 
             Node* stackingContextOwner = lastStackingContextOwner->node();
             auto iter2 =
@@ -190,6 +232,9 @@ static void traceRepaintRegionJob(
                 }
             }
 
+            LayoutRepaintTracker::ComputeOverflow::reduceRect(
+                tracker, dirtyRect, lastStackingContextOwner);
+
             if (dirtyRect.size().width()) {
                 gotPaintingDirty = true;
                 Node* stackingContextOwner = lastStackingContextOwner->node();
@@ -214,11 +259,14 @@ static void traceRepaintRegionJob(
             std::move(inlineResult))));
     }
 
+    LayoutRepaintTracker::ComputeOverflow o(tracker, currentFrame,
+                                            lastStackingContextOwner);
+
     Frame* f = currentFrame->firstChild();
     while (f) {
         traceRepaintRegionJob(
-            f, lastStackingContextOwner, oldResultMap, newLayoutResultMap,
-            oldInlineResultMap, newInlineResultMap,
+            tracker, f, lastStackingContextOwner, oldResultMap,
+            newLayoutResultMap, oldInlineResultMap, newInlineResultMap,
             dirtyAreaMapPerStackingContext, rootedNodeSet, gotPaintingDirty);
         f = f->next();
     }
@@ -232,7 +280,7 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
     LayoutRect dirtyArea;
     bool gotPaintingDirty = false;
     auto oldRootedNodeSet = std::move(m_rootedNodeSet);
-    traceRepaintRegionJob(fd, fd, m_lastLayoutResult, newResult,
+    traceRepaintRegionJob(*this, fd, fd, m_lastLayoutResult, newResult,
                           m_lastInlineTextLayoutResult, newInlineLayoutResult,
                           m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet,
                           gotPaintingDirty);

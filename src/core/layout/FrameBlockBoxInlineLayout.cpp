@@ -1575,8 +1575,6 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->mergeTextDecorationData(childBox->style());
             }
 
-            bool overflowApplied = childBox->shouldApplyOverflow();
-
             if (childBox->style()->visibility() ==
                 VisibilityValue::HiddenVisibilityValue) {
                 canvas->setVisible(false);
@@ -1584,23 +1582,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 canvas->setVisible(true);
             }
 
-            if (overflowApplied) {
-                canvas->save();
-                auto clipRect =
-                    childBox->makeRect(BoxValue::PaddingBoxBoxValue);
-                clipRect.setX(clipRect.x() + dx);
-                clipRect.setY(clipRect.y() + dy);
-                canvas->clip(clipRect);
-                const LayoutRect rect(0, 0, childBox->width(),
-                                      childBox->height());
-                childBox->applyBorderRadiusClippingIfNeeds(canvas, rect);
-            }
-
             childBox->paintInlineContent(canvas, stage, dx, dy);
-
-            if (overflowApplied) {
-                canvas->restore();
-            }
 
             canvas->restore();
         } else if (childBox->isInlineTextBox()) {

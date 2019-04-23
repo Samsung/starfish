@@ -499,6 +499,21 @@ void BrowsingContext::buildFrameTreeIfNeeds()
     }
 }
 
+void BrowsingContext::computeLayoutPaintingDirty()
+{
+    INSTALL_PROFILE_TIMER("trace repaint region");
+
+    bool gotPaintingDirty =
+        m_layoutRepaintTracker.traceRepaintRegion(document()
+                                                      ->frame()
+                                                      ->asFrameBox()
+                                                      ->asFrameBlockBox()
+                                                      ->asFrameDocument());
+    if (gotPaintingDirty) {
+        setNeedsPainting();
+    }
+}
+
 bool BrowsingContext::layoutIfNeeded()
 {
     buildFrameTreeIfNeeds();
@@ -517,15 +532,8 @@ bool BrowsingContext::layoutIfNeeded()
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
 
-        bool gotPaintingDirty =
-            m_layoutRepaintTracker.traceRepaintRegion(document()
-                                                          ->frame()
-                                                          ->asFrameBox()
-                                                          ->asFrameBlockBox()
-                                                          ->asFrameDocument());
-        if (gotPaintingDirty) {
-            setNeedsPainting();
-        }
+        registerDidLayoutInWebView();
+
         webView()->setNeedsComputeStackingContextProperties();
         m_needsLayout = false;
         ret = true;
@@ -730,7 +738,8 @@ void BrowsingContext::dispose()
     } else {
         webView()->messageLoop()->clearPendingIdlers(m_window);
     }
-    unRegisterNeedsLayoutInWebView();
+    unregisterNeedsLayoutInWebView();
+    unregisterDidLayoutInWebView();
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -1822,11 +1831,28 @@ void BrowsingContext::registerNeedsLayoutInWebView()
     }
 }
 
-void BrowsingContext::unRegisterNeedsLayoutInWebView()
+void BrowsingContext::unregisterNeedsLayoutInWebView()
 {
     if (isTopLevelBrowsingContext()) {
         return;
     }
+    auto& v = m_webView->m_browsingContextsNeedsLayout;
+    auto iter = std::find(v.begin(), v.end(), this);
+    if (iter != v.end()) {
+        v.erase(iter);
+    }
+}
+
+void BrowsingContext::registerDidLayoutInWebView()
+{
+    auto& v = m_webView->m_browsingContextsDidLayout;
+    if (v.end() == std::find(v.begin(), v.end(), this)) {
+        v.push_back(this);
+    }
+}
+
+void BrowsingContext::unregisterDidLayoutInWebView()
+{
     auto& v = m_webView->m_browsingContextsNeedsLayout;
     auto iter = std::find(v.begin(), v.end(), this);
     if (iter != v.end()) {

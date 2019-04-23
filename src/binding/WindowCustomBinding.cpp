@@ -43,6 +43,8 @@ namespace Starfish {
 #ifdef STARFISH_ENABLE_TEST
 void customExit(int returnCode)
 {
+    fflush(stdout);
+    fflush(stderr);
     exit(returnCode);
 }
 #endif
@@ -601,9 +603,9 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GENERATE_WINDOW();
-    customExit(0);
     fflush(stdout);
     fflush(stderr);
+    customExit(0);
 
     return scriptUndefined();
 }
@@ -617,7 +619,7 @@ void doWptTestEnd()
     }
     const char* hide = getenv("HIDE_WINDOW");
     if ((hide && strlen(hide))) {
-        ::exit(0);
+        customExit(0);
     }
 }
 

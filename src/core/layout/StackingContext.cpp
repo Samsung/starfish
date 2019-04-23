@@ -1054,11 +1054,7 @@ void StackingContext::computeStackingContextProperties(
              parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
              parentExtent.containsInVisual(selfExtent.maxX(),
                                            selfExtent.maxY())) ||
-            (compositedAncestor->owner()->shouldApplyOverflow() &&
-             compositedAncestor->owner()->style()->overflowX() >
-                 OverflowValue::VisibleOverflow &&
-             compositedAncestor->owner()->style()->overflowY() >
-                 OverflowValue::VisibleOverflow)) {
+            (compositedAncestor->owner()->shouldApplyOverflow())) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
@@ -1987,7 +1983,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                             m_owner->node()
                                                 ->webView()
                                                 ->lastRenderingTick() >
-                                        (uint64_t) WebView::
+                                        (uint64_t)WebView::
                                                 g_fillingGraphicsBufferTileFrameTimeLimitInMS *
                                             1000) {
                                         STARFISH_LOG_INFO(
@@ -2237,25 +2233,11 @@ bool StackingContext::fillGraphicsBufferContents(
 
                     delete canvas;
 
-                    LayoutUnit leftX =
-                        std::max(deviceLayerClipRect.x(), LayoutUnit(0));
-                    LayoutUnit rightX =
-                        std::min(deviceLayerClipRect.maxX(),
-                                 (LayoutUnit)canvasSurface->bufferWidth());
-                    LayoutUnit topY =
-                        std::max(deviceLayerClipRect.y(), LayoutUnit(0));
-                    LayoutUnit bottomY =
-                        std::min(deviceLayerClipRect.maxY(),
-                                 (LayoutUnit)canvasSurface->bufferHeight());
-
-                    if (leftX < rightX && topY < bottomY) {
-                        deviceLayerClipRect = LayoutRect(
-                            leftX, topY, rightX - leftX, bottomY - topY);
-                    } else {
-                        // Rectangles do not overlap
-                        deviceLayerClipRect.setWidth(0);
-                        deviceLayerClipRect.setHeight(0);
-                    }
+                    deviceLayerClipRect = LayoutRect::overlappedRect(
+                        deviceLayerClipRect,
+                        LayoutRect(0, 0,
+                                   (LayoutUnit)canvasSurface->bufferWidth(),
+                                   (LayoutUnit)canvasSurface->bufferHeight()));
 
                     if ((bool)deviceLayerClipRect.width() ||
                         (bool)deviceLayerClipRect.height()) {

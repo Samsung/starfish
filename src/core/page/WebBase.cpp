@@ -31,7 +31,7 @@ namespace Starfish {
 WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* customUserAgentString)
     : StarfishHoldable(starfish)
-    , m_seed((unsigned int)time(NULL))
+    , m_randEngine((unsigned int)time(NULL))
     , m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_customUserAgentString(customUserAgentString)
@@ -225,13 +225,14 @@ BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr)
     BlobURLStore a;
     a.m_blob = ptr;
 
+    std::uniform_int_distribution<uint32_t> distribution;
 #ifdef STARFISH_32
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
-    a.m_c = rand_r(&m_seed);
+    a.m_a = distribution(m_randEngine);
+    a.m_b = distribution(m_randEngine);
+    a.m_c = distribution(m_randEngine);
 #else
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
+    a.m_a = distribution(m_randEngine);
+    a.m_b = distribution(m_randEngine);
 #endif
 
     m_urlBlobStore.insert(a);

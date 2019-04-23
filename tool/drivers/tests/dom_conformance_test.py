@@ -8,7 +8,7 @@ from basics.utils import Strings
 
 RE_KEYWORDS = re.compile(r"Success|failure|Skipped")
 
-def tc_handler(tc_file, output, show_progress=True):
+def tc_handler(tc_file, output, err, show_progress=True):
     is_pass = False
     result = ""
     tc_expected_file = os.path.splitext(tc_file)[0] + "-expected.txt"

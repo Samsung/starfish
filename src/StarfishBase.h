@@ -132,7 +132,6 @@
 #ifndef NDEBUG
 #define _ITERATOR_DEBUG_LEVEL 0
 #endif
-#define rand_r(x) rand()
 #endif
 
 #if defined(COMPILER_MSVC)
@@ -203,6 +202,7 @@ typedef unsigned int uint;
 #include <stdarg.h>
 #include <future>
 #include <type_traits>
+#include <random>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil

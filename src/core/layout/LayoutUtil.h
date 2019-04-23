@@ -1295,6 +1295,22 @@ public:
         return ret;
     }
 
+    static LayoutRect overlappedRect(const LayoutRect& src1,
+                                     const LayoutRect& src2)
+    {
+        LayoutUnit leftX = std::max(src1.x(), src2.x());
+        LayoutUnit rightX = std::min(src1.maxX(), src2.maxX());
+        LayoutUnit topY = std::max(src1.y(), src2.y());
+        LayoutUnit bottomY = std::min(src1.maxY(), src2.maxY());
+
+        if (leftX < rightX && topY < bottomY) {
+            return LayoutRect(leftX, topY, rightX - leftX, bottomY - topY);
+        } else {
+            // Rectangles do not overlap
+            return LayoutRect();
+        }
+    }
+
 private:
     static bool valueInRange(LayoutUnit value, LayoutUnit min, LayoutUnit max)
     {

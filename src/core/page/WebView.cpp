@@ -445,6 +445,8 @@ void WebView::destroy()
     m_tts->destroy();
 #endif
 
+    m_browsingContextsNeedsLayout.clear();
+    m_browsingContextsDidLayout.clear();
     m_repaintRegionInRendering.clear();
     m_globalPointingEventListener.clear();
     m_jsInterfaceList.clear();
@@ -666,13 +668,15 @@ BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
     BlobURLStore a;
     a.m_blob = ptr;
 
+    std::uniform_int_distribution<uint32_t> distribution;
+
 #ifdef STARFISH_32
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
-    a.m_c = rand_r(&m_seed);
+    a.m_a = distribution(m_randEngine);
+    a.m_b = distribution(m_randEngine);
+    a.m_c = distribution(m_randEngine);
 #else
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
+    a.m_a = distribution(m_randEngine);
+    a.m_b = distribution(m_randEngine);
 #endif
 
     m_urlMediaSourceBlobStore.insert(a);
@@ -731,9 +735,20 @@ void WebView::clearMediaSourceBlobURLStore()
     GCUnorderedSet<BlobURLStore>().swap(m_urlMediaSourceBlobStore);
 }
 
+void WebView::computeLayoutPaintingDirty()
+{
+    INSTALL_PROFILE_TIMER("WebView::computeLayoutPaintingDirty");
+
+    auto browsingContextsDidLayout = std::move(m_browsingContextsDidLayout);
+    m_browsingContextsDidLayout.clear();
+    for (size_t i = 0; i < browsingContextsDidLayout.size(); i++) {
+        browsingContextsDidLayout[i]->computeLayoutPaintingDirty();
+    }
+}
+
 void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
 {
-    INSTALL_PROFILE_TIMER("WebView::rendering::layoutIfNeeded");
+    INSTALL_PROFILE_TIMER("WebView::layoutIfNeeded");
     bool didLayout = false;
 
     {
@@ -1056,6 +1071,7 @@ RenderResult WebView::rendering(bool force)
         CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
 
     layoutIfNeeded();
+    computeLayoutPaintingDirty();
 
     bool didPainting = false;
     if (m_needsPainting) {
