@@ -22,6 +22,8 @@
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
 
+#include "core/util/Id.h"
+#include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
 
@@ -72,11 +74,17 @@ ServiceWorkerContainer::ServiceWorkerContainer(
     ExecutionContext* executionContext)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_state(State::Started)
 {
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
+}
+
+void ServiceWorkerContainer::dispose()
+{
+    m_state = State::Disposed;
 }
 
 ExecutionContext* ServiceWorkerContainer::executionContext() const
@@ -225,7 +233,7 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     scheduleJob(job);
 }
 
-// TODO: consider movig this to job handler
+// TODO: consider moving this to job handler
 ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
                                                     String* scopeURL,
                                                     String* scriptURL,
@@ -265,7 +273,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
             auto swConnection =
                 ServiceWorkerProcessManager::getInstance()->getConnection(
-                    CSTR(webOrigin->serialize()));
+                    webOrigin->serialize());
 
             swConnection->scheduleJob(job);
         },
@@ -274,15 +282,133 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
     m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
 
-Promise* ServiceWorkerContainer::getRegistration(String* scriptURL)
+Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
 {
+    STARFISH_ASSERT(rawClientURL != nullptr);
+
+    // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistration
+
+    // 1. Let client be the context object’s service worker client.
+    ExecutionContext* client = executionContext();
+
+    STARFISH_ASSERT(client != nullptr);
+    STARFISH_ASSERT(client->baseURL() != nullptr);
+
+    // 2. Let clientURL be the result of parsing clientURL with the context
+    // object’s relevant settings object’s API base URL.
+    auto clientURL =
+        new ResourceURL(rawClientURL, client->baseURL()->baseURI());
+
+    // 3. If clientURL is failure, return a promise rejected with a TypeError.
+    if (clientURL->urlString()->isEmpty()) {
+        auto exception = createException(
+            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
+            "serviceWorker.getRegistration() cannot be "
+            "called with an empty script URL");
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->reject(exception);
+        return promise;
+    }
+
+    // 4. Set clientURL’s fragment to null.
+    auto clientURLWithNoFragment = clientURL->urlStringWithoutSearchPart();
+
+    STARFISH_ASSERT(clientURLWithNoFragment != nullptr);
+
+    // 5. If the origin of clientURL is not client’s origin, return a promise
+    // rejected with a "SecurityError" DOMException.
+
+    if (!client->webOrigin()->isSameOrigin(
+            WebOrigin::createDocumentOrigin(clientURL))) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SECURITY_ERR,
+            "Origin of clientURL is not client's origin");
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 6. Let promise be a new promise.
     Promise* promise = new Promise(scriptBindingInstance());
 
     STARFISH_ASSERT(promise != nullptr);
 
-    // TODO: return registraton
-    promise->fulfill(Escargot::ValueRef::createUndefined());
+    // 7. Run the following substeps in parallel:
+
+    // 7.1 Let registration be the result of running Match Service Worker
+    // Registration algorithm with clientURL as its argument.
+    auto request = createRequest("matchRegistration", promise);
+
+    request->setPostTask(new RequestTask(
+        [](ServiceWorkerRequest* req, TaskResult results, TaskParam params) {
+            auto request = castTo<ServiceWorkerRequest*>(params[0]);
+            auto container = castTo<ServiceWorkerContainer*>(params[1]);
+
+            STARFISH_ASSERT(req->id == request->id);
+
+            auto registrationData =
+                castTo<ServiceWorkerRegistrationData*>(results[0]);
+
+            // 7.2 If registration is not null, then:
+            // 7.2.1 Resolve promise with the ServiceWorkerRegistration
+            // object which represents registration.
+            // TODO: consider supporting null
+            if (registrationData->isValid()) {
+                auto registration = new ServiceWorkerRegistration(
+                    container->executionContext());
+                registration->setData(registrationData);
+
+                STARFISH_ASSERT(request->promise());
+                request->promise()->fulfill(registration->scriptValue());
+
+            } else {
+                // 7.3 Else:
+                // 7.3.1 Resolve promise with undefined.
+                request->promise()->fulfill(
+                    Escargot::ValueRef::createUndefined());
+            }
+        },
+        { request, this }));
+
+    matchRegistration(request, clientURL);
+
+    // 8. Return promise.
     return promise;
+}
+
+ServiceWorkerRequest* ServiceWorkerContainer::createRequest(
+    const char* requestName, Promise* promise)
+{
+    STARFISH_ASSERT(requestName != nullptr);
+    STARFISH_ASSERT(promise != nullptr);
+
+    auto request = new ServiceWorkerRequest();
+    request->id = RequestId::generate();
+    request->contextId = executionContext()->globalScope()->uid();
+    request->name = String::createASCIIString(requestName);
+    request->origin = executionContext()->webOrigin()->serialize();
+    request->setPromise(promise);
+    return request;
+}
+
+void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
+                                               ResourceURL* clientURL)
+{
+    executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext()->globalScope(),
+        [](size_t handle, void* data1, void* data2) {
+            auto swrequest = static_cast<ServiceWorkerRequest*>(data1);
+            auto urlString = static_cast<String*>(data2);
+
+            auto swConnection =
+                ServiceWorkerProcessManager::getInstance()->getConnection(
+                    swrequest->origin);
+
+            swConnection->matchRegistration(swrequest, urlString);
+        },
+        request, clientURL->urlString());
+
+    m_requestMap.insert(std::make_pair(request->id, request));
 }
 
 Promise* ServiceWorkerContainer::registerServiceWorker(

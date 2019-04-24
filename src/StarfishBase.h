@@ -653,13 +653,21 @@ inline Target* downcast(Source* source)
     STARFISH_ASSERT(source != nullptr);
     static_assert(std::is_base_of<Source, Target>::value == true,
                   "Wrong type cast");
-#if defined(__GXX_RTTI) || defined(_CPPRTTI)
+
+#if !defined(NDEBUG) && (defined(__GXX_RTTI) || defined(_CPPRTTI))
     auto casted = dynamic_cast<Target*>(source);
     STARFISH_ASSERT(casted != nullptr);
     return casted;
 #else
     return static_cast<Target*>(source);
 #endif
+}
+
+template <typename Target>
+inline Target castTo(void* source)
+{
+    STARFISH_ASSERT(source != nullptr);
+    return static_cast<Target>(source);
 }
 
 template <typename Type>

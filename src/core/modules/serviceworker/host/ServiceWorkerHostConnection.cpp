@@ -23,10 +23,11 @@
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
-
 #include "core/modules/networking/Socket.h"
 #include "core/util/Id.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 
@@ -73,6 +74,21 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
 }
 
+void ServiceWorkerHostConnection::resolveRequest(ServiceWorkerRequest* request,
+                                                 Archivable* archivable)
+{
+    STARFISH_ASSERT(request != nullptr);
+    STARFISH_ASSERT(archivable != nullptr);
+
+    JsonWriter writer;
+    Message msg("resolveRequest");
+    msg.addParam(request);
+    msg.addParam(archivable);
+    msg.archive(writer);
+
+    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+}
+
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
 {
     STARFISH_ASSERT(m_client != nullptr);
@@ -83,6 +99,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
     msg.archive(reader);
 
     auto msgName = msg.name();
+
     if (msgName == "scheduleJob") {
         auto job =
             new ServiceWorkerJob(downcast<ServiceWorkerJobData>(msg.param(0)));
@@ -93,6 +110,11 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
         m_client->matchRegistration(
             downcast<ServiceWorkerRequest>(msg.param(0)),
             downcast<GenericArchivable<String*>>(msg.param(1))->value());
+
+        // TODO: remove the following simulating resolveRequest
+        auto registration = new ServiceWorkerRegistrationData();
+        resolveRequest(downcast<ServiceWorkerRequest>(msg.param(0)),
+                       registration);
     }
 }
 

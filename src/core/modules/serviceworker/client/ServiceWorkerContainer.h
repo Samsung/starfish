@@ -43,6 +43,11 @@ class ServiceWorkerRegistrationData;
 typedef ServiceWorkerRequest NullableServiceWorkerRequest;
 typedef ServiceWorkerJob NullableServiceWorkerJob;
 
+// typedef void (*Handler_t)(ServiceWorkerRequest*, TaskParam);
+// // using RequestId = Id<ServiceWorkerRequest>;
+// using RequestTask = Task<Handler_t>;
+// using RequestTasker = Tasker<RequestId, RequestTask*>;
+
 class ServiceWorkerContainer : public EventTarget {
 public:
     ServiceWorkerContainer(ExecutionContext* executionContext);
@@ -51,8 +56,8 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerContainer() const override;
-
     virtual ExecutionContext* executionContext() const override;
+    void dispose();
 
     Promise* registerServiceWorker(
         String* scriptURL,
@@ -71,18 +76,31 @@ public:
                                 ExecutionContext* client);
     void scheduleJob(ServiceWorkerJob* job);
     void finishJob(ServiceWorkerJob* job);
-
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
 
+    void matchRegistration(ServiceWorkerRequest* request,
+                           ResourceURL* clientURL);
+    void resolveMatchRegistration(ServiceWorkerRequest* request,
+                                  ServiceWorkerRegistrationData* registration);
+
+    ServiceWorkerRequest* createRequest(const char* requestName,
+                                        Promise* promise);
     NullableServiceWorkerRequest* findRequest(Id<ServiceWorkerRequest> id);
     void finishRequest(ServiceWorkerRequest* request);
 
 private:
+    enum class State {
+        Started,
+        Stopped,
+        Disposed,
+    };
+
     ExecutionContext* m_executionContext;
     GCUnorderedMap<Id<ServiceWorkerJob>, ServiceWorkerJob*, IdHash> m_jobMap;
     GCUnorderedMap<Id<ServiceWorkerRequest>, ServiceWorkerRequest*, IdHash>
         m_requestMap;
+    State m_state;
 };
 } // namespace Starfish
 

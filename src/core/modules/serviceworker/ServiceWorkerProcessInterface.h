@@ -26,6 +26,7 @@ namespace Starfish {
 class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
+class Archivable;
 
 class ServiceWorkerClientProcessInterface {
 public:
@@ -34,6 +35,9 @@ public:
     }
     virtual void resolveJobPromise(
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
+
+    virtual void resolveRequest(ServiceWorkerRequest* request,
+                                Archivable* registration) = 0;
 };
 
 class ServiceWorkerHostProcessInterface {

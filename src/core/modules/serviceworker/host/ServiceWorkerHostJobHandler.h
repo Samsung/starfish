@@ -66,6 +66,8 @@ public:
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
+    void matchRegistration(ServiceWorkerRequest* request, String* clientURL);
+
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
     MessageLoop* m_messageLoop;

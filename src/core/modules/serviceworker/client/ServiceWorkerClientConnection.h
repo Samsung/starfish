@@ -26,6 +26,9 @@ namespace Starfish {
 class Socket;
 class ServiceWorkerJob;
 class ServiceWorkerRegistrationData;
+class ServiceWorkerContainer;
+
+typedef ServiceWorkerContainer* NullableServiceWorkerContainer;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -42,6 +45,9 @@ public:
     void onReceived(Socket* socket, const char* data) override;
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
+
+    NullableServiceWorkerContainer findServiceWorkerContainer(
+        ServiceWorkerContextId id);
 };
 } // namespace Starfish
 

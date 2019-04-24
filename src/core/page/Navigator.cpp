@@ -68,6 +68,12 @@ void Navigator::dispose()
     if (m_geolocation) {
         m_geolocation->dispose();
     }
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    if (m_serviceWorker) {
+        m_serviceWorker->dispose();
+    }
+#endif
 }
 
 ScriptBindingInstance* Navigator::scriptBindingInstance()

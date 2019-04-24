@@ -39,6 +39,9 @@ public:
         ServiceWorkerJob* job,
         ServiceWorkerRegistrationData* registration) override;
 
+    void resolveRequest(ServiceWorkerRequest* request,
+                        Archivable* archivable) override;
+
     // receive
     void onReceived(Socket* socket, const char* data) override;
 

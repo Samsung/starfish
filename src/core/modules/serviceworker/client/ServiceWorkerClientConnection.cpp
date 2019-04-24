@@ -23,13 +23,14 @@
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #include "core/modules/networking/Socket.h"
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/util/Archivable.h"
@@ -109,6 +110,25 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
         auto registration =
             downcast<ServiceWorkerRegistrationData>(msg.param(1));
         resolveJobPromise(job, registration);
+
+    } else if (msgName == "resolveRequest") {
+        auto request = downcast<ServiceWorkerRequest>(msg.param(0));
+        auto serviceWorkerContainer =
+            findServiceWorkerContainer(request->contextId);
+
+        if (serviceWorkerContainer) {
+            auto archivable = msg.param(1);
+            auto registration =
+                downcast<ServiceWorkerRegistrationData>(msg.param(1));
+
+            auto requestMatched =
+                serviceWorkerContainer->findRequest(request->id);
+
+            if (requestMatched) {
+                requestMatched->postTask()->run(requestMatched,
+                                                { registration });
+            }
+        }
     }
 }
 
@@ -119,23 +139,35 @@ void ServiceWorkerClientConnection::resolveJobPromise(
     STARFISH_ASSERT(registration != nullptr);
 
     // find if this job owner context is still active.
+    auto serviceWorkerContainer =
+        findServiceWorkerContainer(job->data()->contextId);
+
+    if (serviceWorkerContainer) {
+        // TODO: consider passing job data and move findjob into container
+        auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
+        if (jobMatched) {
+            serviceWorkerContainer->resolveJobPromise(jobMatched, registration);
+        }
+    }
+}
+
+NullableServiceWorkerContainer
+ServiceWorkerClientConnection::findServiceWorkerContainer(
+    ServiceWorkerContextId id)
+{
     auto swpm = ServiceWorkerProcessManager::getInstance();
-    auto globalScope = swpm->find(job->data()->contextId);
+    auto globalScope = swpm->find(id);
 
     if (globalScope) {
         auto executionContext = globalScope->executionContext();
-        if (executionContext->hasDocument()) {
-            auto window = executionContext->document()->window();
+        if (executionContext && executionContext->hasDocument()) {
             // TODO: use serviceworker bindings on window
-            auto serviceWorkerContainer = window->navigator()->serviceWorker();
-            // TODO: consider passing job data and move findjob into container
-            auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
-            if (jobMatched) {
-                serviceWorkerContainer->resolveJobPromise(jobMatched,
-                                                          registration);
-            }
+            auto window = executionContext->document()->window();
+            return window->navigator()->serviceWorker();
         }
     }
+
+    return nullptr;
 }
 
 } // namespace Starfish

@@ -325,6 +325,16 @@ void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
         runJob(jobQueue);
     }
 }
+
+void ServiceWorkerHostJobHandler::matchRegistration(
+    ServiceWorkerRequest* request, String* clientURL)
+{
+    // TODO: https://w3c.github.io/ServiceWorker/#scope-match-algorithm
+    STARFISH_ASSERT(request != nullptr);
+    STARFISH_ASSERT(clientURL != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
