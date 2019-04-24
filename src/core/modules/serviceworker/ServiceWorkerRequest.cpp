@@ -24,6 +24,7 @@
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
@@ -38,6 +39,7 @@ void ServiceWorkerRequest::archive(Archiver& ar)
 {
     ar.MemberId("id", id);
     ar.MemberId("contextId", contextId);
+    ar.Member("name") & name;
     ar.Member("origin") & origin;
 }
 }

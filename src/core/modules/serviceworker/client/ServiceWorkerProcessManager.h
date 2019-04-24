@@ -53,7 +53,7 @@ public:
     static void destroy();
 
     void init(WebView* webView);
-    ServiceWorkerClientConnection* getConnection(std::string origin);
+    ServiceWorkerClientConnection* getConnection(String* originSerialized);
 
     void registerActiveGlobalScope(Id<GlobalScope> id,
                                    GlobalScope* globalScope);

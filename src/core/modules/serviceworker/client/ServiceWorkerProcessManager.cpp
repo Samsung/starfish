@@ -28,6 +28,9 @@
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
+
+#include "core/util/Id.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
@@ -41,8 +44,6 @@
 #include "core/modules/networking/Socket.h"
 #include "core/modules/serviceworker/IORunnable.h"
 
-#include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
@@ -112,9 +113,12 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
 }
 
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
-    std::string origin)
+    String* originSerialized)
 {
+    STARFISH_ASSERT(originSerialized != nullptr);
     STARFISH_ASSERT(m_threadPool != nullptr);
+
+    std::string origin = CSTR(originSerialized);
 
     std::shared_ptr<ProcessData> processData = nullptr;
 

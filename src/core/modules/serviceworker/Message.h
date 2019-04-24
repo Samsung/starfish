@@ -37,7 +37,7 @@ public:
     static void archive(Archiver& arch, Archivable*& param);
 
 private:
-    std::string m_name;
+    String* m_name;
     GCVector<Archivable*> m_params;
 };
 

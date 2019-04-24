@@ -42,6 +42,11 @@ public:
         ServiceWorkerUpdateViaCache::None
     };
 
+    bool isValid()
+    {
+        return (scope != String::emptyString);
+    }
+
     // serialize/deserialize
     const char* archiveId() const override;
     void archive(Archiver& ar) override;

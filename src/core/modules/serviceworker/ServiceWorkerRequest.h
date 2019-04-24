@@ -24,19 +24,42 @@
 namespace Starfish {
 
 class Promise;
+class RequestTask;
+
+typedef void (*Handler_t)(ServiceWorkerRequest*, TaskResult, TaskParam);
+
+class RequestTask : public Task<Handler_t> {
+public:
+    RequestTask(Handler_t handler, std::initializer_list<void*> params = {})
+        : Task(handler, std::move(params))
+    {
+    }
+
+    void run(ServiceWorkerRequest* request, std::vector<void*> results = {})
+    {
+        STARFISH_ASSERT(request != nullptr);
+        m_handler(request, results, m_params);
+    }
+};
 
 class ServiceWorkerRequest : public Archivable {
 public:
+    // payload
     RequestId id;
     ServiceWorkerContextId contextId;
+    String* name;
     String* origin{ nullptr };
 
     // serialize/deserialize
     const char* archiveId() const override;
     void archive(Archiver& ar) override;
 
+    DEFINE_GETTER_SETTER(Promise*, promise, Promise);
+    DEFINE_GETTER_SETTER(RequestTask*, postTask, PostTask);
+
 private:
     Promise* m_promise{ nullptr };
+    RequestTask* m_postTask{ nullptr };
 };
 }
 

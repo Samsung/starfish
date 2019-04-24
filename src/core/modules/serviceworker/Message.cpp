@@ -26,6 +26,7 @@
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/Message.h"
 
 #include "core/dom/ExecutionContext.h"
@@ -43,12 +44,13 @@ namespace Starfish {
 Message::Message(const char* msgname)
 {
     STARFISH_ASSERT(msgname != nullptr);
-    m_name = msgname;
+    m_name = String::createASCIIString(msgname);
 }
 
 std::string Message::name()
 {
-    return m_name;
+    std::string str = CSTR(m_name);
+    return str;
 }
 
 void Message::addParam(Archivable* param)
