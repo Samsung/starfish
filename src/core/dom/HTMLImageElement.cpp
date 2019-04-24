@@ -27,6 +27,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -110,14 +111,14 @@ HTMLImageElement::HTMLImageElement(Document* document,
 {
 }
 
-HTMLImageElement::HTMLImageElement(Document* document, unsigned long width)
+HTMLImageElement::HTMLImageElement(Document* document, uint32_t width)
     : HTMLImageElement(document)
 {
     setWidth(width);
 }
 
-HTMLImageElement::HTMLImageElement(Document* document, unsigned long width,
-                                   unsigned long height)
+HTMLImageElement::HTMLImageElement(Document* document, uint32_t width,
+                                   uint32_t height)
     : HTMLImageElement(document, width)
 {
     setHeight(height);
@@ -155,9 +156,9 @@ void HTMLImageElement::setCrossOrigin(Nullable<String*> crossOrigin)
     }
 }
 
-unsigned long HTMLImageElement::width()
+uint32_t HTMLImageElement::width()
 {
-    unsigned long result = 0;
+    uint32_t result = 0;
     String* widthStr =
         getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     String* heightStr =
@@ -178,14 +179,14 @@ unsigned long HTMLImageElement::width()
     return result;
 }
 
-void HTMLImageElement::setWidth(unsigned long width)
+void HTMLImageElement::setWidth(uint32_t width)
 {
     setAttribute(starfish()->staticStrings()->m_width, String::fromInt(width));
 }
 
-unsigned long HTMLImageElement::height()
+uint32_t HTMLImageElement::height()
 {
-    unsigned long result = 0;
+    uint32_t result = 0;
     String* widthStr =
         getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     String* heightStr =
@@ -206,10 +207,30 @@ unsigned long HTMLImageElement::height()
     return result;
 }
 
-void HTMLImageElement::setHeight(unsigned long height)
+void HTMLImageElement::setHeight(uint32_t height)
 {
     setAttribute(starfish()->staticStrings()->m_height,
                  String::fromInt(height));
+}
+
+uint32_t HTMLImageElement::naturalWidth()
+{
+    if (m_imageData) {
+        // TODO : Apply a current pixel density when it is implemented.
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return m_imageData->width();
+    }
+    return 0;
+}
+
+uint32_t HTMLImageElement::naturalHeight()
+{
+    if (m_imageData) {
+        // TODO : Apply a current pixel density when it is implemented.
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return m_imageData->height();
+    }
+    return 0;
 }
 
 void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
@@ -347,5 +368,10 @@ String* HTMLImageElement::nameAttr()
 void HTMLImageElement::setNameAttr(String* name)
 {
     setAttribute(starfish()->staticStrings()->m_name, name);
+}
+
+bool HTMLImageElement::isBroken() const
+{
+    return document()->brokenImage() == m_imageData;
 }
 }

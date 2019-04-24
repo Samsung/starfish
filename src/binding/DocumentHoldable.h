@@ -33,6 +33,7 @@ public:
     DocumentHoldable(Document* document)
         : m_document(document)
     {
+        STARFISH_ASSERT(document != nullptr);
     }
 
     Document* document() const

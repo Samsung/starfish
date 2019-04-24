@@ -34,9 +34,8 @@ class HTMLImageElement : public HTMLElement {
 public:
     HTMLImageElement(Document* document);
     HTMLImageElement(Document* document, const QualifiedName& qname);
-    HTMLImageElement(Document* document, unsigned long width);
-    HTMLImageElement(Document* document, unsigned long width,
-                     unsigned long height);
+    HTMLImageElement(Document* document, uint32_t width);
+    HTMLImageElement(Document* document, uint32_t width, uint32_t height);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -53,11 +52,14 @@ public:
     Nullable<String*> crossOrigin();
     void setCrossOrigin(Nullable<String*> crossOrigin);
 
-    unsigned long width();
-    void setWidth(unsigned long width);
+    uint32_t width();
+    void setWidth(uint32_t width);
 
-    unsigned long height();
-    void setHeight(unsigned long height);
+    uint32_t height();
+    void setHeight(uint32_t height);
+
+    uint32_t naturalWidth();
+    uint32_t naturalHeight();
 
     String* referrerPolicy();
     void setReferrerPolicy(String* policy);
@@ -78,6 +80,8 @@ public:
     virtual void didNodeAdopted() override;
 
     virtual void didNodeInsertedToDocumentTree() override;
+
+    bool isBroken() const;
 
 private:
     void unloadImage();

@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
+#include "binding/HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementUnion.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
@@ -43,6 +44,7 @@
 #include "EscargotPublic.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
+#include "core/dom/WebOrigin.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
@@ -148,9 +150,9 @@ void CanvasRenderingContext2DMixIn::initialize()
         CanvasSurface::CanvasElement);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface);
+    m_canvas->unsetDevicePixelRatio();
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     m_canvasPath = new CanvasPath(executionContext());
-
     auto black = Unit::Color(0, 0, 0, 255);
     setLineWidth(1.0f);                 // default 1.0
     setLineCap(CanvasLineCap::Butt);    // default "butt"
@@ -682,33 +684,142 @@ void CanvasRenderingContext2DMixIn::ellipse(float x, float y, float radiusX,
                           endAngle, anticlockwise);
 }
 
-void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
+void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float dx,
                                               float dy)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
-        return;
-    }
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    drawImage(image, dx, dy, 0, 0);
 }
 
-void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
+void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float dx,
                                               float dy, float dw, float dh)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
-        return;
-    }
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    drawImage(image, 0, 0, 0, 0, dx, dy, dw, dh);
 }
 
-void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float sx,
+static inline Unit::Rect normalizeRect(const Unit::Rect& rect)
+{
+    return Unit::Rect(std::min(rect.x(), rect.maxX()),
+                      std::min(rect.y(), rect.maxY()),
+                      std::max(rect.width(), -rect.width()),
+                      std::max(rect.height(), -rect.height()));
+}
+
+static inline void clipRectsToImageRect(const Unit::Rect& img, Unit::Rect& src,
+                                        Unit::Rect& dst)
+{
+    if (img.contains(src)) {
+        return;
+    }
+
+    Unit::Size scale(dst.width() / src.width(), dst.height() / src.height());
+    Unit::Location scaledSrcLocation(src.x(), src.y());
+    scaledSrcLocation.scale(scale.width(), scale.height());
+    Unit::Size offset(dst.x() - scaledSrcLocation.x(),
+                      dst.y() - scaledSrcLocation.y());
+
+    src.intersect(img);
+
+    dst = src;
+    dst.scale(scale.width(), scale.height());
+    dst.setX(dst.x() + offset.width());
+    dst.setY(dst.y() + offset.height());
+}
+
+void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
                                               float sy, float sw, float sh,
                                               float dx, float dy, float dw,
                                               float dh)
 {
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-drawimage
     if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+
+    if (isInfOrNan(sx) || isInfOrNan(sy) || isInfOrNan(sw) || isInfOrNan(sh) ||
+        isInfOrNan(dx) || isInfOrNan(dy) || isInfOrNan(dw) || isInfOrNan(dh)) {
+        return;
+    }
+
+    auto usability = checkUsabilityOfCanvasImageSource(image);
+    if (usability.isDOMException()) {
+        throw usability.asDOMException();
+    } else {
+        if (!usability.asOtherType()) {
+            return;
+        }
+    }
+
+    NativeImageData* nativeImageData = nullptr;
+
+    if (image.isHTMLImageElementOrSVGImageElementValue()) {
+        if (image.getHTMLImageElementOrSVGImageElementValue()
+                .isHTMLImageElementValue()) {
+            auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
+                                 .getHTMLImageElementValue();
+            auto imageSrcWebOrigin = WebOrigin::createDocumentOrigin(
+                new ResourceURL(htmlImage->src()));
+
+            if (!executionContext()->document()->webOrigin()->isSameOrigin(
+                    imageSrcWebOrigin)) {
+                m_originCleanFlag = false;
+            }
+
+            nativeImageData = htmlImage->imageData();
+
+            if (!sw) {
+                sw = nativeImageData->width();
+            }
+            if (!sh) {
+                sh = nativeImageData->height();
+            }
+        }
+    }
+
+    if (!sw || !sh) {
+        return;
+    }
+    if (!dw) {
+        dw = sw;
+    }
+    if (!dh) {
+        dh = sh;
+    }
+
+    Unit::Rect src = normalizeRect(Unit::Rect(sx, sy, sw, sh));
+    Unit::Rect dst = normalizeRect(Unit::Rect(dx, dy, dw, dh));
+    const Unit::Rect imageSize =
+        Unit::Rect(0, 0, nativeImageData->width(), nativeImageData->height());
+
+    clipRectsToImageRect(imageSize, src, dst);
+
+    Unit::Rect adjustSrcRect(0, 0, nativeImageData->width(),
+                             nativeImageData->height());
+    if (adjustSrcRect.contains(src)) {
+        adjustSrcRect = src;
+    } else {
+        adjustSrcRect.intersect(src);
+    }
+    if (adjustSrcRect.isEmpty()) {
+        return;
+    }
+
+    Unit::Rect adjustDstRect(0, 0, m_ownerHTMLCanvasElement->width(),
+                             m_ownerHTMLCanvasElement->height());
+
+    if (adjustDstRect.contains(dst)) {
+        adjustDstRect = dst;
+    } else {
+        adjustDstRect.intersect(dst);
+    }
+    if (adjustDstRect.isEmpty()) {
+        return;
+    }
+    // TODO : Apply Image CanvasImageSmoothing
+    DrawImageInfo drawImageInfo = { 1.0, 1.0,
+                                    BorderImageRepeatValue::StretchValue,
+                                    BorderImageRepeatValue::StretchValue };
+    m_canvas->drawImage(nativeImageData, src, dst, drawImageInfo);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 ImageData* CanvasRenderingContext2DMixIn::createImageData(int32_t sw,
@@ -1080,6 +1191,39 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
     path->applyPathDrawingStyles(m_canvas);
     return path->isPointInStroke(xx, yy);
+}
+
+DOMExceptionOr<bool>
+CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
+    CanvasImageSource image)
+{
+    // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
+    if (image.isHTMLImageElementOrSVGImageElementValue()) {
+        auto imgOrSvg = image.getHTMLImageElementOrSVGImageElementValue();
+        if (imgOrSvg.isHTMLImageElementValue()) {
+            auto img = imgOrSvg.getHTMLImageElementValue();
+            if (img->isBroken()) {
+                return new DOMException(executionContext(),
+                                        DOMException::Code::INVALID_STATE_ERR);
+            }
+            if (!img->imageData()) {
+                return false;
+            }
+            if (!img->imageData()->width() || !img->imageData()->height()) {
+                return false;
+            }
+            return true;
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+    } else if (image.isHTMLVideoElementValue()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (image.isHTMLCanvasElementValue()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    return false;
 }
 }
 #undef NEEDS_UNPREMULTIPLIED

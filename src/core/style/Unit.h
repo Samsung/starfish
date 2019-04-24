@@ -116,6 +116,12 @@ namespace Unit {
             return m_y;
         }
 
+        void scale(float sx, float sy)
+        {
+            m_x *= sx;
+            m_y *= sy;
+        }
+
     protected:
         float m_x, m_y;
     };
@@ -186,6 +192,36 @@ namespace Unit {
                    py < (y() + height());
         }
 
+        bool contains(const Unit::Rect& other) const
+        {
+            return x() <= other.x() && maxX() >= other.maxX() &&
+                   y() <= other.y() && maxY() >= other.maxY();
+        }
+
+        void intersect(const Rect& other)
+        {
+            float left = std::max(x(), other.x());
+            float top = std::max(y(), other.y());
+            float right = std::min(maxX(), other.maxX());
+            float bottom = std::min(maxY(), other.maxY());
+            // Return a clean empty rectangle for non-intersecting cases.
+            if (left >= right || top >= bottom) {
+                left = 0;
+                top = 0;
+                right = 0;
+                bottom = 0;
+            }
+            setLocationAndSizeFromEdges(left, top, right, bottom);
+        }
+
+        void scale(float sx, float sy)
+        {
+            m_location.setX(x() * sx);
+            m_location.setY(y() * sy);
+            m_size.setWidth(width() * sx);
+            m_size.setHeight(height() * sy);
+        }
+
         void unite(const Rect& other)
         {
             if (other.isEmpty()) {
@@ -249,6 +285,14 @@ namespace Unit {
                             valueInRange(B.y(), A.y(), A.y() + A.height());
 
             return xOverlap && yOverlap;
+        }
+
+        void setLocationAndSizeFromEdges(float left, float top, float right,
+                                         float bottom)
+        {
+            m_location = Location(left, top);
+            m_size.setWidth(right - left);
+            m_size.setHeight(bottom - top);
         }
 
         Location m_location;
