@@ -6845,6 +6845,9 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+
     bool needsToCheckActiveAnimationExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
     bool elementHasAnimation = false;
