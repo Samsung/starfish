@@ -21,22 +21,17 @@
 #include "Navigator.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/modules/location/Geolocation.h"
-#include "core/page/WebView.h"
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
-#endif
-#if defined(OS_WINDOWS)
-#include <Windows.h>
-#else
-#include <sys/utsname.h>
 #endif
 
 namespace Starfish {
 
 Navigator::Navigator(Document* document)
     : ScriptWrappable(this)
-    , DocumentHoldable(document)
+    , NavigatorMixin(document->executionContext())
     , m_geolocation(nullptr)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     , m_serviceWorker(nullptr)
@@ -47,7 +42,7 @@ Navigator::Navigator(Document* document)
 Geolocation* Navigator::geolocation()
 {
     if (m_geolocation == nullptr) {
-        m_geolocation = Geolocation::create(document());
+        m_geolocation = Geolocation::create(executionContext()->document());
     }
     return m_geolocation;
 }
@@ -56,8 +51,7 @@ Geolocation* Navigator::geolocation()
 ServiceWorkerContainer* Navigator::serviceWorker()
 {
     if (m_serviceWorker == nullptr) {
-        m_serviceWorker =
-            new ServiceWorkerContainer(document()->executionContext());
+        m_serviceWorker = new ServiceWorkerContainer(executionContext());
     }
     return m_serviceWorker;
 }
@@ -78,41 +72,7 @@ void Navigator::dispose()
 
 ScriptBindingInstance* Navigator::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
-String* Navigator::userAgent()
-{
-    return webView()->userAgent();
-}
-
-String* Navigator::platform()
-{
-    StringBuilder platformName;
-#if !defined(OS_WINDOWS)
-    // Unix-like systems
-    struct utsname osname;
-    if (uname(&osname) == 0) {
-        platformName.appendString(osname.sysname);
-        platformName.appendString(String::spaceString);
-        platformName.appendString(osname.machine);
-    }
-#else
-    OSVERSIONINFO info;
-    ZeroMemory(&info, sizeof(OSVERSIONINFO));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&info);
-
-    platformName.appendString("Windows ");
-    platformName.appendChar((char32_t)(info.dwMajorVersion + '0'));
-    platformName.appendChar(' ');
-    platformName.appendChar((char32_t)(info.dwMinorVersion + '0'));
-#endif
-    return platformName.finalize();
-}
-
-String* Navigator::language()
-{
-    return String::fromUTF8(webView()->locale().getName());
-}
 } // namespace Starfish

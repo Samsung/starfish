@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
@@ -18,26 +17,26 @@
  *  USA
  */
 
-#ifndef __StarfishScriptBindingWindowInstance__
-#define __StarfishScriptBindingWindowInstance__
+#ifdef STARFISH_WEBWORKER_HOST
+
+#include "StarfishConfig.h"
+#include "core/modules/worker/host/WorkerNavigator.h"
+#include "platform/loader/ResourceURL.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-class ScriptBindingWindowInstance final : public ScriptBindingInstance {
-public:
-    ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance, Window* ownerWindow);
-
-    void destroy() override;
-
-    Window* ownerWindow() override;
-    Document* ownerDocument() override;
-    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
-private:
-    Window* m_ownerWindow;
-
-    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
-};
-
+WorkerNavigator::WorkerNavigator(ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , NavigatorMixin(executionContext)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
 }
 
-#endif
+ScriptBindingInstance* WorkerNavigator::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
+}
+}
+
+#endif /* STARFISH_WEBWORKER_HOST */

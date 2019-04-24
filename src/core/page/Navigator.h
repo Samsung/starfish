@@ -21,7 +21,7 @@
 #define __StarfishNavigator__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
+#include "core/page/NavigatorMixin.h"
 
 namespace Starfish {
 
@@ -31,7 +31,7 @@ class Geolocation;
 class ServiceWorkerContainer;
 #endif
 
-class Navigator : public ScriptWrappable, public DocumentHoldable {
+class Navigator : public ScriptWrappable, public NavigatorMixin {
 public:
     Navigator(Document* document);
 
@@ -40,52 +40,11 @@ public:
     virtual bool isNavigator() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    String* appCodeName()
-    {
-        return String::createASCIIString(APP_CODE_NAME);
-    }
-
-    String* appName()
-    {
-        return String::createASCIIString(APP_NAME);
-    }
-
-    String* appVersion()
-    {
-        return userAgent();
-    }
-
-    String* platform();
-
-    String* product()
-    {
-        return String::createASCIIString(PRODUCT_NAME);
-    }
-
-    String* vendor()
-    {
-        return String::createASCIIString(VENDOR_NAME);
-    }
-
-    String* vendorSub()
-    {
-        return String::emptyString;
-    }
-
-    String* userAgent();
-
     Geolocation* geolocation();
 
     void dispose();
 
     bool cookieEnabled()
-    {
-        return true;
-    }
-
-    String* language();
-
-    bool onLine()
     {
         return true;
     }

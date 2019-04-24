@@ -226,15 +226,19 @@ static ValueRef* _seekToAvplayFunction(ExecutionStateRef* state,
 }
 #endif /* defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY) */
 
-ScriptBindingWindowInstance::ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance, Window* ownerWindow)
+ScriptBindingWindowInstance::ScriptBindingWindowInstance(
+    ScriptEngineInstance* engineInstance, Window* ownerWindow)
     : ScriptBindingInstance(engineInstance)
     , m_ownerWindow(ownerWindow)
 {
+    STARFISH_ASSERT(engineInstance != nullptr && ownerWindow != nullptr);
 }
 
-void ScriptBindingWindowInstance::initJSBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state)
+void ScriptBindingWindowInstance::initJavaScriptBinding(
+    Escargot::ContextRef* context, Escargot::ExecutionStateRef* state)
 {
-    ScriptBindingInstance::initJSBinding(context, state);
+    STARFISH_ASSERT(context != nullptr && state != nullptr);
+    ScriptBindingInstance::initJavaScriptBinding(context, state);
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     ObjectRef* avplay = ObjectRef::create(state);

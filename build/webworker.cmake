@@ -35,7 +35,9 @@ SET (STARFISH_WEBWORKER_ENTRY ${STARFISH_ROOT}/src/launcher/WebWorkerEntry.cpp)
 FILE (GLOB_RECURSE STARFISH_IDL ${STARFISH_ROOT}/src/*.idl)
 SET (STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC)
 # TODO: include this interface or completely exclude in Worker.
-SET (EXCLUDE_INTERFACE_NAME "Navigator" "EventSource" "DOMStringList" "FormData" "MessageEvent" "CSS")
+SET (EXCLUDE_INTERFACE_NAME 
+    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS"
+    "MessageEvent" "MessagePort" "MessageChannel")
 FOREACH (IDL_FILE ${STARFISH_IDL})
     FILE (READ ${IDL_FILE} IDL_STRING)
     STRING (REGEX MATCH "[[].*Exposed=(Worker|.*,Worker)" MATCHED_IDL_FILE ${IDL_STRING})
@@ -68,31 +70,50 @@ FILE (GLOB STARFISH_WEBWORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/platform/message_loop/*.cpp
     ${STARFISH_ROOT}/src/platform/network/curl/*.cpp
     ${STARFISH_ROOT}/src/platform/network/http/*.cpp
+    ${STARFISH_ROOT}/src/platform/file/File.cpp
 )
 
 FILE (GLOB STARFISH_WEBWORKER_CORE_SRC 
     ${STARFISH_ROOT}/src/core/util/*.cpp
     ${STARFISH_ROOT}/src/core/fileapi/*.cpp
     ${STARFISH_ROOT}/src/core/extra/Console.cpp
+    ${STARFISH_ROOT}/src/core/extra/MimeType.cpp
     ${STARFISH_ROOT}/src/core/page/WebBase.cpp
+    ${STARFISH_ROOT}/src/core/page/NavigatorMixin.cpp
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp
+    ${STARFISH_ROOT}/src/core/dom/WebOrigin.cpp
     ${STARFISH_ROOT}/src/core/csp/*.cpp
+    ${STARFISH_ROOT}/src/core/fetch/*.cpp
+    ${STARFISH_ROOT}/src/core/fetch/stream/*.cpp
 )
 
 FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC 
     ${STARFISH_ROOT}/src/binding/ScriptWrappable.cpp
     ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
-    ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
+    ${STARFISH_ROOT}/src/binding/ScriptBindingWorkerInstance.cpp
+    ${STARFISH_ROOT}/src/binding/RequestInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ArrayBufferViewOrArrayBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SecurityPolicyViolationEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ResponseInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ErrorEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMPointInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CustomEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/RequestOrUSVStringBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST
     ${STARFISH_WEBWORKER_DEFAULT_SRC}
     ${STARFISH_WEBWORKER_CORE_SRC}
-    # ${STARFISH_WEBWORKER_BINDING_SRC} // TODO: include source files
+    ${STARFISH_WEBWORKER_BINDING_SRC}
     ${STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC}
 )
 
@@ -127,15 +148,15 @@ ADD_EXECUTABLE (starfish.webworker
                 ${STARFISH_WEBWORKER_ENTRY})
 
 # Create JavaScript binding source for worker
-# TODO: Enable command
-# ADD_CUSTOM_TARGET (CREATE_JSBINDINGSOURCE
-#     COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding --exposed worker
-# )
-#ADD_DEPENDENCIES (${STARFISH_WEBWORKER_OBJECT_LIBRARY} ${STARFISH_WEBWORKER_DEPENDENCIES} CREATE_JSBINDINGSOURCE)
+ADD_CUSTOM_TARGET (CREATE_JSBINDINGSOURCE
+    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding --exposed worker
+)
+ADD_DEPENDENCIES (${STARFISH_WEBWORKER_OBJECT_LIBRARY} ${STARFISH_WEBWORKER_DEPENDENCIES} CREATE_JSBINDINGSOURCE)
 
 ADD_CUSTOM_COMMAND (TARGET starfish.webworker POST_BUILD
     COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${STARFISH_WEBWORKER_OUTPUT_NAME} ${STARFISH_ROOT}/${STARFISH_WEBWORKER_OUTPUT_NAME}
 )
+
 
 message (STATUS "FLAGS: " ${LWE_CXXFLAGS})
 message (STATUS "LIBRARIES: " ${STARFISH_WEBWORKER_LINK_LIBRARIES})

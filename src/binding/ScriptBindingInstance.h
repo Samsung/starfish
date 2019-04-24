@@ -125,7 +125,8 @@ protected:
 #ifdef TIZEN_DEVICE_API
     ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI;
 #endif
-    virtual void initJSBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state);
+    virtual void initJavaScriptBinding(Escargot::ContextRef* context, 
+        Escargot::ExecutionStateRef* state);
 };
 }
 

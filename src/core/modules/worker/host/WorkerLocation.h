@@ -17,25 +17,35 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWebWorker__)
-#define __StarfishWebWorker__
+#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWorkerLocation__)
+#define __StarfishWorkerLocation__
+
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
-class WebWorker : public gc {
+class ResourceURL;
+
+class WorkerLocation : public ScriptWrappable {
 public:
-    WebWorker();
-    virtual ~WebWorker();
+    WorkerLocation(ExecutionContext* executionContext, ResourceURL* url);
 
-    bool init();
-    bool start();
-    bool tick();
-    bool terminate();
-    bool run();
-    bool pause();
-    bool resume();
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WorkerLocation)
+
+    String* href();
+    String* origin();
+    String* protocol();
+    String* host();
+    String* hostname();
+    String* port();
+    String* pathname();
+    String* search();
+    String* hash();
+
+private:
+    ExecutionContext* m_executionContext;
+    ResourceURL* m_url;
 };
+}
 
-} // namespace Starfish
-
-#endif // __StarfishWebWorker__
+#endif

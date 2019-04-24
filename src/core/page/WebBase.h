@@ -104,8 +104,6 @@ public:
     {
     }
 
-    virtual Console* console() const = 0;
-
     virtual bool isWebView() const
     {
         return false;
@@ -136,6 +134,11 @@ public:
     bool isValidBlobURL(Blob* ptr);
     BlobURLStore findBlobURL(Blob* ptr);
     void clearBlobURLStore();
+
+    Console* console() const
+    {
+        return m_console;
+    }
 
     const icu::Locale& locale()
     {
@@ -234,6 +237,8 @@ protected:
     MessageLoop* m_messageLoop;
     Timer* m_timer;
     ThreadPool* m_threadPool;
+
+    Console* m_console;
 
     LWE::WebSecurityMode m_webSecurityMode;
 

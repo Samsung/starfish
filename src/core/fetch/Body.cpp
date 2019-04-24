@@ -20,8 +20,6 @@
 #include "StarfishConfig.h"
 #include "core/fetch/Body.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/DOMException.h"
 #include "core/util/URL.h"
@@ -29,7 +27,6 @@
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/fetch/stream/ReadableStreamBuffer.h"
 #include "core/fetch/stream/ReadableStreamDefaultReader.h"
-#include "core/xml/XMLHttpRequest.h"
 
 namespace Starfish {
 

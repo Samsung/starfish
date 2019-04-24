@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
@@ -18,26 +17,22 @@
  *  USA
  */
 
-#ifndef __StarfishScriptBindingWindowInstance__
-#define __StarfishScriptBindingWindowInstance__
+#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWorkerNavigator__)
+#define __StarfishWorkerNavigator__
+
+#include "binding/ScriptWrappable.h"
+#include "core/page/NavigatorMixin.h"
 
 namespace Starfish {
 
-class ScriptBindingWindowInstance final : public ScriptBindingInstance {
+class ResourceURL;
+
+class WorkerNavigator : public ScriptWrappable, public NavigatorMixin {
 public:
-    ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance, Window* ownerWindow);
+    WorkerNavigator(ExecutionContext* executionContext);
 
-    void destroy() override;
-
-    Window* ownerWindow() override;
-    Document* ownerDocument() override;
-    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
-private:
-    Window* m_ownerWindow;
-
-    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WorkerNavigator)
 };
-
 }
 
 #endif

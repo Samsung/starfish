@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
@@ -18,26 +17,36 @@
  *  USA
  */
 
-#ifndef __StarfishScriptBindingWindowInstance__
-#define __StarfishScriptBindingWindowInstance__
+#if defined(STARFISH_WEBWORKER_HOST) && \
+    !defined(__StarfishServiceWorkerGlobalScope__)
+#define __StarfishServiceWorkerGlobalScope__
+
+#include "core/modules/worker/host/WorkerGlobalScope.h"
 
 namespace Starfish {
 
-class ScriptBindingWindowInstance final : public ScriptBindingInstance {
+class WebWorker;
+class ResourceURL;
+class ErrorEventInit;
+
+class ServiceWorkerGlobalScope : public WorkerGlobalScope {
 public:
-    ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance, Window* ownerWindow);
+    ServiceWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
+                             String* charSet);
 
-    void destroy() override;
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
-    Window* ownerWindow() override;
-    Document* ownerDocument() override;
-    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isServiceWorkerGlobalScope() const override;
+
 private:
-    Window* m_ownerWindow;
-
-    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        WorkerGlobalScope::fillGCDescriptor(desc);
+    }
 };
-
 }
 
 #endif

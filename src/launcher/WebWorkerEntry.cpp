@@ -20,15 +20,61 @@
 #ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
-#include "core/modules/serviceworker/host/WebWorker.h"
+#include "LWEWebView.h"
+#include "Starfish.h"
+#include "core/modules/worker/host/WebWorker.h"
 #include <functional>
 #include <cstdio>
 #include <iostream>
+#include <signal.h>
+#ifdef OS_POSIX
+#include <unistd.h>
+#endif
+
+namespace LWE {
+extern Starfish::Starfish* g_starfishInstance;
+}
+
+static volatile sig_atomic_t g_workerDoneFlag = 0;
+
+static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
+{
+    g_workerDoneFlag = 1;
+}
 
 int main(int argc, char* argv[])
 {
-    Starfish::WebWorker webWorker;
-    return webWorker.run();
+    if (argc == 1) {
+        puts("please specify url");
+        return -1;
+    }
+
+    LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
+                         "/tmp/Starfish_WebWorkerCookies.txt", "/tmp");
+
+    Starfish::WebWorker* webWorker = Starfish::WebWorker::create(
+        LWE::g_starfishInstance, "ko-KR", "Asia/Seoul",
+        Starfish::String::emptyString);
+
+    webWorker->run(std::string(argv[1]));
+
+    struct sigaction act;
+    memset(&act, '\0', sizeof(act));
+    act.sa_sigaction = setDoneFlag;
+    act.sa_flags = SA_SIGINFO;
+
+    if (sigaction(SIGINT, &act, NULL) < 0) {
+        perror("sigaction");
+        return 1;
+    }
+
+    while (!g_workerDoneFlag) {
+        usleep(100);
+    }
+
+    LWE::LWE::Finalize();
+
+    return 0;
 }
 
 #endif

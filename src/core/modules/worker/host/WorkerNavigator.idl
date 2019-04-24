@@ -1,0 +1,10 @@
+// https://html.spec.whatwg.org/multipage/workers.html#dom-worker-navigator
+
+[STARFISH_WEBWORKER_HOST, Exposed=Worker, NoInterfaceObject]
+interface WorkerNavigator {
+  [Unimplemented] readonly attribute unsigned long long hardwareConcurrency; // NavigatorConcurrentHardware
+};
+
+WorkerNavigator implements NavigatorID;
+WorkerNavigator implements NavigatorLanguage;
+WorkerNavigator implements NavigatorOnLine;

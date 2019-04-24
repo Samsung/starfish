@@ -29,6 +29,8 @@
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#else
+#include "core/modules/worker/host/WorkerGlobalScope.h"
 #endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #include <EscargotPublic.h>
