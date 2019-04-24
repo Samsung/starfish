@@ -14,8 +14,26 @@ android {
         abortOnError false
         checkReleaseBuilds false
     }
-    buildTypes {
+    signingConfigs {
         release {
+            // https://github.com/aosp-mirror/platform_build/tree/master/target/product/security
+            storeFile file("testkey.jks")
+            storePassword "android"
+            keyAlias "testkey"
+            keyPassword "android"
+        }
+    }
+    buildTypes {
+        debug {
+            debuggable = true
+            jniDebuggable true
+            renderscriptDebuggable true
+        }
+        release {
+            signingConfig signingConfigs.release
+            debuggable = true
+            jniDebuggable true
+            renderscriptDebuggable true
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

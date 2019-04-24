@@ -207,7 +207,7 @@ void Starfish::printEveryReachableGCObjects()
             STARFISH_ASSERT(size == bytes);
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
             STARFISH_LOG_ERROR("@@@ kind %d pointer %p\n", (int)kind, ptr);
-#if !defined(NDEBUG) && !defined(OS_WINDOWS)
+#if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID))
             GC_print_backtrace(ptr);
 #endif
         },

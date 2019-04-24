@@ -10,7 +10,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                cppFlags "-fexceptions"
+                arguments "-DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF", "-DLTO=0"
             }
         }
         ndk {
