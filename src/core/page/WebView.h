@@ -71,7 +71,6 @@ class Thread;
 class ThreadPool;
 class Mutex;
 class Inspector;
-class Console;
 class MouseData;
 class TouchData;
 class PlatformKeyEventData;
@@ -328,11 +327,6 @@ public:
         return m_publicLayerUserDataMap;
     }
 
-    Console* console() const override
-    {
-        return m_console;
-    }
-
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     Avplay* avplay()
     {
@@ -503,7 +497,6 @@ private:
 
     GCVector<Thread*> m_parallelJobExecutorThreadPool;
 
-    Console* m_console;
 #ifdef STARFISH_ENABLE_TTS
     TTS* m_tts;
 #endif

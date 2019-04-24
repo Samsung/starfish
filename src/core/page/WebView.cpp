@@ -74,7 +74,6 @@
 #include "browser/history/HistoryManager.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
-#include "core/extra/Console.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
 
@@ -259,7 +258,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_inIdleMode(false)
     , m_didFirstRenderingAfterWakeup(true)
     , m_rootStackingContext(nullptr)
-    , m_console(new Console(this))
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(new TTS(this))
 #endif

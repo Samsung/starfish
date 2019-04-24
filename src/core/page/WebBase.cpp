@@ -25,6 +25,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
+#include "core/extra/Console.h"
 
 namespace Starfish {
 
@@ -37,8 +38,12 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_customUserAgentString(customUserAgentString)
     , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
+    , m_console(new Console(this))
     , m_webSecurityMode(LWE::WebSecurityMode::Enable)
 {
+    STARFISH_ASSERT(starfish != nullptr && locale != nullptr &&
+                    timezoneID != nullptr && customUserAgentString != nullptr);
+
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif

@@ -294,7 +294,13 @@ const char* getWindowsTempDir();
 } // namespace Starfish
 #endif
 
-#define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
+#if defined(STARFISH_WEBWORKER_HOST)
+#define STARFISH_LOG_TAG "[WORKER] "
+#else
+#define STARFISH_LOG_TAG ""
+#endif
+
+#define STARFISH_LOG_INFO(...) fprintf(stdout, STARFISH_LOG_TAG __VA_ARGS__);
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
@@ -314,9 +320,10 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_ERROR(fmt, ...)                                \
-    do {                                                            \
-        fprintf(stderr, "\033[0;31m" fmt "\033[0m", ##__VA_ARGS__); \
+#define STARFISH_LOG_ERROR(fmt, ...)                                 \
+    do {                                                             \
+        fprintf(stderr, "\033[0;31m" STARFISH_LOG_TAG fmt "\033[0m", \
+                ##__VA_ARGS__);                                      \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
@@ -337,9 +344,10 @@ const char* getWindowsTempDir();
     ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_WARN(fmt, ...)                                 \
-    do {                                                            \
-        fprintf(stderr, "\033[0;33m" fmt "\033[0m", ##__VA_ARGS__); \
+#define STARFISH_LOG_WARN(fmt, ...)                                  \
+    do {                                                             \
+        fprintf(stderr, "\033[0;33m" STARFISH_LOG_TAG fmt "\033[0m", \
+                ##__VA_ARGS__);                                      \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN

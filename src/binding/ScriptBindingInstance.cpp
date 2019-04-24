@@ -17,11 +17,7 @@
  *  USA
  */
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "StarfishConfig.h"
-#include "core/page/Window.h"
-#endif
-
 #include "Starfish.h"
 #include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingInstance.h"
@@ -29,6 +25,12 @@
 #include "core/extra/Console.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/page/Window.h"
+#else
+#include "core/modules/worker/host/WorkerGlobalScope.h"
+#endif
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
@@ -74,7 +76,7 @@ void ScriptBindingInstance::initBinding()
 {
     ContextRef* context = scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(context);
-    initJSBinding(context, state);
+    initJavaScriptBinding(context, state);
     state->destroy();
 
 #ifdef TIZEN_DEVICE_API
@@ -196,8 +198,9 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
     return ValueRef::createUndefined();
 }
 
-void ScriptBindingInstance::initJSBinding(ContextRef* context, ExecutionStateRef* state)
+void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context, ExecutionStateRef* state)
 {
+    STARFISH_ASSERT(context != nullptr && state != nullptr);
     // binding names first
     GlobalObjectRef* globalObject = context->globalObject();
 #define DECLARE_NAME_FOR_BINDING(exportName)                                   \

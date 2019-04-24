@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
@@ -17,70 +18,30 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
-
-#include "StarfishConfig.h"
-#include "core/modules/serviceworker/host/WebWorker.h"
+#if defined(STARFISH_WEBWORKER_HOST) && \
+    !defined(__StarfishScriptBindingWorkerInstance__)
+#define __StarfishScriptBindingWorkerInstance__
 
 namespace Starfish {
 
-WebWorker::WebWorker()
-{
+class WorkerGlobalScope;
+
+class ScriptBindingWorkerInstance final : public ScriptBindingInstance {
+public:
+    ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+        WorkerGlobalScope* workerGlobalScope);
+
+    Window* ownerWindow() override;
+    Document* ownerDocument() override;
+
+    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
+    void destroy() override;
+private:
+    WorkerGlobalScope* m_ownerWorkerGlobalScope;
+
+    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+};
+
 }
-
-WebWorker::~WebWorker()
-{
-}
-
-bool WebWorker::init()
-{
-    STARFISH_LOG_INFO("WebWorker::init\n");
-    return true;
-}
-
-bool WebWorker::start()
-{
-    STARFISH_LOG_INFO("WebWorker::start\n");
-    return true;
-}
-
-bool WebWorker::tick()
-{
-    return false;
-}
-
-bool WebWorker::terminate()
-{
-    STARFISH_LOG_INFO("WebWorker::terminate\n");
-    return true;
-}
-
-bool WebWorker::run()
-{
-    bool more = false;
-
-    init();
-    start();
-
-    do {
-        more = tick();
-    } while (more);
-
-    return terminate();
-}
-
-bool WebWorker::pause()
-{
-    STARFISH_LOG_INFO("WebWorker::pause\n");
-    return true;
-}
-
-bool WebWorker::resume()
-{
-    STARFISH_LOG_INFO("WebWorker::resume\n");
-    return true;
-}
-
-} // namespace Starfish
 
 #endif

@@ -35,7 +35,7 @@ public:
 private:
     Window* m_ownerWindow;
 
-    void initJSBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
 };
 
 }
