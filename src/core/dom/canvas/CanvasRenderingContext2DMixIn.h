@@ -24,6 +24,7 @@
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasPath.h"
+#include "core/dom/DOMExceptionOr.h"
 
 namespace Starfish {
 
@@ -35,9 +36,13 @@ class DOMStringOrCanvasGradientOrCanvasPattern;
 class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
+class HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement;
 
 enum class CanvasLineCap : int;
 enum class CanvasLineJoin : int;
+
+typedef HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement
+    CanvasImageSource;
 
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
                                       public CanvasPathInterfaceMixIn {
@@ -138,13 +143,11 @@ public:
     // TODO :CanvasText
 
     // CanvasDrawImage
-    // NOTE Replace first argument's type of "drawImage" temporarily to
-    // implement mock
-    // CanvasImageSource -> ScriptValue
-    void drawImage(ScriptValue image, float dx, float dy);
-    void drawImage(ScriptValue image, float dx, float dy, float dw, float dh);
-    void drawImage(ScriptValue image, float sx, float sy, float sw, float sh,
-                   float dx, float dy, float dw, float dh);
+    void drawImage(CanvasImageSource image, float dx, float dy);
+    void drawImage(CanvasImageSource image, float dx, float dy, float dw,
+                   float dh);
+    void drawImage(CanvasImageSource image, float sx, float sy, float sw,
+                   float sh, float dx, float dy, float dw, float dh);
 
     // CanvasImageData
     ImageData* createImageData(int32_t sw, int32_t sh);
@@ -221,6 +224,8 @@ private:
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
     void setLineDashToCanvas();
+    DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
+        CanvasImageSource image);
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;

@@ -87,13 +87,16 @@ jobs:
             command: /etc/init.d/networking restart
       - checkout
       - run:
+            name : Check tidy
+            command: ./tool/check_tidy.py
+      - run:
             name : Run build script
             command: /root/workspace/build.sh x64_glfw_debug
       - run:
             name : Install test dep
             command: ninja install_pixel_test_dep
       - run:
-            no_output_timeout: 60m
+            no_output_timeout: 30m
             name : Run test
             command: /root/workspace/run_test.sh
   build_x64_release:
@@ -111,6 +114,7 @@ jobs:
       - checkout
       - run:
             name : Run build script
+            no_output_timeout: 20m
             command: /root/workspace/build.sh x64_glfw_release
 workflows:
   version: 2
