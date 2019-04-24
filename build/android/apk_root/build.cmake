@@ -1,18 +1,158 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
-
-# Sets the minimum version of CMake required to build the native library.
-
 cmake_minimum_required(VERSION 3.4.1)
 
-# Creates and names a library, sets it as either STATIC
-# or SHARED, and provides the relative paths to its source code.
-# You can define multiple libraries, and CMake builds them for you.
-# Gradle automatically packages shared libraries with your APK.
+project (STARFISH)
 
-set (CMAKE_CXX_STANDARD 11)
+#######################################################
+# CONFIGURATION
+#######################################################
 
-set (ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
+set(CMAKE_CXX_STANDARD 11)
+set(OPENGL_LIB GLESv3)
+set(LTO "0" CACHE STRING "LTO")
+
+
+#######################################################
+# SOURCE FILES
+#######################################################
+
+file(GLOB_RECURSE STARFISH_SRC "${STARFISH_ROOT_PATH}/src/*.cpp" )
+list(REMOVE_ITEM STARFISH_SRC "${STARFISH_ROOT_PATH}/src/shell/shell.cpp")
+
+file(GLOB CLIPPER_SRC "${STARFISH_ROOT_PATH}/third_party/clipper/cpp/clipper.cpp" )
+file(GLOB GCUTIL_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/*.cpp" )
+file(GLOB DOUBLEC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion/*.cc" )
+file(GLOB YARR_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr/*.cpp" )
+file(GLOB BDWGC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/*.c" )
+file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/src/**/*.cpp" )
+
+
+#######################################################
+# INCLUDE DIRS
+#######################################################
+
+set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
+set(LWE_INCLUDE_DIRS
+    ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc
+    ${STARFISH_ROOT_PATH} ${STARFISH_ROOT_PATH}/inc ${STARFISH_ROOT_PATH}/src
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/include
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil
+    ${STARFISH_ROOT_PATH}/third_party/escargot/src
+    ${STARFISH_ROOT_PATH}/third_party/escargot/include
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/checked_arithmetic
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/rapidjson/include
+    ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr
+    ${STARFISH_ROOT_PATH}/third_party/clipper/cpp
+    ${STARFISH_ROOT_PATH}/third_party/rapidxml
+    ${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox
+    ${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp
+    ${STARFISH_ROOT_PATH}/third_party/libtuv/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/config
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/core
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/image
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/gpu
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/ports
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/libpng
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/giflib
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/boringssl/src/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/libjpeg-turbo
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/curl/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/freetype/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/harfbuzz_ng/src
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/common
+    ${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/i18n)
+
+
+#######################################################
+# DEFINITION
+#######################################################
+
+set(LWE_DEFINITIONS
+    -DHAVE_CONFIG_H
+    -DANDROID
+    -DPLATFORM_ANDROID
+    -DIGNORE_DYNAMIC_LOADING
+    -DGC_DONT_REGISTER_MAIN_STATIC_DATA
+    -DUSE_GET_STACKBASE_FOR_MAIN
+    -DSTARFISH_ANDROID
+    -DSTARFISH_ENABLE_DOMPARSER
+    -DSTARFISH_ENABLE_HTTPCACHE
+    -DSTARFISH_IGNORE_SSL_VERIFYPEER
+    -DESCARGOT
+    -DESCARGOT_ENABLE_TYPEDARRAY
+    -DESCARGOT_ENABLE_PROMISE)
+
+IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
+    set(LWE_DEFINITIONS "${LWE_DEFINITIONS}"
+        -DESCARGOT_64=1)
+ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    set(LWE_DEFINITIONS "${LWE_DEFINITIONS}"
+        -DESCARGOT_32=1)
+ENDIF()
+
+
+#######################################################
+# CXXFLAGS & LDFLAGS
+#######################################################
+
+set(LWE_CXXFLAGS
+    -Wall
+    -Wno-format-nonliteral
+    -Wno-invalid-offsetof
+    -Wno-unused-parameter
+    -Wno-unused-result
+    -Wno-unused-variable
+    -Wno-unused-function
+    -Wno-deprecated-declarations
+    -Wno-type-limits
+    -Wno-parentheses-equality
+    -Wno-unused-parameter
+    -Wno-dynamic-class-memaccess
+    -Wno-deprecated-register
+    -Wno-expansion-to-defined
+    -Wno-return-type
+    -Wno-type-limits
+    -Wno-unused-result
+    -Wno-narrowing
+    -fno-rtti
+    -fexceptions
+    -fvisibility=hidden
+    -fno-omit-frame-pointer
+    -fstack-protector
+    -fno-math-errno
+    -fdata-sections
+    -ffunction-sections
+    -fno-fast-math
+    -fno-unsafe-math-optimizations
+    -fdenormal-fp-math=ieee)
+
+set(LWE_LDFLAGS )
+
+IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
+    set(LWE_CXXFLAGS "${LWE_CXXFLAGS}"
+        -march=armv8-a)
+ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    set(LWE_CXXFLAGS "${LWE_CXXFLAGS}"
+        -march=armv7-a
+        -mfloat-abi=softfp
+        -mfpu=neon)
+ENDIF()
+
+IF (${LTO} STREQUAL "1")
+    # armeabi-v7a uses -Os by default, which cannot be used with -flto
+    IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
+        set(LWE_CXXFLAGS "${LWE_CXXFLAGS}" -flto)
+        set(LWE_LDFLAGS "${LWE_LDFLAGS}" -flto)
+    ENDIF()
+ENDIF()
+
+
+#######################################################
+# LIBRARIES
+#######################################################
 
 IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
     set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/arm64-v8a)
@@ -21,9 +161,6 @@ ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
     set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
     set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a)
 ENDIF()
-
-
-set(OPENGL_LIB GLESv3)
 
 # Copy prebuilt library to packged lib path.
 execute_process(COMMAND @rm ${PACKAGED_LIB_PATH}/*)
@@ -35,137 +172,12 @@ list(REMOVE_ITEM PREBUILT_SHARED_LIBS ${PREBUILT_LIB_PATH}/libicui18n.so ${PREBU
 file(COPY ${PREBUILT_SHARED_LIBS}
      DESTINATION ${PACKAGED_LIB_PATH})
 
-
-add_definitions(-DESCARGOT -DHAVE_CONFIG_H -DPLATFORM_ANDROID -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA -DUSE_GET_STACKBASE_FOR_MAIN -DSTARFISH_ENABLE_DOMPARSER)
-add_definitions(-DSTARFISH_ANDROID -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -DANDROID=1 -DNDEBUG -DSTARFISH_IGNORE_SSL_VERIFYPEER -DSTARFISH_ENABLE_HTTPCACHE )
-IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
-    add_definitions( -DESCARGOT_64=1 )
-ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
-    add_definitions( -DESCARGOT_32=1 )
-ENDIF()
-#add_definitions(-D_GLIBCXX_DEBUG -DGC_DEBUG )
-
-include_directories(${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc)
-
-include_directories(${STARFISH_ROOT_PATH} ${STARFISH_ROOT_PATH}/inc ${STARFISH_ROOT_PATH}/src)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/include)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/src)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/include)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/checked_arithmetic)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/rapidjson/include)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr)
-include_directories(${STARFISH_ROOT_PATH}/third_party/clipper/cpp)
-include_directories(${STARFISH_ROOT_PATH}/third_party/rapidxml)
-include_directories(${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox)
-include_directories(${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp)
-include_directories(${STARFISH_ROOT_PATH}/third_party/libtuv/include)
-
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/config)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/core)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/image)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/gpu)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/ports)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/libpng)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/giflib)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/boringssl/src/include)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/libjpeg-turbo)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/curl/include)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/freetype/include)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/harfbuzz_ng/src)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/common)
-include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/i18n)
-
-file(GLOB CLIPPER_SRC "${STARFISH_ROOT_PATH}/third_party/clipper/cpp/clipper.cpp" )
-file(GLOB GCUTIL_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/*.cpp" )
-file(GLOB DOUBLEC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion/*.cc" )
-file(GLOB YARR_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr/*.cpp" )
-file(GLOB BDWGC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/*.c" )
-file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/src/**/*.cpp" )
-file(GLOB_RECURSE STARFISH_SRC "${STARFISH_ROOT_PATH}/src/*.cpp" )
-
-list(REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT_PATH}/src/shell/shell.cpp)
-add_definitions("-fno-rtti
-                -Wno-format-nonliteral
-                -Wno-invalid-offsetof
-                -fvisibility=hidden
-                -fno-omit-frame-pointer
-                -fstack-protector
-                -Wno-unused-parameter
-                -Wno-unused-result
-                -Wno-unused-variable
-                -Wno-unused-function
-                -Wno-deprecated-declarations
-                -Wno-type-limits
-                -fno-math-errno
-                -fdata-sections
-                -ffunction-sections
-                -fno-fast-math
-                -fno-unsafe-math-optimizations
-                -fdenormal-fp-math=ieee
-                -Wno-parentheses-equality
-                -Wno-unused-parameter
-                -Wno-dynamic-class-memaccess
-                -Wno-deprecated-register
-                -Wno-expansion-to-defined
-                -Wno-return-type
-                -Wno-type-limits
-                -Wno-unused-result ")
-
-IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
-    add_definitions("-march=armv8-a
-                -Wno-narrowing " )
-ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
-    add_definitions("-march=armv7-a
-                -mfloat-abi=softfp
-                -mfpu=neon
-                -Wno-narrowing " )
-ENDIF()
-
-add_library( # Sets the name of the library.
-             lightweightwebengine
-             # Sets the library as a shared library.
-             SHARED
-             # Provides a relative path to your source file(s).
-             ${STARFISH_SRC}
-             ${BDWGC_SRC}
-             ${GCUTIL_SRC}
-             ${DOUBLEC_SRC}
-             ${YARR_SRC}
-             ${ESCARGOT_SRC}
-             ${CLIPPER_SRC}
-             )
-set_target_properties(lightweightwebengine PROPERTIES LINKER_LANGUAGE CXX)
-# Searches for a specified prebuilt library and stores the path as a
-# variable. Because CMake includes system libraries in the search path by
-# default, you only need to specify the name of the public NDK library
-# you want to add. CMake verifies that the library exists before
-# completing its build.
-
-find_library( # Sets the name of the path variable.
-              log-lib
-
-              # Specifies the name of the NDK library that
-              # you want CMake to locate.
-              log )
-
-# Specifies libraries CMake should link to your target library. You
-# can link multiple libraries, such as libraries you define in this
-# build script, prebuilt third-party libraries, or system libraries.
-
+find_library( log-lib log )
 find_library( z-lib z )
 find_library( jnig-lib jnigraphics )
 find_library( android-lib android )
 
 LINK_DIRECTORIES("libs")
-
-# Specifies libraries CMake should link to your target library. You
-# can link multiple libraries, such as libraries you define in this
-# build script, prebuilt third-party libraries, or system libraries.
 
 add_library( ft2-lib SHARED IMPORTED )
 set_target_properties( ft2-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libft2.so )
@@ -195,8 +207,28 @@ set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_P
 add_library( icuuc-lib SHARED IMPORTED )
 set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
 
-target_link_libraries( # Specifies the target library.
-                       lightweightwebengine
+
+#######################################################
+# BUILD TARGET
+#######################################################
+
+add_library(lightweightwebengine
+            SHARED
+            ${STARFISH_SRC}
+            ${BDWGC_SRC}
+            ${GCUTIL_SRC}
+            ${DOUBLEC_SRC}
+            ${YARR_SRC}
+            ${ESCARGOT_SRC}
+            ${CLIPPER_SRC})
+
+target_compile_definitions(lightweightwebengine PUBLIC ${LWE_DEFINITIONS})
+target_compile_options(lightweightwebengine PUBLIC ${LWE_CXXFLAGS})
+target_include_directories(lightweightwebengine PUBLIC ${LWE_INCLUDE_DIRS})
+target_link_libraries(lightweightwebengine ${LWE_LDFLAGS})
+set_target_properties(lightweightwebengine PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries( lightweightwebengine
                        png-lib
                        skia-lib
                        hb-lib
@@ -208,13 +240,9 @@ target_link_libraries( # Specifies the target library.
                        icuuc-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
                        ${PREBUILT_LIB_PATH}/libtuv.a
-#                       ${PREBUILT_LIB_PATH}/libicui18n.a
-#                       ${PREBUILT_LIB_PATH}/libicuuc.a
-#                       ${PREBUILT_LIB_PATH}/icudtl_dat.o
                        ${z-lib}
                        ${jnig-lib}
                        ${log-lib}
                        ${OPENGL_LIB}
                        ${android-lib}
-                       EGL
-                        )
+                       EGL)
