@@ -25,7 +25,6 @@
 #include "core/modules/worker/host/WebWorker.h"
 #include <functional>
 #include <cstdio>
-#include <iostream>
 #include <signal.h>
 #ifdef OS_POSIX
 #include <unistd.h>

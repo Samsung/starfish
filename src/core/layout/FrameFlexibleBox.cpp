@@ -678,6 +678,20 @@ void FlexFormattingContext::computeCrossSize()
                 m_layoutContext.pushBlockBoxAligningAtFirstBaseline(
                     flexItem->asFrameBlockBox());
             }
+
+            bool isStretchFlexItem = false;
+            if (flexItem->style()->alignSelf() == StretchAlignItemValue) {
+                if ((m_isMainAxisInInlineAxis &&
+                     flexItem->style()->height().isAuto() &&
+                     !margin.top().isAuto() && !margin.bottom().isAuto()) ||
+                    (!m_isMainAxisInInlineAxis &&
+                     flexItem->style()->width().isAuto() &&
+                     !margin.left().isAuto() && !margin.right().isAuto())) {
+                    flexItemsToStretchInfos.emplace_back(i, flexItem);
+                    isStretchFlexItem = true;
+                }
+            }
+
             flexItem->markNeedsLayout();
             if (m_isMainAxisInInlineAxis) {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
@@ -690,6 +704,9 @@ void FlexFormattingContext::computeCrossSize()
             } else {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveWidth;
+                if (!isStretchFlexItem) {
+                    resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
+                }
                 flexItem->layout(m_layoutContext, resolveWhat);
             }
             if (shouldAlignAtFirstBaseline) {
@@ -712,17 +729,6 @@ void FlexFormattingContext::computeCrossSize()
             } else {
                 maxHypotheticalCrossSize =
                     std::max(maxHypotheticalCrossSize, flexItem->outerWidth());
-            }
-
-            if (flexItem->style()->alignSelf() == StretchAlignItemValue) {
-                if ((m_isMainAxisInInlineAxis &&
-                     flexItem->style()->height().isAuto() &&
-                     !margin.top().isAuto() && !margin.bottom().isAuto()) ||
-                    (!m_isMainAxisInInlineAxis &&
-                     flexItem->style()->width().isAuto() &&
-                     !margin.left().isAuto() && !margin.right().isAuto())) {
-                    flexItemsToStretchInfos.emplace_back(i, flexItem);
-                }
             }
         }
 

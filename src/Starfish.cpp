@@ -17,13 +17,6 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_TEST
-#include <unistd.h>
-#include <ios>
-#include <iostream>
-#include <fstream>
-#endif
-
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/modules/threading/Locker.h"

@@ -21,8 +21,6 @@
 
 #include "StarfishConfig.h"
 
-#include <iostream>
-
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
