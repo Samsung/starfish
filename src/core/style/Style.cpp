@@ -10015,6 +10015,10 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
             v->push_back(
                 GridTrackSize(CSSLength(str, number).toLength(),
                               GridTrackSize::GridTrackType::LengthType));
+        } else if (str == "%") {
+            v->push_back(
+                GridTrackSize(Length(Length::Percent, number / 100),
+                              GridTrackSize::GridTrackType::LengthType));
         } else {
             if (number == 0) {
                 v->push_back(
