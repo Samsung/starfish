@@ -441,7 +441,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // * the width of each cell, and
     // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
-    FrameTableSectionBox* firstSection = firstSectionBoxInVisualOrder();
+    FrameTableSectionBox* firstSection = firstNonEmptySectionBoxInVisualOrder();
     if (firstSection) {
         FrameTableRowBox* nonEmptyFirstRow = nullptr;
         for (Frame* r = firstSection->firstChild(); r; r = r->next()) {
