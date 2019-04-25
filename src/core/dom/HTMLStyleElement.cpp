@@ -112,14 +112,18 @@ void HTMLStyleElement::didNodeRemoved(Node* parent, Node* oldChild)
 void HTMLStyleElement::didNodeInsertedToDocumentTree()
 {
     HTMLElement::didNodeInsertedToDocumentTree();
-    generateStyleSheet();
-    dispatchLoadEvent();
+    if (document()->doesParticipateInRendering()) {
+        generateStyleSheet();
+        dispatchLoadEvent();
+    }
 }
 
 void HTMLStyleElement::didNodeRemovedFromDocumentTree()
 {
     HTMLElement::didNodeRemovedFromDocumentTree();
-    removeStyleSheet();
+    if (document()->doesParticipateInRendering()) {
+        removeStyleSheet();
+    }
 }
 
 void HTMLStyleElement::generateStyleSheet()

@@ -53,6 +53,7 @@
 #ifdef STARFISH_ENABLE_TEST
 extern int g_testCompatibleMode;
 extern int g_startUpFlag;
+extern int g_exitCode;
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_GLFW)
@@ -638,13 +639,8 @@ int main(int argc, char* argv[])
     LWE::LWE::Finalize();
 
 #if defined(STARFISH_ENABLE_TEST)
-    auto stat = getSmapsStats();
-    STARFISH_LOG_INFO(
-        "PSS[%.1f MB] "
-        "RSS[%.1f MB] "
-        "Private_Dirty[%.1fMB]\n",
-        stat.Pss / 1024.f, stat.Rss / 1024.f, stat.Private_Dirty / 1024.f);
-#endif
-
+    return g_exitCode;
+#else
     return 0;
+#endif
 }

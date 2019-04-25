@@ -113,6 +113,7 @@ extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
 int g_testCompatibleMode;
 int g_startUpFlag;
+int g_exitCode;
 #endif
 
 namespace Starfish {
