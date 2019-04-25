@@ -1694,9 +1694,16 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
              repeatY == BackgroundRepeatValue::RepeatRepeatValue)) {
             if (type.isURL()) {
-                canvas->drawRepeatImage(
-                    id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
-                    true, true, imageRenderingValue);
+                if (positioningRect.x() == paintingRect.x() &&
+                    positioningRect.y() == paintingRect.y() &&
+                    paintingW == imgW && paintingH == imgH) {
+                    canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
+                                      imageRenderingValue);
+                } else {
+                    canvas->drawRepeatImage(
+                        id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
+                        true, true, imageRenderingValue);
+                }
             } else if (type.isGradient()) {
                 paintRepeatGradient(canvas, box, style, idx,
                                     Unit::Rect(x, y, paintingW, paintingH),
