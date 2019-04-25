@@ -15,16 +15,22 @@ def tc_handler(tc_file, output, err, show_progress=True):
     if not os.path.isfile(tc_expected_file):
         result = Strings.FAIL_SIGN + tc_file + ": Expected file does not exist."
     else:
+        sliced_output = output.split("wptTestEnd() called")[0]
         expected_out = None
         starfish_out = None
         with open(tc_expected_file) as fp:
             expected_out = RE_KEYWORDS.findall(fp.read())
-        starfish_out = RE_KEYWORDS.findall(output)
+        starfish_out = RE_KEYWORDS.findall(sliced_output)
 
-        if expected_out == starfish_out:
+        if starfish_out == expected_out:
             result = Strings.PASS_SIGN
             is_pass = True
         else:
+            print "output unmatched"
+            print "Starfish->"
+            print starfish_out
+            print "expected->"
+            print expected_out
             result = Strings.FAIL_SIGN
         result += tc_file
     if show_progress:

@@ -38,16 +38,28 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace Starfish {
-
 #ifdef STARFISH_ENABLE_TEST
+#include <signal.h>
+extern int g_exitCode;
 void customExit(int returnCode)
 {
     fflush(stdout);
     fflush(stderr);
+
+    // TODO enable this every port
+    // --hide-window + EFL window is not working correctly
+    // because EFL throws error
+#ifdef PORT_WEBVIEW_BRIDGE_GLFW
+    g_exitCode = returnCode;
+    raise(SIGINT);
+#else
     exit(returnCode);
+#endif
 }
 #endif
+
+
+namespace Starfish {
 
 struct TimeOutData : public gc {
     TimeOutData(GlobalScope* globalScope)
@@ -597,21 +609,16 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
 {
     puts("[PASS]");
     STARFISH_LOG_ERROR("%s\n", "[PASS]");
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GENERATE_WINDOW();
-    fflush(stdout);
-    fflush(stderr);
     customExit(0);
 
     return scriptUndefined();
 }
 
-void doWptTestEnd()
+static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
+    puts("wptTestEnd() called");
     if (gotTestAssert) {
         puts("[PASS]");
         STARFISH_LOG_ERROR("%s\n", "[PASS]");
@@ -621,13 +628,6 @@ void doWptTestEnd()
     if ((hide && strlen(hide))) {
         customExit(0);
     }
-}
-
-static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
-                                    ValueRef* thisValue, size_t argc,
-                                    ValueRef** argv, bool isNewExpression)
-{
-    doWptTestEnd();
     return ValueRef::createUndefined();
 }
 
