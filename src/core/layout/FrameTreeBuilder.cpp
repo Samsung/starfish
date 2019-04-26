@@ -30,6 +30,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameCounterText.h"
@@ -886,6 +887,10 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
                    display == DisplayValue::InlineListItemDisplayValue) {
             if (current->isCharacterData() &&
                 current->asCharacterData()->isText()) {
+                // mark needs painting dirty check
+                // because layout repaint tracker don't track damage
+                // without length change
+                current->webView()->markNeedsPaintingConsiderInRendering();
                 return new FrameText(current, current->style());
             } else if (current->isComment()) {
                 FrameTreeBuilder::clearTree(current);

@@ -199,6 +199,12 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             ctx.setIsQuickLayout(isQuickLayout);
             if ((!isQuickLayout && blockContainer(this)->hasBlockFlow()) ||
                 blockContainer(this)->needToEstablishBlockFormattingContext()) {
+                if (style()->position() ==
+                        PositionValue::RelativePositionValue &&
+                    isQuickLayout) {
+                    ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
+                        this);
+                }
                 addToRelativePositionedBoxesIfNeeded(ctx);
             }
             addToRelativePositionedBoxes(ctx);
@@ -448,9 +454,6 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             if (child->isFrameBox() &&
                 child->style()->position() == RelativePositionValue) {
                 auto box = child->asFrameBox();
-                LayoutUnit orgX = box->x();
-                LayoutUnit orgY = box->y();
-
                 bool dueToSelf = true;
                 if (box->node() && box->node()->parentElement()) {
                     Node* nd = box->node()->parentElement();
@@ -460,11 +463,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                     }
                 }
 
-                ctx.layoutRelativePositionedBox(box, dueToSelf);
-
-                box->setX(orgX - (box->x() - orgX));
-                box->setY(orgY - (box->y() - orgY));
-
+                ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
+                    box);
                 ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
             child = child->next();

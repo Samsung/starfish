@@ -779,9 +779,8 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
         if (m_boxes[i]->isFloating()) {
             if (m_boxes[i]->style()->position() == RelativePositionValue) {
                 auto box = m_boxes[i];
-                LayoutUnit orgX = box->x();
-                LayoutUnit orgY = box->y();
-
+                ctx.applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
+                    box);
                 bool dueToSelf = true;
                 if (box->node() && box->node()->parentElement()) {
                     Node* nd = box->node()->parentElement();
@@ -790,12 +789,6 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
                         dueToSelf = false;
                     }
                 }
-
-                ctx.layoutRelativePositionedBox(box, dueToSelf);
-
-                box->setX(orgX - (box->x() - orgX));
-                box->setY(orgY - (box->y() - orgY));
-
                 ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
         } else {
