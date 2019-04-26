@@ -24,6 +24,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -54,7 +55,7 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        updateImage(nullptr);
+        updateImage(m_element->document()->brokenImage());
     }
 
     virtual void didLoadFinished()
@@ -118,7 +119,10 @@ void SVGImageElement::didAttributeChanged(QualifiedName name, String* old,
                                     attributeRemoved);
 
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_href == name) {
+    if (ss->m_href == name || ss->m_xlinkHref == name ||
+        (!name.hasPrefix() &&
+         ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
+         ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
         if (attributeRemoved) {
             unloadImage();
         } else {
@@ -133,5 +137,21 @@ void SVGImageElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues);
+}
+
+WebOrigin* SVGImageElement::webOrigin()
+{
+    return WebOrigin::createDocumentOrigin(origin());
+}
+
+ResourceURL* SVGImageElement::origin()
+{
+    if (hasAttribute(starfish()->staticStrings()->m_href) != SIZE_MAX) {
+        return new ResourceURL(
+            getAttributeOrEmpty(starfish()->staticStrings()->m_href),
+            document()->baseURI());
+    } else {
+        return new ResourceURL(String::emptyString);
+    }
 }
 }

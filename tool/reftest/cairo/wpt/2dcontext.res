@@ -507,12 +507,12 @@ http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImag
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.path.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.1.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.2.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.svg.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.svg.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.transform.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.wrongtype.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.wrongtype.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerosource.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerosource.image.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_html_image.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_svg_image_1.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_svg_image_1.html

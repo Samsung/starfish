@@ -28,6 +28,7 @@
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/page/Window.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -132,10 +133,7 @@ void HTMLImageElement::setSrc(String* src)
 String* HTMLImageElement::src()
 {
     if (hasAttribute(starfish()->staticStrings()->m_src) != SIZE_MAX) {
-        return (new ResourceURL(
-                    getAttributeOrEmpty(starfish()->staticStrings()->m_src),
-                    document()->baseURI()))
-            ->urlString();
+        return origin()->urlString();
     } else {
         return String::emptyString;
     }
@@ -370,8 +368,19 @@ void HTMLImageElement::setNameAttr(String* name)
     setAttribute(starfish()->staticStrings()->m_name, name);
 }
 
-bool HTMLImageElement::isBroken() const
+WebOrigin* HTMLImageElement::webOrigin()
 {
-    return document()->brokenImage() == m_imageData;
+    return WebOrigin::createDocumentOrigin(origin());
+}
+
+ResourceURL* HTMLImageElement::origin()
+{
+    if (hasAttribute(starfish()->staticStrings()->m_src) != SIZE_MAX) {
+        return new ResourceURL(
+            getAttributeOrEmpty(starfish()->staticStrings()->m_src),
+            document()->baseURI());
+    } else {
+        return new ResourceURL(String::emptyString);
+    }
 }
 }

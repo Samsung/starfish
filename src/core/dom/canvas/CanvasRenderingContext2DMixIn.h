@@ -226,6 +226,7 @@ private:
     void setLineDashToCanvas();
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);
+    void markOriginCleanFlagDirtyIfNeeds(WebOrigin* webOrigin);
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;

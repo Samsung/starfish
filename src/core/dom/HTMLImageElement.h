@@ -27,6 +27,7 @@ namespace Starfish {
 class NativeImageData;
 class ImageResource;
 class Document;
+class WebOrigin;
 
 class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;
@@ -81,11 +82,13 @@ public:
 
     virtual void didNodeInsertedToDocumentTree() override;
 
-    bool isBroken() const;
+    WebOrigin* webOrigin();
 
 private:
     void unloadImage();
     void loadImage(String* src);
+    ResourceURL* origin();
+
     ImageResource* m_imageResource;
     NativeImageData* m_imageData;
 };
