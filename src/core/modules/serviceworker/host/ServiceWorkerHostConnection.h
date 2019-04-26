@@ -43,7 +43,7 @@ public:
                         Archivable* archivable) override;
 
     // receive
-    void onReceived(Socket* socket, const char* data) override;
+    void onReceived(Socket* socket, const char* data, size_t len) override;
 
     DEFINE_GETTER(ServiceWorkerHostProcessInterface*, client);
 

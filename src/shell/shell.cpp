@@ -349,6 +349,8 @@ int main(int argc, char* argv[])
             ttsMode = LWE::TTSMode::Forced;
         } else if (strcmp(argv[i], "--crash-test") == 0) {
             crashTest = true;
+        } else if (strcmp(argv[i], "--debug-worker") == 0) {
+            setenv("DEBUG_WORKER", "1", 1);
         }
     }
 

@@ -29,15 +29,20 @@ class Connection : public IORunnable::Client {
 public:
     Connection();
 
-    void onReceived(Socket* socket, const char* data) override;
+    void send(const char* data, size_t len);
+    void onReceived(Socket* socket, const char* data, size_t len) override;
     void onStopped() override;
-    Socket* socket() override
-    {
-        return m_socket;
-    }
+    Socket* socket() override;
 
 protected:
     Socket* m_socket;
+
+#ifdef STARFISH_ENABLE_TEST
+    bool m_isDebugEnabled;
+
+public:
+    DEFINE_GETTER(bool, isDebugEnabled);
+#endif
 };
 
 } // namespace Starfish

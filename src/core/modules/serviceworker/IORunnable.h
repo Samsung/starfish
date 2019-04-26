@@ -35,7 +35,8 @@ public:
         virtual ~Client()
         {
         }
-        virtual void onReceived(Socket* socket, const char* data) = 0;
+        virtual void onReceived(Socket* socket, const char* data,
+                                size_t len) = 0;
         virtual void onStopped() = 0;
         virtual Socket* socket() = 0;
     };
