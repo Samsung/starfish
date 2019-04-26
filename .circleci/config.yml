@@ -57,10 +57,10 @@ jobs:
           command: ./gradlew :app:assembleRelease
   build_x64_debug:
     docker:
-      - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
+      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.test,www1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge
     steps:
       - add_ssh_keys:
@@ -101,10 +101,10 @@ jobs:
             command: /root/workspace/run_test.sh
   build_x64_release:
     docker:
-      - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
+      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.test,www1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge
     steps:
       - add_ssh_keys:
