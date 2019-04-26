@@ -254,9 +254,9 @@ static void traceRepaintRegionJob(
                 nullptr);
         }
 
-        newInlineResultMap.push_back(std::move(std::make_tuple(
+        newInlineResultMap.push_back(std::make_tuple(
             currentFrame->asFrameBlockBox(), lastStackingContextOwner,
-            std::move(inlineResult))));
+            std::move(inlineResult)));
     }
 
     LayoutRepaintTracker::ComputeOverflow o(tracker, currentFrame,

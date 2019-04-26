@@ -29,9 +29,11 @@ namespace Starfish {
 class Frame;
 class NativeImageData;
 class PlatformWindow;
-class GradientDrawingInfo;
 class NativeGradient;
 class Path;
+
+struct GradientDrawingInfo;
+
 enum class CanvasLineCap : int;
 enum class CanvasLineJoin : int;
 

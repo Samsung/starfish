@@ -51,7 +51,7 @@ void HTMLTableColElement::styleForPresentationAttribute(
 
         CSSStyleValuePair pair;
         CSSTokenVector tokens;
-        CSSTokenValue token(std::move(w->toUTF8NonGCString()));
+        CSSTokenValue token(w->toUTF8NonGCString());
         tokens.push_back(token);
         if (pair.updateValueWidth(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
