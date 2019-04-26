@@ -918,6 +918,31 @@ void LayoutContext::pushIntoInlineNonReplacedBoxPool(InlineNonReplacedBox* b)
     m_inlineNonReplacedBoxPool.push_back(b);
 }
 
+void LayoutContext::
+    applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(FrameBox* box)
+{
+    STARFISH_ASSERT(box);
+    STARFISH_ASSERT(box->style()->position() ==
+                    PositionValue::RelativePositionValue);
+
+    LayoutUnit orgX = box->x();
+    LayoutUnit orgY = box->y();
+
+    bool dueToSelf = true;
+    if (box->node() && box->node()->parentElement()) {
+        Node* nd = box->node()->parentElement();
+        if (nd->frame()->isFrameInline() &&
+            nd->style()->position() == RelativePositionValue) {
+            dueToSelf = false;
+        }
+    }
+
+    layoutRelativePositionedBox(box, dueToSelf);
+
+    box->setX(orgX - (box->x() - orgX));
+    box->setY(orgY - (box->y() - orgY));
+}
+
 PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
 {
     PreferredWidthContext* c = this;

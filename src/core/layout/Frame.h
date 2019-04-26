@@ -584,6 +584,9 @@ public:
         m_didResetTables[table] = true;
     }
 
+    void applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
+        FrameBox* fb);
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
