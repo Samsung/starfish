@@ -43,7 +43,8 @@ IORunnable::IORunnable(MessageLoop* messageLoop)
     STARFISH_ASSERT(messageLoop != nullptr);
     GC_REGISTER_FINALIZER_NO_ORDER(this,
                                    [](void* obj, void* cd) {
-                                       IORunnable* self = (IORunnable*)obj;
+                                       IORunnable* self =
+                                           castTo<IORunnable*>(obj);
                                        self->~IORunnable();
                                    },
                                    NULL, NULL, NULL);
@@ -63,6 +64,7 @@ void IORunnable::run()
             : client(nullptr)
             , socket(nullptr)
             , buffer(nullptr)
+            , len(0)
         {
         }
 
@@ -77,6 +79,7 @@ void IORunnable::run()
         Client* client;
         Socket* socket;
         void* buffer;
+        size_t len;
     };
 
     struct nn_pollfd pfd[MAX_LISTEN_SOCKET];
@@ -123,13 +126,14 @@ void IORunnable::run()
                         param->client = m_clients[i];
                         param->socket = socket;
                         param->buffer = buffer;
+                        param->len = rc;
 
                         m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
                             nullptr,
                             [](size_t, void* data) {
-                                Param* p = (Param*)data;
-                                p->client->onReceived(p->socket,
-                                                      (const char*)p->buffer);
+                                Param* p = castTo<Param*>(data);
+                                p->client->onReceived(
+                                    p->socket, (const char*)p->buffer, p->len);
                                 delete p;
                             },
                             param);
@@ -149,7 +153,7 @@ void IORunnable::run()
 
     for (const auto& connection : m_clients) {
         auto notifier = [](size_t, void* data) {
-            Client* client = (Client*)data;
+            Client* client = castTo<Client*>(data);
             client->onStopped();
         };
         m_messageLoop->addIdlerWithNoGCRootingInOtherThread(nullptr, notifier,
@@ -171,6 +175,7 @@ void IORunnable::stop()
 
 void IORunnable::addClient(Client* connection)
 {
+    STARFISH_ASSERT(connection != nullptr);
     std::unique_lock<std::mutex> lock(m_mutex);
 
     m_clients.push_back(connection);

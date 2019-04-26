@@ -72,7 +72,7 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
     msg.addParam(job->data());
     msg.archive(writer);
 
-    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+    send(writer.GetString(), writer.GetSize() + 1);
 }
 
 void ServiceWorkerClientConnection::matchRegistration(
@@ -88,12 +88,13 @@ void ServiceWorkerClientConnection::matchRegistration(
     msg.addParam(new GenericArchivable<String*>(TypeName::String, clientURL));
     msg.archive(writer);
 
-    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+    send(writer.GetString(), writer.GetSize() + 1);
 }
 
-void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
+void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
+                                               size_t len)
 {
-    STARFISH_ASSERT(data != nullptr);
+    Connection::onReceived(socket, data, len);
 
     JsonReader reader(data);
     Message msg;

@@ -42,7 +42,7 @@ public:
                            String* clientURL) override;
 
     // receive
-    void onReceived(Socket* socket, const char* data) override;
+    void onReceived(Socket* socket, const char* data, size_t len) override;
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
 

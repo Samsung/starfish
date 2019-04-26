@@ -71,7 +71,7 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     msg.addParam(registration);
     msg.archive(writer);
 
-    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+    send(writer.GetString(), writer.GetSize() + 1);
 }
 
 void ServiceWorkerHostConnection::resolveRequest(ServiceWorkerRequest* request,
@@ -86,11 +86,14 @@ void ServiceWorkerHostConnection::resolveRequest(ServiceWorkerRequest* request,
     msg.addParam(archivable);
     msg.archive(writer);
 
-    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
+    send(writer.GetString(), writer.GetSize() + 1);
 }
 
-void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
+void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
+                                             size_t len)
 {
+    Connection::onReceived(socket, data, len);
+
     STARFISH_ASSERT(m_client != nullptr);
 
     // unmarshalling
