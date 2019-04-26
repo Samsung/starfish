@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class GradientDrawingInfo;
+struct GradientDrawingInfo;
 
 class NativeGradient : public gc {
 public:

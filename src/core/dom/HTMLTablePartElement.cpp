@@ -175,7 +175,7 @@ void HTMLTablePartElement::additionalPadding(
     {                                                                  \
         CSSStyleValuePair pair;                                        \
         CSSTokenVector tokens;                                         \
-        CSSTokenValue token(std::move(padding->toUTF8NonGCString()));  \
+        CSSTokenValue token(padding->toUTF8NonGCString());             \
         tokens.push_back(token);                                       \
         if (pair.updateValueLength(tokens, 0)) {                       \
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Padding##POS); \

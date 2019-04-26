@@ -878,7 +878,7 @@ Java_com_samsung_android_lwe_LweWebViewImpl_addJavascriptInterface(
     });
 
     std::function<std::string(const std::string&)> NB =
-        [javaObjectRef, callback_obj, clz,
+        [javaObjectRef, callback_obj,
          callback_methodID](const std::string& param) -> std::string {
         JNIEnv* env = g_WindowGlue.m_env;
 

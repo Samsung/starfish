@@ -90,7 +90,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
 
         CSSStyleValuePair pair;
         CSSTokenVector tokens;
-        CSSTokenValue token(std::move(h->toUTF8NonGCString()));
+        CSSTokenValue token(h->toUTF8NonGCString());
         tokens.push_back(token);
         if (pair.updateValueHeight(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Height);
@@ -107,7 +107,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
 
         CSSStyleValuePair pair;
         CSSTokenVector tokens;
-        CSSTokenValue token(std::move(w->toUTF8NonGCString()));
+        CSSTokenValue token(w->toUTF8NonGCString());
         tokens.push_back(token);
         if (pair.updateValueWidth(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
@@ -119,7 +119,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->isEmpty()) {
         CSSStyleValuePair pair;
-        CSSTokenValue token(std::move(bgColor->toUTF8NonGCString()));
+        CSSTokenValue token(bgColor->toUTF8NonGCString());
         if (pair.updateValueUnitColor(token)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             cssValues.push_back(pair);
