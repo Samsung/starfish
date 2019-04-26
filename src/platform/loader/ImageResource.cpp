@@ -85,7 +85,14 @@ protected:
 
             size_t w = (int)svgBox->width();
             size_t h = (int)svgBox->height();
+            if (!w || !h) {
+                // Should not dispatch 'error' event
+                // test/cairo/reftest/vendor/blink_original/svg/as-image/zero-size-svg-image-with-data-uri.html
+                m_resource->Resource::didLoadFinished();
+                return;
+            }
             NativeImageData* imageData = NativeImageData::create(w, h);
+            STARFISH_ASSERT(imageData != nullptr);
             imageData->clear();
             Canvas* canvas = Canvas::create(
                 m_browsingContext->webView(), imageData->data(),

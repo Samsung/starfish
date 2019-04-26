@@ -47,7 +47,7 @@
 #include "core/dom/WebOrigin.h"
 
 #ifndef CRASH
-#define CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
+#define CRASH STARFISH_CRASH
 #endif
 #include "../third_party/escargot/third_party/checked_arithmetic/CheckedArithmetic.h"
 
@@ -756,22 +756,26 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
                 .isHTMLImageElementValue()) {
             auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
                                  .getHTMLImageElementValue();
-            auto imageSrcWebOrigin = WebOrigin::createDocumentOrigin(
-                new ResourceURL(htmlImage->src()));
 
-            if (!executionContext()->document()->webOrigin()->isSameOrigin(
-                    imageSrcWebOrigin)) {
-                m_originCleanFlag = false;
-            }
-
+            markOriginCleanFlagDirtyIfNeeds(htmlImage->webOrigin());
             nativeImageData = htmlImage->imageData();
+        } else if (image.getHTMLImageElementOrSVGImageElementValue()
+                       .isSVGImageElementValue()) {
+            auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
+                                .getSVGImageElementValue();
 
-            if (!sw) {
-                sw = nativeImageData->width();
-            }
-            if (!sh) {
-                sh = nativeImageData->height();
-            }
+            markOriginCleanFlagDirtyIfNeeds(svgImage->webOrigin());
+            nativeImageData = svgImage->imageData();
+        } else {
+            STARFISH_ASSERT(image.isNoneValue());
+            return;
+        }
+
+        if (!sw) {
+            sw = nativeImageData->width();
+        }
+        if (!sh) {
+            sh = nativeImageData->height();
         }
     }
 
@@ -1200,30 +1204,54 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
     // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
     if (image.isHTMLImageElementOrSVGImageElementValue()) {
         auto imgOrSvg = image.getHTMLImageElementOrSVGImageElementValue();
+
+        NativeImageData* imageData = nullptr;
         if (imgOrSvg.isHTMLImageElementValue()) {
-            auto img = imgOrSvg.getHTMLImageElementValue();
-            if (img->isBroken()) {
-                return new DOMException(executionContext(),
-                                        DOMException::Code::INVALID_STATE_ERR);
-            }
-            if (!img->imageData()) {
-                return false;
-            }
-            if (!img->imageData()->width() || !img->imageData()->height()) {
-                return false;
-            }
-            return true;
+            imageData = imgOrSvg.getHTMLImageElementValue()->imageData();
+        } else if (imgOrSvg.isSVGImageElementValue()) {
+            imageData = imgOrSvg.getSVGImageElementValue()->imageData();
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_ASSERT(imgOrSvg.isNoneValue());
+            return false;
         }
+
+        if (imageData == executionContext()->document()->brokenImage()) {
+            return new DOMException(executionContext(),
+                                    DOMException::Code::INVALID_STATE_ERR);
+        }
+
+        if (imageData == nullptr || !imageData->width() ||
+            !imageData->height()) {
+            return false;
+        }
+
+        return true;
     } else if (image.isHTMLVideoElementValue()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else if (image.isHTMLCanvasElementValue()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_ASSERT(image.isNoneValue());
+        return new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
+            "The image is not of type '(CSSImageValue or HTMLImageElement or "
+            "SVGImageElement or HTMLVideoElement or HTMLCanvasElement or "
+            "ImageBitmap or OffscreenCanvas)");
     }
     return false;
+}
+
+void CanvasRenderingContext2DMixIn::markOriginCleanFlagDirtyIfNeeds(
+    WebOrigin* webOrigin)
+{
+    STARFISH_ASSERT(webOrigin != nullptr);
+    if (m_originCleanFlag == false) {
+        return;
+    }
+
+    if (!executionContext()->document()->webOrigin()->isSameOrigin(webOrigin)) {
+        m_originCleanFlag = false;
+    }
 }
 }
 #undef NEEDS_UNPREMULTIPLIED

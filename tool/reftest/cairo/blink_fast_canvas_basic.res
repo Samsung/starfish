@@ -251,7 +251,7 @@ test/cairo/reftest/vendor/blink/fast/canvas/canvas-with-incorrect-args.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/draw-focus-if-needed-with-path2d.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/DrawImageSinglePixelStretch.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-bad-canvas.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-broken-image.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-broken-image.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-globalAlpha.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-negative-source-destination.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-valid-image.html

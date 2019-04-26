@@ -77,9 +77,13 @@ public:
         return m_imageData;
     }
 
+    WebOrigin* webOrigin();
+
 protected:
     void unloadImage();
     void loadImage(String* src);
+    ResourceURL* origin();
+
     ImageResource* m_imageResource;
     NativeImageData* m_imageData;
 };

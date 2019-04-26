@@ -226,6 +226,22 @@ public:
         }
     }
 
+    bool hasSameNamespaceURI(Nullable<AtomicString> str) const
+    {
+        if (m_namespaceURI.string()) {
+            if (str.hasValue()) {
+                return m_namespaceURI == str.getValue();
+            } else {
+                return false;
+            }
+        } else {
+            if (str.hasValue()) {
+                return false;
+            }
+            return true;
+        }
+    }
+
     String* toString() const
     {
         if (!prefix().hasValue())
