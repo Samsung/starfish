@@ -51,11 +51,6 @@ namespace LWE {
 const int g_arrowKeyDownMinimumDelayInMS = 150;
 static int g_arrowKeyDownTimestamp[4];
 
-static void elm_box_layout_cb(Evas_Object* o, Evas_Object_Box_Data* priv,
-                              void* user_data)
-{
-}
-
 static const char* getImfMethod()
 {
     Eina_List* modules;
@@ -241,6 +236,22 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
 
 const uint32_t CLICK_REFRESH_DELAY = 400;
 
+static void elm_box_layout_cb(Evas_Object* o, Evas_Object_Box_Data* priv,
+                              void* user_data)
+{
+    int x, y, width, height;
+    evas_object_geometry_get(o, &x, &y, &width, &height);
+
+    Evas_Object_Box_Option* opt;
+    Eina_List* l;
+    for (l = priv->children,
+        opt = (Evas_Object_Box_Option*)eina_list_data_get(l);
+         l; l = eina_list_next(l),
+        opt = (Evas_Object_Box_Option*)eina_list_data_get(l)) {
+        evas_object_geometry_set(opt->obj, x, y, width, height);
+    }
+}
+
 class WebViewEFL : public WebView {
 public:
     WebViewEFL(void* winArg, unsigned x, unsigned y, unsigned width,
@@ -258,11 +269,24 @@ public:
         , m_lastMouseY(0)
         , m_isMouseLbuttonDown(false)
         , m_isKeyDown(false)
+        , m_isDestroyed(false)
         , m_lastRenderingTime(0)
         , m_lastInputTime(0)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
+
+        m_windowObject = win;
+
+        m_windowDelEventHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                     void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            wv->m_isDestroyed = true;
+        };
+
+        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_DEL,
+                                       m_windowDelEventHandler, this);
+
         m_nonIMEKeyEventBox = elm_label_add(win);
         evas_object_show(m_nonIMEKeyEventBox);
 
@@ -275,6 +299,7 @@ public:
         m_graphicsAdapter =
             evas_object_image_filled_add(evas_object_evas_get(win));
         evas_object_resize(m_graphicsAdapter, width, height);
+        evas_object_move(m_graphicsAdapter, x, y);
         evas_object_image_size_set(m_graphicsAdapter, width, height);
         evas_object_image_alpha_set(m_graphicsAdapter, EINA_TRUE);
 
@@ -848,11 +873,12 @@ public:
             [](void* data, Evas_Object* o) {
                 // We need to draw every time for preventing screen blinking
                 WebViewEFL* s = (WebViewEFL*)data;
-                if (s->m_lastDoRenderingFunction) {
+                if (s->m_lastDoRenderingFunction && !s->m_isDestroyed) {
                     s->m_lastDoRenderingFunction();
                 }
             },
             this);
+
 #else
         ::LWE::WebContainer* webContainer =
             ::LWE::WebContainer::Create(width, height, devicePixelRatio,
@@ -907,6 +933,8 @@ public:
 
     virtual void Destroy() override
     {
+        m_isDestroyed = true;
+
         Blur();
 
         FetchWebContainer()->Destroy();
@@ -949,6 +977,9 @@ public:
             m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
         evas_object_event_callback_del(
             m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_UP, m_keyUpEventHandler);
+
+        evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_DEL,
+                                       m_windowDelEventHandler);
 
         if (m_graphicsAdapter) {
             evas_object_del(m_graphicsAdapter);
@@ -1052,7 +1083,10 @@ protected:
                                   void* event_info);
     void (*m_keyUpEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                 void* event_info);
+    void (*m_windowDelEventHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                    void* event_info);
 
+    Evas_Object* m_windowObject;
     Evas_Object* m_mainBox;
     Evas_Object* m_graphicsAdapter;
 #if defined(PORT_WINDOW_BACKEND_GL)
@@ -1070,6 +1104,7 @@ protected:
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
+    bool m_isDestroyed;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
