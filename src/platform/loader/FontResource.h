@@ -69,6 +69,7 @@ public:
     virtual void didCacheHit(Resource* cache)
     {
         m_fontFace = cache->asFontResource()->m_fontFace;
+        m_requestErrorType = cache->asFontResource()->requestErrorType();
         Resource::didLoadFinished();
     }
 

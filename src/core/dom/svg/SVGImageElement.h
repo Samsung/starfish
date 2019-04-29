@@ -26,17 +26,13 @@ namespace Starfish {
 
 class SVGSVGElement;
 class ImageResource;
+enum class RequestErrorType;
 
 class SVGImageElement : public SVGElement {
     friend class SVGImageDownloadClient;
 
 public:
-    SVGImageElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-        , m_imageResource(nullptr)
-        , m_imageData(nullptr)
-    {
-    }
+    SVGImageElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -78,6 +74,7 @@ public:
     }
 
     WebOrigin* webOrigin();
+    bool hasRequestError();
 
 protected:
     void unloadImage();
@@ -86,6 +83,7 @@ protected:
 
     ImageResource* m_imageResource;
     NativeImageData* m_imageData;
+    RequestErrorType m_requestErrorType;
 };
 }
 

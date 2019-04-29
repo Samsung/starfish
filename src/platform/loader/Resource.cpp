@@ -38,6 +38,8 @@ void Resource::request(RequestData* requestData, bool allowCache)
     auto syncLevel = requestData->m_syncLevel;
 
     m_isRequested = true;
+    m_requestErrorType = RequestErrorType::NoError;
+
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_resourceRequest =
@@ -141,6 +143,7 @@ void Resource::didLoadFinished()
     m_state = Finished;
     if (m_resourceRequest) {
         m_responseMimeType = m_resourceRequest->responseMimeType();
+        m_requestErrorType = m_resourceRequest->errorType();
     }
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
@@ -154,6 +157,9 @@ void Resource::didLoadFinished()
 void Resource::didLoadFailed()
 {
     m_state = Failed;
+    if (m_resourceRequest) {
+        m_requestErrorType = m_resourceRequest->errorType();
+    }
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
         (*iter)->didLoadFailed();

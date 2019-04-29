@@ -356,5 +356,11 @@ Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
     return new CanvasMock(webView);
 }
+
+NativeImageData* NativeImageData::attach(Canvas* canvas)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
 }
 #endif

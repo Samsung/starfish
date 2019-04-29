@@ -66,6 +66,7 @@ public:
 
     void updateImage(NativeImageData* imageData)
     {
+        m_element->m_requestErrorType = m_resource->requestErrorType();
         m_element->m_imageResource = nullptr;
         m_element->m_imageData = imageData;
         if (!imageData) {
@@ -80,6 +81,14 @@ protected:
     SVGImageElement* m_element;
 };
 
+SVGImageElement::SVGImageElement(Document* document, const QualifiedName& qname)
+    : SVGElement(document, qname)
+    , m_imageResource(nullptr)
+    , m_imageData(nullptr)
+    , m_requestErrorType(RequestErrorType::NoError)
+{
+}
+
 void SVGImageElement::unloadImage()
 {
     if (m_imageResource) {
@@ -87,6 +96,7 @@ void SVGImageElement::unloadImage()
         m_imageResource = nullptr;
     }
     m_imageData = nullptr;
+    m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
         setNeedsPainting();
     }
@@ -153,5 +163,10 @@ ResourceURL* SVGImageElement::origin()
     } else {
         return new ResourceURL(String::emptyString);
     }
+}
+
+bool SVGImageElement::hasRequestError()
+{
+    return m_requestErrorType != RequestErrorType::NoError;
 }
 }

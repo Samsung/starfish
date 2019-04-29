@@ -73,6 +73,7 @@ public:
     virtual void didCacheHit(Resource* cache)
     {
         m_imageData = cache->asImageResource()->m_imageData;
+        m_requestErrorType = cache->asImageResource()->requestErrorType();
         Resource::didLoadFinished();
     }
 

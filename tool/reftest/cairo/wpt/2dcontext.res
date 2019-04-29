@@ -51,11 +51,6 @@
 #http://web-platform.test:8000/2dcontext/transformations/canvas_transformations_scale_001.htm
 #
 #
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.canvas.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html
-#
-#
 #http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.crosscanvas.html
 #http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/canvas_colorsandstyles_createlineargradient_001.htm
 #http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.modify.canvas1.html
@@ -489,7 +484,7 @@ http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImag
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.gif.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.poster.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.broken.html // Bug : Decoding a corrupted png file should fail, but it did not fail.
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.canvas.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.canvas.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.clip.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.composite.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.floatsource.html
@@ -503,16 +498,16 @@ http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImag
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.negativesource.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.nonfinite.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.nowrap.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.null.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.null.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.path.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.1.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.2.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.1.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.self.2.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.svg.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.transform.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.wrongtype.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerocanvas.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerosource.html
 #http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.zerosource.image.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html
+#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html // FIXME: (150 pass, 1 fail) I guess one failure is because of image smoothing.
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_html_image.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_svg_image_1.html

@@ -70,6 +70,7 @@ public:
 
     void updateImage(NativeImageData* imageData)
     {
+        m_element->m_requestErrorType = m_resource->requestErrorType();
         m_element->m_imageResource = nullptr;
         NativeImageData* imageDataBefore = m_element->imageData();
         if (!imageData) {
@@ -109,6 +110,7 @@ HTMLImageElement::HTMLImageElement(Document* document,
     : HTMLElement(document, qname)
     , m_imageResource(nullptr)
     , m_imageData(nullptr)
+    , m_requestErrorType(RequestErrorType::NoError)
 {
 }
 
@@ -295,6 +297,7 @@ void HTMLImageElement::unloadImage()
         m_imageResource = nullptr;
     }
     m_imageData = nullptr;
+    m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
         setNeedsLayout();
         setNeedsPainting();
@@ -382,5 +385,10 @@ ResourceURL* HTMLImageElement::origin()
     } else {
         return new ResourceURL(String::emptyString);
     }
+}
+
+bool HTMLImageElement::hasRequestError()
+{
+    return m_requestErrorType != RequestErrorType::NoError;
 }
 }
