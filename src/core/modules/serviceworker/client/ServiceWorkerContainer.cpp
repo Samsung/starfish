@@ -268,8 +268,8 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
-            ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data1);
-            WebOrigin* webOrigin = static_cast<WebOrigin*>(data2);
+            ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data1);
+            WebOrigin* webOrigin = castTo<WebOrigin*>(data2);
 
             auto swConnection =
                 ServiceWorkerProcessManager::getInstance()->getConnection(
@@ -335,31 +335,30 @@ Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
 
     // 7. Run the following substeps in parallel:
 
-    // 7.1 Let registration be the result of running Match Service Worker
-    // Registration algorithm with clientURL as its argument.
-    auto request = createRequest("matchRegistration", promise);
+    auto matchRegistrationRequest = createRequest("matchRegistration", promise);
 
-    request->setPostTask(new RequestTask(
-        [](ServiceWorkerRequest* req, TaskResult results, TaskParam params) {
+    matchRegistrationRequest->setPostTask(new RequestTask(
+        [](ServiceWorkerRequest& req, TaskResult& results, TaskParam& params) {
             auto request = castTo<ServiceWorkerRequest*>(params[0]);
             auto container = castTo<ServiceWorkerContainer*>(params[1]);
 
-            STARFISH_ASSERT(req->id == request->id);
+            STARFISH_ASSERT(req.id == request->id);
 
-            auto registrationData =
-                castTo<ServiceWorkerRegistrationData*>(results[0]);
+            // 7.1 Let registration be the result of running Match Service
+            // Worker Registration algorithm with clientURL as its argument.
+            auto registration =
+                static_cast<ServiceWorkerRegistrationData*>(results[0]);
 
             // 7.2 If registration is not null, then:
-            // 7.2.1 Resolve promise with the ServiceWorkerRegistration
-            // object which represents registration.
-            // TODO: consider supporting null
-            if (registrationData->isValid()) {
-                auto registration = new ServiceWorkerRegistration(
+            if (registration != nullptr) {
+                // 7.2.1 Resolve promise with the ServiceWorkerRegistration
+                // object which represents registration.
+                auto swRegistration = new ServiceWorkerRegistration(
                     container->executionContext());
-                registration->setData(registrationData);
+                swRegistration->setData(registration);
 
                 STARFISH_ASSERT(request->promise());
-                request->promise()->fulfill(registration->scriptValue());
+                request->promise()->fulfill(swRegistration->scriptValue());
 
             } else {
                 // 7.3 Else:
@@ -368,9 +367,9 @@ Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
                     Escargot::ValueRef::createUndefined());
             }
         },
-        { request, this }));
+        { matchRegistrationRequest, this }));
 
-    matchRegistration(request, clientURL);
+    matchRegistration(matchRegistrationRequest, clientURL);
 
     // 8. Return promise.
     return promise;
@@ -397,8 +396,8 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
-            auto swrequest = static_cast<ServiceWorkerRequest*>(data1);
-            auto urlString = static_cast<String*>(data2);
+            auto swrequest = castTo<ServiceWorkerRequest*>(data1);
+            auto urlString = castTo<String*>(data2);
 
             auto swConnection =
                 ServiceWorkerProcessManager::getInstance()->getConnection(
@@ -449,9 +448,9 @@ void ServiceWorkerContainer::resolveJobPromise(
         context->webBase()->messageLoop()->addIdler(
             context->globalScope(),
             [](size_t handle, void* data, void* data1) {
-                ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data);
+                ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
                 ServiceWorkerContainer* container =
-                    static_cast<ServiceWorkerContainer*>(data1);
+                    castTo<ServiceWorkerContainer*>(data1);
 
                 // 1. Let convertedValue be null.
                 auto convertedValue = Escargot::ValueRef::createNull();

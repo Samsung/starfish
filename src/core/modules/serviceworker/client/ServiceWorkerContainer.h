@@ -23,11 +23,14 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/client/RegistrationOptions.h"
+#include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 
 namespace Starfish {
 
@@ -35,20 +38,12 @@ class Promise;
 class Document;
 class ExecutionContext;
 class ServiceWorker;
-class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
 class ServiceWorkerRegistrationData;
 
-typedef ServiceWorkerRequest NullableServiceWorkerRequest;
-typedef ServiceWorkerJob NullableServiceWorkerJob;
-
-// typedef void (*Handler_t)(ServiceWorkerRequest*, TaskParam);
-// // using RequestId = Id<ServiceWorkerRequest>;
-// using RequestTask = Task<Handler_t>;
-// using RequestTasker = Tasker<RequestId, RequestTask*>;
-
-class ServiceWorkerContainer : public EventTarget {
+class ServiceWorkerContainer : public EventTarget,
+                               public ServiceWorkerJobClientInterface {
 public:
     ServiceWorkerContainer(ExecutionContext* executionContext);
     virtual ~ServiceWorkerContainer();
@@ -70,11 +65,12 @@ public:
     void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
                        Promise* p, ExecutionContext* client);
 
-    NullableServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
+    void scheduleJob(ServiceWorkerJob* job) override;
     ServiceWorkerJob* createJob(ServiceWorkerJobType type, String* scopeURL,
                                 String* scriptURL, Promise* p,
-                                ExecutionContext* client);
-    void scheduleJob(ServiceWorkerJob* job);
+                                ExecutionContext* client) override;
+
+    NullableServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
     void finishJob(ServiceWorkerJob* job);
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);

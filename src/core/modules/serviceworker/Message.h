@@ -25,11 +25,11 @@ namespace Starfish {
 class Message : public gc {
 public:
     Message(const char* msgname = "");
-    void addParam(Archivable* param);
+    void addParam(NullableArchivable* param);
     void archive(Archiver& arch);
 
     // getter
-    Archivable* param(size_t index);
+    NullableArchivable* param(size_t index);
     std::string name();
 
     // statics
@@ -38,7 +38,7 @@ public:
 
 private:
     String* m_name;
-    GCVector<Archivable*> m_params;
+    GCVector<NullableArchivable*> m_params;
 };
 
 } // namespace Starfish

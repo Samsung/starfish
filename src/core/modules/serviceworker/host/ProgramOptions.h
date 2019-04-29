@@ -33,8 +33,8 @@ namespace Starfish {
 
 class ProgramOptions : public gc {
 public:
-    typedef int (*logger_t)(const char*, ...);
-    typedef std::unordered_map<std::string, std::string> map_t;
+    using logger_t = int (*)(const char*, ...);
+    using map_t = std::unordered_map<std::string, std::string>;
 
     ProgramOptions();
 

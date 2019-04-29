@@ -19,35 +19,27 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/util/Archivable.h"
+#include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/Message.h"
+#include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
-#include "core/modules/networking/Socket.h"
-#include "core/util/Id.h"
-#include "core/modules/serviceworker/Task.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+#include "core/dom/ExecutionContext.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-
-#include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-
-#include "core/util/Archivable.h"
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
-
-#include "core/util/Archiver.h"
-#include "core/util/Archivable.h"
-#include "core/modules/serviceworker/Message.h"
-
-#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
-
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -75,10 +67,9 @@ void ServiceWorkerHostConnection::resolveJobPromise(
 }
 
 void ServiceWorkerHostConnection::resolveRequest(ServiceWorkerRequest* request,
-                                                 Archivable* archivable)
+                                                 NullableArchivable* archivable)
 {
     STARFISH_ASSERT(request != nullptr);
-    STARFISH_ASSERT(archivable != nullptr);
 
     JsonWriter writer;
     Message msg("resolveRequest");
@@ -113,11 +104,6 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
         m_client->matchRegistration(
             downcast<ServiceWorkerRequest>(msg.param(0)),
             downcast<GenericArchivable<String*>>(msg.param(1))->value());
-
-        // TODO: remove the following simulating resolveRequest
-        auto registration = new ServiceWorkerRegistrationData();
-        resolveRequest(downcast<ServiceWorkerRequest>(msg.param(0)),
-                       registration);
     }
 }
 

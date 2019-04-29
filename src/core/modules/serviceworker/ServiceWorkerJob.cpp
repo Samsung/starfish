@@ -37,8 +37,8 @@ ServiceWorkerJob::ServiceWorkerJob(ServiceWorkerJobData* data)
         m_data = data;
     } else {
         m_data = new ServiceWorkerJobData();
-        STARFISH_ASSERT(m_data != nullptr);
     }
+    STARFISH_ASSERT(m_data != nullptr);
 }
 
 ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()

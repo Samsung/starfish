@@ -26,22 +26,6 @@ namespace Starfish {
 class Promise;
 class RequestTask;
 
-typedef void (*Handler_t)(ServiceWorkerRequest*, TaskResult, TaskParam);
-
-class RequestTask : public Task<Handler_t> {
-public:
-    RequestTask(Handler_t handler, std::initializer_list<void*> params = {})
-        : Task(handler, std::move(params))
-    {
-    }
-
-    void run(ServiceWorkerRequest* request, std::vector<void*> results = {})
-    {
-        STARFISH_ASSERT(request != nullptr);
-        m_handler(request, results, m_params);
-    }
-};
-
 class ServiceWorkerRequest : public Archivable {
 public:
     // payload
@@ -61,6 +45,30 @@ private:
     Promise* m_promise{ nullptr };
     RequestTask* m_postTask{ nullptr };
 };
-}
+
+using NullableServiceWorkerRequest = ServiceWorkerRequest;
+
+// RequestTask
+
+using Handler_t = void (*)(ServiceWorkerRequest&, TaskResult&, TaskParam&);
+
+class RequestTask : public Task<Handler_t> {
+public:
+    RequestTask(Handler_t handler, std::initializer_list<void*> params = {})
+        : Task(handler, std::move(params))
+    {
+    }
+
+    void run(ServiceWorkerRequest* request,
+             std::initializer_list<void*> results = {})
+    {
+        STARFISH_ASSERT(request != nullptr);
+        TaskResult wrapper;
+        wrapper.assign(results.begin(), results.end());
+        m_handler(*request, wrapper, m_params);
+    }
+};
+
+} // namespace Starfish
 
 #endif

@@ -34,6 +34,12 @@ public:
     virtual void archive(Archiver& ar) = 0;
 };
 
+using NullableArchivable = Archivable;
+
+// GenericArchivable
+
+#define MAX_TYPE_NAME 10
+
 struct TypeName {
     static const char String[];
 };
@@ -42,19 +48,21 @@ template <typename T>
 class GenericArchivable : public Archivable {
 public:
     GenericArchivable(const char* archiveId)
-        : m_archiveId(archiveId)
     {
+        STARFISH_ASSERT(archiveId != nullptr);
+        strncpy(m_archiveId, archiveId, MAX_TYPE_NAME);
     }
 
     GenericArchivable(const char* archiveId, T value)
     {
-        m_archiveId = archiveId;
+        STARFISH_ASSERT(archiveId != nullptr);
+        strncpy(m_archiveId, archiveId, MAX_TYPE_NAME);
         m_value = value;
     }
 
     const char* archiveId() const override
     {
-        return m_archiveId.c_str();
+        return m_archiveId;
     }
 
     void archive(Archiver& ar) override
@@ -65,8 +73,8 @@ public:
     DEFINE_GETTER_SETTER(T, value, Value);
 
 private:
+    char m_archiveId[MAX_TYPE_NAME]{};
     T m_value{};
-    std::string m_archiveId;
 };
 
 } // namespace Starfish

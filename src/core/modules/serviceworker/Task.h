@@ -17,13 +17,13 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishTasker__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishTask__)
 #define __StarfishTask__
 
 namespace Starfish {
 
-typedef std::vector<void*> TaskResult;
-typedef GCVector<void*> TaskParam;
+using TaskParam = GCVector<void*>;
+using TaskResult = GCVector<void*>;
 
 template <typename HandlerType>
 class Task : public gc {
@@ -39,10 +39,7 @@ public:
         : m_handler(handler)
     {
         STARFISH_ASSERT(m_handler);
-
-        for (const auto& it : params) {
-            m_params.push_back(it);
-        }
+        m_params.assign(params.begin(), params.end());
     }
 
     void destroy()

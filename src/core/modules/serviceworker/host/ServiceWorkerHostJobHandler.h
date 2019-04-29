@@ -31,6 +31,7 @@ class JobQueue;
 class ServiceWorkerRegistrationData;
 
 using ServiceWorkerRegistrationKey = String*;
+using NullableServiceWorkerRegistrationData = ServiceWorkerRegistrationData;
 
 struct RegistrationIdentifier : public gc {
     String* m_scope;
@@ -62,11 +63,12 @@ public:
                                  const char* target, ServiceWorkerData* source);
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
-    ServiceWorkerRegistrationData* getRegistration(String* scope);
+    NullableServiceWorkerRegistrationData* getRegistration(String* scope);
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
-    void matchRegistration(ServiceWorkerRequest* request, String* clientURL);
+    NullableServiceWorkerRegistrationData* matchRegistration(
+        ServiceWorkerRequest* request, String* clientURL);
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
@@ -74,8 +76,8 @@ private:
     GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>
-        m_registrationMap;
+        m_scopeToRegistrationMap;
 };
-}
+} // namespace Starfish
 
 #endif

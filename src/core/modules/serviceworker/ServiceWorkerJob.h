@@ -27,7 +27,6 @@ class ExecutionContext;
 class Promise;
 class String;
 class JobQueue;
-class ServiceWorkerJob;
 class ServiceWorkerHostProcessInterface;
 class ServiceWorkerClientProcessInterface;
 
@@ -56,6 +55,8 @@ private:
     ServiceWorkerClientProcessInterface* m_hostConnection{ nullptr };
     ServiceWorkerHostProcessInterface* m_clientConnection{ nullptr };
 };
+
+using NullableServiceWorkerJob = ServiceWorkerJob;
 
 } // namespace Starfish
 

@@ -22,18 +22,18 @@
 #include "StarfishConfig.h"
 
 #include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/util/Archivable.h"
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/JobQueue.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+#include "platform/loader/ResourceURL.h"
 
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
 
@@ -80,14 +80,14 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     }
 }
 
-ServiceWorkerRegistrationData* ServiceWorkerHostJobHandler::getRegistration(
-    String* queriedScope)
+NullableServiceWorkerRegistrationData*
+ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 {
     STARFISH_ASSERT(queriedScope != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
-    auto it = m_registrationMap.find(queriedScope);
-    if (it == m_registrationMap.end()) {
+    auto it = m_scopeToRegistrationMap.find(queriedScope);
+    if (it == m_scopeToRegistrationMap.end()) {
         return nullptr;
     }
     return it->second;
@@ -104,7 +104,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     // is set to scope and update via cache mode is set to updateViaCache.
     auto registration = new ServiceWorkerRegistrationData();
     STARFISH_ASSERT(registration != nullptr);
-    m_registrationMap[scope] = registration;
+    m_scopeToRegistrationMap[scope] = registration;
 }
 
 void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
@@ -326,13 +326,67 @@ void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
     }
 }
 
-void ServiceWorkerHostJobHandler::matchRegistration(
-    ServiceWorkerRequest* request, String* clientURL)
+NullableServiceWorkerRegistrationData*
+ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
+                                               String* clientURLString)
 {
-    // TODO: https://w3c.github.io/ServiceWorker/#scope-match-algorithm
     STARFISH_ASSERT(request != nullptr);
-    STARFISH_ASSERT(clientURL != nullptr);
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_ASSERT(clientURLString != nullptr);
+
+    // https://w3c.github.io/ServiceWorker/#match-service-worker-registration
+
+    // 1. Run the following steps atomically.
+    // 2. Let clientURLString be serialized clientURL.
+    // NOTE: consider using URLData instead of serialized clientURL,
+    // clientURLString.
+
+    // 3. Let matchingScopeString be the empty string.
+    String* matchingScopeString = String::emptyString;
+
+    // 4. Let scopeStringSet be the result of getting the keys from `scope to
+    // registration map`.
+    for (const auto& pair : m_scopeToRegistrationMap) {
+        ServiceWorkerRegistrationKey selectedRegistrationKey = pair.first;
+
+        if (!selectedRegistrationKey->startsWith(clientURLString)) {
+            continue;
+        }
+
+        // 5. Set matchingScopeString to the longest value in scopeStringSet
+        // which the value of clientURLString starts with, if it exists.
+        if (matchingScopeString->length() < selectedRegistrationKey->length()) {
+            matchingScopeString = selectedRegistrationKey;
+        }
+    }
+
+    // 6. Let matchingScope be null.
+    String* matchingScope = nullptr;
+
+    NullableServiceWorkerRegistrationData* registration = nullptr;
+
+    // 7. If matchingScopeString is not the empty string, then:
+    if (matchingScopeString->isEmpty() == false) {
+        // 7.1. Set matchingScope to the result of parsing matchingScopeString.
+        auto matchingScope = new ResourceURL(matchingScopeString);
+
+        // 7.2. Assert: matchingScope’s origin and clientURL’s origin are same
+        // origin.
+        auto clientURL = new ResourceURL(clientURLString);
+        STARFISH_ASSERT(matchingScope->origin() == clientURL->origin());
+
+        // 8. Let registration be the result of running Get Registration
+        // algorithm passing matchingScope as the argument.
+        registration = getRegistration(matchingScopeString);
+    }
+
+    // 9. If registration is not null and registration’s uninstalling flag is
+    // set, return null.
+    if (registration && registration->isUninstalling()) {
+        return nullptr;
+    }
+
+    // 10. Return registration.
+    return registration;
 }
 
 } // namespace Starfish

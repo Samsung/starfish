@@ -28,7 +28,7 @@ class ServiceWorkerJob;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerContainer;
 
-typedef ServiceWorkerContainer* NullableServiceWorkerContainer;
+using NullableServiceWorkerContainer = ServiceWorkerContainer*;
 
 class ServiceWorkerClientConnection final
     : public Connection,
