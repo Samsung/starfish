@@ -354,6 +354,7 @@ public:
         const DrawImageInfo& borderinfo,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
+
     virtual void drawRepeatImage(
         NativeImageData* data, const Unit::Rect& dst, float imageWidth,
         float imageHeight, bool xRepeat, bool yRepeat,

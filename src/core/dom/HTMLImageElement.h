@@ -28,6 +28,7 @@ class NativeImageData;
 class ImageResource;
 class Document;
 class WebOrigin;
+enum class RequestErrorType;
 
 class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;
@@ -83,6 +84,7 @@ public:
     virtual void didNodeInsertedToDocumentTree() override;
 
     WebOrigin* webOrigin();
+    bool hasRequestError();
 
 private:
     void unloadImage();
@@ -91,6 +93,7 @@ private:
 
     ImageResource* m_imageResource;
     NativeImageData* m_imageData;
+    RequestErrorType m_requestErrorType;
 };
 }
 

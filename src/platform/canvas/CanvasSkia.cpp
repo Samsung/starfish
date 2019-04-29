@@ -1273,5 +1273,11 @@ Canvas* Canvas::create(WebView* webview, NativeImageData* data)
 {
     return new CanvasSkia(webview, data);
 }
+
+NativeImageData* NativeImageData::attach(Canvas* canvas)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
 }
 #endif

@@ -55,6 +55,11 @@
 #define NEEDS_UNPREMULTIPLIED
 #endif
 
+#define MAX_NATIVE_SURFACE_WIDTH 32767U
+#define MAX_NATIVE_SURFACE_HEIGHT 32767U
+#define MAX_NATIVE_SURFACE_AREA 268435456U
+#define SQAURE_MAX_NATIVE_SURFACE_AREA 16384
+
 namespace Starfish {
 
 static inline CanvasFillRule stringToCanvasFillRule(String* rule)
@@ -144,9 +149,31 @@ void CanvasRenderingContext2DMixIn::initialize()
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(m_canvas == nullptr);
 
+    auto ow = m_ownerHTMLCanvasElement->width();
+    auto oh = m_ownerHTMLCanvasElement->height();
+    auto w = ow;
+    auto h = oh;
+
+    if (!ow || isInfOrNan(ow)) {
+        w = 1;
+    }
+    if (!oh || isInfOrNan(oh)) {
+        h = 1;
+    }
+
+    if (ow * oh >= MAX_NATIVE_SURFACE_AREA) {
+        w = SQAURE_MAX_NATIVE_SURFACE_AREA * ((double)ow / (ow + oh));
+        h = SQAURE_MAX_NATIVE_SURFACE_AREA * ((double)oh / (ow + oh));
+    }
+
+    w = std::min(w, MAX_NATIVE_SURFACE_WIDTH);
+    h = std::min(h, MAX_NATIVE_SURFACE_HEIGHT);
+
+    STARFISH_ASSERT(w);
+    STARFISH_ASSERT(h);
+
     m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->platformWindow(),
-        m_ownerHTMLCanvasElement->width(), m_ownerHTMLCanvasElement->height(),
+        m_ownerHTMLCanvasElement->webView()->platformWindow(), w, h,
         CanvasSurface::CanvasElement);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface);
@@ -770,13 +797,31 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
             STARFISH_ASSERT(image.isNoneValue());
             return;
         }
+    } else if (image.isHTMLCanvasElementValue()) {
+        auto htmlCanvas = image.getHTMLCanvasElementValue();
+        auto context = htmlCanvas->canvasRenderingContext();
+        if (context == nullptr) {
+            return;
+        }
+        auto context2d = (CanvasRenderingContext2DMixIn*)context;
+        context2d->flush();
+        nativeImageData = NativeImageData::attach(context2d->m_canvas);
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return;
+    }
 
-        if (!sw) {
-            sw = nativeImageData->width();
-        }
-        if (!sh) {
-            sh = nativeImageData->height();
-        }
+    if (nativeImageData == nullptr) {
+        // FIXME : nativeImageData can be nullptr after call
+        // NativeImageData::attach on a canvas other than CanvasCairo currently
+        return;
+    }
+
+    if (!sw) {
+        sw = nativeImageData->width();
+    }
+    if (!sh) {
+        sh = nativeImageData->height();
     }
 
     if (!sw || !sh) {
@@ -807,8 +852,8 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         return;
     }
 
-    Unit::Rect adjustDstRect(0, 0, m_ownerHTMLCanvasElement->width(),
-                             m_ownerHTMLCanvasElement->height());
+    Unit::Rect adjustDstRect(0, 0, m_canvasSurface->bufferWidth(),
+                             m_canvasSurface->bufferHeight());
 
     if (adjustDstRect.contains(dst)) {
         adjustDstRect = dst;
@@ -819,6 +864,9 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         return;
     }
     // TODO : Apply Image CanvasImageSmoothing
+    // FIXME : The result of the test below is 150 pass, 1 fail, I guess one
+    // failure is because of image smoothing.
+    // http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html
     DrawImageInfo drawImageInfo = { 1.0, 1.0,
                                     BorderImageRepeatValue::StretchValue,
                                     BorderImageRepeatValue::StretchValue };
@@ -1207,8 +1255,14 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
 
         NativeImageData* imageData = nullptr;
         if (imgOrSvg.isHTMLImageElementValue()) {
+            if (imgOrSvg.getHTMLImageElementValue()->hasRequestError()) {
+                return false;
+            }
             imageData = imgOrSvg.getHTMLImageElementValue()->imageData();
         } else if (imgOrSvg.isSVGImageElementValue()) {
+            if (imgOrSvg.getSVGImageElementValue()->hasRequestError()) {
+                return false;
+            }
             imageData = imgOrSvg.getSVGImageElementValue()->imageData();
         } else {
             STARFISH_ASSERT(imgOrSvg.isNoneValue());
@@ -1226,9 +1280,16 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
         }
 
         return true;
-    } else if (image.isHTMLVideoElementValue()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else if (image.isHTMLCanvasElementValue()) {
+        auto canvas = image.getHTMLCanvasElementValue();
+        if (!canvas->width() || !canvas->height()) {
+            return new DOMException(executionContext(),
+                                    DOMException::Code::INVALID_STATE_ERR,
+                                    "The image argument is a canvas element "
+                                    "with a width or height of 0.");
+        }
+        return true;
+    } else if (image.isHTMLVideoElementValue()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else {
         STARFISH_ASSERT(image.isNoneValue());

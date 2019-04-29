@@ -128,6 +128,7 @@ std::shared_ptr<NativeGradient> NativeGradient::create(
 }
 
 class CanvasCairo : public Canvas {
+    friend class CanvasAttachableNativeImageCairo;
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
         m_renderTargetInfo.m_buffer = (uint8_t*)buffer;
@@ -897,6 +898,22 @@ public:
             srcImage = cairo_image_surface_create_for_data(
                 (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
                 data->height(), data->stride());
+        } else if (srcImage == m_surface) {
+            auto format = cairo_image_surface_get_format(srcImage);
+            auto width = cairo_image_surface_get_width(srcImage);
+            auto height = cairo_image_surface_get_height(srcImage);
+            auto surfaceToCopy = cairo_surface_create_similar_image(
+                srcImage, format, width, height);
+
+            auto context = cairo_create(surfaceToCopy);
+            cairo_set_source_surface(context, srcImage, 0, 0);
+            cairo_rectangle(context, 0, 0, width, height);
+            cairo_fill(context);
+            cairo_surface_flush(surfaceToCopy);
+            cairo_destroy(context);
+
+            srcImage = surfaceToCopy;
+            surfaceWasCreated = true;
         }
 
         cairo_surface_t* image = srcImage;
@@ -1715,6 +1732,81 @@ Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
     return new CanvasCairo(webView, data);
+}
+
+class CanvasAttachableNativeImageCairo : public NativeImageData {
+public:
+    CanvasAttachableNativeImageCairo(CanvasCairo* canvasCairo)
+        : m_canvasCairo(canvasCairo)
+    {
+        STARFISH_ASSERT(canvasCairo != nullptr);
+    }
+
+    virtual size_t bufferSize() override
+    {
+        return m_canvasCairo->m_renderTargetInfo.m_height *
+               m_canvasCairo->m_renderTargetInfo.m_stride;
+    }
+
+    virtual uint8_t* data() override
+    {
+        return m_canvasCairo->m_renderTargetInfo.m_buffer;
+    }
+
+    virtual void clear() override
+    {
+    }
+
+    virtual void* unwrap() override
+    {
+        return m_canvasCairo->m_surface;
+    }
+
+    virtual size_t width() override
+    {
+        return m_canvasCairo->m_renderTargetInfo.m_width;
+    }
+
+    virtual size_t height() override
+    {
+        return m_canvasCairo->m_renderTargetInfo.m_height;
+    }
+
+    virtual size_t stride() override
+    {
+        return m_canvasCairo->m_renderTargetInfo.m_stride;
+    }
+
+    virtual bool isAttachableNativeImage() override
+    {
+        return true;
+    }
+
+    virtual bool hasTransparentPixel() override
+    {
+        return true;
+    }
+
+    virtual void pruneInternalDataIfPossible() override
+    {
+    }
+
+    virtual void disposeNativeImageData() override
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        return GC_MALLOC(size);
+    }
+
+private:
+    CanvasCairo* m_canvasCairo;
+};
+
+NativeImageData* NativeImageData::attach(Canvas* canvas)
+{
+    return new CanvasAttachableNativeImageCairo(castTo<CanvasCairo*>(canvas));
 }
 }
 

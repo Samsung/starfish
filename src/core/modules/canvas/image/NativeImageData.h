@@ -23,6 +23,7 @@
 namespace Starfish {
 
 class CanvasShadowData;
+class Canvas;
 
 class NativeImageData : public gc {
     friend class ResourceLoader;
@@ -51,6 +52,7 @@ public:
                                    size_t height); // this function will apply
                                                    // device-pixel-ratio to
                                                    // width, height
+    static NativeImageData* attach(Canvas* canvas);
 
     virtual size_t bufferSize() = 0;
     virtual uint8_t* data() = 0;
@@ -73,6 +75,11 @@ public:
     virtual ~NativeImageData()
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
+    }
+
+    virtual bool isAttachableNativeImage()
+    {
+        return false;
     }
 
     PreserveAspectRatioValue preserveAspectRatioValue()
@@ -110,7 +117,6 @@ protected:
                                        },
                                        NULL, NULL, NULL);
     }
-
     bool m_isSeenByGC : 1;
     PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
 };

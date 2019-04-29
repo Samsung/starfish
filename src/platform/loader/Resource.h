@@ -64,6 +64,7 @@ public:
         , m_loader(loader)
         , m_resourceRequest(nullptr)
         , m_responseMimeType(String::emptyString)
+        , m_requestErrorType(RequestErrorType::NoError)
     {
     }
 
@@ -224,6 +225,11 @@ public:
         return m_state;
     }
 
+    RequestErrorType requestErrorType()
+    {
+        return m_requestErrorType;
+    }
+
 protected:
     bool m_isIncludedInComputingWindowOnLoadEvent : 1;
     bool m_isReferencedByAnoterResource : 1;
@@ -235,6 +241,7 @@ protected:
     ResourceLoader* m_loader;
     ResourceRequest* m_resourceRequest;
     String* m_responseMimeType;
+    RequestErrorType m_requestErrorType;
     GCVector<ResourceClient*> m_resourceClients;
     GCVector<size_t> m_requstedIdlers;
 };

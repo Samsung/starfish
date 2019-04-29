@@ -77,7 +77,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-copyPixels.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-direction.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-draw-canvas-on-canvas-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-animated.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-incomplete.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-incomplete.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-live-video.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-scaled-copy-to-self.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-shadow.html
@@ -250,7 +250,7 @@ test/cairo/reftest/vendor/blink/fast/canvas/canvas-with-incorrect-args.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/draw-focus-if-needed-scrolls-horiz.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/draw-focus-if-needed-with-path2d.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/DrawImageSinglePixelStretch.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-bad-canvas.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-bad-canvas.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-broken-image.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-globalAlpha.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/drawImage-with-negative-source-destination.html
