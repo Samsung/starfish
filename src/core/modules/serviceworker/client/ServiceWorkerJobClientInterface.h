@@ -17,28 +17,19 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishMessage__)
-#define __StarfishMessage__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    !defined(__ServiceWorkerJobClientInterface__)
+#define __ServiceWorkerJobClientInterface__
 
 namespace Starfish {
 
-class Message : public gc {
+class ServiceWorkerJobClientInterface {
 public:
-    Message(const char* msgname = "");
-    void addParam(NullableArchivable* param);
-    void archive(Archiver& arch);
-
-    // getter
-    NullableArchivable* param(size_t index);
-    std::string name();
-
-    // statics
-    static void init();
-    static void archive(Archiver& arch, Archivable*& param);
-
-private:
-    String* m_name;
-    GCVector<NullableArchivable*> m_params;
+    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
+    virtual ServiceWorkerJob* createJob(ServiceWorkerJobType type,
+                                        String* scopeURL, String* scriptURL,
+                                        Promise* p,
+                                        ExecutionContext* client) = 0;
 };
 
 } // namespace Starfish

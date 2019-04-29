@@ -47,7 +47,7 @@ class String;
 class Archiver;
 class Archivable;
 
-typedef void (*ArchivableHandler_t)(Archiver& ar, Archivable*& archivable);
+using ArchivableHandler_t = void (*)(Archiver& ar, Archivable*& archivable);
 
 template <typename T>
 constexpr typename std::underlying_type<T>::type toUnderlyingType(T value)

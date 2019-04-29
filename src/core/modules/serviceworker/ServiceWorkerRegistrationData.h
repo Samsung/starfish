@@ -47,9 +47,14 @@ public:
         return (scope != String::emptyString);
     }
 
+    DEFINE_GETTER_SETTER(bool, isUninstalling, IsUninstalling);
+
     // serialize/deserialize
     const char* archiveId() const override;
     void archive(Archiver& ar) override;
+
+private:
+    bool m_isUninstalling{ false };
 };
 
 } // namespace Starfish

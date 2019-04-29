@@ -23,13 +23,15 @@
 #include "platform/process/base/ProcessType.h"
 
 #include "core/page/WebView.h"
+#include "core/util/Id.h"
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/Message.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
 
-#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
@@ -48,8 +50,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 #include "core/modules/serviceworker/host/ProgramOptions.h"
-#include "core/util/Archivable.h"
-#include "core/modules/serviceworker/Message.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 

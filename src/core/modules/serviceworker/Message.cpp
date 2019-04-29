@@ -51,9 +51,8 @@ std::string Message::name()
     return str;
 }
 
-void Message::addParam(Archivable* param)
+void Message::addParam(NullableArchivable* param)
 {
-    STARFISH_ASSERT(param != nullptr);
     m_params.push_back(param);
 }
 
@@ -100,12 +99,11 @@ void Message::init()
     Archiver::setArchivableHandler(Message::archive);
 }
 
-Archivable* Message::param(size_t index)
+NullableArchivable* Message::param(size_t index)
 {
     STARFISH_ASSERT(m_params.size() > index);
 
     auto archivable = m_params[index];
-    STARFISH_ASSERT(archivable != nullptr);
 
     return archivable;
 }

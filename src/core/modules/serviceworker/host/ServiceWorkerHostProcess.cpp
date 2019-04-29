@@ -21,30 +21,31 @@
 
 #include "StarfishConfig.h"
 
-#include "core/dom/ExecutionContext.h"
 #include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
-
+#include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
-#include "core/modules/serviceworker/JobQueue.h"
-#include "core/modules/serviceworker/client/ServiceWorker.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/threading/AdaptedThread.h"
-#include "core/modules/threading/ThreadPool.h"
-#include "core/modules/threading/IRunnable.h"
 #include "core/modules/networking/Socket.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/Message.h"
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/serviceworker/host/ProgramOptions.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+#include "core/dom/ExecutionContext.h"
 
-#include "core/modules/serviceworker/host/ProgramOptions.h"
-#include "core/modules/serviceworker/Message.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/JobQueue.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 namespace Starfish {
 
@@ -108,7 +109,7 @@ void ServiceWorkerHostProcess::start(ProgramOptions* programOptions)
     address.append(IPC_ADDRESS_PREFIX);
     address.append(encodedOrigin);
 
-#ifndef NDEBUG
+#ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_WARN("host: bind: %s\n", address.c_str());
     STARFISH_LOG_WARN("host: origin: %s\n", origin.c_str());
 #endif
@@ -131,6 +132,9 @@ void ServiceWorkerHostProcess::matchRegistration(ServiceWorkerRequest* request,
 {
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURL != nullptr);
+
+    auto registration = m_jobHandler->matchRegistration(request, clientURL);
+    m_connection->resolveRequest(request, registration);
 }
 
 } // namespace Starfish

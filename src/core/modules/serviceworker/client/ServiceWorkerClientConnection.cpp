@@ -19,38 +19,31 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/util/Archivable.h"
+#include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/Task.h"
+#include "core/modules/serviceworker/Message.h"
+#include "platform/process/base/ProcessType.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/page/Window.h"
+#include "core/page/Navigator.h"
+#include "core/dom/Document.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
 
-#include "core/modules/networking/Socket.h"
-#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
-#include "core/modules/serviceworker/Task.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
-
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
-
-#include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-
-#include "core/page/Navigator.h"
-#include "core/page/Window.h"
-#include "core/dom/ExecutionContext.h"
-#include "core/dom/Document.h"
-#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
-
-#include "core/util/Archiver.h"
-#include "core/modules/serviceworker/Message.h"
-#include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerRequest.h"
+#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -118,16 +111,13 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
             findServiceWorkerContainer(request->contextId);
 
         if (serviceWorkerContainer) {
-            auto archivable = msg.param(1);
-            auto registration =
-                downcast<ServiceWorkerRegistrationData>(msg.param(1));
+            NullableArchivable* archivable = msg.param(1);
 
             auto requestMatched =
                 serviceWorkerContainer->findRequest(request->id);
 
-            if (requestMatched) {
-                requestMatched->postTask()->run(requestMatched,
-                                                { registration });
+            if (requestMatched && requestMatched->postTask()) {
+                requestMatched->postTask()->run(requestMatched, { archivable });
             }
         }
     }
