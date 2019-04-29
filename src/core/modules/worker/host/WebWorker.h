@@ -35,8 +35,6 @@ public:
 
     virtual ~WebWorker();
 
-    void run(const std::string& url);
-
     void setNeedsRendering() override
     {
     }
@@ -58,10 +56,8 @@ public:
         return m_scriptEngineInstance;
     }
 
-    void createScriptEngineInstance();
-    void removeScriptEngineInstance();
-
-    void loadJavaScript(String* scriptURL);
+    void loadJavaScript(const std::string& scriptURL,
+                        const std::string& baseURL);
 
 private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
@@ -69,6 +65,9 @@ private:
 
     WorkerGlobalScope* m_workerGlobalScope;
     ScriptEngineInstance* m_scriptEngineInstance;
+
+    void createScriptEngineInstance();
+    void removeScriptEngineInstance();
 };
 
 } // namespace Starfish
