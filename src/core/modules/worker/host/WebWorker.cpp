@@ -27,7 +27,9 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#include "core/modules/threading/Thread.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
@@ -40,6 +42,7 @@ WebWorker::WebWorker(Starfish* starfish, const char* locale,
 {
     STARFISH_ASSERT(starfish != nullptr && locale != nullptr &&
                     timezoneID != nullptr && customUserAgentString != nullptr);
+    STARFISH_ASSERT(isMainThread());
 }
 
 WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
@@ -58,6 +61,7 @@ WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
 
 void WebWorker::createScriptEngineInstance()
 {
+    STARFISH_ASSERT(isMainThread());
     if (!m_scriptEngineInstance) {
         PromiseJobListener listener = [](Escargot::ExecutionStateRef* state,
                                          Escargot::JobRef* job) {
@@ -96,6 +100,8 @@ void WebWorker::createScriptEngineInstance()
 
 void WebWorker::removeScriptEngineInstance()
 {
+    STARFISH_ASSERT(isMainThread());
+
     if (m_scriptEngineInstance) {
         m_scriptEngineInstance->dispose();
 
@@ -104,34 +110,32 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-void WebWorker::loadJavaScript(String* scriptURL)
+void WebWorker::loadJavaScript(const std::string& scriptURL,
+                               const std::string& baseURL)
 {
-    STARFISH_ASSERT(scriptURL != nullptr);
-    clearBlobURLStore();
+    m_messageLoop->runOnMainThreadAsync([=]() -> void {
+        clearBlobURLStore();
 
-    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+        clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
-    if (m_workerGlobalScope) {
-        m_workerGlobalScope->dispose();
-    }
+        if (m_workerGlobalScope) {
+            m_workerGlobalScope->dispose();
+        }
 
-    removeScriptEngineInstance();
-    createScriptEngineInstance();
-    ResourceURL* resourceURL = new ResourceURL(scriptURL);
-    m_workerGlobalScope = new ServiceWorkerGlobalScope(
-        this, resourceURL, String::createASCIIString("UTF-8"));
+        removeScriptEngineInstance();
+        createScriptEngineInstance();
+        ResourceURL* resourceURL =
+            new ResourceURL(String::fromUTF8(scriptURL.data()),
+                            String::fromUTF8(baseURL.data()));
+        m_workerGlobalScope = new ServiceWorkerGlobalScope(
+            this, resourceURL, String::createASCIIString("UTF-8"));
 
-    // TODO: evaluate JavaScript from URL
+        m_workerGlobalScope->workerScriptController()->evaluate(resourceURL);
+    });
 }
 
 WebWorker::~WebWorker()
 {
-}
-
-void WebWorker::run(const std::string& url)
-{
-    m_messageLoop->runOnMainThreadAsync(
-        [=]() -> void { loadJavaScript(String::fromUTF8(url.data())); });
 }
 
 } // namespace Starfish

@@ -26,6 +26,7 @@
 namespace Starfish {
 
 class WebWorker;
+class WorkerScriptController;
 class WorkerLocation;
 class WorkerNavigator;
 class ErrorEventInit;
@@ -45,6 +46,11 @@ public:
     WebWorker* webWorker()
     {
         return m_webWorker;
+    }
+
+    WorkerScriptController* workerScriptController()
+    {
+        return m_workerScriptController;
     }
 
     WorkerGlobalScope* self()
@@ -76,6 +82,7 @@ protected:
     WebWorker* m_webWorker;
     ScriptBindingInstance* m_scriptBindingInstance;
     ExecutionContext* m_executionContext;
+    WorkerScriptController* m_workerScriptController;
     WorkerLocation* m_workerLocation;
     WorkerNavigator* m_workerNavigator;
 
@@ -85,6 +92,8 @@ protected:
         GC_set_bit(desc,
                    GC_WORD_OFFSET(WorkerGlobalScope, m_scriptBindingInstance));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_executionContext));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WorkerGlobalScope, m_workerScriptController));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
     }

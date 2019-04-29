@@ -43,8 +43,8 @@ static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 
 int main(int argc, char* argv[])
 {
-    if (argc == 1) {
-        puts("please specify url");
+    if (argc < 3) {
+        puts("please specify URL and baseURL");
         return -1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         LWE::g_starfishInstance, "ko-KR", "Asia/Seoul",
         Starfish::String::emptyString);
 
-    webWorker->run(std::string(argv[1]));
+    webWorker->loadJavaScript(std::string(argv[1]), std::string(argv[2]));
 
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
