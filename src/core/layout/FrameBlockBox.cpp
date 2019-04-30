@@ -213,26 +213,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     }
 
     if (isFrameTableBox()) {
-        bool isCollapsedBefore = false;
-        if (width() == 0 && height() == 0) {
-            isCollapsedBefore = true;
-        }
-
         asFrameTableBox()->layoutTable(ctx);
-
-        if (isCollapsedBefore && width() == 0 && height() == 0) {
-            // skip marking painting dirty
-        } else {
-            // TODO saidly, we cannot compute table painting dirty correctly
-            // yet.
-            // because there is so many annoying anonymous boxes.
-            Frame* stackingContextOwner = this;
-            while (!stackingContextOwner->needToEstablishStackingContext()) {
-                stackingContextOwner = stackingContextOwner->parent();
-            }
-            stackingContextOwner->markNeedsPainting();
-        }
-
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
 
