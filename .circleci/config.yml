@@ -60,28 +60,12 @@ jobs:
       - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.test,www1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge
     steps:
       - add_ssh_keys:
           fingerprints:
             - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
       - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
-      - run:
-            name: Add hosts
-            command: echo "10.113.164.251	xn--lve-6lad.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	xn--lve-6lad.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	xn--n8j6ds53lwwkrqhv28a.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www1.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www2.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www2.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www1.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www.not-web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	www.web-platform.test" >> /etc/hosts |
-              echo "10.113.164.251	xn--n8j6ds53lwwkrqhv28a.web-platform.test" >> /etc/hosts |
-              cat /etc/hosts
       - run:
             name: Restart network
             command: /etc/init.d/networking restart
@@ -104,7 +88,6 @@ jobs:
       - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
-        no_proxy: "10.113.164.251,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.test,www1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
     resource_class: xlarge
     steps:
       - add_ssh_keys:
