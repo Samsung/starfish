@@ -70,6 +70,22 @@ public:
         FrameBox* frame;
     };
 
+    class ClearNeedsPainting {
+    public:
+        ClearNeedsPainting(FrameBox* frame)
+            : frame(frame)
+        {
+        }
+
+        ~ClearNeedsPainting()
+        {
+            frame->clearNeedsPainting();
+        }
+
+    private:
+        FrameBox* frame;
+    };
+
     RepaintRegionTracker(
         FrameBox* rootFrame, bool needsFullPainting,
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
@@ -226,6 +242,7 @@ protected:
     void trackRepaintRegion(FrameBox* frame, SkMatrix currentMatrix)
     {
         bool needsRepainting = frame->needsPainting();
+        ClearNeedsPainting clearNeedsPainting(frame);
 
         if (frame->isInlineBoxLayoutParentBox() &&
             frame->isInlineNonReplacedBox()) {
@@ -457,8 +474,6 @@ protected:
 
             trackRepaintRegion(box, childMatrix);
         }
-
-        frame->clearNeedsPainting();
     }
 };
 }
