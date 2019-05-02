@@ -32,6 +32,7 @@
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 
@@ -43,15 +44,16 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
 {
     STARFISH_ASSERT(webWorker != nullptr && url != nullptr &&
                     charSet != nullptr);
+
     m_scriptBindingInstance = new ScriptBindingWorkerInstance(
         webWorker->scriptEngineInstance(), this);
 
     m_executionContext = new ExecutionContext(this, m_scriptBindingInstance,
                                               url, charSet, this, false);
+    m_executionContext->setBaseURL(new ResourceURL(url->baseURL()));
     m_workerScriptController = new WorkerScriptController(m_executionContext);
     m_workerLocation = new WorkerLocation(m_executionContext, url);
     m_workerNavigator = new WorkerNavigator(m_executionContext);
-
     m_scriptBindingInstance->initBinding();
 }
 
@@ -66,6 +68,44 @@ void WorkerGlobalScope::dispose()
 {
     if (m_scriptBindingInstance) {
         m_scriptBindingInstance->destroy();
+    }
+}
+
+void WorkerGlobalScope::importScripts(GCVector<String*>& urls)
+{
+    if (urls.empty()) {
+        return;
+    }
+
+    for (unsigned i = 0; i < urls.size(); i++) {
+        STARFISH_ASSERT(urls[i] != nullptr);
+        if (urls[i]->isEmpty() == false) {
+            ResourceURL* url = new ResourceURL(
+                urls[i], executionContext()->baseURL()->baseURI());
+            importScript(url);
+        }
+    }
+}
+
+void WorkerGlobalScope::importScript(ResourceURL* url)
+{
+    STARFISH_ASSERT(url != nullptr);
+    if (url->isValid() == false) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::SYNTAX_ERR, "Invalid URL");
+    }
+
+    ScriptLoadResult result = m_workerScriptController->loadJavaScript(url);
+    if (result != ScriptLoadResult::Success) {
+        DOMException::Code errorCode = DOMException::Code::NOT_SUPPORTED_ERR;
+        if (result == ScriptLoadResult::NetworkError) {
+            errorCode = DOMException::Code::NETWORK_ERR;
+        } else if (result == ScriptLoadResult::ScriptError) {
+            errorCode = DOMException::SCRIPT_ERROR;
+        }
+        throw new DOMException(executionContext(),
+                               DOMException::Code::DOM_EXCEPTION,
+                               "Failed to execute 'importScript'");
     }
 }
 }

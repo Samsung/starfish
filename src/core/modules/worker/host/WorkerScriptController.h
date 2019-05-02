@@ -26,15 +26,27 @@ namespace Starfish {
 class ResourceRequest;
 class ScriptBindingInstance;
 
+enum class ScriptLoadResult {
+    NotHandled,
+    Success,
+    NetworkError,
+    ScriptError,
+};
+
 class WorkerScriptController : public gc {
 public:
     WorkerScriptController(ExecutionContext* executionContext);
 
-    void evaluate(ResourceURL* resourceURL);
-    void evaluate(String* string);
+    ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
+    bool evaluatefromString(String* string);
+
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
 
 private:
-    ResourceRequest* m_resourceRequest;
+    ExecutionContext* m_executionContext;
 
     ScriptBindingInstance* scriptBindingInstance();
 };

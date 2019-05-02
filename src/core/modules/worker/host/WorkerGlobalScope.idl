@@ -1,11 +1,16 @@
 // https://html.spec.whatwg.org/multipage/workers.html#workerglobalscope
 
-[STARFISH_WEBWORKER_HOST, PrimaryGlobal, Exposed=Worker, NoInterfaceObject]
+[
+  STARFISH_WEBWORKER_HOST,
+  PrimaryGlobal,
+  Exposed=Worker,
+  NoInterfaceObject
+]
 interface WorkerGlobalScope : EventTarget {
   readonly attribute WorkerGlobalScope self;
   readonly attribute WorkerLocation location;
   readonly attribute WorkerNavigator navigator;
-  [Unimplemented] void importScripts(USVString... urls);
+  [RaisesException] void importScripts(USVString... urls);
 
   [Unimplemented] attribute EventHandler onerror;
   [Unimplemented] attribute EventHandler onlanguagechange;
