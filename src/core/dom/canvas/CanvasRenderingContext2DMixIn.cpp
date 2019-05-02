@@ -30,6 +30,9 @@
 #include "core/dom/canvas/CanvasFillRule.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
+#include "core/dom/canvas/CanvasDirection.h"
+#include "core/dom/canvas/CanvasTextAlign.h"
+#include "core/dom/canvas/CanvasTextBaseline.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/modules/canvas/Path.h"
@@ -192,6 +195,8 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_canvas->setFillColor(black);
     m_canvas->setStrokeColor(black);
     m_canvas->setGlobalAlpha(1.0f);
+
+    setFont(String::fromUTF8("10px sans-serif")); // default font
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -709,6 +714,91 @@ void CanvasRenderingContext2DMixIn::ellipse(float x, float y, float radiusX,
 {
     m_canvasPath->ellipse(x, y, radiusX, radiusY, rotation, startAngle,
                           endAngle, anticlockwise);
+}
+
+void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y)
+{
+    STARFISH_ASSERT(text != nullptr);
+    fillText(text, x, y, 0, false);
+}
+
+void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
+                                             float maxWidth)
+{
+    STARFISH_ASSERT(text != nullptr);
+    if (maxWidth <= 0 || isInfOrNan(maxWidth)) {
+        return;
+    }
+    fillText(text, x, y, maxWidth, true);
+}
+
+void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y)
+{
+    STARFISH_ASSERT(text != nullptr);
+    strokeText(text, x, y, 0, false);
+}
+
+void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
+                                               float maxWidth)
+{
+    STARFISH_ASSERT(text != nullptr);
+    if (maxWidth <= 0 || isInfOrNan(maxWidth)) {
+        return;
+    }
+    strokeText(text, x, y, maxWidth, true);
+}
+
+void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
+                                                     StringView text)
+{
+    m_canvas->save();
+    m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+    m_canvas->drawText(x, y, LayoutUnit(0), text);
+    m_canvas->restore();
+}
+
+bool CanvasRenderingContext2DMixIn::canUseTextFastPath(String* text,
+                                                       bool shouldApplyMaxWidth)
+{
+    STARFISH_ASSERT(text != nullptr);
+    // check text direction
+    UBiDiDirection dir;
+    StringView(text, 0, text->length())
+        .peekUTF16Buffer(
+            [](const char16_t* buf, size_t len, void* data) -> size_t {
+                STARFISH_ASSERT(buf != nullptr);
+                STARFISH_ASSERT(data != nullptr);
+
+                *((UBiDiDirection*)data) =
+                    ubidi_getBaseDirection((const UChar*)buf, len);
+                return false;
+            },
+            &dir);
+    if (dir == UBIDI_LTR && !shouldApplyMaxWidth) {
+        return true;
+    }
+    return false;
+}
+
+void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
+                                             float maxWidth, bool useMaxWidth)
+{
+    STARFISH_ASSERT(text != nullptr);
+
+    if (text == nullptr || isInfOrNan(x) || isInfOrNan(y)) {
+        return;
+    }
+    if (canUseTextFastPath(text, useMaxWidth)) {
+        fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
+        return;
+    }
+}
+
+void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
+                                               float maxWidth, bool useMaxWidth)
+{
+    STARFISH_ASSERT(text != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float dx,
@@ -1313,6 +1403,154 @@ void CanvasRenderingContext2DMixIn::markOriginCleanFlagDirtyIfNeeds(
     if (!executionContext()->document()->webOrigin()->isSameOrigin(webOrigin)) {
         m_originCleanFlag = false;
     }
+}
+
+String* CanvasRenderingContext2DMixIn::font()
+{
+    STARFISH_ASSERT(m_fontStr != nullptr);
+    return m_fontStr;
+}
+
+void CanvasRenderingContext2DMixIn::setFont(String* font)
+{
+    STARFISH_ASSERT(font != nullptr);
+    m_fontStr = font;
+    // Parsing
+    auto raw = font->toUTF8NonGCString();
+    CSSTokenVector tokens;
+    CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length(),
+                                          "/,", 2, true);
+
+    CSSStyleValuePair style /*, variant*/, weight /*, stretch*/, size,
+        lineHeight, fontFamily;
+    CSSStyleDeclaration::parseFontShorthand(tokens, &style, &weight, &size,
+                                            &lineHeight, &fontFamily);
+
+    FontSelector* fs = m_ownerHTMLCanvasElement->document()->fontSelector();
+    STARFISH_ASSERT(fs != nullptr);
+
+    String** familyNameArray;
+    size_t familyNameArraySize;
+
+    float fixedFontSize = 10;
+    char fontStyle = FontStyleValue::NormalFontStyleValue;
+    char fontWeight = FontWeightValue::NormalFontWeightValue;
+
+    // font size
+    if (size.valueKind() == CSSStyleValuePair::FontSizeValueKind) {
+        // fixedFontSize = size.fontSizeValue();
+    } else if (size.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+        if (size.lengthValue().isFixed()) {
+            fixedFontSize = size.lengthValue().fixed();
+        }
+    }
+
+    // font style
+    if (style.valueKind() == CSSStyleValuePair::FontStyleValueKind) {
+        fontStyle = style.fontStyleValue();
+    }
+
+    // font weight
+    if (weight.valueKind() == CSSStyleValuePair::FontWeightValueKind) {
+        switch (weight.fontWeightValue()) {
+        case OneHundredFontWeightValue:
+            fontWeight = 1;
+            break;
+        case TwoHundredsFontWeightValue:
+            fontWeight = 2;
+            break;
+        case ThreeHundredsFontWeightValue:
+            fontWeight = 3;
+            break;
+        case FourHundredsFontWeightValue:
+            fontWeight = 4;
+            break;
+        case NormalFontWeightValue:
+            fontWeight = 4;
+            break;
+        case FiveHundredsFontWeightValue:
+            fontWeight = 5;
+            break;
+        case SixHundredsFontWeightValue:
+            fontWeight = 6;
+            break;
+        case BoldFontWeightValue:
+            fontWeight = 7;
+            break;
+        case EightHundredsFontWeightValue:
+            fontWeight = 8;
+            break;
+        case NineHundredsFontWeightValue:
+            fontWeight = 9;
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    }
+
+    // font familyname
+    if (fontFamily.valueKind() ==
+        CSSStyleValuePair::ValueKind::KeywordValueKind) {
+        String* str = fontFamily.keywordValue();
+        familyNameArray = &str;
+        familyNameArraySize = 1;
+    } else if (fontFamily.valueKind() ==
+               CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = fontFamily.multiValue();
+        familyNameArraySize = list->size();
+        familyNameArray =
+            (String**)GC_MALLOC_ATOMIC(sizeof(String*) * (familyNameArraySize));
+        for (size_t i = 0; i < familyNameArraySize; i++) {
+            familyNameArray[i] = list->at(i).keywordValue();
+        }
+    }
+
+    Font* new_font = fs->loadFont(familyNameArray, familyNameArraySize,
+                                  fixedFontSize, fontStyle, fontWeight, false);
+
+    STARFISH_ASSERT(new_font != nullptr);
+
+    // TODO :
+    if (new_font != m_font) {
+        m_canvas->setFont(new_font);
+        m_font = new_font;
+    }
+}
+
+String* CanvasRenderingContext2DMixIn::textAlign()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
+void CanvasRenderingContext2DMixIn::setTextAlign(String* textAlign)
+{
+    STARFISH_ASSERT(textAlign != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+String* CanvasRenderingContext2DMixIn::textBaseline()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
+void CanvasRenderingContext2DMixIn::setTextBaseline(String* textBaseline)
+{
+    STARFISH_ASSERT(textBaseline != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+String* CanvasRenderingContext2DMixIn::direction()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
+}
+
+void CanvasRenderingContext2DMixIn::setDirection(String* direction)
+{
+    STARFISH_ASSERT(direction != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 }
 #undef NEEDS_UNPREMULTIPLIED

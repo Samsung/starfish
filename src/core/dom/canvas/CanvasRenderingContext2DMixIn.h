@@ -40,6 +40,9 @@ class HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement;
 
 enum class CanvasLineCap : int;
 enum class CanvasLineJoin : int;
+enum class CanvasTextAlign : int;
+enum class CanvasTextBaseline : int;
+enum class CanvasDirection : int;
 
 typedef HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement
     CanvasImageSource;
@@ -140,7 +143,12 @@ public:
                          bool anticlockwise = false) override;
 
     // TODO : CanvasUserInterface
+
     // TODO :CanvasText
+    void fillText(String* text, float x, float y);
+    void fillText(String* text, float x, float y, float maxWidth);
+    void strokeText(String* text, float x, float y);
+    void strokeText(String* text, float x, float y, float maxWidth);
 
     // CanvasDrawImage
     void drawImage(CanvasImageSource image, float dx, float dy);
@@ -176,7 +184,15 @@ public:
     double lineDashOffset();
     void setLineDashOffset(double offset);
 
-    // TODO : CanvasTextDrawingStyles
+    // CanvasTextDrawingStyles
+    String* font();
+    void setFont(String* font);
+    String* textAlign();
+    void setTextAlign(String* textAlign);
+    String* textBaseline();
+    void setTextBaseline(String* textBaseline);
+    String* direction();
+    void setDirection(String* direction);
 
     void* operator new(size_t size)
     {
@@ -207,6 +223,9 @@ protected:
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvasPath));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_dashList));
+        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_font));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_fontStr));
     }
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
 
@@ -224,6 +243,12 @@ private:
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
     void setLineDashToCanvas();
+    void fillText(String* text, float x, float y, float maxWidth,
+                  bool useMaxWidth);
+    void strokeText(String* text, float x, float y, float maxWidth,
+                    bool useMaxWidth);
+    bool canUseTextFastPath(String* text, bool useMaxWidth);
+    void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);
     void markOriginCleanFlagDirtyIfNeeds(WebOrigin* webOrigin);
@@ -233,6 +258,8 @@ private:
     CanvasPath* m_canvasPath;
     GCVector<double> m_dashList;
     double m_lineDashOffset;
+    Font* m_font;
+    String* m_fontStr;
 };
 }
 #endif

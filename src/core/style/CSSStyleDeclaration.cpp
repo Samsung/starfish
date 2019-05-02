@@ -930,14 +930,13 @@ static bool parseFlexFlowShorthand(const CSSTokenVector& tokens,
     return hasFlexDirection || hasFlexWrap;
 }
 
-static bool parseFontShorthand(const CSSTokenVector& tokens,
-                               CSSStyleValuePair* _Style,
-                               // UNSUPPORTED CSSStyleValuePair* _Variant,
-                               CSSStyleValuePair* _Weight,
-                               // UNSUPPORTED CSSStyleValuePair* _Stretch,
-                               CSSStyleValuePair* _Size,
-                               CSSStyleValuePair* _LineHeight,
-                               CSSStyleValuePair* _Family)
+bool CSSStyleDeclaration::parseFontShorthand(
+    const CSSTokenVector& tokens, CSSStyleValuePair* _Style,
+    // UNSUPPORTED CSSStyleValuePair* _Variant,
+    CSSStyleValuePair* _Weight,
+    // UNSUPPORTED CSSStyleValuePair* _Stretch,
+    CSSStyleValuePair* _Size, CSSStyleValuePair* _LineHeight,
+    CSSStyleValuePair* _Family)
 {
     // [font-style|font-weight] font-size[/line-height] font-family
     size_t len = tokens.size();
