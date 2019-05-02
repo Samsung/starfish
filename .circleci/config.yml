@@ -80,7 +80,7 @@ jobs:
             name : Install test dep
             command: ninja install_pixel_test_dep
       - run:
-            no_output_timeout: 30m
+            no_output_timeout: 5m
             name : Run test
             command: /root/workspace/run_test.sh
   build_x64_release:

@@ -21,7 +21,7 @@ http://web-platform.test:8000/fetch/api/request/request-init-002.babel.html
 #http://web-platform.test:8000/fetch/api/request/request-consume-empty.html
 #http://web-platform.test:8000/fetch/api/request/url-encoding.html
 #http://web-platform.test:8000/fetch/api/request/request-error.html
-http://web-platform.test:8000/fetch/api/request/request-error.babel.html
+#http://web-platform.test:8000/fetch/api/request/request-error.babel.html
 #http://web-platform.test:8000/fetch/api/request/multi-globals/url-parsing.html
 #http://web-platform.test:8000/fetch/api/request/multi-globals/current/current.html
 #http://web-platform.test:8000/fetch/api/request/multi-globals/incumbent/incumbent.html

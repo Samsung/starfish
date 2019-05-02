@@ -15,7 +15,7 @@ The following platforms are supported.
 ### Install required packages
 
 ```sh
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev cmake autoconf automake libtool
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev cmake autoconf automake libtool ninja
 sudo apt-get install python-pip
 pip install Jinja2
 sudo add-apt-repository ppa:enlightenment-git/ppa
@@ -129,54 +129,25 @@ ninja install_pixel_test_dep
 ### Summary
 ``` sh
 # Run all test at once
-ninja test_all
+./tool/test_runner.py
 ```
 ``` sh
 # Sub tests
-# A. Dom Conformance Test (4)
-ninja dom_conformance_test
-ninja dom_conformance_test_[webkit|blink|gecko]
+# A. Dom Conformance Test
+./tool/test_runner.py dom_conformance
 
-# B. Web Platfrom Test (6)
-ninja web_platform_test_[dom|dom_events|html|page_visibility|progress_events|xhr]
+# B. Web Platfrom Test
+./tool/test_runner.py wpt_all or
+./tool/test_runner.py wpt_[css_css21|css_backgrounds|css_color|css_flexbox|css_transforms|css_variables|cssom_view|mediaqueries|selectors|others|canvas|pwa]
 
-# C. Vendor Test (9)
-ninja vendor_test_[webkit|blink]_fast_[dom|html|css|etc]
-ninja vendor_test_gecko_layout
+# C. Vendor Test
+./tool/test_runner.py vendor_test or vendor_test_[blink|webkit|gecko]
 
-# D. Bidi Test (1)
-ninja bidi_test
+# D. Bidi Test
+./tool/test_runner.py bidi_test
 
-# E. CSSWG Test (8)
-ninja csswg_test_css[1|21|3_color|3_backgrounds|3_transforms|3_selectors]
-ninja csswg_test_[rtl|manual]
-
-# F. Internal Test (1)
-ninja internal_test
-```
-``` sh
-# Specify pool size for multiprocessing
-ninja [test_name] TEST_NPROCS=5
-```
-
-### CSSWG Test (compare with node-WebKit/previous version of Starfish)
-
-We use the W3C's CSS conformance test suites.
-(W3C CSS WG Test Suites Repository: https://hg.csswg.org/test)
-
-You can find these in `test/reftest/csswg-test/*`
-
-To run the pixel tests, use:
-
-``` sh
-# (1) Compare with node-webkit
-ninja csswg_test_[name]
-
-# (2) Compare with our previous version of Startfish
-ninja csswg_test_manual
-
-# Run (1) + (2) at once
-ninja csswg_test_all
+# E. Internal Test
+./tool/test_runner.py internal_test
 ```
 
 If you want to capture the screenshot on the command line, use:
@@ -199,7 +170,7 @@ You can find these in `test/reftest/web-platform-tests/*`
 To run the Web Platform Tests, use:
 
 ``` sh
-ninja web_platform_test_[name]
+./tool/test_runner.py wpt_[name]
 ```
 
 ### Bidi Tests

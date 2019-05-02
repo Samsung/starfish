@@ -90,7 +90,7 @@
 #https://web-platform.test:8443/service-workers/service-worker/import-scripts-updated-flag.https.html
 #https://web-platform.test:8443/service-workers/service-worker/indexeddb.https.html
 #https://web-platform.test:8443/service-workers/service-worker/install-event-type.https.html
-https://web-platform.test:8443/service-workers/service-worker/installing.https.html
+#https://web-platform.test:8443/service-workers/service-worker/installing.https.html
 #https://web-platform.test:8443/service-workers/service-worker/interfaces-sw.https.html
 #https://web-platform.test:8443/service-workers/service-worker/interfaces-window.https.html
 #https://web-platform.test:8443/service-workers/service-worker/invalid-blobtype.https.html
