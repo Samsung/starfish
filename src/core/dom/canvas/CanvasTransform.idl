@@ -11,8 +11,8 @@ interface CanvasTransform {
   void translate(unrestricted double x, unrestricted double y);
   void transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
 
-  [Unimplemented, NewObject] DOMMatrix getTransform();
+  [NewObject] DOMMatrix getTransform();
   void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
-  [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);
+  void setTransform(optional DOMMatrix2DInit transform);
   void resetTransform();
 };

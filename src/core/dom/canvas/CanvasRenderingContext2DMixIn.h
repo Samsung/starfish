@@ -25,6 +25,8 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasPath.h"
 #include "core/dom/DOMExceptionOr.h"
+#include "core/dom/DOMMatrix2DInit.h"
+#include "core/dom/DOMMatrix.h"
 
 namespace Starfish {
 
@@ -81,7 +83,10 @@ public:
     void rotate(float angle);
     void translate(float x, float y);
     void transform(float a, float b, float c, float d, float e, float f);
+    DOMMatrix* getTransform();
     void setTransform(float a, float b, float c, float d, float e, float f);
+    void setTransform(DOMMatrix2DInit matrix);
+    void setTransform();
     void resetTransform();
 
     // CanvasCompositing
