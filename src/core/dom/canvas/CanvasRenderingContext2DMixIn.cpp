@@ -377,6 +377,19 @@ void CanvasRenderingContext2DMixIn::translate(float x, float y)
     transform(1, 0, 0, 1, x, y, false);
 }
 
+DOMMatrix* CanvasRenderingContext2DMixIn::getTransform()
+{
+    DOMMatrix* result = new DOMMatrix(executionContext());
+    SkMatrix ctm = m_canvas->currentTransformMatrix();
+    result->setA(ctm.get(0));
+    result->setB(ctm.get(3));
+    result->setC(ctm.get(1));
+    result->setD(ctm.get(4));
+    result->setE(ctm.get(2));
+    result->setF(ctm.get(5));
+    return result;
+}
+
 void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
                                               float d, float e, float f,
                                               bool needResetMatrix)
@@ -421,6 +434,17 @@ void CanvasRenderingContext2DMixIn::setTransform(float a, float b, float c,
                                                  float d, float e, float f)
 {
     transform(a, b, c, d, e, f, true);
+}
+
+void CanvasRenderingContext2DMixIn::setTransform()
+{
+    transform(1, 0, 0, 1, 0, 0, true);
+}
+
+void CanvasRenderingContext2DMixIn::setTransform(DOMMatrix2DInit matrix)
+{
+    transform(matrix.a(), matrix.b(), matrix.c(), matrix.d(), matrix.e(),
+              matrix.f(), true);
 }
 
 void CanvasRenderingContext2DMixIn::resetTransform()

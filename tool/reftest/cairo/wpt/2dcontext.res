@@ -77,7 +77,7 @@ http://web-platform.test:8000/2dcontext/transformations/2d.transformation.scale.
 http://web-platform.test:8000/2dcontext/transformations/2d.transformation.scale.negative.html
 http://web-platform.test:8000/2dcontext/transformations/2d.transformation.scale.nonfinite.html
 #http://web-platform.test:8000/2dcontext/transformations/2d.transformation.scale.zero.html
-#http://web-platform.test:8000/2dcontext/transformations/2d.transformation.setTransform.multiple.html
+http://web-platform.test:8000/2dcontext/transformations/2d.transformation.setTransform.multiple.html
 http://web-platform.test:8000/2dcontext/transformations/2d.transformation.setTransform.nonfinite.html
 http://web-platform.test:8000/2dcontext/transformations/2d.transformation.setTransform.skewed.html
 http://web-platform.test:8000/2dcontext/transformations/2d.transformation.transform.identity.html
