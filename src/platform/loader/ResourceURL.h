@@ -148,6 +148,11 @@ public:
         return m_protocol;
     }
 
+    String* baseURL()
+    {
+        return m_baseURL;
+    }
+
     // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
     String* urlStringWithoutSearchPart() const;
     String* getUrlPathString() const;

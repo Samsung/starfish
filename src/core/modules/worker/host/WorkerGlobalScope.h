@@ -77,6 +77,8 @@ public:
 
     void dispose();
 
+    void importScripts(GCVector<String*>& urls);
+
 protected:
     WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);
     WebWorker* m_webWorker;
@@ -97,6 +99,9 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
     }
+
+private:
+    void importScript(ResourceURL* url);
 };
 }
 

@@ -130,7 +130,8 @@ void WebWorker::loadJavaScript(const std::string& scriptURL,
         m_workerGlobalScope = new ServiceWorkerGlobalScope(
             this, resourceURL, String::createASCIIString("UTF-8"));
 
-        m_workerGlobalScope->workerScriptController()->evaluate(resourceURL);
+        m_workerGlobalScope->workerScriptController()->loadJavaScript(
+            resourceURL);
     });
 }
 

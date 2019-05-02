@@ -24,6 +24,7 @@
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
 
@@ -31,6 +32,7 @@ class WorkerScriptControllerClient : public ResourceRequestClient {
 public:
     WorkerScriptControllerClient(WorkerScriptController* workerScriptController)
         : m_workerScriptController(workerScriptController)
+        , m_scriptLoadResult(ScriptLoadResult::NotHandled)
     {
         STARFISH_ASSERT(workerScriptController != nullptr);
     }
@@ -50,49 +52,73 @@ public:
         }
 
         if (request->readyState() == ReadyState::Done) {
-            if (!request->isError() && request->status() == 200) {
-                auto response = request->response();
+            if (request->isError() == false && request->status() == 200) {
+                auto& response = request->response();
                 String* text =
                     String::fromUTF8(response.data(), response.size());
-                m_workerScriptController->evaluate(text);
+                if (m_workerScriptController->evaluatefromString(text)) {
+                    m_scriptLoadResult = ScriptLoadResult::Success;
+                } else {
+                    m_scriptLoadResult = ScriptLoadResult::ScriptError;
+                }
+
+                response.clear();
+                response.shrink_to_fit();
+
+            } else {
+                m_scriptLoadResult = ScriptLoadResult::NetworkError;
             }
         }
     }
 
+    ScriptLoadResult scriptLoadResult()
+    {
+        return m_scriptLoadResult;
+    }
+
 private:
     WorkerScriptController* m_workerScriptController;
+    ScriptLoadResult m_scriptLoadResult;
 };
 
 WorkerScriptController::WorkerScriptController(
     ExecutionContext* executionContext)
-    : m_resourceRequest(new ResourceRequest(executionContext))
+    : m_executionContext(executionContext)
 {
     STARFISH_ASSERT(executionContext != nullptr);
-
-    m_resourceRequest->addResourceRequestClient(
-        new WorkerScriptControllerClient(this));
 }
 
 ScriptBindingInstance* WorkerScriptController::scriptBindingInstance()
 {
-    return m_resourceRequest->executionContext()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
-void WorkerScriptController::evaluate(ResourceURL* resourceURL)
+ScriptLoadResult WorkerScriptController::loadJavaScript(
+    ResourceURL* resourceURL)
 {
     STARFISH_ASSERT(resourceURL != nullptr);
     RequestData* requestData = new RequestData();
     requestData->m_url = resourceURL;
     requestData->m_destination = RequestDestination::Script;
+    requestData->m_syncLevel = RequestSyncLevel::AlwaysSync;
 
-    m_resourceRequest->open(requestData);
-    m_resourceRequest->send();
+    ResourceRequest* resourceRequest = new ResourceRequest(executionContext());
+    WorkerScriptControllerClient* client =
+        new WorkerScriptControllerClient(this);
+    resourceRequest->addResourceRequestClient(client);
+    resourceRequest->open(requestData);
+    resourceRequest->send();
+
+    return client->scriptLoadResult();
 }
 
-void WorkerScriptController::evaluate(String* string)
+bool WorkerScriptController::evaluatefromString(String* string)
 {
     STARFISH_ASSERT(string != nullptr);
-    evaluateString(scriptBindingInstance(), string);
+    bool result = false;
+    evaluateString(scriptBindingInstance(), string, String::emptyString,
+                   &result);
+    return result;
 }
 }
 
