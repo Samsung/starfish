@@ -179,8 +179,8 @@ public:
     float miterLimit();
     void setMiterLimit(float limit);
 
-    void setLineDash(GCVector<double> segments);
-    GCVector<double> getLineDash();
+    void setLineDash(GCAtomicVector<double> segments);
+    GCAtomicVector<double> getLineDash();
     double lineDashOffset();
     void setLineDashOffset(double offset);
 
@@ -256,7 +256,7 @@ private:
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;
-    GCVector<double> m_dashList;
+    GCAtomicVector<double> m_dashList;
     double m_lineDashOffset;
     Font* m_font;
     String* m_fontStr;

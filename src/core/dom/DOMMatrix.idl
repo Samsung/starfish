@@ -1,0 +1,67 @@
+// https://drafts.fxtf.org/geometry/#DOMMatrix
+[Constructor(optional (DOMString or sequence<unrestricted double>) init),
+ ConstructorCallWith=ExecutionContext,
+ Exposed=(Window,Worker),
+ Serializable,
+ LegacyWindowAlias=(SVGMatrix,WebKitCSSMatrix)]
+interface DOMMatrix : DOMMatrixReadOnly {
+    [Unimplemented,NewObject] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [Unimplemented,NewObject] static DOMMatrix fromFloat32Array(Float32Array array32);
+    [Unimplemented,NewObject] static DOMMatrix fromFloat64Array(Float64Array array64);
+
+    // These attributes are simple aliases for certain elements of the 4x4 matrix
+    inherit attribute unrestricted double a;
+    inherit attribute unrestricted double b;
+    inherit attribute unrestricted double c;
+    inherit attribute unrestricted double d;
+    inherit attribute unrestricted double e;
+    inherit attribute unrestricted double f;
+
+    inherit attribute unrestricted double m11;
+    inherit attribute unrestricted double m12;
+    inherit attribute unrestricted double m13;
+    inherit attribute unrestricted double m14;
+    inherit attribute unrestricted double m21;
+    inherit attribute unrestricted double m22;
+    inherit attribute unrestricted double m23;
+    inherit attribute unrestricted double m24;
+    inherit attribute unrestricted double m31;
+    inherit attribute unrestricted double m32;
+    inherit attribute unrestricted double m33;
+    inherit attribute unrestricted double m34;
+    inherit attribute unrestricted double m41;
+    inherit attribute unrestricted double m42;
+    inherit attribute unrestricted double m43;
+    inherit attribute unrestricted double m44;
+
+    // Mutable transform methods
+    [Unimplemented] DOMMatrix multiplySelf(optional DOMMatrixInit other);
+    [Unimplemented] DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
+    [Unimplemented] DOMMatrix translateSelf(optional unrestricted double tx = 0,
+                            optional unrestricted double ty = 0,
+                            optional unrestricted double tz = 0);
+    [Unimplemented] DOMMatrix scaleSelf(optional unrestricted double scaleX = 1,
+                        optional unrestricted double scaleY,
+                        optional unrestricted double scaleZ = 1,
+                        optional unrestricted double originX = 0,
+                        optional unrestricted double originY = 0,
+                        optional unrestricted double originZ = 0);
+    [Unimplemented] DOMMatrix scale3dSelf(optional unrestricted double scale = 1,
+                          optional unrestricted double originX = 0,
+                          optional unrestricted double originY = 0,
+                          optional unrestricted double originZ = 0);
+    [Unimplemented] DOMMatrix rotateSelf(optional unrestricted double rotX = 0,
+                         optional unrestricted double rotY,
+                         optional unrestricted double rotZ);
+    [Unimplemented] DOMMatrix rotateFromVectorSelf(optional unrestricted double x = 0,
+                                   optional unrestricted double y = 0);
+    [Unimplemented] DOMMatrix rotateAxisAngleSelf(optional unrestricted double x = 0,
+                                  optional unrestricted double y = 0,
+                                  optional unrestricted double z = 0,
+                                  optional unrestricted double angle = 0);
+    [Unimplemented] DOMMatrix skewXSelf(optional unrestricted double sx = 0);
+    [Unimplemented] DOMMatrix skewYSelf(optional unrestricted double sy = 0);
+    [Unimplemented] DOMMatrix invertSelf();
+
+    [Unimplemented,Exposed=Window] DOMMatrix setMatrixValue(DOMString transformList);
+};
