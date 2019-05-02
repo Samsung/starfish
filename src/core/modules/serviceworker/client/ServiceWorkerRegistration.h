@@ -21,11 +21,15 @@
     !defined(__StarfishServiceWorkerRegistration__)
 #define __StarfishServiceWorkerRegistration__
 
-#include "core/dom/EventTarget.h"
 #include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/client/ServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
+#include "core/dom/EventTarget.h"
 
 namespace Starfish {
 
@@ -35,7 +39,8 @@ class String;
 
 class ServiceWorkerRegistration : public EventTarget {
 public:
-    ServiceWorkerRegistration(ExecutionContext* executionContext);
+    ServiceWorkerRegistration(ExecutionContext* executionContext,
+                              ServiceWorkerJobClientInterface* client);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -48,6 +53,7 @@ public:
     ServiceWorker* installing() const; // binding interface
     ServiceWorker* waiting() const;    // binding interface
     ServiceWorker* active() const;     // binding interface
+    Promise* unregister();             // binding interface
 
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorker* serviceWorker);
@@ -61,6 +67,7 @@ private:
     ServiceWorker* m_activeWorker;
 
     ServiceWorkerRegistrationData* m_data;
+    ServiceWorkerJobClientInterface* m_client;
 };
 } // namespace Starfish
 

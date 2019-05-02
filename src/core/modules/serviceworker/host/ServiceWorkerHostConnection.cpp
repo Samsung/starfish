@@ -52,10 +52,9 @@ ServiceWorkerHostConnection::ServiceWorkerHostConnection(
 }
 
 void ServiceWorkerHostConnection::resolveJobPromise(
-    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
+    ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    STARFISH_ASSERT(registration != nullptr);
 
     JsonWriter writer;
     Message msg("resolveJobPromise");
@@ -66,8 +65,8 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
-void ServiceWorkerHostConnection::resolveRequest(ServiceWorkerRequest* request,
-                                                 NullableArchivable* archivable)
+void ServiceWorkerHostConnection::resolveRequest(
+    ServiceWorkerRequest* request, NULLABLE Archivable* archivable)
 {
     STARFISH_ASSERT(request != nullptr);
 

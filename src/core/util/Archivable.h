@@ -34,8 +34,6 @@ public:
     virtual void archive(Archiver& ar) = 0;
 };
 
-using NullableArchivable = Archivable;
-
 // GenericArchivable
 
 #define MAX_TYPE_NAME 10

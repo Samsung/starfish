@@ -33,6 +33,7 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
@@ -49,7 +50,8 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
-#include "core/modules/serviceworker/host/ProgramOptions.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -59,16 +61,23 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::m_instance = nullptr;
 
 ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
 {
-    if (!m_instance) {
+    if (m_instance == nullptr) {
         m_instance = new ServiceWorkerProcessManager();
-        STARFISH_ASSERT(m_instance);
     }
+
+    STARFISH_ASSERT(m_instance);
     return m_instance;
 }
 
 void ServiceWorkerProcessManager::init(WebView* webView)
 {
     STARFISH_ASSERT(webView != nullptr);
+
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+    WorkerConfig::instance().set("app", "BOTH");
+#else
+    WorkerConfig::instance().set("app", "CLIT");
+#endif
 
     Message::init();
 
@@ -90,7 +99,7 @@ void ServiceWorkerProcessManager::init(WebView* webView)
 
 void ServiceWorkerProcessManager::destroy()
 {
-    if (m_instance) {
+    if (m_instance != nullptr) {
         m_instance->~ServiceWorkerProcessManager();
         m_instance = nullptr;
     }
@@ -107,7 +116,7 @@ ServiceWorkerProcessManager::ServiceWorkerProcessManager()
 
 ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
 {
-    if (m_ioThread) {
+    if (m_ioThread != nullptr) {
         m_ioThread->stop();
     }
 }
@@ -131,7 +140,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
         // TODO: launch a service worker process
-        auto po = new ProgramOptions;
+        auto po = std::make_shared<ProgramOptions>();
 
         STARFISH_ASSERT(po != nullptr);
 
@@ -153,10 +162,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         address.append(IPC_ADDRESS_PREFIX);
         address.append(encodedOrigin);
 
-#ifndef NDEBUG
-        STARFISH_LOG_WARN("client: connect: %s\n", address.c_str());
-        STARFISH_LOG_WARN("client: origin: %s\n", origin.c_str());
-#endif
+        SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
+        SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
+
         processData->connection->socket()->connect(address.c_str());
         m_ioRunnable->addClient(processData->connection);
     }

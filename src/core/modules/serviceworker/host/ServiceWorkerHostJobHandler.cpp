@@ -25,6 +25,8 @@
 #include "core/util/Archivable.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/JobQueue.h"
@@ -46,6 +48,8 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+                          toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     // 1. Let jobQueue be null.
@@ -67,7 +71,10 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     }
 
     // 5. If jobQueue is empty, then:
-    if (jobQueue->size() == 0) {
+    SWHOST_LOG_IF_ALLOWED(1, "5: is jobQueue empty? (%s)\n",
+                          jobQueue->empty() ? "true" : "false");
+
+    if (jobQueue->empty()) {
         // 5.1. Set job’s containing job queue to jobQueue, and enqueue job to
         // jobQueue.
         job->setContainingJobQueue(jobQueue);
@@ -77,33 +84,55 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
         runJob(jobQueue);
     } else {
         // 6. Else:
+        // 6.1 Let lastJob be the element at the back of jobQueue.
+
+        // 6.2 If job is equivalent to lastJob and lastJob’s job promise has not
+        // settled, append job to lastJob’s list of equivalent jobs.
+
+        // 6.3 Else, set job’s containing job queue to jobQueue, and enqueue job
+        // to jobQueue.
     }
 }
 
-NullableServiceWorkerRegistrationData*
+NULLABLE ServiceWorkerRegistrationData*
 ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 {
     STARFISH_ASSERT(queriedScope != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
-    auto it = m_scopeToRegistrationMap.find(queriedScope);
-    if (it == m_scopeToRegistrationMap.end()) {
-        return nullptr;
+
+    // NOTE: Using GCMap.find doesn't work well, so we use its iterator.
+    // e.g) auto it = m_scopeToRegistrationMap.find(queriedScope);
+    // if (it == m_scopeToRegistrationMap.end()) {
+    // ...
+    // }
+
+    for (const auto& pair : m_scopeToRegistrationMap) {
+        if (pair.first->equals(queriedScope)) {
+            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)\n", CSTR(queriedScope));
+            return pair.second;
+        }
     }
-    return it->second;
+
+    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)\n", CSTR(queriedScope));
+    return nullptr;
 }
 
 void ServiceWorkerHostJobHandler::setRegistration(
-    String* scope, ServiceWorkerUpdateViaCache updateViaCacheMode)
+    String* scope, ServiceWorkerUpdateViaCache updateViaCache)
 {
     STARFISH_ASSERT(scope != nullptr);
+
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(scope));
 
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
 
     // 3. Let registration be a new service worker registration whose scope url
     // is set to scope and update via cache mode is set to updateViaCache.
     auto registration = new ServiceWorkerRegistrationData();
-    STARFISH_ASSERT(registration != nullptr);
+    registration->scope = scope;
+    registration->updateViaCache = updateViaCache;
+
     m_scopeToRegistrationMap[scope] = registration;
 }
 
@@ -171,7 +200,7 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
     // algorithm passing job’s scope url as the argument.
     auto registration = getRegistration(job->data()->scopeURL);
 
-    if (registration) {
+    if (registration != nullptr) {
         // 5. If registration is not null, then:
     } else {
         // 6. Invoke Set Registration algorithm with job’s scope url and job’s
@@ -202,7 +231,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
     hasUpdatedResources = true;
 
     // 10. If hasUpdatedResources is false, then:
-    if (!hasUpdatedResources) {
+    if (hasUpdatedResources == false) {
         // 10.1. Invoke Resolve Job Promise with job and registration.
         resolveJobPromise(job, registration);
 
@@ -261,14 +290,16 @@ void ServiceWorkerHostJobHandler::install(
     // scope url and all the service workers
     // whose containing service worker registration is registration.
 
-    // 20. Invoke Try Activate with registration.
+    // 21. Invoke Finish Job with job.
+    finishJob(job);
+
+    // 23. Invoke Try Activate with registration.
 }
 
 void ServiceWorkerHostJobHandler::resolveJobPromise(
-    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
+    ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     job->hostConnection()->resolveJobPromise(job, registration);
 }
@@ -287,7 +318,7 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
     // ServiceWorkerRegistration objects associated with registration.
 
     // 2. If target is "installing", then:
-    if (!strncmp(target, "installing", 10)) {
+    if (strncmp(target, "installing", 10) == 0) {
         // 2.1. Set registration’s installing worker to source.
         registration->installingWorker = source;
         // 2.2 For each registrationObject in registrationObjects:
@@ -295,20 +326,28 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
         // registrationObject to the ServiceWorker object that represents
         // registration’s installing worker, or null if registration’s
         // installing worker is null.
-    } else if (!strncmp(target, "waiting", 10)) {
-    } else if (!strncmp(target, "active", 10)) {
+    } else if (strncmp(target, "waiting", 10) == 0) {
+    } else if (strncmp(target, "active", 10) == 0) {
     }
 }
 
 void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+                          toUnderlyingType(job->data()->type));
+
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
+    auto registration = getRegistration(job->data()->scopeURL);
+    resolveJobPromise(job, registration);
 }
 
 void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+                          toUnderlyingType(job->data()->type));
+
     // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
 
     // 1. Let jobQueue be job’s containing job queue.
@@ -321,17 +360,19 @@ void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
     // 3. Dequeue from jobQueue.
     // 4. If jobQueue is not empty, invoke Run Job with jobQueue.
     jobQueue->dequeueJob();
-    if (!jobQueue->empty()) {
+    if (jobQueue->empty() == false) {
         runJob(jobQueue);
     }
 }
 
-NullableServiceWorkerRegistrationData*
+NULLABLE ServiceWorkerRegistrationData*
 ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
                                                String* clientURLString)
 {
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURLString != nullptr);
+
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(clientURLString));
 
     // https://w3c.github.io/ServiceWorker/#match-service-worker-registration
 
@@ -348,13 +389,16 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     for (const auto& pair : m_scopeToRegistrationMap) {
         ServiceWorkerRegistrationKey selectedRegistrationKey = pair.first;
 
-        if (!selectedRegistrationKey->startsWith(clientURLString)) {
+        SWHOST_LOG_IF_ALLOWED(1, "4: %s\n", CSTR(selectedRegistrationKey));
+        if (clientURLString->startsWith(selectedRegistrationKey, false) ==
+            false) {
             continue;
         }
 
         // 5. Set matchingScopeString to the longest value in scopeStringSet
         // which the value of clientURLString starts with, if it exists.
         if (matchingScopeString->length() < selectedRegistrationKey->length()) {
+            SWHOST_LOG_IF_ALLOWED(1, "5: %s\n", CSTR(selectedRegistrationKey));
             matchingScopeString = selectedRegistrationKey;
         }
     }
@@ -362,7 +406,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     // 6. Let matchingScope be null.
     String* matchingScope = nullptr;
 
-    NullableServiceWorkerRegistrationData* registration = nullptr;
+    NULLABLE ServiceWorkerRegistrationData* registration = nullptr;
 
     // 7. If matchingScopeString is not the empty string, then:
     if (matchingScopeString->isEmpty() == false) {
@@ -372,7 +416,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
         // 7.2. Assert: matchingScope’s origin and clientURL’s origin are same
         // origin.
         auto clientURL = new ResourceURL(clientURLString);
-        STARFISH_ASSERT(matchingScope->origin() == clientURL->origin());
+        STARFISH_ASSERT(matchingScope->origin()->equals(clientURL->origin()));
 
         // 8. Let registration be the result of running Get Registration
         // algorithm passing matchingScope as the argument.
@@ -381,7 +425,8 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
 
     // 9. If registration is not null and registration’s uninstalling flag is
     // set, return null.
-    if (registration && registration->isUninstalling()) {
+    if ((registration != nullptr) && registration->isUninstalling()) {
+        SWHOST_LOG_IF_ALLOWED(1, "9: done\n");
         return nullptr;
     }
 

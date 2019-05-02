@@ -37,7 +37,7 @@ public:
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
 
     virtual void resolveRequest(ServiceWorkerRequest* request,
-                                NullableArchivable* registration) = 0;
+                                NULLABLE Archivable* registration) = 0;
 };
 
 class ServiceWorkerHostProcessInterface {

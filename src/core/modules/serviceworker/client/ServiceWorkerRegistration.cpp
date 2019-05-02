@@ -20,20 +20,24 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/client/ServiceWorker.h"
+
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/dom/Document.h"
+
+#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
 
 namespace Starfish {
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(
-    ExecutionContext* executionContext)
+    ExecutionContext* executionContext, ServiceWorkerJobClientInterface* client)
     : EventTarget()
     , m_executionContext(executionContext)
     , m_installingWorker(nullptr)
     , m_waitingWorker(nullptr)
     , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
+    , m_client(client)
 {
     STARFISH_ASSERT(m_data != nullptr);
 }
@@ -96,6 +100,31 @@ ServiceWorker* ServiceWorkerRegistration::active() const
 {
     return m_activeWorker;
 }
+
+Promise* ServiceWorkerRegistration::unregister()
+{
+    STARFISH_ASSERT(m_client != nullptr);
+    WORKER_LOG_IF_ALLOWED(1, "0: called\n");
+
+    // https://w3c.github.io/ServiceWorker/#navigator-service-worker-unregister
+
+    // 1. Let promise be a promise.
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    // 2. Let job be the result of running Create Job with unregister, the scope
+    // url of the service worker registration, null, promise, and the context
+    // object’s relevant settings object.
+    auto job = m_client->createJob(ServiceWorkerJobType::Unregister,
+                                   data()->scope, nullptr, promise,
+                                   m_client->serviceWorkerEnvironment());
+
+    // 3. Invoke Schedule Job with job.
+    m_client->scheduleJob(job);
+
+    // 4. Return promise.
+    return promise;
 }
+
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

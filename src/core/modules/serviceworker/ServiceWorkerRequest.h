@@ -46,8 +46,6 @@ private:
     RequestTask* m_postTask{ nullptr };
 };
 
-using NullableServiceWorkerRequest = ServiceWorkerRequest;
-
 // RequestTask
 
 using Handler_t = void (*)(ServiceWorkerRequest&, TaskResult&, TaskParam&);

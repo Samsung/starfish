@@ -31,7 +31,6 @@ class JobQueue;
 class ServiceWorkerRegistrationData;
 
 using ServiceWorkerRegistrationKey = String*;
-using NullableServiceWorkerRegistrationData = ServiceWorkerRegistrationData;
 
 struct RegistrationIdentifier : public gc {
     String* m_scope;
@@ -61,13 +60,14 @@ public:
                  ServiceWorkerRegistrationData* registration);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
                                  const char* target, ServiceWorkerData* source);
-    void resolveJobPromise(ServiceWorkerJob* job,
-                           ServiceWorkerRegistrationData* registration);
-    NullableServiceWorkerRegistrationData* getRegistration(String* scope);
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        NULLABLE ServiceWorkerRegistrationData* registration);
+    NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
-    NullableServiceWorkerRegistrationData* matchRegistration(
+    NULLABLE ServiceWorkerRegistrationData* matchRegistration(
         ServiceWorkerRequest* request, String* clientURL);
 
 private:

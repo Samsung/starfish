@@ -26,10 +26,11 @@ namespace Starfish {
 class ServiceWorkerJobClientInterface {
 public:
     virtual void scheduleJob(ServiceWorkerJob* job) = 0;
-    virtual ServiceWorkerJob* createJob(ServiceWorkerJobType type,
-                                        String* scopeURL, String* scriptURL,
-                                        Promise* p,
-                                        ExecutionContext* client) = 0;
+    virtual ServiceWorkerJob* createJob(
+        ServiceWorkerJobType type, NULLABLE String* scopeURL,
+        NULLABLE String* scriptURL, Promise* p,
+        NULLABLE ServiceWorkerEnvironment* client) = 0;
+    virtual ServiceWorkerEnvironment* serviceWorkerEnvironment() = 0;
 };
 
 } // namespace Starfish

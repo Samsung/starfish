@@ -51,7 +51,7 @@ std::string Message::name()
     return str;
 }
 
-void Message::addParam(NullableArchivable* param)
+void Message::addParam(NULLABLE Archivable* param)
 {
     m_params.push_back(param);
 }
@@ -99,7 +99,7 @@ void Message::init()
     Archiver::setArchivableHandler(Message::archive);
 }
 
-NullableArchivable* Message::param(size_t index)
+NULLABLE Archivable* Message::param(size_t index)
 {
     STARFISH_ASSERT(m_params.size() > index);
 
@@ -110,7 +110,7 @@ NullableArchivable* Message::param(size_t index)
 
 void Message::archive(Archiver& ar, Archivable*& archivable)
 {
-    if (!ar.IsReader() && archivable == nullptr) {
+    if ((ar.IsReader() == false) && archivable == nullptr) {
         // empty object
         ar.StartObject();
         ar.EndObject();

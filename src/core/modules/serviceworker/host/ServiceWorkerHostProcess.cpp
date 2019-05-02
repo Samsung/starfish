@@ -32,7 +32,9 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/host/ProgramOptions.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
+
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
 #include "core/dom/ExecutionContext.h"
@@ -53,17 +55,20 @@ ServiceWorkerHostProcess* ServiceWorkerHostProcess::m_instance = nullptr;
 
 ServiceWorkerHostProcess* ServiceWorkerHostProcess::getInstance()
 {
-    if (!m_instance) {
+    if (m_instance == nullptr) {
         m_instance = new ServiceWorkerHostProcess();
-        STARFISH_ASSERT(m_instance != nullptr);
     }
+
+    STARFISH_ASSERT(m_instance != nullptr);
     return m_instance;
 }
 
 void ServiceWorkerHostProcess::destroy()
 {
-    delete m_instance;
-    m_instance = nullptr;
+    if (m_instance != nullptr) {
+        m_instance->~ServiceWorkerHostProcess();
+        m_instance = nullptr;
+    }
 }
 
 ServiceWorkerHostProcess::ServiceWorkerHostProcess()
@@ -77,6 +82,10 @@ ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 {
     STARFISH_ASSERT(threadPool != nullptr);
+
+#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
+    WorkerConfig::instance().set("app", "HOST");
+#endif
 
     Message::init();
 
@@ -95,7 +104,8 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
     m_ioThread->start(m_ioRunnable);
 }
 
-void ServiceWorkerHostProcess::start(ProgramOptions* programOptions)
+void ServiceWorkerHostProcess::start(
+    std::shared_ptr<ProgramOptions> programOptions)
 {
     STARFISH_ASSERT(programOptions != nullptr);
 
@@ -109,10 +119,9 @@ void ServiceWorkerHostProcess::start(ProgramOptions* programOptions)
     address.append(IPC_ADDRESS_PREFIX);
     address.append(encodedOrigin);
 
-#ifdef STARFISH_ENABLE_TEST
-    STARFISH_LOG_WARN("host: bind: %s\n", address.c_str());
-    STARFISH_LOG_WARN("host: origin: %s\n", origin.c_str());
-#endif
+    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
+    SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s\n", origin.c_str());
+
     STARFISH_ASSERT(m_connection != nullptr);
     STARFISH_ASSERT(m_ioRunnable != nullptr);
 

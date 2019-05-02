@@ -31,18 +31,20 @@
 
 namespace Starfish {
 
-class ProgramOptions : public gc {
+class ProgramOptions {
 public:
-    using logger_t = int (*)(const char*, ...);
     using map_t = std::unordered_map<std::string, std::string>;
 
-    ProgramOptions();
+    ProgramOptions() = default;
+    virtual ~ProgramOptions() = default;
 
-    bool has(const std::string& key);
+    bool has(const char* key);
+    bool is(const char* key);
 
     template <typename T = std::string>
-    T get(const std::string& key)
+    T get(const char* key)
     {
+        STARFISH_ASSERT(key != nullptr);
         T converted;
         std::istringstream in(m_map[key]);
         in >> converted >> std::ws;
@@ -50,14 +52,16 @@ public:
     }
 
     template <typename T>
-    void set(const std::string& key, const T& value)
+    void set(const char* key, const T& value)
     {
-        m_map[key] = value;
+        STARFISH_ASSERT(key != nullptr);
+        std::ostringstream out;
+        out << value;
+        m_map[key] = out.str();
     }
 
 private:
     map_t m_map;
-    logger_t m_logger;
 };
 
 } // namespace Starfish

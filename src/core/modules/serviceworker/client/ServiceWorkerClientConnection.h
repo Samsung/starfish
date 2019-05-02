@@ -28,8 +28,6 @@ class ServiceWorkerJob;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerContainer;
 
-using NullableServiceWorkerContainer = ServiceWorkerContainer*;
-
 class ServiceWorkerClientConnection final
     : public Connection,
       public ServiceWorkerHostProcessInterface {
@@ -43,10 +41,11 @@ public:
 
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
-    void resolveJobPromise(ServiceWorkerJob* job,
-                           ServiceWorkerRegistrationData* registration);
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        NULLABLE ServiceWorkerRegistrationData* registration);
 
-    NullableServiceWorkerContainer findServiceWorkerContainer(
+    NULLABLE ServiceWorkerContainer* findServiceWorkerContainer(
         ServiceWorkerContextId id);
 };
 } // namespace Starfish

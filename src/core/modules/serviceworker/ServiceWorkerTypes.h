@@ -45,7 +45,12 @@ enum class WorkerType : unsigned {
     Module,
 };
 
-using ServiceWorkerClient = ExecutionContext;
+// NOTE: We consider ExecutionContext as service worker environment (a.k.a
+// service worker client, https://w3c.github.io/ServiceWorker/#dfn-service
+// -worker-client) In order to distinguish ServiceWorkerClient (https://w3c.
+// github.io/ServiceWorker/#client-interface) from it, we use the term,
+// ServiceWorkerEnvironment.
+using ServiceWorkerEnvironment = ExecutionContext;
 using ServiceWorkerRegistrationKey = String*;
 
 using ServiceWorkerJobId = Id<ServiceWorkerJob>;

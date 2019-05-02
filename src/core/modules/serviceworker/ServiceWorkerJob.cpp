@@ -33,7 +33,7 @@ namespace Starfish {
 
 ServiceWorkerJob::ServiceWorkerJob(ServiceWorkerJobData* data)
 {
-    if (data) {
+    if (data != nullptr) {
         m_data = data;
     } else {
         m_data = new ServiceWorkerJobData();
