@@ -189,8 +189,8 @@ void CanvasRenderingContext2DMixIn::initialize()
     setLineJoin(CanvasLineJoin::Miter); // default "miter"
     setMiterLimit(10.0f);
 
-    setLineDash(GCVector<double>()); // default empty
-    setLineDashOffset(0.0f);         // default 0.0
+    setLineDash(GCAtomicVector<double>()); // default empty
+    setLineDashOffset(0.0f);               // default 0.0
 
     m_canvas->setFillColor(black);
     m_canvas->setStrokeColor(black);
@@ -289,7 +289,7 @@ void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
     m_canvas->setMiterLimit(limit);
 }
 
-void CanvasRenderingContext2DMixIn::setLineDash(GCVector<double> segments)
+void CanvasRenderingContext2DMixIn::setLineDash(GCAtomicVector<double> segments)
 {
     for (auto& segment : segments) {
         if (isInfOrNan(segment) || segment < 0) {
@@ -306,7 +306,7 @@ void CanvasRenderingContext2DMixIn::setLineDash(GCVector<double> segments)
     setLineDashToCanvas();
 }
 
-GCVector<double> CanvasRenderingContext2DMixIn::getLineDash()
+GCAtomicVector<double> CanvasRenderingContext2DMixIn::getLineDash()
 {
     return m_dashList;
 }
