@@ -252,7 +252,7 @@ private:
                   bool useMaxWidth);
     void strokeText(String* text, float x, float y, float maxWidth,
                     bool useMaxWidth);
-    bool canUseTextFastPath(String* text, bool useMaxWidth);
+    bool canUseFathPathText(String* text, bool shouldApplyMaxwidth);
     void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);

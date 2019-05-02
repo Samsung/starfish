@@ -48,6 +48,8 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 #include "core/dom/WebOrigin.h"
+#include "core/layout/FrameDocument.h"
+#include "core/dom/Text.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_CRASH
@@ -781,7 +783,7 @@ void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
     m_canvas->restore();
 }
 
-bool CanvasRenderingContext2DMixIn::canUseTextFastPath(String* text,
+bool CanvasRenderingContext2DMixIn::canUseFathPathText(String* text,
                                                        bool shouldApplyMaxWidth)
 {
     STARFISH_ASSERT(text != nullptr);
@@ -812,10 +814,66 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
     if (text == nullptr || isInfOrNan(x) || isInfOrNan(y)) {
         return;
     }
-    if (canUseTextFastPath(text, useMaxWidth)) {
+
+    if (canUseFathPathText(text, useMaxWidth)) {
         fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
         return;
     }
+
+    ComputedStyle style =
+        ComputedStyle(executionContext()->document()->style());
+    style.setFont(m_font);
+    style.setDisplay(DisplayValue::BlockDisplayValue);
+    style.setWidth(Length(Length::Fixed, 0));
+    style.setWhiteSpace(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+
+    FrameDocument dummyFrameDocument =
+        FrameDocument(executionContext()->document());
+    FrameBlockBox dummyFrameBlockContainer = FrameBlockBox(nullptr, &style);
+    dummyFrameDocument.appendChild(&dummyFrameBlockContainer);
+    Text textNode = Text(executionContext()->document(), text);
+
+    ComputedStyle textStyle = ComputedStyle(&style);
+    textStyle.setFont(m_font);
+
+    FrameText frameText = FrameText(&textNode, &textStyle);
+    textNode.setFrame(&frameText);
+    textNode.setStyle(&textStyle);
+    dummyFrameBlockContainer.appendChild(&frameText);
+
+    // layout
+    LayoutContext layoutCtx(executionContext()->starfish(),
+                            &dummyFrameDocument);
+    dummyFrameBlockContainer.layout(layoutCtx,
+                                    Frame::LayoutWantToResolve::ResolveAll);
+
+    // Paint
+    PaintingContext paintCtx(m_canvas);
+    paintCtx.m_paintingStage = PaintingNormalFlowInline;
+    dummyFrameBlockContainer
+        .establishesStackingContextIfNeedsAndComputingPaintingFlags();
+    paintCtx.m_canvas->save();
+
+    // CanvasTextDrawingStyles.textBaseline
+    paintCtx.m_canvas->translate(x, y);
+    paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+
+    float width = 1;
+    dummyFrameBlockContainer.iterateChildFrameBox([&width](FrameBox* fb) {
+        if (fb->isInlineTextBox()) {
+            width = fb->contentWidth().toFloat();
+        }
+    });
+
+    if (useMaxWidth) {
+        float scale = maxWidth / width;
+        if (!isInfOrNan(scale)) {
+            paintCtx.m_canvas->scale(scale, 1);
+        }
+    }
+
+    dummyFrameBlockContainer.paintContent(paintCtx);
+    paintCtx.m_canvas->restore();
 }
 
 void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
