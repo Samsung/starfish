@@ -111,8 +111,8 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_speechSynthesis = new SpeechSynthesis(m_document);
 #endif
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-    ServiceWorkerProcessManager::getInstance()->registerActiveGlobalScope(uid(),
-                                                                          this);
+    ServiceWorkerProcessManager::instance()->registerActiveGlobalScope(uid(),
+                                                                       this);
 #endif
 }
 
@@ -157,8 +157,7 @@ void Window::dispose()
         m_scriptBindingInstance->destroy();
     }
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-    ServiceWorkerProcessManager::getInstance()->deregisterActiveGlobalScope(
-        uid());
+    ServiceWorkerProcessManager::instance()->deregisterActiveGlobalScope(uid());
 #endif
 }
 

@@ -77,11 +77,6 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-#include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-#endif
-
 #if defined(OS_POSIX)
 #include <malloc.h>
 #endif
@@ -311,11 +306,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
         this;
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-    m_serviceWorkerProcessManager = ServiceWorkerProcessManager::getInstance();
-    m_serviceWorkerProcessManager->init(this);
-#endif
-
     m_starfish->m_webViewInstanceCount++;
 
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
@@ -475,10 +465,6 @@ void WebView::destroy()
     }
 
     removeScriptEngineInstance();
-
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-    m_serviceWorkerProcessManager->destroy();
-#endif
 
     m_threadPool->destroy();
     m_messageLoop->destroy();

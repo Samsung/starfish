@@ -145,7 +145,7 @@ NULLABLE ServiceWorkerContainer*
 ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {
-    auto swpm = ServiceWorkerProcessManager::getInstance();
+    auto swpm = ServiceWorkerProcessManager::instance();
     auto globalScope = swpm->find(id);
 
     if (globalScope != nullptr) {

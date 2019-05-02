@@ -30,6 +30,11 @@
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/http/HTTPCache.h"
 #endif
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#include "core/util/Id.h"
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {
@@ -110,6 +115,11 @@ Starfish::Starfish(const char* localStorageFilePath,
         }
     }
 #endif
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
+    m_serviceWorkerProcessManager->init();
+#endif
 }
 
 void Starfish::destroy()
@@ -123,6 +133,14 @@ void Starfish::destroy()
         m_httpCache = nullptr;
     }
 #endif
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    if (m_serviceWorkerProcessManager) {
+        m_serviceWorkerProcessManager->destroy();
+        m_serviceWorkerProcessManager = nullptr;
+    }
+#endif
+
     delete m_lineBreakIteratorPool;
     m_lineBreakIteratorPool = nullptr;
 
@@ -208,4 +226,4 @@ void Starfish::printEveryReachableGCObjects()
     GC_enable();
     STARFISH_LOG_ERROR("<-- end of print reachable pointers\n");
 }
-}
+} // namespace Starfish

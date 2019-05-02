@@ -31,6 +31,9 @@ class Mutex;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
 #endif
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+class ServiceWorkerProcessManager;
+#endif
 
 #define BDWGC_FREE_SPACE_DIVISOR 12
 
@@ -93,6 +96,9 @@ protected:
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;
+#endif
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    ServiceWorkerProcessManager* m_serviceWorkerProcessManager;
 #endif
     size_t m_webViewInstanceCount;
 
