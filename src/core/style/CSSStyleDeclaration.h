@@ -259,6 +259,14 @@ public:
                                                  CSSStyleValuePair* retx,
                                                  CSSStyleValuePair* rety,
                                                  bool allowComma = true);
+    static bool parseFontShorthand(const CSSTokenVector& tokens,
+                                   CSSStyleValuePair* _Style,
+                                   // UNSUPPORTED CSSStyleValuePair* _Variant,
+                                   CSSStyleValuePair* _Weight,
+                                   // UNSUPPORTED CSSStyleValuePair* _Stretch,
+                                   CSSStyleValuePair* _Size,
+                                   CSSStyleValuePair* _LineHeight,
+                                   CSSStyleValuePair* _Family);
 
 protected:
     void rootPointerValueIfExists(const CSSStyleValuePair& v);

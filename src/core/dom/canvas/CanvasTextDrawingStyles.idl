@@ -10,8 +10,8 @@ enum CanvasDirection { "ltr", "rtl", "inherit" };
  NoInterfaceObject]
 interface CanvasTextDrawingStyles {
   // text
-  [Unimplemented] attribute DOMString font; // (default 10px sans-serif)
-  [Unimplemented] attribute CanvasTextAlign textAlign; // (default: "start")
-  [Unimplemented] attribute CanvasTextBaseline textBaseline; // (default: "alphabetic")
-  [Unimplemented] attribute CanvasDirection direction; // (default: "inherit")
+  attribute DOMString font; // (default 10px sans-serif)
+  attribute CanvasTextAlign textAlign; // (default: "start")
+  attribute CanvasTextBaseline textBaseline; // (default: "alphabetic")
+  attribute CanvasDirection direction; // (default: "inherit")
 };
