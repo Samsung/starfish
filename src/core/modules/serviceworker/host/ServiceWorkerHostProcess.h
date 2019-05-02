@@ -51,7 +51,7 @@ public:
     void operator=(ServiceWorkerHostProcess const&) = delete;
 
     void init(ThreadPool* threadPool);
-    void start(ProgramOptions* programOptions);
+    void start(std::shared_ptr<ProgramOptions> programOptions);
 
     void scheduleJob(ServiceWorkerJob* job) override;
     void matchRegistration(ServiceWorkerRequest* request,
@@ -71,7 +71,6 @@ private:
     IORunnable* m_ioRunnable{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
-    ProgramOptions* m_po{ nullptr };
 };
 
 } // namespace Starfish

@@ -40,7 +40,7 @@ public:
 
     DEFINE_GETTER_SETTER(Promise*, promise, Promise);
     DEFINE_GETTER_SETTER(ServiceWorkerJobData*, data, Data);
-    DEFINE_GETTER_SETTER(ServiceWorkerClient*, client, Client);
+    DEFINE_GETTER_SETTER(ServiceWorkerEnvironment*, client, Client);
     DEFINE_GETTER_SETTER(JobQueue*, containingJobQueue, ContainingJobQueue);
     DEFINE_GETTER_SETTER(ServiceWorkerClientProcessInterface*, hostConnection,
                          HostConnection);
@@ -50,13 +50,11 @@ public:
 private:
     Promise* m_promise{ nullptr };
     ServiceWorkerJobData* m_data{ nullptr };
-    ServiceWorkerClient* m_client{ nullptr };
+    ServiceWorkerEnvironment* m_client{ nullptr };
     JobQueue* m_containingJobQueue{ nullptr };
     ServiceWorkerClientProcessInterface* m_hostConnection{ nullptr };
     ServiceWorkerHostProcessInterface* m_clientConnection{ nullptr };
 };
-
-using NullableServiceWorkerJob = ServiceWorkerJob;
 
 } // namespace Starfish
 

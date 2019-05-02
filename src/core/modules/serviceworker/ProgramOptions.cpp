@@ -21,22 +21,24 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/host/ProgramOptions.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
 
 namespace Starfish {
 
-ProgramOptions::ProgramOptions()
+bool ProgramOptions::has(const char* key)
 {
-    m_logger = nullptr;
-}
-
-bool ProgramOptions::has(const std::string& key)
-{
+    STARFISH_ASSERT(key != nullptr);
     auto it = m_map.find(key);
     if (it != m_map.end()) {
         return true;
     }
     return false;
+}
+
+bool ProgramOptions::is(const char* key)
+{
+    STARFISH_ASSERT(key != nullptr);
+    return get<bool>(key);
 }
 
 } // namespace Starfish

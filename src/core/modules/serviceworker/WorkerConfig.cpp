@@ -17,29 +17,33 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishMessage__)
-#define __StarfishMessage__
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 
 namespace Starfish {
 
-class Message : public gc {
-public:
-    Message(const char* msgname = "");
-    void addParam(NULLABLE Archivable* param);
-    void archive(Archiver& arch);
+WorkerConfig& WorkerConfig::instance()
+{
+    static WorkerConfig instance;
+    return instance;
+}
 
-    // getter
-    NULLABLE Archivable* param(size_t index);
-    std::string name();
+WorkerConfig::WorkerConfig()
+{
+#ifdef STARFISH_ENABLE_TEST
+    const char* verbose = getenv("DEBUG_WORKER");
 
-    // statics
-    static void init();
-    static void archive(Archiver& arch, Archivable*& param);
-
-private:
-    String* m_name;
-    GCVector<NULLABLE Archivable*> m_params;
-};
+    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
+        set("DEBUG_WORKER", std::atoi(verbose));
+    } else {
+        set("DEBUG_WORKER", 0);
+    }
+#endif
+}
 
 } // namespace Starfish
 

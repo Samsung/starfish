@@ -28,6 +28,7 @@
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/client/RegistrationOptions.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
@@ -40,7 +41,6 @@ class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
-class ServiceWorkerRegistrationData;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClientInterface {
@@ -56,24 +56,28 @@ public:
 
     Promise* registerServiceWorker(
         String* scriptURL,
-        RegistrationOptions* options = nullptr); // binding interface
+        NULLABLE RegistrationOptions* options = nullptr); // binding interface
     Promise* registerServiceWorker(
-        String* url, RegistrationOptions& options);        // binding interface
-    Promise* getRegistration(String* scriptURL = nullptr); // binding interface
-    ServiceWorker* controller();                           // binding interface
+        String* url, RegistrationOptions& options); // binding interface
+    Promise* getRegistration(
+        NULLABLE String* scriptURL = nullptr); // binding interface
+    ServiceWorker* controller();               // binding interface
 
-    void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
-                       Promise* p, ExecutionContext* client);
+    void startRegister(NULLABLE ResourceURL* scopeURL, ResourceURL* scriptURL,
+                       Promise* p, ServiceWorkerEnvironment* client);
 
     void scheduleJob(ServiceWorkerJob* job) override;
-    ServiceWorkerJob* createJob(ServiceWorkerJobType type, String* scopeURL,
-                                String* scriptURL, Promise* p,
-                                ExecutionContext* client) override;
+    ServiceWorkerJob* createJob(
+        ServiceWorkerJobType type, NULLABLE String* scopeURL,
+        NULLABLE String* scriptURL, Promise* p,
+        NULLABLE ServiceWorkerEnvironment* client) override;
+    ServiceWorkerEnvironment* serviceWorkerEnvironment() override;
 
-    NullableServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
+    NULLABLE ServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
     void finishJob(ServiceWorkerJob* job);
-    void resolveJobPromise(ServiceWorkerJob* job,
-                           ServiceWorkerRegistrationData* registration);
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        NULLABLE ServiceWorkerRegistrationData* registration);
 
     void matchRegistration(ServiceWorkerRequest* request,
                            ResourceURL* clientURL);
@@ -82,7 +86,7 @@ public:
 
     ServiceWorkerRequest* createRequest(const char* requestName,
                                         Promise* promise);
-    NullableServiceWorkerRequest* findRequest(Id<ServiceWorkerRequest> id);
+    NULLABLE ServiceWorkerRequest* findRequest(Id<ServiceWorkerRequest> id);
     void finishRequest(ServiceWorkerRequest* request);
 
 private:

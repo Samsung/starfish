@@ -36,13 +36,6 @@ public:
 
 protected:
     Socket* m_socket;
-
-#ifdef STARFISH_ENABLE_TEST
-    bool m_isDebugEnabled;
-
-public:
-    DEFINE_GETTER(bool, isDebugEnabled);
-#endif
 };
 
 } // namespace Starfish

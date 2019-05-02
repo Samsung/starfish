@@ -70,7 +70,7 @@ void IORunnable::run()
 
         ~Param()
         {
-            if (buffer) {
+            if (buffer != nullptr) {
                 nn::freemsg(buffer);
                 buffer = nullptr;
             }

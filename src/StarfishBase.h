@@ -126,6 +126,8 @@
 #endif
 #endif
 
+#define NULLABLE
+
 #if defined(COMPILER_MSVC)
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp

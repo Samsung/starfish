@@ -21,6 +21,9 @@
 
 #include "StarfishConfig.h"
 
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
+
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
@@ -44,14 +47,6 @@ Connection::Connection()
     : m_socket(new SocketNN(AF_SP, NN_PAIR))
 {
     STARFISH_ASSERT(m_socket != nullptr);
-#ifdef STARFISH_ENABLE_TEST
-    const char* verbose = getenv("DEBUG_WORKER");
-    if (verbose && strlen(verbose)) {
-        m_isDebugEnabled = true;
-    } else {
-        m_isDebugEnabled = false;
-    }
-#endif
 }
 
 void Connection::send(const char* data, size_t len)
@@ -61,11 +56,8 @@ void Connection::send(const char* data, size_t len)
 
     m_socket->send(data, len, SCK_DONTWAIT);
 
-#ifdef STARFISH_ENABLE_TEST
-    if (m_isDebugEnabled) {
-        STARFISH_LOG_INFO(COLOR_SEND "[SEND] %zu byte(s)\n" COLOR_RESET, len);
-    }
-#endif
+    WORKER_LOG_IF_ALLOWED(3, COLOR_SEND "[SEND] %zu byte(s)\n" COLOR_RESET,
+                          len);
 }
 
 Socket* Connection::socket()
@@ -83,12 +75,8 @@ void Connection::onReceived(Socket* socket, const char* data, size_t len)
     // recv buffer like a string.
     STARFISH_ASSERT(memchr(data, '\0', len));
 
-#ifdef STARFISH_ENABLE_TEST
-    if (m_isDebugEnabled) {
-        STARFISH_LOG_INFO(COLOR_RECV "[RECV] %zu byte(s)\n%s\n" COLOR_RESET,
+    WORKER_LOG_IF_ALLOWED(3, COLOR_RECV "[RECV] %zu byte(s)\n%s\n" COLOR_RESET,
                           len, data);
-    }
-#endif
 }
 
 void Connection::onStopped()

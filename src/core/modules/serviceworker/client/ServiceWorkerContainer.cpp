@@ -26,6 +26,8 @@
 #include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/threading/IRunnable.h"
@@ -92,8 +94,13 @@ ExecutionContext* ServiceWorkerContainer::executionContext() const
     return m_executionContext;
 }
 
+ServiceWorkerEnvironment* ServiceWorkerContainer::serviceWorkerEnvironment()
+{
+    return m_executionContext;
+}
+
 Promise* ServiceWorkerContainer::registerServiceWorker(
-    String* rawScriptURL, RegistrationOptions* options)
+    String* rawScriptURL, NULLABLE RegistrationOptions* options)
 {
     STARFISH_ASSERT(rawScriptURL != nullptr);
 
@@ -105,7 +112,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     STARFISH_ASSERT(p != nullptr);
 
     // 2. Let client be the context object’s service worker client.
-    ExecutionContext* client = executionContext();
+    ServiceWorkerEnvironment* client = serviceWorkerEnvironment();
 
     // 3. Let scriptURL be the result of parsing scriptURL with the context
     // object’s relevant settings object’s API base URL.
@@ -117,10 +124,12 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     // 4. Let scopeURL be null
     ResourceURL* scopeURL = nullptr;
 
-    if (options) {
+    if ((options != nullptr) && (options->scope()->isEmpty() == false)) {
         // 5. If options.scope is present, set scopeURL to the result of parsing
         // options.scope with the context object’s relevant settings object’s
         // API base URL.
+        scopeURL =
+            new ResourceURL(options->scope(), client->baseURL()->baseURI());
     }
 
     startRegister(scopeURL, scriptURL, p, client);
@@ -128,10 +137,10 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     return p;
 }
 
-void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
+void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
                                            ResourceURL* scriptURL,
                                            Promise* promise,
-                                           ExecutionContext* client)
+                                           ServiceWorkerEnvironment* client)
 {
     STARFISH_ASSERT(scriptURL != nullptr);
     STARFISH_ASSERT(promise != nullptr);
@@ -182,9 +191,9 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
 
     // 5. If scopeURL is null, set scopeURL to the result of parsing the string
     // "./" with scriptURL.
-    if (!scopeURL) {
-        scopeURL = new ResourceURL(String::createASCIIString("./"),
-                                   scriptURL->urlStringWithoutSearchPart());
+    if (scopeURL == nullptr) {
+        scopeURL = new ResourceURL(scriptURL->urlString(),
+                                   String::createASCIIString("./"));
         STARFISH_ASSERT(scopeURL != nullptr);
     }
 
@@ -233,18 +242,17 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     scheduleJob(job);
 }
 
-// TODO: consider moving this to job handler
-ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
-                                                    String* scopeURL,
-                                                    String* scriptURL,
-                                                    Promise* promise,
-                                                    ExecutionContext* client)
+ServiceWorkerJob* ServiceWorkerContainer::createJob(
+    ServiceWorkerJobType type, NULLABLE String* scopeURL,
+    NULLABLE String* scriptURL, Promise* promise,
+    NULLABLE ServiceWorkerEnvironment* client)
 {
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
 
     STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(promise != nullptr);
 
     auto data = job->data();
 
@@ -254,6 +262,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     data->scopeURL = scopeURL;
     data->scriptURL = scriptURL;
     data->origin = executionContext()->webOrigin()->serialize();
+    data->referrerURL = client ? client->referrer() : nullptr;
 
     job->setPromise(promise);
     job->setClient(client);
@@ -282,14 +291,14 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
     m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
 
-Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
+Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 {
-    STARFISH_ASSERT(rawClientURL != nullptr);
+    SWCLIENT_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(rawClientURL));
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistration
 
     // 1. Let client be the context object’s service worker client.
-    ExecutionContext* client = executionContext();
+    ServiceWorkerEnvironment* client = serviceWorkerEnvironment();
 
     STARFISH_ASSERT(client != nullptr);
     STARFISH_ASSERT(client->baseURL() != nullptr);
@@ -318,8 +327,8 @@ Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
     // 5. If the origin of clientURL is not client’s origin, return a promise
     // rejected with a "SecurityError" DOMException.
 
-    if (!client->webOrigin()->isSameOrigin(
-            WebOrigin::createDocumentOrigin(clientURL))) {
+    if (client->webOrigin()->isSameOrigin(
+            WebOrigin::createDocumentOrigin(clientURL)) == false) {
         auto exception = new DOMException(
             executionContext(), DOMException::Code::SECURITY_ERR,
             "Origin of clientURL is not client's origin");
@@ -353,8 +362,11 @@ Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
             if (registration != nullptr) {
                 // 7.2.1 Resolve promise with the ServiceWorkerRegistration
                 // object which represents registration.
+                SWCLIENT_LOG_IF_ALLOWED(1, "7.2.1: %s\n",
+                                        CSTR(registration->scope));
+
                 auto swRegistration = new ServiceWorkerRegistration(
-                    container->executionContext());
+                    container->executionContext(), container);
                 swRegistration->setData(registration);
 
                 STARFISH_ASSERT(request->promise());
@@ -363,6 +375,7 @@ Promise* ServiceWorkerContainer::getRegistration(String* rawClientURL)
             } else {
                 // 7.3 Else:
                 // 7.3.1 Resolve promise with undefined.
+                SWCLIENT_LOG_IF_ALLOWED(1, "7.3.1: null\n");
                 request->promise()->fulfill(
                     Escargot::ValueRef::createUndefined());
             }
@@ -393,6 +406,9 @@ ServiceWorkerRequest* ServiceWorkerContainer::createRequest(
 void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
                                                ResourceURL* clientURL)
 {
+    STARFISH_ASSERT(request != nullptr);
+    STARFISH_ASSERT(clientURL != nullptr);
+
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
@@ -431,10 +447,9 @@ ServiceWorker* ServiceWorkerContainer::controller()
 }
 
 void ServiceWorkerContainer::resolveJobPromise(
-    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
+    ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    STARFISH_ASSERT(registration != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // TODO: get matched registration
@@ -442,9 +457,11 @@ void ServiceWorkerContainer::resolveJobPromise(
     // 2. If job’s client is not null, queue a task, on job’s client's
     // responsible event loop using the DOM manipulation task source, to run the
     // following substeps:
+
+    // TODO: consider moving resolveJobPromise to ServiceWorkerClientConnection
     auto context = job->client();
 
-    if (context) {
+    if (context != nullptr) {
         context->webBase()->messageLoop()->addIdler(
             context->globalScope(),
             [](size_t handle, void* data, void* data1) {
@@ -457,26 +474,35 @@ void ServiceWorkerContainer::resolveJobPromise(
 
                 if (job->data()->type == ServiceWorkerJobType::Register ||
                     job->data()->type == ServiceWorkerJobType::Update) {
-                    // TODO: 2. If job’s job type is either register or update,
-                    // set convertedValue to the ServiceWorkerRegistration
-                    // object that represents value, in job’s client's Realm.
-                    auto registeration = new ServiceWorkerRegistration(
-                        container->executionContext());
+                    auto registration = new ServiceWorkerRegistration(
+                        container->executionContext(), container);
                     auto serviceWorker =
                         new ServiceWorker(container->executionContext());
 
-                    STARFISH_ASSERT(registeration != nullptr);
+                    STARFISH_ASSERT(registration != nullptr);
                     STARFISH_ASSERT(serviceWorker != nullptr);
 
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
-                    registeration->updateRegistrationState(
+                    registration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
                         serviceWorker);
 
-                    convertedValue = registeration->scriptValue();
-                    job->promise()->fulfill(convertedValue);
+                    // 2.1 If job’s job type is either register or update, set
+                    // convertedValue to the ServiceWorkerRegistration object
+                    // that represents value, in job’s client's Realm.
+                    convertedValue = registration->scriptValue();
+
+                } else {
+                    // 2.2 Else, set convertedValue to value, in job’s client's
+                    // Realm.
                 }
+
+                // 2.3 Resolve job’s job promise with convertedValue.
+                job->promise()->fulfill(convertedValue);
+
                 container->finishJob(job);
+
+                // TODO: 3. Resolve job’s job promise with convertedValue.
             },
             job, this);
     } else {
@@ -490,7 +516,7 @@ void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
     m_jobMap.erase(job->data()->id);
 }
 
-NullableServiceWorkerJob* ServiceWorkerContainer::findJob(
+NULLABLE ServiceWorkerJob* ServiceWorkerContainer::findJob(
     Id<ServiceWorkerJob> id)
 {
     auto it = m_jobMap.find(id);
@@ -500,7 +526,7 @@ NullableServiceWorkerJob* ServiceWorkerContainer::findJob(
     return it->second;
 }
 
-NullableServiceWorkerRequest* ServiceWorkerContainer::findRequest(
+NULLABLE ServiceWorkerRequest* ServiceWorkerContainer::findRequest(
     Id<ServiceWorkerRequest> id)
 {
     auto it = m_requestMap.find(id);

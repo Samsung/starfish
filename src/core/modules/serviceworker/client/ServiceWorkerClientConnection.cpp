@@ -101,8 +101,8 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
 
         STARFISH_ASSERT(job != nullptr);
 
-        auto registration =
-            downcast<ServiceWorkerRegistrationData>(msg.param(1));
+        NULLABLE auto registration =
+            static_cast<ServiceWorkerRegistrationData*>(msg.param(1));
         resolveJobPromise(job, registration);
 
     } else if (msgName == "resolveRequest") {
@@ -110,13 +110,13 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto serviceWorkerContainer =
             findServiceWorkerContainer(request->contextId);
 
-        if (serviceWorkerContainer) {
-            NullableArchivable* archivable = msg.param(1);
+        if (serviceWorkerContainer != nullptr) {
+            NULLABLE Archivable* archivable = msg.param(1);
 
             auto requestMatched =
                 serviceWorkerContainer->findRequest(request->id);
 
-            if (requestMatched && requestMatched->postTask()) {
+            if ((requestMatched != nullptr) && requestMatched->postTask()) {
                 requestMatched->postTask()->run(requestMatched, { archivable });
             }
         }
@@ -124,34 +124,33 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
 }
 
 void ServiceWorkerClientConnection::resolveJobPromise(
-    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
+    ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    STARFISH_ASSERT(registration != nullptr);
 
     // find if this job owner context is still active.
     auto serviceWorkerContainer =
         findServiceWorkerContainer(job->data()->contextId);
 
-    if (serviceWorkerContainer) {
+    if (serviceWorkerContainer != nullptr) {
         // TODO: consider passing job data and move findjob into container
         auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
-        if (jobMatched) {
+        if (jobMatched != nullptr) {
             serviceWorkerContainer->resolveJobPromise(jobMatched, registration);
         }
     }
 }
 
-NullableServiceWorkerContainer
+NULLABLE ServiceWorkerContainer*
 ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {
     auto swpm = ServiceWorkerProcessManager::getInstance();
     auto globalScope = swpm->find(id);
 
-    if (globalScope) {
+    if (globalScope != nullptr) {
         auto executionContext = globalScope->executionContext();
-        if (executionContext && executionContext->hasDocument()) {
+        if ((executionContext != nullptr) && executionContext->hasDocument()) {
             // TODO: use serviceworker bindings on window
             auto window = executionContext->document()->window();
             return window->navigator()->serviceWorker();

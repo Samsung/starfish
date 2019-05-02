@@ -40,7 +40,7 @@ public:
         ServiceWorkerRegistrationData* registration) override;
 
     void resolveRequest(ServiceWorkerRequest* request,
-                        NullableArchivable* archivable) override;
+                        NULLABLE Archivable* archivable) override;
 
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
