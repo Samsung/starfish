@@ -1126,6 +1126,9 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_paddingHeightDamaged = false;
     m_flags.m_needToEstablishBlockFormattingContext = false;
 
+    m_flags.m_isFlexItem = false;
+    m_flags.m_isGridItem = false;
+
     computeStyleFlags();
 
     if (m_flags.m_needToEstablishBlockFormattingContext) {
