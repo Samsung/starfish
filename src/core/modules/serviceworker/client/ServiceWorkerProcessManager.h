@@ -29,7 +29,6 @@ class ServiceWorkerClientConnection;
 class ServiceWorkerHostProcess;
 class ServiceWorkerClientProcess;
 
-class WebView;
 class ThreadPool;
 class IThread;
 class IORunnable;
@@ -49,10 +48,10 @@ struct ProcessData {
 
 class ServiceWorkerProcessManager : public gc {
 public:
-    static ServiceWorkerProcessManager* getInstance();
-    static void destroy();
+    static ServiceWorkerProcessManager* instance();
+    void init();
+    void destroy();
 
-    void init(WebView* webView);
     ServiceWorkerClientConnection* getConnection(String* originSerialized);
 
     void registerActiveGlobalScope(Id<GlobalScope> id,
@@ -63,11 +62,13 @@ public:
 private:
     ServiceWorkerProcessManager();
     virtual ~ServiceWorkerProcessManager();
+
     static ServiceWorkerProcessManager* m_instance;
 
     IThread* m_ioThread{ nullptr };
     ThreadPool* m_threadPool{ nullptr };
     IORunnable* m_ioRunnable{ nullptr };
+    MessageLoop* m_messageLoop{ nullptr };
 
     ServiceWorkerHostProcess* m_serviceWorkerHostProcess{ nullptr };
     ServiceWorkerClientProcess* m_serviceWorkerClientProcess{ nullptr };

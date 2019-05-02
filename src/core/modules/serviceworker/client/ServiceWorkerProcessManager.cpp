@@ -19,11 +19,9 @@
 
 #include "StarfishConfig.h"
 
+#include "core/util/Id.h"
 #include "core/page/GlobalScope.h"
 #include "platform/process/base/ProcessType.h"
-
-#include "core/page/WebView.h"
-#include "core/util/Id.h"
 #include "core/util/Archivable.h"
 #include "core/modules/serviceworker/Message.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
@@ -57,9 +55,11 @@
 
 namespace Starfish {
 
+#define SERVICE_WORKER_THREAD_POOL_SIZE 1
+
 ServiceWorkerProcessManager* ServiceWorkerProcessManager::m_instance = nullptr;
 
-ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
+ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
 {
     if (m_instance == nullptr) {
         m_instance = new ServiceWorkerProcessManager();
@@ -69,10 +69,8 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
     return m_instance;
 }
 
-void ServiceWorkerProcessManager::init(WebView* webView)
+void ServiceWorkerProcessManager::init()
 {
-    STARFISH_ASSERT(webView != nullptr);
-
 #ifndef SERVICE_WORKER_USE_MULTI_PROCESS
     WorkerConfig::instance().set("app", "BOTH");
 #else
@@ -81,14 +79,13 @@ void ServiceWorkerProcessManager::init(WebView* webView)
 
     Message::init();
 
-    m_threadPool = webView->threadPool();
+    m_messageLoop = new MessageLoop();
+    m_threadPool =
+        new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop);
 
     // start I/O runner
     m_ioRunnable = new IORunnable(m_threadPool->messageLoop());
     m_ioThread = new AdaptedThread(m_threadPool);
-
-    STARFISH_ASSERT(m_ioRunnable != nullptr);
-    STARFISH_ASSERT(m_ioThread != nullptr);
 
     m_ioThread->start(m_ioRunnable);
 
@@ -118,6 +115,15 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
 {
     if (m_ioThread != nullptr) {
         m_ioThread->stop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    if (m_messageLoop) {
+        m_messageLoop->destroy();
+    }
+
+    if (m_threadPool) {
+        m_threadPool->destroy();
     }
 }
 

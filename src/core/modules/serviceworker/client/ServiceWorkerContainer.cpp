@@ -281,7 +281,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
             WebOrigin* webOrigin = castTo<WebOrigin*>(data2);
 
             auto swConnection =
-                ServiceWorkerProcessManager::getInstance()->getConnection(
+                ServiceWorkerProcessManager::instance()->getConnection(
                     webOrigin->serialize());
 
             swConnection->scheduleJob(job);
@@ -416,7 +416,7 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
             auto urlString = castTo<String*>(data2);
 
             auto swConnection =
-                ServiceWorkerProcessManager::getInstance()->getConnection(
+                ServiceWorkerProcessManager::instance()->getConnection(
                     swrequest->origin);
 
             swConnection->matchRegistration(swrequest, urlString);
