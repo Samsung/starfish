@@ -21,9 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/modules/serviceworker/client/ServiceWorker.h"
-#include "core/page/Window.h"
-#include "core/dom/Document.h"
+#include "core/modules/serviceworker/ServiceWorker.h"
 
 namespace Starfish {
 

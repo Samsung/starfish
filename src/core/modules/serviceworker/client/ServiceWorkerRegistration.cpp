@@ -18,12 +18,10 @@
  */
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-
 #include "StarfishConfig.h"
 
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/dom/Document.h"
 
 #include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
 

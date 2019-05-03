@@ -14,17 +14,21 @@ SET (STARFISH_WEBWORKER_DEFINITIONS
     -DGC_DEBUG # bdwgc
     -D_GLIBCXX_DEBUG
     -DSTARFISH_WEBWORKER_HOST
+    -DSTARFISH_ENABLE_SERVICE_WORKER
     -DPORT_EVENTLOOP_BACKEND_LIBUV
     -DPORT_NEEDS_THREADED_PUBLIC_API
 )
 
 SET (STARFISH_WEBWORKER_LIBRARIES_DEFAULT pthread curl ssl crypto)
-SET (STARFISH_WEBWORKER_DEPENDENCIES escargot gc tuv)
-SET (STARFISH_WEBWORKER_LIBRARIES_THIRD_PARTY escargot ${GC_TARGET} ${TUV_TARGET})
+SET (STARFISH_WEBWORKER_DEPENDENCIES escargot gc tuv nanomsg)
+SET (STARFISH_WEBWORKER_LIBRARIES_THIRD_PARTY escargot ${GC_TARGET} ${TUV_TARGET} ${NANOMSG_TARGET})
 SET (STARFISH_WEBWORKER_INCLUDE_ADDITIONAL_DIRS 
     ${GCUTIL_ROOT} 
     ${GCUTIL_ROOT}/bdwgc/include
-    ${ESCARGOT_ROOT}/src/api)
+    ${ESCARGOT_ROOT}/src/api
+    ${ESCARGOT_ROOT}/third_party/rapidjson/include
+    ${THIRD_PARTY_ROOT}/nanomsg/dist/include
+    ${THIRD_PARTY_ROOT}/nanomsgcpp)
 SET (STARFISH_WEBWORKER_ENTRY ${STARFISH_ROOT}/src/launcher/WebWorkerEntry.cpp)
 
 #######################################################
@@ -82,8 +86,11 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/page/NavigatorMixin.cpp
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/networking/*.cpp 
     ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/serviceworker/client/*.cpp # TODO: remove client source files
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp
     ${STARFISH_ROOT}/src/core/dom/WebOrigin.cpp
@@ -108,6 +115,7 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/CustomEventInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/RequestOrUSVStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/RegistrationOptionsBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST
