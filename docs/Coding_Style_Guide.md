@@ -241,24 +241,60 @@ void A::functionA(B* arg1, int arg2) {
     STARFISH_ASSERT(arg1 != nullptr);
 }
 ```
-### Return nullptr explicitly
+### Handling a nullable pointer
 
-* Use Nullable Pointer macro
+There are the following choices where you handle a pointer which can be nullable.
+
+* Use NULLABLE macro
+
+Add `NULLABLE` definition before the type of pointers. `NULLABLE` is nothing but a notation which explicitly shows whether or not the given pointer can be nullable.
+
 ```cpp
-typedef Object* NullableObjectPtr;
+// `NULLABLE` is predefined in Starfish as below.
+#define NULLABLE
+
+...
+
+NULLABLE Object* A::functionA(NULLABLE ObjectB* b, ObjectC* c) {
+
+    // NOTE: If NULLABLE isn't prepended on the type of the given parameter,
+    // ASSERTION is preferred as below.
+    STARFISH_ASSERT(c != nullptr);
+
+    ...
+
+    // Access violation should be considered for a nullable pointer.
+    if ((b != nullptr) && b->isLoaded())
+    {
+        ...
+    }
+
+    // Use `NULLABLE` when calling a function which can return a nullable pointer.
+    NULLABLE Object* obj = c->getObject(...);
+    // NULLABLE auto obj = c->getObject(...);
+
+    if (cnd) {
+        return new Object;
+    } else {
+        return nullptr;
+    }
+}
 ```
-* Use Nullable template
+
+* Use Nullable template only for javascript binding interfaces
 ```cpp
 Nullable<Object> A::functionA() {
     if (cnd) {
         return valueOfObjectClass;
     } else {
         // return nullptr;
-        // Instead, return Nullable object
         return Nullable<Object>();
     }
 }
 ```
+
+* Use reference instead of pointer
+
 ### Be sure to explicitly assign nullptr if you need to release it.
 ```cpp
 A::releaseMemeber() {
@@ -275,6 +311,7 @@ STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE()
 // ETC, See StarfishBase.h for more information
 ...
 ```
+
 ## Comments
 ### Comment Style
 Both `//` and `/* */` style comments can be used, although `//` style is
@@ -291,3 +328,30 @@ much preferred.
 I do not encourage to add comment
  - in the function body
  - in the header file
+
+
+## Code readability
+
+Make sure your code is obvious and readable with the following conventions.
+
+```diff
+++ // NOTE: the statements in green are preferred.
+
+// Use a more explicit expression for `nullptr` checking.
+- if (ptr)
++ if (ptr != nullptr)
+
+- STARFISH_ASSERT(ptr)
++ STARFISH_ASSERT(ptr != nullptr)
+
+// Using the obvious meaning is preferred. ((e.g) the following usage for `strlen`)
+- if (verbose && strlen(verbose))
++ if ((verbose != nullptr) && (strlen(verbose) > 0))
+
+// Avoiding logic with an exclamation mark (`!`) in `if` statement is preferred.
+- if (!ptr)
++ if (ptr == nullptr)
+
+- if (!o.isLoaded() && ptr == nullptr)
++ if ((o.isLoaded() == false) && ptr == nullptr)
+```
