@@ -29,6 +29,7 @@ public:
     ExceptionCode code{ ExceptionCode::DOM_EXCEPTION };
     String* message{ String::emptyString };
 
+    ErrorData() = default;
     ErrorData(ExceptionCode code, const char* rawMessage);
 
     // serialize/deserialize

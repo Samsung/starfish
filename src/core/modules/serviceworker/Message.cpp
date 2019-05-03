@@ -26,16 +26,18 @@
 #include "core/util/Archivable.h"
 #include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/Message.h"
+#include "core/dom/DOMException.h"
 
 #include "core/dom/ExecutionContext.h"
-#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
+#include "core/modules/serviceworker/ErrorData.h"
 
 namespace Starfish {
 
@@ -146,6 +148,12 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
     } else if (id == "ServiceWorkerRequest") {
         if (ar.IsReader()) {
             archivable = new ServiceWorkerRequest;
+            STARFISH_ASSERT(archivable != nullptr);
+        }
+        archivable->archive(ar);
+    } else if (id == "ErrorData") {
+        if (ar.IsReader()) {
+            archivable = new ErrorData;
             STARFISH_ASSERT(archivable != nullptr);
         }
         archivable->archive(ar);

@@ -302,7 +302,8 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    // TODO: https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
+    // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
+    // is implemented on ServiceWorkerContainer.
     job->hostConnection()->resolveJobPromise(job, registration);
 }
 
@@ -311,7 +312,9 @@ void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
 {
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(errorData != nullptr);
-    // TODO: https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
+    // https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
+    // is implemented on ServiceWorkerContainer.
+    job->hostConnection()->rejectJobPromise(job, errorData);
 }
 
 void ServiceWorkerHostJobHandler::updateRegistrationState(

@@ -511,6 +511,46 @@ void ServiceWorkerContainer::resolveJobPromise(
     }
 }
 
+void ServiceWorkerContainer::rejectJobPromise(ServiceWorkerJob* job,
+                                              ErrorData* errorData)
+{
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(errorData != nullptr);
+    // https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
+
+    // 1. If job’s client is not null, queue a task, on job’s client's
+    // responsible event loop using the DOM manipulation task source, to reject
+    // job’s job promise with a new exception with errorData and a user
+    // agent-defined message, in job’s client's Realm.
+    auto context = job->client();
+
+    if (context != nullptr) {
+        context->webBase()->messageLoop()->addIdler(
+            context->globalScope(),
+            [](size_t handle, void* data, void* data1, void* data2) {
+                ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
+                ServiceWorkerContainer* container =
+                    castTo<ServiceWorkerContainer*>(data1);
+                ErrorData* errorData = castTo<ErrorData*>(data2);
+
+                // TODO: consider generating an error message here.
+                auto exception =
+                    new DOMException(container->executionContext(),
+                                     errorData->code, CSTR(errorData->message));
+
+                job->promise()->reject(exception->scriptValue());
+            },
+            job, this, errorData);
+    }
+
+    // 2. For each equivalentJob in job’s list of equivalent jobs:
+    // 2.1. If equivalentJob’s client is null, continue.
+    // 2.2 Queue a task, on equivalentJob’s client's responsible event loop
+    // using the DOM manipulation task source, to reject equivalentJob’s job
+    // promise with a new exception with errorData and a user agent-defined
+    // message, in equivalentJob’s client's Realm.
+}
+
 void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);

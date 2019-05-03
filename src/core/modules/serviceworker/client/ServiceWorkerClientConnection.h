@@ -27,6 +27,7 @@ class Socket;
 class ServiceWorkerJob;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerContainer;
+class ErrorData;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -44,6 +45,7 @@ public:
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
+    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
 
     NULLABLE ServiceWorkerContainer* findServiceWorkerContainer(
         ServiceWorkerContextId id);
