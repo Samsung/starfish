@@ -85,6 +85,45 @@ static inline String* canvasLineCapToString(CanvasLineCap lineCap)
     return String::createASCIIString("butt");
 }
 
+static inline String* canvasTextAlignToString(CanvasTextAlign textAlign)
+{
+    if (textAlign == CanvasTextAlign::End) {
+        return String::createASCIIString("end");
+    } else if (textAlign == CanvasTextAlign::Left) {
+        return String::createASCIIString("left");
+    } else if (textAlign == CanvasTextAlign::Right) {
+        return String::createASCIIString("right");
+    } else if (textAlign == CanvasTextAlign::Center) {
+        return String::createASCIIString("center");
+    }
+    return String::createASCIIString("start");
+}
+
+static inline bool stringToCanvasTextAlign(String* textAlign,
+                                           CanvasTextAlign& out)
+{
+    STARFISH_ASSERT(textAlign != nullptr);
+    if (textAlign) {
+        if (textAlign->equals("start")) {
+            out = CanvasTextAlign::Start;
+            return true;
+        } else if (textAlign->equals("end")) {
+            out = CanvasTextAlign::End;
+            return true;
+        } else if (textAlign->equals("left")) {
+            out = CanvasTextAlign::Left;
+            return true;
+        } else if (textAlign->equals("right")) {
+            out = CanvasTextAlign::Right;
+            return true;
+        } else if (textAlign->equals("center")) {
+            out = CanvasTextAlign::Center;
+            return true;
+        }
+    }
+    return false;
+}
+
 static inline bool stringToCanvasLineCap(String* lineCap, CanvasLineCap& out)
 {
     if (lineCap) {
@@ -138,6 +177,7 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasPath(nullptr)
     , m_dashList()
     , m_lineDashOffset(0.0)
+    , m_canvasTextAlign(CanvasTextAlign::Start)
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -864,6 +904,17 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
             width = fb->contentWidth().toFloat();
         }
     });
+
+    // CanvasTextDrawingStyles.textAlign
+    if (m_canvasTextAlign == CanvasTextAlign::End) {
+        paintCtx.m_canvas->translate(-width, 0);
+    } else if (m_canvasTextAlign == CanvasTextAlign::Left) {
+    } else if (m_canvasTextAlign == CanvasTextAlign::Right) {
+        paintCtx.m_canvas->translate(-width, 0);
+    } else if (m_canvasTextAlign == CanvasTextAlign::Center) {
+        paintCtx.m_canvas->translate(-(width / 2), 0);
+    } else {
+    }
 
     if (useMaxWidth) {
         float scale = maxWidth / width;
@@ -1601,14 +1652,16 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
 
 String* CanvasRenderingContext2DMixIn::textAlign()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return String::emptyString;
+    return canvasTextAlignToString(m_canvasTextAlign);
 }
 
-void CanvasRenderingContext2DMixIn::setTextAlign(String* textAlign)
+void CanvasRenderingContext2DMixIn::setTextAlign(String* value)
 {
-    STARFISH_ASSERT(textAlign != nullptr);
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_ASSERT(value != nullptr);
+    CanvasTextAlign textAlign;
+    if (stringToCanvasTextAlign(value, textAlign)) {
+        m_canvasTextAlign = textAlign;
+    }
 }
 
 String* CanvasRenderingContext2DMixIn::textBaseline()
