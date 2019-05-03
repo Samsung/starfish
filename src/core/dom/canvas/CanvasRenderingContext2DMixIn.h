@@ -265,6 +265,7 @@ private:
     double m_lineDashOffset;
     Font* m_font;
     String* m_fontStr;
+    CanvasTextAlign m_canvasTextAlign;
 };
 }
 #endif
