@@ -1,4 +1,4 @@
-// [STARFISH_ENABLE_SERVICE_WORKER] // FIXME: this doesn't work in binding generator
+// [STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker)] // FIXME: this doesn't work in binding generator
 dictionary RegistrationOptions {
   [STARFISH_ENABLE_SERVICE_WORKER] USVString scope;
   // WorkerType type = "classic";

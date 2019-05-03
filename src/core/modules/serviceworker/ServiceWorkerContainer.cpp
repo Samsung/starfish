@@ -24,7 +24,7 @@
 
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/Task.h"
-#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
@@ -36,12 +36,11 @@
 
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/client/ServiceWorker.h"
+#include "core/modules/serviceworker/ServiceWorker.h"
 
 #include "core/page/GlobalScope.h"
-#include "core/page/Window.h"
 #include "core/dom/WebOrigin.h"
-#include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 

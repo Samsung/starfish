@@ -26,7 +26,7 @@
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/client/ServiceWorker.h"
+#include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 #include "core/dom/EventTarget.h"

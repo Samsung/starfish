@@ -24,7 +24,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/location/Geolocation.h"
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #endif
 
 namespace Starfish {

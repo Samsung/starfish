@@ -17,6 +17,8 @@
  *  USA
  */
 
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
 #include "StarfishConfig.h"
 
 #include "core/util/Id.h"
@@ -29,10 +31,8 @@
 #include "platform/process/base/ProcessType.h"
 
 #include "core/dom/ExecutionContext.h"
-#include "core/page/Window.h"
-#include "core/page/Navigator.h"
-#include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/page/GlobalScope.h"
 
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
@@ -44,11 +44,15 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/page/Navigator.h"
+#include "core/dom/Document.h"
+#include "core/page/Window.h"
+#endif
 
 namespace Starfish {
 
@@ -175,7 +179,7 @@ ServiceWorkerClientConnection::findServiceWorkerContainer(
 {
     auto swpm = ServiceWorkerProcessManager::instance();
     auto globalScope = swpm->find(id);
-
+#if !defined(STARFISH_WEBWORKER_HOST)
     if (globalScope != nullptr) {
         auto executionContext = globalScope->executionContext();
         if ((executionContext != nullptr) && executionContext->hasDocument()) {
@@ -184,7 +188,7 @@ ServiceWorkerClientConnection::findServiceWorkerContainer(
             return window->navigator()->serviceWorker();
         }
     }
-
+#endif
     return nullptr;
 }
 
