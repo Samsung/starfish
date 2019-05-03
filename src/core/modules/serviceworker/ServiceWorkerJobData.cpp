@@ -44,7 +44,7 @@ void ServiceWorkerJobData::archive(Archiver& ar)
     ar.Member("scopeURL") & scopeURL;
     ar.Member("scriptURL") & scriptURL;
     ar.Member("referrerURL") & referrerURL;
-    ar.Member("origin") & origin;
+    ar.Member("clientOrigin") & clientOrigin;
 }
 
 } // namespace Starfish

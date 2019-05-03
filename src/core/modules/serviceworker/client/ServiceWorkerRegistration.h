@@ -67,7 +67,7 @@ private:
     ServiceWorker* m_activeWorker;
 
     ServiceWorkerRegistrationData* m_data;
-    ServiceWorkerJobClientInterface* m_client;
+    ServiceWorkerJobClientInterface* m_jobClient;
 };
 } // namespace Starfish
 

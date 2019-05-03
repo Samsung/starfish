@@ -29,6 +29,7 @@ class ServiceWorkerJob;
 class ServiceWorkerData;
 class JobQueue;
 class ServiceWorkerRegistrationData;
+class ErrorData;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -63,6 +64,9 @@ public:
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
+
+    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+
     NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);

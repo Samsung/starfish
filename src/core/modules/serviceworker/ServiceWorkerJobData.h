@@ -28,10 +28,10 @@ public:
     ServiceWorkerJobId id;
     ServiceWorkerContextId contextId;
     ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
-    String* scopeURL{ nullptr };
-    String* scriptURL{ nullptr };
-    String* referrerURL{ nullptr };
-    String* origin{ nullptr };
+    String* scopeURL{ String::emptyString };
+    String* scriptURL{ String::emptyString };
+    String* referrerURL{ String::emptyString };
+    String* clientOrigin{ String::emptyString };
     WorkerType workerType{ WorkerType::Classic };
     ServiceWorkerUpdateViaCache updateViaCacheMode{
         ServiceWorkerUpdateViaCache::None
