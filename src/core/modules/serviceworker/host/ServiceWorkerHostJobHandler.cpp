@@ -25,10 +25,12 @@
 #include "core/util/Archivable.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/dom/DOMException.h"
+
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
-
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
@@ -300,8 +302,16 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
-    // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
+    // TODO: https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     job->hostConnection()->resolveJobPromise(job, registration);
+}
+
+void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
+                                                   ErrorData* errorData)
+{
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(errorData != nullptr);
+    // TODO: https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
 }
 
 void ServiceWorkerHostJobHandler::updateRegistrationState(
@@ -338,8 +348,53 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
                           toUnderlyingType(job->data()->type));
 
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
-    auto registration = getRegistration(job->data()->scopeURL);
+
+    // 1. If the origin of job’s scope url is not `job’s client's origin`, then:
+    auto scopeURL = new ResourceURL(job->data()->scopeURL);
+    auto clientOrigin = job->data()->clientOrigin;
+
+    STARFISH_ASSERT(clientOrigin != nullptr);
+
+    if (clientOrigin->equals(scopeURL->origin()) == false) {
+        // 1.1 Invoke Reject Job Promise with job and "SecurityError"
+        // DOMException.
+        rejectJobPromise(job, new ErrorData(ExceptionCode::SECURITY_ERR,
+                                            "Script origin does not match the "
+                                            "registering client's origin"));
+
+        // 1.2 Invoke Finish Job with job and abort these steps.
+        return finishJob(job);
+    }
+
+    // 2. Let registration be the result of running
+    // Get Registration algorithm passing job’s scope url as the argument.
+    NULLABLE auto registration = getRegistration(job->data()->scopeURL);
+
+    // 3. If registration is null, then:
+    if (registration == nullptr) {
+        // 3.1 Invoke Resolve Job Promise with job and false.
+        // NOTE: we handle `false` as nullptr.
+        resolveJobPromise(job, nullptr);
+
+        // 3.2 Invoke Finish Job with job and abort these steps.
+        return finishJob(job);
+    }
+
+    // 4. Set registration’s uninstalling flag.
+    registration->setIsUninstalling(true);
+
+    // 5. Invoke Resolve Job Promise with job and true.
     resolveJobPromise(job, registration);
+
+    // 6. Invoke Try Clear Registration with registration.
+
+    // Note: If Try Clear Registration does not trigger Clear Registration here,
+    // Clear Registration is tried again when the last client using the
+    // registration is unloaded or the extend lifetime promises for the
+    // registration’s service workers settle.
+
+    // 7. Invoke Finish Job with job.
+    finishJob(job);
 }
 
 void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
@@ -402,9 +457,6 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
             matchingScopeString = selectedRegistrationKey;
         }
     }
-
-    // 6. Let matchingScope be null.
-    String* matchingScope = nullptr;
 
     NULLABLE ServiceWorkerRegistrationData* registration = nullptr;
 

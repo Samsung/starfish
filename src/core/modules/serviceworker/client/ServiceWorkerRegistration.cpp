@@ -37,7 +37,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
     , m_waitingWorker(nullptr)
     , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
-    , m_client(client)
+    , m_jobClient(client)
 {
     STARFISH_ASSERT(m_data != nullptr);
 }
@@ -103,7 +103,7 @@ ServiceWorker* ServiceWorkerRegistration::active() const
 
 Promise* ServiceWorkerRegistration::unregister()
 {
-    STARFISH_ASSERT(m_client != nullptr);
+    STARFISH_ASSERT(m_jobClient != nullptr);
     WORKER_LOG_IF_ALLOWED(1, "0: called\n");
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-unregister
@@ -114,12 +114,12 @@ Promise* ServiceWorkerRegistration::unregister()
     // 2. Let job be the result of running Create Job with unregister, the scope
     // url of the service worker registration, null, promise, and the context
     // object’s relevant settings object.
-    auto job = m_client->createJob(ServiceWorkerJobType::Unregister,
-                                   data()->scope, nullptr, promise,
-                                   m_client->serviceWorkerEnvironment());
+    auto job = m_jobClient->createJob(ServiceWorkerJobType::Unregister,
+                                      data()->scope, nullptr, promise,
+                                      m_jobClient->serviceWorkerEnvironment());
 
     // 3. Invoke Schedule Job with job.
-    m_client->scheduleJob(job);
+    m_jobClient->scheduleJob(job);
 
     // 4. Return promise.
     return promise;

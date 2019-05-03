@@ -22,29 +22,31 @@
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
+#include "core/dom/DOMException.h"
+
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
+#include "core/modules/serviceworker/ErrorData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-const char* ServiceWorkerJobData::archiveId() const
+ErrorData::ErrorData(ExceptionCode exceptionCode, const char* rawMessage)
+    : code(exceptionCode)
+    , message(String::createASCIIString(rawMessage))
 {
-    return "ServiceWorkerJobData";
+    STARFISH_ASSERT(rawMessage != nullptr);
 }
 
-void ServiceWorkerJobData::archive(Archiver& ar)
+const char* ErrorData::archiveId() const
 {
-    ar.MemberId("id", id);
-    ar.MemberId("contextId", contextId);
-    ar.MemberEnum("type", type);
-    ar.MemberEnum("workerType", workerType);
-    ar.MemberEnum("updateViaCacheMode", updateViaCacheMode);
-    ar.Member("scopeURL") & scopeURL;
-    ar.Member("scriptURL") & scriptURL;
-    ar.Member("referrerURL") & referrerURL;
-    ar.Member("clientOrigin") & clientOrigin;
+    return "ErrorData";
+}
+
+void ErrorData::archive(Archiver& ar)
+{
+    ar.MemberEnum("code", code);
+    ar.Member("message") & message;
 }
 
 } // namespace Starfish

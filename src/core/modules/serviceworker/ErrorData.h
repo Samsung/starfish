@@ -17,25 +17,19 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerJobData__)
-#define __StarfishServiceWorkerJobData__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishErrorData__)
+#define __StarfishErrorData__
 
 namespace Starfish {
 
-class ServiceWorkerJobData : public Archivable {
+using ExceptionCode = DOMException::Code;
+
+class ErrorData : public Archivable {
 public:
-    ServiceWorkerJobId id;
-    ServiceWorkerContextId contextId;
-    ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
-    String* scopeURL{ String::emptyString };
-    String* scriptURL{ String::emptyString };
-    String* referrerURL{ String::emptyString };
-    String* clientOrigin{ String::emptyString };
-    WorkerType workerType{ WorkerType::Classic };
-    ServiceWorkerUpdateViaCache updateViaCacheMode{
-        ServiceWorkerUpdateViaCache::None
-    };
+    ExceptionCode code{ ExceptionCode::DOM_EXCEPTION };
+    String* message{ String::emptyString };
+
+    ErrorData(ExceptionCode code, const char* rawMessage);
 
     // serialize/deserialize
     const char* archiveId() const override;

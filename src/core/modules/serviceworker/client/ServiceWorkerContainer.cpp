@@ -261,7 +261,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(
     data->type = type;
     data->scopeURL = scopeURL;
     data->scriptURL = scriptURL;
-    data->origin = executionContext()->webOrigin()->serialize();
+    data->clientOrigin = executionContext()->webOrigin()->serialize();
     data->referrerURL = client ? client->referrer() : nullptr;
 
     job->setPromise(promise);
@@ -472,6 +472,7 @@ void ServiceWorkerContainer::resolveJobPromise(
                 // 1. Let convertedValue be null.
                 auto convertedValue = Escargot::ValueRef::createNull();
 
+                // Handling Register Job or Update Job
                 if (job->data()->type == ServiceWorkerJobType::Register ||
                     job->data()->type == ServiceWorkerJobType::Update) {
                     auto registration = new ServiceWorkerRegistration(
