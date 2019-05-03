@@ -27,6 +27,7 @@ class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
 class Archivable;
+class ErrorData;
 
 class ServiceWorkerClientProcessInterface {
 public:
@@ -35,6 +36,9 @@ public:
     }
     virtual void resolveJobPromise(
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
+
+    virtual void rejectJobPromise(ServiceWorkerJob* job,
+                                  ErrorData* errorData) = 0;
 
     virtual void resolveRequest(ServiceWorkerRequest* request,
                                 NULLABLE Archivable* registration) = 0;

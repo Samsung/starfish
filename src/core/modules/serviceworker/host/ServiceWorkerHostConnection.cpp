@@ -30,8 +30,10 @@
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
@@ -60,6 +62,22 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     Message msg("resolveJobPromise");
     msg.addParam(job->data());
     msg.addParam(registration);
+    msg.archive(writer);
+
+    send(writer.GetString(), writer.GetSize() + 1);
+}
+
+void ServiceWorkerHostConnection::rejectJobPromise(ServiceWorkerJob* job,
+                                                   ErrorData* errorData)
+{
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(errorData != nullptr);
+
+    JsonWriter writer;
+
+    Message msg("rejectJobPromise");
+    msg.addParam(job->data());
+    msg.addParam(errorData);
     msg.archive(writer);
 
     send(writer.GetString(), writer.GetSize() + 1);

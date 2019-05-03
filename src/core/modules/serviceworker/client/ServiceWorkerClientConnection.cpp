@@ -32,10 +32,13 @@
 #include "core/page/Window.h"
 #include "core/page/Navigator.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
+
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -99,11 +102,16 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto jobData = downcast<ServiceWorkerJobData>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
-        STARFISH_ASSERT(job != nullptr);
-
         NULLABLE auto registration =
             static_cast<ServiceWorkerRegistrationData*>(msg.param(1));
         resolveJobPromise(job, registration);
+
+    } else if (msgName == "rejectJobPromise") {
+        auto jobData = downcast<ServiceWorkerJobData>(msg.param(0));
+        auto job = new ServiceWorkerJob(jobData);
+
+        auto errorData = downcast<ErrorData>(msg.param(1));
+        rejectJobPromise(job, errorData);
 
     } else if (msgName == "resolveRequest") {
         auto request = downcast<ServiceWorkerRequest>(msg.param(0));
@@ -129,14 +137,34 @@ void ServiceWorkerClientConnection::resolveJobPromise(
     STARFISH_ASSERT(job != nullptr);
 
     // find if this job owner context is still active.
-    auto serviceWorkerContainer =
+    NULLABLE auto serviceWorkerContainer =
         findServiceWorkerContainer(job->data()->contextId);
 
     if (serviceWorkerContainer != nullptr) {
         // TODO: consider passing job data and move findjob into container
-        auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
+        NULLABLE auto jobMatched =
+            serviceWorkerContainer->findJob(job->data()->id);
         if (jobMatched != nullptr) {
             serviceWorkerContainer->resolveJobPromise(jobMatched, registration);
+        }
+    }
+}
+
+void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
+                                                     ErrorData* errorData)
+{
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(errorData != nullptr);
+
+    // find if this job owner context is still active.
+    NULLABLE auto serviceWorkerContainer =
+        findServiceWorkerContainer(job->data()->contextId);
+
+    if (serviceWorkerContainer != nullptr) {
+        NULLABLE auto jobMatched =
+            serviceWorkerContainer->findJob(job->data()->id);
+        if (jobMatched != nullptr) {
+            serviceWorkerContainer->rejectJobPromise(jobMatched, errorData);
         }
     }
 }
