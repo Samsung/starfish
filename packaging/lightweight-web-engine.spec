@@ -426,9 +426,9 @@ cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
-cp *.pc %{buildroot}%{_libdir}/pkgconfig/
+cp lightweight-web-engine.pc lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
-cp *.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
+cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 
 # symbolic links
 pushd %{buildroot}%{_libdir}/lwe
