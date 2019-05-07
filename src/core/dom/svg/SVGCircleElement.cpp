@@ -34,13 +34,13 @@ void SVGCircleElement::didAttributeChanged(QualifiedName name, String* old,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_r == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_cx == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_cy == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
 }

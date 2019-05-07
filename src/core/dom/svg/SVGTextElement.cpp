@@ -34,10 +34,10 @@ void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_fontDashSize == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_fontDashFamily == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
 }

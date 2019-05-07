@@ -295,6 +295,19 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_crossorigin = QualifiedName(
         AtomicString::createAtomicString(starfish, "crossorigin"));
 
+    m_leftmargin =
+        QualifiedName(AtomicString::createAtomicString(starfish, "leftmargin"));
+    m_rightmargin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "rightmargin"));
+    m_topmargin =
+        QualifiedName(AtomicString::createAtomicString(starfish, "topmargin"));
+    m_bottommargin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "bottommargin"));
+    m_marginwidth = QualifiedName(
+        AtomicString::createAtomicString(starfish, "marginwidth"));
+    m_marginheight = QualifiedName(
+        AtomicString::createAtomicString(starfish, "marginheight"));
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =
         QualifiedName(AtomicString::createAtomicString(starfish, "default"));

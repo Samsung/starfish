@@ -33,7 +33,7 @@ void HTMLTablePartElement::didAttributeChanged(QualifiedName name, String* old,
                                      attributeRemoved);
     if (name == starfish()->staticStrings()->m_align ||
         name == starfish()->staticStrings()->m_valign) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     }
 }
 

@@ -86,8 +86,9 @@ public:
                 std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
 
             m_bufferStride = m_bufferWidth * 4;
-            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                              sizeof(uint32_t));
+            m_buffer = (unsigned char*)calloc(
+                1, m_bufferWidth * m_bufferHeight * sizeof(uint32_t));
+            STARFISH_RELEASE_ASSERT(m_buffer);
             g_totalAllocatedCanvasSurfaceSize +=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             return true;

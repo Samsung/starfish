@@ -63,12 +63,12 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
             }
         }
 
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsLayout();
     } else if (name == starfish()->staticStrings()->m_width) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == starfish()->staticStrings()->m_height) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     }
 }
 

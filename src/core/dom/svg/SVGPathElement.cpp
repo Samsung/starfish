@@ -34,7 +34,7 @@ void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_d == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
 }

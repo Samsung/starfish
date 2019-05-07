@@ -77,6 +77,7 @@ public:
     NativeImageDataMISC(size_t w, size_t h)
     {
         m_image = (unsigned char*)malloc(w * h * 4);
+        STARFISH_RELEASE_ASSERT(m_image);
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         m_imageSurface = nullptr;
 #endif
@@ -112,6 +113,7 @@ public:
             if (!m_image) {
                 // fallback
                 m_image = malloc(m_stride * m_height);
+                STARFISH_RELEASE_ASSERT(m_image);
                 memset(m_image, 0x00, m_stride * m_height);
             }
             initInternalSurface();
@@ -328,6 +330,7 @@ private:
         if (needsDecoding) {
             rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * m_height);
             m_image = (unsigned char*)malloc(rowbytes * m_height);
+            STARFISH_RELEASE_ASSERT(m_image);
             for (png_uint_32 i = 0; i < (unsigned int)m_height; ++i) {
                 rowPointers[i] = (png_bytep)m_image + i * rowbytes;
             }
@@ -395,6 +398,7 @@ private:
         if (!needsDecoding) {
             // decode first line for testing
             m_image = malloc(m_stride);
+            STARFISH_RELEASE_ASSERT(m_image);
 
             unsigned char* buffer_array[1];
             while (dHandle->output_scanline < dHandle->output_height) {
@@ -411,6 +415,7 @@ private:
 
         dstSize = m_stride * m_height;
         m_image = malloc(dstSize);
+        STARFISH_RELEASE_ASSERT(m_image);
 
         m_hasTransparentPixel = false;
         unsigned char* buffer_array[1];
@@ -590,6 +595,7 @@ private:
             return false;
         }
         m_image = (unsigned char*)malloc(Width * Height * 4);
+        STARFISH_RELEASE_ASSERT(m_image);
         m_width = Width;
         m_height = Height;
         m_stride = Width * 4;
@@ -800,6 +806,7 @@ private:
             GifByteType* buffer = nullptr;
 
             m_image = (void*)malloc(m_width * m_height * 4);
+            STARFISH_RELEASE_ASSERT(m_image);
             buffer = (GifByteType*)m_image;
             for (unsigned long h = 0; h < m_height; h++) {
                 gifRow = screenBuffer[h];

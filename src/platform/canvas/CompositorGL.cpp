@@ -441,7 +441,7 @@ static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
-static bool g_shouldUseEGLImageOnPlainSurface = false;
+static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_useStencilBufferOnFBO = false;
 static size_t g_maxTextureSize;
 
@@ -1453,7 +1453,7 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 
 #if defined(STARFISH_TIZEN)
         if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
-            g_shouldUseEGLImageOnPlainSurface = true;
+            g_shouldUseEGLImageOnPlainSurface = false;
         }
 #endif
         if (g_isSupportExtensionEGLImageExternal) {
@@ -1629,8 +1629,8 @@ public:
                 m_bufferHeight = h;
             }
 
-            if (!g_shouldUseEGLImageOnPlainSurface &&
-                g_isSupportExtensionEGLImageExternal &&
+            if (g_isSupportExtensionEGLImageExternal &&
+                g_shouldUseEGLImageOnPlainSurface &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
@@ -1641,7 +1641,15 @@ public:
                     LongTaskFinder t("tbm_surface_create", 1);
                     m_tbmSurface = tbm_surface_create(
                         m_bufferWidth, m_bufferHeight, TBM_FORMAT_ABGR8888);
-                    tbm_surface_get_info(m_tbmSurface, &surfaceInfo);
+                    {
+                        LongTaskFinder t("tbm_surface_create_clear", 1);
+                        tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
+                                        &surfaceInfo);
+                        void* buffer = surfaceInfo.planes[0].ptr;
+                        memset(buffer, 0,
+                               surfaceInfo.planes[0].stride * m_bufferHeight);
+                        tbm_surface_unmap(m_tbmSurface);
+                    }
                 }
                 STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
                 m_bufferStride = surfaceInfo.planes[0].stride;
@@ -1880,7 +1888,8 @@ public:
         } else {
             if (!m_buffer) {
                 m_buffer =
-                    (unsigned char*)malloc(m_bufferStride * m_bufferHeight);
+                    (unsigned char*)calloc(1, m_bufferStride * m_bufferHeight);
+                STARFISH_RELEASE_ASSERT(m_buffer);
             }
         }
 
