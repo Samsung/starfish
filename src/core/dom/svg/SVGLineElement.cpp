@@ -33,16 +33,16 @@ void SVGLineElement::didAttributeChanged(QualifiedName name, String* old,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_x1 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_x2 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_y1 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_y2 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
 }

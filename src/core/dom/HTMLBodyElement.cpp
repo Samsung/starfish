@@ -21,9 +21,11 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/CSSParser.h"
 
 namespace Starfish {
 
@@ -76,18 +78,76 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == ss->m_onunload) {
         window()->setAttributeEventListener(ss->m_unload, value, this);
     } else if (name == ss->m_alink) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == ss->m_background) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == ss->m_bgcolor) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == ss->m_link) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == ss->m_text) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     } else if (name == ss->m_vlink) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_marginwidth) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_leftmargin) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_rightmargin) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_marginheight) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_topmargin) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+    } else if (name == ss->m_bottommargin) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
     }
+}
+
+static std::pair<bool, CSSStyleValuePair> parseStyleLength(String* input)
+{
+    STARFISH_ASSERT(input != nullptr);
+    CSSStyleValuePair pair;
+    if (input->length() == 0) {
+        return std::make_pair(false, pair);
+    }
+    CSSTokenVector tokens;
+    CSSTokenValue token(input->toUTF8NonGCString());
+    tokens.push_back(token);
+    if (pair.updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit)) {
+        return std::make_pair(true, pair);
+    }
+    return std::make_pair(false, pair);
+}
+
+static bool parseMarginWidthKind(String* input,
+                                 CSSStyleValuePairVectorHolder& cssValues)
+{
+    STARFISH_ASSERT(input != nullptr);
+    auto test = parseStyleLength(input);
+    if (test.first) {
+        test.second.setKeyKind(CSSStyleValuePair::KeyKind::MarginLeft);
+        cssValues.push_back(test.second);
+        test.second.setKeyKind(CSSStyleValuePair::KeyKind::MarginRight);
+        cssValues.push_back(test.second);
+        return true;
+    }
+    return false;
+}
+
+static bool parseMarginHeightKind(String* input,
+                                  CSSStyleValuePairVectorHolder& cssValues)
+{
+    STARFISH_ASSERT(input != nullptr);
+    auto test = parseStyleLength(input);
+    if (test.first) {
+        test.second.setKeyKind(CSSStyleValuePair::KeyKind::MarginTop);
+        cssValues.push_back(test.second);
+        test.second.setKeyKind(CSSStyleValuePair::KeyKind::MarginBottom);
+        cssValues.push_back(test.second);
+        return true;
+    }
+    return false;
 }
 
 void HTMLBodyElement::styleForPresentationAttribute(
@@ -145,6 +205,86 @@ void HTMLBodyElement::styleForPresentationAttribute(
             if (pair.updateValueColor(document(), v)) {
                 cssValues.push_back(pair);
             }
+        }
+    }
+
+    // https://html.spec.whatwg.org/multipage/rendering.html#the-page
+    // attr leftmargin
+    // attr rightmargin
+    // attr marginwidth
+    // attr parent marginwidth
+    {
+        CSSStyleValuePair pair;
+        bool parsed = false;
+        // attr parent marginwidth
+        if (!document()->browsingContext()->isTopLevelBrowsingContext()) {
+            String* value = document()
+                                ->browsingContext()
+                                ->sourceElement()
+                                ->getAttributeOrEmpty(
+                                    starfish()->staticStrings()->m_marginwidth);
+            parsed = parseMarginWidthKind(value, cssValues);
+        }
+
+        // marginwidth
+        if (!parsed) {
+            String* value =
+                getAttributeOrEmpty(starfish()->staticStrings()->m_marginwidth);
+            parsed = parseMarginWidthKind(value, cssValues);
+        }
+
+        // leftmargin
+        if (!parsed) {
+            String* value =
+                getAttributeOrEmpty(starfish()->staticStrings()->m_leftmargin);
+            parsed = parseMarginWidthKind(value, cssValues);
+        }
+
+        // rightmargin
+        if (!parsed) {
+            String* value =
+                getAttributeOrEmpty(starfish()->staticStrings()->m_rightmargin);
+            parsed = parseMarginWidthKind(value, cssValues);
+        }
+    }
+
+    // attr topmargin
+    // attr bottommargin
+    // attr marginheight
+    // attr parent marginheight
+    {
+        CSSStyleValuePair pair;
+        bool parsed = false;
+        // attr parent marginheight
+        if (!document()->browsingContext()->isTopLevelBrowsingContext()) {
+            String* value =
+                document()
+                    ->browsingContext()
+                    ->sourceElement()
+                    ->getAttributeOrEmpty(
+                        starfish()->staticStrings()->m_marginheight);
+            parsed = parseMarginHeightKind(value, cssValues);
+        }
+
+        // marginheight
+        if (!parsed) {
+            String* value = getAttributeOrEmpty(
+                starfish()->staticStrings()->m_marginheight);
+            parsed = parseMarginHeightKind(value, cssValues);
+        }
+
+        // topmargin
+        if (!parsed) {
+            String* value =
+                getAttributeOrEmpty(starfish()->staticStrings()->m_topmargin);
+            parsed = parseMarginHeightKind(value, cssValues);
+        }
+
+        // bottommargin
+        if (!parsed) {
+            String* value = getAttributeOrEmpty(
+                starfish()->staticStrings()->m_bottommargin);
+            parsed = parseMarginHeightKind(value, cssValues);
         }
     }
 }

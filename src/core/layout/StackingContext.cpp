@@ -1955,10 +1955,6 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                 canvas->translate(-ctx.layerBaseX,
                                                   -ctx.layerBaseY);
 
-                                memset(canvas->renderTargetInfo().m_buffer, 0,
-                                       canvas->renderTargetInfo().m_stride *
-                                           canvas->renderTargetInfo().m_height);
-
                                 fillGraphicsBufferContents(canvas, ctx);
 
                                 delete canvas;
@@ -2223,7 +2219,7 @@ bool StackingContext::fillGraphicsBufferContents(
 
                     if (needsInitialClip) {
                         canvas->clearColor(Unit::Color(0, 0, 0, 0));
-                    } else {
+                    } else if (!gotNewBuffer) {
                         memset(canvas->renderTargetInfo().m_buffer, 0,
                                canvas->renderTargetInfo().m_stride *
                                    canvas->renderTargetInfo().m_height);

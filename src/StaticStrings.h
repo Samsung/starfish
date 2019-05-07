@@ -400,6 +400,12 @@ public:
     QualifiedName m_securitypolicyviolation;
     QualifiedName m_nonce;
     QualifiedName m_crossorigin;
+    QualifiedName m_leftmargin;
+    QualifiedName m_rightmargin;
+    QualifiedName m_topmargin;
+    QualifiedName m_bottommargin;
+    QualifiedName m_marginwidth;
+    QualifiedName m_marginheight;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

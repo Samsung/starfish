@@ -42,11 +42,6 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     m_emptySurface =
         CanvasSurface::create(node->webView()->platformWindow(), 1, 1,
                               CanvasSurface::CanvasSurfaceFlag::CanvasElement);
-
-    auto buf = m_emptySurface->mapBuffer();
-    memset(buf, 0,
-           m_emptySurface->bufferStride() * m_emptySurface->bufferHeight());
-    m_emptySurface->unmapBufferAndNotifyUpdatedRegion(0, 0, 1, 1);
 }
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()

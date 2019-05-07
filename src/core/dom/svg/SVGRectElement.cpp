@@ -34,10 +34,10 @@ void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_rx == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     } else if (ss->m_ry == name) {
-        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
     }
 }

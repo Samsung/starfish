@@ -51,10 +51,6 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
 {
     m_canvasSurface =
         CanvasSurface::create(m_container->webView()->platformWindow(), 1, 1);
-    auto buf = m_canvasSurface->mapBuffer();
-    memset(buf, 0,
-           m_canvasSurface->bufferStride() * m_canvasSurface->bufferHeight());
-    m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(0, 0, 1, 1);
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()

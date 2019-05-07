@@ -140,6 +140,18 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
         if (m_browsingContext) {
             m_browsingContext->setName(value);
         }
+    } else if (name == starfish()->staticStrings()->m_marginwidth) {
+        // https://html.spec.whatwg.org/multipage/rendering.html#the-page
+        if (m_browsingContext && m_browsingContext->document()->body()) {
+            m_browsingContext->document()->body()->setNeedsStyleRecalc(
+                StyleChangeReason::JustNeedsRecalcSelf);
+        }
+    } else if (name == starfish()->staticStrings()->m_marginheight) {
+        // https://html.spec.whatwg.org/multipage/rendering.html#the-page
+        if (m_browsingContext && m_browsingContext->document()->body()) {
+            m_browsingContext->document()->body()->setNeedsStyleRecalc(
+                StyleChangeReason::JustNeedsRecalcSelf);
+        }
     }
 }
 

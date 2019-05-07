@@ -59,43 +59,43 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (needsGeometryAttributes()) {
         if (ss->m_x == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
         } else if (ss->m_y == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
         }
     }
 
     if (needsSizingAttributes()) {
         if (ss->m_width == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
         } else if (ss->m_height == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
         }
     }
 
     if (needsFillAttributes()) {
         if (ss->m_fill == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         } else if (ss->m_fillOpacity == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         } else if (ss->m_fillRule == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
     }
 
     if (needsStrokeAttributes()) {
         if (ss->m_stroke == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         } else if (ss->m_strokeWidth == name) {
-            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
     }
