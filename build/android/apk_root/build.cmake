@@ -9,6 +9,7 @@ project (STARFISH)
 set(CMAKE_CXX_STANDARD 11)
 set(OPENGL_LIB GLESv3)
 set(LTO "0" CACHE STRING "LTO")
+set(STARFISH_ANDROID_OS "9" CACHE STRING "ANDROID_OS")
 
 
 #######################################################
@@ -30,13 +31,19 @@ file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/src/*
 # INCLUDE DIRS
 #######################################################
 
-set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
+IF (${STARFISH_ANDROID_OS} STREQUAL "9")
+    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0 )
+ELSEIF(${STARFISH_ANDROID_OS} STREQUAL "10")
+    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_10.0 )
+ENDIF()
+
 set(LWE_INCLUDE_DIRS
-    ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc
+    ${ANDROID_PLATFORM_ROOT_PATH}/include/bdwgc
     ${STARFISH_ROOT_PATH} ${STARFISH_ROOT_PATH}/inc ${STARFISH_ROOT_PATH}/src
     ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/include
     ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil
     ${STARFISH_ROOT_PATH}/third_party/escargot/src
+    ${STARFISH_ROOT_PATH}/third_party/escargot/src/api
     ${STARFISH_ROOT_PATH}/third_party/escargot/include
     ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/checked_arithmetic
     ${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion
@@ -47,23 +54,24 @@ set(LWE_INCLUDE_DIRS
     ${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox
     ${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp
     ${STARFISH_ROOT_PATH}/third_party/libtuv/include
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/config
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/core
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/image
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/gpu
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/ports
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/libpng
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/giflib
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/boringssl/src/include
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/libjpeg-turbo
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/curl/include
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/freetype/include
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/harfbuzz_ng/src
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/common
-    ${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/i18n)
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/effects
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/config
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/effects
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/core
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/image
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/gpu
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/skia/include/ports
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/libpng
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/giflib
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/boringssl/src/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/libjpeg-turbo
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/curl/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/freetype/include
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/harfbuzz_ng/src
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/icu/icu4c/source/common
+    ${ANDROID_PLATFORM_ROOT_PATH}/android/external/icu/icu4c/source/i18n
+)
 
 
 #######################################################
@@ -156,10 +164,10 @@ ENDIF()
 
 IF (${ANDROID_ABI} STREQUAL "arm64-v8a")
     set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/arm64-v8a)
-    set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib/arm64-v8a)
+    set (PREBUILT_LIB_PATH ${ANDROID_PLATFORM_ROOT_PATH}/lib/arm64-v8a)
 ELSEIF(${ANDROID_ABI} STREQUAL "armeabi-v7a")
     set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
-    set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a)
+    set (PREBUILT_LIB_PATH ${ANDROID_PLATFORM_ROOT_PATH}/lib/armeabi-v7a)
 ENDIF()
 
 # Copy prebuilt library to packged lib path.
@@ -168,7 +176,11 @@ execute_process(COMMAND @rm ${PACKAGED_LIB_PATH}/*)
 file(GLOB PREBUILT_SHARED_LIBS
   "${PREBUILT_LIB_PATH}/*.so"
 )
-list(REMOVE_ITEM PREBUILT_SHARED_LIBS ${PREBUILT_LIB_PATH}/libicui18n.so ${PREBUILT_LIB_PATH}/libicuuc.so )
+list(REMOVE_ITEM PREBUILT_SHARED_LIBS
+    ${PREBUILT_LIB_PATH}/libicui18n.so
+    ${PREBUILT_LIB_PATH}/libicuuc.so
+)
+
 file(COPY ${PREBUILT_SHARED_LIBS}
      DESTINATION ${PACKAGED_LIB_PATH})
 
@@ -206,7 +218,6 @@ set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_P
 
 add_library( icuuc-lib SHARED IMPORTED )
 set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
-
 
 #######################################################
 # BUILD TARGET
