@@ -45,6 +45,11 @@ public:
                                     GeoPositionErrorCallback errorCb,
                                     void* errorCbData, bool enableHighAccuracy,
                                     int32_t timeout, int32_t maximumAge);
+    virtual uint32_t watchPosition(GeoPositionCallback cb, void* cbData,
+                                   GeoPositionErrorCallback errorCb,
+                                   void* errorCbData, bool enableHighAccuracy,
+                                   int32_t timeout, int32_t maximumAge);
+    virtual void clearWatch(uint32_t watchId);
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     virtual void dispose()

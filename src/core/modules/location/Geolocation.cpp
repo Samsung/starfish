@@ -90,4 +90,33 @@ ScriptBindingInstance* Geolocation::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();
 }
+
+uint32_t Geolocation::watchPosition(GeoPositionCallback cb, void* cbData,
+                                    GeoPositionErrorCallback errorCb,
+                                    void* errorCbData, bool enableHighAccuracy,
+                                    int32_t timeout, int32_t maximumAge)
+{
+    if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
+                                        enableHighAccuracy, timeout,
+                                        maximumAge)) {
+        m_document->webView()->messageLoop()->addIdler(
+            window(),
+            [](size_t, void* data, void* data2, void* data3) {
+                STARFISH_ASSERT(data != nullptr);
+                STARFISH_ASSERT(data2 != nullptr);
+                Document* document = (Document*)data;
+                GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
+                cb(document, new PositionError(
+                                 document->executionContext(),
+                                 PositionError::Error::POSITION_UNAVAILABLE),
+                   data3);
+            },
+            m_document, (void*)errorCb, errorCbData);
+    }
+    return 0;
+}
+
+void Geolocation::clearWatch(uint32_t watchId)
+{
+}
 }
