@@ -429,6 +429,22 @@ static void logEglError(const char* name) noexcept
 #define GL_UNSIGNED_INT_24_8 0x84FA
 #endif
 
+#ifndef GL_TEXTURE_SWIZZLE_R
+#define GL_TEXTURE_SWIZZLE_R 0x8E42
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_G
+#define GL_TEXTURE_SWIZZLE_G 0x8E43
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_B
+#define GL_TEXTURE_SWIZZLE_B 0x8E44
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_A
+#define GL_TEXTURE_SWIZZLE_A 0x8E45
+#endif
+#ifndef TEXTURE_SWIZZLE_RGBA
+#define TEXTURE_SWIZZLE_RGBA 0x8E46
+#endif
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
 Evas_GL* g_evasGL;
@@ -441,6 +457,8 @@ static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
+static bool g_isSupportBGRATexture = false;
+static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_useStencilBufferOnFBO = false;
 static size_t g_maxTextureSize;
@@ -511,12 +529,6 @@ public:
     GLint m_texShaderProgramPosition;
     GLint m_texShaderProgramTexture;
     GLint m_texShaderProgramAlpha;
-    GLuint m_texFragmentShaderWithOriginalColor;
-    GLuint m_texShaderProgramWithOriginalColor;
-    GLint m_texShaderProgramWithOriginalColorTexPos;
-    GLint m_texShaderProgramWithOriginalColorPosition;
-    GLint m_texShaderProgramWithOriginalColorTexture;
-    GLint m_texShaderProgramWithOriginalColorAlpha;
 
     GLuint m_texFragmentShaderEGLImageExternal;
     GLuint m_texShaderProgramEGLImageExternal;
@@ -524,13 +536,6 @@ public:
     GLint m_texShaderProgramEGLImageExternalPosition;
     GLint m_texShaderProgramEGLImageExternalTexture;
     GLint m_texShaderProgramEGLImageExternalAlpha;
-
-    GLuint m_texFragmentShaderEGLImageExternalWithOriginalColor;
-    GLuint m_texShaderProgramEGLImageExternalWithOriginalColor;
-    GLint m_texShaderProgramEGLImageExternalWithOriginalColorTexPos;
-    GLint m_texShaderProgramEGLImageExternalWithOriginalColorPosition;
-    GLint m_texShaderProgramEGLImageExternalWithOriginalColorTexture;
-    GLint m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
 
     GLuint m_texFragmentBlurShaderW;
     GLuint m_texFragmentBlurShaderEGLImageExternalW;
@@ -576,24 +581,13 @@ public:
         m_texShaderProgramEGLImageExternalPosition = 0;
         m_texShaderProgramEGLImageExternalTexture = 0;
         m_texShaderProgramEGLImageExternalAlpha = 0;
-        m_texShaderProgramEGLImageExternalWithOriginalColorPosition = 0;
-        m_texShaderProgramEGLImageExternalWithOriginalColorTexture = 0;
-        m_texShaderProgramEGLImageExternalWithOriginalColorAlpha = 0;
         m_texVertexShader = m_texFragmentShader = 0;
         m_texShaderProgramEGLImageExternal =
             m_texFragmentShaderEGLImageExternal = 0;
-        m_texShaderProgramEGLImageExternalWithOriginalColor =
-            m_texFragmentShaderEGLImageExternalWithOriginalColor = 0;
         m_texFragmentBlurShaderH = m_texFragmentBlurShaderW =
             m_texFragmentBlurShaderEGLImageExternalW = 0;
         m_texBlurShaderProgramW = m_texBlurShaderProgramEGLImageExternalW =
             m_texBlurShaderProgramH = 0;
-        m_texFragmentShaderWithOriginalColor = 0;
-        m_texShaderProgramWithOriginalColor = 0;
-        m_texShaderProgramWithOriginalColorTexPos = 0;
-        m_texShaderProgramWithOriginalColorPosition = 0;
-        m_texShaderProgramWithOriginalColorTexture = 0;
-        m_texShaderProgramWithOriginalColorAlpha = 0;
 
         m_texBlurShaderProgramWPosition = 0;
         m_texBlurShaderProgramWTexture = 0;
@@ -617,7 +611,6 @@ public:
         m_texTexPosBuffer = 0;
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
-        m_texShaderProgramEGLImageExternalWithOriginalColorTexPos = 0;
         m_texBlurShaderProgramWTexPos = 0;
         m_texBlurShaderProgramEGLImageExternalWTexPos = 0;
         m_texBlurShaderProgramHTexPos = 0;
@@ -709,18 +702,7 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
-#if defined(PORT_PIXEL_ORDER_BGRA)
-                "  gl_FragColor.r = texData[2];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[0];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#else
-                "  gl_FragColor.r = texData[0];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[2];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#endif
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
 
             m_texFragmentShaderEGLImageExternal = loadShader(
@@ -779,96 +761,6 @@ public:
         return m_texShaderProgramEGLImageExternal;
     }
 
-    GLuint texShaderProgramEGLImageExternalWithOriginalColor()
-    {
-        if (!m_texShaderProgramEGLImageExternalWithOriginalColor) {
-            GLchar texFragmentSourceEGLImageExternal[] =
-                "#extension GL_OES_EGL_image_external : require\n"
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform samplerExternalOES uTexture;\n"
-                "varying vec2 vTexPos;\n"
-                "uniform float uAlpha;\n"
-                "void main(void)\n"
-                "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
-                "}";
-
-            m_texFragmentShaderEGLImageExternalWithOriginalColor = loadShader(
-                GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
-            checkError();
-
-            m_texShaderProgramEGLImageExternalWithOriginalColor =
-                glCreateProgram();
-            checkError();
-
-            glAttachShader(m_texShaderProgramEGLImageExternalWithOriginalColor,
-                           texVertexShader());
-            checkError();
-            glAttachShader(
-                m_texShaderProgramEGLImageExternalWithOriginalColor,
-                m_texFragmentShaderEGLImageExternalWithOriginalColor);
-            checkError();
-
-            glLinkProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
-            checkError();
-
-            m_lastProgram = m_texShaderProgramEGLImageExternalWithOriginalColor;
-            glUseProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
-            checkError();
-
-            m_texShaderProgramEGLImageExternalWithOriginalColorPosition =
-                glGetAttribLocation(
-                    m_texShaderProgramEGLImageExternalWithOriginalColor,
-                    "aPosition");
-            m_texShaderProgramEGLImageExternalWithOriginalColorTexPos =
-                glGetAttribLocation(
-                    m_texShaderProgramEGLImageExternalWithOriginalColor,
-                    "aTexPos");
-            m_texShaderProgramEGLImageExternalWithOriginalColorTexture =
-                glGetUniformLocation(
-                    m_texShaderProgramEGLImageExternalWithOriginalColor,
-                    "uTexture");
-            m_texShaderProgramEGLImageExternalWithOriginalColorAlpha =
-                glGetUniformLocation(
-                    m_texShaderProgramEGLImageExternalWithOriginalColor,
-                    "uAlpha");
-
-            glUniform1i(
-                m_texShaderProgramEGLImageExternalWithOriginalColorTexture, 0);
-            glEnableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalWithOriginalColorPosition);
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-            glEnableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalWithOriginalColorTexPos);
-            glVertexAttribPointer(
-                m_texShaderProgramEGLImageExternalWithOriginalColorTexPos, 2,
-                GL_FLOAT, false, 0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            glUniform1f(
-                m_texShaderProgramEGLImageExternalWithOriginalColorAlpha, 1);
-        } else {
-            if (m_lastProgram !=
-                m_texShaderProgramEGLImageExternalWithOriginalColor) {
-                m_lastProgram =
-                    m_texShaderProgramEGLImageExternalWithOriginalColor;
-                glUseProgram(
-                    m_texShaderProgramEGLImageExternalWithOriginalColor);
-
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(
-                    m_texShaderProgramEGLImageExternalWithOriginalColorTexPos,
-                    2, GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-            }
-        }
-
-        return m_texShaderProgramEGLImageExternalWithOriginalColor;
-    }
-
     GLuint texShaderProgram()
     {
         if (!m_texShaderProgram) {
@@ -884,18 +776,7 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
-#if defined(PORT_PIXEL_ORDER_BGRA)
-                "  gl_FragColor.r = texData[2];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[0];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#else
-                "  gl_FragColor.r = texData[0];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[2];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#endif
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
 
             m_texFragmentShader =
@@ -948,78 +829,6 @@ public:
             }
         }
         return m_texShaderProgram;
-    }
-
-    GLuint texShaderProgramWithOriginalColor()
-    {
-        if (!m_texShaderProgramWithOriginalColor) {
-            GLchar texFragmentSource[] =
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform sampler2D uTexture;\n"
-                "varying vec2 vTexPos;\n"
-                "uniform float uAlpha;\n"
-                "void main(void)\n"
-                "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
-                "}";
-
-            m_texFragmentShaderWithOriginalColor =
-                loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
-            checkError();
-
-            m_texShaderProgramWithOriginalColor = glCreateProgram();
-            checkError();
-
-            glAttachShader(m_texShaderProgramWithOriginalColor,
-                           texVertexShader());
-            checkError();
-            glAttachShader(m_texShaderProgramWithOriginalColor,
-                           m_texFragmentShaderWithOriginalColor);
-            checkError();
-
-            glLinkProgram(m_texShaderProgramWithOriginalColor);
-            checkError();
-
-            m_lastProgram = m_texShaderProgramWithOriginalColor;
-            glUseProgram(m_texShaderProgramWithOriginalColor);
-            checkError();
-
-            m_texShaderProgramWithOriginalColorPosition = glGetAttribLocation(
-                m_texShaderProgramWithOriginalColor, "aPosition");
-            m_texShaderProgramWithOriginalColorTexPos = glGetAttribLocation(
-                m_texShaderProgramWithOriginalColor, "aTexPos");
-            m_texShaderProgramWithOriginalColorTexture = glGetUniformLocation(
-                m_texShaderProgramWithOriginalColor, "uTexture");
-            m_texShaderProgramWithOriginalColorAlpha = glGetUniformLocation(
-                m_texShaderProgramWithOriginalColor, "uAlpha");
-
-            glUniform1i(m_texShaderProgramWithOriginalColorTexture, 0);
-            glEnableVertexAttribArray(
-                m_texShaderProgramWithOriginalColorPosition);
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-            glEnableVertexAttribArray(
-                m_texShaderProgramWithOriginalColorTexPos);
-            glVertexAttribPointer(m_texShaderProgramWithOriginalColorTexPos, 2,
-                                  GL_FLOAT, false, 0, 0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            glUniform1f(m_texShaderProgramWithOriginalColorAlpha, 1);
-
-        } else {
-            if (m_lastProgram != m_texShaderProgramWithOriginalColor) {
-                m_lastProgram = m_texShaderProgramWithOriginalColor;
-                glUseProgram(m_texShaderProgramWithOriginalColor);
-
-                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texShaderProgramWithOriginalColorTexPos,
-                                      2, GL_FLOAT, false, 0, 0);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-            }
-        }
-        return m_texShaderProgramWithOriginalColor;
     }
 
 // I take blur shader source from WebKit
@@ -1101,18 +910,7 @@ public:
         }
 
         if (addColorAlign) {
-            ss << "  total = total * uAlpha;\n";
-#if defined(PORT_PIXEL_ORDER_BGRA)
-            ss << "  gl_FragColor.r = total[2];\n";
-            ss << "  gl_FragColor.g = total[1];\n";
-            ss << "  gl_FragColor.b = total[0];\n";
-            ss << "  gl_FragColor.a = total[3];\n";
-#else
-            ss << "  gl_FragColor.r = total[0];\n";
-            ss << "  gl_FragColor.g = total[1];\n";
-            ss << "  gl_FragColor.b = total[2];\n";
-            ss << "  gl_FragColor.a = total[3];\n";
-#endif
+            ss << "  gl_FragColor = total * uAlpha;\n";
         } else {
             ss << "  gl_FragColor = total;\n";
         }
@@ -1374,14 +1172,6 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
             glDeleteShader(ctx->m_texFragmentShaderEGLImageExternal);
         }
 
-        if (ctx->m_texShaderProgramWithOriginalColor) {
-            glDetachShader(ctx->m_texShaderProgramWithOriginalColor,
-                           ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texShaderProgramWithOriginalColor,
-                           ctx->m_texFragmentShaderWithOriginalColor);
-            glDeleteProgram(ctx->m_texShaderProgramWithOriginalColor);
-        }
-
         if (ctx->m_texShaderProgram) {
             glDetachShader(ctx->m_texShaderProgram, ctx->m_texVertexShader);
             glDetachShader(ctx->m_texShaderProgram, ctx->m_texFragmentShader);
@@ -1400,6 +1190,17 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
 
         delete ctx;
     }
+}
+
+inline static GLenum textureFormat()
+{
+    GLenum kind = GL_RGBA;
+#if defined(PORT_PIXEL_ORDER_BGRA)
+    if (g_isSupportBGRATexture) {
+        kind = GL_BGRA_EXT;
+    }
+#endif
+    return kind;
 }
 
 CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
@@ -1442,6 +1243,10 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             STARFISH_LOG_INFO("GL_EXTENSIONS -> %s\n", ex);
             g_isSupportExtensionEGLImageExternal =
                 strstr(ex, "GL_OES_EGL_image_external") != nullptr;
+            g_isSupportBGRATexture =
+                strstr(ex, "GL_EXT_texture_format_BGRA8888") != nullptr;
+            g_isSupportTextureSwizzle =
+                strstr(ex, "GL_ARB_texture_swizzle") != nullptr;
         } else {
             STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...\n");
         }
@@ -1457,8 +1262,26 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         }
 #endif
         if (g_isSupportExtensionEGLImageExternal) {
-            STARFISH_LOG_INFO("use EGLImageExternal!\n");
+            STARFISH_LOG_INFO("support EGLImageExternal!\n");
         }
+
+        if (g_isSupportBGRATexture) {
+            STARFISH_LOG_INFO("support BGRA texture!\n");
+        }
+
+        if (g_isSupportTextureSwizzle) {
+            STARFISH_LOG_INFO("support Texture Swizzle!\n");
+            g_isSupportBGRATexture = false;
+        }
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        if (!g_isSupportTextureSwizzle && !g_isSupportBGRATexture) {
+            STARFISH_LOG_ERROR(
+                "at least one of extension required {GL_ARB_texture_swizzle, "
+                "GL_ARB_texture_swizzle} in BGRA port!\n");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+#endif
 
 #if defined(STARFISH_TIZEN) && \
     !defined(PORT_WEBVIEW_BRIDGE_EFL) // STARFISH_TIZEN without
@@ -1507,7 +1330,6 @@ public:
         m_buffer = nullptr;
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
-        m_isEGLImageNeedsFlipRGB = false;
         m_flag = flag;
         m_wTextureCount = 0;
         m_hTextureCount = 0;
@@ -1603,8 +1425,7 @@ public:
             m_bufferStride = m_bufferWidth = m_width = 0;
             m_bufferHeight = m_height = 0;
 
-            m_isEGLImageNeedsFlipRGB = m_isEGLBufferOwner =
-                m_isEGLImageExternal = false;
+            m_isEGLBufferOwner = m_isEGLImageExternal = false;
         }
     }
 
@@ -1634,13 +1455,17 @@ public:
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
-                m_isEGLImageNeedsFlipRGB = false;
 #if defined(STARFISH_TIZEN)
                 tbm_surface_info_s surfaceInfo;
                 {
                     LongTaskFinder t("tbm_surface_create", 1);
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                    m_tbmSurface = tbm_surface_create(
+                        m_bufferWidth, m_bufferHeight, TBM_FORMAT_ARGB8888);
+#else
                     m_tbmSurface = tbm_surface_create(
                         m_bufferWidth, m_bufferHeight, TBM_FORMAT_ABGR8888);
+#endif
                     {
                         LongTaskFinder t("tbm_surface_create_clear", 1);
                         tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
@@ -1826,9 +1651,9 @@ public:
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 checkError();
 
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texureDataWidth,
-                             texureDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                             nullptr);
+                glTexImage2D(GL_TEXTURE_2D, 0, textureFormat(), texureDataWidth,
+                             texureDataHeight, 0, textureFormat(),
+                             GL_UNSIGNED_BYTE, nullptr);
                 checkError();
 
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -1840,6 +1665,15 @@ public:
                                 GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
                                 GL_CLAMP_TO_EDGE);
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                if (g_isSupportTextureSwizzle) {
+                    GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED,
+                                            GL_ALPHA };
+                    glTexParameteriv(GL_TEXTURE_2D, TEXTURE_SWIZZLE_RGBA,
+                                     swizzleMask);
+                }
+#endif
                 checkError();
 
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -2029,6 +1863,7 @@ public:
                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                             checkError();
 
+                            auto kind = textureFormat();
                             if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
                                 glPixelStorei(GL_UNPACK_ROW_LENGTH,
                                               bufferWidth());
@@ -2039,7 +1874,7 @@ public:
                                 data += textureDataY * bStride;
                                 data += textureDataX * 4;
                                 glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                xxEnd - xx, yyEnd - yy, GL_RGBA,
+                                                xxEnd - xx, yyEnd - yy, kind,
                                                 GL_UNSIGNED_BYTE, data);
 
                                 glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -2051,7 +1886,7 @@ public:
                                     data += ((yy + textureDataY) * bStride);
                                     data += ((textureDataX + xx) * 4);
                                     glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                    xxEnd - xx, 1, GL_RGBA,
+                                                    xxEnd - xx, 1, kind,
                                                     GL_UNSIGNED_BYTE, data);
                                     checkError();
                                 }
@@ -2092,7 +1927,6 @@ public:
 
         m_isEGLBufferOwner = false;
         m_isEGLImageExternal = true;
-        m_isEGLImageNeedsFlipRGB = false;
 
         size_t w = 0, h = 0;
 #if defined(STARFISH_TIZEN)
@@ -2103,16 +1937,6 @@ public:
         w = surfaceInfo.width;
         h = surfaceInfo.height;
         m_bufferStride = surfaceInfo.planes[0].stride;
-        switch (surfaceInfo.format) {
-        case TBM_FORMAT_ABGR8888:
-        case TBM_FORMAT_BGR565:
-        case TBM_FORMAT_BGR888:
-            m_isEGLImageNeedsFlipRGB = false;
-            break;
-        default:
-            m_isEGLImageNeedsFlipRGB = true;
-            break;
-        }
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
         m_aHardwareBuffer = (AHardwareBuffer*)buffer;
         AHardwareBuffer_Desc outDesc;
@@ -2154,7 +1978,6 @@ protected:
 
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
-    bool m_isEGLImageNeedsFlipRGB;
     CanvasSurfaceFlag m_flag;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
@@ -2797,12 +2620,7 @@ public:
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
         if (isEGLImage) {
-            if (cs->m_isEGLImageNeedsFlipRGB) {
-                m_compositorContext
-                    ->texShaderProgramEGLImageExternalWithOriginalColor();
-            } else {
-                m_compositorContext->texShaderProgramEGLImageExternal();
-            }
+            m_compositorContext->texShaderProgramEGLImageExternal();
         } else {
             m_compositorContext->texShaderProgram();
         }
@@ -2814,19 +2632,10 @@ public:
 
         float a = lastState.opacity;
         if (isEGLImage) {
-            if (cs->m_isEGLImageNeedsFlipRGB) {
-                positionPos =
-                    &m_compositorContext
-                         ->m_texShaderProgramEGLImageExternalWithOriginalColorPosition;
-                alphaPos =
-                    &m_compositorContext
-                         ->m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
-            } else {
-                positionPos = &m_compositorContext
-                                   ->m_texShaderProgramEGLImageExternalPosition;
-                alphaPos = &m_compositorContext
-                                ->m_texShaderProgramEGLImageExternalAlpha;
-            }
+            positionPos = &m_compositorContext
+                               ->m_texShaderProgramEGLImageExternalPosition;
+            alphaPos =
+                &m_compositorContext->m_texShaderProgramEGLImageExternalAlpha;
         } else {
             positionPos = &m_compositorContext->m_texShaderProgramPosition;
             alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
@@ -3246,7 +3055,7 @@ public:
                 GLuint fboTex = popFBOContext();
                 checkError();
 
-                m_compositorContext->texShaderProgramWithOriginalColor();
+                m_compositorContext->texShaderProgram();
 
                 float dest[4][2]; // order is LB, LT, RB, RT
                 dest[0][0] = visibleArea.x();
@@ -3291,9 +3100,8 @@ public:
                 checkError();
 
                 glVertexAttribPointer(
-                    m_compositorContext
-                        ->m_texShaderProgramWithOriginalColorPosition,
-                    2, GL_FLOAT, false, 2 * 4, position);
+                    m_compositorContext->m_texShaderProgramPosition, 2,
+                    GL_FLOAT, false, 2 * 4, position);
                 checkError();
 
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
