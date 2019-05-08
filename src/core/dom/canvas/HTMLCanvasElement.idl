@@ -1,5 +1,6 @@
 // https://html.spec.whatwg.org/#the-canvas-element
 
+[STARFISH_ENABLE_CANVAS]
 typedef (CanvasRenderingContext2D or
          WebGLRenderingContext or
          ImageBitmapRenderingContext) RenderingContext;

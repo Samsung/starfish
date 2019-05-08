@@ -1,7 +1,12 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#path2d
 
+// Declare a typedef to apply the flag
+[STARFISH_ENABLE_CANVAS]
+typedef (Path2D or DOMString) Path2DConstructorType;
+
+// (Path2D or DOMString) -> Path2DConstructorType
 [STARFISH_ENABLE_CANVAS,
- Constructor(optional (Path2D or DOMString) path),
+ Constructor(optional Path2DConstructorType path),
  ConstructorCallWith=ExecutionContext,
  Exposed=(Window,Worker)]
 interface Path2D {

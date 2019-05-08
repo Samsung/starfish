@@ -11,7 +11,7 @@ dictionary ScrollToOptions : ScrollOptions {
     unrestricted double top;
 };
 
-[PrimaryGlobal, LegacyUnenumerableNamedProperties, CustomDescriptor]
+[PrimaryGlobal, LegacyUnenumerableNamedProperties, CustomDescriptor, Exposed=Window]
 interface Window : EventTarget {
   // the current browsing context
   // NOTE WindowProxy -> Window

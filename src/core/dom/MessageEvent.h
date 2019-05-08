@@ -21,8 +21,11 @@
 #define __StarfishMessageEvent__
 
 #include "Event.h"
+#include "binding/WindowOrServiceWorkerUnion.h"
 
 namespace Starfish {
+
+typedef WindowOrServiceWorker MessageEventSource;
 
 class MessagePort;
 
@@ -79,12 +82,12 @@ public:
         m_lastEventId = lastEventId;
     }
 
-    Window* source() const
+    Nullable<MessageEventSource> source() const
     {
         return m_source;
     }
 
-    void setSource(Window* source)
+    void setSource(Nullable<MessageEventSource> source)
     {
         m_source = source;
     }
@@ -94,8 +97,7 @@ private:
     GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
-    // FIXME: Should change this type to MessageEventSource*
-    Window* m_source;
+    Nullable<MessageEventSource> m_source;
 };
 
 class MessageEvent : public Event {
@@ -173,19 +175,19 @@ public:
         m_lastEventId = lastEventId;
     }
 
-    Window* source() const
+    Nullable<MessageEventSource> source() const
     {
         return m_source;
     }
 
-    void setSource(Window* source)
+    void setSource(Nullable<MessageEventSource> source)
     {
         m_source = source;
     }
 
     void initMessageEvent(String* type, bool bubbles, bool cancelable,
                           ScriptValue data, String* origin, String* lastEventId,
-                          Window* source)
+                          Nullable<MessageEventSource> source)
     {
         initEvent(type, bubbles, cancelable);
         m_data = data;
@@ -199,8 +201,7 @@ private:
     GCVector<MessagePort*> m_ports;
     String* m_origin;
     String* m_lastEventId;
-    // FIXME: Should change this type to MessageEventSource*
-    Window* m_source;
+    Nullable<MessageEventSource> m_source;
 };
 }
 
