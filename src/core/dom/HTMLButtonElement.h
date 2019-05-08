@@ -50,6 +50,11 @@ public:
     {
         return false;
     }
+
+    bool supportsFocus()
+    {
+        return true;
+    }
 };
 }
 
