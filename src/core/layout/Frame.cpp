@@ -925,22 +925,36 @@ void LayoutContext::
     STARFISH_ASSERT(box->style()->position() ==
                     PositionValue::RelativePositionValue);
 
-    LayoutUnit orgX = box->x();
-    LayoutUnit orgY = box->y();
+    FrameBlockBox* cb = containingFrameBlockBox(box);
+    m_relativePositionedBoxes.emplace(
+        cb, std::vector<std::pair<FrameBox*, bool>>());
+    auto& vec = m_relativePositionedBoxes[cb];
 
-    bool dueToSelf = true;
-    if (box->node() && box->node()->parentElement()) {
-        Node* nd = box->node()->parentElement();
-        if (nd->frame()->isFrameInline() &&
-            nd->style()->position() == RelativePositionValue) {
-            dueToSelf = false;
+    bool has = false;
+    for (size_t i = 0; i < vec.size(); i++) {
+        if (vec[i].first == box) {
+            has = true;
+            break;
         }
     }
+    if (!has) {
+        LayoutUnit orgX = box->x();
+        LayoutUnit orgY = box->y();
 
-    layoutRelativePositionedBox(box, dueToSelf);
+        bool dueToSelf = true;
+        if (box->node() && box->node()->parentElement()) {
+            Node* nd = box->node()->parentElement();
+            if (nd->frame()->isFrameInline() &&
+                nd->style()->position() == RelativePositionValue) {
+                dueToSelf = false;
+            }
+        }
 
-    box->setX(orgX - (box->x() - orgX));
-    box->setY(orgY - (box->y() - orgY));
+        layoutRelativePositionedBox(box, dueToSelf);
+
+        box->setX(orgX - (box->x() - orgX));
+        box->setY(orgY - (box->y() - orgY));
+    }
 }
 
 PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
