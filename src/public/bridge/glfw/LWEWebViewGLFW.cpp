@@ -106,6 +106,8 @@ public:
 
         m_isMouseLbuttonDown = false;
 
+        glfwMakeContextCurrent(nullptr);
+
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) { glfwMakeContextCurrent(m_glWindow); },
