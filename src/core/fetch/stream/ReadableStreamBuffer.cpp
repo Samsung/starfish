@@ -58,12 +58,12 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
             textConverter.convert(m_buffer.data(), size, true);
         promise->fulfill(createScriptValue(responseText));
     } else if (type == BodyType::Blob) {
-        void* buffer = calloc(1, size);
+        void* buffer = malloc(size);
+        STARFISH_RELEASE_ASSERT(buffer);
         memcpy(buffer, m_buffer.data(), size);
         auto blob =
             new Blob(executionContext, size, m_mimeType, buffer, false, false);
         promise->fulfill(blob->scriptValue());
-        free(buffer);
     } else if (type == BodyType::Json) {
         TextConverter textConverter(m_mimeType, String::fromUTF8("UTF-8"),
                                     m_buffer.data(), size);
@@ -73,12 +73,12 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
             parseJSON(executionContext->scriptBindingInstance(), responseText);
         promise->fulfill(json);
     } else if (type == BodyType::ArrayBuffer) {
-        void* buffer = calloc(1, size);
+        void* buffer = malloc(size);
+        STARFISH_RELEASE_ASSERT(buffer);
         memcpy(buffer, m_buffer.data(), size);
         auto arrayBuffer = createArrayBuffer(
             executionContext->scriptBindingInstance(), buffer, size);
         promise->fulfill(arrayBuffer);
-        free(buffer);
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }

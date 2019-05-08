@@ -118,12 +118,12 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    if (m_messageLoop) {
-        m_messageLoop->destroy();
-    }
-
     if (m_threadPool) {
         m_threadPool->destroy();
+    }
+
+    if (m_messageLoop) {
+        m_messageLoop->destroy();
     }
 }
 

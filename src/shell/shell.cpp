@@ -538,14 +538,6 @@ int main(int argc, char* argv[])
     };
     evas_object_event_callback_add(wndObj, EVAS_CALLBACK_FOCUS_IN,
                                    focusInHandler, webView);
-
-    auto destroyHandler = [](void* data, Evas* e, Evas_Object* obj,
-                             void* event_info) {
-        LWE::WebView* wv = (LWE::WebView*)data;
-        wv->Destroy();
-    };
-    evas_object_event_callback_add(wndObj, EVAS_CALLBACK_DEL, destroyHandler,
-                                   webView);
 #endif
 
 #if defined(PORT_EVENTLOOP_BACKEND_EFL) && \
@@ -625,10 +617,9 @@ int main(int argc, char* argv[])
     }
 #endif
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL) // evas object delete callback will call
-                                      // destroy function
     webView->Destroy();
-#endif
+    webView = nullptr;
+    LWE::LWE::Finalize();
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_shutdown();
@@ -636,9 +627,6 @@ int main(int argc, char* argv[])
     defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
     ecore_shutdown();
 #endif
-
-    webView = nullptr;
-    LWE::LWE::Finalize();
 
 #if defined(STARFISH_ENABLE_TEST)
     return g_exitCode;

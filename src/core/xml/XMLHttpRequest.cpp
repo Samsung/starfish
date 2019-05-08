@@ -199,6 +199,7 @@ public:
                                XMLHttpRequestResponseType::Blob) {
                         void* buffer = calloc(
                             1, m_xhr->m_resourceRequest->response().size());
+                        STARFISH_RELEASE_ASSERT(buffer);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
@@ -213,6 +214,7 @@ public:
                                XMLHttpRequestResponseType::ArrayBuffer) {
                         void* buffer = calloc(
                             1, m_xhr->m_resourceRequest->response().size());
+                        STARFISH_RELEASE_ASSERT(buffer);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());

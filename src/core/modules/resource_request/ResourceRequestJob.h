@@ -24,8 +24,6 @@ namespace Starfish {
 
 class ResourceRequest;
 
-String* decodeURL(String* src, size_t startIndex = 0);
-
 class ResourceRequestJobInterface {
 public:
     virtual ~ResourceRequestJobInterface()
