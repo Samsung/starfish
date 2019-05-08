@@ -100,9 +100,6 @@ void ScriptBindingWorkerInstance::dispatchErrorEventToGlobalScope(
     F(DOMStringList) \
     F(EventSource) \
     F(FormData) \
-    F(MessageEvent) \
-    F(MessagePort)  \
-    F(MessageChannel) \
     F(Option) \
     F(Image)
 

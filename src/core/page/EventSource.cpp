@@ -326,7 +326,7 @@ void EventSource::onMessageEvent(String* eventType, String* data,
     e->setCancelable(false);
     e->setComposed(false);
     e->setLastEventId(lastEventId);
-    e->setSource(document()->window());
+    e->setSource(MessageEventSource::createWindow(document()->window()));
     e->setData(createScriptValue(createScriptString(data)));
     dispatchEventByUA(this, e);
 }

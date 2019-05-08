@@ -300,7 +300,7 @@ void Window::postMessage(Window* source, ScriptValue message,
                 }
                 Window* source = (Window*)data2;
 
-                e->setSource(source);
+                e->setSource(MessageEventSource::createWindow(source));
                 e->setOrigin(source->location()->origin());
                 window->dispatchEventByUA(e);
             },

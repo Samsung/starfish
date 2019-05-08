@@ -40,8 +40,7 @@ FILE (GLOB_RECURSE STARFISH_IDL ${STARFISH_ROOT}/src/*.idl)
 SET (STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC)
 # TODO: include this interface or completely exclude in Worker.
 SET (EXCLUDE_INTERFACE_NAME 
-    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS"
-    "MessageEvent" "MessagePort" "MessageChannel")
+    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS")
 FOREACH (IDL_FILE ${STARFISH_IDL})
     FILE (READ ${IDL_FILE} IDL_STRING)
     STRING (REGEX MATCH "[[].*Exposed=(Worker|.*,Worker)" MATCHED_IDL_FILE ${IDL_STRING})
@@ -84,6 +83,7 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/extra/MimeType.cpp
     ${STARFISH_ROOT}/src/core/page/WebBase.cpp
     ${STARFISH_ROOT}/src/core/page/NavigatorMixin.cpp
+    ${STARFISH_ROOT}/src/core/page/Serializer.cpp
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp
     ${STARFISH_ROOT}/src/core/modules/networking/*.cpp 
@@ -116,6 +116,8 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/RequestOrUSVStringBinding.cpp
     ${STARFISH_ROOT}/src/binding/RegistrationOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WindowOrServiceWorkerBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST
@@ -157,7 +159,7 @@ ADD_EXECUTABLE (starfish.webworker
 
 # Create JavaScript binding source for worker
 ADD_CUSTOM_TARGET (CREATE_JSBINDINGSOURCE
-    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding --exposed worker
+    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding --exposed Worker
 )
 ADD_DEPENDENCIES (${STARFISH_WEBWORKER_OBJECT_LIBRARY} ${STARFISH_WEBWORKER_DEPENDENCIES} CREATE_JSBINDINGSOURCE)
 
