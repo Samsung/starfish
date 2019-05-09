@@ -578,6 +578,51 @@ static bool isNumber(const TextRun& run)
     return isNumber(sv.originalString(), sv.start(), sv.end());
 }
 
+// https://www.w3.org/TR/css-text-3/#line-breaking
+static bool isSoftWrapOpportunity(char32_t d)
+{
+    if (d < 127) {
+        return false;
+    }
+
+    auto blockNumber = ublock_getCode(d);
+
+    switch(blockNumber) {
+    // korean
+    case UBLOCK_HANGUL_JAMO:
+    case UBLOCK_HANGUL_COMPATIBILITY_JAMO:
+    case UBLOCK_HANGUL_SYLLABLES:
+    case UBLOCK_HANGUL_JAMO_EXTENDED_A:
+    case UBLOCK_HANGUL_JAMO_EXTENDED_B:
+    // japanese
+    case UBLOCK_KATAKANA:
+    case UBLOCK_HIRAGANA:
+    // left cjk
+    case UBLOCK_CJK_RADICALS_SUPPLEMENT:
+    case UBLOCK_CJK_SYMBOLS_AND_PUNCTUATION:
+    case UBLOCK_CJK_COMPATIBILITY:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS:
+    case UBLOCK_YI_SYLLABLES:
+    case UBLOCK_YI_RADICALS:
+    case UBLOCK_CJK_COMPATIBILITY_IDEOGRAPHS:
+    case UBLOCK_CJK_COMPATIBILITY_FORMS:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B:
+    case UBLOCK_CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT:
+    case UBLOCK_KATAKANA_PHONETIC_EXTENSIONS:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D:
+    // others
+    case UBLOCK_THAI:
+    case UBLOCK_LAO:
+    case UBLOCK_KHMER:
+    case UBLOCK_KHMER_SYMBOLS:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static bool isWhiteSpace(const TextRun& run)
 {
     const StringView& sv = run.m_stringView;
@@ -2970,8 +3015,10 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         char32_t c = t.m_frameText->text()->charAt(t.m_end - 1);
         bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
 
-        if (isHyphenAtLast) {
+        if (isSoftWrapOpportunity(c) || isHyphenAtLast) {
             insertWord(t.m_frameText);
+        }
+        if (isHyphenAtLast) {
             m_isSoftHyphenAtLast = isSoftHyphen(c);
         }
 
