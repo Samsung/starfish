@@ -1636,6 +1636,12 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
         for (size_t i = 0; i < familyNameArraySize; i++) {
             familyNameArray[i] = list->at(i).keywordValue();
         }
+    } else {
+        String* str = m_ownerHTMLCanvasElement->webView()
+                          ->initialFontFamilyDatas()[1]
+                          .m_familyName.string();
+        familyNameArray = &str;
+        familyNameArraySize = 1;
     }
 
     Font* new_font = fs->loadFont(familyNameArray, familyNameArraySize,
