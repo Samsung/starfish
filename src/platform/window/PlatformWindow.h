@@ -160,6 +160,10 @@ public:
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
+    virtual void checkGLCompatibility()
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
 
     void registerRenderingPrepareCallback(
         const std::function<RenderInfo(void)>& cb)
