@@ -56,10 +56,9 @@ public:
         if (!glfwInit())
             exit(-1);
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
 #if defined(STARFISH_ENABLE_TEST)
         {
             const char* path = getenv("SCREEN_SHOT");
@@ -69,19 +68,17 @@ public:
             }
         }
 #endif
-
         m_glWindow = glfwCreateWindow(width, height, "Starfish", NULL, NULL);
-
         if (m_glWindow == nullptr) {
             STARFISH_LOG_ERROR(
-                "failed to create OpenGL ES 3.0 context. try OpenGL 3.0 "
+                "failed to create OpenGL 3.0  context. try OpenGL ES 3.0 "
                 "instead\n");
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
             m_glWindow =
                 glfwCreateWindow(width, height, "Starfish", NULL, NULL);
             if (m_glWindow == nullptr) {
                 STARFISH_LOG_ERROR(
-                    "failed to create OpenGL 3.0 context. please check your "
+                    "failed to create OpenGL ES 3.0 context. please check your "
                     "environment...\n");
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
