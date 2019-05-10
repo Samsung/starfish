@@ -30,6 +30,22 @@
 
 namespace Starfish {
 
+void HTMLCanvasElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_width == name || ss->m_height == name) {
+        if (m_canvasRenderingContext) {
+            m_canvasRenderingContext->onResize();
+        }
+        setNeedsLayout();
+    }
+}
+
 uint32_t HTMLCanvasElement::width()
 {
     Nullable<String*> width =
@@ -45,10 +61,6 @@ void HTMLCanvasElement::setWidth(uint32_t value)
     if (value >= 0) {
         setAttribute(starfish()->staticStrings()->m_width,
                      String::fromInt(value));
-        if (m_canvasRenderingContext) {
-            m_canvasRenderingContext->onResize();
-        }
-        setNeedsLayout();
     }
 }
 
@@ -67,10 +79,6 @@ void HTMLCanvasElement::setHeight(uint32_t value)
     if (value >= 0) {
         setAttribute(starfish()->staticStrings()->m_height,
                      String::fromInt(value));
-        if (m_canvasRenderingContext) {
-            m_canvasRenderingContext->onResize();
-        }
-        setNeedsLayout();
     }
 }
 
