@@ -1691,6 +1691,10 @@ public:
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType, bool isInsertedByUser = false);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
+    ParseResult parseStyleDeclarations(CSSStyleDeclaration* declarations,
+                                       bool& valid, bool& invalidDeclaration,
+                                       bool hasSelector, bool validSelector,
+                                       bool isQueryingSelector);
     ParseResult parseStyleRule(RefPtr<CSSToken> aToken,
                                GCVector<StyleRuleBase*>& rules,
                                AllowedRulesType allowedRules,
@@ -1704,9 +1708,14 @@ public:
     StyleRuleSupports* parseSupportsRule();
     StyleRuleCounterStyle* parseCounterStyleRule();
     StyleRuleNamespace* parseNamespaceRule();
+    ParseResult parseKeyframeStyleRule(RefPtr<CSSToken>& token,
+                                       GCVector<StyleRuleBase*>& rootRule,
+                                       AllowedRulesType allowedRules);
     StyleRuleKeyframes* parseKeyframesRule();
     Nullable<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
+    bool parseKeyframeKeyList(RefPtr<CSSToken>& token,
+                              GCVector<double>& keyList);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
     bool parseSupportsCondition(); // for supports rule

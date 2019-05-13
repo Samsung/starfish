@@ -37,6 +37,7 @@ class StyleRuleFontFace;
 class StyleRuleSupports;
 class StyleRuleCounterStyle;
 class StyleRuleNamespace;
+class StyleRuleKeyframe;
 class StyleRuleKeyframes;
 
 class StyleRuleBase : public gc {
@@ -137,6 +138,7 @@ public:
     inline StyleRuleSupports* asStyleRuleSupports();
     inline StyleRuleCounterStyle* asStyleRuleCounterStyle();
     inline StyleRuleNamespace* asStyleRuleNamespace();
+    inline StyleRuleKeyframe* asStyleRuleKeyframe();
     inline StyleRuleKeyframes* asStyleRuleKeyframes();
 
     CSSRule* createCSSOMWrapper(CSSStyleSheet* parent_sheet = 0) const;
@@ -397,10 +399,28 @@ private:
     String* m_prefix;
 };
 
+class StyleRuleKeyframe : public StyleRuleBase {
+public:
+    StyleRuleKeyframe(GCVector<double>& keyList, CSSStyleDeclaration* decl);
+
+    String* keyText();
+    bool setKeyText(Document* doc, String* text);
+    String* cssText();
+
+    CSSStyleDeclaration* styleDeclaration()
+    {
+        return m_styleDeclaration;
+    }
+
+private:
+    GCVector<double> m_keyList;
+    CSSStyleDeclaration* m_styleDeclaration;
+};
+
 class StyleRuleKeyframes : public StyleRuleBase {
 public:
     // TODO: Consider <keyframe-block-list>
-    StyleRuleKeyframes(String* name);
+    StyleRuleKeyframes(String* name, GCVector<StyleRuleBase*>& keyframes);
 
     String* name() const
     {
@@ -412,8 +432,25 @@ public:
         m_name = name;
     }
 
+    const GCVector<StyleRuleBase*>& keyframes() const
+    {
+        return m_keyframes;
+    }
+
+    void styleChanged()
+    {
+        m_version++;
+    }
+
+    unsigned int version() const
+    {
+        return m_version;
+    }
+
 private:
     String* m_name;
+    GCVector<StyleRuleBase*> m_keyframes;
+    unsigned int m_version;
 };
 
 inline StyleRule* StyleRuleBase::asStyleRule()
@@ -456,6 +493,12 @@ inline StyleRuleNamespace* StyleRuleBase::asStyleRuleNamespace()
 {
     STARFISH_ASSERT(isNamespaceRule());
     return (StyleRuleNamespace*)this;
+}
+
+inline StyleRuleKeyframe* StyleRuleBase::asStyleRuleKeyframe()
+{
+    STARFISH_ASSERT(isKeyframeRule());
+    return (StyleRuleKeyframe*)this;
 }
 
 inline StyleRuleKeyframes* StyleRuleBase::asStyleRuleKeyframes()

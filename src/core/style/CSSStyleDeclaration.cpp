@@ -3471,22 +3471,29 @@ StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
 
 CSSStyleSheet* StyleRuleCSSStyleDeclaration::parentStyleSheet() const
 {
-    STARFISH_ASSERT(m_parentRule);
+    STARFISH_ASSERT(m_parentRule != nullptr);
     return m_parentRule->parentStyleSheet();
 }
 
 ScriptBindingInstance* StyleRuleCSSStyleDeclaration::scriptBindingInstance()
 {
-    STARFISH_ASSERT(m_parentRule);
+    STARFISH_ASSERT(m_parentRule != nullptr);
     STARFISH_ASSERT(m_parentRule->parentStyleSheet());
     return m_parentRule->parentStyleSheet()->scriptBindingInstance();
 }
 
 void StyleRuleCSSStyleDeclaration::setCssText(String* text)
 {
-    STARFISH_ASSERT(m_parentRule);
-    CSSStyleDeclaration* decl =
-        ((CSSStyleRule*)m_parentRule)->styleRule()->styleDeclaration();
+    STARFISH_ASSERT(text != nullptr);
+    STARFISH_ASSERT(m_parentRule != nullptr);
+
+    CSSStyleDeclaration* decl;
+    if (m_parentRule->type() == CSSRule::Type::KEYFRAME_RULE) {
+        decl =
+            ((CSSKeyframeRule*)m_parentRule)->styleRule()->styleDeclaration();
+    } else {
+        decl = ((CSSStyleRule*)m_parentRule)->styleRule()->styleDeclaration();
+    }
     decl->clear();
 
     CSSParser parser(scriptBindingInstance()->ownerDocument());

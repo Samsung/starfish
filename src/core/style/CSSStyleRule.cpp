@@ -481,11 +481,64 @@ String* CSSNamespaceRule::prefix() const
     return m_namespaceRule->prefix();
 }
 
+CSSKeyframeRule::CSSKeyframeRule(StyleRuleKeyframe* keyframeRule,
+                                 NULLABLE CSSStyleSheet* parent)
+    : CSSRule(parent)
+    , m_keyframe(keyframeRule)
+    , m_propertiesWrapper(nullptr)
+{
+    STARFISH_ASSERT(keyframeRule != nullptr);
+}
+
+String* CSSKeyframeRule::cssText()
+{
+    return m_keyframe->cssText();
+}
+
+String* CSSKeyframeRule::keyText() const
+{
+    return m_keyframe->keyText();
+}
+
+void CSSKeyframeRule::setKeyText(String* text)
+{
+    STARFISH_ASSERT(text != nullptr);
+    bool ret =
+        m_keyframe->setKeyText(scriptBindingInstance()->ownerDocument(), text);
+    if (!ret) {
+        StringBuilder msg;
+        msg.appendString(
+            "Failed to set the 'keyText' property on 'CSSKeyframeRule': The "
+            "key '");
+        msg.appendString(text);
+        msg.appendString("' is invalid and cannot be parsed");
+        auto s = msg.finalize()->toUTF8NonGCString();
+        throw new DOMException(
+            scriptBindingInstance()->ownerDocument()->executionContext(),
+            DOMException::INDEX_SIZE_ERR, s.data());
+    }
+
+    (static_cast<CSSKeyframesRule*>(parentRule()))->styleChanged();
+}
+
+CSSStyleDeclaration* CSSKeyframeRule::style()
+{
+    if (!m_propertiesWrapper) {
+        m_propertiesWrapper = new StyleRuleCSSStyleDeclaration(
+            m_keyframe->styleDeclaration(), this->asCSSKeyframeRule());
+    }
+
+    return m_propertiesWrapper;
+}
+
 CSSKeyframesRule::CSSKeyframesRule(StyleRuleKeyframes* keyframesRule,
-                                   CSSStyleSheet* parent)
+                                   NULLABLE CSSStyleSheet* parent)
     : CSSRule(parent)
     , m_keyframesRule(keyframesRule)
+    , m_ruleListWrapper(nullptr)
 {
+    STARFISH_ASSERT(keyframesRule != nullptr);
+    m_childRuleWrappers.resize(m_keyframesRule->keyframes().size());
 }
 
 String* CSSKeyframesRule::cssText()
@@ -493,10 +546,60 @@ String* CSSKeyframesRule::cssText()
     // TODO: Consider <keyframes-name> and <keyframe-block-list>
     StringBuilder result;
     result.appendString("@keyframes ");
+    result.appendString(name());
+    result.appendString(" { \n");
+
+    size_t size = m_keyframesRule->keyframes().size();
+    for (size_t i = 0; i < size; ++i) {
+        result.appendString("  ");
+        result.appendString(
+            (static_cast<StyleRuleKeyframe*>(m_keyframesRule->keyframes()[i]))
+                ->cssText());
+        result.appendChar('\n');
+    }
+
+    result.appendString("}");
     return result.finalize();
 }
 
-String* CSSKeyframesRule::name()
+CSSRuleList* CSSKeyframesRule::cssRules()
+{
+    if (!m_ruleListWrapper) {
+        m_ruleListWrapper = new LiveCSSRuleList<CSSKeyframesRule>(
+            const_cast<CSSKeyframesRule*>(this));
+    }
+    return m_ruleListWrapper;
+}
+
+unsigned CSSKeyframesRule::length() const
+{
+    return m_keyframesRule->keyframes().size();
+}
+
+CSSRule* CSSKeyframesRule::item(unsigned index)
+{
+    if (index >= length()) {
+        return nullptr;
+    }
+
+    STARFISH_ASSERT(m_childRuleWrappers.size() ==
+                    m_keyframesRule->keyframes().size());
+
+    if (!m_childRuleWrappers[index]) {
+        m_childRuleWrappers[index] =
+            m_keyframesRule->keyframes()[index]->createCSSOMWrapper(
+                const_cast<CSSKeyframesRule*>(this));
+    }
+
+    return m_childRuleWrappers[index];
+}
+
+void CSSKeyframesRule::styleChanged()
+{
+    m_keyframesRule->styleChanged();
+}
+
+String* CSSKeyframesRule::name() const
 {
     return m_keyframesRule->name();
 }
