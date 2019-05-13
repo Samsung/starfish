@@ -439,6 +439,7 @@ void WebView::destroy()
     m_repaintRegionInRendering.clear();
     m_globalPointingEventListener.clear();
     m_jsInterfaceList.clear();
+    m_repaintRegionTrackerContext.clear();
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
@@ -1116,7 +1117,10 @@ RenderResult WebView::rendering(bool force)
 
             auto prevDrawnStackingContextInfo =
                 std::move(m_prevDrawnStackingContextInfo);
+            auto oldRepaintRegionTrackerContext =
+                std::move(m_repaintRegionTrackerContext);
             RepaintRegionTracker tracker(
+                oldRepaintRegionTrackerContext, m_repaintRegionTrackerContext,
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox(),
                 needsFullPainting, prevDrawnStackingContextInfo, scrollX,
                 scrollY, m_needsComposite);
