@@ -37,6 +37,7 @@ class StyleRuleSupports;
 class StyleRuleCounterStyle;
 class StyleRuleNamespace;
 class StyleRuleKeyframes;
+class StyleRuleKeyframe;
 class MediaQuerySet;
 class MediaList;
 
@@ -234,6 +235,34 @@ private:
     StyleRuleNamespace* m_namespaceRule;
 };
 
+class CSSKeyframeRule : public CSSRule {
+public:
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCSSKeyframeRule() const override;
+
+    CSSKeyframeRule(StyleRuleKeyframe* keyframeRule, CSSStyleSheet* parent);
+
+    String* cssText();
+    String* keyText() const;
+    void setKeyText(String* text);
+    CSSStyleDeclaration* style();
+
+    StyleRuleKeyframe* styleRule() const
+    {
+        return m_keyframe;
+    }
+
+private:
+    CSSRule::Type type() const override
+    {
+        return CSSRule::Type::KEYFRAME_RULE;
+    }
+
+    StyleRuleKeyframe* m_keyframe;
+    CSSStyleDeclaration* m_propertiesWrapper;
+};
+
 class CSSKeyframesRule : public CSSRule {
 public:
     virtual void init(ScriptBindingInstance* instance,
@@ -241,14 +270,20 @@ public:
     virtual bool isCSSKeyframesRule() const override;
 
     CSSKeyframesRule(StyleRuleKeyframes* keyframesRule, CSSStyleSheet* parent);
-    String* cssText() override;
+    String* cssText();
+    CSSRuleList* cssRules();
     StyleRuleKeyframes* keyframesRule() const
     {
         return m_keyframesRule;
     }
 
-    String* name();
+    String* name() const;
     void setName(String* name);
+
+    unsigned length() const;
+    CSSRule* item(unsigned index);
+
+    void styleChanged();
 
 private:
     CSSRule::Type type() const override
@@ -256,6 +291,8 @@ private:
         return CSSRule::Type::KEYFRAMES_RULE;
     }
     StyleRuleKeyframes* m_keyframesRule;
+    GCVector<CSSRule*> m_childRuleWrappers;
+    CSSRuleList* m_ruleListWrapper;
 };
 }
 

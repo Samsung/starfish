@@ -51,10 +51,15 @@ interface CSSNamespaceRule : CSSRule {
 // https://drafts.csswg.org/css-animations/#interface-csskeyframesrule
 interface CSSKeyframesRule : CSSRule {
     attribute CSSOMString name;
-    [Unimplemented] readonly attribute CSSRuleList cssRules;
+    readonly attribute CSSRuleList cssRules;
 
     [Unimplemented] void appendRule(CSSOMString rule);
     [Unimplemented] void deleteRule(CSSOMString select);
     [Unimplemented] CSSKeyframeRule? findRule(CSSOMString select);
+};
+
+interface CSSKeyframeRule : CSSRule {
+    [RaisesException=Setter] attribute DOMString keyText;
+    [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };
 

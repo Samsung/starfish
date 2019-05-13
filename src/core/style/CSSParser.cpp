@@ -1824,27 +1824,12 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
     return ParseResult::Consumed;
 }
 
-CSSParser::ParseResult CSSParser::parseStyleRule(
-    RefPtr<CSSToken> aToken, GCVector<StyleRuleBase*>& rules,
-    AllowedRulesType allowedRules, GCVector<CSSSelectorList*>* sList,
-    bool isQueryingSelector)
+CSSParser::ParseResult CSSParser::parseStyleDeclarations(
+    CSSStyleDeclaration* declarations, bool& valid, bool& invalidDeclaration,
+    bool hasSelector, bool validSelector, bool isQueryingSelector)
 {
-    if (allowedRules > RegularRules) {
-        return ParseResult::Failed;
-    }
-
-    // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
-    preserveState();
-    // first let's see if we have a selector here...
-    bool validSelector = true;
-
-    GCVector<CSSSelectorList*> list;
-    parseSelector(list, validSelector);
-
-    bool valid = false;
-    bool invalidDeclaration = false;
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
-    if (list.size()) {
+    STARFISH_ASSERT(declarations != nullptr);
+    if (hasSelector) {
         RefPtr<CSSToken> token = currentToken();
         if (token->isSymbol('{')) {
             RefPtr<CSSToken> token = getToken(true, false);
@@ -1888,6 +1873,36 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
                 token = getToken(true, false);
             }
         }
+    }
+
+    return ParseResult::Consumed;
+}
+
+CSSParser::ParseResult CSSParser::parseStyleRule(
+    RefPtr<CSSToken> aToken, GCVector<StyleRuleBase*>& rules,
+    AllowedRulesType allowedRules, GCVector<CSSSelectorList*>* sList,
+    bool isQueryingSelector)
+{
+    if (allowedRules > RegularRules) {
+        return ParseResult::Failed;
+    }
+
+    preserveState();
+    // first let's see if we have a selector here...
+    bool validSelector = true;
+
+    GCVector<CSSSelectorList*> list;
+    parseSelector(list, validSelector);
+
+    bool valid = false;
+    bool invalidDeclaration = false;
+
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+    CSSParser::ParseResult ret = parseStyleDeclarations(
+        declarations, valid, invalidDeclaration, list.size() > 0, validSelector,
+        isQueryingSelector);
+    if (ret != CSSParser::ParseResult::Consumed) {
+        return ret;
     }
 
     if (isQueryingSelector) {
@@ -2529,10 +2544,84 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
     return new StyleRuleNamespace(namespaceURI.getValue(), prefix);
 }
 
+bool CSSParser::parseKeyframeKeyList(RefPtr<CSSToken>& token,
+                                     GCVector<double>& keyList)
+{
+    while (token->isNotNull() && !token->isSymbol('{')) {
+        if (token->isPercentage() && token->numericValue() >= 0 &&
+            token->numericValue() <= 100) {
+            keyList.push_back(token->numericValue() / 100);
+        } else if (token->isIdent()) {
+            if (token->value()->toString()->equalsIgnoreCase("from")) {
+                keyList.push_back(0);
+            } else if (token->value()->toString()->equalsIgnoreCase("to")) {
+                keyList.push_back(1);
+            }
+        } else {
+            return false; // parse error
+        }
+        token = getToken(true, true);
+
+        if (token->isSymbol(',')) {
+            token = getToken(true, true);
+        }
+    }
+
+    return true;
+}
+
+CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
+    RefPtr<CSSToken>& token, GCVector<StyleRuleBase*>& rootRule,
+    AllowedRulesType allowedRules)
+{
+    preserveState();
+    GCVector<double> keyList;
+    if (!parseKeyframeKeyList(token, keyList)) {
+        return CSSParser::ParseResult::Failed;
+    }
+
+    bool valid = false;
+    bool invalidDeclaration = false;
+
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+    CSSParser::ParseResult ret = parseStyleDeclarations(
+        declarations, valid, invalidDeclaration, true, true, false);
+
+    if (valid) {
+        rootRule.push_back(new StyleRuleKeyframe(keyList, declarations));
+        forgetState();
+        return invalidDeclaration ? ParseResult::ErrorFounded
+                                  : ParseResult::Consumed;
+    }
+
+    return CSSParser::ParseResult::Failed;
+}
+
 StyleRuleKeyframes* CSSParser::parseKeyframesRule()
 {
     // TODO: Parse @keyframes CSS at-rule.
     // https://drafts.csswg.org/css-animations/#keyframes
+    preserveState();
+    RefPtr<CSSToken> token = getToken(true, true);
+
+    String* name = String::emptyString;
+    if (token->isIdent()) {
+        name = token->value()->toString();
+    } else {
+        ungetToken();
+        forgetState();
+        return nullptr;
+    }
+    token = getToken(true, true);
+
+    GCVector<StyleRuleBase*> keyframeRules;
+    if (token->isSymbol('{')) {
+        parseRules(token, keyframeRules, RuleListType::KeyframesRuleList);
+        forgetState();
+        return new StyleRuleKeyframes(name, keyframeRules);
+    }
+
+    forgetState();
     return nullptr;
 }
 
@@ -2704,8 +2793,15 @@ void CSSParser::parseRules(RefPtr<CSSToken> token,
         } else {
             // plain style rules
             GCVector<StyleRuleBase*> rules;
-            CSSParser::ParseResult res =
-                parseStyleRule(token, rules, allowedRules, nullptr, false);
+
+            CSSParser::ParseResult res = ParseResult::Failed;
+            if (allowedRules <= RegularRules) {
+                res =
+                    parseStyleRule(token, rules, allowedRules, nullptr, false);
+            }
+            if (allowedRules == KeyframeRules) {
+                res = parseKeyframeStyleRule(token, rules, allowedRules);
+            }
             if (res != ParseResult::Failed) {
                 allowedRules = computeNewAllowedRules(allowedRules, rules[0]);
                 rootRule.insert(rootRule.end(), rules.begin(), rules.end());

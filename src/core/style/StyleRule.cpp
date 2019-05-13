@@ -73,6 +73,9 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
     case CSSRule::Type::NAMESPACE_RULE:
         rule = new CSSNamespaceRule(self->asStyleRuleNamespace(), parentSheet);
         break;
+    case CSSRule::Type::KEYFRAME_RULE:
+        rule = new CSSKeyframeRule(self->asStyleRuleKeyframe(), parentSheet);
+        break;
     case CSSRule::Type::KEYFRAMES_RULE:
         rule = new CSSKeyframesRule(self->asStyleRuleKeyframes(), parentSheet);
         break;
@@ -355,6 +358,73 @@ StyleRuleNamespace::StyleRuleNamespace(String* namespaceURI, String* prefix)
     , m_namespaceURI(namespaceURI)
     , m_prefix(prefix)
 {
+}
+
+StyleRuleKeyframe::StyleRuleKeyframe(GCVector<double>& keyList,
+                                     CSSStyleDeclaration* decl)
+    : StyleRuleBase(CSSRule::Type::KEYFRAME_RULE)
+    , m_keyList(std::move(keyList))
+    , m_styleDeclaration(decl)
+{
+    STARFISH_ASSERT(decl != nullptr);
+}
+
+String* StyleRuleKeyframe::keyText()
+{
+    STARFISH_ASSERT(!m_keyList.empty());
+    StringBuilder keyText;
+    for (unsigned i = 0; i < m_keyList.size(); ++i) {
+        if (i) {
+            keyText.appendString(", ");
+        }
+        keyText.appendString(String::fromDouble(m_keyList[i] * 100));
+        keyText.appendChar('%');
+    }
+    return keyText.finalize();
+}
+
+bool StyleRuleKeyframe::setKeyText(Document* doc, String* text)
+{
+    STARFISH_ASSERT(doc != nullptr);
+    STARFISH_ASSERT(text != nullptr);
+    STARFISH_ASSERT(!text->isEmpty());
+
+    CSSParser parser(doc);
+    RefPtr<CSSToken> token = parser.makeToken(text);
+    GCVector<double> keys;
+    parser.parseKeyframeKeyList(token, keys);
+
+    if (keys.empty()) {
+        return false;
+    }
+
+    m_keyList = keys;
+    return true;
+}
+
+String* StyleRuleKeyframe::cssText()
+{
+    StringBuilder result;
+    result.appendString(keyText());
+    result.appendString(" { ");
+    String* decls = styleDeclaration()->cssText();
+    result.appendString(decls);
+    if (!decls->isEmpty()) {
+        result.appendChar(' ');
+    }
+    result.appendChar('}');
+
+    return result.finalize();
+}
+
+StyleRuleKeyframes::StyleRuleKeyframes(String* name,
+                                       GCVector<StyleRuleBase*>& keyframes)
+    : StyleRuleBase(CSSRule::Type::KEYFRAMES_RULE)
+    , m_name(name)
+    , m_keyframes(std::move(keyframes))
+    , m_version(0)
+{
+    STARFISH_ASSERT(name != nullptr);
 }
 
 StyleRuleSupports::StyleRuleSupports(String* conditionText, bool isSupported,
