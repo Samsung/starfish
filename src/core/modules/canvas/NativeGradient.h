@@ -23,10 +23,17 @@
 namespace Starfish {
 
 struct GradientDrawingInfo;
+class NativeImageData;
 
 class NativeGradient : public gc {
 public:
     static std::shared_ptr<NativeGradient> create(GradientDrawingInfo* info);
+    static std::shared_ptr<NativeGradient> create(double x0, double y0,
+                                                  double x1, double y1);
+    static std::shared_ptr<NativeGradient> create(double x0, double y0,
+                                                  double r0, double x1,
+                                                  double y1, double r1);
+
     virtual ~NativeGradient()
     {
     }
@@ -38,21 +45,37 @@ public:
 
     void setGradientImageDataCached(NativeImageData* imageData)
     {
+        STARFISH_ASSERT(m_gradientDrawingInfo != nullptr);
         m_gradientImageDataCached = imageData;
     }
 
+    virtual void addColorStop(const double& offset, const Unit::Color& color)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual bool isZeroSize()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return false;
+    }
+
 protected:
-    NativeGradient(GradientDrawingInfo* info)
-        : m_gradientDrawingInfo(info)
+    NativeGradient()
+        : m_gradientDrawingInfo(nullptr)
         , m_gradientImageDataCached(nullptr)
     {
     }
 
+    NativeGradient(GradientDrawingInfo* info)
+        : m_gradientDrawingInfo(info)
+        , m_gradientImageDataCached(nullptr)
+    {
+        STARFISH_ASSERT(info != nullptr);
+    }
+
     GradientDrawingInfo* m_gradientDrawingInfo;
     NativeImageData* m_gradientImageDataCached;
-
-private:
-    virtual void init(GradientDrawingInfo* info) = 0;
 };
 }
 #endif

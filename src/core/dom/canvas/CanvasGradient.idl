@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasgradient
-[STARFISH_ENABLE_CANVAS, Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface CanvasGradient {
   // opaque object
-  void addColorStop(double offset, DOMString color);
+  [RaisesException] void addColorStop(double offset, DOMString color);
 };

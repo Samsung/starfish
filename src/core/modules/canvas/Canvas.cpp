@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "core/style/Style.h"
 #include "Canvas.h"
+#include "CanvasFillStrokeSource.h"
 #include "Starfish.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
@@ -254,5 +255,20 @@ CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
                                                  size_t h, size_t stride)
 {
     return new CanvasSurfaceCanvasTarget(buffer, w, h, stride);
+}
+
+CanvasState::CanvasState()
+    : m_fillSource(Unit::Color())
+    , m_strokeSource(Unit::Color())
+    , m_layerOpacity(1.0f)
+    , m_font(nullptr)
+    , m_textDecorationData()
+    , m_pathTM(SkMatrix::I())
+    , m_globalAlpha(1.0f)
+    , m_compositeOperator(CanvasCompositeOperator::SourceOver)
+    , m_blendMode(CanvasBlendMode::Normal)
+    , m_visible(true)
+    , m_hasNonInvertableCTM(false)
+{
 }
 }

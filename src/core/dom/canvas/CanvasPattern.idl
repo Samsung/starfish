@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvaspattern
 
-[STARFISH_ENABLE_CANVAS, Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface CanvasPattern {
   // opaque object
   [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);

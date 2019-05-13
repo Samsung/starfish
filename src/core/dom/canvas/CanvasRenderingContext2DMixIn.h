@@ -48,6 +48,7 @@ enum class CanvasDirection : int;
 
 typedef HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement
     CanvasImageSource;
+typedef DOMStringOrCanvasGradientOrCanvasPattern CanvasStyle;
 
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
                                       public CanvasPathInterfaceMixIn {
@@ -98,13 +99,15 @@ public:
     // CanvasImageSmoothing
 
     // CanvasFillStrokeStyles
-    DOMStringOrCanvasGradientOrCanvasPattern fillStyle();
-    void setFillStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
+    CanvasStyle fillStyle();
+    void setFillStyle(CanvasStyle value);
 
-    DOMStringOrCanvasGradientOrCanvasPattern strokeStyle();
-    void setStrokeStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
+    CanvasStyle strokeStyle();
+    void setStrokeStyle(CanvasStyle value);
     CanvasGradient* createLinearGradient(float x0, float y0, float x1,
                                          float y1);
+    CanvasGradient* createRadialGradient(double x0, double y0, double r0,
+                                         double x1, double y1, double r1);
 
     // CanvasShadowStyles
 

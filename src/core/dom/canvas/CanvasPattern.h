@@ -20,8 +20,6 @@
 #ifndef __StarfishCanvasPattern__
 #define __StarfishCanvasPattern__
 
-#ifdef STARFISH_ENABLE_CANVAS
-
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
@@ -29,16 +27,12 @@ class CanvasRenderingContext;
 
 class CanvasPattern : public ScriptWrappable {
 public:
-    CanvasPattern(CanvasRenderingContext* context);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isCanvasPattern() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
+    CanvasPattern(ExecutionContext* executionContext);
 
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasPattern)
 private:
-    CanvasRenderingContext* m_canvasRenderingContext;
+    ExecutionContext* m_executionContext;
 };
 }
 
-#endif
 #endif

@@ -83,12 +83,51 @@ public:
         : NativeGradient(info)
         , m_pattern(nullptr)
     {
-        init(info);
+        initialize(info);
+    }
+
+    NativeGradientCairo(double x0, double y0, double x1, double y1)
+        : NativeGradient()
+        , m_pattern(nullptr)
+    {
+        initializePatternToLinearGradient(x0, y0, x1, y1);
+    }
+
+    NativeGradientCairo(double x0, double y0, double r0, double x1, double y1,
+                        double r1)
+        : NativeGradient()
+        , m_pattern(nullptr)
+    {
+        initializePatternToRadialGradient(x0, y0, r0, x1, y1, r1);
     }
 
     ~NativeGradientCairo()
     {
         cairo_pattern_destroy(m_pattern);
+    }
+
+    virtual void addColorStop(const double& offset,
+                              const Unit::Color& color) override
+    {
+        cairo_pattern_add_color_stop_rgba(m_pattern, offset, color.R(),
+                                          color.G(), color.B(), color.A());
+    }
+
+    virtual bool isZeroSize() override
+    {
+        auto type = cairo_pattern_get_type(m_pattern);
+        if (type == CAIRO_PATTERN_TYPE_LINEAR) {
+            double x0, y0, x1, y1;
+            cairo_pattern_get_linear_points(m_pattern, &x0, &y0, &x1, &y1);
+            return (x0 == x1) && (y0 == y1);
+        } else {
+            STARFISH_ASSERT(type == CAIRO_PATTERN_TYPE_RADIAL);
+            double x0, y0, r0, x1, y1, r1;
+            cairo_pattern_get_radial_circles(m_pattern, &x0, &y0, &r0, &x1, &y1,
+                                             &r1);
+            return (x0 == x1) && (y0 == y1) && (r0 == r1);
+        }
+        return false;
     }
 
     cairo_pattern_t* pattern()
@@ -97,14 +136,14 @@ public:
     }
 
 private:
-    virtual void init(GradientDrawingInfo* info) override
+    void initialize(GradientDrawingInfo* info)
     {
         if (info->type == GradientType::LinearGradient) {
-            m_pattern = cairo_pattern_create_linear(info->x1, info->y1,
-                                                    info->x2, info->y2);
+            initializePatternToLinearGradient(info->x1, info->y1, info->x2,
+                                              info->y2);
         } else if (info->type == GradientType::RadialGradient) {
-            m_pattern = cairo_pattern_create_radial(
-                info->x1, info->y1, info->r1, info->x2, info->y2, info->r2);
+            initializePatternToRadialGradient(info->x1, info->y1, info->r1,
+                                              info->x2, info->y2, info->r2);
         } else {
             STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
         }
@@ -113,9 +152,24 @@ private:
         for (size_t i = 0; i < size; ++i) {
             const auto& color = info->colorStops[i]->color();
             const auto& offset = info->colorStops[i]->offset().percent();
-            cairo_pattern_add_color_stop_rgba(m_pattern, offset, color.R(),
-                                              color.G(), color.B(), color.A());
+            addColorStop(offset, color);
         }
+    }
+
+    void initializePatternToLinearGradient(double x0, double y0, double x1,
+                                           double y1)
+    {
+        m_pattern = cairo_pattern_create_linear(x0, y0, x1, y1);
+        STARFISH_ASSERT(cairo_pattern_status(m_pattern) ==
+                        CAIRO_STATUS_SUCCESS);
+    }
+
+    void initializePatternToRadialGradient(double x0, double y0, double r0,
+                                           double x1, double y1, double r1)
+    {
+        m_pattern = cairo_pattern_create_radial(x0, y0, r0, x1, y1, r1);
+        STARFISH_ASSERT(cairo_pattern_status(m_pattern) ==
+                        CAIRO_STATUS_SUCCESS);
     }
 
     cairo_pattern_t* m_pattern;
@@ -125,6 +179,21 @@ std::shared_ptr<NativeGradient> NativeGradient::create(
     GradientDrawingInfo* info)
 {
     return std::shared_ptr<NativeGradient>(new NativeGradientCairo(info));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double x1, double y1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientCairo(x0, y0, x1, y1));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double r0, double x1,
+                                                       double y1, double r1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientCairo(x0, y0, r0, x1, y1, r1));
 }
 
 class CanvasCairo : public Canvas {
@@ -167,15 +236,40 @@ class CanvasCairo : public Canvas {
 #endif
     }
 
-    void applySourceColorIfNeeds(bool useStrokeColor = false)
+    void applyCanvasFillStrokeSourceIfNeeds(bool useStrokeSource = false)
     {
-        if (m_shouldApplyColor) {
-            Unit::Color clr = color();
-            if (useStrokeColor) {
-                clr = strokeColor();
-            }
+        if (m_shouldApplyCanvasFillStrokeSource == false) {
+            return;
+        }
+
+        CanvasFillStrokeSource* source = nullptr;
+        if (useStrokeSource) {
+            source = &lastState().m_strokeSource;
+        } else {
+            source = &lastState().m_fillSource;
+        }
+        STARFISH_ASSERT(source != nullptr);
+
+        if (source->isColorType()) {
+            Unit::Color clr = source->getColorValue();
             cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
                                   clr.A() * globalAlpha());
+        } else if (source->isCanvasStyleType()) {
+            auto canvasStyle = source->getCanvasStyleValue();
+            if (canvasStyle.isCanvasGradientValue()) {
+                auto gradientValue =
+                    canvasStyle.getCanvasGradientValue()->nativeGradient();
+                cairo_set_source(
+                    m_canvas,
+                    ((NativeGradientCairo*)gradientValue.get())->pattern());
+
+            } else if (canvasStyle.isCanvasPatternValue()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            } else {
+                STARFISH_ASSERT(canvasStyle.isDOMStringValue() ||
+                                canvasStyle.isNoneValue());
+                return;
+            }
         }
     }
 
@@ -185,7 +279,7 @@ public:
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
-        m_shouldApplyColor = false;
+        m_shouldApplyCanvasFillStrokeSource = false;
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -203,7 +297,7 @@ public:
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
-        m_shouldApplyColor = false;
+        m_shouldApplyCanvasFillStrokeSource = false;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -216,7 +310,7 @@ public:
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
-        m_shouldApplyColor = false;
+        m_shouldApplyCanvasFillStrokeSource = false;
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -279,8 +373,8 @@ public:
         CanvasStateCairo state;
         if (m_state.size()) {
             auto& lastState = m_state.back();
-            state.m_fillColor = lastState.m_fillColor;
-            state.m_strokeColor = lastState.m_strokeColor;
+            state.m_fillSource = lastState.m_fillSource;
+            state.m_strokeSource = lastState.m_strokeSource;
             state.m_layerOpacity = lastState.m_layerOpacity;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
@@ -301,7 +395,7 @@ public:
         checkError();
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
-        m_shouldApplyColor = true;
+        m_shouldApplyCanvasFillStrokeSource = true;
     }
 
     // transformations (default transform is the identity matrix)
@@ -445,32 +539,52 @@ public:
 
     virtual void setFillColor(const Unit::Color& clr)
     {
-        STARFISH_ASSERT(m_canvas);
-        lastState().m_fillColor = clr;
-        m_shouldApplyColor = true;
+        auto source = CanvasFillStrokeSource(clr);
+        setFillSource(source);
+    }
+
+    virtual void setFillSource(CanvasFillStrokeSource& source)
+    {
+        STARFISH_ASSERT(m_canvas != nullptr);
+        if (!source.isCanvasAvailableSource()) {
+            return;
+        }
+        lastState().m_fillSource = source;
+        m_shouldApplyCanvasFillStrokeSource = true;
+    }
+
+    virtual CanvasFillStrokeSource fillSource()
+    {
+        STARFISH_ASSERT(m_canvas != nullptr);
+        return lastState().m_fillSource;
     }
 
     virtual void setStrokeColor(const Unit::Color& clr)
     {
-        STARFISH_ASSERT(m_canvas);
-        lastState().m_strokeColor = clr;
-        m_shouldApplyColor = true;
+        auto source = CanvasFillStrokeSource(clr);
+        setStrokeSource(source);
+    }
+
+    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    {
+        STARFISH_ASSERT(m_canvas != nullptr);
+        if (!source.isCanvasAvailableSource()) {
+            return;
+        }
+        lastState().m_strokeSource = source;
+        m_shouldApplyCanvasFillStrokeSource = true;
+    }
+
+    virtual CanvasFillStrokeSource strokeSource()
+    {
+        STARFISH_ASSERT(m_canvas != nullptr);
+        return lastState().m_strokeSource;
     }
 
     virtual void setGlobalAlpha(float c)
     {
         lastState().m_globalAlpha = std::max<float>(0, std::min<float>(1.0, c));
-        m_shouldApplyColor = true;
-    }
-
-    virtual Unit::Color color()
-    {
-        return lastState().m_fillColor;
-    }
-
-    virtual Unit::Color strokeColor()
-    {
-        return lastState().m_strokeColor;
+        m_shouldApplyCanvasFillStrokeSource = true;
     }
 
     virtual float globalAlpha()
@@ -655,7 +769,7 @@ public:
 
     virtual void punchHole(const Unit::Rect& rt)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -672,7 +786,7 @@ public:
             cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
         } else {
-            applySourceColorIfNeeds();
+            applyCanvasFillStrokeSourceIfNeeds();
         }
         cairo_translate(m_canvas, xx, yy);
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
@@ -683,7 +797,7 @@ public:
     void strokeCairoRect(float xx, float yy, float ww, float hh)
     {
         cairo_save(m_canvas);
-        applySourceColorIfNeeds(true);
+        applyCanvasFillStrokeSourceIfNeeds(true);
         cairo_rectangle(m_canvas, xx, yy, ww, hh);
         cairo_stroke(m_canvas);
         cairo_restore(m_canvas);
@@ -691,7 +805,7 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -701,7 +815,7 @@ public:
 
     virtual void drawRect(const LayoutRect& rt)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -711,7 +825,7 @@ public:
 
     virtual void strokeRect(const Unit::Rect& rt)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -721,7 +835,7 @@ public:
 
     virtual void strokeRect(const LayoutRect& rt)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -743,7 +857,7 @@ public:
         cairo_line_to(m_canvas, p4.x(), p4.y());
         cairo_line_to(m_canvas, p1.x(), p1.y());
         cairo_close_path(m_canvas);
-        applySourceColorIfNeeds();
+        applyCanvasFillStrokeSourceIfNeeds();
         cairo_fill(m_canvas);
 
         cairo_restore(m_canvas);
@@ -1076,7 +1190,7 @@ public:
                                     GradientDrawingInfo* info,
                                     NativeGradient* gradient)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -1094,7 +1208,7 @@ public:
                                     GradientDrawingInfo* info,
                                     NativeGradient* gradient)
     {
-        STARFISH_ASSERT(m_canvas);
+        STARFISH_ASSERT(m_canvas != nullptr);
         if (!lastState().m_visible) {
             return;
         }
@@ -1270,7 +1384,7 @@ public:
             cairo_close_path(m_canvas);
             return;
         }
-        applySourceColorIfNeeds(true);
+        applyCanvasFillStrokeSourceIfNeeds(true);
         cairo_stroke(m_canvas);
     }
     virtual void strokePreserve()
@@ -1278,7 +1392,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        applySourceColorIfNeeds(true);
+        applyCanvasFillStrokeSourceIfNeeds(true);
         cairo_stroke_preserve(m_canvas);
     }
     virtual void strokePath(Path* path)
@@ -1295,7 +1409,7 @@ public:
             cairo_close_path(m_canvas);
             return;
         }
-        applySourceColorIfNeeds();
+        applyCanvasFillStrokeSourceIfNeeds();
         cairo_fill(m_canvas);
     }
     virtual void fillPreserve()
@@ -1303,7 +1417,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        applySourceColorIfNeeds();
+        applyCanvasFillStrokeSourceIfNeeds();
         cairo_fill_preserve(m_canvas);
     }
     virtual void fillPath(Path* path)
@@ -1414,20 +1528,20 @@ private:
                                 cairo_line_to(canvas, p4.x(), p4.y());
                                 cairo_line_to(canvas, p1.x(), p1.y());
                                 cairo_close_path(canvas);
-                                applySourceColorIfNeeds();
+                                applyCanvasFillStrokeSourceIfNeeds();
                                 cairo_fill(canvas);
                                 cairo_restore(canvas);
                             } else {
                                 // left, top, w, h
                                 Unit::Rect rt(xx, y, h, h);
                                 cairo_rectangle(canvas, xx, y, h, h);
-                                applySourceColorIfNeeds();
+                                applyCanvasFillStrokeSourceIfNeeds();
                                 cairo_fill(canvas);
                             }
                         } else {
                             int ph = h * 0.2;
                             cairo_rectangle(canvas, xx, y + h - ph, h, ph);
-                            applySourceColorIfNeeds();
+                            applyCanvasFillStrokeSourceIfNeeds();
                             cairo_fill(canvas);
                         }
                     }
@@ -1443,7 +1557,7 @@ private:
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
                     size_t glyphCount)
     {
-        applySourceColorIfNeeds();
+        applyCanvasFillStrokeSourceIfNeeds();
         cairo_font_face_t* fontFace =
             cairo_ft_font_face_create_for_ft_face(ftFace, 0);
         cairo_font_options_t* fontOptions = cairo_font_options_create();
@@ -1537,7 +1651,7 @@ private:
                     cairo_new_path(canvas);
                     cairo_rectangle(canvas, xBias, -fontMetrics.m_ascender,
                                     f->spaceWidth(), fontMetrics.m_fontHeight);
-                    applySourceColorIfNeeds();
+                    applyCanvasFillStrokeSourceIfNeeds();
                     cairo_stroke(canvas);
                     cairo_restore(canvas);
                     xBias += f->spaceWidth() + letterSpacing;
@@ -1563,7 +1677,7 @@ private:
                                             -fontMetrics.m_ascender,
                                             f->spaceWidth(),
                                             fontMetrics.m_fontHeight);
-                            applySourceColorIfNeeds();
+                            applyCanvasFillStrokeSourceIfNeeds();
                             cairo_stroke(canvas);
                         }
                         cairo_restore(canvas);
@@ -1715,7 +1829,7 @@ protected:
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
-    bool m_shouldApplyColor;
+    bool m_shouldApplyCanvasFillStrokeSource;
 };
 
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
