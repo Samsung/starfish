@@ -103,7 +103,7 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
     auto msgName = msg.name();
 
     if (msgName == "resolveJobPromise") {
-        auto jobData = downcast<ServiceWorkerJobData>(msg.param(0));
+        auto jobData = downcast<ServiceWorkerJobData*>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
         NULLABLE auto registration =
@@ -111,14 +111,14 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         resolveJobPromise(job, registration);
 
     } else if (msgName == "rejectJobPromise") {
-        auto jobData = downcast<ServiceWorkerJobData>(msg.param(0));
+        auto jobData = downcast<ServiceWorkerJobData*>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
-        auto errorData = downcast<ErrorData>(msg.param(1));
+        auto errorData = downcast<ErrorData*>(msg.param(1));
         rejectJobPromise(job, errorData);
 
     } else if (msgName == "resolveRequest") {
-        auto request = downcast<ServiceWorkerRequest>(msg.param(0));
+        auto request = downcast<ServiceWorkerRequest*>(msg.param(0));
         auto serviceWorkerContainer =
             findServiceWorkerContainer(request->contextId);
 

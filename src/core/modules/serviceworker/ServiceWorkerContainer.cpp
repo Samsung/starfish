@@ -35,7 +35,7 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 
 #include "core/page/GlobalScope.h"
@@ -49,27 +49,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
-#include <EscargotPublic.h>
-
 namespace Starfish {
-
-ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
-                            Escargot::ErrorObjectRef::Code errorCode,
-                            const char* message)
-{
-    STARFISH_ASSERT(scriptBindingInstance != nullptr);
-    STARFISH_ASSERT(message != nullptr);
-
-    Escargot::ContextRef* context = scriptBindingInstance->scriptContext();
-    Escargot::ExecutionStateRef* state =
-        Escargot::ExecutionStateRef::create(context);
-
-    auto exception =
-        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create(
-            state, errorCode, Escargot::StringRef::fromASCII(message)));
-
-    return exception;
-}
 
 ServiceWorkerContainer::ServiceWorkerContainer(
     ExecutionContext* executionContext)
@@ -150,11 +130,11 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
     // 1. If scriptURL is failure, reject promise with a TypeError and abort
     // these steps.
     if (scriptURL->urlString()->isEmpty()) {
-        auto exception = createException(scriptBindingInstance(),
-                                         Escargot::ErrorObjectRef::TypeError,
-                                         "serviceWorker.register() cannot be "
-                                         "called with an empty script URL");
-        promise->reject(exception);
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::Code::SCRIPT_TYPE_ERR,
+                                          "serviceWorker.register() cannot be "
+                                          "called with an empty script URL");
+        promise->reject(exception->scriptValue());
         return;
     }
 
@@ -166,11 +146,11 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
     // 3. If scriptURL’s scheme is not one of "http" and "https", reject promise
     // with a TypeError and abort these steps.
     if (scriptURL->isHTTPFamilyURL() == false) {
-        auto exception = createException(
-            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
             "serviceWorker.register() must be called with a script URL whose "
             "protocol is either HTTP or HTTPS");
-        promise->reject(exception);
+        promise->reject(exception->scriptValue());
         return;
     }
 
@@ -180,11 +160,11 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
     // and abort these steps.
     if (scriptURLWithNoFragment->contains("%2f", false) ||
         scriptURLWithNoFragment->contains("%5c", false)) {
-        auto exception = createException(
-            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
-            "Scope URL provided to serviceWorker.register() cannot have a path "
-            "that contains '%2f' or '%5c");
-        promise->reject(exception);
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
+            "Script URL provided to serviceWorker.register() cannot have a "
+            "path that contains '%2f' or '%5c'");
+        promise->reject(exception->scriptValue());
         return;
     }
 
@@ -199,11 +179,11 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
     // 8. If scopeURL’s scheme is not one of "http" and "https", reject promise
     // with a TypeError and abort these steps.
     if (scopeURL->isHTTPFamilyURL() == false) {
-        auto exception = createException(
-            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
             "serviceWorker.register() must be called with a scope URL whose "
             "protocol is either HTTP or HTTPS");
-        promise->reject(exception);
+        promise->reject(exception->scriptValue());
         return;
     }
 
@@ -217,11 +197,11 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
 
     if (scopeURLWithNoFragment->contains("%2f", false) ||
         scopeURLWithNoFragment->contains("%5c", false)) {
-        auto exception = createException(
-            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
             "Scope URL provided to serviceWorker.register() cannot have a path "
-            "that contains '%2f' or '%5c");
-        promise->reject(exception);
+            "that contains '%2f' or '%5c'");
+        promise->reject(exception->scriptValue());
         return;
     }
 
@@ -309,12 +289,12 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 
     // 3. If clientURL is failure, return a promise rejected with a TypeError.
     if (clientURL->urlString()->isEmpty()) {
-        auto exception = createException(
-            scriptBindingInstance(), Escargot::ErrorObjectRef::TypeError,
-            "serviceWorker.getRegistration() cannot be "
-            "called with an empty script URL");
+        auto exception = new DOMException(
+            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
+            "serviceWorker.getRegistration() cannot be called with an empty "
+            "script URL");
         Promise* promise = new Promise(scriptBindingInstance());
-        promise->reject(exception);
+        promise->reject(exception->scriptValue());
         return promise;
     }
 
@@ -375,8 +355,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
                 // 7.3 Else:
                 // 7.3.1 Resolve promise with undefined.
                 SWCLIENT_LOG_IF_ALLOWED(1, "7.3.1: null\n");
-                request->promise()->fulfill(
-                    Escargot::ValueRef::createUndefined());
+                request->promise()->fulfill(scriptUndefined());
             }
         },
         { matchRegistrationRequest, this }));
@@ -469,7 +448,7 @@ void ServiceWorkerContainer::resolveJobPromise(
                     castTo<ServiceWorkerContainer*>(data1);
 
                 // 1. Let convertedValue be null.
-                auto convertedValue = Escargot::ValueRef::createNull();
+                auto convertedValue = scriptNull();
 
                 // Handling Register Job or Update Job
                 if (job->data()->type == ServiceWorkerJobType::Register ||

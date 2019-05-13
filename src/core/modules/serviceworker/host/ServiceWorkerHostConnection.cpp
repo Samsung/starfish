@@ -40,7 +40,6 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -113,14 +112,14 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
 
     if (msgName == "scheduleJob") {
         auto job =
-            new ServiceWorkerJob(downcast<ServiceWorkerJobData>(msg.param(0)));
+            new ServiceWorkerJob(downcast<ServiceWorkerJobData*>(msg.param(0)));
         job->setHostConnection(this);
         m_client->scheduleJob(job);
 
     } else if (msgName == "matchRegistration") {
         m_client->matchRegistration(
-            downcast<ServiceWorkerRequest>(msg.param(0)),
-            downcast<GenericArchivable<String*>>(msg.param(1))->value());
+            downcast<ServiceWorkerRequest*>(msg.param(0)),
+            downcast<GenericArchivable<String*>*>(msg.param(1))->value());
     }
 }
 

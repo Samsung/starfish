@@ -23,7 +23,7 @@
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 
-#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 
 namespace Starfish {
 
