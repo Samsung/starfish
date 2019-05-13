@@ -19,3 +19,5 @@ interface WorkerGlobalScope : EventTarget {
   [Unimplemented] attribute EventHandler onrejectionhandled;
   [Unimplemented] attribute EventHandler onunhandledrejection;
 };
+
+WorkerGlobalScope implements WindowOrWorkerGlobalScope;

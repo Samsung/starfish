@@ -1,5 +1,13 @@
 // https://fetch.spec.whatwg.org/#fetch-method
 
+//partial interface mixin WindowOrWorkerGlobalScope {
+//  [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+//};
+
 partial interface Window {
-  Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+  [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+};
+
+partial interface WorkerGlobalScope {
+  [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init);
 };

@@ -241,6 +241,13 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
     }                                                                        \
     Window* window = (Window*)state->context()->globalObject()->extraData();
 
+#define GENERATE_WORKERGLOBALSCOPE()                                         \
+   if (!(thisValue->isUndefinedOrNull() ||                                   \
+          thisValue->toObject(state) == state->context()->globalObject())) { \
+        THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
+    }                                                                        \
+    WorkerGlobalScope* originalObj = (WorkerGlobalScope*)state->context()->globalObject()->extraData();
+
 class ScriptWrappable : public gc {
 public:
 #define FOR_EACH_REFLECT_FN(exportName) \
