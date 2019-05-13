@@ -17,23 +17,20 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_CANVAS
-
 #include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasPattern.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
+CanvasPattern::CanvasPattern(ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
+}
 
 ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
 {
-    return m_canvasRenderingContext->scriptBindingInstance();
-}
-
-CanvasPattern::CanvasPattern(CanvasRenderingContext* context)
-    : ScriptWrappable(this)
-    , m_canvasRenderingContext(context)
-{
+    return m_executionContext->scriptBindingInstance();
 }
 }
-#endif

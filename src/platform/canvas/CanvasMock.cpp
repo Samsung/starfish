@@ -39,20 +39,43 @@ public:
     {
     }
 
+    NativeGradientMock(double x0, double y0, double x1, double y1)
+        : NativeGradient()
+    {
+    }
+
+    NativeGradientMock(double x0, double y0, double r0, double x1, double y1,
+                       double r1)
+        : NativeGradient()
+    {
+    }
+
     ~NativeGradientMock()
     {
     }
 
 private:
-    virtual void init(GradientDrawingInfo* info) override
-    {
-    }
 };
 
 std::shared_ptr<NativeGradient> NativeGradient::create(
     GradientDrawingInfo* info)
 {
     return std::shared_ptr<NativeGradient>(new NativeGradientMock(info));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double x1, double y1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientMock(x0, y0, x1, y1));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double r0, double x1,
+                                                       double y1, double r1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientMock(x0, y0, r0, x1, y1, r1));
 }
 
 class CanvasMock : public Canvas {
@@ -123,6 +146,15 @@ public:
 
     virtual void setFillColor(const Unit::Color& clr)
     {
+    }
+
+    virtual void setFillSource(CanvasFillStrokeSource& source)
+    {
+    }
+
+    virtual CanvasFillStrokeSource fillSource()
+    {
+        return CanvasFillStrokeSource();
     }
 
     virtual void setVisible(bool visible)
@@ -285,6 +317,15 @@ public:
     {
     }
 
+    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    {
+    }
+
+    virtual CanvasFillStrokeSource strokeSource()
+    {
+        return CanvasFillStrokeSource();
+    }
+
     virtual void setNonInvertableCTM(bool validation)
     {
     }
@@ -305,16 +346,6 @@ public:
 
     virtual void setGlobalAlpha(float c)
     {
-    }
-
-    virtual Unit::Color color()
-    {
-        return Unit::Color();
-    }
-
-    virtual Unit::Color strokeColor()
-    {
-        return Unit::Color();
     }
 
     virtual float globalAlpha()

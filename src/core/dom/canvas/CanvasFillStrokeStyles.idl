@@ -1,7 +1,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasfillstrokestyles
 
 // Declare a typedef to apply the flag
-[STARFISH_ENABLE_CANVAS]
 typedef (DOMString or CanvasGradient or CanvasPattern) CanvasFillStrokeStylesType;
 
 // mixin
@@ -13,8 +12,8 @@ interface CanvasFillStrokeStyles {
   // (DOMString or CanvasGradient or CanvasPattern) -> CanvasFillStrokeStylesType
   attribute CanvasFillStrokeStylesType strokeStyle; // (default black)
   attribute CanvasFillStrokeStylesType fillStyle; // (default black)
-  [Unimplemented] CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
-  [Unimplemented] CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
+  [RaisesException] CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
+  [RaisesException] CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
   [Unimplemented] CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition);
 
 };

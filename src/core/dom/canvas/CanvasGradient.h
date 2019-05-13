@@ -20,26 +20,39 @@
 #ifndef __StarfishCanvasGradient__
 #define __StarfishCanvasGradient__
 
-#ifdef STARFISH_ENABLE_CANVAS
-
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
-class CanvasRenderingContext;
+class NativeGradient;
+class ExecutionContext;
 
 class CanvasGradient : public ScriptWrappable {
 public:
-    CanvasGradient(CanvasRenderingContext* context);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isCanvasGradient() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
-    void addColorStop(double offset, String* color);
+    CanvasGradient(ExecutionContext* executionContext, double x0, double y0,
+                   double x1, double y1);
+    CanvasGradient(ExecutionContext* executionContext, double x0, double y0,
+                   double r0, double x1, double y1, double r1);
+    ~CanvasGradient()
+    {
+    }
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasGradient)
+
+    void addColorStop(double offset, NULLABLE String* color);
+
+    std::shared_ptr<NativeGradient> nativeGradient()
+    {
+        return m_nativeGardient;
+    }
+
+    bool isZeroSize();
 
 private:
-    CanvasRenderingContext* m_canvasRenderingContext;
+    CanvasGradient(ExecutionContext* executionContext);
+
+    ExecutionContext* m_executionContext;
+    std::shared_ptr<NativeGradient> m_nativeGardient;
 };
 }
 
-#endif
 #endif

@@ -58,10 +58,16 @@ class CanvasStateSkia : public CanvasState {
 public:
     CanvasStateSkia()
         : CanvasState()
+        , m_fillColor(Unit::Color())
+        , m_strokeColor(Unit::Color())
         , m_fillType(SkPath::FillType::kWinding_FillType)
         , m_strokeWidth(0.0f)
     {
     }
+    // FiXME : Remove it after applies a CanvasFillStrokeSource
+    Unit::Color m_fillColor;
+    Unit::Color m_strokeColor;
+
     SkPath::FillType m_fillType;
     float m_strokeWidth;
 };
@@ -74,6 +80,19 @@ public:
         init(info);
     }
 
+    NativeGradientSkia(double x0, double y0, double x1, double y1)
+        : NativeGradient()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    NativeGradientSkia(double x0, double y0, double r0, double x1, double y1,
+                       double r1)
+        : NativeGradient()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     ~NativeGradientSkia()
     {
     }
@@ -84,7 +103,7 @@ public:
     }
 
 private:
-    virtual void init(GradientDrawingInfo* info) override
+    void init(GradientDrawingInfo* info)
     {
         size_t colorCount = info->colorStops.size();
         SkColor colors[colorCount];
@@ -117,6 +136,21 @@ std::shared_ptr<NativeGradient> NativeGradient::create(
     GradientDrawingInfo* info)
 {
     return std::shared_ptr<NativeGradient>(new NativeGradientSkia(info));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double x1, double y1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientSkia(x0, y0, x1, y1));
+}
+
+std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
+                                                       double r0, double x1,
+                                                       double y1, double r1)
+{
+    return std::shared_ptr<NativeGradient>(
+        new NativeGradientSkia(x0, y0, r0, x1, y1, r1));
 }
 
 class CanvasSkia : public Canvas {
@@ -405,10 +439,32 @@ public:
         lastState().m_fillColor = clr;
     }
 
+    virtual void setFillSource(CanvasFillStrokeSource& source)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasFillStrokeSource fillSource()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasFillStrokeSource();
+    }
+
     virtual void setStrokeColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_strokeColor = clr;
+    }
+
+    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasFillStrokeSource strokeSource()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasFillStrokeSource();
     }
 
     virtual void setGlobalAlpha(float c)
@@ -433,16 +489,6 @@ public:
     virtual CanvasBlendMode blendMode()
     {
         return lastState().m_blendMode;
-    }
-
-    virtual Unit::Color color()
-    {
-        return lastState().m_fillColor;
-    }
-
-    virtual Unit::Color strokeColor()
-    {
-        return lastState().m_strokeColor;
     }
 
     virtual float globalAlpha()

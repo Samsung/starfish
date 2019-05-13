@@ -23,6 +23,7 @@
 #define STARFISH_CANVAS_LENGTH_MAX 65535
 
 #include "core/modules/canvas/TextDecorationData.h"
+#include "core/modules/canvas/CanvasFillStrokeSource.h"
 
 namespace Starfish {
 
@@ -101,13 +102,14 @@ namespace CanvasCompositing {
     const int sizeOfCanvasBlendModeNames =
         sizeof(canvasBlendModeNames) / sizeof(*canvasBlendModeNames);
 }
+
 class CanvasState {
 public:
-    Unit::Color m_fillColor;
+    CanvasFillStrokeSource m_fillSource;
+    CanvasFillStrokeSource m_strokeSource;
     float m_layerOpacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
-    Unit::Color m_strokeColor;
     SkMatrix m_pathTM;
     float m_globalAlpha;
     CanvasCompositeOperator m_compositeOperator;
@@ -116,20 +118,7 @@ public:
     bool m_visible;
     bool m_hasNonInvertableCTM;
 
-    CanvasState()
-        : m_fillColor()
-        , m_layerOpacity(1.0f)
-        , m_font(nullptr)
-        , m_textDecorationData()
-        , m_strokeColor()
-        , m_pathTM(SkMatrix::I())
-        , m_globalAlpha(1.0f)
-        , m_compositeOperator(CanvasCompositeOperator::SourceOver)
-        , m_blendMode(CanvasBlendMode::Normal)
-        , m_visible(true)
-        , m_hasNonInvertableCTM(false)
-    {
-    }
+    CanvasState();
 };
 
 struct CanvasSurfaceTextureInfo {
@@ -302,10 +291,14 @@ public:
     virtual void resetClip() = 0;
 
     virtual void setFillColor(const Unit::Color& clr) = 0;
+    virtual void setFillSource(CanvasFillStrokeSource& source) = 0;
+    virtual CanvasFillStrokeSource fillSource() = 0;
+
     virtual void setStrokeColor(const Unit::Color& clr) = 0;
+    virtual void setStrokeSource(CanvasFillStrokeSource& source) = 0;
+    virtual CanvasFillStrokeSource strokeSource() = 0;
+
     virtual void setGlobalAlpha(float c) = 0;
-    virtual Unit::Color color() = 0;
-    virtual Unit::Color strokeColor() = 0;
     virtual float globalAlpha() = 0;
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,

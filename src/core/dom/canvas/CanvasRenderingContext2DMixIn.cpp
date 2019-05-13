@@ -26,8 +26,11 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/GradientData.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/dom/Node.h"
 #include "core/dom/canvas/CanvasFillRule.h"
+#include "core/dom/canvas/CanvasGradient.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/dom/canvas/CanvasDirection.h"
@@ -50,6 +53,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/layout/FrameDocument.h"
 #include "core/dom/Text.h"
+#include "core/modules/canvas/NativeGradient.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_CRASH
@@ -67,7 +71,7 @@
 
 namespace Starfish {
 
-static inline CanvasFillRule stringToCanvasFillRule(String* rule)
+static inline CanvasFillRule stringToCanvasFillRule(NULLABLE String* rule)
 {
     if (rule && rule->equals("evenodd")) {
         return CanvasFillRule::EvenOdd;
@@ -99,10 +103,9 @@ static inline String* canvasTextAlignToString(CanvasTextAlign textAlign)
     return String::createASCIIString("start");
 }
 
-static inline bool stringToCanvasTextAlign(String* textAlign,
+static inline bool stringToCanvasTextAlign(NULLABLE String* textAlign,
                                            CanvasTextAlign& out)
 {
-    STARFISH_ASSERT(textAlign != nullptr);
     if (textAlign) {
         if (textAlign->equals("start")) {
             out = CanvasTextAlign::Start;
@@ -124,7 +127,8 @@ static inline bool stringToCanvasTextAlign(String* textAlign,
     return false;
 }
 
-static inline bool stringToCanvasLineCap(String* lineCap, CanvasLineCap& out)
+static inline bool stringToCanvasLineCap(NULLABLE String* lineCap,
+                                         CanvasLineCap& out)
 {
     if (lineCap) {
         if (lineCap->equals("round")) {
@@ -151,7 +155,8 @@ static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
     return String::createASCIIString("miter");
 }
 
-static inline bool stringToCanvasLineJoin(String* lineJoin, CanvasLineJoin& out)
+static inline bool stringToCanvasLineJoin(NULLABLE String* lineJoin,
+                                          CanvasLineJoin& out)
 {
     if (lineJoin) {
         if (lineJoin->equals("round")) {
@@ -163,6 +168,26 @@ static inline bool stringToCanvasLineJoin(String* lineJoin, CanvasLineJoin& out)
         } else if (lineJoin->equals("miter")) {
             out = CanvasLineJoin::Miter;
             return true;
+        }
+    }
+    return false;
+}
+
+static inline bool stringToColor(NULLABLE String* color, Unit::Color& out)
+{
+    if (color) {
+        CSSTokenValue token(color->toUTF8NonGCString());
+        CSSStyleValuePair pair;
+        if (pair.updateValueUnitColor(token)) {
+            if (pair.valueKind() ==
+                CSSStyleValuePair::ValueKind::ColorValueKind) {
+                out = pair.colorValue();
+                return true;
+            } else if (pair.valueKind() ==
+                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                out = NamedColor::namedColorToColor(pair.namedColorValue());
+                return true;
+            }
         }
     }
     return false;
@@ -547,65 +572,53 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
     }
 }
 
-DOMStringOrCanvasGradientOrCanvasPattern
-CanvasRenderingContext2DMixIn::fillStyle()
+CanvasStyle CanvasRenderingContext2DMixIn::fillStyle()
 {
-    return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
-        m_canvas->color().toHTMLColorCodeString());
-}
-
-void CanvasRenderingContext2DMixIn::setFillStyle(
-    DOMStringOrCanvasGradientOrCanvasPattern value)
-{
-    if (value.isDOMStringValue()) {
-        String* v = value.getDOMStringValue();
-        CSSTokenValue token(v->toUTF8NonGCString());
-        CSSStyleValuePair pair;
-        Unit::Color fillColor;
-        if (pair.updateValueUnitColor(token)) {
-            if (pair.valueKind() ==
-                CSSStyleValuePair::ValueKind::ColorValueKind) {
-                fillColor = pair.colorValue();
-            } else if (pair.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                fillColor =
-                    NamedColor::namedColorToColor(pair.namedColorValue());
-            }
-            m_canvas->setFillColor(fillColor);
-        }
+    auto source = m_canvas->fillSource();
+    if (source.isColorType()) {
+        return CanvasStyle::createDOMString(
+            source.getColorValue().toHTMLColorCodeString());
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_ASSERT(source.isCanvasStyleType());
+        return source.getCanvasStyleValue();
     }
 }
 
-DOMStringOrCanvasGradientOrCanvasPattern
-CanvasRenderingContext2DMixIn::strokeStyle()
-{
-    return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
-        m_canvas->strokeColor().toHTMLColorCodeString());
-}
-
-void CanvasRenderingContext2DMixIn::setStrokeStyle(
-    DOMStringOrCanvasGradientOrCanvasPattern value)
+void CanvasRenderingContext2DMixIn::setFillStyle(CanvasStyle value)
 {
     if (value.isDOMStringValue()) {
-        String* v = value.getDOMStringValue();
-        CSSTokenValue token(v->toUTF8NonGCString());
-        CSSStyleValuePair pair;
-        Unit::Color strokeColor;
-        if (pair.updateValueUnitColor(token)) {
-            if (pair.valueKind() ==
-                CSSStyleValuePair::ValueKind::ColorValueKind) {
-                strokeColor = pair.colorValue();
-            } else if (pair.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                strokeColor =
-                    NamedColor::namedColorToColor(pair.namedColorValue());
-            }
-            m_canvas->setStrokeColor(strokeColor);
+        Unit::Color color;
+        if (stringToColor(value.getDOMStringValue(), color)) {
+            m_canvas->setFillColor(color);
         }
+    } else if (!value.isNoneValue()) {
+        CanvasFillStrokeSource s(value);
+        m_canvas->setFillSource(s);
+    }
+}
+
+CanvasStyle CanvasRenderingContext2DMixIn::strokeStyle()
+{
+    auto source = m_canvas->strokeSource();
+    if (source.isColorType()) {
+        return CanvasStyle::createDOMString(
+            source.getColorValue().toHTMLColorCodeString());
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_ASSERT(source.isCanvasStyleType());
+        return source.getCanvasStyleValue();
+    }
+}
+
+void CanvasRenderingContext2DMixIn::setStrokeStyle(CanvasStyle value)
+{
+    if (value.isDOMStringValue()) {
+        Unit::Color color;
+        if (stringToColor(value.getDOMStringValue(), color)) {
+            m_canvas->setStrokeColor(color);
+        }
+    } else if (!value.isNoneValue()) {
+        CanvasFillStrokeSource s(value);
+        m_canvas->setStrokeSource(s);
     }
 }
 
@@ -614,7 +627,19 @@ CanvasGradient* CanvasRenderingContext2DMixIn::createLinearGradient(float x0,
                                                                     float x1,
                                                                     float y1)
 {
-    return new CanvasGradient(this);
+    return new CanvasGradient(executionContext(), x0, y0, x1, y1);
+}
+
+CanvasGradient* CanvasRenderingContext2DMixIn::createRadialGradient(
+    double x0, double y0, double r0, double x1, double y1, double r1)
+{
+    if (r0 < 0 || r1 < 0) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "r0 or r1 are negative");
+    }
+
+    return new CanvasGradient(executionContext(), x0, y0, r0, x1, y1, r1);
 }
 
 String* CanvasRenderingContext2DMixIn::filter()
@@ -645,6 +670,12 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
         return;
     }
 
+    auto fs = fillStyle();
+    if (fs.isCanvasGradientValue() &&
+        fs.getCanvasGradientValue()->isZeroSize()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsComposite();
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -663,9 +694,17 @@ void CanvasRenderingContext2DMixIn::strokeRect(float x, float y, float w,
     if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
         return;
     }
+
     if (!w && !h) {
         return;
     }
+
+    auto fs = strokeStyle();
+    if (fs.isCanvasGradientValue() &&
+        fs.getCanvasGradientValue()->isZeroSize()) {
+        return;
+    }
+
     m_canvas->strokeRect(Unit::Rect(x, y, w, h));
 }
 
@@ -1376,6 +1415,12 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         return;
     }
 
+    auto fs = fillStyle();
+    if (fs.isCanvasGradientValue() &&
+        fs.getCanvasGradientValue()->isZeroSize()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsComposite();
 
     auto rule = stringToCanvasFillRule(fillRule);
@@ -1396,6 +1441,12 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 void CanvasRenderingContext2DMixIn::stroke(Path* path)
 {
     if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
+    auto fs = strokeStyle();
+    if (fs.isCanvasGradientValue() &&
+        fs.getCanvasGradientValue()->isZeroSize()) {
         return;
     }
 
