@@ -1271,10 +1271,20 @@ public:
         return m_state[m_state.size() - 1];
     }
     // reset transform matrix & clip
-    virtual void resetMatrixAndClip()
+    virtual void resetMatrixAndClip(bool needsApplyDPR)
     {
         m_canvas->resetMatrix();
-        applyDevicePixelRatio(m_canvas);
+        if (needsApplyDPR) {
+            applyDevicePixelRatio(m_canvas);
+        }
+    }
+
+    virtual void resetMatrix(bool needsApplyDPR)
+    {
+        m_canvas->resetMatrix();
+        if (needsApplyDPR) {
+            applyDevicePixelRatio(m_canvas);
+        }
     }
 
     // reset transform clip
