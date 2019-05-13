@@ -286,9 +286,10 @@ public:
     virtual void unsetDevicePixelRatio() = 0;
 
     // reset transform matrix & clip
-    virtual void resetMatrixAndClip() = 0;
+    virtual void resetMatrixAndClip(bool needsApplyDPR = true) = 0;
     // reset transform clip
     virtual void resetClip() = 0;
+    virtual void resetMatrix(bool needsApplyDPR = true) = 0;
 
     virtual void setFillColor(const Unit::Color& clr) = 0;
     virtual void setFillSource(CanvasFillStrokeSource& source) = 0;

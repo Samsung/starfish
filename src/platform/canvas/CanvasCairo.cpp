@@ -1476,11 +1476,21 @@ public:
         return m_state[m_state.size() - 1];
     }
 
-    virtual void resetMatrixAndClip()
+    virtual void resetMatrixAndClip(bool needsApplyDPR)
     {
         cairo_reset_clip(m_canvas);
         cairo_identity_matrix(m_canvas);
-        applyDevicePixelRatio();
+        if (needsApplyDPR) {
+            applyDevicePixelRatio();
+        }
+    }
+
+    virtual void resetMatrix(bool needsApplyDPR)
+    {
+        cairo_identity_matrix(m_canvas);
+        if (needsApplyDPR) {
+            applyDevicePixelRatio();
+        }
     }
 
     virtual void resetClip()

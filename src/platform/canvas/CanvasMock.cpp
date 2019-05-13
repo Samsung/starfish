@@ -265,7 +265,11 @@ public:
     {
     }
 
-    virtual void resetMatrixAndClip()
+    virtual void resetMatrixAndClip(bool needsApplyDPR)
+    {
+    }
+
+    virtual void resetMatrix(bool needsApplyDPR)
     {
     }
 

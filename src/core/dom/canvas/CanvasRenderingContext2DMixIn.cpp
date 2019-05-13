@@ -517,7 +517,7 @@ void CanvasRenderingContext2DMixIn::setTransform(DOMMatrix2DInit matrix)
 void CanvasRenderingContext2DMixIn::resetTransform()
 {
     m_canvas->setNonInvertableCTM(false);
-    m_canvas->resetMatrixAndClip();
+    m_canvas->resetMatrix(false);
     m_canvasPath->setShouldDisable(false);
     m_canvasPath->path()->resetCTM();
 }
