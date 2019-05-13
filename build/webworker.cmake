@@ -20,15 +20,17 @@ SET (STARFISH_WEBWORKER_DEFINITIONS
 )
 
 SET (STARFISH_WEBWORKER_LIBRARIES_DEFAULT pthread curl ssl crypto)
-SET (STARFISH_WEBWORKER_DEPENDENCIES escargot gc tuv nanomsg)
-SET (STARFISH_WEBWORKER_LIBRARIES_THIRD_PARTY escargot ${GC_TARGET} ${TUV_TARGET} ${NANOMSG_TARGET})
+SET (STARFISH_WEBWORKER_DEPENDENCIES escargot gc tuv nanomsg skia_matrix)
+SET (STARFISH_WEBWORKER_LIBRARIES_THIRD_PARTY escargot ${GC_TARGET} ${TUV_TARGET} ${NANOMSG_TARGET} skia_matrix)
 SET (STARFISH_WEBWORKER_INCLUDE_ADDITIONAL_DIRS 
     ${GCUTIL_ROOT} 
     ${GCUTIL_ROOT}/bdwgc/include
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/rapidjson/include
     ${THIRD_PARTY_ROOT}/nanomsg/dist/include
-    ${THIRD_PARTY_ROOT}/nanomsgcpp)
+    ${THIRD_PARTY_ROOT}/nanomsgcpp
+    ${THIRD_PARTY_ROOT}/skia_matrix
+    ${THIRD_PARTY_ROOT}/skia_matrix/include/core)
 SET (STARFISH_WEBWORKER_ENTRY ${STARFISH_ROOT}/src/launcher/WebWorkerEntry.cpp)
 
 #######################################################
@@ -118,6 +120,8 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/RegistrationOptionsBinding.cpp
     ${STARFISH_ROOT}/src/binding/WindowOrServiceWorkerBinding.cpp
     ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringOrSequenceBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST

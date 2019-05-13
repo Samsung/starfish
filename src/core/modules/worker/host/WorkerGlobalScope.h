@@ -22,6 +22,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/page/GlobalScope.h"
+#include "core/fetch/Fetch.h"
 
 namespace Starfish {
 
@@ -31,6 +32,8 @@ class WorkerLocation;
 class WorkerNavigator;
 class ErrorEventInit;
 class ResourceURL;
+
+typedef void (*TimerHandler)(void* data);
 
 class WorkerGlobalScope : public EventTarget, public GlobalScope {
 public:
@@ -77,7 +80,15 @@ public:
 
     void dispose();
 
+    uint32_t setTimeout(TimerHandler handler, int32_t delay, void* data);
+    void clearTimeout(int32_t id);
+    uint32_t setInterval(TimerHandler handler, int32_t delay, void* data);
+    void clearInterval(int32_t id);
+
     void importScripts(GCVector<String*>& urls);
+
+    Promise* fetch(RequestInfo& input);
+    Promise* fetch(RequestInfo& input, RequestInit& init);
 
 protected:
     WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);

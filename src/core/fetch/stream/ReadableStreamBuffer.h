@@ -28,15 +28,17 @@ enum class BodyType;
 class Promise;
 class ExecutionContext;
 
-class ReadableStreamBuffer : public gc {
+class ReadableStreamBuffer final : public gc {
 public:
     ReadableStreamBuffer();
+    ~ReadableStreamBuffer();
+
     size_t size()
     {
         return m_buffer.size();
     }
 
-    ReadableStreamChunk::pointer data()
+    char* data()
     {
         return m_buffer.data();
     }

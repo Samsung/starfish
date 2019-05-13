@@ -24,6 +24,7 @@
 
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerLocation.h"
@@ -71,6 +72,32 @@ void WorkerGlobalScope::dispose()
     }
 }
 
+uint32_t WorkerGlobalScope::setTimeout(TimerHandler handler, int32_t delay,
+                                       void* data)
+{
+    STARFISH_ASSERT(handler != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+    return webWorker()->timer()->addTimer(delay, this, handler, data, false);
+}
+
+void WorkerGlobalScope::clearTimeout(int32_t id)
+{
+    webWorker()->timer()->removeTimer(id);
+}
+
+uint32_t WorkerGlobalScope::setInterval(TimerHandler handler, int32_t delay,
+                                        void* data)
+{
+    STARFISH_ASSERT(handler != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+    return webWorker()->timer()->addTimer(delay, this, handler, data, true);
+}
+
+void WorkerGlobalScope::clearInterval(int32_t id)
+{
+    webWorker()->timer()->removeTimer(id);
+}
+
 void WorkerGlobalScope::importScripts(GCVector<String*>& urls)
 {
     if (urls.empty()) {
@@ -107,6 +134,16 @@ void WorkerGlobalScope::importScript(ResourceURL* url)
                                DOMException::Code::DOM_EXCEPTION,
                                "Failed to execute 'importScript'");
     }
+}
+
+Promise* WorkerGlobalScope::fetch(RequestInfo& input)
+{
+    return Fetch::fetch(executionContext(), input);
+}
+
+Promise* WorkerGlobalScope::fetch(RequestInfo& input, RequestInit& init)
+{
+    return Fetch::fetch(executionContext(), input, init);
 }
 }
 
