@@ -46,6 +46,14 @@
 
 #include <EscargotPublic.h>
 
+#if defined(STARFISH_TIZEN_VERSION_5_0) && !defined(TIZEN_COMPAT_HEADER_5_0)
+#error "Version Mismatch: You must build LWE on Tizen 5.5 Environment"
+#endif
+
+#if defined(STARFISH_TIZEN_VERSION_5_5) && defined(TIZEN_COMPAT_HEADER_5_0)
+#error "Version Mismatch: You must build LWE on Tizen 5.0 Environment"
+#endif
+
 #define TO_STARFISH(ptr) (((Starfish::WebView*)ptr)->starfish())
 #define TO_WEBVIEW(ptr) (((Starfish::WebView*)ptr))
 #define TO_HISTORY(ptr) \

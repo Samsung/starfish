@@ -37,6 +37,8 @@
 
 namespace LWE {
 
+#define TIZEN_COMPAT_HEADER_5_0
+
 class LWE_EXPORT LWE {
 public:
     // You must call Initialize function before using WebContainer or WebView
