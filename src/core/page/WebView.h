@@ -471,6 +471,7 @@ private:
     uint64_t m_lastRenderingTick;
     uint64_t m_navigateStartingTime;
     uint32_t m_currentActiveAnimatorCount;
+    RepaintRegionTrackerContext m_repaintRegionTrackerContext;
     RepaintRegion m_repaintRegionInRendering;
     bool m_inRendering;
     bool m_needsRendering;

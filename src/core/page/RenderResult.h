@@ -24,6 +24,7 @@ namespace Starfish {
 
 class CanvasSurface;
 class GraphicsBufferHolder;
+class FrameBox;
 
 struct RenderInfo {
     void* updatedBufferAddress;
@@ -66,6 +67,21 @@ typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>
     PrevDrawnStackingContextInfoMap;
 
 typedef std::unordered_map<Node*, LayoutRect> RepaintRegion;
+
+class RepaintRegionTrackerContext {
+    friend class RepaintRegionTracker;
+
+public:
+    void clear()
+    {
+        std::unordered_map<FrameBox*, LayoutRect>().swap(
+            m_visibleRectOfFrameRectIsOverflowedBoxes);
+    }
+
+protected:
+    std::unordered_map<FrameBox*, LayoutRect>
+        m_visibleRectOfFrameRectIsOverflowedBoxes;
+};
 }
 
 #endif

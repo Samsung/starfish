@@ -587,7 +587,7 @@ static bool isSoftWrapOpportunity(char32_t d)
 
     auto blockNumber = ublock_getCode(d);
 
-    switch(blockNumber) {
+    switch (blockNumber) {
     // korean
     case UBLOCK_HANGUL_JAMO:
     case UBLOCK_HANGUL_COMPATIBILITY_JAMO:
