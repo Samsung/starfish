@@ -41,10 +41,6 @@ jobs:
           working_directory: third_party/escargot/
           command: mkdir -p include
       - run:
-          name: Prepare escargot header
-          working_directory: third_party/escargot/
-          command: make install_header_to_include
-      - run:
           name: Prepare binding
           command: python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
       - run:
