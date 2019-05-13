@@ -33,7 +33,7 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/client/RegistrationOptions.h"
+#include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 
 namespace Starfish {

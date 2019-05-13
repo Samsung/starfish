@@ -658,18 +658,21 @@ inline T2 narrow_cast(T1 v)
 }
 
 template <typename Target, typename Source>
-inline Target* downcast(Source* source)
+inline Target downcast(Source* source)
 {
+#if !defined(NDEBUG)
     STARFISH_ASSERT(source != nullptr);
-    static_assert(std::is_base_of<Source, Target>::value == true,
+    typedef typename std::remove_pointer<Target>::type TargetType;
+    static_assert(std::is_base_of<Source, TargetType>::value == true,
                   "Wrong type cast");
+#endif
 
 #if !defined(NDEBUG) && (defined(__GXX_RTTI) || defined(_CPPRTTI))
-    auto casted = dynamic_cast<Target*>(source);
+    auto casted = dynamic_cast<Target>(source);
     STARFISH_ASSERT(casted != nullptr);
     return casted;
 #else
-    return static_cast<Target*>(source);
+    return static_cast<Target>(source);
 #endif
 }
 
