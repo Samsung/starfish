@@ -53,9 +53,9 @@ interface CSSKeyframesRule : CSSRule {
     attribute CSSOMString name;
     readonly attribute CSSRuleList cssRules;
 
-    [Unimplemented] void appendRule(CSSOMString rule);
-    [Unimplemented] void deleteRule(CSSOMString select);
-    [Unimplemented] CSSKeyframeRule? findRule(CSSOMString select);
+    void appendRule(CSSOMString rule);
+    void deleteRule(CSSOMString select);
+    CSSKeyframeRule? findRule(CSSOMString select);
 };
 
 interface CSSKeyframeRule : CSSRule {

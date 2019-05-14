@@ -350,6 +350,22 @@ public:
         std::swap(m_size, other.m_size);
     }
 
+    bool operator==(const Vector<T, Allocator>& other)
+    {
+        if (m_size != other.m_size) {
+            return false;
+        }
+        if (other.empty()) {
+            return true;
+        }
+        return std::equal(begin(), end(), other.begin());
+    }
+
+    bool operator!=(const Vector<T, Allocator>& other)
+    {
+        return !(this == other);
+    }
+
     void resize(size_t newSize)
     {
         reserve(newSize);
