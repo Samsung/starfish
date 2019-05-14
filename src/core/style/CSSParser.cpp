@@ -2545,7 +2545,7 @@ StyleRuleNamespace* CSSParser::parseNamespaceRule()
 }
 
 bool CSSParser::parseKeyframeKeyList(RefPtr<CSSToken>& token,
-                                     GCVector<double>& keyList)
+                                     GCAtomicVector<double>& keyList)
 {
     while (token->isNotNull() && !token->isSymbol('{')) {
         if (token->isPercentage() && token->numericValue() >= 0 &&
@@ -2575,7 +2575,7 @@ CSSParser::ParseResult CSSParser::parseKeyframeStyleRule(
     AllowedRulesType allowedRules)
 {
     preserveState();
-    GCVector<double> keyList;
+    GCAtomicVector<double> keyList;
     if (!parseKeyframeKeyList(token, keyList)) {
         return CSSParser::ParseResult::Failed;
     }

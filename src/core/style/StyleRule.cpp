@@ -360,7 +360,7 @@ StyleRuleNamespace::StyleRuleNamespace(String* namespaceURI, String* prefix)
 {
 }
 
-StyleRuleKeyframe::StyleRuleKeyframe(GCVector<double>& keyList,
+StyleRuleKeyframe::StyleRuleKeyframe(GCAtomicVector<double>& keyList,
                                      CSSStyleDeclaration* decl)
     : StyleRuleBase(CSSRule::Type::KEYFRAME_RULE)
     , m_keyList(std::move(keyList))
@@ -391,7 +391,7 @@ bool StyleRuleKeyframe::setKeyText(Document* doc, String* text)
 
     CSSParser parser(doc);
     RefPtr<CSSToken> token = parser.makeToken(text);
-    GCVector<double> keys;
+    GCAtomicVector<double> keys;
     parser.parseKeyframeKeyList(token, keys);
 
     if (keys.empty()) {
@@ -409,9 +409,6 @@ String* StyleRuleKeyframe::cssText()
     result.appendString(" { ");
     String* decls = styleDeclaration()->cssText();
     result.appendString(decls);
-    if (!decls->isEmpty()) {
-        result.appendChar(' ');
-    }
     result.appendChar('}');
 
     return result.finalize();
@@ -425,6 +422,42 @@ StyleRuleKeyframes::StyleRuleKeyframes(String* name,
     , m_version(0)
 {
     STARFISH_ASSERT(name != nullptr);
+}
+
+void StyleRuleKeyframes::wrapperAppendKeyframe(StyleRuleKeyframe* keyframe)
+{
+    STARFISH_ASSERT(keyframe != nullptr);
+    m_keyframes.push_back(keyframe);
+    styleChanged();
+}
+
+void StyleRuleKeyframes::wrapperRemoveKeyframe(int index)
+{
+    m_keyframes.erase(m_keyframes.begin() + index);
+    styleChanged();
+}
+
+int StyleRuleKeyframes::findKeyframeIndex(Document* doc, String* key) const
+{
+    STARFISH_ASSERT(doc != nullptr);
+    STARFISH_ASSERT(key != nullptr);
+    CSSParser parser(doc);
+    RefPtr<CSSToken> token = parser.makeToken(key);
+
+    GCAtomicVector<double> keyList;
+    parser.parseKeyframeKeyList(token, keyList);
+
+    if (keyList.size() == 0) {
+        return -1;
+    }
+
+    for (size_t i = m_keyframes.size(); i--;) {
+        if (static_cast<StyleRuleKeyframe*>(m_keyframes[i])->keyList() ==
+            keyList) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 StyleRuleSupports::StyleRuleSupports(String* conditionText, bool isSupported,

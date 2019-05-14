@@ -571,6 +571,65 @@ CSSRuleList* CSSKeyframesRule::cssRules()
     return m_ruleListWrapper;
 }
 
+void CSSKeyframesRule::appendRule(String* rule)
+{
+    STARFISH_ASSERT(rule != nullptr);
+    STARFISH_ASSERT(m_childRuleWrappers.size() ==
+                    m_keyframesRule->keyframes().size());
+
+    CSSStyleSheet* style_sheet = parentStyleSheet();
+
+    CSSParser parser(scriptBindingInstance()->ownerDocument());
+    RefPtr<CSSToken> token = parser.makeToken(rule);
+
+    GCVector<StyleRuleBase*> keyframe;
+    parser.parseKeyframeStyleRule(token, keyframe,
+                                  CSSParser::AllowedRulesType::KeyframeRules);
+
+    if (keyframe.size() != 1) {
+        return;
+    }
+    m_keyframesRule->wrapperAppendKeyframe(
+        static_cast<StyleRuleKeyframe*>(keyframe[0]));
+    m_childRuleWrappers.resize(length());
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+}
+
+void CSSKeyframesRule::deleteRule(String* keyList)
+{
+    STARFISH_ASSERT(keyList != nullptr);
+    STARFISH_ASSERT(m_childRuleWrappers.size() ==
+                    m_keyframesRule->keyframes().size());
+    int i = m_keyframesRule->findKeyframeIndex(
+        scriptBindingInstance()->ownerDocument(), keyList);
+    if (i < 0) {
+        return;
+    }
+    m_keyframesRule->wrapperRemoveKeyframe(i);
+
+    if (m_childRuleWrappers[i]) {
+        m_childRuleWrappers[i]->setParentRule(nullptr);
+    }
+    m_childRuleWrappers.erase(m_childRuleWrappers.begin() + i);
+
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
+}
+
+CSSKeyframeRule* CSSKeyframesRule::findRule(String* keyList)
+{
+    STARFISH_ASSERT(keyList != nullptr);
+    int i = m_keyframesRule->findKeyframeIndex(
+        scriptBindingInstance()->ownerDocument(), keyList);
+    return (i >= 0) ? static_cast<CSSKeyframeRule*>(item(i)) : nullptr;
+}
+
 unsigned CSSKeyframesRule::length() const
 {
     return m_keyframesRule->keyframes().size();
@@ -596,6 +655,10 @@ CSSRule* CSSKeyframesRule::item(unsigned index)
 
 void CSSKeyframesRule::styleChanged()
 {
+    scriptBindingInstance()
+        ->ownerWindow()
+        ->browsingContext()
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
     m_keyframesRule->styleChanged();
 }
 

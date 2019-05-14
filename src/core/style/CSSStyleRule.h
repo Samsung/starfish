@@ -277,6 +277,10 @@ public:
         return m_keyframesRule;
     }
 
+    void appendRule(String* rule);
+    void deleteRule(String* keyList);
+    CSSKeyframeRule* findRule(String* keyList);
+
     String* name() const;
     void setName(String* name);
 

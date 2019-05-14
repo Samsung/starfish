@@ -401,11 +401,17 @@ private:
 
 class StyleRuleKeyframe : public StyleRuleBase {
 public:
-    StyleRuleKeyframe(GCVector<double>& keyList, CSSStyleDeclaration* decl);
+    StyleRuleKeyframe(GCAtomicVector<double>& keyList,
+                      CSSStyleDeclaration* decl);
 
     String* keyText();
     bool setKeyText(Document* doc, String* text);
     String* cssText();
+
+    GCAtomicVector<double>& keyList()
+    {
+        return m_keyList;
+    }
 
     CSSStyleDeclaration* styleDeclaration()
     {
@@ -413,7 +419,7 @@ public:
     }
 
 private:
-    GCVector<double> m_keyList;
+    GCAtomicVector<double> m_keyList;
     CSSStyleDeclaration* m_styleDeclaration;
 };
 
@@ -446,6 +452,10 @@ public:
     {
         return m_version;
     }
+
+    void wrapperAppendKeyframe(StyleRuleKeyframe*);
+    void wrapperRemoveKeyframe(int);
+    int findKeyframeIndex(Document* doc, String* key) const;
 
 private:
     String* m_name;

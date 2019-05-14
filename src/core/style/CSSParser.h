@@ -1715,7 +1715,7 @@ public:
     Nullable<String*> parseURLString();
     void consumeComponentValue(RefPtr<CSSToken>& token);
     bool parseKeyframeKeyList(RefPtr<CSSToken>& token,
-                              GCVector<double>& keyList);
+                              GCAtomicVector<double>& keyList);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
     bool parseSupportsCondition(); // for supports rule
