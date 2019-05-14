@@ -64,8 +64,7 @@ def internal_test():
     run_test(["basic", "tool/reftest/cairo/internal.res", "common"])
     run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep"])
     run_test(["csswg", "tool/pixel_test/svg.res", "cairo"])
-    # we cannot test obsolete spec. because obsolete spec is don't enabled by default
-    # run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common"])
+    run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common"])
 
 
 def dom_conformance_test():

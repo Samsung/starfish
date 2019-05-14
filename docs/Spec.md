@@ -1232,6 +1232,8 @@ To use these features, you need to define STARFISH_ENABLE_OBSOLETE_SPEC.
 |----------------------|--------|---------------------------|-------------|
 | Document  | attribute | width | Returns the width of the &lt;body&gt; element of the current document in pixels. |
 |  | attribute | height | Returns the height of the &lt;body&gt; element of the current document in pixels.  |
+| Window  | attribute | event | Returns current dispatching event. |
+
 
 ## CSS
 
@@ -1421,6 +1423,9 @@ To use these features, you need to define specific string when compile. the stri
 | | -webkit-flex-grow | alias of flex-grow |
 | | -webkit-flex-shrink | alias of flex-shrink |
 | | -webkit-flex-basis | alias of flex-basis |
+| STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX | -webkit-transform | alias of transform |
+| | -webkit-transform-origin | alias of transform-origin |
+| STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX | -webkit-transition | alias of transition |
 
 ## Selectors
 

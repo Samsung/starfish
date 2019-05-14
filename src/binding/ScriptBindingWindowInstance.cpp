@@ -24,6 +24,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/dom/Event.h"
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
@@ -75,6 +76,11 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
     if (name->equals("self")) {
         return self->scriptValue();
     }
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    else if (name->equals("event") && self->event()) {
+        return self->event()->scriptValue();
+    }
+#endif
 
     return ValueRef::createEmpty();
 }

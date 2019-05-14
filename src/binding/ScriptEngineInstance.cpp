@@ -30,6 +30,8 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
 {
     // Set this flag to process const keyword temporary
     setenv("ESCARGOT_TREAT_CONST_AS_VAR", "1", 1);
+    // Set this flag to process let keyword temporary
+    setenv("ESCARGOT_TREAT_LET_AS_VAR", "1", 1);
 
     Escargot::Globals::initialize();
 

@@ -214,10 +214,48 @@ bool EventTarget::dispatchEventByUA(Event* event)
     return dispatchEventByUA(this, event);
 }
 
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+class WindowCurrentDispatchingEventChanger {
+public:
+    WindowCurrentDispatchingEventChanger(EventTarget* e, Event* nextEventValue)
+        : m_eventTarget(e)
+        , m_prevEventValue(nullptr)
+    {
+        STARFISH_ASSERT(e != nullptr);
+        STARFISH_ASSERT(nextEventValue != nullptr);
+
+        if (m_eventTarget->isWindow()) {
+            m_prevEventValue = m_eventTarget->asWindow()->event();
+            m_eventTarget->asWindow()->setEvent(nextEventValue);
+        } else if (m_eventTarget->isNode()) {
+            m_prevEventValue = m_eventTarget->asNode()->window()->event();
+            m_eventTarget->asNode()->window()->setEvent(nextEventValue);
+        }
+    }
+
+    ~WindowCurrentDispatchingEventChanger()
+    {
+        if (m_eventTarget->isWindow()) {
+            m_eventTarget->asWindow()->setEvent(m_prevEventValue);
+        } else if (m_eventTarget->isNode()) {
+            m_eventTarget->asNode()->window()->setEvent(m_prevEventValue);
+        }
+    }
+
+private:
+    EventTarget* m_eventTarget;
+    Event* m_prevEventValue;
+};
+#endif
+
 bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
                                     bool onlyTarget)
 {
     event->setIsTrusted(true);
+
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    WindowCurrentDispatchingEventChanger changer(this, event);
+#endif
     return onlyTarget ? dispatchEventForTarget(origin, event)
                       : dispatchEvent(origin, event);
 }
