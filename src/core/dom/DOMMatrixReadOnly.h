@@ -75,7 +75,6 @@ public:
 private:
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
-    bool m_is2D;
 };
 }
 #endif

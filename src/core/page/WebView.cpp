@@ -323,7 +323,7 @@ void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
                 uint64_t currentTick = longTickCount();
                 if (!wv->m_inIdleMode &&
                     currentTick - wv->m_lastRenderingTick >
-                        wv->m_idleModeCheckIntervalInMS * 1000) {
+                        (uint64_t)wv->m_idleModeCheckIntervalInMS * 1000) {
                     wv->enterIdleMode();
                 }
             },
