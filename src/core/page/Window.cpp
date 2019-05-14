@@ -90,6 +90,9 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     , m_height(initialHeight)
     , m_cssTarget(nullptr)
     , m_frames(nullptr)
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    , m_currentDispatchingEvent(nullptr)
+#endif
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -859,4 +862,16 @@ void Window::setName(String* name)
 {
     m_browsingContext->setName(name);
 }
+
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+Event* Window::event()
+{
+    return m_currentDispatchingEvent;
+}
+
+void Window::setEvent(Event* e)
+{
+    m_currentDispatchingEvent = e;
+}
+#endif
 } // namespace Starfish

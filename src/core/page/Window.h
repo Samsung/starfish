@@ -356,6 +356,11 @@ public:
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    Event* event();
+    void setEvent(Event* e);
+#endif
+
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
     void screenShot(std::string filePath, void (*callback)(void*), void* data);
@@ -482,6 +487,9 @@ private:
 
     Node* m_cssTarget;
     NodeList* m_frames;
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    Event* m_currentDispatchingEvent;
+#endif
 };
 }
 

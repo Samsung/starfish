@@ -24,6 +24,7 @@ namespace Starfish {
 
 CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 {
+    STARFISH_ASSERT(data);
     switch (length) {
     case 1:
         if (memcmp(data, "x", 1) == 0) {
@@ -870,8 +871,10 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
             break;
 
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case '-':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-flow", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexFlow;
             }
@@ -881,6 +884,12 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "-webkit-flex-wrap", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexWrap;
             }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
+            if (memcmp(data, "-webkit-transform", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::Transform;
+            }
+#endif
             break;
 #endif
         }
@@ -915,11 +924,19 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
         case '-':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-basis", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;
             }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
+            if (memcmp(data, "-webkit-transition", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::Transition;
+            }
+#endif
             break;
 #endif
         }
@@ -1077,6 +1094,17 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             break;
         }
         break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
+    case 24:
+        switch (data[0]) {
+        case '-':
+            if (memcmp(data, "-webkit-transform-origin", 24) == 0) {
+                return CSSStyleValuePair::KeyKind::TransformOrigin;
+            }
+            break;
+        }
+        break;
+#endif
     case 25:
         // border-bottom-left-radius
         switch (data[0]) {
@@ -1775,11 +1803,19 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case 'w':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlexBasis", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;
             }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
+            if (memcmp(data, "webkitTransform", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::Transform;
+            }
+#endif
             break;
 #endif
         }
@@ -1819,11 +1855,19 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
         case 'w':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlexShrink", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexShrink;
             }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
+            if (memcmp(data, "webkitTransition", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::Transition;
+            }
+#endif
             break;
 #endif
         }
@@ -1945,6 +1989,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::TextUnderlinePosition;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitTransformOrigin", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::TransformOrigin;
+            }
+            break;
+#endif
         }
         break;
     case 22:

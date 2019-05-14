@@ -35,6 +35,8 @@ interface Window : EventTarget {
   [Unimplemented] void stop();
   void focus();
   void blur();
+  // `event` is Implemented in virtual id
+  // [STARFISH_ENABLE_OBSOLETE_SPEC, Replaceable] readonly attribute Event? event;
 
   // other browsing contexts
   // NOTE WindowProxy -> Window
