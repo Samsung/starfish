@@ -338,6 +338,9 @@ public:
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& text) = 0;
+    virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
+                                LayoutUnit stringWidth,
+                                const StringView& text) = 0;
 
     virtual void drawImage(
         NativeImageData* data, const Unit::Rect& dst,
