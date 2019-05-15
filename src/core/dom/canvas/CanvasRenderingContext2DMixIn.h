@@ -260,6 +260,10 @@ private:
     bool canUseFastPathText(String* text, bool shouldApplyMaxWidth);
     bool isLtrDirection();
     void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
+    void strokeTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
+    void drawTextNormal(String* text, float x, float y, float maxWidth,
+                        bool shouldApplyMaxWidth, bool isStroke);
+
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);
     std::pair<NULLABLE NativeImageData*, bool>

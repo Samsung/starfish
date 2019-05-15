@@ -827,6 +827,11 @@ public:
 #endif
     }
 
+    virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
+                                LayoutUnit stringWidth, const StringView& sv)
+    {
+    }
+
     static inline void setImageRenderingMode(
         SkPaint& paint, ImageRenderingValue imageRenderingMode)
     {

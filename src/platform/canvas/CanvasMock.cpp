@@ -239,6 +239,11 @@ public:
     {
     }
 
+    virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
+                                LayoutUnit stringWidth, const StringView& sv)
+    {
+    }
+
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {

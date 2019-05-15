@@ -1001,6 +1001,7 @@ public:
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
+        applyCanvasFillStrokeSourceIfNeeds();
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
             drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
@@ -1012,6 +1013,24 @@ public:
         drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
         drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
 #endif
+    }
+
+    virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
+                                LayoutUnit stringWidth, const StringView& sv)
+    {
+        int size = lastState().m_font->size();
+        if (!lastState().m_visible || size == 0 || sv.length() == 0) {
+            return;
+        }
+
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawStrokeText");
+
+        LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+        LayoutRect rt(x, y, sz.width(), sz.height());
+
+        applyCanvasFillStrokeSourceIfNeeds(true);
+        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), true);
+        drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
     }
 
     void setImageRenderingModeToPattern(cairo_pattern_t* resizePattern,
@@ -1692,7 +1711,9 @@ private:
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
                     size_t glyphCount)
     {
-        applyCanvasFillStrokeSourceIfNeeds();
+        STARFISH_ASSERT(canvas != nullptr);
+        STARFISH_ASSERT(glyphs != nullptr);
+
         cairo_font_face_t* fontFace =
             cairo_ft_font_face_create_for_ft_face(ftFace, 0);
         cairo_font_options_t* fontOptions = cairo_font_options_create();
@@ -1709,9 +1730,38 @@ private:
         cairo_font_face_destroy(fontFace);
     }
 
-    void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
-                         LayoutUnit dx, LayoutUnit dy)
+    void drawStrokeGlyphs(cairo_t* canvas, const FT_Face& ftFace,
+                          const cairo_matrix_t& sizeMatrix,
+                          const cairo_matrix_t& identityMatrix,
+                          cairo_glyph_t* glyphs, size_t glyphCount,
+                          size_t strokeWidth)
     {
+        STARFISH_ASSERT(canvas != nullptr);
+        STARFISH_ASSERT(glyphs != nullptr);
+
+        cairo_font_face_t* fontFace =
+            cairo_ft_font_face_create_for_ft_face(ftFace, 0);
+        cairo_font_options_t* fontOptions = cairo_font_options_create();
+        cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
+            fontFace, &sizeMatrix, &identityMatrix, fontOptions);
+        cairo_font_options_destroy(fontOptions);
+        auto oldScaledFont = cairo_get_scaled_font(canvas);
+        cairo_set_line_width(canvas, strokeWidth);
+        cairo_scaled_font_reference(oldScaledFont);
+        cairo_set_scaled_font(canvas, scaledFontFace);
+        cairo_glyph_path(canvas, glyphs, glyphCount);
+        cairo_stroke(canvas);
+        cairo_set_scaled_font(canvas, oldScaledFont);
+        cairo_scaled_font_destroy(oldScaledFont);
+        cairo_scaled_font_destroy(scaledFontFace);
+        cairo_font_face_destroy(fontFace);
+    }
+
+    void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
+                         LayoutUnit dx, LayoutUnit dy, bool isStroke = false)
+    {
+        STARFISH_ASSERT(canvas != nullptr);
+
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
         FT_Face lastFontFace = nullptr;
@@ -1761,8 +1811,15 @@ private:
                     }
                     if (lastFontFace != g.first.first->freetypeFace()) {
                         if (glyphCount) {
-                            drawGlyphs(canvas, lastFontFace, sizeMatrix,
-                                       identityMatrix, glyphs, glyphCount);
+                            if (isStroke) {
+                                drawStrokeGlyphs(canvas, lastFontFace,
+                                                 sizeMatrix, identityMatrix,
+                                                 glyphs, glyphCount,
+                                                 lineWidth());
+                            } else {
+                                drawGlyphs(canvas, lastFontFace, sizeMatrix,
+                                           identityMatrix, glyphs, glyphCount);
+                            }
                             glyphCount = 0;
                         }
                         lastFontFace = g.first.first->freetypeFace();
@@ -1824,8 +1881,16 @@ private:
                     } else {
                         if (run.m_ftFace != lastFontFace) {
                             if (glyphCount) {
-                                drawGlyphs(canvas, lastFontFace, sizeMatrix,
-                                           identityMatrix, glyphs, glyphCount);
+                                if (isStroke) {
+                                    drawStrokeGlyphs(canvas, lastFontFace,
+                                                     sizeMatrix, identityMatrix,
+                                                     glyphs, glyphCount,
+                                                     lineWidth());
+                                } else {
+                                    drawGlyphs(canvas, lastFontFace, sizeMatrix,
+                                               identityMatrix, glyphs,
+                                               glyphCount);
+                                }
                                 glyphCount = 0;
                             }
                             lastFontFace = run.m_ftFace;
@@ -1848,8 +1913,15 @@ private:
         }
 
         if (glyphCount) {
-            drawGlyphs(canvas, lastFontFace, sizeMatrix, identityMatrix, glyphs,
-                       glyphCount);
+            if (isStroke) {
+                drawStrokeGlyphs(canvas, lastFontFace, sizeMatrix,
+                                 identityMatrix, glyphs, glyphCount,
+                                 lineWidth());
+            } else {
+                drawGlyphs(canvas, lastFontFace, sizeMatrix, identityMatrix,
+                           glyphs, glyphCount);
+            }
+
             glyphCount = 0;
         }
 
