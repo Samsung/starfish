@@ -21,7 +21,6 @@
 #define __StarfishSVGSVGElement__
 
 #include "core/dom/svg/SVGElement.h"
-#include "core/modules/canvas/image/NativeImageData.h"
 
 #define STARFISH_DEFAULT_SVG_WIDTH 300
 #define STARFISH_DEFAULT_SVG_HEIGHT 150
@@ -30,12 +29,7 @@ namespace Starfish {
 
 class SVGSVGElement : public SVGElement {
 public:
-    SVGSVGElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-        , m_hasViewBox(false)
-        , m_viewBox(0, 0, 0, 0)
-    {
-    }
+    SVGSVGElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -71,6 +65,9 @@ public:
         STARFISH_ASSERT(m_hasViewBox);
         return m_viewBox;
     }
+
+    virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+        override;
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);

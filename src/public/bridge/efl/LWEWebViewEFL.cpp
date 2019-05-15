@@ -331,13 +331,20 @@ public:
 
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
-#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
         m_glCtx = evas_gl_context_version_create(
             m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
-#else
-        m_glCtx = evas_gl_context_version_create(
-            m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
-#endif
+
+        if (m_glCtx == nullptr) {
+            STARFISH_LOG_ERROR(
+                "failed to create openGL 3.0 context... try to use 2.0 "
+                "instead\n");
+            m_glCtx = evas_gl_context_version_create(
+                m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+        }
+        if (m_glCtx == nullptr) {
+            STARFISH_LOG_ERROR("failed to create openGL 2.0 context...\n");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
 
         Evas_Native_Surface ns;
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);

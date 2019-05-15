@@ -23,8 +23,17 @@
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace Starfish {
+
+SVGSVGElement::SVGSVGElement(Document* document, const QualifiedName& qname)
+    : SVGElement(document, qname)
+    , m_hasViewBox(false)
+    , m_viewBox(0, 0, 0, 0)
+{
+    STARFISH_ASSERT(document != nullptr);
+}
 
 void* SVGSVGElement::operator new(size_t size)
 {
@@ -99,5 +108,22 @@ void SVGSVGElement::styleForPresentationAttribute(
             cssValues.push_back(pair);
         }
     }
+}
+
+NativeImageData::PreserveAspectRatioValue
+SVGSVGElement::preserveAspectRatioValue()
+{
+    if (hasAttribute(starfish()->staticStrings()->m_preserveAspectRatio) ==
+        SIZE_MAX) {
+        bool hasViewbox =
+            hasAttribute(starfish()->staticStrings()->m_viewBox) != SIZE_MAX;
+        bool hasWidth =
+            hasAttribute(starfish()->staticStrings()->m_width) != SIZE_MAX;
+        bool hasHeight =
+            hasAttribute(starfish()->staticStrings()->m_height) != SIZE_MAX;
+        return hasViewbox && hasWidth && hasHeight ? NativeImageData::xMidYMid
+                                                   : NativeImageData::None;
+    }
+    return m_preserveAspectRatioValue;
 }
 }

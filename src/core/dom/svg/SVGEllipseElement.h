@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,23 +17,24 @@
  *  USA
  */
 
-#ifndef __StarfishSVGCircleElement__
-#define __StarfishSVGCircleElement__
+#ifndef __StarfishSVGEllipseElement__
+#define __StarfishSVGEllipseElement__
 
 #include "core/dom/svg/SVGElement.h"
 
 namespace Starfish {
 
-class SVGCircleElement : public SVGElement {
+class SVGEllipseElement : public SVGElement {
 public:
-    SVGCircleElement(Document* document, const QualifiedName& qname)
+    SVGEllipseElement(Document* document, const QualifiedName& qname)
         : SVGElement(document, qname)
     {
+        STARFISH_ASSERT(document != nullptr);
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSVGCircleElement() const override;
+    virtual bool isSVGEllipseElement() const override;
 
     virtual bool needsGeometryAttributes() override
     {
@@ -49,7 +50,8 @@ public:
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cx);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cy);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(r);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
 };
 }
 
