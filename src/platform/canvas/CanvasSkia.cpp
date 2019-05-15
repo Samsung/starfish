@@ -30,6 +30,7 @@
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/NativePattern.h"
 #include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
 #include "core/page/WebView.h"
@@ -125,7 +126,7 @@ private:
                 { info->x1, info->y1 }, info->r2, colors, pos, colorCount,
                 SkShader::kClamp_TileMode);
         } else {
-            STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
 
@@ -151,6 +152,29 @@ std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
 {
     return std::shared_ptr<NativeGradient>(
         new NativeGradientSkia(x0, y0, r0, x1, y1, r1));
+}
+
+class NativePatternSkia : public NativePattern {
+public:
+    NativePatternSkia(NULLABLE NativeImageData* image, bool repeatX,
+                      bool repeatY)
+        : NativePattern(image, repeatX, repeatY)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    ~NativePatternSkia()
+    {
+    }
+
+private:
+};
+
+std::shared_ptr<NativePattern> NativePattern::create(
+    NULLABLE NativeImageData* image, bool repeatX, bool repeatY)
+{
+    return std::shared_ptr<NativePattern>(
+        new NativePatternSkia(image, repeatX, repeatY));
 }
 
 class CanvasSkia : public Canvas {

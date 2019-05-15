@@ -20,17 +20,40 @@
 #include "StarfishConfig.h"
 #include "core/dom/canvas/CanvasPattern.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/canvas/NativePattern.h"
 
 namespace Starfish {
 CanvasPattern::CanvasPattern(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_nativePattern()
+    , m_originCleanFlag(true)
 {
     STARFISH_ASSERT(executionContext != nullptr);
+    GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                   [](void* obj, void* cd) {
+                                       STARFISH_ASSERT(obj != nullptr);
+                                       CanvasPattern* c = (CanvasPattern*)obj;
+                                       c->~CanvasPattern();
+                                   },
+                                   NULL, NULL, NULL);
+}
+
+CanvasPattern::CanvasPattern(ExecutionContext* executionContext,
+                             NULLABLE NativeImageData* image, bool repeatX,
+                             bool repeatY)
+    : CanvasPattern(executionContext)
+{
+    m_nativePattern = NativePattern::create(image, repeatX, repeatY);
 }
 
 ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+bool CanvasPattern::isEmptyPattern()
+{
+    return m_nativePattern->isEmpyPattern();
 }
 }

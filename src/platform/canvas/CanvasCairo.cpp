@@ -35,6 +35,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/NativePattern.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
@@ -196,6 +197,84 @@ std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
         new NativeGradientCairo(x0, y0, r0, x1, y1, r1));
 }
 
+class NativePatternCairo : public NativePattern {
+public:
+    NativePatternCairo(NULLABLE NativeImageData* image, bool repeatX,
+                       bool repeatY)
+        : NativePattern(image, repeatX, repeatY)
+        , m_pattern(nullptr)
+    {
+        initialize();
+    }
+
+    ~NativePatternCairo()
+    {
+        if (m_pattern != nullptr) {
+            cairo_pattern_destroy(m_pattern);
+        }
+    }
+
+    cairo_pattern_t* pattern()
+    {
+        return m_pattern;
+    }
+
+private:
+    void initialize()
+    {
+        if (m_nativeImage == nullptr) {
+            return;
+        }
+
+        bool surfaceWasCreated = false;
+        cairo_surface_t* surface = (cairo_surface_t*)m_nativeImage->unwrap();
+
+        if (surface == nullptr && !m_nativeImage->isAttachableNativeImage()) {
+            surface = cairo_image_surface_create_for_data(
+                (unsigned char*)m_nativeImage->data(), CAIRO_FORMAT,
+                m_nativeImage->width(), m_nativeImage->height(),
+                m_nativeImage->stride());
+            surfaceWasCreated = true;
+        } else if (surface && m_nativeImage->isAttachableNativeImage()) {
+            auto format = cairo_image_surface_get_format(surface);
+            auto width = cairo_image_surface_get_width(surface);
+            auto height = cairo_image_surface_get_height(surface);
+            auto surfaceToCopy = cairo_surface_create_similar_image(
+                surface, format, width, height);
+
+            auto context = cairo_create(surfaceToCopy);
+            cairo_set_source_surface(context, surface, 0, 0);
+            cairo_rectangle(context, 0, 0, width, height);
+            cairo_fill(context);
+            cairo_surface_flush(surfaceToCopy);
+            cairo_destroy(context);
+
+            surface = surfaceToCopy;
+            surfaceWasCreated = true;
+        }
+
+        // TODO : setTransform
+        m_pattern = cairo_pattern_create_for_surface(surface);
+        cairo_pattern_set_extend(m_pattern, CAIRO_EXTEND_REPEAT);
+
+        if (surfaceWasCreated) {
+            cairo_surface_destroy(surface);
+        }
+
+        STARFISH_ASSERT(cairo_pattern_status(m_pattern) ==
+                        CAIRO_STATUS_SUCCESS);
+    }
+
+    cairo_pattern_t* m_pattern;
+};
+
+std::shared_ptr<NativePattern> NativePattern::create(
+    NULLABLE NativeImageData* image, bool repeatX, bool repeatY)
+{
+    return std::shared_ptr<NativePattern>(
+        new NativePatternCairo(image, repeatX, repeatY));
+}
+
 class CanvasCairo : public Canvas {
     friend class CanvasAttachableNativeImageCairo;
     void initFromBuffer(void* buffer, int width, int height, int stride)
@@ -264,7 +343,53 @@ class CanvasCairo : public Canvas {
                     ((NativeGradientCairo*)gradientValue.get())->pattern());
 
             } else if (canvasStyle.isCanvasPatternValue()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                auto nativePattern =
+                    (NativePatternCairo*)(canvasStyle.getCanvasPatternValue()
+                                              ->nativePattern()
+                                              .get());
+                if (nativePattern->isEmpyPattern()) {
+                    return;
+                }
+
+                auto pattern = nativePattern->pattern();
+
+                cairo_surface_t* surface = nullptr;
+                auto status = cairo_pattern_get_surface(pattern, &surface);
+
+                STARFISH_ASSERT(status == CAIRO_STATUS_SUCCESS);
+                STARFISH_ASSERT(surface != nullptr);
+
+                auto width = cairo_image_surface_get_width(surface);
+                auto height = cairo_image_surface_get_height(surface);
+
+                cairo_set_source(m_canvas, pattern);
+
+                auto currentPath = cairo_copy_path(m_canvas);
+                cairo_new_path(m_canvas);
+
+                double x1, y1, x2, y2;
+                cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
+                Unit::Rect clipRect(x1, y1, x2 - x1, y2 - y1);
+                Unit::Rect patternRect(0, 0, width, height);
+
+                bool repeatX = nativePattern->repeatX();
+                bool repeatY = nativePattern->repeatY();
+
+                if (!repeatX) {
+                    clipRect.setX(patternRect.x());
+                    clipRect.setWidth(patternRect.width());
+                }
+                if (!repeatY) {
+                    clipRect.setY(patternRect.y());
+                    clipRect.setHeight(patternRect.height());
+                }
+                if (!repeatX || !repeatY) {
+                    cairo_rectangle(m_canvas, clipRect.x(), clipRect.y(),
+                                    clipRect.width(), clipRect.height());
+                    cairo_clip(m_canvas);
+                }
+                cairo_append_path(m_canvas, currentPath);
+                cairo_path_destroy(currentPath);
             } else {
                 STARFISH_ASSERT(canvasStyle.isDOMStringValue() ||
                                 canvasStyle.isNoneValue());

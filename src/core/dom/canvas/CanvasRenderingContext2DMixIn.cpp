@@ -717,6 +717,59 @@ CanvasGradient* CanvasRenderingContext2DMixIn::createRadialGradient(
     return new CanvasGradient(executionContext(), x0, y0, r0, x1, y1, r1);
 }
 
+CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
+    CanvasImageSource image, String* repetition)
+{
+    STARFISH_ASSERT(repetition != nullptr);
+
+    auto usability = checkUsabilityOfCanvasImageSource(image);
+    if (usability.isDOMException()) {
+        throw usability.asDOMException();
+    } else {
+        if (usability.asOtherType() == false) {
+            return nullptr;
+        }
+    }
+
+    if (repetition->isEmpty()) {
+        repetition = String::createASCIIString("repeat");
+    }
+
+    bool repeatX = false;
+    bool repeatY = false;
+    if (repetition->equals("repeat")) {
+        repeatX = true;
+        repeatY = true;
+    } else if (repetition->equals("repeat-x")) {
+        repeatX = true;
+    } else if (repetition->equals("repeat-y")) {
+        repeatY = true;
+    } else if (repetition->equals("no-repeat") == false) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::SYNTAX_ERR,
+                               "The repetition is not one of 'repeat', "
+                               "'no-repeat', 'repeat-x', or 'repeat-y'.");
+    }
+
+    auto pair = CanvasImageSourceToNativeImageData(image);
+
+    NativeImageData* nativeImageData = pair.first;
+    if (nativeImageData == nullptr && !image.isHTMLCanvasElementValue()) {
+        // FIXME : nativeImageData can be nullptr after call
+        // NativeImageData::attach on a canvas other than CanvasCairo currently
+        return nullptr;
+    }
+
+    auto ret = new CanvasPattern(executionContext(), nativeImageData, repeatX,
+                                 repeatY);
+
+    if (pair.second == false) {
+        ret->setOriginCleanFlag(false);
+    }
+
+    return ret;
+}
+
 String* CanvasRenderingContext2DMixIn::filter()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -751,6 +804,11 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
         return;
     }
 
+    if (fs.isCanvasPatternValue() &&
+        fs.getCanvasPatternValue()->isEmptyPattern()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsComposite();
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -777,6 +835,11 @@ void CanvasRenderingContext2DMixIn::strokeRect(float x, float y, float w,
     auto fs = strokeStyle();
     if (fs.isCanvasGradientValue() &&
         fs.getCanvasGradientValue()->isZeroSize()) {
+        return;
+    }
+
+    if (fs.isCanvasPatternValue() &&
+        fs.getCanvasPatternValue()->isEmptyPattern()) {
         return;
     }
 
@@ -1181,45 +1244,17 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         }
     }
 
-    NativeImageData* nativeImageData = nullptr;
+    auto pair = CanvasImageSourceToNativeImageData(image);
 
-    if (image.isHTMLImageElementOrSVGImageElementValue()) {
-        if (image.getHTMLImageElementOrSVGImageElementValue()
-                .isHTMLImageElementValue()) {
-            auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                 .getHTMLImageElementValue();
-
-            markOriginCleanFlagDirtyIfNeeds(htmlImage->webOrigin());
-            nativeImageData = htmlImage->imageData();
-        } else if (image.getHTMLImageElementOrSVGImageElementValue()
-                       .isSVGImageElementValue()) {
-            auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                .getSVGImageElementValue();
-
-            markOriginCleanFlagDirtyIfNeeds(svgImage->webOrigin());
-            nativeImageData = svgImage->imageData();
-        } else {
-            STARFISH_ASSERT(image.isNoneValue());
-            return;
-        }
-    } else if (image.isHTMLCanvasElementValue()) {
-        auto htmlCanvas = image.getHTMLCanvasElementValue();
-        auto context = htmlCanvas->canvasRenderingContext();
-        if (context == nullptr) {
-            return;
-        }
-        auto context2d = (CanvasRenderingContext2DMixIn*)context;
-        context2d->flush();
-        nativeImageData = NativeImageData::attach(context2d->m_canvas);
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return;
-    }
-
+    NativeImageData* nativeImageData = pair.first;
     if (nativeImageData == nullptr) {
         // FIXME : nativeImageData can be nullptr after call
         // NativeImageData::attach on a canvas other than CanvasCairo currently
         return;
+    }
+
+    if (pair.second == false) {
+        setOriginCleanFlag(false);
     }
 
     if (!sw) {
@@ -1564,6 +1599,11 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         return;
     }
 
+    if (fs.isCanvasPatternValue() &&
+        fs.getCanvasPatternValue()->isEmptyPattern()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsComposite();
 
     auto rule = stringToCanvasFillRule(fillRule);
@@ -1590,6 +1630,11 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
     auto fs = strokeStyle();
     if (fs.isCanvasGradientValue() &&
         fs.getCanvasGradientValue()->isZeroSize()) {
+        return;
+    }
+
+    if (fs.isCanvasPatternValue() &&
+        fs.getCanvasPatternValue()->isEmptyPattern()) {
         return;
     }
 
@@ -1719,17 +1764,52 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
     return false;
 }
 
-void CanvasRenderingContext2DMixIn::markOriginCleanFlagDirtyIfNeeds(
-    WebOrigin* webOrigin)
+std::pair<NULLABLE NativeImageData*, bool>
+CanvasRenderingContext2DMixIn::CanvasImageSourceToNativeImageData(
+    CanvasImageSource& image)
 {
-    STARFISH_ASSERT(webOrigin != nullptr);
-    if (m_originCleanFlag == false) {
-        return;
+    NativeImageData* nativeImageData = nullptr;
+    bool clean = true;
+
+    if (image.isHTMLImageElementOrSVGImageElementValue()) {
+        if (image.getHTMLImageElementOrSVGImageElementValue()
+                .isHTMLImageElementValue()) {
+            auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
+                                 .getHTMLImageElementValue();
+
+            if (!executionContext()->document()->webOrigin()->isSameOrigin(
+                    htmlImage->webOrigin())) {
+                clean = false;
+            }
+
+            nativeImageData = htmlImage->imageData();
+        } else if (image.getHTMLImageElementOrSVGImageElementValue()
+                       .isSVGImageElementValue()) {
+            auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
+                                .getSVGImageElementValue();
+
+            if (!executionContext()->document()->webOrigin()->isSameOrigin(
+                    svgImage->webOrigin())) {
+                clean = false;
+            }
+            nativeImageData = svgImage->imageData();
+        } else {
+            STARFISH_ASSERT(image.isNoneValue());
+        }
+    } else if (image.isHTMLCanvasElementValue()) {
+        auto htmlCanvas = image.getHTMLCanvasElementValue();
+        auto context = htmlCanvas->canvasRenderingContext();
+        if (context != nullptr) {
+            auto context2d = (CanvasRenderingContext2DMixIn*)context;
+            context2d->flush();
+            nativeImageData = NativeImageData::attach(context2d->m_canvas);
+            clean = context->originCleanFlag();
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    if (!executionContext()->document()->webOrigin()->isSameOrigin(webOrigin)) {
-        m_originCleanFlag = false;
-    }
+    return std::make_pair(nativeImageData, clean);
 }
 
 String* CanvasRenderingContext2DMixIn::font()

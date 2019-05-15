@@ -185,6 +185,7 @@ section are supported.
 |  | attribute | fillStyle | Specifies the color, gradient, or pattern to use inside shapes. |
 |  | method | CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1) | Creates a gradient along the line connecting two given coordinates. |
 |  | method | CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) | Creates a radial gradient using the size and coordinates of two circles. |
+|  | method | CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition) | creates a pattern using the specified image and repetition. This method returns a CanvasPattern. |
 | [CanvasRect](https://html.spec.whatwg.org/multipage/canvas.html#canvasrect) | interface mixin | CanvasRect |  |
 |  | method | void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Erases the pixels in a rectangular area by setting them to transparent black. |
 |  | method | void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is filled according to the current fillStyle. |

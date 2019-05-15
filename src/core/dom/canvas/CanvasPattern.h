@@ -23,15 +23,43 @@
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
-class CanvasRenderingContext;
+
+class NativeImageData;
+class NativePattern;
 
 class CanvasPattern : public ScriptWrappable {
 public:
-    CanvasPattern(ExecutionContext* executionContext);
+    CanvasPattern(ExecutionContext* executionContext,
+                  NULLABLE NativeImageData* image, bool repeatX, bool repeatY);
+
+    ~CanvasPattern()
+    {
+    }
+
+    std::shared_ptr<NativePattern> nativePattern()
+    {
+        return m_nativePattern;
+    }
+
+    bool originCleanFlag()
+    {
+        return m_originCleanFlag;
+    }
+
+    void setOriginCleanFlag(bool value)
+    {
+        m_originCleanFlag = value;
+    }
+
+    bool isEmptyPattern();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasPattern)
 private:
+    CanvasPattern(ExecutionContext* executionContext);
+
     ExecutionContext* m_executionContext;
+    std::shared_ptr<NativePattern> m_nativePattern;
+    bool m_originCleanFlag;
 };
 }
 
