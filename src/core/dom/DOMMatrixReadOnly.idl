@@ -34,8 +34,8 @@ interface DOMMatrixReadOnly {
     readonly attribute unrestricted double m43;
     readonly attribute unrestricted double m44;
 
-    [Unimplemented] readonly attribute boolean is2D;
-    [Unimplemented] readonly attribute boolean isIdentity;
+    readonly attribute boolean is2D;
+    readonly attribute boolean isIdentity;
 
     // Immutable transform methods
     [Unimplemented,NewObject] DOMMatrix translate(optional unrestricted double tx = 0,

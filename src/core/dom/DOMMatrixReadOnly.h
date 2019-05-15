@@ -56,6 +56,16 @@ public:
     double m43() const;
     double m44() const;
 
+    bool is2D()
+    {
+        return m_is2D;
+    }
+
+    bool isIdentity()
+    {
+        return (m_is2D && (m_matrix == SkMatrix44::I()));
+    }
+
     ExecutionContext* executionContext()
     {
         return m_executionContext;
@@ -75,6 +85,7 @@ public:
 private:
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
+    bool m_is2D;
 };
 }
 #endif
