@@ -17,50 +17,46 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasPattern__
-#define __StarfishCanvasPattern__
-
-#include "binding/ScriptWrappable.h"
+#ifndef __StarfishNativePattern__
+#define __StarfishNativePattern__
 
 namespace Starfish {
-
 class NativeImageData;
-class NativePattern;
 
-class CanvasPattern : public ScriptWrappable {
+class NativePattern : public gc {
 public:
-    CanvasPattern(ExecutionContext* executionContext,
-                  NULLABLE NativeImageData* image, bool repeatX, bool repeatY);
+    static std::shared_ptr<NativePattern> create(
+        NULLABLE NativeImageData* image, bool repeatX, bool repeatY);
 
-    ~CanvasPattern()
+    virtual ~NativePattern()
     {
     }
 
-    std::shared_ptr<NativePattern> nativePattern()
+    bool repeatX()
     {
-        return m_nativePattern;
+        return m_repeatX;
+    }
+    bool repeatY()
+    {
+        return m_repeatY;
     }
 
-    bool originCleanFlag()
+    bool isEmpyPattern()
     {
-        return m_originCleanFlag;
+        return m_nativeImage == nullptr;
     }
 
-    void setOriginCleanFlag(bool value)
+protected:
+    NativePattern(NULLABLE NativeImageData* image, bool repeatX, bool repeatY)
+        : m_nativeImage(image)
+        , m_repeatX(repeatX)
+        , m_repeatY(repeatY)
     {
-        m_originCleanFlag = value;
     }
 
-    bool isEmptyPattern();
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasPattern)
-private:
-    CanvasPattern(ExecutionContext* executionContext);
-
-    ExecutionContext* m_executionContext;
-    std::shared_ptr<NativePattern> m_nativePattern;
-    bool m_originCleanFlag;
+    NULLABLE NativeImageData* m_nativeImage;
+    bool m_repeatX;
+    bool m_repeatY;
 };
 }
-
 #endif

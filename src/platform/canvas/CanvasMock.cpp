@@ -28,6 +28,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/NativePattern.h"
 #include "core/style/UnitHelper.h"
 
 namespace Starfish {
@@ -76,6 +77,28 @@ std::shared_ptr<NativeGradient> NativeGradient::create(double x0, double y0,
 {
     return std::shared_ptr<NativeGradient>(
         new NativeGradientMock(x0, y0, r0, x1, y1, r1));
+}
+
+class NativePatternMock : public NativePattern {
+public:
+    NativePatternMock(NULLABLE NativeImageData* image, bool repeatX,
+                      bool repeatY)
+        : NativePattern(image, repeatX, repeatY)
+    {
+    }
+
+    ~NativePatternMock()
+    {
+    }
+
+private:
+};
+
+std::shared_ptr<NativePattern> NativePattern::create(
+    NULLABLE NativeImageData* image, bool repeatX, bool repeatY)
+{
+    return std::shared_ptr<NativePattern>(
+        new NativePatternMock(image, repeatX, repeatY));
 }
 
 class CanvasMock : public Canvas {

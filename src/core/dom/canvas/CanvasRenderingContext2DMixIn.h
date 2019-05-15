@@ -38,6 +38,7 @@ class DOMStringOrCanvasGradientOrCanvasPattern;
 class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
+class NativeImageData;
 class HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement;
 
 enum class CanvasLineCap : int;
@@ -108,6 +109,7 @@ public:
                                          float y1);
     CanvasGradient* createRadialGradient(double x0, double y0, double r0,
                                          double x1, double y1, double r1);
+    CanvasPattern* createPattern(CanvasImageSource image, String* repetition);
 
     // CanvasShadowStyles
 
@@ -260,7 +262,8 @@ private:
     void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);
-    void markOriginCleanFlagDirtyIfNeeds(WebOrigin* webOrigin);
+    std::pair<NULLABLE NativeImageData*, bool>
+    CanvasImageSourceToNativeImageData(CanvasImageSource& image);
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
