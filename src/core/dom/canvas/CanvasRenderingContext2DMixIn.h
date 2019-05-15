@@ -255,7 +255,8 @@ private:
                   bool useMaxWidth);
     void strokeText(String* text, float x, float y, float maxWidth,
                     bool useMaxWidth);
-    bool canUseFathPathText(String* text, bool shouldApplyMaxwidth);
+    bool canUseFastPathText(String* text, bool shouldApplyMaxWidth);
+    bool isLtrDirection();
     void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);
@@ -269,6 +270,8 @@ private:
     Font* m_font;
     String* m_fontStr;
     CanvasTextAlign m_canvasTextAlign;
+    CanvasTextBaseline m_canvasTextBaseline;
+    CanvasDirection m_canvasDirection;
 };
 }
 #endif
