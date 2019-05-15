@@ -142,6 +142,7 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
     AnimationTickData* ad = new (NoGC) AnimationTickData;
     STARFISH_ASSERT(ad != nullptr);
 
+    ad->m_id = id;
     ad->m_timer = this;
     ad->m_data = data;
     ad->m_globalScope = globalScope;

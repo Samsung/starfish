@@ -215,6 +215,11 @@ public:
         return false;
     }
 
+    virtual bool shouldDrawOnEveryRenderingCallback()
+    {
+        return false;
+    }
+
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
     void dispatchMouseEvent(MouseEventKind kind, MouseData data);
