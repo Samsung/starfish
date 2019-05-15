@@ -121,7 +121,7 @@ public:
 
     int tabIndex() override;
 
-    NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+    virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
     {
         return m_preserveAspectRatioValue;
     }

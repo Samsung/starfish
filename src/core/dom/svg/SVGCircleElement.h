@@ -47,8 +47,8 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
-    STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(cx);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(cy);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(r);
 };
 }

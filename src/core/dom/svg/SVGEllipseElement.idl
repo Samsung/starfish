@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/SVG11/shapes.html#InterfaceSVGEllipseElement
+interface SVGEllipseElement : SVGElement {
+  readonly attribute SVGAnimatedLength rx;
+  readonly attribute SVGAnimatedLength ry;
+  readonly attribute SVGAnimatedLength cx;
+  readonly attribute SVGAnimatedLength cy;
+};

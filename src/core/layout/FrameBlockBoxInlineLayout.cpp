@@ -3380,16 +3380,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
 void FrameLineBreak::layoutInline(LineFormattingContext& ctx)
 {
     ctx.insertWord(this);
-
-    if (ctx.m_isPendingBreakLine) {
-        FloatingBoxLayoutContext& fbCtx =
-            *ctx.m_floatingBoxLayoutContexts.begin();
-        if (dontClear(fbCtx.m_hasFloat, this)) {
-            ctx.breakLine(this);
-        }
-    } else {
-        ctx.breakLine(this);
-    }
+    ctx.breakLine(this);
 }
 
 void FrameInline::layoutInline(LineFormattingContext& ctx)
@@ -4561,6 +4552,15 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 }
             }
             ctx.finishLine(false);
+
+            // if FrameBlockBox doesn't allow line-break with content is bigger
+            // than FrameBlockBox
+            // we should update minimum preferred width as preferred width
+            if (style()->whiteSpace() ==
+                    WhiteSpaceValue::NoWrapWhiteSpaceValue ||
+                style()->whiteSpace() == WhiteSpaceValue::PreWhiteSpaceValue) {
+                ctx.updatePreferredMinWidth(ctx.preferredWidth());
+            }
         }
     }
 

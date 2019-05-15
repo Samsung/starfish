@@ -27,6 +27,7 @@
 #include "core/dom/svg/SVGPolygonElement.h"
 #include "core/dom/svg/SVGPolylineElement.h"
 #include "core/dom/svg/SVGCircleElement.h"
+#include "core/dom/svg/SVGEllipseElement.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/svg/SVGTextElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
@@ -61,6 +62,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGStyleElement(document, qname);
     } else if (str->m_svglineTagName == localName) {
         return new SVGLineElement(document, qname);
+    } else if (str->m_svgellipseTagName == localName) {
+        return new SVGEllipseElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

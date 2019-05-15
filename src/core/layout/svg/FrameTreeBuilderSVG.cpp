@@ -30,6 +30,7 @@
 #include "core/layout/svg/FrameSVGPolygonBox.h"
 #include "core/layout/svg/FrameSVGPolylineBox.h"
 #include "core/layout/svg/FrameSVGCircleBox.h"
+#include "core/layout/svg/FrameSVGEllipseBox.h"
 #include "core/layout/svg/FrameSVGImageBox.h"
 #include "core/layout/svg/FrameSVGTextBox.h"
 #include "core/layout/svg/FrameSVGLineBox.h"
@@ -79,6 +80,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGImageElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGImageBox(svgElement);
+    } else if (svgElement->isSVGEllipseElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGEllipseBox(svgElement);
     } else if (svgElement->isSVGLineElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGLineBox(svgElement);
