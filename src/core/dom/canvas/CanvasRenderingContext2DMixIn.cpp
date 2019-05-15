@@ -103,6 +103,33 @@ static inline String* canvasTextAlignToString(CanvasTextAlign textAlign)
     return String::createASCIIString("start");
 }
 
+static inline String* canvasTextBaselineToString(
+    CanvasTextBaseline textBaseline)
+{
+    if (textBaseline == CanvasTextBaseline::Top) {
+        return String::createASCIIString("top");
+    } else if (textBaseline == CanvasTextBaseline::Hanging) {
+        return String::createASCIIString("hanging");
+    } else if (textBaseline == CanvasTextBaseline::Middle) {
+        return String::createASCIIString("middle");
+    } else if (textBaseline == CanvasTextBaseline::Ideographic) {
+        return String::createASCIIString("ideographic");
+    } else if (textBaseline == CanvasTextBaseline::Bottom) {
+        return String::createASCIIString("bottom");
+    }
+    return String::createASCIIString("alphabetic");
+}
+
+static inline String* canvasDirectionToString(CanvasDirection direction)
+{
+    if (direction == CanvasDirection::Ltr) {
+        return String::createASCIIString("ltr");
+    } else if (direction == CanvasDirection::Rtl) {
+        return String::createASCIIString("rtl");
+    }
+    return String::createASCIIString("inherit");
+}
+
 static inline bool stringToCanvasTextAlign(NULLABLE String* textAlign,
                                            CanvasTextAlign& out)
 {
@@ -121,6 +148,51 @@ static inline bool stringToCanvasTextAlign(NULLABLE String* textAlign,
             return true;
         } else if (textAlign->equals("center")) {
             out = CanvasTextAlign::Center;
+            return true;
+        }
+    }
+    return false;
+}
+
+static inline bool stringToCanvasTextBaseline(NULLABLE String* textBaseline,
+                                              CanvasTextBaseline& out)
+{
+    if (textBaseline) {
+        if (textBaseline->equals("top")) {
+            out = CanvasTextBaseline::Top;
+            return true;
+        } else if (textBaseline->equals("hanging")) {
+            out = CanvasTextBaseline::Hanging;
+            return true;
+        } else if (textBaseline->equals("middle")) {
+            out = CanvasTextBaseline::Middle;
+            return true;
+        } else if (textBaseline->equals("alphabetic")) {
+            out = CanvasTextBaseline::Alphabetic;
+            return true;
+        } else if (textBaseline->equals("ideographic")) {
+            out = CanvasTextBaseline::Ideographic;
+            return true;
+        } else if (textBaseline->equals("bottom")) {
+            out = CanvasTextBaseline::Bottom;
+            return true;
+        }
+    }
+    return false;
+}
+
+static inline bool stringToCanvasDirection(NULLABLE String* canvasDirection,
+                                           CanvasDirection& out)
+{
+    if (canvasDirection) {
+        if (canvasDirection->equals("ltr")) {
+            out = CanvasDirection::Ltr;
+            return true;
+        } else if (canvasDirection->equals("rtl")) {
+            out = CanvasDirection::Rtl;
+            return true;
+        } else if (canvasDirection->equals("inherit")) {
+            out = CanvasDirection::Inherit;
             return true;
         }
     }
@@ -264,6 +336,9 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_canvas->setGlobalAlpha(1.0f);
 
     setFont(String::fromUTF8("10px sans-serif")); // default font
+    m_canvasTextBaseline = CanvasTextBaseline::Alphabetic;
+    m_canvasTextAlign = CanvasTextAlign::Start;
+    m_canvasDirection = CanvasDirection::Inherit;
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -862,7 +937,28 @@ void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
     m_canvas->restore();
 }
 
-bool CanvasRenderingContext2DMixIn::canUseFathPathText(String* text,
+bool CanvasRenderingContext2DMixIn::isLtrDirection()
+{
+    if (m_canvasDirection == CanvasDirection::Ltr) {
+        return true;
+    }
+    if (m_canvasDirection == CanvasDirection::Inherit) {
+        if (m_ownerHTMLCanvasElement->style()) {
+            if (m_ownerHTMLCanvasElement->style()->direction() ==
+                DirectionValue::LtrDirectionValue) {
+                return true;
+            }
+        } else {
+            if (executionContext()->document()->style()->direction() ==
+                DirectionValue::LtrDirectionValue) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CanvasRenderingContext2DMixIn::canUseFastPathText(String* text,
                                                        bool shouldApplyMaxWidth)
 {
     STARFISH_ASSERT(text != nullptr);
@@ -879,8 +975,14 @@ bool CanvasRenderingContext2DMixIn::canUseFathPathText(String* text,
                 return false;
             },
             &dir);
-    if (dir == UBIDI_LTR && !shouldApplyMaxWidth) {
-        return true;
+    if (dir == UBIDI_LTR && !shouldApplyMaxWidth &&
+        m_canvasTextBaseline == CanvasTextBaseline::Alphabetic) {
+        if (isLtrDirection()) {
+            if (m_canvasTextAlign == CanvasTextAlign::Left ||
+                m_canvasTextAlign == CanvasTextAlign::Start) {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -894,7 +996,7 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
         return;
     }
 
-    if (canUseFathPathText(text, useMaxWidth)) {
+    if (canUseFastPathText(text, useMaxWidth)) {
         fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
         return;
     }
@@ -905,6 +1007,20 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
     style.setDisplay(DisplayValue::BlockDisplayValue);
     style.setWidth(Length(Length::Fixed, 0));
     style.setWhiteSpace(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+
+    // CanvasTextDrawingStyles.direction
+    if (m_canvasDirection == CanvasDirection::Ltr) {
+        style.setDirection(DirectionValue::LtrDirectionValue);
+    } else if (m_canvasDirection == CanvasDirection::Rtl) {
+        style.setDirection(DirectionValue::RtlDirectionValue);
+    } else {
+        if (m_ownerHTMLCanvasElement->style()) {
+            style.setDirection(m_ownerHTMLCanvasElement->style()->direction());
+        } else {
+            style.setDirection(
+                executionContext()->document()->style()->direction());
+        }
+    }
 
     FrameDocument dummyFrameDocument =
         FrameDocument(executionContext()->document());
@@ -935,23 +1051,50 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
 
     // CanvasTextDrawingStyles.textBaseline
     paintCtx.m_canvas->translate(x, y);
-    paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
 
-    float width = 1;
+    if (m_canvasTextBaseline == CanvasTextBaseline::Top) {
+    } else if (m_canvasTextBaseline == CanvasTextBaseline::Hanging) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (m_canvasTextBaseline == CanvasTextBaseline::Middle) {
+        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_fontHeight /
+                                            2);
+    } else if (m_canvasTextBaseline == CanvasTextBaseline::Ideographic) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (m_canvasTextBaseline == CanvasTextBaseline::Bottom) {
+        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_fontHeight);
+    } else {
+        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+    }
+
+    float width = 0;
     dummyFrameBlockContainer.iterateChildFrameBox([&width](FrameBox* fb) {
+        STARFISH_ASSERT(fb != nullptr);
         if (fb->isInlineTextBox()) {
-            width = fb->contentWidth().toFloat();
+            width += fb->contentWidth().toFloat();
         }
     });
 
     // CanvasTextDrawingStyles.textAlign
     if (m_canvasTextAlign == CanvasTextAlign::End) {
-        paintCtx.m_canvas->translate(-width, 0);
+        if (isLtrDirection()) {
+            paintCtx.m_canvas->translate(-width, 0);
+        } else {
+            paintCtx.m_canvas->translate(width, 0);
+        }
     } else if (m_canvasTextAlign == CanvasTextAlign::Left) {
+        if (!isLtrDirection()) {
+            paintCtx.m_canvas->translate(width, 0);
+        }
     } else if (m_canvasTextAlign == CanvasTextAlign::Right) {
-        paintCtx.m_canvas->translate(-width, 0);
+        if (isLtrDirection()) {
+            paintCtx.m_canvas->translate(-width, 0);
+        }
     } else if (m_canvasTextAlign == CanvasTextAlign::Center) {
-        paintCtx.m_canvas->translate(-(width / 2), 0);
+        if (isLtrDirection()) {
+            paintCtx.m_canvas->translate(-(width / 2), 0);
+        } else {
+            paintCtx.m_canvas->translate((width / 2), 0);
+        }
     } else {
     }
 
@@ -1723,26 +1866,30 @@ void CanvasRenderingContext2DMixIn::setTextAlign(String* value)
 
 String* CanvasRenderingContext2DMixIn::textBaseline()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return String::emptyString;
+    return canvasTextBaselineToString(m_canvasTextBaseline);
 }
 
-void CanvasRenderingContext2DMixIn::setTextBaseline(String* textBaseline)
+void CanvasRenderingContext2DMixIn::setTextBaseline(String* value)
 {
-    STARFISH_ASSERT(textBaseline != nullptr);
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_ASSERT(value != nullptr);
+    CanvasTextBaseline textBaseline;
+    if (stringToCanvasTextBaseline(value, textBaseline)) {
+        m_canvasTextBaseline = textBaseline;
+    }
 }
 
 String* CanvasRenderingContext2DMixIn::direction()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return String::emptyString;
+    return canvasDirectionToString(m_canvasDirection);
 }
 
-void CanvasRenderingContext2DMixIn::setDirection(String* direction)
+void CanvasRenderingContext2DMixIn::setDirection(String* value)
 {
-    STARFISH_ASSERT(direction != nullptr);
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_ASSERT(value != nullptr);
+    CanvasDirection direction;
+    if (stringToCanvasDirection(value, direction)) {
+        m_canvasDirection = direction;
+    }
 }
 }
 #undef NEEDS_UNPREMULTIPLIED
