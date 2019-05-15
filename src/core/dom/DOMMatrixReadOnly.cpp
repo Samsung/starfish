@@ -26,17 +26,21 @@ namespace Starfish {
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_matrix(SkMatrix44::I())
+    , m_is2D(true)
 {
-    STARFISH_ASSERT(m_executionContext != nullptr);
-    m_matrix.reset();
+    STARFISH_ASSERT(executionContext != nullptr);
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
                                      DOMStringOrSequence value)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_matrix(SkMatrix44::I())
+    , m_is2D(true)
 {
-    STARFISH_ASSERT(m_executionContext != nullptr);
+    STARFISH_ASSERT(executionContext != nullptr);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 double DOMMatrixReadOnly::a() const
