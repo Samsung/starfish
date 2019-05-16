@@ -40,6 +40,7 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -96,6 +97,18 @@ void ServiceWorkerHostConnection::resolveRequest(
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
+void ServiceWorkerHostConnection::onUpdateWorkerState(
+    ServiceWorkerRegistrationId id, ServiceWorkerState target)
+{
+    JsonWriter writer;
+    Message msg("updateWorkerState");
+
+    msg.addParam(new UpdateWorkerStateData(id, target));
+    msg.archive(writer);
+
+    send(writer.GetString(), writer.GetSize() + 1);
+}
+
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
                                              size_t len)
 {
@@ -119,7 +132,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     } else if (msgName == "matchRegistration") {
         m_client->matchRegistration(
             downcast<ServiceWorkerRequest*>(msg.param(0)),
-            downcast<GenericArchivable<String*>*>(msg.param(1))->value());
+            downcast<StringArchivable*>(msg.param(1))->value());
     }
 }
 

@@ -23,6 +23,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 
 namespace Starfish {

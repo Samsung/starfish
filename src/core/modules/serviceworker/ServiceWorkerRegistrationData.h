@@ -26,14 +26,9 @@ namespace Starfish {
 class String;
 class ServiceWorkerData;
 
-enum class ServiceWorkerRegistrationState {
-    Installing = 0,
-    Waiting,
-    Active,
-};
-
 class ServiceWorkerRegistrationData : public Archivable {
 public:
+    ServiceWorkerRegistrationId id;
     String* scope{ String::emptyString };
     ServiceWorkerData* installingWorker{ nullptr };
     ServiceWorkerData* waitingWorker{ nullptr };

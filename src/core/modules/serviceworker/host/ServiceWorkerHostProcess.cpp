@@ -47,6 +47,7 @@
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 namespace Starfish {
@@ -92,7 +93,7 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
     m_threadPool = threadPool;
     m_messageLoop = m_threadPool->messageLoop();
 
-    m_jobHandler = new ServiceWorkerHostJobHandler(m_messageLoop);
+    m_jobHandler = new ServiceWorkerHostJobHandler(m_messageLoop, this);
     m_ioRunnable = new IORunnable(m_messageLoop);
     m_ioThread = new AdaptedThread(m_threadPool);
 
@@ -115,6 +116,8 @@ void ServiceWorkerHostProcess::start(
     // create a connection
     m_connection = new ServiceWorkerHostConnection(this);
 
+    registerConnection(m_connection);
+
     std::string address = IPC_PROTOCOL;
     address.append(IPC_ADDRESS_PREFIX);
     address.append(encodedOrigin);
@@ -127,6 +130,19 @@ void ServiceWorkerHostProcess::start(
 
     m_connection->socket()->bind(address.c_str());
     m_ioRunnable->addClient(m_connection);
+}
+
+void ServiceWorkerHostProcess::registerConnection(
+    ServiceWorkerHostConnection* connection)
+{
+    STARFISH_ASSERT(connection != nullptr);
+    m_connections.push_back(connection);
+}
+
+void ServiceWorkerHostProcess::getConnections(
+    GCVector<ServiceWorkerClientProcessInterface*>& connections)
+{
+    connections.assign(m_connections.begin(), m_connections.end());
 }
 
 void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)

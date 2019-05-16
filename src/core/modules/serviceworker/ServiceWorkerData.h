@@ -23,18 +23,11 @@
 
 namespace Starfish {
 
-enum class ServiceWorkerState {
-    Installing,
-    Installed,
-    Activating,
-    Activated,
-    Redundant,
-};
-
 class ServiceWorkerData : public Archivable {
 public:
     String* scriptURL{ String::emptyString };
     ServiceWorkerState state{ ServiceWorkerState::Installing };
+    ServiceWorkerRegistrationId registrationId;
 
     // serialize/deserialize
     const char* archiveId() const override;

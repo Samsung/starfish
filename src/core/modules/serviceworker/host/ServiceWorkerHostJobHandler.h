@@ -30,6 +30,7 @@ class ServiceWorkerData;
 class JobQueue;
 class ServiceWorkerRegistrationData;
 class ErrorData;
+class ServiceWorkerServerClient;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -48,7 +49,8 @@ struct ServiceWorkerRegistrationKeyComparator {
 
 class ServiceWorkerHostJobHandler : public gc {
 public:
-    ServiceWorkerHostJobHandler(MessageLoop* messageLoop);
+    ServiceWorkerHostJobHandler(MessageLoop* messageLoop,
+                                ServiceWorkerServerClient* client);
 
     void scheduleJob(ServiceWorkerJob* job);
     void runJob(JobQueue* jobQueue);
@@ -61,6 +63,8 @@ public:
                  ServiceWorkerRegistrationData* registration);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
                                  const char* target, ServiceWorkerData* source);
+    void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
+
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
@@ -68,6 +72,9 @@ public:
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
 
     NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
+    NULLABLE ServiceWorkerRegistrationData* getRegistration(
+        ServiceWorkerRegistrationId registrationId);
+
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
@@ -76,7 +83,10 @@ public:
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
+
     MessageLoop* m_messageLoop;
+    ServiceWorkerServerClient* m_SWServerClient;
+
     GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>

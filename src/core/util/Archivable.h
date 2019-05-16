@@ -75,6 +75,8 @@ private:
     T m_value{};
 };
 
+using StringArchivable = GenericArchivable<String*>;
+
 } // namespace Starfish
 
 #endif

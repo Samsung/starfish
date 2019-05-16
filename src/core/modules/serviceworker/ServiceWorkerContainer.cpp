@@ -46,7 +46,6 @@
 
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
 namespace Starfish {

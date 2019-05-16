@@ -39,6 +39,7 @@ const char* ServiceWorkerRegistrationData::archiveId() const
 
 void ServiceWorkerRegistrationData::archive(Archiver& ar)
 {
+    ar.MemberId("id", id);
     ar.Member("scope") & scope;
     ar.MemberArchivable("installingWorker", (Archivable*&)installingWorker);
     ar.MemberArchivable("waitingWorker", (Archivable*&)waitingWorker);

@@ -37,14 +37,18 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
 
 ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
-    MessageLoop* messageLoop)
+    MessageLoop* messageLoop, ServiceWorkerServerClient* client)
     : m_messageLoop(messageLoop)
+    , m_SWServerClient(client)
 {
+    STARFISH_ASSERT(messageLoop != nullptr);
+    STARFISH_ASSERT(client != nullptr);
 }
 
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
@@ -120,6 +124,24 @@ ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
     return nullptr;
 }
 
+NULLABLE ServiceWorkerRegistrationData*
+ServiceWorkerHostJobHandler::getRegistration(
+    ServiceWorkerRegistrationId registrationId)
+{
+    for (const auto& pair : m_scopeToRegistrationMap) {
+        auto registration = pair.second;
+        if (registration->id == registrationId) {
+            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)\n",
+                                  registrationId.toString().c_str());
+            return registration;
+        }
+    }
+
+    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)\n",
+                          registrationId.toString().c_str());
+    return nullptr;
+}
+
 void ServiceWorkerHostJobHandler::setRegistration(
     String* scope, ServiceWorkerUpdateViaCache updateViaCache)
 {
@@ -132,6 +154,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     // 3. Let registration be a new service worker registration whose scope url
     // is set to scope and update via cache mode is set to updateViaCache.
     auto registration = new ServiceWorkerRegistrationData();
+    registration->id = ServiceWorkerRegistrationId::generate();
     registration->scope = scope;
     registration->updateViaCache = updateViaCache;
 
@@ -200,7 +223,7 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 
     // 4. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
-    auto registration = getRegistration(job->data()->scopeURL);
+    NULLABLE auto registration = getRegistration(job->data()->scopeURL);
 
     if (registration != nullptr) {
         // 5. If registration is not null, then:
@@ -221,7 +244,19 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
     // https://w3c.github.io/ServiceWorker/#update-algorithm
     // 1. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
-    auto registration = getRegistration(job->data()->scopeURL);
+    NULLABLE auto registration = getRegistration(job->data()->scopeURL);
+
+    // 2. If registration is null or registration’s uninstalling flag is set,
+    if (registration == nullptr) {
+        //  2.1 Invoke Reject Job Promise with job and TypeError.
+        rejectJobPromise(job, new ErrorData(ExceptionCode::SCRIPT_TYPE_ERR,
+                                            "Cannot update a null/nonexistent "
+                                            "service worker registration"));
+
+        //  2.2 Invoke  Finish Job with job and abort these steps.
+        finishJob(job);
+        return;
+    }
 
     // 7. Let hasUpdatedResources be false.
     bool hasUpdatedResources = false;
@@ -245,7 +280,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
     // 11. Let worker be a new service worker.
     auto worker = new ServiceWorkerData();
 
-    STARFISH_ASSERT(worker != nullptr);
+    worker->registrationId = registration->id;
 
     // 12. Set worker’s script url to job’s script url,
     // TODO: worker’s script resource to script, and worker’s type to job’s
@@ -283,6 +318,10 @@ void ServiceWorkerHostJobHandler::install(
     // "installing" and worker as the arguments.
     updateRegistrationState(registration, "installing", worker);
 
+    // 4. Run the Update Worker State algorithm passing registration’s
+    // installing worker and installing as the arguments.
+    updateWorkerState(worker, ServiceWorkerState::Installing);
+
     // 6. Invoke Resolve Job Promise with job and registration.
     resolveJobPromise(job, registration);
 
@@ -302,6 +341,8 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(job->hostConnection() != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // is implemented on ServiceWorkerContainer.
     job->hostConnection()->resolveJobPromise(job, registration);
@@ -341,6 +382,32 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
         // installing worker is null.
     } else if (strncmp(target, "waiting", 10) == 0) {
     } else if (strncmp(target, "active", 10) == 0) {
+    }
+}
+
+void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
+                                                    ServiceWorkerState state)
+{
+    STARFISH_ASSERT(worker != nullptr);
+
+    // https://w3c.github.io/ServiceWorker/#update-worker-state
+
+    // 1. Set worker’s state to state.
+    worker->state = state;
+
+    // 2. Let workerObjects be an array containing all the ServiceWorker objects
+    // associated with worker.
+
+    // NOTE: strategy : Here, we simply broadcast this changes to all the
+    // connections. Clients ought to search ServiceWorkers which have a
+    // registraion containing the matched Id, and then, update the state of the
+    // ServiceWorkers.
+    GCVector<ServiceWorkerClientProcessInterface*> connections;
+
+    m_SWServerClient->getConnections(connections);
+
+    for (const auto& connection : connections) {
+        connection->onUpdateWorkerState(worker->registrationId, state);
     }
 }
 

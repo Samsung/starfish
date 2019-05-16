@@ -20,36 +20,33 @@
 #include "StarfishConfig.h"
 
 #include "core/util/Id.h"
+#include "core/util/Archivable.h"
 #include "core/page/GlobalScope.h"
 #include "platform/process/base/ProcessType.h"
-#include "core/util/Archivable.h"
-#include "core/modules/serviceworker/Message.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "platform/process/base/Process.h"
 #include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
-#include "core/modules/serviceworker/IORunnable.h"
-#include "core/modules/serviceworker/Connection.h"
-
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
-#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-
-#include "platform/process/base/ProcessType.h"
-#include "platform/process/base/Process.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
 
-#include "core/modules/threading/IRunnable.h"
-#include "core/modules/networking/Socket.h"
-#include "core/modules/serviceworker/IORunnable.h"
-
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
-
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/serviceworker/Message.h"
+#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/Connection.h"
+
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#endif
+
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -89,9 +86,11 @@ void ServiceWorkerProcessManager::init()
 
     m_ioThread->start(m_ioRunnable);
 
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
     // create mock instances
     m_serviceWorkerHostProcess = ServiceWorkerHostProcess::getInstance();
     m_serviceWorkerHostProcess->init(m_threadPool);
+#endif
 }
 
 void ServiceWorkerProcessManager::destroy()
