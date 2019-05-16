@@ -109,8 +109,12 @@ public:
         , m_inlineStyle(nullptr)
         , m_tabIndex(0)
         , m_name(qname)
+#if !defined(NDEBUG)
+        , m_didAttributeChangedCorrectlyInvoked(true)
+#endif
         , m_id(AtomicString::emptyAtomicString())
     {
+        STARFISH_ASSERT(document != nullptr);
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -423,6 +427,12 @@ protected:
     QualifiedName m_name;
 
 private:
+    void invokeDidAttributeChanged(QualifiedName name, String* old,
+                                   String* value, bool attributeCreated,
+                                   bool attributeRemoved);
+#if !defined(NDEBUG)
+    bool m_didAttributeChangedCorrectlyInvoked;
+#endif
     AtomicString m_id;
     GCVector<AtomicString> m_classNames;
     GCVector<Attribute> m_attributes;

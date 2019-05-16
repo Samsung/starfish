@@ -1424,6 +1424,11 @@ To use these features, you need to define specific string when compile. the stri
 | | -webkit-flex-grow | alias of flex-grow |
 | | -webkit-flex-shrink | alias of flex-shrink |
 | | -webkit-flex-basis | alias of flex-basis |
+| | -webkit-align-items | alias of align-items |
+| | -webkit-align-content | alias of align-content |
+| | -webkit-align-self | alias of align-self |
+| | -webkit-order | alias of order |
+| | -webkit-justify-content | alias of justify-content |
 | STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX | -webkit-transform | alias of transform |
 | | -webkit-transform-origin | alias of transform-origin |
 | STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX | -webkit-transition | alias of transition |

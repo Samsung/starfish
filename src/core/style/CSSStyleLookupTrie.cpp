@@ -677,6 +677,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::OverflowWrap;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-order", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::Order;
+            }
+            break;
+#endif
         }
         break;
     case 14:
@@ -931,6 +938,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "-webkit-flex-basis", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;
             }
+            if (memcmp(data, "-webkit-align-self", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignSelf;
+            }
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
             if (memcmp(data, "-webkit-transition", 18) == 0) {
@@ -1006,6 +1016,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "-webkit-flex-shrink", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexShrink;
             }
+            if (memcmp(data, "-webkit-align-items", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignItems;
+            }
             break;
 #endif
         }
@@ -1059,6 +1072,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::TextDecorationStyle;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-align-content", 21) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignContent;
+            }
+            break;
+#endif
         }
         break;
     case 22:
@@ -1092,6 +1112,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::TextUnderlinePosition;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-justify-content", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifyContent;
+            }
+            break;
+#endif
         }
         break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
@@ -1598,6 +1625,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::WordSpacing;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "webkitOrder", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::Order;
+            }
+            break;
+#endif
         }
         break;
     case 12:
@@ -1810,6 +1844,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "webkitFlexBasis", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;
             }
+            if (memcmp(data, "webkitAlignSelf", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignSelf;
+            }
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
             if (memcmp(data, "webkitTransform", 15) == 0) {
@@ -1861,6 +1898,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlexShrink", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexShrink;
+            }
+            if (memcmp(data, "webkitAlignItems", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignItems;
             }
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
@@ -1933,6 +1973,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::TextDecorationLine;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitAlignContent", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignContent;
+            }
+            break;
+#endif
         }
         break;
     case 19:
@@ -1980,6 +2027,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::BackgroundAttachment;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "webkitJustifyContent", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::JustifyContent;
+            }
+            break;
+#endif
         }
         break;
     case 21:

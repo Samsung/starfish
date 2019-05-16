@@ -257,14 +257,32 @@ String* Element::getAttributeOrEmpty(const QualifiedName& qualifiedName) const
     return String::emptyString;
 }
 
+void Element::invokeDidAttributeChanged(QualifiedName name, String* old,
+                                        String* value, bool attributeCreated,
+                                        bool attributeRemoved)
+{
+    STARFISH_ASSERT(old != nullptr);
+    STARFISH_ASSERT(value != nullptr);
+
+#if !defined(NDEBUG)
+    m_didAttributeChangedCorrectlyInvoked = false;
+#endif
+    didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+#if !defined(NDEBUG)
+    STARFISH_ASSERT(m_didAttributeChangedCorrectlyInvoked);
+#endif
+}
+
 void Element::setAttribute(const AttributeName& name, String* value)
 {
+    STARFISH_ASSERT(value != nullptr);
     STARFISH_ASSERT(name.qname().localName()->length());
+
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         m_attributes.push_back(Attribute(name.qname(), value));
-        didAttributeChanged(name.qname(), String::emptyString, value, true,
-                            false);
+        invokeDidAttributeChanged(name.qname(), String::emptyString, value,
+                                  true, false);
     } else {
         if (name.isNamespaceAware()) {
             // If an attribute with the same local name and namespace URI is
@@ -274,17 +292,21 @@ void Element::setAttribute(const AttributeName& name, String* value)
         }
         String* v = m_attributes[idx].value();
         m_attributes[idx].setValue(value);
-        didAttributeChanged(name.qname(), v, value, false, false);
+        invokeDidAttributeChanged(name.qname(), v, value, false, false);
     }
 }
 
 void Element::setAttribute(const QualifiedName& name, String* value)
 {
+    STARFISH_ASSERT(value != nullptr);
+
     setAttribute(AttributeName(name, AttributeName::MatchName), value);
 }
 
 void Element::setAttribute(String* name, String* value)
 {
+    STARFISH_ASSERT(value != nullptr);
+
     if (!QualifiedName::checkNameProductionRule(name)) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
@@ -295,6 +317,9 @@ void Element::setAttribute(String* name, String* value)
 void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
                              String* value)
 {
+    STARFISH_ASSERT(qualifiedName != nullptr);
+    STARFISH_ASSERT(value != nullptr);
+
     QualifiedName qname =
         document()->validateAndExtractQualifiedName(ns, qualifiedName);
     setAttribute(AttributeName(qname, AttributeName::MatchNS), value);
@@ -302,6 +327,8 @@ void Element::setAttributeNS(Nullable<String*> ns, String* qualifiedName,
 
 Attr* Element::setAttributeNode(Attr* newAttr)
 {
+    STARFISH_ASSERT(newAttr != nullptr);
+
     RareElementMembers* rareMembers = ensureRareElementMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     if (!rareMembers->m_attrList) {
@@ -344,14 +371,16 @@ Attr* Element::setAttributeNode(Attr* newAttr)
         m_attributes.push_back(Attribute(newAttr->qname(), newValue));
         rareMembers->m_attrList->push_back(newAttr);
     }
-    didAttributeChanged(newAttr->qname(), oldValue, newValue, idx == SIZE_MAX,
-                        false);
+    invokeDidAttributeChanged(newAttr->qname(), oldValue, newValue,
+                              idx == SIZE_MAX, false);
     newAttr->attachToElement(this, String::emptyString);
     return oldAttr;
 }
 
 Attr* Element::setAttributeNodeNS(Attr* attrNode)
 {
+    STARFISH_ASSERT(attrNode != nullptr);
+
     // Seem to have no difference.
     return setAttributeNode(attrNode);
 }
@@ -374,7 +403,7 @@ void Element::removeAttribute(size_t idx)
         attrNode->detachFromElement(v);
         l->erase(l->begin() + attrIdx);
     }
-    didAttributeChanged(name, v, String::emptyString, false, true);
+    invokeDidAttributeChanged(name, v, String::emptyString, false, true);
 }
 
 void Element::removeAttribute(const AttributeName& name)
@@ -392,17 +421,22 @@ void Element::removeAttribute(const QualifiedName& name)
 
 void Element::removeAttribute(String* name)
 {
+    STARFISH_ASSERT(name != nullptr);
+
     removeAttribute(properAttributeName(this, name));
 }
 
 void Element::removeAttributeNS(Nullable<String*> ns, String* localName)
 {
+    STARFISH_ASSERT(localName != nullptr);
+
     removeAttribute(properAttributeNameNS(this, ns, localName));
 }
 
 Attr* Element::removeAttributeNode(Attr* attr)
 {
-    STARFISH_ASSERT(attr);
+    STARFISH_ASSERT(attr != nullptr);
+
     if (attr->ownerElement() != this) {
         throw new DOMException(
             executionContext(), DOMException::NOT_FOUND_ERR,
@@ -431,6 +465,8 @@ GCVector<String*> Element::getAttributeNames() const
 
 Element* Element::closest(String* selectors)
 {
+    STARFISH_ASSERT(selectors != nullptr);
+
     GCVector<CSSSelectorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
     SelectorQuery selectorQuery(selectorListContainer);
@@ -449,6 +485,8 @@ Element* Element::closest(String* selectors)
 
 bool Element::matches(String* selectors)
 {
+    STARFISH_ASSERT(selectors != nullptr);
+
     GCVector<CSSSelectorList*> selectorListContainer;
     parseSelector(selectorListContainer, selectors);
     SelectorQuery selectorQuery(selectorListContainer);
@@ -466,6 +504,13 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         auto s = name.localName()->toUTF8NonGCString();
         STARFISH_LOG_INFO("+++attr:%s\n", s.data());
     }
+#endif
+
+    STARFISH_ASSERT(old != nullptr);
+    STARFISH_ASSERT(value != nullptr);
+#if !defined(NDEBUG)
+    STARFISH_ASSERT(!m_didAttributeChangedCorrectlyInvoked);
+    m_didAttributeChangedCorrectlyInvoked = true;
 #endif
 
     StaticStrings* ss = starfish()->staticStrings();
