@@ -49,6 +49,8 @@
 
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
+#include "core/modules/serviceworker/push/PushServiceAgent.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
@@ -92,6 +94,8 @@ void ServiceWorkerProcessManager::init()
     m_serviceWorkerHostProcess = ServiceWorkerHostProcess::getInstance();
     m_serviceWorkerHostProcess->init(m_threadPool);
 #endif
+
+    m_pushServiceAgent = new PushServiceAgent();
 }
 
 void ServiceWorkerProcessManager::destroy()

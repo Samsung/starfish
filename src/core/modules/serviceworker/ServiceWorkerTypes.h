@@ -73,6 +73,7 @@ using ServiceWorkerContextId = Id<GlobalScope>;
 using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using ServiceWorkerClientId = ServiceWorkerContextId;
 using RequestId = Id<ServiceWorkerRequest>;
+using PushManagerId = Id<GlobalScope>;
 
 #ifdef SERVICE_WORKER_USE_MULTI_PROCESS
 #define IPC_PROTOCOL "ipc://"

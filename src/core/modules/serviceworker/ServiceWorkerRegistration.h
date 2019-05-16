@@ -29,6 +29,7 @@
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
+#include "core/modules/serviceworker/push/PushManager.h"
 #include "core/dom/EventTarget.h"
 
 namespace Starfish {
@@ -59,6 +60,7 @@ public:
                                  ServiceWorker* serviceWorker);
 
     DEFINE_GETTER_SETTER(ServiceWorkerRegistrationData*, data, Data);
+    DEFINE_GETTER_SETTER(PushManager*, pushManager, PushManager);
 
 private:
     ExecutionContext* m_executionContext;
@@ -68,6 +70,7 @@ private:
 
     ServiceWorkerRegistrationData* m_data;
     ServiceWorkerJobClientInterface* m_jobClient;
+    PushManager* m_pushManager;
 };
 } // namespace Starfish
 

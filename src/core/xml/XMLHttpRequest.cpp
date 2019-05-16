@@ -218,9 +218,11 @@ public:
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
-                        m_xhr->m_responseArrayBuffer = createArrayBuffer(
+                        auto scriptArrayBuffer = createScriptArrayBuffer(
                             m_xhr->scriptBindingInstance(), buffer,
                             m_xhr->m_resourceRequest->response().size());
+                        m_xhr->m_responseArrayBuffer =
+                            createScriptValue(scriptArrayBuffer);
                         m_xhr->m_resourceRequest->response().clear();
                         m_xhr->m_resourceRequest->response().shrink_to_fit();
                     } else {

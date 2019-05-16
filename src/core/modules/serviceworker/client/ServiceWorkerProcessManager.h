@@ -34,6 +34,8 @@ class IThread;
 class IORunnable;
 class GlobalScope;
 
+class PushServiceAgent;
+
 struct ProcessData {
     ProcessData()
         : pid(-1)
@@ -59,6 +61,11 @@ public:
     void deregisterActiveGlobalScope(Id<GlobalScope> id);
     NULLABLE GlobalScope* find(Id<GlobalScope> id);
 
+    PushServiceAgent* pushServiceAgent()
+    {
+        return m_pushServiceAgent;
+    }
+
 private:
     ServiceWorkerProcessManager();
     virtual ~ServiceWorkerProcessManager();
@@ -69,6 +76,7 @@ private:
     ThreadPool* m_threadPool{ nullptr };
     IORunnable* m_ioRunnable{ nullptr };
     MessageLoop* m_messageLoop{ nullptr };
+    PushServiceAgent* m_pushServiceAgent{ nullptr };
 
     ServiceWorkerHostProcess* m_serviceWorkerHostProcess{ nullptr };
     ServiceWorkerClientProcess* m_serviceWorkerClientProcess{ nullptr };

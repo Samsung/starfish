@@ -89,11 +89,11 @@ Promise* Body::arrayBuffer()
                 auto str = value->toUTF8NonGCString();
                 void* buffer = calloc(1, str.length());
                 memcpy(buffer, str.data(), str.length());
-                auto ab = createArrayBuffer(
+                auto scriptArrayBuffer = createScriptArrayBuffer(
                     executionContext()->scriptBindingInstance(), buffer,
                     value->length());
 
-                promise->fulfill(ab);
+                promise->fulfill(createScriptValue(scriptArrayBuffer));
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }

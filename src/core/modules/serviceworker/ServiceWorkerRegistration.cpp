@@ -36,6 +36,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
     , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
     , m_jobClient(client)
+    , m_pushManager(new PushManager(executionContext, this))
 {
     STARFISH_ASSERT(m_data != nullptr);
 }

@@ -1,0 +1,16 @@
+// https://w3c.github.io/push-api/#pushsubscriptionoptions-interface-and-dictionary
+
+[STARFISH_ENABLE_SERVICE_WORKER]
+typedef (BufferSource or DOMString) ApplicationServerKeyType;
+
+[STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker)]
+dictionary PushSubscriptionOptionsInit {
+  boolean userVisibleOnly = false;
+  ApplicationServerKeyType? applicationServerKey = null;
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker), SecureContext]
+interface PushSubscriptionOptions {
+  readonly attribute boolean userVisibleOnly;
+  [SameObject, Rename=applicationServerKeyScriptValue] readonly attribute ArrayBuffer? applicationServerKey;
+};

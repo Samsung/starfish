@@ -90,9 +90,10 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
         void* buffer = malloc(size);
         STARFISH_RELEASE_ASSERT(buffer);
         memcpy(buffer, m_buffer.data(), size);
-        auto arrayBuffer = createArrayBuffer(
+        auto scriptArrayBuffer = createScriptArrayBuffer(
             executionContext->scriptBindingInstance(), buffer, size);
-        promise->fulfill(arrayBuffer);
+
+        promise->fulfill(createScriptValue(scriptArrayBuffer));
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }

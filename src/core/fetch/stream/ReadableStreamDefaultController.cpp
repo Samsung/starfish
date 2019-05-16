@@ -95,8 +95,9 @@ void ReadableStreamDefaultController::read(Promise* promise)
     if (bufferSize > 0) {
         void* buffer = calloc(1, bufferSize);
         memcpy(buffer, streamBuffer->data(), bufferSize);
-        resolveRead(promise, createArrayBuffer(scriptBindingInstance(), buffer,
-                                               bufferSize));
+        auto scriptArrayBuffer = createScriptArrayBuffer(
+            scriptBindingInstance(), buffer, bufferSize);
+        resolveRead(promise, createScriptValue(scriptArrayBuffer));
 
         streamBuffer->clear();
     } else {

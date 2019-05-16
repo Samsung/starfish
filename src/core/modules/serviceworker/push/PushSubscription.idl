@@ -1,0 +1,12 @@
+// https://w3c.github.io/push-api/#pushsubscription-interface
+
+[STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker), SecureContext]
+interface PushSubscription {
+  readonly attribute USVString endpoint;
+  // readonly attribute DOMTimeStamp? expirationTime;
+  [SameObject] readonly attribute PushSubscriptionOptions options;
+  // ArrayBuffer? getKey(PushEncryptionKeyName name);
+  // Promise<boolean> unsubscribe();
+
+  // PushSubscriptionJSON toJSON();
+};

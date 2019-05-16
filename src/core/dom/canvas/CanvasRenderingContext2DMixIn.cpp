@@ -1415,7 +1415,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
         sh = -sh;
     }
 
-    // FIXME: Remove below codes When createArrayBuffer handles a RangeError
+    // FIXME: Remove below codes When createScriptArrayBuffer handles a
+    // RangeError
     Checked<int, RecordOverflow> dataSize = 4;
     dataSize *= sw;
     dataSize *= sh;
@@ -1444,8 +1445,9 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
 
     // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then rethrow
     // the RangeError thrown by JavaScript, and return.
-    auto canvasPixelArrayBuffer = createArrayBuffer(
+    auto scriptArrayBuffer = createScriptArrayBuffer(
         executionContext()->scriptBindingInstance(), destSize);
+    auto canvasPixelArrayBuffer = createScriptValue(scriptArrayBuffer);
     ContextRef* ctx =
         executionContext()->scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
