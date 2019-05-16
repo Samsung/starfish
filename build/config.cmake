@@ -59,6 +59,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX: enable CSS -webkit-flex-* support
 # STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX: enable CSS -webkit-transition-* support
 # STARFISH_ENABLE_OBSOLETE_SPEC : enable obsolete spec
+# STARFISH_ENABLE_BATTERY_STATUS : enable battery status api
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -140,6 +141,7 @@ ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
         #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_OBSOLETE_SPEC
+        -DSTARFISH_ENABLE_BATTERY_STATUS
     )
 ELSEIF (${CUSTOM} STREQUAL "headless")
     SET (LWE_DEFINES_CUSTOM
@@ -280,7 +282,7 @@ IF (${HOST} STREQUAL "tizen")
     ELSEIF (${CUSTOM} MATCHES "mobile")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-media-player capi-network-connection)
     ELSEIF (${CUSTOM} MATCHES "wearable")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager capi-system-info)
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager capi-system-info capi-system-device)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
     ELSEIF (${CUSTOM} STREQUAL "unified_tv")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)

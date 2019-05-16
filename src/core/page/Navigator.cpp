@@ -26,6 +26,9 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #endif
+#ifdef STARFISH_ENABLE_BATTERY_STATUS
+#include "core/modules/battery/Battery.h"
+#endif
 
 namespace Starfish {
 
@@ -35,6 +38,9 @@ Navigator::Navigator(Document* document)
     , m_geolocation(nullptr)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     , m_serviceWorker(nullptr)
+#endif
+#ifdef STARFISH_ENABLE_BATTERY_STATUS
+    , m_batteryManager(nullptr)
 #endif
 {
 }
@@ -54,6 +60,19 @@ ServiceWorkerContainer* Navigator::serviceWorker()
         m_serviceWorker = new ServiceWorkerContainer(executionContext());
     }
     return m_serviceWorker;
+}
+#endif
+
+#ifdef STARFISH_ENABLE_BATTERY_STATUS
+Promise* Navigator::getBattery()
+{
+    Promise* promise = new Promise(scriptBindingInstance());
+    if (m_batteryManager == nullptr) {
+        m_batteryManager = new BatteryManager(executionContext());
+    }
+
+    promise->fulfill(m_batteryManager->scriptValue());
+    return promise;
 }
 #endif
 

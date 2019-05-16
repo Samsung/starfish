@@ -30,6 +30,9 @@ class Geolocation;
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 class ServiceWorkerContainer;
 #endif
+#ifdef STARFISH_ENABLE_BATTERY_STATUS
+class BatteryManager;
+#endif
 
 class Navigator : public ScriptWrappable, public NavigatorMixin {
 public:
@@ -56,6 +59,7 @@ public:
 
 protected:
     Geolocation* m_geolocation;
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:
     ServiceWorkerContainer* serviceWorker();
@@ -63,6 +67,15 @@ public:
 protected:
     ServiceWorkerContainer* m_serviceWorker;
 #endif
+
+#ifdef STARFISH_ENABLE_BATTERY_STATUS
+public:
+    Promise* getBattery();
+
+protected:
+    BatteryManager* m_batteryManager;
+#endif
 };
 }
+
 #endif
