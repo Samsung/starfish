@@ -29,11 +29,30 @@ class ServiceWorkerRegistrationData;
 class Archivable;
 class ErrorData;
 
+// ServiceWorkerHostProcessInterface which is used on `Client`
+
+class ServiceWorkerHostProcessInterface {
+public:
+    virtual ~ServiceWorkerHostProcessInterface() = default;
+
+    // send
+    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
+    virtual void matchRegistration(ServiceWorkerRequest* request,
+                                   String* clientURL) = 0;
+    virtual void updateServiceWorkerClient(ContextRequestData* request) = 0;
+
+    // receive
+    // NOTE: For rapid development, declaring receive handler isn't compulsory
+    // for now. However, unimplemented message handler is detected in run time.
+};
+
+// ServiceWorkerClientProcessInterface which is used on `Host`
+
 class ServiceWorkerClientProcessInterface {
 public:
-    virtual ~ServiceWorkerClientProcessInterface()
-    {
-    }
+    virtual ~ServiceWorkerClientProcessInterface() = default;
+
+    // send
     virtual void resolveJobPromise(
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
 
@@ -45,16 +64,11 @@ public:
 
     virtual void onUpdateWorkerState(ServiceWorkerRegistrationId id,
                                      ServiceWorkerState target) = 0;
+
+    // receive
+    // NOTE: For rapid development, declaring receive handler isn't compulsory
+    // for now. However, unimplemented message handler is detected in run time.
 };
 
-class ServiceWorkerHostProcessInterface {
-public:
-    virtual ~ServiceWorkerHostProcessInterface()
-    {
-    }
-    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
-    virtual void matchRegistration(ServiceWorkerRequest* request,
-                                   String* clientURL) = 0;
-};
-}
+} // namespace Starfish
 #endif

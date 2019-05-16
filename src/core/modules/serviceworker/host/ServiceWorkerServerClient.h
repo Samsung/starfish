@@ -24,11 +24,13 @@
 namespace Starfish {
 
 class ServiceWorkerClientProcessInterface;
+class ServiceWorkerHostJobHandler;
 
 class ServiceWorkerServerClient {
 public:
     virtual void getConnections(
         GCVector<ServiceWorkerClientProcessInterface*>& connections) = 0;
+    virtual ServiceWorkerHostJobHandler* jobHandler() = 0;
 };
 
 } // namespace Starfish

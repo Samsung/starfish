@@ -34,13 +34,15 @@
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/MessageServiceWorker.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -48,7 +50,7 @@
 namespace Starfish {
 
 ServiceWorkerHostConnection::ServiceWorkerHostConnection(
-    ServiceWorkerHostProcessInterface* client)
+    ServiceWorkerServerClient* client)
     : m_client(client)
 {
 }
@@ -122,17 +124,31 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     msg.archive(reader);
 
     auto msgName = msg.name();
+    auto handler = m_client->jobHandler();
 
+    STARFISH_ASSERT(handler != nullptr);
+
+    // NOTE: consider using a message map to invoke member functions registered.
     if (msgName == "scheduleJob") {
         auto job =
             new ServiceWorkerJob(downcast<ServiceWorkerJobData*>(msg.param(0)));
         job->setHostConnection(this);
-        m_client->scheduleJob(job);
+        handler->scheduleJob(job);
 
     } else if (msgName == "matchRegistration") {
-        m_client->matchRegistration(
-            downcast<ServiceWorkerRequest*>(msg.param(0)),
-            downcast<StringArchivable*>(msg.param(1))->value());
+        auto request = downcast<ServiceWorkerRequest*>(msg.param(0));
+        auto clientURL = downcast<StringArchivable*>(msg.param(1))->value();
+
+        auto registration = handler->matchRegistration(request, clientURL);
+        resolveRequest(request, registration);
+
+    } else if (msgName == "updateServiceWorkerClient") {
+        handler->updateServiceWorkerClient(
+            downcast<ContextRequestData*>(msg.param(0)));
+
+    } else {
+        STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
+        STARFISH_ASSERT_NOT_REACHED();
     }
 }
 

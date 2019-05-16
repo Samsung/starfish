@@ -37,6 +37,7 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
@@ -107,6 +108,7 @@ ServiceWorkerProcessManager::ServiceWorkerProcessManager()
     , m_ioRunnable(nullptr)
     , m_serviceWorkerHostProcess(nullptr)
     , m_serviceWorkerClientProcess(nullptr)
+    , m_connection(nullptr)
 {
 }
 
@@ -158,10 +160,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     STARFISH_ASSERT(processData != nullptr);
 
+#ifdef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
     if (processData->connection == nullptr) {
         processData->connection = new ServiceWorkerClientConnection();
-
-        STARFISH_ASSERT(processData->connection != nullptr);
 
         std::string address = IPC_PROTOCOL;
         address.append(IPC_ADDRESS_PREFIX);
@@ -173,6 +174,22 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         processData->connection->socket()->connect(address.c_str());
         m_ioRunnable->addClient(processData->connection);
     }
+#else
+    if (m_connection == nullptr) {
+        m_connection = new ServiceWorkerClientConnection();
+        std::string address = IPC_PROTOCOL;
+        address.append(IPC_ADDRESS_PREFIX);
+        address.append(IPC_ADDRESS);
+
+        m_connection->socket()->connect(address.c_str());
+        m_ioRunnable->addClient(m_connection);
+
+        SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
+        SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
+    }
+
+    processData->connection = m_connection;
+#endif
 
     return processData->connection;
 }
@@ -182,15 +199,26 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 {
     STARFISH_ASSERT(globalScope != nullptr);
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
+
+    if (m_connection) {
+        // TODO: check whether of not this context's serviceworker is valid.
+        // m_connection->sendContextRequest(new ContextRequestData(
+        //     id, ServiceWorkerClientRequestType::Register));
+    }
 }
 
 void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
     Id<GlobalScope> id)
 {
     m_mapIdToActiveGlobalScope.erase(id);
+
+    if (m_connection) {
+        m_connection->updateServiceWorkerClient(new ContextRequestData(
+            id, ServiceWorkerClientRequestType::Unregister));
+    }
 }
 
-GlobalScope* ServiceWorkerProcessManager::find(Id<GlobalScope> id)
+NULLABLE GlobalScope* ServiceWorkerProcessManager::find(Id<GlobalScope> id)
 {
     auto it = m_mapIdToActiveGlobalScope.find(id);
     if (it == m_mapIdToActiveGlobalScope.end()) {

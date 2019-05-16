@@ -81,6 +81,8 @@ using RequestId = Id<ServiceWorkerRequest>;
 #define IPC_PROTOCOL "inproc://"
 #define IPC_ADDRESS_PREFIX "sw/"
 #endif
+#define IPC_ADDRESS "host"
+
 } // namespace Starfish
 
 #endif

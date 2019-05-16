@@ -62,13 +62,13 @@ public:
     void install(ServiceWorkerJob* job, ServiceWorkerData* worker,
                  ServiceWorkerRegistrationData* registration);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
-                                 const char* target, ServiceWorkerData* source);
+                                 const char* target,
+                                 NULLABLE ServiceWorkerData* source);
     void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
-
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
 
     NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
@@ -80,6 +80,8 @@ public:
 
     NULLABLE ServiceWorkerRegistrationData* matchRegistration(
         ServiceWorkerRequest* request, String* clientURL);
+
+    void updateServiceWorkerClient(ContextRequestData* request);
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);

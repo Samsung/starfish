@@ -161,6 +161,7 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
     ARCHIVE(ServiceWorkerData);
     ARCHIVE(ErrorData);
     ARCHIVE(UpdateWorkerStateData);
+    ARCHIVE(ContextRequestData);
 
 #undef ARCHIVE
 
