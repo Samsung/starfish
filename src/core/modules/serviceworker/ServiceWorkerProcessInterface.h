@@ -42,6 +42,9 @@ public:
 
     virtual void resolveRequest(ServiceWorkerRequest* request,
                                 NULLABLE Archivable* registration) = 0;
+
+    virtual void onUpdateWorkerState(ServiceWorkerRegistrationId id,
+                                     ServiceWorkerState target) = 0;
 };
 
 class ServiceWorkerHostProcessInterface {

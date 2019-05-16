@@ -42,7 +42,8 @@ class ServiceWorkerClientProcessInterface;
 class ProgramOptions;
 
 class ServiceWorkerHostProcess : public gc,
-                                 public ServiceWorkerHostProcessInterface {
+                                 public ServiceWorkerHostProcessInterface,
+                                 public ServiceWorkerServerClient {
 public:
     static ServiceWorkerHostProcess* getInstance();
     static void destroy();
@@ -57,6 +58,9 @@ public:
     void matchRegistration(ServiceWorkerRequest* request,
                            String* clientURL) override;
 
+    void getConnections(
+        GCVector<ServiceWorkerClientProcessInterface*>& connections) override;
+
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
 
 private:
@@ -65,12 +69,15 @@ private:
     ServiceWorkerHostProcess();
     virtual ~ServiceWorkerHostProcess();
 
+    void registerConnection(ServiceWorkerHostConnection* connection);
+
     MessageLoop* m_messageLoop{ nullptr };
     IThread* m_ioThread{ nullptr };
     ThreadPool* m_threadPool{ nullptr };
     IORunnable* m_ioRunnable{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
+    GCVector<ServiceWorkerHostConnection*> m_connections;
 };
 
 } // namespace Starfish

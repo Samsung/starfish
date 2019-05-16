@@ -46,6 +46,8 @@ public:
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+    void updateWorkerState(ServiceWorkerRegistrationId id,
+                           ServiceWorkerState target);
 
     NULLABLE ServiceWorkerContainer* findServiceWorkerContainer(
         ServiceWorkerContextId id);

@@ -18,38 +18,23 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerRegistrationData__)
-#define __StarfishServiceWorkerRegistrationData__
+    !defined(__StarfishMessageServiceWorker__)
+#define __StarfishMessageServiceWorker__
 
 namespace Starfish {
 
-class String;
-class ServiceWorkerData;
-
-class ServiceWorkerRegistrationData : public Archivable {
+class UpdateWorkerStateData : public Archivable {
 public:
-    ServiceWorkerRegistrationId id;
-    String* scope{ String::emptyString };
-    ServiceWorkerData* installingWorker{ nullptr };
-    ServiceWorkerData* waitingWorker{ nullptr };
-    ServiceWorkerData* activeWorker{ nullptr };
-    ServiceWorkerUpdateViaCache updateViaCache{
-        ServiceWorkerUpdateViaCache::None
-    };
+    ServiceWorkerRegistrationId registrationId;
+    ServiceWorkerState state;
 
-    bool isValid()
-    {
-        return (scope != String::emptyString);
-    }
-
-    DEFINE_GETTER_SETTER(bool, isUninstalling, IsUninstalling);
+    UpdateWorkerStateData() = default;
+    UpdateWorkerStateData(ServiceWorkerRegistrationId id,
+                          ServiceWorkerState target);
 
     // serialize/deserialize
     const char* archiveId() const override;
     void archive(Archiver& ar) override;
-
-private:
-    bool m_isUninstalling{ false };
 };
 
 } // namespace Starfish

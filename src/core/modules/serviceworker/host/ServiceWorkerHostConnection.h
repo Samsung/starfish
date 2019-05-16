@@ -44,6 +44,9 @@ public:
     void resolveRequest(ServiceWorkerRequest* request,
                         NULLABLE Archivable* archivable) override;
 
+    void onUpdateWorkerState(ServiceWorkerRegistrationId id,
+                             ServiceWorkerState target) override;
+
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
 

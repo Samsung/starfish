@@ -38,6 +38,7 @@
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 
 namespace Starfish {
 
@@ -110,6 +111,22 @@ NULLABLE Archivable* Message::param(size_t index)
     return archivable;
 }
 
+template <typename T>
+static void archiveIfMatched(const char* archiveId, std::string& id,
+                             Archiver& ar, Archivable*& archivable,
+                             bool& isAlreadyArchived)
+{
+    STARFISH_ASSERT(archiveId != nullptr);
+
+    if (isAlreadyArchived == false && (id == archiveId)) {
+        if (ar.IsReader()) {
+            archivable = new T;
+        }
+        archivable->archive(ar);
+        isAlreadyArchived = true;
+    }
+}
+
 void Message::archive(Archiver& ar, Archivable*& archivable)
 {
     if ((ar.IsReader() == false) && archivable == nullptr) {
@@ -125,46 +142,27 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
 
     ar.Member("_archiveId") & id;
 
-    // TODO: replace each raw string with a TypeName member
-    // NOTE: consider using macro to cover the same code
-    if (id == "ServiceWorkerJobData") {
+    bool isAlreadyArchived = false;
+
+    if (id == TypeName::String) {
         if (ar.IsReader()) {
-            archivable = new ServiceWorkerJobData;
-            STARFISH_ASSERT(archivable != nullptr);
+            archivable = new StringArchivable(id.c_str(), String::emptyString);
         }
         archivable->archive(ar);
-    } else if (id == "ServiceWorkerRegistrationData") {
-        if (ar.IsReader()) {
-            archivable = new ServiceWorkerRegistrationData;
-            STARFISH_ASSERT(archivable != nullptr);
-        }
-        archivable->archive(ar);
-    } else if (id == "ServiceWorkerData") {
-        if (ar.IsReader()) {
-            archivable = new ServiceWorkerData;
-            STARFISH_ASSERT(archivable != nullptr);
-        }
-        archivable->archive(ar);
-    } else if (id == "ServiceWorkerRequest") {
-        if (ar.IsReader()) {
-            archivable = new ServiceWorkerRequest;
-            STARFISH_ASSERT(archivable != nullptr);
-        }
-        archivable->archive(ar);
-    } else if (id == "ErrorData") {
-        if (ar.IsReader()) {
-            archivable = new ErrorData;
-            STARFISH_ASSERT(archivable != nullptr);
-        }
-        archivable->archive(ar);
-    } else if (id == TypeName::String) {
-        if (ar.IsReader()) {
-            archivable =
-                new GenericArchivable<String*>(id.c_str(), String::emptyString);
-            STARFISH_ASSERT(archivable != nullptr);
-        }
-        archivable->archive(ar);
+        isAlreadyArchived = true;
     }
+
+#define ARCHIVE(NAME) \
+    archiveIfMatched<NAME>(#NAME, id, ar, archivable, isAlreadyArchived);
+
+    ARCHIVE(ServiceWorkerRequest);
+    ARCHIVE(ServiceWorkerJobData);
+    ARCHIVE(ServiceWorkerRegistrationData);
+    ARCHIVE(ServiceWorkerData);
+    ARCHIVE(ErrorData);
+    ARCHIVE(UpdateWorkerStateData);
+
+#undef ARCHIVE
 
     ar.EndObject();
 }

@@ -45,6 +45,7 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
@@ -85,7 +86,7 @@ void ServiceWorkerClientConnection::matchRegistration(
     JsonWriter writer;
     Message msg("matchRegistration");
     msg.addParam(request);
-    msg.addParam(new GenericArchivable<String*>(TypeName::String, clientURL));
+    msg.addParam(new StringArchivable(TypeName::String, clientURL));
     msg.archive(writer);
 
     send(writer.GetString(), writer.GetSize() + 1);
@@ -132,6 +133,9 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
                 requestMatched->postTask()->run(requestMatched, { archivable });
             }
         }
+    } else if (msgName == "updateWorkerState") {
+        auto data = downcast<UpdateWorkerStateData*>(msg.param(0));
+        updateWorkerState(data->registrationId, data->state);
     }
 }
 
@@ -171,6 +175,13 @@ void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
             serviceWorkerContainer->rejectJobPromise(jobMatched, errorData);
         }
     }
+}
+
+void ServiceWorkerClientConnection::updateWorkerState(
+    ServiceWorkerRegistrationId id, ServiceWorkerState target)
+{
+    // https://w3c.github.io/ServiceWorker/#update-worker-state
+    // TODO: 3. For each workerObject in workerObjects:
 }
 
 NULLABLE ServiceWorkerContainer*

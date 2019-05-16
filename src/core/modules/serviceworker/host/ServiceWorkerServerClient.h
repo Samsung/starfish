@@ -18,40 +18,18 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerRegistrationData__)
-#define __StarfishServiceWorkerRegistrationData__
+    !defined(__StarfishServiceWorkerServerClient__)
+#define __StarfishServiceWorkerServerClient__
 
 namespace Starfish {
 
-class String;
-class ServiceWorkerData;
+class ServiceWorkerClientProcessInterface;
 
-class ServiceWorkerRegistrationData : public Archivable {
+class ServiceWorkerServerClient {
 public:
-    ServiceWorkerRegistrationId id;
-    String* scope{ String::emptyString };
-    ServiceWorkerData* installingWorker{ nullptr };
-    ServiceWorkerData* waitingWorker{ nullptr };
-    ServiceWorkerData* activeWorker{ nullptr };
-    ServiceWorkerUpdateViaCache updateViaCache{
-        ServiceWorkerUpdateViaCache::None
-    };
-
-    bool isValid()
-    {
-        return (scope != String::emptyString);
-    }
-
-    DEFINE_GETTER_SETTER(bool, isUninstalling, IsUninstalling);
-
-    // serialize/deserialize
-    const char* archiveId() const override;
-    void archive(Archiver& ar) override;
-
-private:
-    bool m_isUninstalling{ false };
+    virtual void getConnections(
+        GCVector<ServiceWorkerClientProcessInterface*>& connections) = 0;
 };
 
 } // namespace Starfish
-
 #endif

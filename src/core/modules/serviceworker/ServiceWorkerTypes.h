@@ -27,6 +27,21 @@ class GlobalScope;
 class ServiceWorkerJob;
 class ExecutionContext;
 class ServiceWorkerRequest;
+class ServiceWorkerRegistration;
+
+enum class ServiceWorkerState : unsigned {
+    Installing = 0,
+    Installed,
+    Activating,
+    Activated,
+    Redundant,
+};
+
+enum class ServiceWorkerRegistrationState : unsigned {
+    Installing = 0,
+    Waiting,
+    Active,
+};
 
 enum class ServiceWorkerUpdateViaCache : unsigned {
     Imports,
@@ -55,6 +70,8 @@ using ServiceWorkerRegistrationKey = String*;
 
 using ServiceWorkerJobId = Id<ServiceWorkerJob>;
 using ServiceWorkerContextId = Id<GlobalScope>;
+using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
+using ServiceWorkerClientId = ServiceWorkerContextId;
 using RequestId = Id<ServiceWorkerRequest>;
 
 #ifdef SERVICE_WORKER_USE_MULTI_PROCESS

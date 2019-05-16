@@ -22,29 +22,30 @@
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-const char* ServiceWorkerRegistrationData::archiveId() const
+UpdateWorkerStateData::UpdateWorkerStateData(ServiceWorkerRegistrationId id,
+                                             ServiceWorkerState target)
+    : registrationId(id)
+    , state(target)
 {
-    return "ServiceWorkerRegistrationData";
 }
 
-void ServiceWorkerRegistrationData::archive(Archiver& ar)
+const char* UpdateWorkerStateData::archiveId() const
 {
-    ar.MemberId("id", id);
-    ar.Member("scope") & scope;
-    ar.MemberArchivable("installingWorker", (Archivable*&)installingWorker);
-    ar.MemberArchivable("waitingWorker", (Archivable*&)waitingWorker);
-    ar.MemberArchivable("activeWorker", (Archivable*&)activeWorker);
-    ar.MemberEnum("updateViaCache", updateViaCache);
+    return "UpdateWorkerStateData";
+}
+
+void UpdateWorkerStateData::archive(Archiver& ar)
+{
+    ar.MemberId("registrationId", registrationId);
+    ar.MemberEnum("state", state);
 }
 
 } // namespace Starfish
