@@ -37,6 +37,36 @@ public:
     void archive(Archiver& ar) override;
 };
 
+enum class ServiceWorkerClientRequestType : unsigned {
+    Register = 0,
+    Unregister,
+};
+
+class ContextRequestData : public Archivable {
+public:
+    DEFINE_ARCHIVE_ID_GETTER(ContextRequestData);
+
+    // data
+    ServiceWorkerContextId contextId;
+    ServiceWorkerClientRequestType type;
+
+    // constructor
+    ContextRequestData() = default;
+    ContextRequestData(ServiceWorkerContextId id,
+                       ServiceWorkerClientRequestType target)
+        : contextId(id)
+        , type(target)
+    {
+    }
+
+    // serialize/deserialize
+    void archive(Archiver& ar) override
+    {
+        ar.MemberId("contextId", contextId);
+        ar.MemberEnum("type", type);
+    }
+};
+
 } // namespace Starfish
 
 #endif

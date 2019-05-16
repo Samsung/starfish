@@ -26,11 +26,15 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/DOMException.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
@@ -360,11 +364,10 @@ void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
 
 void ServiceWorkerHostJobHandler::updateRegistrationState(
     ServiceWorkerRegistrationData* registration, const char* target,
-    ServiceWorkerData* source)
+    NULLABLE ServiceWorkerData* source)
 {
     STARFISH_ASSERT(registration != nullptr);
     STARFISH_ASSERT(target != nullptr);
-    STARFISH_ASSERT(source != nullptr);
     // https://w3c.github.io/ServiceWorker/#update-registration-state-algorithm
     // TODO: for target, use ServiceWorkerRegistrationState instead of char
 
@@ -458,8 +461,8 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 
     // 6. Invoke Try Clear Registration with registration.
 
-    // Note: If Try Clear Registration does not trigger Clear Registration here,
-    // Clear Registration is tried again when the last client using the
+    // Note: If `Try Clear Registration` does not trigger `Clear Registration`
+    // here, `Clear Registration` is tried again when the last client using the
     // registration is unloaded or the extend lifetime promises for the
     // registration’s service workers settle.
 
@@ -554,6 +557,13 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
 
     // 10. Return registration.
     return registration;
+}
+
+void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
+    ContextRequestData* request)
+{
+    STARFISH_ASSERT(request != nullptr);
+    // TODO: update ServiceWorkerClient
 }
 
 } // namespace Starfish

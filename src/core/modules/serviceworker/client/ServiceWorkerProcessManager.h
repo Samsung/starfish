@@ -57,7 +57,7 @@ public:
     void registerActiveGlobalScope(Id<GlobalScope> id,
                                    GlobalScope* globalScope);
     void deregisterActiveGlobalScope(Id<GlobalScope> id);
-    GlobalScope* find(Id<GlobalScope> id);
+    NULLABLE GlobalScope* find(Id<GlobalScope> id);
 
 private:
     ServiceWorkerProcessManager();
@@ -78,6 +78,8 @@ private:
 
     GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
         m_mapIdToActiveGlobalScope;
+
+    ServiceWorkerClientConnection* m_connection;
 };
 } // namespace Starfish
 

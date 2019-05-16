@@ -23,16 +23,13 @@
 
 namespace Starfish {
 
-class Socket;
-class ServiceWorkerJob;
-class ServiceWorkerRegistrationData;
-class ServiceWorkerHostProcessInterface;
+class ServiceWorkerServerClient;
 
 class ServiceWorkerHostConnection final
     : public Connection,
       public ServiceWorkerClientProcessInterface {
 public:
-    ServiceWorkerHostConnection(ServiceWorkerHostProcessInterface* client);
+    ServiceWorkerHostConnection(ServiceWorkerServerClient* client);
 
     // send
     void resolveJobPromise(
@@ -50,11 +47,12 @@ public:
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
 
-    DEFINE_GETTER(ServiceWorkerHostProcessInterface*, client);
+    DEFINE_GETTER(ServiceWorkerServerClient*, client);
 
 private:
-    ServiceWorkerHostProcessInterface* m_client{ nullptr };
+    ServiceWorkerServerClient* m_client{ nullptr };
 };
+
 } // namespace Starfish
 
 #endif

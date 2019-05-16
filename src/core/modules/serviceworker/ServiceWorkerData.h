@@ -32,6 +32,13 @@ public:
     // serialize/deserialize
     const char* archiveId() const override;
     void archive(Archiver& ar) override;
+
+    // NOTE: consider seperating ServiceWorker model shared
+    // on both client and host.
+    DEFINE_GETTER_SETTER(bool, hasPendingEvents, HasPendingEvents);
+
+private:
+    bool m_hasPendingEvents{ false };
 };
 
 } // namespace Starfish

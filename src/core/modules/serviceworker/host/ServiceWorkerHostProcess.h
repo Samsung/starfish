@@ -41,9 +41,7 @@ class ServiceWorkerRegistrationData;
 class ServiceWorkerClientProcessInterface;
 class ProgramOptions;
 
-class ServiceWorkerHostProcess : public gc,
-                                 public ServiceWorkerHostProcessInterface,
-                                 public ServiceWorkerServerClient {
+class ServiceWorkerHostProcess : public gc, public ServiceWorkerServerClient {
 public:
     static ServiceWorkerHostProcess* getInstance();
     static void destroy();
@@ -54,12 +52,9 @@ public:
     void init(ThreadPool* threadPool);
     void start(std::shared_ptr<ProgramOptions> programOptions);
 
-    void scheduleJob(ServiceWorkerJob* job) override;
-    void matchRegistration(ServiceWorkerRequest* request,
-                           String* clientURL) override;
-
     void getConnections(
         GCVector<ServiceWorkerClientProcessInterface*>& connections) override;
+    ServiceWorkerHostJobHandler* jobHandler() override;
 
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
 

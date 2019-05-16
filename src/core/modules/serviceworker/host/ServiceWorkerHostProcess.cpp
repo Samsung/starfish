@@ -40,6 +40,7 @@
 #include "core/dom/ExecutionContext.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -120,7 +121,11 @@ void ServiceWorkerHostProcess::start(
 
     std::string address = IPC_PROTOCOL;
     address.append(IPC_ADDRESS_PREFIX);
+#ifdef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
     address.append(encodedOrigin);
+#else
+    address.append(IPC_ADDRESS);
+#endif
 
     SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
     SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s\n", origin.c_str());
@@ -145,21 +150,10 @@ void ServiceWorkerHostProcess::getConnections(
     connections.assign(m_connections.begin(), m_connections.end());
 }
 
-void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
+ServiceWorkerHostJobHandler* ServiceWorkerHostProcess::jobHandler()
 {
-    STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(m_jobHandler != nullptr);
-    m_jobHandler->scheduleJob(job);
-}
-
-void ServiceWorkerHostProcess::matchRegistration(ServiceWorkerRequest* request,
-                                                 String* clientURL)
-{
-    STARFISH_ASSERT(request != nullptr);
-    STARFISH_ASSERT(clientURL != nullptr);
-
-    auto registration = m_jobHandler->matchRegistration(request, clientURL);
-    m_connection->resolveRequest(request, registration);
+    return m_jobHandler;
 }
 
 } // namespace Starfish

@@ -23,11 +23,7 @@
 
 namespace Starfish {
 
-class Socket;
-class ServiceWorkerJob;
-class ServiceWorkerRegistrationData;
 class ServiceWorkerContainer;
-class ErrorData;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -39,6 +35,10 @@ public:
     void scheduleJob(ServiceWorkerJob* job) override;
     void matchRegistration(ServiceWorkerRequest* request,
                            String* clientURL) override;
+    void updateServiceWorkerClient(ContextRequestData* request) override;
+
+    void sendMessage(const char* msgName, NULLABLE Archivable* param1 = nullptr,
+                     NULLABLE Archivable* param2 = nullptr);
 
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
@@ -52,6 +52,7 @@ public:
     NULLABLE ServiceWorkerContainer* findServiceWorkerContainer(
         ServiceWorkerContextId id);
 };
+
 } // namespace Starfish
 
 #endif

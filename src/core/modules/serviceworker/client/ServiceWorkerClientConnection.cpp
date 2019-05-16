@@ -39,13 +39,13 @@
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
-#include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
@@ -65,15 +65,7 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
 
-    job->setClientConnection(this);
-
-    // marshalling
-    JsonWriter writer;
-    Message msg("scheduleJob");
-    msg.addParam(job->data());
-    msg.archive(writer);
-
-    send(writer.GetString(), writer.GetSize() + 1);
+    sendMessage("scheduleJob", job->data());
 }
 
 void ServiceWorkerClientConnection::matchRegistration(
@@ -82,11 +74,36 @@ void ServiceWorkerClientConnection::matchRegistration(
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURL != nullptr);
 
-    // marshalling
+    sendMessage("matchRegistration", request,
+                new StringArchivable(TypeName::String, clientURL));
+}
+
+void ServiceWorkerClientConnection::updateServiceWorkerClient(
+    ContextRequestData* request)
+{
+    STARFISH_ASSERT(request != nullptr);
+
+    sendMessage("updateServiceWorkerClient", request);
+}
+
+void ServiceWorkerClientConnection::sendMessage(const char* msgName,
+                                                NULLABLE Archivable* param1,
+                                                NULLABLE Archivable* param2)
+{
+    STARFISH_ASSERT(msgName != nullptr);
+
     JsonWriter writer;
-    Message msg("matchRegistration");
-    msg.addParam(request);
-    msg.addParam(new StringArchivable(TypeName::String, clientURL));
+    Message msg(msgName);
+
+    // marshalling
+    // NOTE: consider using variable arguments if needed
+    if (param1 != nullptr) {
+        msg.addParam(param1);
+    }
+    if (param2 != nullptr) {
+        msg.addParam(param2);
+    }
+
     msg.archive(writer);
 
     send(writer.GetString(), writer.GetSize() + 1);
@@ -136,6 +153,10 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
     } else if (msgName == "updateWorkerState") {
         auto data = downcast<UpdateWorkerStateData*>(msg.param(0));
         updateWorkerState(data->registrationId, data->state);
+
+    } else {
+        STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
+        STARFISH_ASSERT_NOT_REACHED();
     }
 }
 

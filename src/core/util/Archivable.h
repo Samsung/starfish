@@ -34,6 +34,15 @@ public:
     virtual void archive(Archiver& ar) = 0;
 };
 
+// utility macro for realized classes
+#ifndef DEFINE_ARCHIVE_ID_GETTER
+#define DEFINE_ARCHIVE_ID_GETTER(NAME)     \
+    const char* archiveId() const override \
+    {                                      \
+        return #NAME;                      \
+    }
+#endif
+
 // GenericArchivable
 
 #define MAX_TYPE_NAME 10
