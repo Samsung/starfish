@@ -1,5 +1,6 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasgradient
-[Exposed=(Window,Worker)]
+// Exposed=(Window,Worker) -> Exposed=Window
+[Exposed=Window]
 interface CanvasGradient {
   // opaque object
   [RaisesException] void addColorStop(double offset, DOMString color);

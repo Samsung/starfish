@@ -93,6 +93,7 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/client/*.cpp # TODO: remove client source files
+    ${STARFISH_ROOT}/src/core/modules/serviceworker/push/*.cpp
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp
     ${STARFISH_ROOT}/src/core/dom/WebOrigin.cpp
@@ -122,6 +123,8 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/DOMStringOrSequenceBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/PushSubscriptionOptionsInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BufferSourceOrDOMStringBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST

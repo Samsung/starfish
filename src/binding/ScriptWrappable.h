@@ -163,9 +163,11 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
-ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
+
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
-ScriptValue createArrayBuffer(ScriptBindingInstance* instance, size_t len);
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, size_t len);
+
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance);
 

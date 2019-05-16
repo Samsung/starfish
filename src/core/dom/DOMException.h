@@ -50,6 +50,7 @@ public:
         TIMEOUT_ERR = 23,
         INVALID_NODE_TYPE_ERR = 24,
         DATA_CLONE_ERR = 25,
+        NOT_ALLOWED_ERROR,
 
         SCRIPT_ERROR = 101,
         SCRIPT_EVAL_ERR = 102,

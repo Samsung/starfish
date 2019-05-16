@@ -95,8 +95,9 @@ void ImageData::initialize(int32_t rows, int32_t pixelsPerRow,
         size_t destSize = rows * pixelsPerRow * 4;
         // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then
         // throw the RangeError thrown by JavaScript, and return.
-        auto canvasPixelArrayBuffer = createArrayBuffer(
+        auto scriptArrayBuffer = createScriptArrayBuffer(
             executionContext()->scriptBindingInstance(), destSize);
+        auto canvasPixelArrayBuffer = createScriptValue(scriptArrayBuffer);
         ContextRef* ctx =
             executionContext()->scriptBindingInstance()->scriptContext();
         ExecutionStateRef* state = ExecutionStateRef::create(ctx);

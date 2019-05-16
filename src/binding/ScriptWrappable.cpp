@@ -796,25 +796,27 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 }
 
-ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len)
 {
+    STARFISH_ASSERT(instance != nullptr);
+    STARFISH_ASSERT(bufferSrc != nullptr);
     ContextRef* ctx = instance->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
     obj->attachBuffer(bufferSrc, len);
     state->destroy();
-    return ValueRef::create(obj);
+    return obj;
 }
-
-ScriptValue createArrayBuffer(ScriptBindingInstance* instance, size_t len)
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, size_t len)
 {
+    STARFISH_ASSERT(instance != nullptr);
     ContextRef* ctx = instance->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
     obj->allocateBuffer(len);
     state->destroy();
-    return ValueRef::create(obj);
+    return obj;
 }
 
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(

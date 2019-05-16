@@ -1,0 +1,15 @@
+// https://w3c.github.io/push-api/#pushmanager-interface
+
+[STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker), SecureContext]
+interface PushManager {
+  // [SameObject] static readonly attribute FrozenArray<DOMString> supportedContentEncodings;
+
+  Promise<PushSubscription> subscribe(optional PushSubscriptionOptionsInit options);
+  Promise<PushSubscription?> getSubscription();
+  //Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options);
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER, SecureContext]
+partial interface ServiceWorkerRegistration {
+  readonly attribute PushManager pushManager;
+};
