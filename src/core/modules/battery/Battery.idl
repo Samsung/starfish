@@ -1,0 +1,19 @@
+// GENERATED CONTENT - DO NOT EDIT
+// Content of this file was automatically extracted from the Battery Status API spec.
+// See https://w3c.github.io/battery/
+
+partial interface Navigator {
+  [STARFISH_ENABLE_BATTERY_STATUS] Promise<BatteryManager> getBattery();
+};
+
+[STARFISH_ENABLE_BATTERY_STATUS, Exposed=Window]
+interface BatteryManager : EventTarget {
+    [Unimplemented] readonly        attribute boolean             charging;
+    [Unimplemented] readonly        attribute unrestricted double chargingTime;
+    [Unimplemented] readonly        attribute unrestricted double dischargingTime;
+    readonly        attribute double              level;
+    [Unimplemented]                attribute EventHandler        onchargingchange;
+    [Unimplemented]                attribute EventHandler        onchargingtimechange;
+    [Unimplemented]                attribute EventHandler        ondischargingtimechange;
+    [Unimplemented]                attribute EventHandler        onlevelchange;
+};
