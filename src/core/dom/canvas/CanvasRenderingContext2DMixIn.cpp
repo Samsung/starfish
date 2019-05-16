@@ -1954,15 +1954,11 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
     }
 
     // font familyname
+    String* fontFamilyStr = nullptr;
     if (fontFamily.valueKind() ==
         CSSStyleValuePair::ValueKind::KeywordValueKind) {
-        String* str = fontFamily.keywordValue();
-        if (str == nullptr) {
-            str = m_ownerHTMLCanvasElement->webView()
-                      ->initialFontFamilyDatas()[1]
-                      .m_familyName.string();
-        }
-        familyNameArray = &str;
+        fontFamilyStr = fontFamily.keywordValue();
+        familyNameArray = &fontFamilyStr;
         familyNameArraySize = 1;
     } else if (fontFamily.valueKind() ==
                CSSStyleValuePair::ValueKind::ValueListKind) {
@@ -1973,11 +1969,19 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
         for (size_t i = 0; i < familyNameArraySize; i++) {
             familyNameArray[i] = list->at(i).keywordValue();
         }
-    } else {
-        String* str = m_ownerHTMLCanvasElement->webView()
-                          ->initialFontFamilyDatas()[1]
-                          .m_familyName.string();
-        familyNameArray = &str;
+    }
+
+    // font fallback
+    if (fontFamilyStr == nullptr) {
+        String* initialFontFamily = m_ownerHTMLCanvasElement->webView()
+                                        ->initialFontFamilyDatas()[1]
+                                        .m_familyName.string();
+        if (initialFontFamily != nullptr) {
+            fontFamilyStr = initialFontFamily;
+        } else {
+            fontFamilyStr = String::emptyString;
+        }
+        familyNameArray = &fontFamilyStr;
         familyNameArraySize = 1;
     }
 
