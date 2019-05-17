@@ -29,6 +29,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
+#include "core/dom/ExecutionContext.h"
 
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
@@ -46,7 +47,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 #endif
-
+#include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
@@ -202,6 +203,10 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
     Id<GlobalScope> id, GlobalScope* globalScope)
 {
     STARFISH_ASSERT(globalScope != nullptr);
+
+    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s\n",
+                            CSTR(globalScope->executionContext()->urlString()));
+
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 
     if (m_connection) {
@@ -214,15 +219,30 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
     Id<GlobalScope> id)
 {
+    // find activeWorker
+    auto globalScope = findGlobalScope(id);
+
+    STARFISH_ASSERT(globalScope != nullptr);
+
+    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s\n",
+                            CSTR(globalScope->executionContext()->urlString()));
+
     m_mapIdToActiveGlobalScope.erase(id);
 
-    if (m_connection) {
+    if (m_connection != nullptr) {
+        auto executionContext = globalScope->executionContext();
+        auto activeServiceWorker = executionContext->activeServiceWorker();
+        auto registrationId = activeServiceWorker
+                                  ? activeServiceWorker->data()->registrationId
+                                  : ServiceWorkerRegistrationId();
+
         m_connection->updateServiceWorkerClient(new ContextRequestData(
-            id, ServiceWorkerClientRequestType::Unregister));
+            id, ServiceWorkerClientRequestType::Unregister, registrationId));
     }
 }
 
-NULLABLE GlobalScope* ServiceWorkerProcessManager::find(Id<GlobalScope> id)
+NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
+    Id<GlobalScope> id)
 {
     auto it = m_mapIdToActiveGlobalScope.find(id);
     if (it == m_mapIdToActiveGlobalScope.end()) {

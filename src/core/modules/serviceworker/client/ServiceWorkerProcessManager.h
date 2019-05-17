@@ -59,7 +59,7 @@ public:
     void registerActiveGlobalScope(Id<GlobalScope> id,
                                    GlobalScope* globalScope);
     void deregisterActiveGlobalScope(Id<GlobalScope> id);
-    NULLABLE GlobalScope* find(Id<GlobalScope> id);
+    NULLABLE GlobalScope* findGlobalScope(Id<GlobalScope> id);
 
     PushServiceAgent* pushServiceAgent()
     {

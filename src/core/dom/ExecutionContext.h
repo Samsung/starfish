@@ -153,7 +153,7 @@ private:
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:
-    ServiceWorker* activeServiceWorker() const;
+    NULLABLE ServiceWorker* activeServiceWorker() const;
     void setActiveServiceWorker(ServiceWorker* serviceWorker);
 
 private:

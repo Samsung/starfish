@@ -24,6 +24,8 @@ namespace Starfish {
 
 enum class CreatedIdType { UNIQUE, SHARED };
 
+#define ID_INITIAL_VALUE 0
+
 template <typename T>
 class Id {
     friend struct IdHash;
@@ -31,7 +33,7 @@ class Id {
 
 public:
     Id()
-        : m_id(0)
+        : m_id(ID_INITIAL_VALUE)
         , m_createdType(CreatedIdType::SHARED)
     {
     }
@@ -48,7 +50,7 @@ public:
 
     explicit operator bool() const
     {
-        return m_id;
+        return (m_id != ID_INITIAL_VALUE);
     }
 
     static Id<T> generate()
@@ -58,7 +60,7 @@ public:
         if (UNLIKELY(currentId == std::numeric_limits<unsigned>::max())) {
             STARFISH_LOG_WARN(
                 "the Id count is reset since it reaches the end of its value.");
-            currentId = 0;
+            currentId = ID_INITIAL_VALUE;
         }
         return Id<T>(++currentId);
     }
@@ -70,7 +72,13 @@ public:
 
     bool isValid()
     {
-        return ((m_id != 0) && (m_createdType == CreatedIdType::UNIQUE));
+        return (m_id != ID_INITIAL_VALUE);
+    }
+
+    bool isUnique()
+    {
+        return ((m_id != ID_INITIAL_VALUE) &&
+                (m_createdType == CreatedIdType::UNIQUE));
     }
 
 private:

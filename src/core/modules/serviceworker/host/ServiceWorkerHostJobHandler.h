@@ -69,6 +69,10 @@ public:
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
+
+    bool tryClearRegistration(ServiceWorkerRegistrationData* registration);
+    void clearRegistration(ServiceWorkerRegistrationData* registration);
+
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
 
     NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
@@ -89,7 +93,12 @@ private:
     MessageLoop* m_messageLoop;
     ServiceWorkerServerClient* m_SWServerClient;
 
-    GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
+    GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*>
+        m_scopeToJobQueueMap;
+
+    GCUnorderedMap<ServiceWorkerClientId, ServiceWorkerRegistrationId, IdHash>
+        m_clientIdToRegistrationIdMap;
+
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>
         m_scopeToRegistrationMap;

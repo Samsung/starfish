@@ -210,7 +210,7 @@ ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {
     auto swpm = ServiceWorkerProcessManager::instance();
-    auto globalScope = swpm->find(id);
+    auto globalScope = swpm->findGlobalScope(id);
 #if !defined(STARFISH_WEBWORKER_HOST)
     if (globalScope != nullptr) {
         auto executionContext = globalScope->executionContext();

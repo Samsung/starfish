@@ -70,8 +70,8 @@ using ServiceWorkerRegistrationKey = String*;
 
 using ServiceWorkerJobId = Id<ServiceWorkerJob>;
 using ServiceWorkerContextId = Id<GlobalScope>;
-using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using ServiceWorkerClientId = ServiceWorkerContextId;
+using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using RequestId = Id<ServiceWorkerRequest>;
 using PushManagerId = Id<GlobalScope>;
 

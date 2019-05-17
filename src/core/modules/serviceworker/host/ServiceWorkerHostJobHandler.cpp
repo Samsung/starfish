@@ -71,11 +71,11 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     // 3. If scope to job queue map[jobScope] does not exist, set scope to job
     // queue map[jobScope] to a new job queue.
     // 4. Set jobQueue to scope to job queue map[jobScope].
-    auto scope = m_jobQueueMap.find(jobScope);
-    if (scope == m_jobQueueMap.end()) {
+    auto scope = m_scopeToJobQueueMap.find(jobScope);
+    if (scope == m_scopeToJobQueueMap.end()) {
         jobQueue = new JobQueue();
         STARFISH_ASSERT(jobQueue != nullptr);
-        m_jobQueueMap.insert(std::make_pair(jobScope, jobQueue));
+        m_scopeToJobQueueMap.insert(std::make_pair(jobScope, jobQueue));
     } else {
         jobQueue = scope->second;
     }
@@ -352,6 +352,57 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
     job->hostConnection()->resolveJobPromise(job, registration);
 }
 
+bool ServiceWorkerHostJobHandler::tryClearRegistration(
+    ServiceWorkerRegistrationData* registration)
+{
+    STARFISH_ASSERT(registration != nullptr);
+    // https://w3c.github.io/ServiceWorker/#try-clear-registration-algorithm
+
+    // 1. Invoke `Clear Registration` with registration if no service worker
+    // client is using registration and all of the following conditions are
+    // true:
+    for (const auto& pair : m_clientIdToRegistrationIdMap) {
+        if (registration->id == pair.second) {
+            return false;
+        }
+    }
+
+    // 1.1 registration’s installing worker is null or the result of running
+    // Service Worker Has No Pending Events with registration’s installing
+    // worker is true.
+    if ((registration->installingWorker != nullptr) &&
+        (registration->installingWorker->hasPendingEvents() == true)) {
+        return false;
+    }
+
+    // 1.2 registration’s waiting worker is null or the result of running
+    // Service Worker Has No Pending Events with registration’s waiting
+    // worker is true.
+    if ((registration->waitingWorker != nullptr) &&
+        (registration->waitingWorker->hasPendingEvents() == true)) {
+        return false;
+    }
+
+    // 1.3 registration’s active worker is null or the result of running
+    // Service Worker Has No Pending Events with registration’s active
+    // worker is true.
+    if ((registration->activeWorker != nullptr) &&
+        (registration->activeWorker->hasPendingEvents() == true)) {
+        return false;
+    }
+
+    clearRegistration(registration);
+
+    return true;
+}
+
+void ServiceWorkerHostJobHandler::clearRegistration(
+    ServiceWorkerRegistrationData* registration)
+{
+    STARFISH_ASSERT(registration != nullptr);
+    // TODO: https://w3c.github.io/ServiceWorker/#clear-registration
+}
+
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
                                                    ErrorData* errorData)
 {
@@ -460,6 +511,7 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
     resolveJobPromise(job, registration);
 
     // 6. Invoke Try Clear Registration with registration.
+    tryClearRegistration(registration);
 
     // Note: If `Try Clear Registration` does not trigger `Clear Registration`
     // here, `Clear Registration` is tried again when the last client using the
@@ -563,7 +615,24 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
     ContextRequestData* request)
 {
     STARFISH_ASSERT(request != nullptr);
-    // TODO: update ServiceWorkerClient
+
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", request->contextId.toString().c_str());
+
+    if (request->type == ServiceWorkerClientRequestType::Register) {
+        if (request->registrationId.isValid()) {
+            SWHOST_LOG_IF_ALLOWED(1, "1: client is registered to regId: %s\n",
+                                  request->registrationId.toString().c_str());
+            m_clientIdToRegistrationIdMap[request->contextId] =
+                request->registrationId;
+        }
+
+    } else if (request->type == ServiceWorkerClientRequestType::Unregister) {
+        SWHOST_LOG_IF_ALLOWED(1, "1: client is unregistered\n");
+        m_clientIdToRegistrationIdMap.erase(request->contextId);
+
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
 }
 
 } // namespace Starfish
