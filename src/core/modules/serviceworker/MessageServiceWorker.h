@@ -37,6 +37,8 @@ public:
     void archive(Archiver& ar) override;
 };
 
+// ContextRequestData
+
 enum class ServiceWorkerClientRequestType : unsigned {
     Register = 0,
     Unregister,
@@ -48,13 +50,16 @@ public:
 
     // data
     ServiceWorkerContextId contextId;
+    ServiceWorkerRegistrationId registrationId;
     ServiceWorkerClientRequestType type;
 
     // constructor
     ContextRequestData() = default;
     ContextRequestData(ServiceWorkerContextId id,
-                       ServiceWorkerClientRequestType target)
+                       ServiceWorkerClientRequestType target,
+                       ServiceWorkerRegistrationId regId)
         : contextId(id)
+        , registrationId(regId)
         , type(target)
     {
     }
@@ -63,6 +68,7 @@ public:
     void archive(Archiver& ar) override
     {
         ar.MemberId("contextId", contextId);
+        ar.MemberId("registrationId", registrationId);
         ar.MemberEnum("type", type);
     }
 };
