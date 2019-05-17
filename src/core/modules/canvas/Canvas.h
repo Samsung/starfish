@@ -337,10 +337,11 @@ public:
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
-                          const StringView& text) = 0;
+                          const StringView& text,
+                          bool shouldSkipUnresolvedWebFont = true) = 0;
     virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
-                                LayoutUnit stringWidth,
-                                const StringView& text) = 0;
+                                LayoutUnit stringWidth, const StringView& text,
+                                bool shouldSkipUnresolvedWebFont = true) = 0;
 
     virtual void drawImage(
         NativeImageData* data, const Unit::Rect& dst,

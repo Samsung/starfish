@@ -1001,7 +1001,7 @@ void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
 {
     m_canvas->save();
     m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
-    m_canvas->drawText(x, y, LayoutUnit(0), text);
+    m_canvas->drawText(x, y, LayoutUnit(0), text, false);
     m_canvas->restore();
 }
 
@@ -1011,7 +1011,7 @@ void CanvasRenderingContext2DMixIn::strokeTextFastPath(LayoutUnit x,
 {
     m_canvas->save();
     m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
-    m_canvas->drawStrokeText(x, y, LayoutUnit(0), text);
+    m_canvas->drawStrokeText(x, y, LayoutUnit(0), text, false);
     m_canvas->restore();
 }
 
@@ -1194,10 +1194,10 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
             StringView txt = childBox->text();
             if (isStroke) {
                 paintCtx.m_canvas->drawStrokeText(
-                    dx, dy, childBox->contentWidth(), txt);
+                    dx, dy, childBox->contentWidth(), txt, false);
             } else {
                 paintCtx.m_canvas->drawText(dx, dy, childBox->contentWidth(),
-                                            txt);
+                                            txt, false);
             }
         }
     }
@@ -1988,7 +1988,8 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
     }
 
     Font* new_font = fs->loadFont(familyNameArray, familyNameArraySize,
-                                  fixedFontSize, fontStyle, fontWeight, false);
+                                  fixedFontSize, fontStyle, fontWeight, 0,
+                                  FontKerningValue::FontKerningAutoValue);
 
     STARFISH_ASSERT(new_font != nullptr);
 

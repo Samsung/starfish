@@ -235,12 +235,14 @@ public:
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
-                          const StringView& sv)
+                          const StringView& sv,
+                          bool shouldSkipUnresolvedWebFont)
     {
     }
 
     virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
-                                LayoutUnit stringWidth, const StringView& sv)
+                                LayoutUnit stringWidth, const StringView& sv,
+                                bool shouldSkipUnresolvedWebFont)
     {
     }
 

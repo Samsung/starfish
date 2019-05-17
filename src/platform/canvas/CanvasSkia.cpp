@@ -803,7 +803,8 @@ public:
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
-                          const StringView& sv)
+                          const StringView& sv,
+                          bool shouldSkipUnresolvedWebFont)
     {
         int size = lastState().m_font->size();
         if (!lastState().m_visible || size == 0 || sv.length() == 0) {
@@ -828,7 +829,8 @@ public:
     }
 
     virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
-                                LayoutUnit stringWidth, const StringView& sv)
+                                LayoutUnit stringWidth, const StringView& sv,
+                                bool shouldSkipUnresolvedWebFont)
     {
     }
 
