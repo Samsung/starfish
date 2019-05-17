@@ -1268,6 +1268,7 @@ RenderResult WebView::rendering(bool force)
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
+        m_didCompositeBefore = true;
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
@@ -1314,10 +1315,13 @@ RenderResult WebView::rendering(bool force)
                 mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
 
-            m_didCompositeBefore = true;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
             platformWindow()->paintVirtualCursor(compositor);
 #endif
+            delete compositor;
+        } else {
+            Compositor* compositor = platformWindow()->prepareCompositor();
+            compositor->clearColor(Unit::Color(0, 0, 0, 0));
             delete compositor;
         }
         m_needsComposite = false;

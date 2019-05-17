@@ -989,7 +989,8 @@ public:
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
-                          const StringView& sv)
+                          const StringView& sv,
+                          bool shouldSkipUnresolvedWebFont)
     {
         int size = lastState().m_font->size();
         if (!lastState().m_visible || size == 0 || sv.length() == 0) {
@@ -1006,17 +1007,20 @@ public:
         if (g_enablePixelTest) {
             drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
         } else {
-            drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+            drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), false,
+                            shouldSkipUnresolvedWebFont);
             drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
         }
 #else
-        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), false,
+                        shouldSkipUnresolvedWebFont);
         drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
 #endif
     }
 
     virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
-                                LayoutUnit stringWidth, const StringView& sv)
+                                LayoutUnit stringWidth, const StringView& sv,
+                                bool shouldSkipUnresolvedWebFont)
     {
         int size = lastState().m_font->size();
         if (!lastState().m_visible || size == 0 || sv.length() == 0) {
@@ -1029,7 +1033,8 @@ public:
         LayoutRect rt(x, y, sz.width(), sz.height());
 
         applyCanvasFillStrokeSourceIfNeeds(true);
-        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), true);
+        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), true,
+                        shouldSkipUnresolvedWebFont);
         drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
     }
 
@@ -1758,7 +1763,8 @@ private:
     }
 
     void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
-                         LayoutUnit dx, LayoutUnit dy, bool isStroke = false)
+                         LayoutUnit dx, LayoutUnit dy, bool isStroke,
+                         bool shouldSkipUnresolvedWebFont)
     {
         STARFISH_ASSERT(canvas != nullptr);
 
@@ -1802,7 +1808,7 @@ private:
                     g = cairoBackendInternalLoadGlyph(
                         f, stringAccessData.charAt(i));
                 if (g.second.first) {
-                    if (true) { // skip webfont enabled
+                    if (shouldSkipUnresolvedWebFont) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX &&
                             f->seenUnresolvedWebFontIndex() <= g.first.second) {
                             xBias += g.second.second;
@@ -1832,7 +1838,7 @@ private:
                     letterSpacingValueSoFar += letterSpacingValueSoFar;
                     xBias += g.second.second + letterSpacing;
                 } else {
-                    if (true) { // skip webfont enabled
+                    if (shouldSkipUnresolvedWebFont) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX) {
                             xBias += f->spaceWidth();
                             continue;
@@ -1859,7 +1865,8 @@ private:
                 LayoutUnit letterSpacingValueSoFar;
                 if (run.m_ftFace == nullptr) {
                     if (/* skip webfont enabled*/ f
-                            ->seenUnresolvedWebFontIndex() != SIZE_MAX) {
+                                ->seenUnresolvedWebFontIndex() != SIZE_MAX &&
+                        shouldSkipUnresolvedWebFont) {
                     } else {
                         cairo_save(canvas);
                         cairo_set_line_width(canvas, 1);
@@ -1877,7 +1884,8 @@ private:
                 } else {
                     if (/* skip webfont enabled*/ f
                                 ->seenUnresolvedWebFontIndex() != SIZE_MAX &&
-                        f->seenUnresolvedWebFontIndex() <= run.m_faceIndex) {
+                        f->seenUnresolvedWebFontIndex() <= run.m_faceIndex &&
+                        shouldSkipUnresolvedWebFont) {
                     } else {
                         if (run.m_ftFace != lastFontFace) {
                             if (glyphCount) {

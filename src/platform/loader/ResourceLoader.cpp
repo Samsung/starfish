@@ -532,6 +532,11 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 {
     if (m_pendingResourceCountWhileDocumentOpening == 0 &&
         m_isDocumentInOpenState && !m_document->m_onLoadFired) {
+        m_document->browsingContext()->resolveStyleIfNeeds();
+        if (m_pendingResourceCountWhileDocumentOpening != 0) {
+            return;
+        }
+
         m_isDocumentInOpenState = false;
         m_document->m_onLoadFired = true;
         webView()->messageLoop()->addIdler(

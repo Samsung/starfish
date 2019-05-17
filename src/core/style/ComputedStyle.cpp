@@ -364,7 +364,8 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
                 m_inheritedStyles.m_fontFamilyDatas[0].m_length;
 
             for (size_t i = 0; i < familyNameArraySize; i++) {
-                if (familyNameArray[i]->contains("ahem", false)) {
+                if (familyNameArray[i]->contains("ahem", false) ||
+                    familyNameArray[i]->contains("CanvasTest", false)) {
                     regressionEnable = false;
                 }
             }
