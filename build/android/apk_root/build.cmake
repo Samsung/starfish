@@ -9,7 +9,7 @@ project (STARFISH)
 set(CMAKE_CXX_STANDARD 11)
 set(OPENGL_LIB GLESv3)
 set(LTO "0" CACHE STRING "LTO")
-set(STARFISH_ANDROID_OS "9" CACHE STRING "ANDROID_OS")
+set(STARFISH_ANDROID_OS "9" CACHE STRING "STARFISH_ANDROID_OS")
 
 
 #######################################################
@@ -176,6 +176,7 @@ execute_process(COMMAND @rm ${PACKAGED_LIB_PATH}/*)
 file(GLOB PREBUILT_SHARED_LIBS
   "${PREBUILT_LIB_PATH}/*.so"
 )
+
 list(REMOVE_ITEM PREBUILT_SHARED_LIBS
     ${PREBUILT_LIB_PATH}/libicui18n.so
     ${PREBUILT_LIB_PATH}/libicuuc.so
@@ -183,6 +184,10 @@ list(REMOVE_ITEM PREBUILT_SHARED_LIBS
 
 file(COPY ${PREBUILT_SHARED_LIBS}
      DESTINATION ${PACKAGED_LIB_PATH})
+
+# We add an empty dummy.so to remove all *.so from an apk if
+# LWE is installed as a preloaded lib.
+file(WRITE "${PREBUILT_LIB_PATH}/libdummy.so" "")
 
 find_library( log-lib log )
 find_library( z-lib z )
@@ -223,7 +228,7 @@ set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PAT
 # BUILD TARGET
 #######################################################
 
-add_library(lightweightwebengine
+add_library(lightweightwebengine.lwe.samsung
             SHARED
             ${STARFISH_SRC}
             ${BDWGC_SRC}
@@ -233,13 +238,13 @@ add_library(lightweightwebengine
             ${ESCARGOT_SRC}
             ${CLIPPER_SRC})
 
-target_compile_definitions(lightweightwebengine PUBLIC ${LWE_DEFINITIONS})
-target_compile_options(lightweightwebengine PUBLIC ${LWE_CXXFLAGS})
-target_include_directories(lightweightwebengine PUBLIC ${LWE_INCLUDE_DIRS})
-target_link_libraries(lightweightwebengine ${LWE_LDFLAGS})
-set_target_properties(lightweightwebengine PROPERTIES LINKER_LANGUAGE CXX)
+target_compile_definitions(lightweightwebengine.lwe.samsung PUBLIC ${LWE_DEFINITIONS})
+target_compile_options(lightweightwebengine.lwe.samsung PUBLIC ${LWE_CXXFLAGS})
+target_include_directories(lightweightwebengine.lwe.samsung PUBLIC ${LWE_INCLUDE_DIRS})
+target_link_libraries(lightweightwebengine.lwe.samsung ${LWE_LDFLAGS})
+set_target_properties(lightweightwebengine.lwe.samsung PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries( lightweightwebengine
+target_link_libraries( lightweightwebengine.lwe.samsung
                        png-lib
                        skia-lib
                        hb-lib
