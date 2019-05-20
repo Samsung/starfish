@@ -59,11 +59,11 @@ public class LweWebViewImpl implements LweWebView {
 
     static {
         try {
-            System.loadLibrary("lightweightwebengine");
+            System.loadLibrary("lightweightwebengine.lwe.samsung");
         } catch (Exception e) {
-            Log.e(sTag, "Cannot load: liblightweightwebengine.so");
+            Log.e(sTag, "Cannot load: liblightweightwebengine.lwe.samsung.so");
             e.printStackTrace();
-        }
+       }
     }
 
     public enum ImeComposingStatus {
