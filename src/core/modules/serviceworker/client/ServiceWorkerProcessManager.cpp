@@ -72,11 +72,7 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
 
 void ServiceWorkerProcessManager::init()
 {
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
-    WorkerConfig::instance().set("app", "BOTH");
-#else
     WorkerConfig::instance().set("app", "CLIT");
-#endif
 
     Message::init();
 

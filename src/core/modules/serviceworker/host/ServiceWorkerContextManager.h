@@ -18,22 +18,29 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServerClient__)
-#define __StarfishServiceWorkerServerClient__
+    !defined(__ServiceWorkerContextManager__)
+#define __ServiceWorkerContextManager__
 
 namespace Starfish {
 
-class ServiceWorkerClientProcessInterface;
-class ServiceWorkerHostJobHandler;
+class ThreadPool;
+class ServiceWorkerData;
 
-class ServiceWorkerServerClient {
+class ServiceWorkerContextManager {
 public:
-    virtual void getConnections(
-        GCVector<ServiceWorkerClientProcessInterface*>& connections) = 0;
-    virtual ServiceWorkerHostJobHandler* jobHandler() = 0;
-    virtual bool tryTerminate() = 0;
-    virtual bool isTerminating() = 0;
+    static ServiceWorkerContextManager* instance();
+    void init(ThreadPool* threadPool);
+    void destroy();
+
+    virtual ~ServiceWorkerContextManager();
+
+    void runServiceWorker(ServiceWorkerData* serviceWorker);
+    void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
+
+private:
+    static ServiceWorkerContextManager* m_instance;
 };
 
 } // namespace Starfish
+
 #endif

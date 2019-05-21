@@ -42,9 +42,14 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
+
+#define REGISTRATION_INSTALLING "installing"
+#define REGISTRATION_WAITING "waiting"
+#define REGISTRATION_ACTIVE "active"
 
 ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
     MessageLoop* messageLoop, ServiceWorkerServerClient* client)
@@ -205,6 +210,7 @@ void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
                 break;
             case ServiceWorkerJobType::Unregister:
                 self->unregisterServiceWorker(job);
+                self->m_SWServerClient->tryTerminate();
                 break;
             default:
                 break;
@@ -304,6 +310,24 @@ void ServiceWorkerHostJobHandler::runServiceWorker(
 {
     STARFISH_ASSERT(serviceWorker != nullptr);
     // https://w3c.github.io/ServiceWorker/#run-service-worker
+    // TODO: 1. Let script be serviceWorker’s script resource.
+
+    // 2. Assert: script is not null.
+
+    // TODO: 3. If serviceWorker is already running, this algorithm must have
+    // been invoked previously. If callbackSteps is provided, run them with the
+    // same value as the previous time, and abort these steps.
+
+    // 4. Create a separate parallel execution environment (i.e. a separate
+    // thread or process or equivalent construct), and run the following
+    // substeps in that context:
+
+    auto startServiceWorker = [](size_t handle, void* data) {
+        ServiceWorkerContextManager::instance()->runServiceWorker(
+            castTo<ServiceWorkerData*>(data));
+    };
+
+    m_messageLoop->addIdler(nullptr, startServiceWorker, serviceWorker);
 }
 
 void ServiceWorkerHostJobHandler::install(
@@ -320,7 +344,7 @@ void ServiceWorkerHostJobHandler::install(
 
     // 3. Run the Update Registration State algorithm passing registration,
     // "installing" and worker as the arguments.
-    updateRegistrationState(registration, "installing", worker);
+    updateRegistrationState(registration, REGISTRATION_INSTALLING, worker);
 
     // 4. Run the Update Worker State algorithm passing registration’s
     // installing worker and installing as the arguments.
@@ -400,7 +424,81 @@ void ServiceWorkerHostJobHandler::clearRegistration(
     ServiceWorkerRegistrationData* registration)
 {
     STARFISH_ASSERT(registration != nullptr);
-    // TODO: https://w3c.github.io/ServiceWorker/#clear-registration
+    // https://w3c.github.io/ServiceWorker/#clear-registration
+
+    // 1. Run the following steps atomically.
+    // 2. If registration’s installing worker is not null, then:
+    if (registration->installingWorker != nullptr) {
+        // 2.1. Terminate registration’s installing worker.
+        terminateServiceWorker(registration->installingWorker);
+
+        // 2.2. Run the `Update Worker State` algorithm passing registration’s
+        // installing worker and redundant as the arguments.
+        updateWorkerState(registration->installingWorker,
+                          ServiceWorkerState::Redundant);
+
+        // 2.3 Run the Update Registration State algorithm passing registration,
+        // "installing" and null as the arguments.
+        updateRegistrationState(registration, REGISTRATION_INSTALLING, nullptr);
+    }
+
+    // 3. If registration’s waiting worker is not null, then:
+    if (registration->waitingWorker != nullptr) {
+        // 3.1 Terminate registration’s waiting worker.
+        terminateServiceWorker(registration->waitingWorker);
+
+        // 3.2 Run the Update Worker State algorithm passing registration’s
+        // waiting worker and redundant as the arguments.
+        updateWorkerState(registration->waitingWorker,
+                          ServiceWorkerState::Redundant);
+
+        // 3.3 Run the Update Registration State algorithm passing registration,
+        // "waiting" and null as the arguments.
+        updateRegistrationState(registration, REGISTRATION_WAITING, nullptr);
+    }
+
+    // 4. If registration’s active worker is not null, then:
+    if (registration->activeWorker != nullptr) {
+        // 4.1 Terminate registration’s active worker.
+        terminateServiceWorker(registration->activeWorker);
+
+        // 4.2 Run the Update Worker State algorithm passing registration’s
+        // active worker and redundant as the arguments.
+        updateWorkerState(registration->activeWorker,
+                          ServiceWorkerState::Redundant);
+
+        // 4.3 Run the Update Registration State algorithm passing registration,
+        // "active" and null as the arguments.
+        updateRegistrationState(registration, REGISTRATION_ACTIVE, nullptr);
+    }
+
+    // 5. Let scopeString be registration’s serialized scope url.
+    // 6. Remove scope to registration map[scopeString].
+    m_scopeToRegistrationMap.erase(registration->scope);
+}
+
+void ServiceWorkerHostJobHandler::terminateServiceWorker(
+    ServiceWorkerData* serviceWorker)
+{
+    STARFISH_ASSERT(serviceWorker != nullptr);
+
+    // https://w3c.github.io/ServiceWorker/#terminate-service-worker-algorithm
+
+    // 1. If serviceWorker is not running, abort these steps.
+    if (serviceWorker->runningState() != ServiceWorkerRunningState::Running) {
+        return;
+    }
+
+    // 2. Let serviceWorkerGlobalScope be serviceWorker’s global object.
+    // TODO: get global object using serviceWorkerGlobalScope Id
+
+    // 3. Set serviceWorkerGlobalScope’s closing flag to true.
+
+    // 4. Remove all the items from serviceWorker’s set of extended events.
+
+    // 6. Abort the script currently running in serviceWorker.
+    ServiceWorkerContextManager::instance()->abortServiceWorkerScript(
+        serviceWorker);
 }
 
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
@@ -426,7 +524,7 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
     // ServiceWorkerRegistration objects associated with registration.
 
     // 2. If target is "installing", then:
-    if (strncmp(target, "installing", 10) == 0) {
+    if (strncmp(target, REGISTRATION_INSTALLING, 10) == 0) {
         // 2.1. Set registration’s installing worker to source.
         registration->installingWorker = source;
         // 2.2 For each registrationObject in registrationObjects:
@@ -434,8 +532,8 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
         // registrationObject to the ServiceWorker object that represents
         // registration’s installing worker, or null if registration’s
         // installing worker is null.
-    } else if (strncmp(target, "waiting", 10) == 0) {
-    } else if (strncmp(target, "active", 10) == 0) {
+    } else if (strncmp(target, REGISTRATION_WAITING, 10) == 0) {
+    } else if (strncmp(target, REGISTRATION_ACTIVE, 10) == 0) {
     }
 }
 

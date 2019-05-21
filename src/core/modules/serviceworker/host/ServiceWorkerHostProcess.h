@@ -34,12 +34,13 @@ class IThread;
 class ThreadPool;
 class IORunnable;
 class MessageLoop;
+class ProgramOptions;
 class ServiceWorkerJob;
 class ServiceWorkerHostJobHandler;
 class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerClientProcessInterface;
-class ProgramOptions;
+class ServiceWorkerContextManager;
 
 class ServiceWorkerHostProcess : public gc, public ServiceWorkerServerClient {
 public:
@@ -55,6 +56,9 @@ public:
     void getConnections(
         GCVector<ServiceWorkerClientProcessInterface*>& connections) override;
     ServiceWorkerHostJobHandler* jobHandler() override;
+
+    bool tryTerminate() override;
+    bool isTerminating() override;
 
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
 
@@ -73,6 +77,8 @@ private:
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
     GCVector<ServiceWorkerHostConnection*> m_connections;
+    ServiceWorkerContextManager* m_SWContextManager{ nullptr };
+    bool m_isTerminating{ false };
 };
 
 } // namespace Starfish

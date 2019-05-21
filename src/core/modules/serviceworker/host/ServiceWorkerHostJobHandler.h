@@ -72,6 +72,7 @@ public:
 
     bool tryClearRegistration(ServiceWorkerRegistrationData* registration);
     void clearRegistration(ServiceWorkerRegistrationData* registration);
+    void terminateServiceWorker(ServiceWorkerData* serviceWorker);
 
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
 
@@ -86,6 +87,11 @@ public:
         ServiceWorkerRequest* request, String* clientURL);
 
     void updateServiceWorkerClient(ContextRequestData* request);
+
+    bool isEmptyRegistrationMap()
+    {
+        return m_scopeToRegistrationMap.size() == 0;
+    }
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
