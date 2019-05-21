@@ -70,7 +70,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments "-DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF", "-DLTO=0"
+                arguments "-DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF", "-DLTO=0", "-DSTARFISH_ANDROID_OS=9"
             }
         }
         ndk {

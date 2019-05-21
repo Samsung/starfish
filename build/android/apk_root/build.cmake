@@ -11,6 +11,11 @@ set(OPENGL_LIB GLESv3)
 set(LTO "0" CACHE STRING "LTO")
 set(STARFISH_ANDROID_OS "9" CACHE STRING "STARFISH_ANDROID_OS")
 
+IF (${STARFISH_ANDROID_OS} STREQUAL "9")
+    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0 )
+ELSEIF(${STARFISH_ANDROID_OS} STREQUAL "10")
+    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_10.0 )
+ENDIF()
 
 #######################################################
 # SOURCE FILES
@@ -25,17 +30,11 @@ file(GLOB DOUBLEC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/do
 file(GLOB YARR_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr/*.cpp" )
 file(GLOB BDWGC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/*.c" )
 file(GLOB_RECURSE ESCARGOT_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/src/**/*.cpp" )
-
+file(GLOB GIF_SRC "${ANDROID_PLATFORM_ROOT_PATH}/android/external/giflib/*.c")
 
 #######################################################
 # INCLUDE DIRS
 #######################################################
-
-IF (${STARFISH_ANDROID_OS} STREQUAL "9")
-    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0 )
-ELSEIF(${STARFISH_ANDROID_OS} STREQUAL "10")
-    set(ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_10.0 )
-ENDIF()
 
 set(LWE_INCLUDE_DIRS
     ${ANDROID_PLATFORM_ROOT_PATH}/include/bdwgc
@@ -187,7 +186,9 @@ file(COPY ${PREBUILT_SHARED_LIBS}
 
 # We add an empty dummy.so to remove all *.so from an apk if
 # LWE is installed as a preloaded lib.
-file(WRITE "${PREBUILT_LIB_PATH}/libdummy.so" "")
+ADD_LIBRARY (dummy SHARED ${ANDROID_PLATFORM_ROOT_PATH}/src/dummy.cpp)
+TARGET_COMPILE_DEFINITIONS (dummy PUBLIC ${LWE_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (dummy PUBLIC ${LWE_CXXFLAGS})
 
 find_library( log-lib log )
 find_library( z-lib z )
@@ -236,7 +237,8 @@ add_library(lightweightwebengine.lwe.samsung
             ${DOUBLEC_SRC}
             ${YARR_SRC}
             ${ESCARGOT_SRC}
-            ${CLIPPER_SRC})
+            ${CLIPPER_SRC}
+            ${GIF_SRC})
 
 target_compile_definitions(lightweightwebengine.lwe.samsung PUBLIC ${LWE_DEFINITIONS})
 target_compile_options(lightweightwebengine.lwe.samsung PUBLIC ${LWE_CXXFLAGS})
@@ -254,7 +256,6 @@ target_link_libraries( lightweightwebengine.lwe.samsung
                        crypto-lib
                        icui18n-lib
                        icuuc-lib
-                       ${PREBUILT_LIB_PATH}/libgif.a
                        ${PREBUILT_LIB_PATH}/libtuv.a
                        ${z-lib}
                        ${jnig-lib}

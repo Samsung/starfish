@@ -12,6 +12,12 @@ P /.github
 + third_party/android/prebuilt_armv-7a_8.1.0/lib/arm64-v8a/*.a
 + third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a/*.so
 + third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a/*.a
++ third_party/android/prebuilt_armv-7a_8.1.0/src/*.cpp
++ third_party/android/prebuilt_10.0/lib/arm64-v8a/*.so
++ third_party/android/prebuilt_10.0/lib/arm64-v8a/*.a
++ third_party/android/prebuilt_10.0/lib/armeabi-v7a/*.so
++ third_party/android/prebuilt_10.0/lib/armeabi-v7a/*.a
++ third_party/android/prebuilt_10.0/src/*.cpp
 
 - third_party/windows
 - third_party/deviceapi
