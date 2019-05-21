@@ -21,11 +21,11 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
-#include "platform/loader/ImageResource.h"
-#include "platform/loader/ResourceLoader.h"
-#include "platform/file/File.h"
+#include "core/modules/canvas/image/ImageDecoder.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/extra/MimeType.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -34,6 +34,9 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "platform/loader/ImageResource.h"
+#include "platform/loader/ResourceLoader.h"
+#include "platform/file/File.h"
 
 namespace Starfish {
 
@@ -158,8 +161,84 @@ void ImageResource::didLoadFinished()
         }
     }
 
-    m_imageData = NativeImageData::create(m_resourceRequest->response().data(),
-                                          m_resourceRequest->response().size());
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    if (!m_resourceRequest->isSync() &&
+        m_resourceRequest->executionContext()->hasDocument()) {
+        if (m_resourceRequest->executionContext()
+                ->document()
+                ->webView()
+                ->isThereURLInActiveImageURLsInRenderingSet(
+                    url()->urlString()->toUTF8NonGCString())) {
+            struct ImageDecodeData : public gc {
+                ResponseBody responseData;
+                ImageResource* imageResource;
+                ImageDecoder::DecodeResult decodeResult;
+            };
+
+            ImageDecodeData* d = new ImageDecodeData();
+            d->imageResource = this;
+            d->responseData = std::move(m_resourceRequest->response());
+
+            m_resourceRequest->executionContext()
+                ->document()
+                ->webView()
+                ->imageDecodeThreadPool()
+                ->addWork(
+                    m_resourceRequest->executionContext(),
+                    [](void* data) -> void* {
+                        STARFISH_ASSERT(data != nullptr);
+                        ImageDecodeData* d = (ImageDecodeData*)data;
+
+                        ImageDecoder id(d->responseData);
+                        d->decodeResult = id.decode();
+
+                        d->imageResource->resourceRequest()
+                            ->webBase()
+                            ->messageLoop()
+                            ->addIdlerWithNoGCRootingInOtherThread(
+                                nullptr,
+                                [](size_t handle, void* data) {
+                                    STARFISH_ASSERT(data != nullptr);
+                                    ImageDecodeData* d = (ImageDecodeData*)data;
+                                    ResponseBody buffer =
+                                        std::move(d->responseData);
+
+                                    if (d->decodeResult.m_isSuccessful) {
+                                        d->imageResource->m_imageData =
+                                            NativeImageData::create(
+                                                buffer,
+                                                std::move(
+                                                    d->imageResource->url()
+                                                        ->urlString()
+                                                        ->toUTF8NonGCString()),
+                                                d->decodeResult.m_buffer,
+                                                d->decodeResult.m_width,
+                                                d->decodeResult.m_height,
+                                                d->decodeResult.m_stride);
+                                        d->imageResource
+                                            ->Resource::didLoadFinished();
+                                    } else {
+                                        d->imageResource
+                                            ->Resource::didLoadFailed();
+                                    }
+
+                                },
+                                d);
+
+                        return nullptr;
+                    },
+                    d);
+
+            return;
+        }
+    }
+#endif
+    if (m_resourceRequest->response().size() != 0) {
+        m_imageData = NativeImageData::create(
+            m_resourceRequest->response(),
+            std::move(url()->urlString()->toUTF8NonGCString()));
+    }
+
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;

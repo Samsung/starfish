@@ -20,15 +20,40 @@
 #include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/page/WebView.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
+    STARFISH_ASSERT(canvas != nullptr);
+
     FrameReplaced::paintReplaced(canvas);
+
+    if (canvas->canRejectPainting(LayoutRect(0, 0, width(), height()))) {
+        return;
+    }
+
     NativeImageData* id = node()->asHTMLImageElement()->imageData();
+
+    if (id) {
+        if (id->hasCompressedData()) {
+            node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
+                id->compressedImageURL());
+        }
+    } else if (node()->asHTMLImageElement()->imageResource()) {
+        node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
+            node()
+                ->asHTMLImageElement()
+                ->imageResource()
+                ->url()
+                ->urlString()
+                ->toUTF8NonGCString());
+    }
+
     if (id) {
         if (id->preserveAspectRatioValue() == NativeImageData::None) {
             Unit::Rect frameRect = Unit::Rect(

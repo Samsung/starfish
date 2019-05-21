@@ -41,6 +41,7 @@
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 
@@ -1522,9 +1523,13 @@ static inline void paintRepeatGradient(
 }
 
 void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
-                                     HTMLElement* rootOrBodyelement,
+                                     NULLABLE HTMLElement* rootOrBodyelement,
                                      ComputedStyle* style)
 {
+    STARFISH_ASSERT(canvas != nullptr);
+    STARFISH_ASSERT(box != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+
     ImageRenderingValue imageRenderingValue = style->imageRendering();
 
     for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
@@ -1539,6 +1544,12 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         float width = 0;
         float height = 0;
         if (type.isURL()) {
+            ImageResource* ir = style->background()->imageResource(idx);
+            if (box->node()) {
+                box->node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
+                    ir->url()->urlString()->toUTF8NonGCString());
+            }
+
             id = style->backgroundImageData(idx);
             if (!id || !id->width() || !id->height()) {
                 return;

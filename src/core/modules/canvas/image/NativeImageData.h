@@ -45,7 +45,12 @@ public:
     static int nativeImageDataGCKind();
     static std::vector<NativeImageData*>& everyNativeImageInstances();
 
-    static NativeImageData* create(const char* buf, size_t len);
+    static NativeImageData* create(const std::vector<char>& compressedImageData,
+                                   std::string&& imageURL);
+    static NativeImageData* create(const std::vector<char>& compressedImageData,
+                                   std::string&& imageURL,
+                                   uint8_t* decodedImageBuffer, size_t width,
+                                   size_t height, size_t stride);
     static NativeImageData* create(size_t actualDeviceWidth,
                                    size_t actualDeviceHeight);
     static NativeImageData* create(float devicePixelRatio, size_t width,
@@ -61,7 +66,21 @@ public:
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
-    virtual bool hasTransparentPixel() = 0;
+
+    virtual bool hasCompressedData()
+    {
+        return false;
+    }
+    virtual bool isDecompressed()
+    {
+        return true;
+    }
+    virtual const std::string& compressedImageURL()
+    {
+        STARFISH_ASSERT(hasCompressedData());
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
     virtual void pruneInternalDataIfPossible()
     {
     }

@@ -350,22 +350,6 @@ public:
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
-
-        evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
-        evas_object_image_pixels_get_callback_set(
-            m_graphicsAdapter,
-            [](void* data, Evas_Object* o) {
-                WebViewEFL* wv = (WebViewEFL*)data;
-                evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
-
-                STARFISH_LOG_INFO("clean up m_graphicsAdapter\n");
-
-                wv->m_glGlapi->glClearColor(0, 0, 0, 0);
-                wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
-                                       GL_STENCIL_BUFFER_BIT);
-                wv->m_glGlapi->glFlush();
-            },
-            this);
 #else
         evas_object_image_content_hint_set(m_graphicsAdapter,
                                            EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
@@ -584,6 +568,8 @@ public:
             evas_object_resize(wv->m_graphicsAdapter, w, h);
 
 #if defined(PORT_WINDOW_BACKEND_GL)
+            g_evasGL = nullptr;
+            g_evasGLAPI = nullptr;
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
@@ -833,10 +819,14 @@ public:
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
-                evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
-                g_evasGL = m_glEvasgl;
-                g_evasGLAPI = m_glGlapi;
-                g_isEvasGLOnDirectMode = m_isEvasGLOnDirectMode;
+                STARFISH_ASSERT(wc != nullptr);
+
+                if (g_evasGL != m_glEvasgl) {
+                    evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+                    g_evasGL = m_glEvasgl;
+                    g_evasGLAPI = m_glGlapi;
+                    g_isEvasGLOnDirectMode = m_isEvasGLOnDirectMode;
+                }
                 if (m_glSync) {
                     Starfish::LongTaskFinder t("evasglWaitSync");
                     g_evasGLAPI->evasglClientWaitSync(
@@ -847,6 +837,8 @@ public:
                 }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
+                STARFISH_ASSERT(wc != nullptr);
+
                 if (mayNeedsSync && g_evasGLAPI->evasglCreateSync &&
                     !m_glSync) {
                     int attr[] = { EVAS_GL_NONE };

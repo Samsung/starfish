@@ -50,6 +50,8 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
 #include "core/util/URL.h"
 
 #include "core/dom/MouseEvent.h"
@@ -119,6 +121,8 @@ void screenShotInRendering(WebView* wv, const char* path,
 // WPT Reference Test
 static Nullable<String*> rtExtractReference(Document* document)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     HTMLCollection* result = document->getElementsByTagName(
         document->starfish()->staticStrings()->m_link);
     for (size_t i = 0; i < result->length(); i++) {
@@ -132,6 +136,9 @@ static Nullable<String*> rtExtractReference(Document* document)
 // WPT Reference Test
 static void rtShouldTrue(bool condition, WebView* wv, const char* msg)
 {
+    STARFISH_ASSERT(wv != nullptr);
+    STARFISH_ASSERT(msg != nullptr);
+
     if (!condition) {
         STARFISH_LOG_INFO("STARFISH_RTERROR %s\n", msg);
         exit(0);
@@ -140,6 +147,9 @@ static void rtShouldTrue(bool condition, WebView* wv, const char* msg)
 // WPT Reference Test
 static void rtShouldLoaded(Document* document, const char* msg)
 {
+    STARFISH_ASSERT(document != nullptr);
+    STARFISH_ASSERT(msg != nullptr);
+
     HTMLCollection* error =
         document->getElementsByTagName(String::createASCIIString("sfrtfailed"));
     rtShouldTrue((!error->length()), document->webView(), msg);
@@ -154,6 +164,8 @@ static std::string rtCreatePngName(int id)
 // WPT Reference Test
 static void rtScreenShot(WebView* wv)
 {
+    STARFISH_ASSERT(wv != nullptr);
+
     std::string capturePng = rtCreatePngName(g_referenceTestState);
     screenShotInRendering(wv, capturePng.c_str(), [capturePng]() {
         STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
@@ -162,6 +174,8 @@ static void rtScreenShot(WebView* wv)
 // WPT Reference Test
 static bool rtPixelDiff(WebView* wv)
 {
+    STARFISH_ASSERT(wv != nullptr);
+
     std::string cmd = "./tool/imgdiff/imgdiff ";
     cmd += rtCreatePngName(1);
     cmd += " ";
@@ -180,6 +194,8 @@ static bool rtPixelDiff(WebView* wv)
 // WPT Reference Test
 static void rtDoTest(Document* document)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     WebView* wv = document->webView();
     if (g_referenceTestState == 1) {
         // Case1: Running TC
@@ -220,6 +236,13 @@ WebView* WebView::create(Starfish* starfish, const char* locale,
                          const ScreenInfo& info, String* customUserAgentString,
                          String* builtinPolyfillPathString)
 {
+    STARFISH_ASSERT(starfish != nullptr);
+    STARFISH_ASSERT(locale != nullptr);
+    STARFISH_ASSERT(timezoneID != nullptr);
+    STARFISH_ASSERT(defaultFontName != nullptr);
+    STARFISH_ASSERT(customUserAgentString != nullptr);
+    STARFISH_ASSERT(builtinPolyfillPathString != nullptr);
+
     return new WebView(starfish, locale, timezoneID, w, h, defaultFontSize,
                        defaultFontName, info, customUserAgentString,
                        builtinPolyfillPathString);
@@ -263,6 +286,10 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    , m_imageDecodeThreadPool(nullptr)
+#endif
+    , m_activeImageURLsInRenderingMutex(new Mutex())
     , m_defaultFontSize(defaultFontSize)
     , m_screenInfo(info)
     , m_builtinPolyfillPathString(builtinPolyfillPathString)
@@ -274,8 +301,14 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_idleModeJob(LWE::IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(0)
     , m_idleCheckTimerID(TimerInvalidID)
-
 {
+    STARFISH_ASSERT(starfish != nullptr);
+    STARFISH_ASSERT(locale != nullptr);
+    STARFISH_ASSERT(timezoneID != nullptr);
+    STARFISH_ASSERT(defaultFontName != nullptr);
+    STARFISH_ASSERT(customUserAgentString != nullptr);
+    STARFISH_ASSERT(builtinPolyfillPathString != nullptr);
+
     m_platformWindow->setWebView(this);
     m_deviceKind = deviceKindUseTouchScreen;
 #ifdef STARFISH_ENABLE_TEST
@@ -285,9 +318,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_startUpFlag = 0;
 #endif
 
-#ifndef STARFISH_THREAD_POOL_SIZE
-#define STARFISH_THREAD_POOL_SIZE 6
-#endif
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
@@ -308,6 +338,14 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     m_starfish->m_webViewInstanceCount++;
 
+#ifndef STARFISH_IMAGE_DECODE_THREAD_THREAD_POOL_SIZE
+#define STARFISH_IMAGE_DECODE_THREAD_THREAD_POOL_SIZE 4
+#endif
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    m_imageDecodeThreadPool = new ThreadPool(
+        STARFISH_IMAGE_DECODE_THREAD_THREAD_POOL_SIZE, m_messageLoop);
+#endif
+
     setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
 }
 
@@ -319,6 +357,8 @@ void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
         m_idleCheckTimerID = m_timer->addTimer(
             m_idleModeCheckIntervalInMS, nullptr,
             [](void* data) {
+                STARFISH_ASSERT(data != nullptr);
+
                 WebView* wv = (WebView*)data;
                 uint64_t currentTick = longTickCount();
                 if (!wv->m_inIdleMode &&
@@ -390,6 +430,11 @@ void WebView::addJavaScriptNativeInterface(
     String* exposedObjectName, String* jsFunctionName, void* scriptObject,
     Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer)
 {
+    STARFISH_ASSERT(exposedObjectName != nullptr);
+    STARFISH_ASSERT(jsFunctionName != nullptr);
+    STARFISH_ASSERT(scriptObject != nullptr);
+    STARFISH_ASSERT(scriptNativeFunctionPointer != nullptr);
+
     m_jsInterfaceList.push_back(std::make_tuple(exposedObjectName,
                                                 jsFunctionName, scriptObject,
                                                 scriptNativeFunctionPointer));
@@ -398,6 +443,9 @@ void WebView::addJavaScriptNativeInterface(
 void WebView::removeJavaScriptNativeInterface(String* exposedObjectName,
                                               String* jsFunctionName)
 {
+    STARFISH_ASSERT(exposedObjectName != nullptr);
+    STARFISH_ASSERT(jsFunctionName != nullptr);
+
     m_jsInterfaceList.erase(
         std::remove_if(
             m_jsInterfaceList.begin(), m_jsInterfaceList.end(),
@@ -412,6 +460,8 @@ void WebView::removeJavaScriptNativeInterface(String* exposedObjectName,
 
 void WebView::applyJavaScriptNativeInterface(ScriptBindingInstance* instance)
 {
+    STARFISH_ASSERT(instance != nullptr);
+
     for (auto it = m_jsInterfaceList.begin(); it != m_jsInterfaceList.end();
          it++) {
         registerJavaScriptNativeInterface(instance, std::get<0>(*it),
@@ -449,6 +499,8 @@ void WebView::destroy()
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
+                STARFISH_ASSERT(ctx != nullptr);
+
                 ctx->clearGraphicsBuffer();
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
@@ -467,11 +519,19 @@ void WebView::destroy()
 
     removeScriptEngineInstance();
 
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    m_imageDecodeThreadPool->destroy();
+#endif
+
     m_threadPool->destroy();
     m_messageLoop->destroy();
 
     m_timer->clear(nullptr);
     m_timer->destroy();
+
+    std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
+    delete m_activeImageURLsInRenderingMutex;
+    m_activeImageURLsInRenderingMutex = nullptr;
 
     m_publicLayerUserDataMap.clear();
 
@@ -494,6 +554,9 @@ void WebView::createScriptEngineInstance()
     if (!m_scriptEngineInstance) {
         PromiseJobListener listener = [](ExecutionStateRef* state,
                                          JobRef* job) {
+            STARFISH_ASSERT(state != nullptr);
+            STARFISH_ASSERT(job != nullptr);
+
             // web view on loop
             Window* window =
                 (Window*)state->context()->globalObject()->extraData();
@@ -501,6 +564,9 @@ void WebView::createScriptEngineInstance()
             window->webView()->messageLoop()->addIdler(
                 window,
                 [](size_t, void* data, void* data2) {
+                    STARFISH_ASSERT(data != nullptr);
+                    STARFISH_ASSERT(data2 != nullptr);
+
                     Window* window = (Window*)data;
 
                     if (!window->webView()->isActive()) {
@@ -552,6 +618,8 @@ void WebView::initStorage()
 
 static String* resolvePath(String* filePath)
 {
+    STARFISH_ASSERT(filePath != nullptr);
+
     String* resolvedPath = filePath;
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
         !filePath->startsWith("data:")) {
@@ -576,6 +644,8 @@ static String* resolvePath(String* filePath)
 
 void WebView::loadHTMLDocument(String* filePath) // navigate function helper
 {
+    STARFISH_ASSERT(filePath != nullptr);
+
     String* resolvedPath = resolvePath(filePath);
     ResourceURL* url = new ResourceURL(resolvedPath);
     ReferrerURL* rUrl = new ReferrerURL(String::emptyString);
@@ -585,8 +655,12 @@ void WebView::loadHTMLDocument(String* filePath) // navigate function helper
 void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
                        ReferrerURL* referrerURL)
 {
+    STARFISH_ASSERT(url != nullptr);
+    STARFISH_ASSERT(referrerURL != nullptr);
+
     clearBlobURLStore();
     clearMediaSourceBlobURLStore();
+    clearActiveImageURLsInRenderingSet();
     initRenderingFlags();
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
@@ -614,6 +688,8 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
 
 String* WebView::evaluateJavaScript(String* s)
 {
+    STARFISH_ASSERT(s != nullptr);
+
     if (mainBrowsingContext()) {
         ANNOTATE_SETUP;
         ANNOTATE_CHANNEL_COLOR(3003, ANNOTATE_BLUE,
@@ -631,6 +707,8 @@ String* WebView::evaluateJavaScript(String* s)
 
 void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
 {
+    STARFISH_ASSERT(s != nullptr);
+
     String* ret = String::emptyString;
 
     if (mainBrowsingContext()) {
@@ -643,6 +721,8 @@ void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
 
 BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
 {
+    STARFISH_ASSERT(ptr != nullptr);
+
 #ifndef NDEBUG
     {
         BlobURLStore s;
@@ -672,6 +752,8 @@ BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
 
 void WebView::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 {
+    STARFISH_ASSERT(ptr != nullptr);
+
 #ifndef NDEBUG
     STARFISH_LOG_INFO(
         "[TRACE_MSE_GC] WebView::removeMediaSourceFromBlobURLStore\n");
@@ -701,6 +783,8 @@ bool WebView::isValidMediaSourceBlobURL(BlobURLStore ptr)
 
 bool WebView::isValidMediaSourceBlobURL(MediaSource* ptr)
 {
+    STARFISH_ASSERT(ptr != nullptr);
+
     BlobURLStore s;
     s.m_blob = ptr;
     auto iter = m_urlMediaSourceBlobStore.find(s);
@@ -709,6 +793,8 @@ bool WebView::isValidMediaSourceBlobURL(MediaSource* ptr)
 
 BlobURLStore WebView::findMediaSourceBlobURL(MediaSource* ptr)
 {
+    STARFISH_ASSERT(ptr != nullptr);
+
     BlobURLStore s;
     s.m_blob = ptr;
     auto iter = m_urlMediaSourceBlobStore.find(s);
@@ -818,6 +904,7 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                     std::function<void(StackingContext*, int)> dumpSC =
                         [&dumpSC, &totalSurfaceBufferSize](StackingContext* ctx,
                                                            int depth) {
+                            STARFISH_ASSERT(ctx != nullptr);
                             for (int i = 0; i < depth; i++) {
                                 printf("  ");
                             }
@@ -948,6 +1035,8 @@ void WebView::setNeedsRendering()
 
 static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
 {
+    STARFISH_ASSERT(ctx != nullptr);
+
     ctx->layoutRepaintTracker().clearDatasRelatedWithStackingContext();
     ctx->iterateChildContext(
         [](BrowsingContext* ctx) { cleanupLayoutRepaintTracker(ctx); });
@@ -955,6 +1044,8 @@ static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
 
 static void saveCurrentPaintingState(StackingContext* ctx)
 {
+    STARFISH_ASSERT(ctx != nullptr);
+
     PrevDrawnStackingContextInfo info;
     if (ctx->isIFrameStackingContext()) {
         info.screenExtent = ctx->parent()->screenExtent();
@@ -1063,6 +1154,7 @@ RenderResult WebView::rendering(bool force)
     if (m_needsPainting) {
         didPainting = true;
         INSTALL_PROFILE_TIMER("painting");
+
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
@@ -1457,6 +1549,8 @@ void WebView::clearStackingContext()
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
+                STARFISH_ASSERT(ctx != nullptr);
+
                 ctx->owner()->clearStackingContextIfNeeds();
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
@@ -1578,6 +1672,8 @@ void WebView::resume()
 
 void WebView::onIdle()
 {
+    clearActiveImageURLsInRenderingSet();
+
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->onIdle();
     }
@@ -1594,6 +1690,8 @@ void WebView::setDefaultFontSize(uint32_t size)
 void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                  size_t touchCount)
 {
+    STARFISH_ASSERT(touches != nullptr);
+
     if (m_globalPointingEventListener.size()) {
         float x, y;
         if (kind == TouchEventKind::TouchEventStart ||
@@ -1707,6 +1805,9 @@ void WebView::dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data)
 void WebView::dispatchCompositionEvent(CompositionEventKind kind, String* data,
                                        Node* node)
 {
+    STARFISH_ASSERT(data != nullptr);
+    STARFISH_ASSERT(node != nullptr);
+
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispatchCompositionEvent(kind, data, node);
     }
@@ -1714,6 +1815,8 @@ void WebView::dispatchCompositionEvent(CompositionEventKind kind, String* data,
 
 void WebView::addGlobalPointingEventInterceptListener(EventTarget* node)
 {
+    STARFISH_ASSERT(node != nullptr);
+
     size_t sizeBefore = m_globalPointingEventListener.size();
     if (sizeBefore == 0) {
         MouseData mdata(MouseButtonValue::NoButton,
@@ -1737,10 +1840,45 @@ void WebView::addGlobalPointingEventInterceptListener(EventTarget* node)
 
 void WebView::removeGlobalPointingEventInterceptListener(EventTarget* node)
 {
+    STARFISH_ASSERT(node != nullptr);
+
     auto iter = std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(), node);
     if (iter != m_globalPointingEventListener.end()) {
         m_globalPointingEventListener.erase(iter);
+    }
+}
+
+void WebView::putURLIntoActiveImageURLsInRenderingSet(const std::string& url)
+{
+    Locker<Mutex> locker(*m_activeImageURLsInRenderingMutex);
+    m_activeImageURLsInRendering.insert(url);
+}
+
+bool WebView::isThereURLInActiveImageURLsInRenderingSet(const std::string& url)
+{
+    Locker<Mutex> locker(*m_activeImageURLsInRenderingMutex);
+    return m_activeImageURLsInRendering.find(url) !=
+           m_activeImageURLsInRendering.end();
+}
+
+void WebView::clearActiveImageURLsInRenderingSet()
+{
+    Locker<Mutex> locker(*m_activeImageURLsInRenderingMutex);
+    std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
+}
+
+void WebView::accessActiveImageURLsInRenderingSet(
+    void (*callback)(const std::string& url, NULLABLE void* data),
+    NULLABLE void* data)
+{
+    STARFISH_ASSERT(callback != nullptr);
+
+    Locker<Mutex> locker(*m_activeImageURLsInRenderingMutex);
+    auto iter = m_activeImageURLsInRendering.begin();
+    while (iter != m_activeImageURLsInRendering.end()) {
+        callback(*iter, data);
+        iter++;
     }
 }
 

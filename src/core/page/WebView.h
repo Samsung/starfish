@@ -418,6 +418,20 @@ public:
     {
         return m_didFirstRenderingAfterWakeup;
     }
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    ThreadPool* imageDecodeThreadPool()
+    {
+        return m_imageDecodeThreadPool;
+    }
+#endif
+    // active image URLs functions
+    // active image URLs are updated while painting(in rendering)
+    void clearActiveImageURLsInRenderingSet();
+    void putURLIntoActiveImageURLsInRenderingSet(const std::string& url);
+    bool isThereURLInActiveImageURLsInRenderingSet(const std::string& url);
+    void accessActiveImageURLsInRenderingSet(
+        void (*callback)(const std::string& url, NULLABLE void* data),
+        NULLABLE void* data);
 
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
@@ -510,6 +524,12 @@ private:
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedSet<Scrolling*> m_activeScrollingSet;
     Unit::Location m_lastMouseMovePoint;
+
+#if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
+    ThreadPool* m_imageDecodeThreadPool;
+#endif
+    std::unordered_set<std::string> m_activeImageURLsInRendering;
+    Mutex* m_activeImageURLsInRenderingMutex;
 
     // options
     uint32_t m_defaultFontSize;
