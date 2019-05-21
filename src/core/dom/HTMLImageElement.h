@@ -74,6 +74,11 @@ public:
         return m_imageData;
     }
 
+    ImageResource* imageResource()
+    {
+        return m_imageResource;
+    }
+
     /* Other methods (not in DOM API) */
 
     virtual void didAttributeChanged(QualifiedName name, String* old,

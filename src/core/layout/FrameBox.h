@@ -952,7 +952,7 @@ protected:
     }
 
     static void paintBackgroundLayers(Canvas* canvas, FrameBox* box,
-                                      HTMLElement* rootOrBodyelement,
+                                      NULLABLE HTMLElement* rootOrBodyelement,
                                       ComputedStyle* style);
 
     void computeBorderRadiusProperties(

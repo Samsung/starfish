@@ -167,7 +167,12 @@ void ServiceWorkerHostJobHandler::setRegistration(
     registration->scope = scope;
     registration->updateViaCache = updateViaCache;
 
-    m_scopeToRegistrationMap[scope] = registration;
+    auto iter = m_scopeToRegistrationMap.find(scope);
+    if (iter == m_scopeToRegistrationMap.end()) {
+        m_scopeToRegistrationMap.insert(std::make_pair(scope, registration));
+    } else {
+        iter->second = registration;
+    }
 }
 
 void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
@@ -720,10 +725,14 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
         if (request->registrationId.isValid()) {
             SWHOST_LOG_IF_ALLOWED(1, "1: client is registered to regId: %s\n",
                                   request->registrationId.toString().c_str());
-            m_clientIdToRegistrationIdMap[request->contextId] =
-                request->registrationId;
+            auto iter = m_clientIdToRegistrationIdMap.find(request->contextId);
+            if (iter == m_clientIdToRegistrationIdMap.end()) {
+                m_clientIdToRegistrationIdMap.insert(std::make_pair(
+                    request->contextId, request->registrationId));
+            } else {
+                iter->second = request->registrationId;
+            }
         }
-
     } else if (request->type == ServiceWorkerClientRequestType::Unregister) {
         SWHOST_LOG_IF_ALLOWED(1, "1: client is unregistered\n");
         m_clientIdToRegistrationIdMap.erase(request->contextId);

@@ -2111,11 +2111,6 @@ public:
         return true;
     }
 
-    virtual bool hasTransparentPixel() override
-    {
-        return true;
-    }
-
     virtual void pruneInternalDataIfPossible() override
     {
     }

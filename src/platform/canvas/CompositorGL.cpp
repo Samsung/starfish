@@ -2103,8 +2103,6 @@ public:
         m_compositorContext = compositorContext;
         m_screenMatrix = computeScreenMatrix();
 
-        setViewport();
-
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
         auto& lastState = m_state.back();
@@ -2127,6 +2125,8 @@ public:
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
         STARFISH_ASSERT(m_fboState.size() == 0);
+
+        setViewport();
 
         glBindTexture(GL_TEXTURE_2D, 0);
         if (g_isSupportExtensionEGLImageExternal) {
