@@ -23,6 +23,12 @@
 
 namespace Starfish {
 
+enum class ServiceWorkerRunningState {
+    Running,
+    Terminating,
+    NotRunning,
+};
+
 class ServiceWorkerData : public Archivable {
 public:
     String* scriptURL{ String::emptyString };
@@ -36,8 +42,12 @@ public:
     // NOTE: consider seperating ServiceWorker model shared
     // on both client and host.
     DEFINE_GETTER_SETTER(bool, hasPendingEvents, HasPendingEvents);
+    DEFINE_GETTER_SETTER(ServiceWorkerRunningState, runningState, RunningState);
 
 private:
+    ServiceWorkerRunningState m_runningState{
+        ServiceWorkerRunningState::NotRunning
+    };
     bool m_hasPendingEvents{ false };
 };
 

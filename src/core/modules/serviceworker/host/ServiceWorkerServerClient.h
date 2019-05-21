@@ -31,6 +31,8 @@ public:
     virtual void getConnections(
         GCVector<ServiceWorkerClientProcessInterface*>& connections) = 0;
     virtual ServiceWorkerHostJobHandler* jobHandler() = 0;
+    virtual bool tryTerminate() = 0;
+    virtual bool isTerminating() = 0;
 };
 
 } // namespace Starfish

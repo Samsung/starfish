@@ -49,6 +49,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 namespace Starfish {
@@ -79,6 +80,10 @@ ServiceWorkerHostProcess::ServiceWorkerHostProcess()
 
 ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 {
+    if (m_SWContextManager != nullptr) {
+        m_SWContextManager->destroy();
+        m_SWContextManager = nullptr;
+    }
 }
 
 void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
@@ -91,16 +96,15 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 
     Message::init();
 
+    m_SWContextManager = ServiceWorkerContextManager::instance();
+    m_SWContextManager->init(threadPool);
+
     m_threadPool = threadPool;
     m_messageLoop = m_threadPool->messageLoop();
 
     m_jobHandler = new ServiceWorkerHostJobHandler(m_messageLoop, this);
     m_ioRunnable = new IORunnable(m_messageLoop);
     m_ioThread = new AdaptedThread(m_threadPool);
-
-    STARFISH_ASSERT(m_jobHandler != nullptr);
-    STARFISH_ASSERT(m_ioRunnable != nullptr);
-    STARFISH_ASSERT(m_ioThread != nullptr);
 
     // start I/O runner
     m_ioThread->start(m_ioRunnable);
@@ -154,6 +158,37 @@ ServiceWorkerHostJobHandler* ServiceWorkerHostProcess::jobHandler()
 {
     STARFISH_ASSERT(m_jobHandler != nullptr);
     return m_jobHandler;
+}
+
+bool ServiceWorkerHostProcess::isTerminating()
+{
+    return m_isTerminating;
+}
+
+bool ServiceWorkerHostProcess::tryTerminate()
+{
+    SWHOST_LOG_IF_ALLOWED(1, "0. called\n");
+
+    if (m_isTerminating == true) {
+        return true;
+    }
+
+    if (jobHandler()->isEmptyRegistrationMap() == true) {
+        m_isTerminating = true;
+        // TODO: notify termination
+        m_messageLoop->addIdler(
+            nullptr,
+            [](size_t handle, void* data0) {
+                SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server\n");
+                castTo<ServiceWorkerHostProcess*>(data0)->destroy();
+            },
+            this);
+    } else {
+        SWHOST_LOG_IF_ALLOWED(1, "1. registration map isn't empty\n");
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace Starfish

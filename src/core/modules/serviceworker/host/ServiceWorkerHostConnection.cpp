@@ -31,6 +31,8 @@
 #include "core/modules/serviceworker/Connection.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
+#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"
@@ -117,6 +119,14 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     Connection::onReceived(socket, data, len);
 
     STARFISH_ASSERT(m_client != nullptr);
+
+    if (m_client->isTerminating() == true) {
+        // TODO: send request reject
+        SWHOST_LOG_IF_ALLOWED(1,
+                              "1. received data is ignored due to swserver is "
+                              "being terminated\n");
+        return;
+    }
 
     // unmarshalling
     JsonReader reader(data);
