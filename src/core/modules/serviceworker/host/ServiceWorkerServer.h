@@ -39,34 +39,36 @@ class ServiceWorkerJob;
 class ServiceWorkerHostJobHandler;
 class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
-class ServiceWorkerClientProcessInterface;
+class IServiceWorkerClientConnection;
 class ServiceWorkerContextManager;
 
-class ServiceWorkerHostProcess : public gc, public ServiceWorkerServerClient {
+class ServiceWorkerServer : public gc, public ServiceWorkerServerInterface {
 public:
-    static ServiceWorkerHostProcess* getInstance();
+    static ServiceWorkerServer* instance();
     static void destroy();
 
-    ServiceWorkerHostProcess(ServiceWorkerHostProcess const&) = delete;
-    void operator=(ServiceWorkerHostProcess const&) = delete;
+    ServiceWorkerServer(ServiceWorkerServer const&) = delete;
+    void operator=(ServiceWorkerServer const&) = delete;
 
     void init(ThreadPool* threadPool);
+    void start();
     void start(std::shared_ptr<ProgramOptions> programOptions);
 
     void getConnections(
-        GCVector<ServiceWorkerClientProcessInterface*>& connections) override;
+        GCVector<IServiceWorkerClientConnection*>& connections) override;
     ServiceWorkerHostJobHandler* jobHandler() override;
 
     bool tryTerminate() override;
     bool isTerminating() override;
 
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
+    DEFINE_SETTER(ServiceWorkerServerClient*, client, Client);
 
 private:
-    static ServiceWorkerHostProcess* m_instance;
+    static ServiceWorkerServer* m_instance;
 
-    ServiceWorkerHostProcess();
-    virtual ~ServiceWorkerHostProcess();
+    ServiceWorkerServer();
+    virtual ~ServiceWorkerServer();
 
     void registerConnection(ServiceWorkerHostConnection* connection);
 
@@ -79,6 +81,7 @@ private:
     GCVector<ServiceWorkerHostConnection*> m_connections;
     ServiceWorkerContextManager* m_SWContextManager{ nullptr };
     bool m_isTerminating{ false };
+    ServiceWorkerServerClient* m_client{ nullptr };
 };
 
 } // namespace Starfish

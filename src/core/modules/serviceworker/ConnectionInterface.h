@@ -17,9 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__ServiceWorkerProcessInterface__)
-#define __ServiceWorkerProcessInterface__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__ConnectionInterface__)
+#define __ConnectionInterface__
 
 namespace Starfish {
 
@@ -29,11 +28,11 @@ class ServiceWorkerRegistrationData;
 class Archivable;
 class ErrorData;
 
-// ServiceWorkerHostProcessInterface which is used on `Client`
+// IServiceWorkerHostConnection which is used on `Client`
 
-class ServiceWorkerHostProcessInterface {
+class IServiceWorkerHostConnection {
 public:
-    virtual ~ServiceWorkerHostProcessInterface() = default;
+    virtual ~IServiceWorkerHostConnection() = default;
 
     // send
     virtual void scheduleJob(ServiceWorkerJob* job) = 0;
@@ -46,11 +45,11 @@ public:
     // for now. However, unimplemented message handler is detected in run time.
 };
 
-// ServiceWorkerClientProcessInterface which is used on `Host`
+// IServiceWorkerClientConnection which is used on `Host`
 
-class ServiceWorkerClientProcessInterface {
+class IServiceWorkerClientConnection {
 public:
-    virtual ~ServiceWorkerClientProcessInterface() = default;
+    virtual ~IServiceWorkerClientConnection() = default;
 
     // send
     virtual void resolveJobPromise(

@@ -40,8 +40,8 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
@@ -52,12 +52,12 @@ namespace Starfish {
 #define REGISTRATION_ACTIVE "active"
 
 ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
-    MessageLoop* messageLoop, ServiceWorkerServerClient* client)
+    MessageLoop* messageLoop, ServiceWorkerServerInterface* swserver)
     : m_messageLoop(messageLoop)
-    , m_SWServerClient(client)
+    , m_SWServer(swserver)
 {
     STARFISH_ASSERT(messageLoop != nullptr);
-    STARFISH_ASSERT(client != nullptr);
+    STARFISH_ASSERT(swserver != nullptr);
 }
 
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
@@ -215,7 +215,7 @@ void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
                 break;
             case ServiceWorkerJobType::Unregister:
                 self->unregisterServiceWorker(job);
-                self->m_SWServerClient->tryTerminate();
+                self->m_SWServer->tryTerminate();
                 break;
             default:
                 break;
@@ -559,9 +559,9 @@ void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
     // connections. Clients ought to search ServiceWorkers which have a
     // registraion containing the matched Id, and then, update the state of the
     // ServiceWorkers.
-    GCVector<ServiceWorkerClientProcessInterface*> connections;
+    GCVector<IServiceWorkerClientConnection*> connections;
 
-    m_SWServerClient->getConnections(connections);
+    m_SWServer->getConnections(connections);
 
     for (const auto& connection : connections) {
         connection->onUpdateWorkerState(worker->registrationId, state);

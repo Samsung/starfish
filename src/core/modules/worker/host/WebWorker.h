@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWebWorker__)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishWebWorker__)
 #define __StarfishWebWorker__
 
 #include "core/page/WebBase.h"
@@ -26,6 +26,8 @@ namespace Starfish {
 
 class WorkerGlobalScope;
 class ScriptEngineInstance;
+class ServiceWorkerServer;
+class ServiceWorkerContextManager;
 
 class WebWorker : public WebBase {
 public:
@@ -34,6 +36,8 @@ public:
                              String* customUserAgentString);
 
     virtual ~WebWorker();
+
+    void destory();
 
     void setNeedsRendering() override
     {
@@ -63,8 +67,10 @@ private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
               String* customUserAgentString);
 
-    WorkerGlobalScope* m_workerGlobalScope;
-    ScriptEngineInstance* m_scriptEngineInstance;
+    WorkerGlobalScope* m_workerGlobalScope{ nullptr };
+    ScriptEngineInstance* m_scriptEngineInstance{ nullptr };
+    ServiceWorkerServer* m_SWServer{ nullptr };
+    ServiceWorkerContextManager* m_SWContextManager{ nullptr };
 
     void createScriptEngineInstance();
     void removeScriptEngineInstance();

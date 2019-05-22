@@ -23,13 +23,13 @@
 
 namespace Starfish {
 
-class ServiceWorkerServerClient;
+class ServiceWorkerServerInterface;
 
 class ServiceWorkerHostConnection final
     : public Connection,
-      public ServiceWorkerClientProcessInterface {
+      public IServiceWorkerClientConnection {
 public:
-    ServiceWorkerHostConnection(ServiceWorkerServerClient* client);
+    ServiceWorkerHostConnection(ServiceWorkerServerInterface* server);
 
     // send
     void resolveJobPromise(
@@ -47,10 +47,8 @@ public:
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
 
-    DEFINE_GETTER(ServiceWorkerServerClient*, client);
-
 private:
-    ServiceWorkerServerClient* m_client{ nullptr };
+    ServiceWorkerServerInterface* m_SWServer{ nullptr };
 };
 
 } // namespace Starfish

@@ -27,8 +27,8 @@ class ExecutionContext;
 class Promise;
 class String;
 class JobQueue;
-class ServiceWorkerHostProcessInterface;
-class ServiceWorkerClientProcessInterface;
+class IServiceWorkerHostConnection;
+class IServiceWorkerClientConnection;
 
 class Job : public gc {
 };
@@ -42,9 +42,9 @@ public:
     DEFINE_GETTER_SETTER(ServiceWorkerJobData*, data, Data);
     DEFINE_GETTER_SETTER(ServiceWorkerEnvironment*, client, Client);
     DEFINE_GETTER_SETTER(JobQueue*, containingJobQueue, ContainingJobQueue);
-    DEFINE_GETTER_SETTER(ServiceWorkerClientProcessInterface*, hostConnection,
+    DEFINE_GETTER_SETTER(IServiceWorkerClientConnection*, hostConnection,
                          HostConnection);
-    DEFINE_GETTER_SETTER(ServiceWorkerHostProcessInterface*, clientConnection,
+    DEFINE_GETTER_SETTER(IServiceWorkerHostConnection*, clientConnection,
                          ClientConnection);
 
 private:
@@ -52,8 +52,8 @@ private:
     ServiceWorkerJobData* m_data{ nullptr };
     ServiceWorkerEnvironment* m_client{ nullptr };
     JobQueue* m_containingJobQueue{ nullptr };
-    ServiceWorkerClientProcessInterface* m_hostConnection{ nullptr };
-    ServiceWorkerHostProcessInterface* m_clientConnection{ nullptr };
+    IServiceWorkerClientConnection* m_hostConnection{ nullptr };
+    IServiceWorkerHostConnection* m_clientConnection{ nullptr };
 };
 
 } // namespace Starfish
