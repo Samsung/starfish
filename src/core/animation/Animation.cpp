@@ -84,12 +84,10 @@ ActiveAnimationTask::ActiveAnimationTask(
 
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
-    if (m_startTimeMs == 0) {
-        m_startTimeMs = currentTickCount + m_delayMs;
-    }
+    STARFISH_ASSERT(style != nullptr);
 
     float f = 0;
-    if (m_startTimeMs <= currentTickCount) {
+    if (m_startTimeMs != 0) {
         f = fraction(currentTickCount);
     }
 

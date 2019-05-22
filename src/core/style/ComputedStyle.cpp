@@ -1071,6 +1071,10 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys)
 {
+    STARFISH_ASSERT(oldStyle != nullptr);
+    STARFISH_ASSERT(newStyle != nullptr);
+    STARFISH_ASSERT(damagedKeys != nullptr);
+
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     if (newStyle->m_inheritedStyles.m_color !=
         oldStyle->m_inheritedStyles.m_color) {
@@ -1871,31 +1875,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::FlexBasis] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
-    }
-
-    // The style for the 'content' property is computed when we build the frame
-    // tree if it is needed.
-
-    ContentDataGroup* oldContent =
-        oldStyle->hasRareComputeStyleData()
-            ? oldStyle->rareComputedStyleData()->content()
-            : nullptr;
-    ContentDataGroup* newContent =
-        newStyle->hasRareComputeStyleData()
-            ? newStyle->rareComputedStyleData()->content()
-            : nullptr;
-
-    if (newContent == nullptr && oldContent == nullptr) {
-    } else if (newContent == nullptr || oldContent == nullptr) {
-        damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
-    } else {
-        if (*oldContent != *newContent) {
-            damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
-        }
     }
 
     CounterBaseList* newCReset = newStyle->counterReset();

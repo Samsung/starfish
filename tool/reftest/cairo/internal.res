@@ -373,3 +373,4 @@ test/cairo/internal-test/css/overflow/overflowhittest.html
 test/cairo/internal-test/canvas/compositing.html
 test/cairo/internal-test/css/presentational-hints/body-margin-presentational-hints.html
 test/cairo/internal-test/css/repaint/outline-repaint.html
+test/cairo/internal-test/css/pseudo/before-element-damage.html

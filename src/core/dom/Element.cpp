@@ -621,6 +621,43 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 
+static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
+                                                     ComputedStyle* newStyle,
+                                                     bool* damagedKeys)
+{
+    STARFISH_ASSERT(oldStyle != nullptr);
+    STARFISH_ASSERT(newStyle != nullptr);
+    STARFISH_ASSERT(damagedKeys != nullptr);
+
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    // The style for the 'content' property is computed when we build the frame
+    // tree if it is needed.
+
+    ContentDataGroup* oldContent =
+        oldStyle->hasRareComputeStyleData()
+            ? oldStyle->rareComputedStyleData()->content()
+            : nullptr;
+    ContentDataGroup* newContent =
+        newStyle->hasRareComputeStyleData()
+            ? newStyle->rareComputedStyleData()->content()
+            : nullptr;
+
+    if (newContent == nullptr && oldContent == nullptr) {
+    } else if (newContent == nullptr || oldContent == nullptr) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    } else {
+        if (*oldContent != *newContent) {
+            damagedKeys[CSSStyleValuePair::KeyKind::Content] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+        }
+    }
+
+    return damage;
+}
+
 void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                                       ComputedStyle* newStyle)
 {
@@ -676,15 +713,19 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         false,
                     };
 
-                    auto damage = compareStyle(ocs, ncs, damagedKeys);
+                    ComputedStyleDamage damage = (ComputedStyleDamage)(
+                        compareStyle(ocs, ncs, damagedKeys) |
+                        comparePseudoElementStyle(ocs, ncs, damagedKeys));
 
                     if (damage !=
                         ComputedStyleDamage::ComputedStyleDamageNone) {
                         computeTransition(pseudoNode, ocs, pseudoNode->frame(),
                                           ncs, damage, damagedKeys);
 
-                        if (damage & ComputedStyleDamage::
-                                         ComputedStyleDamageRebuildFrame) {
+                        if ((damage & ComputedStyleDamage::
+                                          ComputedStyleDamageInherited) ||
+                            (damage & ComputedStyleDamage::
+                                          ComputedStyleDamageRebuildFrame)) {
                             setNeedsFrameTreeBuild();
                         }
 
