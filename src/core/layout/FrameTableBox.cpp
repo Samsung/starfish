@@ -1005,10 +1005,14 @@ bool FrameTableBox::resetColspanIfPossible()
         if (m_columnWidths[i]->isNullCell) {
             forEachRowStruct(
                 [i, &colspanUpdated](RowStruct* rowStruct, size_t _rowId) {
+                    STARFISH_ASSERT(rowStruct != nullptr);
                     FrameTableCellBox* cell =
                         rowStruct->physicalCellAtLogicalColumn(i);
-                    cell->resetColspanForLayout();
-                    colspanUpdated = true;
+
+                    if (cell != nullptr) {
+                        cell->resetColspanForLayout();
+                        colspanUpdated = true;
+                    }
                 });
         }
     }
