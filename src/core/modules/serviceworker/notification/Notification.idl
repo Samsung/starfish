@@ -1,0 +1,40 @@
+// https://notifications.spec.whatwg.org/#api
+
+[
+  STARFISH_ENABLE_SERVICE_WORKER,
+  Constructor(DOMString title, optional NotificationOptions options),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=(Window,Worker)
+]
+interface Notification : EventTarget {
+  [Unimplemented] static readonly attribute NotificationPermission permission;
+  [Unimplemented, Exposed=Window] static Promise<NotificationPermission> requestPermission(optional NotificationPermissionCallback deprecatedCallback);
+
+  [Unimplemented] static readonly attribute unsigned long maxActions;
+
+  [Unimplemented] attribute EventHandler onclick;
+  [Unimplemented] attribute EventHandler onshow;
+  [Unimplemented] attribute EventHandler onerror;
+  [Unimplemented] attribute EventHandler onclose;
+
+  readonly attribute DOMString title;
+  [Unimplemented] readonly attribute NotificationDirection dir;
+  [Unimplemented] readonly attribute DOMString lang;
+  readonly attribute DOMString body;
+  readonly attribute DOMString tag;
+  [Unimplemented] readonly attribute USVString image;
+  [Unimplemented] readonly attribute USVString icon;
+  [Unimplemented] readonly attribute USVString badge;
+  [Unimplemented, SameObject] readonly attribute FrozenArray<unsigned long> vibrate;
+  [Unimplemented] readonly attribute DOMTimeStamp timestamp;
+  [Unimplemented] readonly attribute boolean renotify;
+  [Unimplemented] readonly attribute boolean silent;
+  [Unimplemented] readonly attribute boolean requireInteraction;
+  [Unimplemented, SameObject] readonly attribute any data;
+  [Unimplemented, SameObject] readonly attribute FrozenArray<NotificationAction> actions;
+
+  [Unimplemented] void close();
+};
+
+callback NotificationPermissionCallback = void (NotificationPermission permission);

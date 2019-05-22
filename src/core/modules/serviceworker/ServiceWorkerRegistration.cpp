@@ -22,6 +22,7 @@
 
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/serviceworker/notification/NotificationJob.h"
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 
@@ -121,6 +122,30 @@ Promise* ServiceWorkerRegistration::unregister()
     m_jobClient->scheduleJob(job);
 
     // 4. Return promise.
+    return promise;
+}
+
+Promise* ServiceWorkerRegistration::showNotification(String* title)
+{
+    STARFISH_ASSERT(title != nullptr);
+    NotificationOptions options;
+    return showNotification(title, options);
+}
+
+Promise* ServiceWorkerRegistration::showNotification(
+    String* title, NotificationOptions& options)
+{
+    STARFISH_ASSERT(title != nullptr);
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    // TODO: If active worker is null,
+    // then reject promise with TypeError and return promise
+
+    NotificationJob* notification =
+        new NotificationJob(executionContext(), title, options);
+
+    notification->runNotification(promise);
+
     return promise;
 }
 

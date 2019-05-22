@@ -1,0 +1,38 @@
+// https://notifications.spec.whatwg.org/#api
+
+enum NotificationPermission {
+  "default",
+  "denied",
+  "granted"
+};
+
+enum NotificationDirection {
+  "auto",
+  "ltr",
+  "rtl"
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER, Unimplemented]
+dictionary NotificationAction {
+  required DOMString action;
+  required DOMString title;
+  USVString icon;
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER]
+dictionary NotificationOptions {
+  [Unimplemented] NotificationDirection dir = "auto";
+  [Unimplemented] DOMString lang = "";
+  DOMString body = "";
+  DOMString tag = "";
+  [Unimplemented] USVString image;
+  [Unimplemented] USVString icon;
+  [Unimplemented] USVString badge;
+  [Unimplemented] VibratePattern vibrate;
+  [Unimplemented] DOMTimeStamp timestamp;
+  [Unimplemented] boolean renotify = false;
+  [Unimplemented] boolean silent = false;
+  [Unimplemented] boolean requireInteraction = false;
+  [Unimplemented] any data = null;
+  [Unimplemented] sequence<NotificationAction> actions;
+};

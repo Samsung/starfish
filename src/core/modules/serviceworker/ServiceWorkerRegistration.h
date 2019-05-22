@@ -30,6 +30,7 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 #include "core/modules/serviceworker/push/PushManager.h"
+#include "core/modules/serviceworker/notification/NotificationOptions.h"
 #include "core/dom/EventTarget.h"
 
 namespace Starfish {
@@ -49,12 +50,15 @@ public:
 
     virtual ExecutionContext* executionContext() const override;
 
-    String* scope() const;             // binding interface
-    String* updateViaCache() const;    // binding interface
-    ServiceWorker* installing() const; // binding interface
-    ServiceWorker* waiting() const;    // binding interface
-    ServiceWorker* active() const;     // binding interface
-    Promise* unregister();             // binding interface
+    String* scope() const;                    // binding interface
+    String* updateViaCache() const;           // binding interface
+    ServiceWorker* installing() const;        // binding interface
+    ServiceWorker* waiting() const;           // binding interface
+    ServiceWorker* active() const;            // binding interface
+    Promise* unregister();                    // binding interface
+    Promise* showNotification(String* title); // binding interface
+    Promise* showNotification(
+        String* title, NotificationOptions& options); // binding interface
 
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorker* serviceWorker);
