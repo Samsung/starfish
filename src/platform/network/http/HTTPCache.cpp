@@ -19,6 +19,10 @@
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarfishConfig.h"
+#include <linux/fs.h>
+#include <sys/file.h>
+#include <curl/curl.h>
+
 #include "HTTPCache.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
@@ -35,9 +39,6 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
-
-#include <linux/fs.h>
-#include <sys/file.h>
 
 #define INDEX_FILE_NAME "/index.txt"
 #define DEFAULT_HTTP_CACHE_SIZE 1024 * 1024 * 50

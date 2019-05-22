@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include <curl/curl.h>
+
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fileapi/Blob.h"

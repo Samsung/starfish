@@ -40,6 +40,8 @@
  */
 
 #include "StarfishConfig.h"
+#include <curl/curl.h>
+
 #include "Starfish.h"
 #include "Profiling.h"
 
