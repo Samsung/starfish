@@ -20,8 +20,82 @@
 #include "StarfishConfig.h"
 #include "core/dom/DOMMatrixReadOnly.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
 
 namespace Starfish {
+
+static bool sameValueZero(double a, double b)
+{
+    // https://tc39.github.io/ecma262/#sec-samevaluezero
+    if (std::isnan(a) && std::isnan(b)) {
+        return true;
+    }
+    return a == b;
+}
+
+DOMExceptionOr<void> DOMMatrixReadOnly::validateAndFixup(
+    ExecutionContext* executionContext, DOMMatrix2DInit& init)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
+
+    // https://drafts.fxtf.org/geometry/#matrix-validate-and-fixup-2d
+    if (init.hasA() && init.hasM11() && !sameValueZero(init.a(), init.m11())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.a and init.m11 do not match");
+    }
+    if (init.hasB() && init.hasM12() && !sameValueZero(init.b(), init.m12())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.b and init.m12 do not match");
+    }
+    if (init.hasC() && init.hasM21() && !sameValueZero(init.c(), init.m21())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.c and init.m21 do not match");
+    }
+    if (init.hasD() && init.hasM22() && !sameValueZero(init.d(), init.m22())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.d and init.m22 do not match");
+    }
+    if (init.hasE() && init.hasM41() && !sameValueZero(init.e(), init.m41())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.e and init.m41 do not match");
+    }
+    if (init.hasF() && init.hasM42() && !sameValueZero(init.f(), init.m42())) {
+        return new DOMException(executionContext,
+                                DOMException::Code::SCRIPT_TYPE_ERR,
+                                "init.a and init.m11 do not match");
+    }
+
+    if (!init.hasM11()) {
+        init.setM11(init.hasA() ? init.a() : 1);
+    }
+
+    if (!init.hasM12()) {
+        init.setM12(init.hasB() ? init.b() : 0);
+    }
+
+    if (!init.hasM21()) {
+        init.setM21(init.hasC() ? init.c() : 0);
+    }
+
+    if (!init.hasM22()) {
+        init.setM22(init.hasD() ? init.d() : 1);
+    }
+
+    if (!init.hasM41()) {
+        init.setM41(init.hasE() ? init.e() : 0);
+    }
+
+    if (!init.hasM42()) {
+        init.setM42(init.hasF() ? init.f() : 0);
+    }
+
+    return {};
+}
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext)
     : ScriptWrappable(this)

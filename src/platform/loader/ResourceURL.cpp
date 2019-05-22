@@ -80,6 +80,7 @@ static bool isURIUnreserved(char32_t c)
 
 String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
 {
+    STARFISH_ASSERT(src != nullptr);
     StringBufferAccessData dat = src->bufferAccessData();
 
     bool needsEncoding = false;
@@ -158,8 +159,10 @@ String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
 
 static bool twoCharToHex(char32_t ch1, char32_t ch2, unsigned char* res)
 {
-    if (!isHexadecimalDigit(ch1) || !isHexadecimalDigit(ch2))
+    STARFISH_ASSERT(res != nullptr);
+    if (!isHexadecimalDigit(ch1) || !isHexadecimalDigit(ch2)) {
         return false;
+    }
     *res = (((ch1 & 0x10) ? (ch1 & 0xf) : ((ch1 & 0xf) + 9)) << 4) |
            ((ch2 & 0x10) ? (ch2 & 0xf) : ((ch2 & 0xf) + 9));
     return true;
@@ -167,9 +170,14 @@ static bool twoCharToHex(char32_t ch1, char32_t ch2, unsigned char* res)
 
 inline static bool codeUnitToHex(String* str, size_t start, unsigned char* res)
 {
-    STARFISH_ASSERT(str && str->length() > start + 2);
-    if (str->charAt(start) != '%')
+    STARFISH_ASSERT(res != nullptr);
+    STARFISH_ASSERT(str != nullptr);
+    STARFISH_ASSERT(str->length() > start + 2);
+
+    if (str->charAt(start) != '%') {
         return false;
+    }
+
     bool succeed =
         twoCharToHex(str->charAt(start + 1), str->charAt(start + 2), res);
     // The two most significant bits of res should be 10.
@@ -178,6 +186,8 @@ inline static bool codeUnitToHex(String* str, size_t start, unsigned char* res)
 
 String* ResourceURL::createPercentDecodingString(String* src)
 {
+    STARFISH_ASSERT(src != nullptr);
+
     StringBuilder decoded;
 
     for (size_t i = 0; i < src->length(); i++) {
@@ -186,15 +196,17 @@ String* ResourceURL::createPercentDecodingString(String* src)
             decoded.appendChar(ch32);
         } else {
             size_t start = i;
-            if (i + 2 >= src->length())
+            if (i + 2 >= src->length()) {
                 break;
+            }
             char32_t next = src->charAt(i + 1);
             char32_t nextnext = src->charAt(i + 2);
 
             // char to hex
             unsigned char b = 0;
-            if (!twoCharToHex(next, nextnext, &b))
+            if (!twoCharToHex(next, nextnext, &b)) {
                 break;
+            }
             i += 2;
 
             // most significant bit in b is 0
@@ -224,8 +236,10 @@ String* ResourceURL::createPercentDecodingString(String* src)
 
                 int j = 1;
                 while (j < n) {
-                    if (!codeUnitToHex(src, ++i, &b)) // "%XY" type
+                    // "%XY" type
+                    if (!codeUnitToHex(src, ++i, &b)) {
                         break;
+                    }
                     i += 2;
                     octets[j] = b;
                     j++;
@@ -265,11 +279,15 @@ String* ResourceURL::createPercentDecodingString(String* src)
 ResourceURL::ResourceURL(String* url)
     : ResourceURL(url, String::emptyString)
 {
+    STARFISH_ASSERT(url != nullptr);
 }
 
 ResourceURL::ResourceURL(String* url, String* baseURL)
     : m_baseURL(baseURL)
 {
+    STARFISH_ASSERT(url != nullptr);
+    STARFISH_ASSERT(baseURL != nullptr);
+
     if (m_baseURL->isStringView()) {
         m_baseURL = String::fromStringView(m_baseURL);
     }
@@ -328,6 +346,8 @@ void* ResourceURL::operator new(size_t size)
 
 void ResourceURL::fillGCDescriptor(GC_word* desc)
 {
+    STARFISH_ASSERT(desc != nullptr);
+
     GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_string));
     GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_urlString));
     GC_set_bit(desc, GC_WORD_OFFSET(ResourceURL, m_baseURL));
@@ -335,6 +355,8 @@ void ResourceURL::fillGCDescriptor(GC_word* desc)
 
 bool ResourceURL::isValidURL(String* url)
 {
+    STARFISH_ASSERT(url != nullptr);
+
     // TODO: checking for the validity of a url requires a regexp check.
     // For the time being, we check for valid characters only.
     if (!(url->startsWith("http://") || url->startsWith("https://") ||
@@ -387,6 +409,8 @@ bool ResourceURL::isValidURL(String* url)
 
 static String* removingDots(String* origPath)
 {
+    STARFISH_ASSERT(origPath != nullptr);
+
     StringBufferAccessData str = origPath->bufferAccessData();
     size_t pos = 0;
     size_t pathLen = str.length;
@@ -573,6 +597,9 @@ void ResourceURL::resolvePositions()
 
 void ResourceURL::parseURLString(String* baseURL, String* url)
 {
+    STARFISH_ASSERT(baseURL != nullptr);
+    STARFISH_ASSERT(url != nullptr);
+
     size_t urlLength = url->length();
     m_isValid = true;
 
@@ -729,6 +756,9 @@ bool ResourceURL::isValidPort()
 String* ResourceURL::mergeDocumentURIWithURIString(
     ExecutionContext* executionContext, String* url)
 {
+    STARFISH_ASSERT(executionContext != nullptr);
+    STARFISH_ASSERT(url != nullptr);
+
     ResourceURL u(url, executionContext->baseURL()->baseURI());
     String* ret = u.href();
     return ret;
@@ -737,6 +767,9 @@ String* ResourceURL::mergeDocumentURIWithURIString(
 String* ResourceURL::mergeDocumentURIWithURIString(String* documentURI,
                                                    String* url)
 {
+    STARFISH_ASSERT(documentURI != nullptr);
+    STARFISH_ASSERT(url != nullptr);
+
     ResourceURL u(url, documentURI);
     String* ret = u.href();
     return ret;
@@ -812,6 +845,7 @@ String* ResourceURL::href()
 
 ResourceURL* ResourceURL::setHref(String* newHref)
 {
+    STARFISH_ASSERT(newHref != nullptr);
     return new ResourceURL(newHref);
 }
 
@@ -822,7 +856,9 @@ String* ResourceURL::protocol()
 
 ResourceURL* ResourceURL::setProtocol(String* newProtocol)
 {
+    STARFISH_ASSERT(newProtocol != nullptr);
     STARFISH_ASSERT(newProtocol->length());
+
     return new ResourceURL(newProtocol->concat(m_urlString->substring(
         m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1)));
 }
@@ -835,6 +871,8 @@ String* ResourceURL::username()
 
 ResourceURL* ResourceURL::setUsername(String* newUsername)
 {
+    STARFISH_ASSERT(newUsername != nullptr);
+
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         StringBuilder builder;
         builder.appendString(m_urlString->substring(0, m_usernameStart));
@@ -862,6 +900,8 @@ String* ResourceURL::password()
 
 ResourceURL* ResourceURL::setPassword(String* newPassword)
 {
+    STARFISH_ASSERT(newPassword != nullptr);
+
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         StringBuilder builder;
         // password exists
@@ -897,7 +937,9 @@ String* ResourceURL::host()
 
 ResourceURL* ResourceURL::setHost(String* newHost)
 {
-    if (!newHost || newHost->isEmpty()) {
+    STARFISH_ASSERT(newHost != nullptr);
+
+    if (newHost->isEmpty()) {
         return this;
     }
     size_t start =
@@ -942,7 +984,9 @@ String* ResourceURL::domain()
 
 ResourceURL* ResourceURL::setHostname(String* newHostname)
 {
-    if (!newHostname || newHostname->isEmpty()) {
+    STARFISH_ASSERT(newHostname != nullptr);
+
+    if (newHostname->isEmpty()) {
         return this;
     }
 
@@ -970,6 +1014,8 @@ String* ResourceURL::port()
 
 ResourceURL* ResourceURL::setPort(String* newPort)
 {
+    STARFISH_ASSERT(newPort != nullptr);
+
     if (m_protocol >= HTTP_PROTOCOL && m_protocol <= HTTPS_PROTOCOL) {
         StringBuilder builder;
         builder.appendString(m_urlString->substring(0, m_hostEnd));
@@ -999,6 +1045,8 @@ String* ResourceURL::pathname()
 
 ResourceURL* ResourceURL::setPathname(String* newPath, bool needRemovingDots)
 {
+    STARFISH_ASSERT(newPath != nullptr);
+
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, m_portEnd));
     if (!newPath->length() || newPath->charAt(0) != '/') {
@@ -1022,6 +1070,8 @@ String* ResourceURL::search()
 
 ResourceURL* ResourceURL::setSearch(String* newSearch)
 {
+    STARFISH_ASSERT(newSearch != nullptr);
+
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, m_pathEnd));
     if (newSearch->length() && newSearch->charAt(0) != '?') {
@@ -1044,6 +1094,8 @@ String* ResourceURL::hash()
 
 ResourceURL* ResourceURL::setHash(String* newHash)
 {
+    STARFISH_ASSERT(newHash != nullptr);
+
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, m_searchEnd));
     if (newHash->length() && newHash->charAt(0) != '#') {
@@ -1055,6 +1107,9 @@ ResourceURL* ResourceURL::setHash(String* newHash)
 
 bool ResourceURL::isDefaultPortForProtocol(String* port, String* protocol)
 {
+    STARFISH_ASSERT(port != nullptr);
+    STARFISH_ASSERT(protocol != nullptr);
+
     if (protocol->isEmpty() || port->isEmpty()) {
         return false;
     }
@@ -1073,10 +1128,11 @@ DocumentURL::DocumentURL(String* url)
 {
 }
 
-DocumentURL::DocumentURL(String* url, FormSubmitData* formSubmitData)
+DocumentURL::DocumentURL(String* url, NULLABLE FormSubmitData* formSubmitData)
     : ResourceURL(url)
     , m_formSubmitData(formSubmitData)
 {
+    STARFISH_ASSERT(url != nullptr);
 }
 
 DocumentURL::DocumentURL(ResourceURL* url)
@@ -1084,10 +1140,12 @@ DocumentURL::DocumentURL(ResourceURL* url)
 {
 }
 
-DocumentURL::DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData)
+DocumentURL::DocumentURL(ResourceURL* url,
+                         NULLABLE FormSubmitData* formSubmitData)
     : ResourceURL(*url)
     , m_formSubmitData(formSubmitData)
 {
+    STARFISH_ASSERT(url != nullptr);
 }
 
 void* DocumentURL::operator new(size_t size)
@@ -1114,7 +1172,9 @@ ReferrerURL::ReferrerURL(String* referrer)
 ReferrerURL::ReferrerURL(String* referrer, String* policy)
     : ReferrerURL(referrer)
 {
-    if (isHTTPFamilyURL()) {
+    STARFISH_ASSERT(policy != nullptr);
+
+    if (isHTTPFamilyURL() || isAboutURL()) {
         m_policy = ReferrerURL::policyFromString(policy);
     }
 }
@@ -1129,12 +1189,15 @@ ReferrerURL::ReferrerURL(ResourceURL* referrer)
     : ResourceURL(*referrer)
     , m_policy(ReferrerPolicy::NoReferrer)
 {
+    STARFISH_ASSERT(referrer != nullptr);
 }
 
 ReferrerURL::ReferrerURL(ResourceURL* referrer, String* policy)
     : ReferrerURL(referrer)
 {
-    if (isHTTPFamilyURL()) {
+    STARFISH_ASSERT(policy != nullptr);
+
+    if (isHTTPFamilyURL() || isAboutURL()) {
         m_policy = ReferrerURL::policyFromString(policy);
     }
 }
@@ -1143,6 +1206,7 @@ ReferrerURL::ReferrerURL(ResourceURL* referrer, ReferrerPolicy policy)
     : ResourceURL(*referrer)
     , m_policy(policy)
 {
+    STARFISH_ASSERT(referrer != nullptr);
 }
 
 void* ReferrerURL::operator new(size_t size)
@@ -1161,7 +1225,9 @@ void* ReferrerURL::operator new(size_t size)
 
 String* ReferrerURL::referrerString(ResourceURL* url)
 {
+    STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(url->isHTTPFamilyURL());
+
     switch (m_policy) {
     case ReferrerPolicy::NoReferrer:
         return String::emptyString;
@@ -1242,7 +1308,7 @@ ReferrerPolicy ReferrerURL::policy()
     return m_policy;
 }
 
-bool ReferrerURL::isValidPolicy(String* policy)
+bool ReferrerURL::isValidPolicy(NULLABLE String* policy)
 {
     if (policy->equalsIgnoreCase("no-referrer") ||
         policy->equalsIgnoreCase("no-referrer-when-downgrade") ||
@@ -1259,6 +1325,8 @@ bool ReferrerURL::isValidPolicy(String* policy)
 
 ReferrerPolicy ReferrerURL::policyFromString(String* policy)
 {
+    STARFISH_ASSERT(policy != nullptr);
+
     if (policy->equalsIgnoreCase("no-referrer")) {
         return ReferrerPolicy::NoReferrer;
     } else if (policy->isEmpty()) {

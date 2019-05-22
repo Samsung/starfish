@@ -21,6 +21,7 @@
 #include "core/dom/canvas/CanvasPattern.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/canvas/NativePattern.h"
+#include "core/dom/DOMMatrixReadOnly.h"
 
 namespace Starfish {
 CanvasPattern::CanvasPattern(ExecutionContext* executionContext)
@@ -50,6 +51,27 @@ CanvasPattern::CanvasPattern(ExecutionContext* executionContext,
 ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+void CanvasPattern::setTransform(DOMMatrix2DInit transform)
+{
+    auto exceptionOr =
+        DOMMatrixReadOnly::validateAndFixup(m_executionContext, transform);
+
+    if (exceptionOr.isDOMException()) {
+        throw exceptionOr.asDOMException();
+    }
+
+    SkMatrix matrix = SkMatrix::I();
+
+    matrix.set(0, transform.m11());
+    matrix.set(1, transform.m21());
+    matrix.set(2, transform.m41());
+    matrix.set(3, transform.m12());
+    matrix.set(4, transform.m22());
+    matrix.set(5, transform.m42());
+
+    m_nativePattern->setTransform(matrix);
 }
 
 bool CanvasPattern::isEmptyPattern()

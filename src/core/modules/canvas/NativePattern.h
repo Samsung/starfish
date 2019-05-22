@@ -46,17 +46,30 @@ public:
         return m_nativeImage == nullptr;
     }
 
+    void setTransform(const SkMatrix& matrix)
+    {
+        m_matrix = matrix;
+        applyTransform();
+    }
+
 protected:
     NativePattern(NULLABLE NativeImageData* image, bool repeatX, bool repeatY)
         : m_nativeImage(image)
         , m_repeatX(repeatX)
         , m_repeatY(repeatY)
+        , m_matrix(SkMatrix::I())
     {
+    }
+
+    virtual void applyTransform()
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     NULLABLE NativeImageData* m_nativeImage;
     bool m_repeatX;
     bool m_repeatY;
+    SkMatrix m_matrix;
 };
 }
 #endif

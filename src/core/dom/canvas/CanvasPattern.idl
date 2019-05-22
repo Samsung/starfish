@@ -3,5 +3,5 @@
 [Exposed=(Window,Worker)]
 interface CanvasPattern {
   // opaque object
-  [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);
+  [RaisesException] void setTransform(optional DOMMatrix2DInit transform);
 };

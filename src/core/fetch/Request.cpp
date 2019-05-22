@@ -105,9 +105,11 @@ static String* computeReferrer(String* referrer,
     return url.urlString();
 }
 
-void Request::initialize(RequestInfo* input, RequestInit* init)
+void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
 {
-    // TODO : https://fetch.spec.whatwg.org/#dom-request
+    // FIXME : Apply the https://fetch.spec.whatwg.org/#dom-request
+    STARFISH_ASSERT(input != nullptr);
+
     String* fallbackMode = nullptr;
     String* fallbackCredentials = nullptr;
 
@@ -144,24 +146,40 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
     }
 
     if (init) {
-        String* method = init->method();
-        if (!HeadersData::isValidHTTPToken(method) ||
-            FetchUtils::isForbiddenMethod(method)) {
+        if (init->hasMethod()) {
+            m_data.m_method = init->method();
+        } else {
+            // FIXME : Remove this line after apply a
+            // https://fetch.spec.whatwg.org/#dom-request
+            m_data.m_method = String::createASCIIString("undefined");
+        }
+
+        if (!HeadersData::isValidHTTPToken(m_data.m_method) ||
+            FetchUtils::isForbiddenMethod(m_data.m_method)) {
             throw new DOMException(executionContext(),
                                    DOMException::SCRIPT_TYPE_ERR,
                                    "SCRIPT_TYPE_ERR");
         }
 
-        m_data.m_method = FetchUtils::normalizeMethod(method);
+        m_data.m_method = FetchUtils::normalizeMethod(m_data.m_method);
 
-        if (init->referrer()->isEmpty()) {
-            m_data.m_referrer = new ReferrerURL(
-                new ResourceURL(init->referrer()), init->m_referrerPolicy);
+        String* referrerPolicy = String::emptyString;
+        if (init->hasReferrerPolicy()) {
+            referrerPolicy = init->referrerPolicy();
+        }
+        String* referrer = String::emptyString;
+        if (init->hasReferrer()) {
+            referrer = init->referrer();
+        }
+
+        if (referrer->isEmpty()) {
+            m_data.m_referrer =
+                new ReferrerURL(new ResourceURL(referrer), referrerPolicy);
         } else {
             m_data.m_referrer = new ReferrerURL(
-                new ResourceURL(init->referrer(),
+                new ResourceURL(referrer,
                                 executionContext()->baseURL()->baseURI()),
-                init->m_referrerPolicy);
+                referrerPolicy);
         }
 
         m_data.m_mode = RequestData::requestModeFromString(init->mode());

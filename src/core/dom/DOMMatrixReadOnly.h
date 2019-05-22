@@ -24,10 +24,15 @@
 #include "core/page/Serializer.h"
 #include <SkMatrix44.h>
 #include "binding/DOMStringOrSequenceUnion.h"
+#include "core/dom/DOMMatrix2DInit.h"
+#include "DOMExceptionOr.h"
 
 namespace Starfish {
 class DOMMatrixReadOnly : public ScriptWrappable, public Serializable {
 public:
+    static DOMExceptionOr<void> validateAndFixup(
+        ExecutionContext* executionContext, DOMMatrix2DInit& init);
+
     DOMMatrixReadOnly(ExecutionContext* executionContext);
     DOMMatrixReadOnly(ExecutionContext* executionContext,
                       DOMStringOrSequence value);

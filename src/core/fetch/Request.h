@@ -65,7 +65,7 @@ public:
 
 private:
     Request(ScriptBindingInstance* instance, RequestData* data);
-    void initialize(RequestInfo* input, RequestInit* init = nullptr);
+    void initialize(RequestInfo* input, NULLABLE RequestInit* init = nullptr);
 
 protected:
     RequestData m_data;

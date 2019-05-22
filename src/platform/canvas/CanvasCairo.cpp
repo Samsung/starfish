@@ -219,6 +219,18 @@ public:
         return m_pattern;
     }
 
+protected:
+    virtual void applyTransform()
+    {
+        cairo_matrix_t matrix;
+        cairo_matrix_init_identity(&matrix);
+        cairo_matrix_init(&matrix, m_matrix.getScaleX(), m_matrix.getSkewY(),
+                          m_matrix.getSkewX(), m_matrix.getScaleY(),
+                          m_matrix.getTranslateX(), m_matrix.getTranslateY());
+        cairo_matrix_invert(&matrix);
+        cairo_pattern_set_matrix(m_pattern, &matrix);
+    }
+
 private:
     void initialize()
     {
@@ -253,7 +265,6 @@ private:
             surfaceWasCreated = true;
         }
 
-        // TODO : setTransform
         m_pattern = cairo_pattern_create_for_surface(surface);
         cairo_pattern_set_extend(m_pattern, CAIRO_EXTEND_REPEAT);
 

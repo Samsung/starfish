@@ -31,20 +31,19 @@ class ResponseData;
 struct ResponseInit {
 public:
     ResponseInit()
-        : m_status(0)
-        , m_statusText(String::emptyString)
-        , m_headers()
     {
     }
 
     DEFINE_GETTER_SETTER(uint32_t, status, Status);
     DEFINE_GETTER_SETTER(String*, statusText, StatusText);
-    DEFINE_GETTER_SETTER(HeadersInit, headers, Headers);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(HeadersInit, headers, Headers);
 
 private:
-    uint32_t m_status;
-    String* m_statusText;
-    HeadersInit m_headers;
+    uint32_t m_status{ 0 };
+    String* m_statusText{ String::emptyString };
+
+    bool m_hasHeaders{ false };
+    HeadersInit m_headers{ scriptUndefined() };
 };
 
 class ScriptWrappable;

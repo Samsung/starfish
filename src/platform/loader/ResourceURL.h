@@ -241,9 +241,9 @@ protected:
 class DocumentURL : public ResourceURL {
 public:
     DocumentURL(String* url);
-    DocumentURL(String* url, FormSubmitData* formSubmitData);
+    DocumentURL(String* url, NULLABLE FormSubmitData* formSubmitData);
     DocumentURL(ResourceURL* url);
-    DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData);
+    DocumentURL(ResourceURL* url, NULLABLE FormSubmitData* formSubmitData);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -253,13 +253,13 @@ public:
         return true;
     }
 
-    FormSubmitData* formSubmitData()
+    NULLABLE FormSubmitData* formSubmitData()
     {
         return m_formSubmitData;
     }
 
 private:
-    FormSubmitData* m_formSubmitData;
+    NULLABLE FormSubmitData* m_formSubmitData;
 };
 
 enum class ReferrerPolicy {
@@ -294,7 +294,7 @@ public:
     String* referrerString(ResourceURL* url);
     String* referrerPolicyString();
     ReferrerPolicy policy();
-    static bool isValidPolicy(String* policy);
+    static bool isValidPolicy(NULLABLE String* policy);
     static ReferrerPolicy policyFromString(String* policy);
 
 private:
