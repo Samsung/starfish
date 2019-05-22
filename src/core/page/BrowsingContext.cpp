@@ -1800,7 +1800,10 @@ void BrowsingContext::pause()
 {
     document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
-    iterateChildContext([](BrowsingContext* ctx) { ctx->pause(); });
+    iterateChildContext([](BrowsingContext* ctx) {
+        STARFISH_ASSERT(ctx);
+        ctx->pause();
+    });
 }
 
 void BrowsingContext::resume()
@@ -1815,7 +1818,10 @@ void BrowsingContext::setNeedsFullLayout()
     if (document()->frame() != nullptr) {
         FrameBox* fb = document()->frame()->asFrameBox();
         fb->markNeedsLayout();
-        fb->iterateChildFrameBox([](FrameBox* fb) { fb->markNeedsLayout(); });
+        fb->iterateChildFrameBox([](FrameBox* fb) {
+            STARFISH_ASSERT(fb);
+            fb->markNeedsLayout();
+        });
 
         setNeedsLayout();
     }
@@ -1826,7 +1832,10 @@ void BrowsingContext::setNeedsFullPainting()
     if (document()->frame() != nullptr) {
         FrameBox* fb = document()->frame()->asFrameBox();
         fb->markNeedsPainting();
-        fb->iterateChildFrameBox([](FrameBox* fb) { fb->markNeedsPainting(); });
+        fb->iterateChildFrameBox([](FrameBox* fb) {
+            STARFISH_ASSERT(fb);
+            fb->markNeedsPainting();
+        });
 
         setNeedsPainting();
     }
