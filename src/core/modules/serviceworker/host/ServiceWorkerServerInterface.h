@@ -18,21 +18,26 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServerClient__)
-#define __StarfishServiceWorkerServerClient__
+    !defined(__StarfishServiceWorkerServerInterface__)
+#define __StarfishServiceWorkerServerInterface__
 
 namespace Starfish {
 
-class ServiceWorkerClientProcessInterface;
+class IServiceWorkerClientConnection;
 class ServiceWorkerHostJobHandler;
 
-class ServiceWorkerServerClient {
+class ServiceWorkerServerInterface {
 public:
     virtual void getConnections(
-        GCVector<ServiceWorkerClientProcessInterface*>& connections) = 0;
+        GCVector<IServiceWorkerClientConnection*>& connections) = 0;
     virtual ServiceWorkerHostJobHandler* jobHandler() = 0;
     virtual bool tryTerminate() = 0;
     virtual bool isTerminating() = 0;
+};
+
+class ServiceWorkerServerClient {
+public:
+    virtual void onSWServerTerminated() = 0;
 };
 
 } // namespace Starfish

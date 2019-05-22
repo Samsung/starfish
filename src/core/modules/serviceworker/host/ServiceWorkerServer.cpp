@@ -41,52 +41,50 @@
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
-#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
-#include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 
 namespace Starfish {
 
-ServiceWorkerHostProcess* ServiceWorkerHostProcess::m_instance = nullptr;
+ServiceWorkerServer* ServiceWorkerServer::m_instance = nullptr;
 
-ServiceWorkerHostProcess* ServiceWorkerHostProcess::getInstance()
+ServiceWorkerServer* ServiceWorkerServer::instance()
 {
     if (m_instance == nullptr) {
-        m_instance = new ServiceWorkerHostProcess();
+        m_instance = new ServiceWorkerServer();
     }
 
     STARFISH_ASSERT(m_instance != nullptr);
     return m_instance;
 }
 
-void ServiceWorkerHostProcess::destroy()
+void ServiceWorkerServer::destroy()
 {
     if (m_instance != nullptr) {
-        m_instance->~ServiceWorkerHostProcess();
+        m_instance->~ServiceWorkerServer();
         m_instance = nullptr;
     }
 }
 
-ServiceWorkerHostProcess::ServiceWorkerHostProcess()
+ServiceWorkerServer::ServiceWorkerServer()
 {
 }
 
-ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
+ServiceWorkerServer::~ServiceWorkerServer()
 {
-    if (m_SWContextManager != nullptr) {
-        m_SWContextManager->destroy();
-        m_SWContextManager = nullptr;
+    if (m_client != nullptr) {
+        m_client->onSWServerTerminated();
     }
 }
 
-void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
+void ServiceWorkerServer::init(ThreadPool* threadPool)
 {
     STARFISH_ASSERT(threadPool != nullptr);
 
@@ -95,9 +93,6 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 #endif
 
     Message::init();
-
-    m_SWContextManager = ServiceWorkerContextManager::instance();
-    m_SWContextManager->init(threadPool);
 
     m_threadPool = threadPool;
     m_messageLoop = m_threadPool->messageLoop();
@@ -110,8 +105,25 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
     m_ioThread->start(m_ioRunnable);
 }
 
-void ServiceWorkerHostProcess::start(
-    std::shared_ptr<ProgramOptions> programOptions)
+void ServiceWorkerServer::start()
+{
+    STARFISH_ASSERT(m_ioThread != nullptr);
+
+    // create a connection
+    m_connection = new ServiceWorkerHostConnection(this);
+    registerConnection(m_connection);
+
+    std::string address = IPC_PROTOCOL;
+    address.append(IPC_ADDRESS_PREFIX);
+#ifndef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
+    address.append(IPC_ADDRESS);
+#endif
+
+    m_connection->socket()->bind(address.c_str());
+    m_ioRunnable->addClient(m_connection);
+}
+
+void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 {
     STARFISH_ASSERT(programOptions != nullptr);
 
@@ -141,31 +153,31 @@ void ServiceWorkerHostProcess::start(
     m_ioRunnable->addClient(m_connection);
 }
 
-void ServiceWorkerHostProcess::registerConnection(
+void ServiceWorkerServer::registerConnection(
     ServiceWorkerHostConnection* connection)
 {
     STARFISH_ASSERT(connection != nullptr);
     m_connections.push_back(connection);
 }
 
-void ServiceWorkerHostProcess::getConnections(
-    GCVector<ServiceWorkerClientProcessInterface*>& connections)
+void ServiceWorkerServer::getConnections(
+    GCVector<IServiceWorkerClientConnection*>& connections)
 {
     connections.assign(m_connections.begin(), m_connections.end());
 }
 
-ServiceWorkerHostJobHandler* ServiceWorkerHostProcess::jobHandler()
+ServiceWorkerHostJobHandler* ServiceWorkerServer::jobHandler()
 {
     STARFISH_ASSERT(m_jobHandler != nullptr);
     return m_jobHandler;
 }
 
-bool ServiceWorkerHostProcess::isTerminating()
+bool ServiceWorkerServer::isTerminating()
 {
     return m_isTerminating;
 }
 
-bool ServiceWorkerHostProcess::tryTerminate()
+bool ServiceWorkerServer::tryTerminate()
 {
     SWHOST_LOG_IF_ALLOWED(1, "0. called\n");
 
@@ -180,7 +192,7 @@ bool ServiceWorkerHostProcess::tryTerminate()
             nullptr,
             [](size_t handle, void* data0) {
                 SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server\n");
-                castTo<ServiceWorkerHostProcess*>(data0)->destroy();
+                castTo<ServiceWorkerServer*>(data0)->destroy();
             },
             this);
     } else {

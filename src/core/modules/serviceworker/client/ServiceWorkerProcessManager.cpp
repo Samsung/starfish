@@ -39,14 +39,19 @@
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #ifndef SERVICE_WORKER_USE_MULTI_PROCESS
-#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServer.h"
+#include "core/modules/worker/host/WebWorker.h"
+namespace LWE {
+extern Starfish::Starfish* g_starfishInstance;
+}
 #endif
+
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
@@ -85,13 +90,6 @@ void ServiceWorkerProcessManager::init()
     m_ioThread = new AdaptedThread(m_threadPool);
 
     m_ioThread->start(m_ioRunnable);
-
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
-    // create mock instances
-    m_serviceWorkerHostProcess = ServiceWorkerHostProcess::getInstance();
-    m_serviceWorkerHostProcess->init(m_threadPool);
-#endif
-
     m_pushServiceAgent = new PushServiceAgent();
 }
 
@@ -104,12 +102,6 @@ void ServiceWorkerProcessManager::destroy()
 }
 
 ServiceWorkerProcessManager::ServiceWorkerProcessManager()
-    : m_ioThread(nullptr)
-    , m_threadPool(nullptr)
-    , m_ioRunnable(nullptr)
-    , m_serviceWorkerHostProcess(nullptr)
-    , m_serviceWorkerClientProcess(nullptr)
-    , m_connection(nullptr)
 {
 }
 
@@ -120,13 +112,21 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    if (m_threadPool) {
+    if (m_threadPool != nullptr) {
         m_threadPool->destroy();
     }
 
-    if (m_messageLoop) {
+    if (m_messageLoop != nullptr) {
         m_messageLoop->destroy();
     }
+
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+    // create mock instances
+    if (m_webWorker != nullptr) {
+        m_webWorker->destory();
+    }
+
+#endif
 }
 
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
@@ -147,13 +147,13 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         processData = std::make_shared<ProcessData>();
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
-        // TODO: launch a service worker process
-        auto po = std::make_shared<ProgramOptions>();
+// TODO: launch a service worker process
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+        // create mock instances
+        m_webWorker = WebWorker::create(LWE::g_starfishInstance, "ko-KR",
+                                        "Asia/Seoul", String::emptyString);
 
-        STARFISH_ASSERT(po != nullptr);
-
-        po->set("origin", origin.c_str());
-        m_serviceWorkerHostProcess->start(po);
+#endif
 
     } else {
         processData = it->second;

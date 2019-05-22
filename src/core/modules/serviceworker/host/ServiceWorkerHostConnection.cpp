@@ -37,14 +37,14 @@
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-#include "core/modules/serviceworker/host/ServiceWorkerServerClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -52,9 +52,10 @@
 namespace Starfish {
 
 ServiceWorkerHostConnection::ServiceWorkerHostConnection(
-    ServiceWorkerServerClient* client)
-    : m_client(client)
+    ServiceWorkerServerInterface* server)
+    : m_SWServer(server)
 {
+    STARFISH_ASSERT(server != nullptr);
 }
 
 void ServiceWorkerHostConnection::resolveJobPromise(
@@ -118,9 +119,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
 {
     Connection::onReceived(socket, data, len);
 
-    STARFISH_ASSERT(m_client != nullptr);
-
-    if (m_client->isTerminating() == true) {
+    if (m_SWServer->isTerminating() == true) {
         // TODO: send request reject
         SWHOST_LOG_IF_ALLOWED(1,
                               "1. received data is ignored due to swserver is "
@@ -134,7 +133,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     msg.archive(reader);
 
     auto msgName = msg.name();
-    auto handler = m_client->jobHandler();
+    auto handler = m_SWServer->jobHandler();
 
     STARFISH_ASSERT(handler != nullptr);
 

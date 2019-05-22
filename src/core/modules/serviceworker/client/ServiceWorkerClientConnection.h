@@ -27,7 +27,7 @@ class ServiceWorkerContainer;
 
 class ServiceWorkerClientConnection final
     : public Connection,
-      public ServiceWorkerHostProcessInterface {
+      public IServiceWorkerHostConnection {
 public:
     ServiceWorkerClientConnection();
 

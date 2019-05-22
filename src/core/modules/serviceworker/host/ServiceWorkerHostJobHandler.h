@@ -30,7 +30,7 @@ class ServiceWorkerData;
 class JobQueue;
 class ServiceWorkerRegistrationData;
 class ErrorData;
-class ServiceWorkerServerClient;
+class ServiceWorkerServerInterface;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -50,7 +50,7 @@ struct ServiceWorkerRegistrationKeyComparator {
 class ServiceWorkerHostJobHandler : public gc {
 public:
     ServiceWorkerHostJobHandler(MessageLoop* messageLoop,
-                                ServiceWorkerServerClient* client);
+                                ServiceWorkerServerInterface* server);
 
     void scheduleJob(ServiceWorkerJob* job);
     void runJob(JobQueue* jobQueue);
@@ -97,7 +97,7 @@ private:
     void queueTask(void (*fn)(size_t, void*), void* data);
 
     MessageLoop* m_messageLoop;
-    ServiceWorkerServerClient* m_SWServerClient;
+    ServiceWorkerServerInterface* m_SWServer;
 
     GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*>
         m_scopeToJobQueueMap;

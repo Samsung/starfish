@@ -35,7 +35,7 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/MessageServiceWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 

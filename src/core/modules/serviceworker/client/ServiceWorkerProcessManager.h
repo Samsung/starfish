@@ -25,15 +25,11 @@ namespace Starfish {
 
 class ProcessHost;
 class ServiceWorkerClientConnection;
-
-class ServiceWorkerHostProcess;
-class ServiceWorkerClientProcess;
-
 class ThreadPool;
 class IThread;
 class IORunnable;
 class GlobalScope;
-
+class WebWorker;
 class PushServiceAgent;
 
 struct ProcessData {
@@ -77,17 +73,17 @@ private:
     IORunnable* m_ioRunnable{ nullptr };
     MessageLoop* m_messageLoop{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
+    ServiceWorkerClientConnection* m_connection{ nullptr };
 
-    ServiceWorkerHostProcess* m_serviceWorkerHostProcess{ nullptr };
-    ServiceWorkerClientProcess* m_serviceWorkerClientProcess{ nullptr };
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+    WebWorker* m_webWorker{ nullptr };
+#endif
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;
 
     GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
         m_mapIdToActiveGlobalScope;
-
-    ServiceWorkerClientConnection* m_connection;
 };
 } // namespace Starfish
 
