@@ -30,43 +30,45 @@ typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
 
 struct RequestInit : public gc {
     RequestInit()
-        : m_method(String::emptyString)
-        , m_referrer(String::emptyString)
-        , m_referrerPolicy(String::emptyString)
-        , m_mode(String::emptyString)
-        , m_credentials(String::emptyString)
-        , m_cache(String::emptyString)
-        , m_redirect(String::emptyString)
-        , m_integrity(String::emptyString)
-        , m_keepalive(false)
-        , m_headers(scriptUndefined())
-        , m_body(scriptUndefined())
     {
     }
 
-    String* m_method;
-    String* m_referrer;
-    String* m_referrerPolicy;
-    String* m_mode;
-    String* m_credentials;
-    String* m_cache;
-    String* m_redirect;
-    String* m_integrity;
-    bool m_keepalive;
-    HeadersInit m_headers;
-    ScriptValue m_body;
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, method, Method);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, referrer, Referrer);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, referrerPolicy, ReferrerPolicy);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, mode, Mode);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, credentials, Credentials);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, cache, Cache);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, redirect, Redirect);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, integrity, Integrity);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, keepalive, Keepalive);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(ScriptValue, body, Body);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(HeadersInit, headers, Headers);
 
-    DEFINE_GETTER_SETTER(String*, method, Method);
-    DEFINE_GETTER_SETTER(String*, referrer, Referrer);
-    DEFINE_GETTER_SETTER(String*, referrerPolicy, ReferrerPolicy);
-    DEFINE_GETTER_SETTER(String*, mode, Mode);
-    DEFINE_GETTER_SETTER(String*, credentials, Credentials);
-    DEFINE_GETTER_SETTER(String*, cache, Cache);
-    DEFINE_GETTER_SETTER(String*, redirect, Redirect);
-    DEFINE_GETTER_SETTER(String*, integrity, Integrity);
-    DEFINE_GETTER_SETTER(bool, keepalive, Keepalive);
-    DEFINE_GETTER_SETTER(ScriptValue, body, Body);
-    DEFINE_GETTER_SETTER(HeadersInit, headers, Headers);
+private:
+    bool m_hasMethod{ false };
+    bool m_hasReferrer{ false };
+    bool m_hasReferrerPolicy{ false };
+    bool m_hasMode{ false };
+    bool m_hasCredentials{ false };
+    bool m_hasCache{ false };
+    bool m_hasRedirect{ false };
+    bool m_hasIntegrity{ false };
+    bool m_hasKeepalive{ false };
+    bool m_hasHeaders{ false };
+    bool m_hasBody{ false };
+
+    String* m_method{ String::emptyString };
+    String* m_referrer{ String::emptyString };
+    String* m_referrerPolicy{ String::emptyString };
+    String* m_mode{ String::emptyString };
+    String* m_credentials{ String::emptyString };
+    String* m_cache{ String::emptyString };
+    String* m_redirect{ String::emptyString };
+    String* m_integrity{ String::emptyString };
+    bool m_keepalive{ false };
+    HeadersInit m_headers{ scriptUndefined() };
+    ScriptValue m_body{ scriptUndefined() };
 };
 }
 #endif

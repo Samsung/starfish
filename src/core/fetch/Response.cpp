@@ -66,7 +66,7 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
 
     setStatusText(init.statusText());
 
-    if (!isNullOrUndefinedScriptValue(init.headers())) {
+    if (init.hasHeaders() && !isNullOrUndefinedScriptValue(init.headers())) {
         m_headers.fill(init.headers());
     }
 

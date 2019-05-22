@@ -25,40 +25,50 @@ namespace Starfish {
 struct DOMMatrix2DInit {
 public:
     STARFISH_MAKE_STACK_ALLOCATED()
-    DOMMatrix2DInit();
 
-    double a() const;
-    void setA(double value);
+    DOMMatrix2DInit()
+    {
+    }
 
-    double b() const;
-    void setB(double value);
-
-    double c() const;
-    void setC(double value);
-
-    double d() const;
-    void setD(double value);
-
-    double e() const;
-    void setE(double value);
-
-    double f() const;
-    void setF(double value);
-
-    DEFINE_GETTER_SETTER(double, m11, M11);
-    DEFINE_GETTER_SETTER(double, m12, M12);
-    DEFINE_GETTER_SETTER(double, m21, M21);
-    DEFINE_GETTER_SETTER(double, m22, M22);
-    DEFINE_GETTER_SETTER(double, m41, M41);
-    DEFINE_GETTER_SETTER(double, m42, M42);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, a, A);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, b, B);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, c, C);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, d, D);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, e, E);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, f, F);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m11, M11);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m12, M12);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m21, M21);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m22, M22);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m41, M41);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m42, M42);
 
 private:
-    double m_m11;
-    double m_m12;
-    double m_m21;
-    double m_m22;
-    double m_m41;
-    double m_m42;
+    bool m_hasA{ false };
+    bool m_hasB{ false };
+    bool m_hasC{ false };
+    bool m_hasD{ false };
+    bool m_hasE{ false };
+    bool m_hasF{ false };
+    bool m_hasM11{ false };
+    bool m_hasM12{ false };
+    bool m_hasM21{ false };
+    bool m_hasM22{ false };
+    bool m_hasM41{ false };
+    bool m_hasM42{ false };
+
+    double m_a{ 0 };
+    double m_b{ 0 };
+    double m_c{ 0 };
+    double m_d{ 0 };
+    double m_e{ 0 };
+    double m_f{ 0 };
+    double m_m11{ 0 };
+    double m_m12{ 0 };
+    double m_m21{ 0 };
+    double m_m22{ 0 };
+    double m_m41{ 0 };
+    double m_m42{ 0 };
 };
 }
 

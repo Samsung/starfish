@@ -21,6 +21,7 @@
 #define __StarfishCanvasPattern__
 
 #include "binding/ScriptWrappable.h"
+#include "core/dom/DOMMatrix2DInit.h"
 
 namespace Starfish {
 
@@ -35,6 +36,8 @@ public:
     ~CanvasPattern()
     {
     }
+
+    void setTransform(DOMMatrix2DInit transform = DOMMatrix2DInit());
 
     std::shared_ptr<NativePattern> nativePattern()
     {

@@ -439,9 +439,27 @@ const char* getWindowsTempDir();
         m_##MemberName = value;                   \
     }
 
+#define DEFINE_SETTER_WITH_HASFLAG(Type, MemberName, FaceName) \
+    void set##FaceName(Type value)                             \
+    {                                                          \
+        m_##MemberName = value;                                \
+        m_has##FaceName = true;                                \
+    }
+
+#define DEFINE_HASFLAG_GETTER(FaceName) \
+    bool has##FaceName()                \
+    {                                   \
+        return m_has##FaceName;         \
+    }
+
 #define DEFINE_GETTER_SETTER(Type, MemberName, FaceName) \
     DEFINE_GETTER(Type, MemberName)                      \
     DEFINE_SETTER(Type, MemberName, FaceName)
+
+#define DEFINE_GETTER_SETTER_WITH_HASFLAG(Type, MemberName, FaceName) \
+    DEFINE_GETTER(Type, MemberName)                                   \
+    DEFINE_SETTER_WITH_HASFLAG(Type, MemberName, FaceName)            \
+    DEFINE_HASFLAG_GETTER(FaceName)
 
 #define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \

@@ -165,6 +165,10 @@ section are supported.
 |  | method | void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Adds a rectangle to the current path. |
 |  | method | void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false) | Adds a circular arc to the current sub-path. |
 |  | method | void ellipse(unrestricted double x, unrestricted double y, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false) | Adds an elliptical arc to the current sub-path. |
+| [CanvasGradient ](https://html.spec.whatwg.org/multipage/canvas.html#canvasgradient) | interface mixin | CanvasGradient | |
+|  | method | void addColorStop(double offset, DOMString color) | Adds a new color stop, defined by an offset and a color, to a given canvas gradient. |
+| [CanvasPattern](https://html.spec.whatwg.org/multipage/canvas.html#canvaspattern) | interface mixin | CanvasPattern | |
+|  | method | void setTransform(optional DOMMatrix2DInit transform) | Sets the transformation matrix that will be used when rendering the pattern during a fill or stroke painting operation. |
 | [CanvasPathDrawingStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles) | interface mixin | CanvasPathDrawingStyles |  |
 |  | attribute | lineWidth | Sets/Gets the thickness of lines. |
 |  | attribute | lineCap | Determines the shape used to draw the end points of lines. |

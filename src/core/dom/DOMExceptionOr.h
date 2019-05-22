@@ -26,8 +26,9 @@ namespace Starfish {
 class DOMException;
 
 template <typename T>
-class DOMExceptionOr : public gc {
+class DOMExceptionOr {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
     union Data {
         DOMException* m_exception;
         T m_other;
@@ -80,6 +81,34 @@ private:
 
     Data m_data;
     bool m_isDOMException;
+};
+
+template <>
+class DOMExceptionOr<void> {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED();
+    DOMExceptionOr(DOMException* exception)
+        : m_exception(exception)
+    {
+        STARFISH_ASSERT(exception != nullptr);
+    }
+
+    DOMExceptionOr() = default;
+    DOMExceptionOr(nullptr_t) = delete;
+
+    bool isDOMException() const
+    {
+        return m_exception != nullptr;
+    }
+
+    DOMException* asDOMException() const
+    {
+        STARFISH_ASSERT(isDOMException());
+        return m_exception;
+    }
+
+private:
+    DOMException* m_exception{ nullptr };
 };
 }
 #endif
