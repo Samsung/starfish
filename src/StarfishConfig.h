@@ -46,7 +46,6 @@
 
 #include "StarfishBase.h"
 
-#include <curl/curl.h>
 #include <SkMatrix.h>
 
 #include "core/util/String.h"
