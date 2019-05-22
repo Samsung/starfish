@@ -1122,8 +1122,7 @@ RenderResult WebView::rendering(bool force)
         return renderResult;
     }
 
-    uint64_t currentTick = longTickCount();
-    m_lastRenderingTick = currentTick;
+    m_lastRenderingTick = longTickCount();
     m_inRendering = true;
     ANNOTATE_SETUP;
     ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
@@ -1495,9 +1494,12 @@ RenderResult WebView::rendering(bool force)
     bool needsContinuousRendering = false;
 
     if (m_activeAnimationExecutor.size()) {
+        uint64_t tick = tickCount();
         for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
             auto& a = m_activeAnimationExecutor[i]->activeAnimations();
             for (size_t j = 0; j < a.size(); j++) {
+                a[j]->initializeStartTimeIfNeeded(tick);
+
                 if (a[j]->targetElement()->isPseudoElement()) {
                     // we should give damage on parent element
                     // because style of pseudo element is computed by

@@ -203,8 +203,7 @@ public:
             ->setWholeDocumentNeedsStyleRecalc();
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
-        resource()->loader()->document()->setNeedsLayout();
-        resource()->loader()->document()->setNeedsPainting();
+        resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
         STARFISH_LOG_INFO("WebFont %s is failed to load..\n",
                           m_familyName->toUTF8NonGCString().data());
     }
@@ -219,8 +218,8 @@ public:
             ->setWholeDocumentNeedsStyleRecalc();
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
-        resource()->loader()->document()->setNeedsLayout();
-        resource()->loader()->document()->setNeedsPainting();
+        // we needs to rebuild frame tree due to considering pseudo-elements
+        resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
         STARFISH_LOG_INFO("WebFont %s is downloaded\n",
                           m_familyName->toUTF8NonGCString().data());
     }
@@ -454,13 +453,20 @@ void BrowsingContext::resolveStyleIfNeeds()
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
 
-        if (document()->animationExecutor()->activeAnimations().size()) {
+        if (document()->animationExecutor()->activeAnimations().size() != 0) {
             auto& l = document()->animationExecutor()->activeAnimations();
-
+            uint64_t currentTick = tickCount();
             bool canceled = false;
             for (size_t i = 0; i < l.size(); i++) {
-                if (!l[i]->targetElement()->isInDocumentScope() ||
-                    !l[i]->targetElement()->style() ||
+                if (webView()->inRendering() != true) {
+                    // when in rendering, start time is updated by
+                    // WebView::rendering()
+                    // because other steps(painting, layout) can take too
+                    // long(ex. longer than duration)
+                    l[i]->initializeStartTimeIfNeeded(currentTick);
+                }
+                if ((l[i]->targetElement()->isInDocumentScope() == false) ||
+                    (l[i]->targetElement()->style() == nullptr) ||
                     l[i]->targetElement()->style()->display() ==
                         DisplayValue::NoneDisplayValue) {
                     canceled = true;
@@ -1802,6 +1808,28 @@ void BrowsingContext::resume()
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
 
     iterateChildContext([](BrowsingContext* ctx) { ctx->resume(); });
+}
+
+void BrowsingContext::setNeedsFullLayout()
+{
+    if (document()->frame() != nullptr) {
+        FrameBox* fb = document()->frame()->asFrameBox();
+        fb->markNeedsLayout();
+        fb->iterateChildFrameBox([](FrameBox* fb) { fb->markNeedsLayout(); });
+
+        setNeedsLayout();
+    }
+}
+
+void BrowsingContext::setNeedsFullPainting()
+{
+    if (document()->frame() != nullptr) {
+        FrameBox* fb = document()->frame()->asFrameBox();
+        fb->markNeedsPainting();
+        fb->iterateChildFrameBox([](FrameBox* fb) { fb->markNeedsPainting(); });
+
+        setNeedsPainting();
+    }
 }
 
 void BrowsingContext::setNeedsPainting()

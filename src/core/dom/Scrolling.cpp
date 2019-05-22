@@ -177,7 +177,7 @@ void Scrolling::onAnimationFrameHandler(void* data)
         }
     } else if (self->m_inHorizontalFling || self->m_inVerticalFling) {
         auto currentTime = longTickCount();
-        auto flingLength = STARFISH_SCROLL_FLING_BASE_TIME_IN_MS;
+        uint32_t flingLength = STARFISH_SCROLL_FLING_BASE_TIME_IN_MS;
 
         if (STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE <
             std::abs(self->m_flingStartSpeed)) {
@@ -185,8 +185,8 @@ void Scrolling::onAnimationFrameHandler(void* data)
                                     STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE);
         }
 
-        bool shouldExitFling =
-            currentTime - self->m_flingStartTime > uint64_t(flingLength * 1000);
+        bool shouldExitFling = (currentTime - self->m_flingStartTime) >
+                               (uint64_t(flingLength) * 1000);
 
         float progress =
             shouldExitFling

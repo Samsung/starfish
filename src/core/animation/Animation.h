@@ -287,6 +287,13 @@ public:
         return m_durationMs;
     }
 
+    void initializeStartTimeIfNeeded(uint64_t d)
+    {
+        if (m_startTimeMs == 0) {
+            m_startTimeMs = d;
+        }
+    }
+
 protected:
     float computeProgress(float fraction)
     {
