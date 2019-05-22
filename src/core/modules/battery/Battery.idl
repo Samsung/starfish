@@ -4,6 +4,7 @@
 
 partial interface Navigator {
   [STARFISH_ENABLE_BATTERY_STATUS] Promise<BatteryManager> getBattery();
+  [STARFISH_ENABLE_BATTERY_STATUS, STARFISH_ENABLE_OBSOLETE_SPEC] readonly attribute BatteryManager battery;
 };
 
 [STARFISH_ENABLE_BATTERY_STATUS, Exposed=Window]

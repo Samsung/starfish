@@ -22,6 +22,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/page/NavigatorMixin.h"
+#include "core/modules/battery/Battery.h"
 
 namespace Starfish {
 
@@ -29,9 +30,6 @@ class Starfish;
 class Geolocation;
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 class ServiceWorkerContainer;
-#endif
-#ifdef STARFISH_ENABLE_BATTERY_STATUS
-class BatteryManager;
 #endif
 
 class Navigator : public ScriptWrappable, public NavigatorMixin {
@@ -71,8 +69,12 @@ protected:
 #ifdef STARFISH_ENABLE_BATTERY_STATUS
 public:
     Promise* getBattery();
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
+    BatteryManager* battery();
+#endif
 
 protected:
+    Promise* m_batteryPromise;
     BatteryManager* m_batteryManager;
 #endif
 };

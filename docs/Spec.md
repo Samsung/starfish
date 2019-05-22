@@ -1234,6 +1234,7 @@ To use these features, you need to define STARFISH_ENABLE_OBSOLETE_SPEC.
 | Document  | attribute | width | Returns the width of the &lt;body&gt; element of the current document in pixels. |
 |  | attribute | height | Returns the height of the &lt;body&gt; element of the current document in pixels.  |
 | Window  | attribute | event | Returns current dispatching event. |
+| Navigator  | attribute | battery | The battery read-only property returns a BatteryManager provides information about the system's battery charge level. |
 
 
 ## CSS
@@ -1649,6 +1650,14 @@ Blob object is used by an XMLHTTPRequest object to retrieve binary data. Support
 | |	attribute |	type	| The ASCII-encoded string in lower case representing the media type of the Blob |
 | |	method	| Blob slice([Clamp] optional long long start = 0, [Clamp] optional long long end = size, optional DOMString contentType = "")	| Returns a new Blob object with bytes ranging from the optional start parameter up to but not including the optional end parameter, and with a type attribute that is the value of the optional contentType parameter. It must act as follows: |
 | |	typedef | (BufferSource or Blob or DOMString) BlobPart | |
+
+### BatteryManager
+Extensions to the Navigator Object: The navigator is extended by the following attributes and methods.
+
+| Interface            | Type   | Name                      | Description |
+|----------------------|--------|---------------------------|-------------|
+| [BatteryManager](https://w3c.github.io/battery/#the-batterymanager-interface)	| interface	| BatteryManager	| |
+| |	attribute	| level	| Return the level of system battery. The level attribute MUST be set to 0 if the system's battery is depleted and the system is about to be suspended, and to 1.0 if the battery is full, the implementation is unable to report the battery's level, or there is no battery attached to the system |
 
 
 ### Geolocation

@@ -56,7 +56,7 @@ double BatteryManager::level()
         STARFISH_ASSERT(0);
     }
 #endif
-    return 0.0;
+    return 1.0;
 }
 
 } // namespace Starfish
