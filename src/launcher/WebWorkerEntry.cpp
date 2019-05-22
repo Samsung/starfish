@@ -23,6 +23,7 @@
 #include "LWEWebView.h"
 #include "Starfish.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include <functional>
 #include <cstdio>
 #include <signal.h>
@@ -50,6 +51,9 @@ int main(int argc, char* argv[])
 
     LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
                          "/tmp/Starfish_WebWorkerCookies.txt", "/tmp");
+
+    // Create ServiceWorkerAgent
+    Starfish::ServiceWorkerAgent::instance();
 
     Starfish::WebWorker* webWorker = Starfish::WebWorker::create(
         LWE::g_starfishInstance, "ko-KR", "Asia/Seoul",
