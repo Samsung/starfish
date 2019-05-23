@@ -1544,6 +1544,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         float width = 0;
         float height = 0;
         if (type.isURL()) {
+            STARFISH_ASSERT(style->background() != nullptr);
             ImageResource* ir = style->background()->imageResource(idx);
             if (box->node()) {
                 box->node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
