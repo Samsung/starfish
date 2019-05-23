@@ -23,7 +23,7 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "core/dom/canvas/CanvasPath.h"
+#include "core/dom/canvas/CanvasPathInterfaceMixIn.h"
 #include "core/dom/DOMExceptionOr.h"
 #include "core/dom/DOMMatrix2DInit.h"
 #include "core/dom/DOMMatrix.h"

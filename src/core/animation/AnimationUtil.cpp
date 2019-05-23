@@ -17,6 +17,8 @@
  *  USA
  */
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/animation/Animation.h"

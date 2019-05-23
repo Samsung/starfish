@@ -20,6 +20,8 @@
 #ifndef __StarfishRenderResult__
 #define __StarfishRenderResult__
 
+#include <SkMatrix.h>
+
 namespace Starfish {
 
 class CanvasSurface;

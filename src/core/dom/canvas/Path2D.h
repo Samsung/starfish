@@ -23,9 +23,11 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "binding/ScriptWrappable.h"
-#include "core/dom/canvas/CanvasPath.h"
+#include "core/dom/canvas/CanvasPathInterfaceMixIn.h"
 
 namespace Starfish {
+
+class CanvasPath;
 class Path2DOrDOMString;
 
 class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {

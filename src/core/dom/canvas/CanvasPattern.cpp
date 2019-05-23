@@ -17,6 +17,8 @@
  *  USA
  */
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "core/dom/canvas/CanvasPattern.h"
 #include "core/dom/ExecutionContext.h"

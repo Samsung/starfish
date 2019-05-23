@@ -78,11 +78,15 @@ WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
     STARFISH_ASSERT(timezoneID != nullptr);
     STARFISH_ASSERT(customUserAgentString != nullptr);
 
+#ifdef PORT_NEEDS_THREADED_PUBLIC_API
     return (WebWorker*)MessageLoop::runOnMainThreadSync([&]() -> size_t {
         WebWorker* webWorker =
             new WebWorker(starfish, locale, timezoneID, customUserAgentString);
         return (size_t)webWorker;
     });
+#else
+    return new WebWorker(starfish, locale, timezoneID, customUserAgentString);
+#endif
 }
 
 void WebWorker::destory()

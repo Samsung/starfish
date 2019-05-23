@@ -158,10 +158,11 @@ void rewinddir(DIR* dir)
     But that said, if there are any problems please get in touch.
 
 */
-#else
+#else /* !defined(OS_WINDOWS) */
 #include <dirent.h>
-#endif
 #include <sys/stat.h>
+#include <unistd.h>
+#endif
 
 namespace Starfish {
 

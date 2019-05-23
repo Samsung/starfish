@@ -20,6 +20,8 @@
 #include "StarfishConfig.h"
 #ifdef PORT_WINDOW_BACKEND_HEADLESS
 
+#include <SkMatrix.h>
+
 #include "Starfish.h"
 
 #include "core/animation/Animation.h"

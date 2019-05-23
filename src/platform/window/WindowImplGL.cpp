@@ -21,6 +21,8 @@
 
 #if defined(PORT_WINDOW_BACKEND_GL)
 
+#include <SkMatrix.h>
+
 #include "Starfish.h"
 
 #include "core/animation/Animation.h"

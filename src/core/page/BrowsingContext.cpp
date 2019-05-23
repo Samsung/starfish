@@ -19,6 +19,8 @@
 
 // #define STARFISH_ENABLE_PROFILE_TIMER
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 

@@ -46,8 +46,6 @@
 
 #include "StarfishBase.h"
 
-#include <SkMatrix.h>
-
 #include "core/util/String.h"
 #include "core/util/AtomicString.h"
 #include "core/util/QualifiedName.h"

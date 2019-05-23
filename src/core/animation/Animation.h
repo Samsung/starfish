@@ -20,7 +20,6 @@
 #ifndef __StarfishAnimation__
 #define __StarfishAnimation__
 
-#include "core/animation/AnimationTimingFunction.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
 
@@ -29,6 +28,7 @@ namespace Starfish {
 class Node;
 class PlatformWindow;
 class StyleTransformDataGroup;
+class AnimationTimingFunction;
 
 class AnimatedValue : public gc {
     enum ValueType ENSURE_ENUM_UNSIGNED {
@@ -295,12 +295,7 @@ public:
     }
 
 protected:
-    float computeProgress(float fraction)
-    {
-        STARFISH_ASSERT(fraction >= 0.0f);
-        STARFISH_ASSERT(fraction <= 1.0f);
-        return m_timingFunction->getValue(fraction);
-    }
+    float computeProgress(float fraction);
 
     CSSStyleValuePair::KeyKind m_property;
     Element* m_targetElement;

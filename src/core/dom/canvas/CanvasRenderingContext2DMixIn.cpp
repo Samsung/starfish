@@ -48,6 +48,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSTokenValue.h"
 #include "EscargotPublic.h"
+#include "core/dom/canvas/CanvasPath.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 #include "core/dom/WebOrigin.h"

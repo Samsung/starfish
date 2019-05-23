@@ -49,10 +49,10 @@
 
 #include "Starfish.h"
 #include "core/dom/canvas/CanvasFillRule.h"
-#include "core/modules/canvas/Path.h"
 
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Path.h"
 
 #include <cairo.h>
 #include "platform/canvas/CanvasCairoUtils.h"
