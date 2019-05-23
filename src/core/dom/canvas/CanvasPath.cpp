@@ -54,6 +54,8 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/canvas/Path.h"

@@ -20,6 +20,8 @@
 #ifndef __StarfishComputedStyle__
 #define __StarfishComputedStyle__
 
+#include <SkMatrix.h>
+
 #include "core/style/BorderRadiusData.h"
 #include "core/style/BorderData.h"
 #include "core/style/LengthData.h"
@@ -39,11 +41,11 @@
 #include "core/style/OutlineData.h"
 #include "core/style/ObjectSizingData.h"
 #include "core/style/WillChangeData.h"
-#include "core/animation/Animation.h"
 
 namespace Starfish {
 
 class Frame;
+class AnimationTimingFunction;
 
 enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,

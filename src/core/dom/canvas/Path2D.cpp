@@ -18,7 +18,10 @@
  */
 #ifdef STARFISH_ENABLE_CANVAS
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
+#include "core/dom/canvas/CanvasPath.h"
 #include "binding/Path2DOrDOMStringUnion.h"
 #include "core/modules/canvas/Path.h"
 #include "core/dom/canvas/Path2D.h"

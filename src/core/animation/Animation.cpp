@@ -17,10 +17,13 @@
  *  USA
  */
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/animation/AnimationUtil.h"
+#include "core/animation/AnimationTimingFunction.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/TransitionEvent.h"
@@ -145,6 +148,13 @@ void ActiveAnimationTask::fireCancelEvent()
                                 ->m_transitioncancel.localName(),
                             init);
     m_targetElement->dispatchEventIdleTimeByUA(event);
+}
+
+float ActiveAnimationTask::computeProgress(float fraction)
+{
+    STARFISH_ASSERT(fraction >= 0.0f);
+    STARFISH_ASSERT(fraction <= 1.0f);
+    return m_timingFunction->getValue(fraction);
 }
 
 void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)

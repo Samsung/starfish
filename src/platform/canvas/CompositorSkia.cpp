@@ -22,8 +22,8 @@
 
 #if defined(PORT_COMPOSITOR_BACKEND_SKIA)
 #include "core/style/Style.h"
-#include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"

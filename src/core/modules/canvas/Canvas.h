@@ -22,6 +22,8 @@
 
 #define STARFISH_CANVAS_LENGTH_MAX 65535
 
+#include <SkMatrix.h>
+
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/modules/canvas/CanvasFillStrokeSource.h"
 

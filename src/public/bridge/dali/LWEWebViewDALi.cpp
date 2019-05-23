@@ -28,6 +28,10 @@
 #include <tbm_surface.h>
 #endif
 
+#ifdef OS_POSIX
+#include <unistd.h>
+#endif
+
 #include <dali-toolkit/dali-toolkit.h>
 #include <uv.h>
 

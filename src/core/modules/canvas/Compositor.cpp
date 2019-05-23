@@ -17,6 +17,8 @@
  *  USA
  */
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 #include "Compositor.h"
 #include "core/style/Style.h"

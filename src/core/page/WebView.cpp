@@ -27,6 +27,8 @@
 #endif
 #endif
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 
 #include "WebView.h"
@@ -53,6 +55,8 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
 #include "core/util/URL.h"
+
+#include "core/animation/Animation.h"
 
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"

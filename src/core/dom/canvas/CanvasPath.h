@@ -22,30 +22,12 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
+#include "core/dom/canvas/CanvasPathInterfaceMixIn.h"
+
 namespace Starfish {
 
 class Path;
 class ExecutionContext;
-class CanvasPathInterfaceMixIn {
-    // Shared path API methods
-public:
-    CanvasPathInterfaceMixIn() = default;
-    virtual ~CanvasPathInterfaceMixIn() = default;
-    virtual void closePath() = 0;
-    virtual void moveTo(float x, float y) = 0;
-    virtual void lineTo(float x, float y) = 0;
-    virtual void quadraticCurveTo(float cpx, float cpy, float x, float y) = 0;
-    virtual void bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
-                               float x, float y) = 0;
-    virtual void arcTo(float x1, float y1, float x2, float y2,
-                       float radius) = 0;
-    virtual void rect(float x, float y, float w, float h) = 0;
-    virtual void arc(float x, float y, float radius, float startAngle,
-                     float endAngle, bool anticlockwise = false) = 0;
-    virtual void ellipse(float x, float y, float radiusX, float radiusY,
-                         float rotation, float startAngle, float endAngle,
-                         bool anticlockwise = false) = 0;
-};
 
 class CanvasPath : public CanvasPathInterfaceMixIn, public gc {
 public:

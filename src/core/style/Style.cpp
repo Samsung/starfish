@@ -25,6 +25,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <SkMatrix.h>
+
 #include "StarfishConfig.h"
 
 #include "core/style/Style.h"
@@ -71,6 +73,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/style/ShadowData.h"
 #include "core/style/WillChangeData.h"
+#include "core/animation/Animation.h"
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #endif
