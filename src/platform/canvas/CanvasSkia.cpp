@@ -1292,8 +1292,26 @@ public:
         lastState().m_strokeWidth = width;
     }
 
-    virtual void setDash(double* dashes, int dashCnt, double offset)
+    virtual void setDash(const std::vector<double>& dashes)
     {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual std::vector<double> dash()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return lastState().m_dashes;
+    }
+
+    virtual double dashOffset()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return lastState().m_dashOffset;
+    }
+
+    virtual void setDashOffset(double offset)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     CanvasStateSkia& lastState()

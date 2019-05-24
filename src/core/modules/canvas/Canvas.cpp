@@ -267,6 +267,8 @@ CanvasState::CanvasState()
     , m_globalAlpha(1.0f)
     , m_compositeOperator(CanvasCompositeOperator::SourceOver)
     , m_blendMode(CanvasBlendMode::Normal)
+    , m_dashOffset(0.0f)
+    , m_dashes()
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
 {

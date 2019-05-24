@@ -116,6 +116,8 @@ public:
     float m_globalAlpha;
     CanvasCompositeOperator m_compositeOperator;
     CanvasBlendMode m_blendMode;
+    double m_dashOffset;
+    std::vector<double> m_dashes;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
@@ -334,7 +336,11 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom
-    virtual void setDash(double* dashes, int dashCnt, double offset) = 0;
+
+    virtual void setDash(const std::vector<double>& dashes) = 0;
+    virtual std::vector<double> dash() = 0;
+    virtual double dashOffset() = 0;
+    virtual void setDashOffset(double offset) = 0;
 
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
