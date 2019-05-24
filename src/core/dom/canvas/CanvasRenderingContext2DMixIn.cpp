@@ -278,8 +278,6 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
-    , m_dashList()
-    , m_lineDashOffset(0.0)
     , m_canvasTextAlign(CanvasTextAlign::Start)
 {
     initialize();
@@ -445,23 +443,31 @@ void CanvasRenderingContext2DMixIn::setLineDash(GCAtomicVector<double> segments)
         }
     }
 
-    m_dashList = segments;
+    std::vector<double> dashes;
+    for (auto& segment : segments) {
+        dashes.emplace_back(segment);
+    }
+
     if (segments.size() % 2 != 0) {
         for (auto& segment : segments) {
-            m_dashList.emplace_back(segment);
+            dashes.emplace_back(segment);
         }
     }
-    setLineDashToCanvas();
+    m_canvas->setDash(dashes);
 }
 
 GCAtomicVector<double> CanvasRenderingContext2DMixIn::getLineDash()
 {
-    return m_dashList;
+    GCAtomicVector<double> dashes;
+    for (auto& segment : m_canvas->dash()) {
+        dashes.emplace_back(segment);
+    }
+    return dashes;
 }
 
 double CanvasRenderingContext2DMixIn::lineDashOffset()
 {
-    return m_lineDashOffset;
+    return m_canvas->dashOffset();
 }
 
 void CanvasRenderingContext2DMixIn::setLineDashOffset(double offset)
@@ -469,22 +475,7 @@ void CanvasRenderingContext2DMixIn::setLineDashOffset(double offset)
     if (isInfOrNan(offset)) {
         return;
     }
-    m_lineDashOffset = offset;
-    setLineDashToCanvas();
-}
-
-void CanvasRenderingContext2DMixIn::setLineDashToCanvas()
-{
-    auto size = m_dashList.size();
-    if (size) {
-        double* dashes = new double[size];
-        for (size_t i = 0; i < size; ++i) {
-            dashes[i] = m_dashList[i];
-        }
-
-        m_canvas->setDash(dashes, static_cast<int>(size), m_lineDashOffset);
-        delete[] dashes;
-    }
+    m_canvas->setDashOffset(offset);
 }
 
 void CanvasRenderingContext2DMixIn::save()

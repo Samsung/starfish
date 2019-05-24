@@ -520,6 +520,8 @@ public:
             state.m_globalAlpha = lastState.m_globalAlpha;
             state.m_compositeOperator = lastState.m_compositeOperator;
             state.m_blendMode = lastState.m_blendMode;
+            state.m_dashOffset = lastState.m_dashOffset;
+            state.m_dashes = lastState.m_dashes;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -1618,16 +1620,40 @@ public:
         cairo_set_line_width(m_canvas, width);
     }
 
-    virtual void setDash(double* dashes, int dashCnt, double offset)
+    virtual void setDash(const std::vector<double>& dashes)
     {
-        STARFISH_ASSERT(dashes != nullptr);
-        for (int i = 0; i < dashCnt; ++i) {
-            if (!dashes[i]) {
-                cairo_set_dash(m_canvas, 0, 0, 0);
-                return;
-            }
+        lastState().m_dashes = dashes;
+        updateDashAndDashOffset();
+    }
+
+    virtual std::vector<double> dash()
+    {
+        return lastState().m_dashes;
+    }
+
+    virtual double dashOffset()
+    {
+        return lastState().m_dashOffset;
+    }
+
+    virtual void setDashOffset(double offset)
+    {
+        lastState().m_dashOffset = offset;
+        updateDashAndDashOffset();
+    }
+
+    void updateDashAndDashOffset()
+    {
+        if (std::all_of(lastState().m_dashes.begin(),
+                        lastState().m_dashes.end(),
+                        [](double& dash) { return !dash; })) {
+            cairo_set_dash(m_canvas, 0, 0, 0);
+        } else {
+            cairo_set_dash(m_canvas, lastState().m_dashes.data(),
+                           lastState().m_dashes.size(),
+                           lastState().m_dashOffset);
         }
-        cairo_set_dash(m_canvas, dashes, dashCnt, offset);
+        checkError();
     }
 
     CanvasStateCairo& lastState()

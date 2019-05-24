@@ -230,7 +230,22 @@ public:
     {
     }
 
-    virtual void setDash(double* dashes, int dashCnt, double offset)
+    virtual void setDash(const std::vector<double>& dashes)
+    {
+        return std::vector<double>();
+    }
+
+    virtual std::vector<double> dash()
+    {
+        return lastState().m_dashes;
+    }
+
+    virtual double dashOffset()
+    {
+        return 0.0f;
+    }
+
+    virtual void setDashOffset(double offset)
     {
     }
 

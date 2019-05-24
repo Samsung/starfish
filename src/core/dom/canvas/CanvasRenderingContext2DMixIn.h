@@ -231,8 +231,6 @@ protected:
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvas));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvasPath));
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_dashList));
         GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_font));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_fontStr));
@@ -252,7 +250,6 @@ private:
     void setLineJoin(CanvasLineJoin lineJoin);
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
-    void setLineDashToCanvas();
     void fillText(String* text, float x, float y, float maxWidth,
                   bool useMaxWidth);
     void strokeText(String* text, float x, float y, float maxWidth,
@@ -272,8 +269,6 @@ private:
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;
-    GCAtomicVector<double> m_dashList;
-    double m_lineDashOffset;
     Font* m_font;
     String* m_fontStr;
     CanvasTextAlign m_canvasTextAlign;

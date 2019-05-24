@@ -1873,7 +1873,7 @@ void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
                                const LayoutLocation& p5,
                                const LayoutLocation& p6, BoxSide side)
 {
-    double dashes[] = { 2.0, 1.0 };
+    std::vector<double> dashes{ 2.0, 1.0 };
     int ndash = sizeof(dashes) / sizeof(dashes[0]);
     double offset = 0.0;
 
@@ -1910,7 +1910,8 @@ void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
 
     canvas->drawRect(p1, p2, p3, p3);
     canvas->save();
-    canvas->setDash(dashes, ndash, offset);
+    canvas->setDash(dashes);
+    canvas->setDashOffset(offset);
     canvas->setLineWidth(width.toFloat());
     canvas->moveTo(x1.toDouble(), y1.toDouble());
     canvas->lineTo(x2.toDouble(), y2.toDouble());
