@@ -963,7 +963,7 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                                     (float)se.width(), (float)se.height(),
                                     (float)fr.x(), (float)fr.y(),
                                     (float)fr.width(), (float)fr.height());
-                            } else if (ctx->owner()->node()) {
+                            } else if (ctx->owner()->node() != nullptr) {
                                 printf(
                                     "StackingContext[%d][%p, %s"
                                     ", frame %p, buf %d opacity %f "
