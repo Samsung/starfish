@@ -445,6 +445,19 @@ static void logEglError(const char* name) noexcept
 #define TEXTURE_SWIZZLE_RGBA 0x8E46
 #endif
 
+#ifndef GL_RED
+#define GL_RED 0x1903
+#endif
+#ifndef GL_GREEN
+#define GL_GREEN 0x1904
+#endif
+#ifndef GL_BLUE
+#define GL_BLUE 0x1905
+#endif
+#ifndef GL_ALPHA
+#define GL_ALPHA 0x1906
+#endif
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
 Evas_GL* g_evasGL;
@@ -2145,7 +2158,7 @@ public:
 #endif
     }
 
-    virtual void clearColor(const Unit::Color& clr)
+    virtual void clearColor(const Unit::Color& clr) override
     {
         LongTaskFinder p("CompositorImplGL::clearColor", 1);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
@@ -2153,7 +2166,7 @@ public:
     }
 
     // state
-    virtual void save()
+    virtual void save() override
     {
         auto s = m_state.back();
         CompositorImplGLState newState;
@@ -2168,18 +2181,18 @@ public:
     }
 
     // pop state stack and restore state
-    virtual void restore()
+    virtual void restore() override
     {
         m_state.pop_back();
     }
 
     // transformations (default transform is the identity matrix)
-    virtual void scale(double x, double y)
+    virtual void scale(double x, double y) override
     {
         m_state.back().matrix.preScale(x, y);
     }
 
-    virtual void rotate(double angle)
+    virtual void rotate(double angle) override
     {
         m_state.back().matrix.preRotate(angle);
 
@@ -2188,28 +2201,28 @@ public:
         }
     }
 
-    virtual void translate(double x, double y)
+    virtual void translate(double x, double y) override
     {
         m_state.back().matrix.preTranslate(x, y);
     }
 
-    virtual void translate(LayoutUnit x, LayoutUnit y)
+    virtual void translate(LayoutUnit x, LayoutUnit y) override
     {
         m_state.back().matrix.preTranslate((double)x, (double)y);
     }
 
-    virtual void beginOpacityLayer(float c)
+    virtual void beginOpacityLayer(float c) override
     {
         save();
         m_state.back().opacity *= c;
     }
 
-    virtual void endOpacityLayer()
+    virtual void endOpacityLayer() override
     {
         restore();
     }
 
-    virtual void clip(const Unit::Rect& rt)
+    virtual void clip(const Unit::Rect& rt) override
     {
         ClipperLib::Path path;
         SkPoint pt;
@@ -2243,12 +2256,12 @@ public:
         lastState.clipPaths.get()->push_back(path);
     }
 
-    virtual void setFillColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr) override
     {
         m_state.back().color = clr;
     }
 
-    virtual void punchHole(const Unit::Rect& rt)
+    virtual void punchHole(const Unit::Rect& rt) override
     {
         save();
         setFillColor(Unit::Color(0, 0, 0, 0));
@@ -2258,7 +2271,7 @@ public:
         restore();
     }
 
-    virtual void drawRect(const Unit::Rect& rt)
+    virtual void drawRect(const Unit::Rect& rt) override
     {
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
@@ -2415,7 +2428,7 @@ public:
         }
     }
 
-    virtual void drawRect(const LayoutRect& rt)
+    virtual void drawRect(const LayoutRect& rt) override
     {
         drawRect(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
@@ -2720,8 +2733,10 @@ public:
         position[7] = dest[3][1] * hh + 1;
     }
 
-    virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
+    virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst) override
     {
+        STARFISH_ASSERT(cs != nullptr);
+
         INSTALL_PROFILE_TIMER("CompositorGL::drawSurface");
         auto textureInfo = cs->textureInfo();
         if (textureInfo.fragments.size() == 0) {
@@ -3118,7 +3133,7 @@ public:
         }
     }
 
-    virtual void postMatrix(const SkMatrix& matrix)
+    virtual void postMatrix(const SkMatrix& matrix) override
     {
         auto& lastState = m_state.back();
         lastState.matrix.preConcat(matrix);
@@ -3133,7 +3148,7 @@ public:
         return m_state.back().matrix;
     }
 
-    virtual void applyMatrixTo(LayoutLocation& lp)
+    virtual void applyMatrixTo(LayoutLocation& lp) override
     {
         SkPoint point = SkPoint::Make((float)lp.x(), (float)lp.y());
         m_state.back().matrix.mapPoints(&point, 1);
@@ -3141,7 +3156,7 @@ public:
         lp.setY(point.y());
     }
 
-    virtual void applyMatrixTo(LayoutRect& lp)
+    virtual void applyMatrixTo(LayoutRect& lp) override
     {
         SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)lp.x()),
                                       SkFloatToScalar((float)lp.y()),
@@ -3155,7 +3170,7 @@ public:
         lp.setHeight(sss.height());
     }
 
-    virtual void resetMatrixAndClip()
+    virtual void resetMatrixAndClip() override
     {
         auto& lastState = m_state.back();
         lastState.matrix = SkMatrix::I();
@@ -3195,18 +3210,18 @@ public:
             ClipperLib::IntPoint(floor(pt.x() + 0.5f), floor(pt.y() + 0.5f)));
     }
 
-    virtual void moveTo(float x, float y)
+    virtual void moveTo(float x, float y) override
     {
         addToPath(x, y);
     }
 
-    virtual void lineTo(float x, float y)
+    virtual void lineTo(float x, float y) override
     {
         addToPath(x, y);
     }
 
     virtual void arcNegative(double cx, double cy, double radius, double angle1,
-                             double angle2)
+                             double angle2) override
     {
         float angleDiff = angle2 - angle1;
         if (std::abs(angleDiff) >= M_PI * 2) {
@@ -3233,7 +3248,7 @@ public:
             addToPath(x, y);
         }
     }
-    virtual void clipPath()
+    virtual void clipPath() override
     {
         auto& lastState = m_state.back();
         if (!lastState.clipPathsWasChanged) {
@@ -3247,12 +3262,7 @@ public:
         m_path.shrink_to_fit();
     }
 
-    virtual bool supportsBlurEffect()
-    {
-        return true;
-    }
-
-    virtual void enableBlurEffect(float blurRadius)
+    virtual void enableBlurEffect(float blurRadius) override
     {
         m_state.back().blurRadius = blurRadius;
     }

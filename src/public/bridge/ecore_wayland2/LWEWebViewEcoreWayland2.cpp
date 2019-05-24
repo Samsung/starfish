@@ -357,13 +357,6 @@ public:
         }
 
         mSurface = eglCreateWindowSurface(mDisplay, eglConf, mEglWindow, NULL);
-        EGLBoolean queryResult = eglSurfaceAttrib(
-            mDisplay, mSurface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
-        if (queryResult) {
-            STARFISH_LOG_INFO("EGL_BUFFER_PRESERVED ok\n");
-        } else {
-            STARFISH_LOG_INFO("EGL_BUFFER_PRESERVED failed\n");
-        }
 
         if (eglMakeCurrent(mDisplay, mSurface, mSurface, mContext)) {
             STARFISH_LOG_INFO("Made current\n");

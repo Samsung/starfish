@@ -106,7 +106,7 @@ CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const
 void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
                                size_t height, size_t stride) const
 {
-    float radius = m_stdDeviation.numberData() * 2;
+    float radius = m_stdDeviation.numberData();
 
 #if ENABLE_PARALLEL_BLUR == 0
     // I disabled parallel blur temporarily

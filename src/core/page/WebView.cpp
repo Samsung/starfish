@@ -963,6 +963,24 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                                     (float)se.width(), (float)se.height(),
                                     (float)fr.x(), (float)fr.y(),
                                     (float)fr.width(), (float)fr.height());
+                            } else if (ctx->owner()->node()) {
+                                printf(
+                                    "StackingContext[%d][%p, %s"
+                                    ", frame %p, buf %d opacity %f "
+                                    "screenExtent %f %f %f %f visibleRect %f "
+                                    "%f %f %f]",
+                                    depth / 2, ctx, ctx->owner()
+                                                        ->node()
+                                                        ->localName()
+                                                        ->toUTF8NonGCString()
+                                                        .data(),
+                                    ctx->owner(),
+                                    (int)ctx->needsGraphicsBuffer(),
+                                    ctx->owner()->style()->opacity(),
+                                    (float)se.x(), (float)se.y(),
+                                    (float)se.width(), (float)se.height(),
+                                    (float)fr.x(), (float)fr.y(),
+                                    (float)fr.width(), (float)fr.height());
                             } else {
                                 printf(
                                     "StackingContext[%d][%p, anonymous node"

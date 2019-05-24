@@ -244,16 +244,17 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
         STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
 
         unsigned char* buffer_array[1];
-        while (dHandle->output_scanline < dHandle->output_height) {
+        if (dHandle->output_scanline < dHandle->output_height) {
             buffer_array[0] = (unsigned char*)result.m_buffer +
                               (dHandle->output_scanline) * result.m_stride;
             jpeg_read_scanlines(dHandle, buffer_array, 1);
-            break;
+            result.m_isSuccessful = true;
+        } else {
+            result.m_isSuccessful = false;
         }
 
         free(result.m_buffer);
         result.m_buffer = nullptr;
-        result.m_isSuccessful = true;
         return;
     }
 

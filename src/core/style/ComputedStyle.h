@@ -1534,7 +1534,7 @@ public:
         return background->color();
     }
 
-    ImageValue* backgroundImage(uint32_t layer)
+    NULLABLE ImageValue* backgroundImage(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1543,7 +1543,7 @@ public:
         return background->image(layer);
     }
 
-    NativeImageData* backgroundImageData(uint32_t layer)
+    NULLABLE NativeImageData* backgroundImageData(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {

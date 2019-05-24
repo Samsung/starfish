@@ -5021,7 +5021,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 if (shadow->radius() > 0) {
                     ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                   nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius());
+                    sb.process(shadow->radius() / 2);
                 }
 
                 Unit::Rect rect(0, 0, imageWidth, imageHeight);

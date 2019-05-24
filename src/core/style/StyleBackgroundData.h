@@ -488,7 +488,7 @@ public:
         return m_color;
     }
 
-    ImageValue* image(uint32_t index) const
+    NULLABLE ImageValue* image(uint32_t index) const
     {
         uint16_t assured = assureLayerIndex(index);
         if (assured < m_maxLayerImage) {
@@ -497,7 +497,7 @@ public:
         return nullptr;
     }
 
-    NativeImageData* imageData(uint32_t index) const
+    NULLABLE NativeImageData* imageData(uint32_t index) const
     {
         uint16_t assured = assureLayerIndex(index);
         if (assured < m_maxLayerImage) {
@@ -506,7 +506,7 @@ public:
         return nullptr;
     }
 
-    ImageResource* imageResource(uint32_t index) const
+    NULLABLE ImageResource* imageResource(uint32_t index) const
     {
         uint16_t assured = assureLayerIndex(index);
         if (assured < m_maxLayerImage) {

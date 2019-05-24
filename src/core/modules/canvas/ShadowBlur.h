@@ -29,9 +29,10 @@ public:
     ShadowBlur(uint8_t* source, const size_t& width, const size_t& height,
                const size_t& stride);
     ~ShadowBlur();
-    void process(float radius);
+    void process(float stdDeviation);
 
     static const float RADIUS_LIMIT;
+    static float computeKernelSizeAtStdDeviation(float stdDeviation);
 
 private:
     size_t m_width;

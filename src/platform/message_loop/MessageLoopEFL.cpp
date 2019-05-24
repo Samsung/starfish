@@ -326,5 +326,55 @@ void MessageLoop::stop()
 {
     ecore_main_loop_quit();
 }
+
+size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+{
+    STARFISH_ASSERT((bool)functor == true);
+
+    if (isMainThread()) {
+        return functor();
+    }
+    struct Param {
+        std::function<size_t()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    void* ret = ecore_main_loop_thread_safe_call_sync(
+        [](void* data) -> void* {
+            STARFISH_ASSERT(data != nullptr);
+            Param* p = (Param*)data;
+            auto ret = p->functor();
+            delete p;
+            return (void*)(intptr_t)ret;
+        },
+        p);
+
+    return (size_t)(intptr_t)ret;
+}
+
+void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
+{
+    STARFISH_ASSERT((bool)functor == true);
+
+    struct Param {
+        std::function<void()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    addIdlerWithNoGCRootingInOtherThread(nullptr,
+                                         [](size_t, void* data) {
+                                             STARFISH_ASSERT(data != nullptr);
+                                             Param* p = (Param*)data;
+                                             p->functor();
+                                             delete p;
+                                         },
+                                         p);
+
+    return;
+}
 }
 #endif
