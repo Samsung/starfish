@@ -53,6 +53,8 @@ if (condition) {
 }
 ```
 
+Write the condition of `if` scope with explicit expressions. For details, please refer to [Code readability](#Code-readability)
+
 ### `for`, `while`, `do-while` Statements
 Add a space before the opening parenthesis, and between closing parenthesis and
 opening curly brace. Always have statements with a pair of braces even for a
@@ -68,6 +70,8 @@ while (condition) {
 }
 ```
 
+Write the condition of `for`, `while`, and `do-while` scopes with explicit expressions. For details, please refer to [Code readability](#Code-readability)
+
 ### Binary Operators
 When binary operators cannot fit in the same line, split operands after the
 binary operators, and align operands with the first operand. Try to use
@@ -81,6 +85,8 @@ if (condition1 ||
     ...
 }
 ```
+
+Write the conditions among binary operators with explicit expressions. For details, please refer to [Code readability](#Code-readability)
 
 ## Classes
 ### Constructors
@@ -348,9 +354,11 @@ Make sure your code is obvious and readable with the following conventions.
 - if (verbose && strlen(verbose))
 + if ((verbose != nullptr) && (strlen(verbose) > 0))
 
-// Avoiding logic with an exclamation mark (`!`) in `if` statement is preferred.
-- if (!ptr)
-+ if (ptr == nullptr)
+// Avoiding conditions with logical operators such as (`!`) is preferred.
+// By just using `(!any) or (any)` it's not explicit what you want. 
+// Rely on the condition itself than variable names like `ptr`.
+- if (!any) // The counter of `any` could be read as `nullptr`, `false`, etc.
++ if (any == nullptr) 
 
 - if (!o.isLoaded() && ptr == nullptr)
 + if ((o.isLoaded() == false) && ptr == nullptr)
