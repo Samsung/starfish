@@ -59,5 +59,17 @@ bool ServiceWorkerAgent::replaceNotification(NotificationOptions& currentOption)
     }
     return false;
 }
+
+void ServiceWorkerAgent::onWebWorkerTerminated(WebWorker* worker)
+{
+    STARFISH_ASSERT(worker != nullptr);
 }
+
+void ServiceWorkerAgent::registerOnStatusChangedHandler(
+    const std::function<void(State)>& func)
+{
+    m_clientFunc = func;
+}
+
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

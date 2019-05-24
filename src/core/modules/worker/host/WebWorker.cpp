@@ -148,8 +148,7 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-void WebWorker::loadJavaScript(const std::string& scriptURL,
-                               const std::string& baseURL)
+void WebWorker::loadJavaScript(const std::string& scriptURL)
 {
 #ifdef STARFISH_WEBWORKER_HOST
     m_messageLoop->runOnMainThreadAsync([=]() -> void {
@@ -164,8 +163,7 @@ void WebWorker::loadJavaScript(const std::string& scriptURL,
         removeScriptEngineInstance();
         createScriptEngineInstance();
         ResourceURL* resourceURL =
-            new ResourceURL(String::fromUTF8(scriptURL.data()),
-                            String::fromUTF8(baseURL.data()));
+            new ResourceURL(String::fromUTF8(scriptURL.data()));
         m_workerGlobalScope = new ServiceWorkerGlobalScope(
             this, resourceURL, String::createASCIIString("UTF-8"));
 

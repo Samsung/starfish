@@ -92,7 +92,6 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
-    ${STARFISH_ROOT}/src/core/modules/serviceworker/client/*.cpp # TODO: remove client source files
     ${STARFISH_ROOT}/src/core/modules/serviceworker/push/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/notification/*.cpp
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp

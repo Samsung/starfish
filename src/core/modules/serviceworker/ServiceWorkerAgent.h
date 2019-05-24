@@ -25,13 +25,22 @@
 
 namespace Starfish {
 
+class WebWorker;
+
 class ServiceWorkerAgent : public gc {
 public:
+    enum class State {
+        Terminated,
+    };
+
     static ServiceWorkerAgent* instance();
 
     void appendNotification(NotificationOptions& options);
 
     bool replaceNotification(NotificationOptions& options);
+
+    void onWebWorkerTerminated(WebWorker* worker);
+    void registerOnStatusChangedHandler(const std::function<void(State)>& cb);
 
 private:
     ServiceWorkerAgent() = default;
@@ -39,6 +48,7 @@ private:
 
     static ServiceWorkerAgent* m_instance;
     GCVector<NotificationOptions> m_notificationList;
+    std::function<void(State)> m_clientFunc{ nullptr };
 };
 }
 #endif

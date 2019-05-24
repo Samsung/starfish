@@ -60,8 +60,7 @@ public:
         return m_scriptEngineInstance;
     }
 
-    void loadJavaScript(const std::string& scriptURL,
-                        const std::string& baseURL);
+    void loadJavaScript(const std::string& scriptURL);
 
 private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,

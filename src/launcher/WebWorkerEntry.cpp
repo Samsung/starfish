@@ -31,6 +31,8 @@
 #include <unistd.h>
 #endif
 
+#include <string.h>
+
 namespace LWE {
 extern Starfish::Starfish* g_starfishInstance;
 }
@@ -44,22 +46,34 @@ static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 
 int main(int argc, char* argv[])
 {
-    if (argc < 3) {
+    STARFISH_ASSERT(argv != nullptr);
+    STARFISH_LOG_INFO("WORKER STARTS\n");
+
+    if (argc < 2) {
         puts("please specify URL and baseURL");
         return -1;
     }
+
+    std::string scriptURL = argv[1];
 
     LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
                          "/tmp/Starfish_WebWorkerCookies.txt", "/tmp");
 
     // Create ServiceWorkerAgent
-    Starfish::ServiceWorkerAgent::instance();
+    Starfish::ServiceWorkerAgent::instance()->registerOnStatusChangedHandler(
+        [](Starfish::ServiceWorkerAgent::State state) {
+            if (state == Starfish::ServiceWorkerAgent::State::Terminated) {
+                g_workerDoneFlag = 1;
+            }
+        });
 
     Starfish::WebWorker* webWorker = Starfish::WebWorker::create(
         LWE::g_starfishInstance, "ko-KR", "Asia/Seoul",
         Starfish::String::emptyString);
 
-    webWorker->loadJavaScript(std::string(argv[1]), std::string(argv[2]));
+    if (scriptURL.empty() == false) {
+        webWorker->loadJavaScript(scriptURL);
+    }
 
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
@@ -71,12 +85,15 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    while (!g_workerDoneFlag) {
+    while (g_workerDoneFlag == 0) {
         usleep(100);
     }
 
+    webWorker->destory();
+
     LWE::LWE::Finalize();
 
+    STARFISH_LOG_INFO("WORKER ENDS\n");
     return 0;
 }
 

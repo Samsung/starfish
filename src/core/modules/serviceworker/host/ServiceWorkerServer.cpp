@@ -88,7 +88,7 @@ void ServiceWorkerServer::init(ThreadPool* threadPool)
 {
     STARFISH_ASSERT(threadPool != nullptr);
 
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
+#ifdef STARFISH_WEBWORKER_HOST
     WorkerConfig::instance().set("app", "HOST");
 #endif
 
@@ -105,6 +105,22 @@ void ServiceWorkerServer::init(ThreadPool* threadPool)
     m_ioThread->start(m_ioRunnable);
 }
 
+// TODO: use ServiceWorkerProcessManager::createAddress once its process
+// creation is seperated.
+static std::string createAddress(const std::string& lastAddress = "")
+{
+    std::string address = IPC_PROTOCOL;
+    address.append(IPC_ADDRESS_PREFIX);
+
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    address.append(IPC_ADDRESS);
+#else
+    address.append(lastAddress);
+#endif
+
+    return address;
+}
+
 void ServiceWorkerServer::start()
 {
     STARFISH_ASSERT(m_ioThread != nullptr);
@@ -113,12 +129,9 @@ void ServiceWorkerServer::start()
     m_connection = new ServiceWorkerHostConnection(this);
     registerConnection(m_connection);
 
-    std::string address = IPC_PROTOCOL;
-    address.append(IPC_ADDRESS_PREFIX);
-#ifndef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
-    address.append(IPC_ADDRESS);
-#endif
+    std::string address = createAddress();
 
+    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
     m_connection->socket()->bind(address.c_str());
     m_ioRunnable->addClient(m_connection);
 }
@@ -135,13 +148,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     registerConnection(m_connection);
 
-    std::string address = IPC_PROTOCOL;
-    address.append(IPC_ADDRESS_PREFIX);
-#ifdef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
-    address.append(encodedOrigin);
-#else
-    address.append(IPC_ADDRESS);
-#endif
+    std::string address = createAddress(encodedOrigin);
 
     SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
     SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s\n", origin.c_str());

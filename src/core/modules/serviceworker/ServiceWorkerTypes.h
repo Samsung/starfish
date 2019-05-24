@@ -75,7 +75,11 @@ using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using RequestId = Id<ServiceWorkerRequest>;
 using PushManagerId = Id<GlobalScope>;
 
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
+// TODO: create cmake option for SERVICE_WORKER_USE_SEPERATED_PROCESS
+// #define SERVICE_WORKER_USE_SEPERATED_PROCESS
+#define SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+
+#ifdef SERVICE_WORKER_USE_SEPERATED_PROCESS
 #define IPC_PROTOCOL "ipc://"
 #define IPC_ADDRESS_PREFIX ".ipc/"
 #else
