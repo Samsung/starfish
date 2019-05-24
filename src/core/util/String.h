@@ -411,12 +411,16 @@ public:
         }
     }
 
-    bool equals(const String* src) const;
-    bool equals(const char* src) const;
+    bool equals(const String* str) const;
+    bool equals(const char* str) const;
+    bool equals(const char* str, size_t strLen) const;
 
     bool equalsIgnoreCase(const String* str) const;
     bool equalsIgnoreCase(const char* str) const;
+    bool equalsIgnoreCase(const char* str, size_t strLen) const;
+
     bool equals(const char32_t* str) const;
+    bool equals(const char32_t* str, size_t strLen) const;
 
     size_t indexOf(char32_t ch) const;
     size_t lastIndexOf(char32_t ch) const;
