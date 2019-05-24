@@ -457,6 +457,29 @@ bool String::equalsIgnoreCase(const char* str) const
     return true;
 }
 
+bool String::equalsIgnoreCase(const char* str, size_t strLen) const
+{
+#ifndef NDEBUG
+    {
+        const char* c = str;
+        while (*c) {
+            STARFISH_ASSERT(!(*c & 0x80));
+            c++;
+        }
+    }
+#endif
+    auto data = bufferAccessData();
+    if (strLen != data.length) {
+        return false;
+    }
+    for (size_t i = 0; i < data.length; i++) {
+        if (tolower(data.charAt(i)) != tolower((char32_t)str[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool String::equals(const char* str) const
 {
     size_t srcLen = 0;
@@ -481,6 +504,24 @@ bool String::equals(const char* str) const
     }
 }
 
+bool String::equals(const char* str, size_t strLen) const
+{
+    auto data = bufferAccessData();
+    if (strLen != data.length) {
+        return false;
+    }
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        return memcmp(data.asciiData(), str, data.length) == 0;
+    } else {
+        for (size_t i = 0; i < data.length; i++) {
+            if (data.charAt(i) != (char32_t)str[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 bool String::equals(const char32_t* str) const
 {
     auto data = bufferAccessData();
@@ -489,6 +530,20 @@ bool String::equals(const char32_t* str) const
     }
 
     if (srcLen != data.length) {
+        return false;
+    }
+    for (size_t i = 0; i < data.length; i++) {
+        if (data.charAt(i) != str[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool String::equals(const char32_t* str, size_t strLen) const
+{
+    auto data = bufferAccessData();
+    if (strLen != data.length) {
         return false;
     }
     for (size_t i = 0; i < data.length; i++) {
