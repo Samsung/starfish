@@ -883,7 +883,10 @@ void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
 
 void FrameBox::paintBoxShadows(Canvas* canvas)
 {
+    STARFISH_ASSERT(canvas != nullptr);
+
     ComputedStyle* s = style();
+    STARFISH_ASSERT(s != nullptr);
 
     if (s->visibility() != VisibilityValue::VisibleVisibilityValue) {
         return;
@@ -1021,7 +1024,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     cv->drawRect(shadowRect);
                     ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                   nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius());
+                    sb.process(shadow->radius() / 2);
                     delete cv;
 
                     float offset = ceil(radiusOffset / 2);
@@ -1036,7 +1039,30 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     float pieceSize = bufImageSize;
                     // center
-                    canvas->setFillColor(shadowColor);
+
+                    // pick color from blurred buffer
+                    uint8_t* buf = nativeImage->data();
+                    size_t edgeHeight =
+                        (nativeImage->height() > 0 ? nativeImage->height() - 1
+                                                   : 0);
+                    size_t edgeWidth =
+                        (nativeImage->width() > 0 ? nativeImage->width() - 1
+                                                  : 0);
+                    size_t base =
+                        edgeHeight * nativeImage->stride() + edgeWidth * 4;
+#ifdef PORT_PIXEL_ORDER_RGBA
+                    unsigned char r = buf[base];
+                    unsigned char g = buf[base + 1];
+                    unsigned char b = buf[base + 2];
+                    unsigned char a = buf[base + 3];
+#else
+                    unsigned char b = buf[base];
+                    unsigned char g = buf[base + 1];
+                    unsigned char r = buf[base + 2];
+                    unsigned char a = buf[base + 3];
+#endif
+
+                    canvas->setFillColor(Unit::Color(r, g, b, a));
                     canvas->drawRect(Unit::Rect(
                         imageRect.x() + pieceSize, imageRect.y() + pieceSize,
                         imageRect.width() - pieceSize * 2,
@@ -1169,7 +1195,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
                     ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                                   nativeImage->height(), nativeImage->stride());
-                    sb.process(shadow->radius());
+                    sb.process(shadow->radius() / 2);
                     delete cv;
 
                     float offset = ceil(radiusOffset / 2);
@@ -1287,7 +1313,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                               nativeImage->height(), nativeImage->stride());
-                sb.process(shadow->radius());
+                sb.process(shadow->radius() / 2);
                 delete cv;
 
                 int xx = 0, yy = 0, ww = 0, hh = 0;
@@ -1532,8 +1558,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
 
     ImageRenderingValue imageRenderingValue = style->imageRendering();
 
-    for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-        unsigned int idx = style->backgroundLayerSize() - i - 1;
+    auto backgroundLayerSize = style->backgroundLayerSize();
+    for (unsigned int i = 0; i < backgroundLayerSize; i++) {
+        unsigned int idx = backgroundLayerSize - i - 1;
 
         if (!style->backgroundImage(idx)) {
             continue;
@@ -1546,7 +1573,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         if (type.isURL()) {
             STARFISH_ASSERT(style->background() != nullptr);
             ImageResource* ir = style->background()->imageResource(idx);
-            if (box->node()) {
+            if (box->node() != nullptr && ir != nullptr) {
                 box->node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
                     ir->url()->urlString()->toUTF8NonGCString());
             }
@@ -3209,7 +3236,8 @@ ALWAYS_INLINE LayoutRect computeVisibleShadowRect(
         float radiusOffset = 0.0f;
         if (shadow.radius()) {
             radiusOffset = shadow.radius();
-            radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+            radiusOffset =
+                ShadowBlur::computeKernelSizeAtStdDeviation(radiusOffset / 2);
         }
         float sd = shadow.spreadDistance();
         LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
@@ -3336,6 +3364,8 @@ LayoutRect FrameBox::frameVisibleRect()
 
 LayoutRect FrameBox::frameVisibleOutlineRect(OutlineData* outline)
 {
+    STARFISH_ASSERT(outline != nullptr);
+
     LayoutRect r = frameRect();
     r.setX(0);
     r.setY(0);
@@ -3353,6 +3383,8 @@ LayoutRect FrameBox::frameVisibleOutlineRect(OutlineData* outline)
 
 LayoutRect FrameBox::frameVisibleShadowsRect(ShadowDataList* boxShadow)
 {
+    STARFISH_ASSERT(boxShadow != nullptr);
+
     LayoutRect owner = frameRect();
     owner.setX(0);
     owner.setY(0);
@@ -3369,6 +3401,8 @@ LayoutRect FrameBox::frameVisibleShadowsRect(ShadowDataList* boxShadow)
 
 LayoutRect FrameBox::frameVisibleFilterRect(FilterFunctions* filter)
 {
+    STARFISH_ASSERT(filter != nullptr);
+
     LayoutRect owner = frameRect();
     owner.setX(0);
     owner.setY(0);
@@ -3376,10 +3410,15 @@ LayoutRect FrameBox::frameVisibleFilterRect(FilterFunctions* filter)
 
     Length standardDeviation;
     if (filter->getStandardDeviationOfBlurFilter(standardDeviation)) {
-        CanvasShadowData data(0, 0, standardDeviation.numberData() * 2, 0,
-                              Unit::Color(), false, false);
-        LayoutRect rect = computeVisibleShadowRect(owner, data);
-        ret.unite(rect);
+        float sd = standardDeviation.numberData();
+        if (sd > 0) {
+            float radiusOffset =
+                ShadowBlur::computeKernelSizeAtStdDeviation(sd);
+            LayoutRect rect(owner.x() - radiusOffset, owner.y() - radiusOffset,
+                            ceil(owner.width() + radiusOffset * 2),
+                            ceil(owner.height() + radiusOffset * 2));
+            ret.unite(rect);
+        }
     }
 
     return ret;

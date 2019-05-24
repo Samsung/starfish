@@ -31,7 +31,7 @@
 
 namespace Starfish {
 
-const float ShadowBlur::RADIUS_LIMIT = 250.0f;
+const float ShadowBlur::RADIUS_LIMIT = 500.f;
 
 ShadowBlur::ShadowBlur(uint8_t* source, const size_t& width,
                        const size_t& height, const size_t& stride)
@@ -243,15 +243,38 @@ inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
     }
 }
 
-void ShadowBlur::process(float radius)
+static inline float gaussianKernelFactor()
 {
-    if (radius <= 0) {
+    return 3 / 4.f * sqrtf(2 * M_PI);
+}
+
+static int clampedToKernelSize(float value)
+{
+    // Limit the kernel size to 500. A bigger radius won't make a big difference
+    // for the result image but
+    // inflates the absolute paint rect too much. This is compatible with
+    // Firefox' behavior.
+    unsigned size = std::max<unsigned>(
+        2,
+        static_cast<unsigned>(floorf(value * gaussianKernelFactor() + 0.5f)));
+    return clampTo<int>(
+        std::min(size, static_cast<unsigned>(ShadowBlur::RADIUS_LIMIT)));
+}
+
+float ShadowBlur::computeKernelSizeAtStdDeviation(float stdDeviation)
+{
+    return clampedToKernelSize(stdDeviation);
+}
+
+void ShadowBlur::process(float stdDeviation)
+{
+    if (stdDeviation <= 0) {
         return;
     }
 
     LongTaskFinder timer(__PRETTY_FUNCTION__, 1);
-    radius = std::min(radius, RADIUS_LIMIT);
-    standardBoxBlur(m_source, m_workspace.get(), radius, radius, m_stride,
-                    m_width, m_height, EDGEMODE_DUPLICATE);
+    float kernelSize = computeKernelSizeAtStdDeviation(stdDeviation);
+    standardBoxBlur(m_source, m_workspace.get(), kernelSize, kernelSize,
+                    m_stride, m_width, m_height, EDGEMODE_DUPLICATE);
 }
 }
