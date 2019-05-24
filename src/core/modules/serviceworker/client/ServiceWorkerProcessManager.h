@@ -47,6 +47,8 @@ struct ProcessData {
 class ServiceWorkerProcessManager : public gc {
 public:
     static ServiceWorkerProcessManager* instance();
+    static std::string createAddress(const std::string& lastAddress = "");
+
     void init();
     void destroy();
 
@@ -75,7 +77,7 @@ private:
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
 
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
     WebWorker* m_webWorker{ nullptr };
 #endif
 

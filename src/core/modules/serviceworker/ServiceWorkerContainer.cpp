@@ -46,7 +46,11 @@
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
+
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 
 namespace Starfish {
@@ -258,12 +262,14 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
         [](size_t handle, void* data1, void* data2) {
             ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data1);
             WebOrigin* webOrigin = castTo<WebOrigin*>(data2);
-
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
                     webOrigin->serialize());
-
             swConnection->scheduleJob(job);
+#else
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
         },
         job, executionContext()->webOrigin());
 
@@ -392,12 +398,15 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
         [](size_t handle, void* data1, void* data2) {
             auto swrequest = castTo<ServiceWorkerRequest*>(data1);
             auto urlString = castTo<String*>(data2);
-
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
                     swrequest->origin);
 
             swConnection->matchRegistration(swrequest, urlString);
+#else
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
         },
         request, clientURL->urlString());
 

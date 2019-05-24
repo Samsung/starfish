@@ -97,7 +97,7 @@ protected:
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;
 #endif
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
     ServiceWorkerProcessManager* m_serviceWorkerProcessManager;
 #endif
     size_t m_webViewInstanceCount;

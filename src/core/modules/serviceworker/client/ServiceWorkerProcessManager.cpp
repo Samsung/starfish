@@ -43,7 +43,7 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/worker/host/WebWorker.h"
@@ -51,7 +51,6 @@ namespace LWE {
 extern Starfish::Starfish* g_starfishInstance;
 }
 #endif
-
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
@@ -120,13 +119,28 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
         m_messageLoop->destroy();
     }
 
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
     // create mock instances
     if (m_webWorker != nullptr) {
         m_webWorker->destory();
     }
 
 #endif
+}
+
+std::string ServiceWorkerProcessManager::createAddress(
+    const std::string& lastAddress)
+{
+    std::string address = IPC_PROTOCOL;
+    address.append(IPC_ADDRESS_PREFIX);
+
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    address.append(IPC_ADDRESS);
+#else
+    address.append(lastAddress);
+#endif
+
+    return address;
 }
 
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
@@ -140,6 +154,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::shared_ptr<ProcessData> processData = nullptr;
 
     std::string encodedOrigin = StringUtils::toBase64(origin);
+    std::string address = createAddress(encodedOrigin);
 
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);
@@ -147,12 +162,26 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         processData = std::make_shared<ProcessData>();
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
-// TODO: launch a service worker process
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
         // create mock instances
         m_webWorker = WebWorker::create(LWE::g_starfishInstance, "ko-KR",
                                         "Asia/Seoul", String::emptyString);
+#else
+        // TODO: extract process creation
+        // TODO: check if instance exists
+        // create an arguments
+        std::vector<std::string> args;
 
+        // TODO: use a constant executable name
+        args.push_back("./StarfishWebWorker");
+        args.push_back("--debug-worker=" +
+                       WorkerConfig::instance().get("DEBUG_WORKER"));
+
+        if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
+            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: success\n");
+        } else {
+            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: fail\n");
+        }
 #endif
 
     } else {
@@ -161,36 +190,25 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     STARFISH_ASSERT(processData != nullptr);
 
-#ifdef SERVICE_WORKER_USE_HOST_ON_EACH_PROCESS
-    if (processData->connection == nullptr) {
-        processData->connection = new ServiceWorkerClientConnection();
-
-        std::string address = IPC_PROTOCOL;
-        address.append(IPC_ADDRESS_PREFIX);
-        address.append(encodedOrigin);
-
-        SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
-        SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
-
-        processData->connection->socket()->connect(address.c_str());
-        m_ioRunnable->addClient(processData->connection);
-    }
-#else
-    if (m_connection == nullptr) {
-        m_connection = new ServiceWorkerClientConnection();
-        std::string address = IPC_PROTOCOL;
-        address.append(IPC_ADDRESS_PREFIX);
-        address.append(IPC_ADDRESS);
-
-        m_connection->socket()->connect(address.c_str());
-        m_ioRunnable->addClient(m_connection);
-
-        SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
-        SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
-    }
-
-    processData->connection = m_connection;
+    if (m_connection != nullptr) {
+        processData->connection = m_connection;
+    } else {
+        if (processData->connection == nullptr) {
+            processData->connection = new ServiceWorkerClientConnection();
+            processData->connection->socket()->connect(address.c_str());
+            m_ioRunnable->addClient(processData->connection);
+        }
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+        if (m_connection == nullptr) {
+            m_connection = processData->connection;
+        }
 #endif
+    }
+
+    STARFISH_ASSERT(processData->connection != nullptr);
+
+    SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
+    SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
 
     return processData->connection;
 }

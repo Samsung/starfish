@@ -30,11 +30,13 @@
 #ifdef STARFISH_ENABLE_HTTPCACHE
 #include "platform/network/http/HTTPCache.h"
 #endif
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/util/Id.h"
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #endif
+
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {
@@ -116,7 +118,7 @@ Starfish::Starfish(const char* localStorageFilePath,
     }
 #endif
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init();
 #endif
@@ -134,7 +136,7 @@ void Starfish::destroy()
     }
 #endif
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
     if (m_serviceWorkerProcessManager) {
         m_serviceWorkerProcessManager->destroy();
         m_serviceWorkerProcessManager = nullptr;

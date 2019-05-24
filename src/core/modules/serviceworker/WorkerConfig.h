@@ -37,7 +37,7 @@ private:
 #define CLR_RESET "\033[0m"
 #define CLR_LIGHT_YELLOW "\033[1;33m"
 
-#ifdef STARFISH_ENABLE_TEST
+#if !defined(NDEBUG)
 
 #define FMTTIME(now, down) (now - (((int)(now / down)) * down))
 
@@ -64,7 +64,7 @@ private:
     LOG_IF_ALLOWED(WorkerConfig::instance().get<int>("DEBUG_WORKER") >= lvl, \
                    "HOST", fmt, ##__VA_ARGS__)
 
-#else // STARFISH_ENABLE_TEST
+#else // else defined(NDEBUG)
 
 #define LOG_IF_ALLOWED(condition, fmt, ...)
 #define WORKER_LOG_IF_ALLOWED(fmt, ...)

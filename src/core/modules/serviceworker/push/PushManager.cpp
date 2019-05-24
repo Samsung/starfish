@@ -30,7 +30,9 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/push/PushSubscriptionOptions.h"
 #include "core/modules/serviceworker/push/PushSubscription.h"
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
 
 #include "core/modules/serviceworker/push/PushManager.h"
@@ -58,7 +60,7 @@ ScriptBindingInstance* PushManager::scriptBindingInstance()
 Promise* PushManager::subscribe()
 {
     Promise* promise = new Promise(m_executionContext->scriptBindingInstance());
-
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
     m_executionContext->webBase()->messageLoop()->addIdler(
         m_executionContext->globalScope(),
         [](size_t, void* data, void* data1) {
@@ -99,7 +101,9 @@ Promise* PushManager::subscribe()
             }
         },
         this, promise);
-
+#else
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
     return promise;
 }
 
@@ -113,6 +117,7 @@ Promise* PushManager::getSubscription()
 {
     Promise* promise = new Promise(m_executionContext->scriptBindingInstance());
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
     m_executionContext->webBase()->messageLoop()->addIdler(
         m_executionContext->globalScope(),
         [](size_t, void* data, void* data1) {
@@ -142,7 +147,9 @@ Promise* PushManager::getSubscription()
             }
         },
         this, promise);
-
+#else
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
     return promise;
 }
 
@@ -151,6 +158,6 @@ void PushManager::setPushSubscription(PushSubscription* pushSubscription)
     STARFISH_ASSERT(pushSubscription != nullptr);
     m_pushSubscription = pushSubscription;
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

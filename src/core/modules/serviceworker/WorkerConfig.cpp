@@ -34,14 +34,17 @@ WorkerConfig& WorkerConfig::instance()
 
 WorkerConfig::WorkerConfig()
 {
-#ifdef STARFISH_ENABLE_TEST
+#if !defined(NDEBUG)
     const char* verbose = getenv("DEBUG_WORKER");
 
     if ((verbose != nullptr) && (strlen(verbose) > 0)) {
         set("DEBUG_WORKER", std::atoi(verbose));
+        STARFISH_LOG_INFO("DEBUG_WORKER: %d\n", std::atoi(verbose));
     } else {
         set("DEBUG_WORKER", 0);
+        STARFISH_LOG_INFO("DEBUG_WORKER: %d\n", 0);
     }
+
 #endif
 }
 
