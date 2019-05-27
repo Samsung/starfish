@@ -245,6 +245,9 @@ public:
     ResourceURL* m_currentURL;
 
     player_h m_nativePlayer;
+#if defined(STARFISH_RUN_MSE_THREAD)
+    Thread* m_mseThread;
+#endif
     volatile bool* m_playerDeadFlag;
     MediaStream* m_audioStream;
     MediaStream* m_videoStream;
