@@ -480,6 +480,16 @@ void CanvasRenderingContext2DMixIn::setLineDashOffset(double offset)
 
 void CanvasRenderingContext2DMixIn::save()
 {
+    // https://html.spec.whatwg.org/multipage/canvas.html#the-canvas-state
+    // Drawing states consist of:
+    // The current transformation matrix.
+    // The current clipping region.
+    // The current values of the following attributes: strokeStyle, fillStyle,
+    // globalAlpha, lineWidth, lineCap, lineJoin, miterLimit, lineDashOffset,
+    // shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, filter,
+    // globalCompositeOperation, font, textAlign, textBaseline, direction,
+    // imageSmoothingEnabled, imageSmoothingQuality.
+    // The current dash list.
     m_canvas->setPathTransformMatrix(m_canvasPath->path()->getCTM());
     m_canvas->save();
 }
@@ -492,7 +502,7 @@ void CanvasRenderingContext2DMixIn::restore()
 
 void CanvasRenderingContext2DMixIn::scale(float x, float y)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
     transform(x, 0, 0, y, 0, 0, false);
@@ -500,7 +510,7 @@ void CanvasRenderingContext2DMixIn::scale(float x, float y)
 
 void CanvasRenderingContext2DMixIn::rotate(float angle)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
     float cosValue = cosf(angle);
@@ -510,7 +520,7 @@ void CanvasRenderingContext2DMixIn::rotate(float angle)
 
 void CanvasRenderingContext2DMixIn::translate(float x, float y)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
     transform(1, 0, 0, 1, x, y, false);
@@ -627,14 +637,14 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
     CanvasBlendMode cbm = CanvasBlendMode::Normal;
 
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasCompositeOperatorNames;
-         i++) {
+         ++i) {
         if (value->equals(CanvasCompositing::canvasCompositeOperatorNames[i])) {
             cco = static_cast<CanvasCompositeOperator>(i);
             m_canvas->setCompositeOperator(cco, cbm);
             return;
         }
     }
-    for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; i++) {
+    for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; ++i) {
         if (value->equals(CanvasCompositing::canvasBlendModeNames[i])) {
             cbm = static_cast<CanvasBlendMode>(i);
             cco = CanvasCompositeOperator::SourceOver;
@@ -647,50 +657,48 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 CanvasStyle CanvasRenderingContext2DMixIn::fillStyle()
 {
     auto source = m_canvas->fillSource();
-    if (source.isColorType()) {
+    if (source->isColorType() == true) {
         return CanvasStyle::createDOMString(
-            source.getColorValue().toHTMLColorCodeString());
+            source->getColorValue().toHTMLColorCodeString());
     } else {
-        STARFISH_ASSERT(source.isCanvasStyleType());
-        return source.getCanvasStyleValue();
+        STARFISH_ASSERT(source->isCanvasStyleType() == true);
+        return source->getCanvasStyleValue();
     }
 }
 
 void CanvasRenderingContext2DMixIn::setFillStyle(CanvasStyle value)
 {
-    if (value.isDOMStringValue()) {
+    if (value.isDOMStringValue() == true) {
         Unit::Color color;
         if (stringToColor(value.getDOMStringValue(), color)) {
             m_canvas->setFillColor(color);
         }
-    } else if (!value.isNoneValue()) {
-        CanvasFillStrokeSource s(value);
-        m_canvas->setFillSource(s);
+    } else if (value.isNoneValue() == false) {
+        m_canvas->setFillSource(new CanvasFillStrokeSource(value));
     }
 }
 
 CanvasStyle CanvasRenderingContext2DMixIn::strokeStyle()
 {
     auto source = m_canvas->strokeSource();
-    if (source.isColorType()) {
+    if (source->isColorType() == true) {
         return CanvasStyle::createDOMString(
-            source.getColorValue().toHTMLColorCodeString());
+            source->getColorValue().toHTMLColorCodeString());
     } else {
-        STARFISH_ASSERT(source.isCanvasStyleType());
-        return source.getCanvasStyleValue();
+        STARFISH_ASSERT(source->isCanvasStyleType() == true);
+        return source->getCanvasStyleValue();
     }
 }
 
 void CanvasRenderingContext2DMixIn::setStrokeStyle(CanvasStyle value)
 {
-    if (value.isDOMStringValue()) {
+    if (value.isDOMStringValue() == true) {
         Unit::Color color;
         if (stringToColor(value.getDOMStringValue(), color)) {
             m_canvas->setStrokeColor(color);
         }
-    } else if (!value.isNoneValue()) {
-        CanvasFillStrokeSource s(value);
-        m_canvas->setStrokeSource(s);
+    } else if (value.isNoneValue() == false) {
+        m_canvas->setStrokeSource(new CanvasFillStrokeSource(value));
     }
 }
 
@@ -720,7 +728,7 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
     STARFISH_ASSERT(repetition != nullptr);
 
     auto usability = checkUsabilityOfCanvasImageSource(image);
-    if (usability.isDOMException()) {
+    if (usability.isDOMException() == true) {
         throw usability.asDOMException();
     } else {
         if (usability.asOtherType() == false) {
@@ -751,7 +759,8 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
     auto pair = CanvasImageSourceToNativeImageData(image);
 
     NativeImageData* nativeImageData = pair.first;
-    if (nativeImageData == nullptr && !image.isHTMLCanvasElementValue()) {
+    if (nativeImageData == nullptr &&
+        image.isHTMLCanvasElementValue() == false) {
         // FIXME : nativeImageData can be nullptr after call
         // NativeImageData::attach on a canvas other than CanvasCairo currently
         return nullptr;
@@ -782,27 +791,28 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
 {
     STARFISH_ASSERT(m_canvas != nullptr);
 
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
-    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true ||
+        isInfOrNan(w) == true || isInfOrNan(h) == true) {
         return;
     }
 
-    if (!w || !h) {
+    if (w == 0 || h == 0) {
         return;
     }
 
     auto fs = fillStyle();
-    if (fs.isCanvasGradientValue() &&
-        fs.getCanvasGradientValue()->isZeroSize()) {
+    if (fs.isCanvasGradientValue() == true &&
+        fs.getCanvasGradientValue()->isZeroSize() == true) {
         return;
     }
 
-    if (fs.isCanvasPatternValue() &&
-        fs.getCanvasPatternValue()->isEmptyPattern()) {
+    if (fs.isCanvasPatternValue() == true &&
+        fs.getCanvasPatternValue()->isEmptyPattern() == true) {
         return;
     }
 
@@ -816,27 +826,28 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
 void CanvasRenderingContext2DMixIn::strokeRect(float x, float y, float w,
                                                float h)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-strokerect
-    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true ||
+        isInfOrNan(w) == true || isInfOrNan(h) == true) {
         return;
     }
 
-    if (!w && !h) {
+    if (w == 0 && h == 0) {
         return;
     }
 
     auto fs = strokeStyle();
-    if (fs.isCanvasGradientValue() &&
-        fs.getCanvasGradientValue()->isZeroSize()) {
+    if (fs.isCanvasGradientValue() == true &&
+        fs.getCanvasGradientValue()->isZeroSize() == true) {
         return;
     }
 
-    if (fs.isCanvasPatternValue() &&
-        fs.getCanvasPatternValue()->isEmptyPattern()) {
+    if (fs.isCanvasPatternValue() == true &&
+        fs.getCanvasPatternValue()->isEmptyPattern() == true) {
         return;
     }
 
@@ -966,7 +977,7 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
                                              float maxWidth)
 {
     STARFISH_ASSERT(text != nullptr);
-    if (maxWidth <= 0 || isInfOrNan(maxWidth)) {
+    if (maxWidth <= 0 || isInfOrNan(maxWidth) == true) {
         return;
     }
     fillText(text, x, y, maxWidth, true);
@@ -982,7 +993,7 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
                                                float maxWidth)
 {
     STARFISH_ASSERT(text != nullptr);
-    if (maxWidth <= 0 || isInfOrNan(maxWidth)) {
+    if (maxWidth <= 0 || isInfOrNan(maxWidth) == true) {
         return;
     }
     strokeText(text, x, y, maxWidth, true);
@@ -1047,7 +1058,7 @@ bool CanvasRenderingContext2DMixIn::canUseFastPathText(String* text,
             &dir);
     if (dir == UBIDI_LTR && !shouldApplyMaxWidth &&
         m_canvasTextBaseline == CanvasTextBaseline::Alphabetic) {
-        if (isLtrDirection()) {
+        if (isLtrDirection() == true) {
             if (m_canvasTextAlign == CanvasTextAlign::Left ||
                 m_canvasTextAlign == CanvasTextAlign::Start) {
                 return true;
@@ -1077,7 +1088,7 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     } else if (m_canvasDirection == CanvasDirection::Rtl) {
         style.setDirection(DirectionValue::RtlDirectionValue);
     } else {
-        if (m_ownerHTMLCanvasElement->style()) {
+        if (m_ownerHTMLCanvasElement->style() != nullptr) {
             style.setDirection(m_ownerHTMLCanvasElement->style()->direction());
         } else {
             style.setDirection(
@@ -1139,21 +1150,21 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
 
     // CanvasTextDrawingStyles.textAlign
     if (m_canvasTextAlign == CanvasTextAlign::End) {
-        if (isLtrDirection()) {
+        if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-width, 0);
         } else {
             paintCtx.m_canvas->translate(width, 0);
         }
     } else if (m_canvasTextAlign == CanvasTextAlign::Left) {
-        if (!isLtrDirection()) {
+        if (isLtrDirection() == false) {
             paintCtx.m_canvas->translate(width, 0);
         }
     } else if (m_canvasTextAlign == CanvasTextAlign::Right) {
-        if (isLtrDirection()) {
+        if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-width, 0);
         }
     } else if (m_canvasTextAlign == CanvasTextAlign::Center) {
-        if (isLtrDirection()) {
+        if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-(width / 2), 0);
         } else {
             paintCtx.m_canvas->translate((width / 2), 0);
@@ -1161,18 +1172,18 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     } else {
     }
 
-    if (shouldApplyMaxWidth) {
+    if (shouldApplyMaxWidth == true) {
         float scale = maxWidth / width;
-        if (!isInfOrNan(scale)) {
+        if (isInfOrNan(scale) == false) {
             paintCtx.m_canvas->scale(scale, 1);
         }
     }
 
     GCVector<LineBox*> lbs = dummyFrameBlockContainer.lineBoxes();
-    for (size_t i = 0; i < lbs.size(); i++) {
+    for (size_t i = 0; i < lbs.size(); ++i) {
         InlineBoxLayoutParentBox& ilp = *lbs[i];
         GCVector<FrameBox*> fbs = ilp.boxes();
-        for (size_t k = 0; k < fbs.size(); k++) {
+        for (size_t k = 0; k < fbs.size(); ++k) {
             InlineTextBox* childBox = (InlineTextBox*)fbs[k];
             LayoutUnit dx = ilp.frameRect().x() + childBox->x();
             LayoutUnit dy = ilp.frameRect().y() + childBox->y();
@@ -1184,7 +1195,7 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
             }
 
             StringView txt = childBox->text();
-            if (isStroke) {
+            if (isStroke == true) {
                 paintCtx.m_canvas->drawStrokeText(
                     dx, dy, childBox->contentWidth(), txt, false);
             } else {
@@ -1201,7 +1212,7 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
 {
     STARFISH_ASSERT(text != nullptr);
 
-    if (text == nullptr || isInfOrNan(x) || isInfOrNan(y)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true) {
         return;
     }
 
@@ -1217,7 +1228,7 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
                                                float maxWidth, bool useMaxWidth)
 {
     STARFISH_ASSERT(text != nullptr);
-    if (text == nullptr || isInfOrNan(x) || isInfOrNan(y)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true) {
         return;
     }
 
@@ -1252,7 +1263,7 @@ static inline Unit::Rect normalizeRect(const Unit::Rect& rect)
 static inline void clipRectsToImageRect(const Unit::Rect& img, Unit::Rect& src,
                                         Unit::Rect& dst)
 {
-    if (img.contains(src)) {
+    if (img.contains(src) == true) {
         return;
     }
 
@@ -1276,17 +1287,19 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
                                               float dh)
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-drawimage
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
-    if (isInfOrNan(sx) || isInfOrNan(sy) || isInfOrNan(sw) || isInfOrNan(sh) ||
-        isInfOrNan(dx) || isInfOrNan(dy) || isInfOrNan(dw) || isInfOrNan(dh)) {
+    if (isInfOrNan(sx) == true || isInfOrNan(sy) == true ||
+        isInfOrNan(sw) == true || isInfOrNan(sh) == true ||
+        isInfOrNan(dx) == true || isInfOrNan(dy) == true ||
+        isInfOrNan(dw) == true || isInfOrNan(dh) == true) {
         return;
     }
 
     auto usability = checkUsabilityOfCanvasImageSource(image);
-    if (usability.isDOMException()) {
+    if (usability.isDOMException() == true) {
         throw usability.asDOMException();
     } else {
         if (!usability.asOtherType()) {
@@ -1307,20 +1320,21 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         setOriginCleanFlag(false);
     }
 
-    if (!sw) {
+    if (sw == 0) {
         sw = nativeImageData->width();
     }
-    if (!sh) {
+
+    if (sh == 0) {
         sh = nativeImageData->height();
     }
 
-    if (!sw || !sh) {
+    if (sw == 0 || sh == 0) {
         return;
     }
-    if (!dw) {
+    if (dw == 0) {
         dw = sw;
     }
-    if (!dh) {
+    if (dh == 0) {
         dh = sh;
     }
 
@@ -1333,24 +1347,24 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
 
     Unit::Rect adjustSrcRect(0, 0, nativeImageData->width(),
                              nativeImageData->height());
-    if (adjustSrcRect.contains(src)) {
+    if (adjustSrcRect.contains(src) == true) {
         adjustSrcRect = src;
     } else {
         adjustSrcRect.intersect(src);
     }
-    if (adjustSrcRect.isEmpty()) {
+    if (adjustSrcRect.isEmpty() == true) {
         return;
     }
 
     Unit::Rect adjustDstRect(0, 0, m_canvasSurface->bufferWidth(),
                              m_canvasSurface->bufferHeight());
 
-    if (adjustDstRect.contains(dst)) {
+    if (adjustDstRect.contains(dst) == true) {
         adjustDstRect = dst;
     } else {
         adjustDstRect.intersect(dst);
     }
-    if (adjustDstRect.isEmpty()) {
+    if (adjustDstRect.isEmpty() == true) {
         return;
     }
     // TODO : Apply Image CanvasImageSmoothing
@@ -1367,7 +1381,7 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
 ImageData* CanvasRenderingContext2DMixIn::createImageData(int32_t sw,
                                                           int32_t sh)
 {
-    if (!sw || !sh) {
+    if (sw == 0 || sh == 0) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INDEX_SIZE_ERR,
                                "sw and sh are must not zero");
@@ -1381,7 +1395,7 @@ ImageData* CanvasRenderingContext2DMixIn::createImageData(ImageData* imagedata)
     auto pixelsPerRow = imagedata->width();
     auto rows = imagedata->height();
 
-    if (!imagedata->width() || !imagedata->height()) {
+    if (imagedata->width() == 0 || imagedata->height() == 0) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INDEX_SIZE_ERR,
                                "sw and sh are must not zero");
@@ -1392,7 +1406,7 @@ ImageData* CanvasRenderingContext2DMixIn::createImageData(ImageData* imagedata)
 ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
                                                        int32_t sw, int32_t sh)
 {
-    if (!sw || !sh) {
+    if (sw == 0 || sh == 0) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INDEX_SIZE_ERR,
                                "sw and sh are must not zero");
@@ -1412,7 +1426,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     Checked<int, RecordOverflow> dataSize = 4;
     dataSize *= sw;
     dataSize *= sh;
-    if (dataSize.hasOverflowed()) {
+    if (dataSize.hasOverflowed() == true) {
         throw new DOMException(
             executionContext(), DOMException::Code::INDEX_SIZE_ERR,
             "The requested image size exceeds the supported range.");
@@ -1426,7 +1440,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     flush();
 
     size_t stride = 0;
-    if (m_canvasSurface->bufferWidth() && m_canvasSurface->bufferStride()) {
+    if (m_canvasSurface->bufferWidth() != 0 &&
+        m_canvasSurface->bufferStride() != 0) {
         stride =
             m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
     } else {
@@ -1475,7 +1490,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
             a = srcPixel[3];
 #endif
 #if defined(NEEDS_UNPREMULTIPLIED)
-            if (a && a != 255) {
+            if (a != 0 && a != 255) {
                 r = r * 255 / a;
                 g = g * 255 / a;
                 b = b * 255 / a;
@@ -1502,7 +1517,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
 void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
                                                  int32_t dx, int32_t dy)
 {
-    STARFISH_ASSERT(imagedata);
+    STARFISH_ASSERT(imagedata != nullptr);
     putImageData(imagedata, dx, dy, 0, 0, imagedata->width(),
                  imagedata->height());
 }
@@ -1515,15 +1530,16 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-putimagedata
 
-    STARFISH_ASSERT(imagedata);
+    STARFISH_ASSERT(imagedata != nullptr);
 
-    if (isInfOrNan(dx) || isInfOrNan(dy) || isInfOrNan(dirtyX) ||
-        isInfOrNan(dirtyY) || isInfOrNan(dirtyWidth) ||
-        isInfOrNan(dirtyHeight)) {
+    if (isInfOrNan(dx) == true || isInfOrNan(dy) == true ||
+        isInfOrNan(dirtyX) == true || isInfOrNan(dirtyY) == true ||
+        isInfOrNan(dirtyWidth) == true || isInfOrNan(dirtyHeight) == true) {
         return;
     }
 
-    if (imagedata->data()->asArrayBufferView()->buffer()->isDetachedBuffer()) {
+    if (imagedata->data()->asArrayBufferView()->buffer()->isDetachedBuffer() ==
+        true) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR,
                                "ImageData's data has a detached buffer");
@@ -1568,11 +1584,11 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
     uint8_t* dest = m_canvasSurface->mapBuffer();
     auto destWidth = m_canvasSurface->bufferWidth();
     auto destHeight = m_canvasSurface->bufferHeight();
-    if (!destWidth || !destHeight) {
+    if (destWidth == 0 || destHeight == 0) {
         return;
     }
     size_t destStride = 0;
-    if (destWidth && m_canvasSurface->bufferStride()) {
+    if (destWidth != 0 && m_canvasSurface->bufferStride() != 0) {
         destStride =
             m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
     } else {
@@ -1622,13 +1638,14 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
 void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
                                               float h)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
 
-    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true ||
+        isInfOrNan(w) == true || isInfOrNan(h) == true) {
         return;
     }
 
@@ -1641,25 +1658,25 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
 
 void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     auto fs = fillStyle();
-    if (fs.isCanvasGradientValue() &&
-        fs.getCanvasGradientValue()->isZeroSize()) {
+    if (fs.isCanvasGradientValue() == true &&
+        fs.getCanvasGradientValue()->isZeroSize() == true) {
         return;
     }
 
-    if (fs.isCanvasPatternValue() &&
-        fs.getCanvasPatternValue()->isEmptyPattern()) {
+    if (fs.isCanvasPatternValue() == true &&
+        fs.getCanvasPatternValue()->isEmptyPattern() == true) {
         return;
     }
 
     m_ownerHTMLCanvasElement->setNeedsComposite();
 
     auto rule = stringToCanvasFillRule(fillRule);
-    if (!path->isEmpty()) {
+    if (path->isEmpty() == false) {
         m_canvas->save();
         if (rule == CanvasFillRule::NonZero) {
             m_canvas->setFillRule(true);
@@ -1675,24 +1692,24 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 }
 void CanvasRenderingContext2DMixIn::stroke(Path* path)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     auto fs = strokeStyle();
-    if (fs.isCanvasGradientValue() &&
-        fs.getCanvasGradientValue()->isZeroSize()) {
+    if (fs.isCanvasGradientValue() == true &&
+        fs.getCanvasGradientValue()->isZeroSize() == true) {
         return;
     }
 
-    if (fs.isCanvasPatternValue() &&
-        fs.getCanvasPatternValue()->isEmptyPattern()) {
+    if (fs.isCanvasPatternValue() == true &&
+        fs.getCanvasPatternValue()->isEmptyPattern() == true) {
         return;
     }
 
     m_ownerHTMLCanvasElement->setNeedsComposite();
 
-    if (!path->isEmpty()) {
+    if (path->isEmpty() == false) {
         m_canvas->save();
         if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
             m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1704,13 +1721,13 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
 
 void CanvasRenderingContext2DMixIn::clip(Path* path, String* fillRule)
 {
-    if (m_canvas->hasNonInvertableCTM()) {
+    if (m_canvas->hasNonInvertableCTM() == true) {
         return;
     }
 
     auto rule = stringToCanvasFillRule(fillRule);
 
-    if (!path->isEmpty()) {
+    if (path->isEmpty() == false) {
         if (rule == CanvasFillRule::NonZero) {
             m_canvas->setFillRule(true);
         } else if (rule == CanvasFillRule::EvenOdd) {
@@ -1736,27 +1753,27 @@ void CanvasRenderingContext2DMixIn::getPointsUnaffectedByCurrentTransformation(
 bool CanvasRenderingContext2DMixIn::isPointInPath(Path* path, float x, float y,
                                                   String* fillRule)
 {
-    if (isInfOrNan(x) || isInfOrNan(y)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true) {
         return false;
     }
 
     auto rule = stringToCanvasFillRule(fillRule);
     float xx, yy;
     getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
-    return path->isPointInPath(xx, yy, rule);
+    return (path->isPointInPath(xx, yy, rule) == true);
 }
 
 bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
                                                     float y)
 {
-    if (isInfOrNan(x) || isInfOrNan(y)) {
+    if (isInfOrNan(x) == true || isInfOrNan(y) == true) {
         return false;
     }
 
     float xx, yy;
     getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
     path->applyPathDrawingStyles(m_canvas);
-    return path->isPointInStroke(xx, yy);
+    return (path->isPointInStroke(xx, yy) == true);
 }
 
 DOMExceptionOr<bool>
@@ -1764,22 +1781,23 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
     CanvasImageSource image)
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
-    if (image.isHTMLImageElementOrSVGImageElementValue()) {
+    if (image.isHTMLImageElementOrSVGImageElementValue() == true) {
         auto imgOrSvg = image.getHTMLImageElementOrSVGImageElementValue();
 
         NativeImageData* imageData = nullptr;
-        if (imgOrSvg.isHTMLImageElementValue()) {
-            if (imgOrSvg.getHTMLImageElementValue()->hasRequestError()) {
+        if (imgOrSvg.isHTMLImageElementValue() == true) {
+            if (imgOrSvg.getHTMLImageElementValue()->hasRequestError() ==
+                true) {
                 return false;
             }
             imageData = imgOrSvg.getHTMLImageElementValue()->imageData();
-        } else if (imgOrSvg.isSVGImageElementValue()) {
-            if (imgOrSvg.getSVGImageElementValue()->hasRequestError()) {
+        } else if (imgOrSvg.isSVGImageElementValue() == true) {
+            if (imgOrSvg.getSVGImageElementValue()->hasRequestError() == true) {
                 return false;
             }
             imageData = imgOrSvg.getSVGImageElementValue()->imageData();
         } else {
-            STARFISH_ASSERT(imgOrSvg.isNoneValue());
+            STARFISH_ASSERT(imgOrSvg.isNoneValue() == true);
             return false;
         }
 
@@ -1788,25 +1806,25 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
                                     DOMException::Code::INVALID_STATE_ERR);
         }
 
-        if (imageData == nullptr || !imageData->width() ||
-            !imageData->height()) {
+        if (imageData == nullptr || imageData->width() == 0 ||
+            imageData->height() == 0) {
             return false;
         }
 
         return true;
-    } else if (image.isHTMLCanvasElementValue()) {
+    } else if (image.isHTMLCanvasElementValue() == true) {
         auto canvas = image.getHTMLCanvasElementValue();
-        if (!canvas->width() || !canvas->height()) {
+        if (canvas->width() == 0 || canvas->height() == 0) {
             return new DOMException(executionContext(),
                                     DOMException::Code::INVALID_STATE_ERR,
                                     "The image argument is a canvas element "
                                     "with a width or height of 0.");
         }
         return true;
-    } else if (image.isHTMLVideoElementValue()) {
+    } else if (image.isHTMLVideoElementValue() == true) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else {
-        STARFISH_ASSERT(image.isNoneValue());
+        STARFISH_ASSERT(image.isNoneValue() == true);
         return new DOMException(
             executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
             "The image is not of type '(CSSImageValue or HTMLImageElement or "
@@ -1823,32 +1841,32 @@ CanvasRenderingContext2DMixIn::CanvasImageSourceToNativeImageData(
     NativeImageData* nativeImageData = nullptr;
     bool clean = true;
 
-    if (image.isHTMLImageElementOrSVGImageElementValue()) {
+    if (image.isHTMLImageElementOrSVGImageElementValue() == true) {
         if (image.getHTMLImageElementOrSVGImageElementValue()
-                .isHTMLImageElementValue()) {
+                .isHTMLImageElementValue() == true) {
             auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
                                  .getHTMLImageElementValue();
 
-            if (!executionContext()->document()->webOrigin()->isSameOrigin(
-                    htmlImage->webOrigin())) {
+            if (executionContext()->document()->webOrigin()->isSameOrigin(
+                    htmlImage->webOrigin()) == false) {
                 clean = false;
             }
 
             nativeImageData = htmlImage->imageData();
         } else if (image.getHTMLImageElementOrSVGImageElementValue()
-                       .isSVGImageElementValue()) {
+                       .isSVGImageElementValue() == true) {
             auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
                                 .getSVGImageElementValue();
 
-            if (!executionContext()->document()->webOrigin()->isSameOrigin(
-                    svgImage->webOrigin())) {
+            if (executionContext()->document()->webOrigin()->isSameOrigin(
+                    svgImage->webOrigin()) == false) {
                 clean = false;
             }
             nativeImageData = svgImage->imageData();
         } else {
-            STARFISH_ASSERT(image.isNoneValue());
+            STARFISH_ASSERT(image.isNoneValue() == true);
         }
-    } else if (image.isHTMLCanvasElementValue()) {
+    } else if (image.isHTMLCanvasElementValue() == true) {
         auto htmlCanvas = image.getHTMLCanvasElementValue();
         auto context = htmlCanvas->canvasRenderingContext();
         if (context != nullptr) {
@@ -1960,7 +1978,7 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
         familyNameArraySize = list->size();
         familyNameArray =
             (String**)GC_MALLOC_ATOMIC(sizeof(String*) * (familyNameArraySize));
-        for (size_t i = 0; i < familyNameArraySize; i++) {
+        for (size_t i = 0; i < familyNameArraySize; ++i) {
             familyNameArray[i] = list->at(i).keywordValue();
         }
     }
@@ -2001,7 +2019,7 @@ void CanvasRenderingContext2DMixIn::setTextAlign(String* value)
 {
     STARFISH_ASSERT(value != nullptr);
     CanvasTextAlign textAlign;
-    if (stringToCanvasTextAlign(value, textAlign)) {
+    if (stringToCanvasTextAlign(value, textAlign) == true) {
         m_canvasTextAlign = textAlign;
     }
 }
@@ -2015,14 +2033,14 @@ void CanvasRenderingContext2DMixIn::setTextBaseline(String* value)
 {
     STARFISH_ASSERT(value != nullptr);
     CanvasTextBaseline textBaseline;
-    if (stringToCanvasTextBaseline(value, textBaseline)) {
+    if (stringToCanvasTextBaseline(value, textBaseline) == true) {
         m_canvasTextBaseline = textBaseline;
     }
 }
 
 String* CanvasRenderingContext2DMixIn::direction()
 {
-    if (m_ownerHTMLCanvasElement->style()) {
+    if (m_ownerHTMLCanvasElement->style() != nullptr) {
         return canvasDirectionToString(m_canvasDirection,
                                        m_ownerHTMLCanvasElement->style());
     }
@@ -2034,7 +2052,7 @@ void CanvasRenderingContext2DMixIn::setDirection(String* value)
 {
     STARFISH_ASSERT(value != nullptr);
     CanvasDirection direction;
-    if (stringToCanvasDirection(value, direction)) {
+    if (stringToCanvasDirection(value, direction) == true) {
         m_canvasDirection = direction;
     }
 }

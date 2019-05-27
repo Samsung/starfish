@@ -171,11 +171,11 @@ public:
     {
     }
 
-    virtual void setFillSource(CanvasFillStrokeSource& source)
+    virtual void setFillSource(CanvasFillStrokeSource* source)
     {
     }
 
-    virtual CanvasFillStrokeSource fillSource()
+    virtual CanvasFillStrokeSource* fillSource()
     {
         return CanvasFillStrokeSource();
     }
@@ -366,13 +366,13 @@ public:
     {
     }
 
-    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    virtual void setStrokeSource(CanvasFillStrokeSource* source)
     {
     }
 
-    virtual CanvasFillStrokeSource strokeSource()
+    virtual CanvasFillStrokeSource* strokeSource()
     {
-        return CanvasFillStrokeSource();
+        return new CanvasFillStrokeSource();
     }
 
     virtual void setNonInvertableCTM(bool validation)

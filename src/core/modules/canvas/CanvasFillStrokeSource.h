@@ -56,21 +56,15 @@ union CanvasFillStrokeSourceValue {
     }
 };
 
-class CanvasFillStrokeSource {
+class CanvasFillStrokeSource : public gc {
 public:
     CanvasFillStrokeSource();
     CanvasFillStrokeSource(Unit::Color color);
     CanvasFillStrokeSource(CanvasStyle canvasStyle);
 
-    CanvasFillStrokeSource(const CanvasFillStrokeSource& other);
-
-    STARFISH_MAKE_STACK_ALLOCATED();
-
     ~CanvasFillStrokeSource()
     {
     }
-
-    CanvasFillStrokeSource& operator=(const CanvasFillStrokeSource& other);
 
     bool isInvalidType()
     {

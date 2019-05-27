@@ -76,6 +76,29 @@ public:
         : CanvasState()
     {
     }
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(CanvasStateCairo));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (typeInited == false) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(CanvasStateCairo)] = { 0 };
+            CanvasStateCairo::fillGCDescriptor(obj_bitmap);
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CanvasStateCairo));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        STARFISH_ASSERT(obj_bitmap != nullptr);
+        CanvasState::fillGCDescriptor(obj_bitmap);
+    }
 };
 
 class NativeGradientCairo : public NativeGradient {
@@ -139,6 +162,8 @@ public:
 private:
     void initialize(GradientDrawingInfo* info)
     {
+        STARFISH_ASSERT(info != nullptr);
+
         if (info->type == GradientType::LinearGradient) {
             initializePatternToLinearGradient(info->x1, info->y1, info->x2,
                                               info->y2);
@@ -241,13 +266,15 @@ private:
         bool surfaceWasCreated = false;
         cairo_surface_t* surface = (cairo_surface_t*)m_nativeImage->unwrap();
 
-        if (surface == nullptr && !m_nativeImage->isAttachableNativeImage()) {
+        if (surface == nullptr &&
+            (m_nativeImage->isAttachableNativeImage() == false)) {
             surface = cairo_image_surface_create_for_data(
                 (unsigned char*)m_nativeImage->data(), CAIRO_FORMAT,
                 m_nativeImage->width(), m_nativeImage->height(),
                 m_nativeImage->stride());
             surfaceWasCreated = true;
-        } else if (surface && m_nativeImage->isAttachableNativeImage()) {
+        } else if (surface != nullptr &&
+                   m_nativeImage->isAttachableNativeImage() == true) {
             auto format = cairo_image_surface_get_format(surface);
             auto width = cairo_image_surface_get_width(surface);
             auto height = cairo_image_surface_get_height(surface);
@@ -268,7 +295,7 @@ private:
         m_pattern = cairo_pattern_create_for_surface(surface);
         cairo_pattern_set_extend(m_pattern, CAIRO_EXTEND_REPEAT);
 
-        if (surfaceWasCreated) {
+        if (surfaceWasCreated == true) {
             cairo_surface_destroy(surface);
         }
 
@@ -290,6 +317,8 @@ class CanvasCairo : public Canvas {
     friend class CanvasAttachableNativeImageCairo;
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
+        STARFISH_ASSERT(buffer != nullptr);
+
         m_renderTargetInfo.m_buffer = (uint8_t*)buffer;
         m_renderTargetInfo.m_width = width;
         m_renderTargetInfo.m_height = height;
@@ -304,6 +333,8 @@ class CanvasCairo : public Canvas {
 
     void initFromNativeImageData(NativeImageData* data)
     {
+        STARFISH_ASSERT(data != nullptr);
+
         m_renderTargetInfo.m_buffer = (uint8_t*)data->data();
         m_renderTargetInfo.m_width = data->width();
         m_renderTargetInfo.m_height = data->height();
@@ -333,32 +364,32 @@ class CanvasCairo : public Canvas {
         }
 
         CanvasFillStrokeSource* source = nullptr;
-        if (useStrokeSource) {
-            source = &lastState().m_strokeSource;
+        if (useStrokeSource == true) {
+            source = lastState()->m_strokeSource;
         } else {
-            source = &lastState().m_fillSource;
+            source = lastState()->m_fillSource;
         }
         STARFISH_ASSERT(source != nullptr);
 
-        if (source->isColorType()) {
+        if (source->isColorType() == true) {
             Unit::Color clr = source->getColorValue();
             cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
                                   clr.A() * globalAlpha());
-        } else if (source->isCanvasStyleType()) {
+        } else if (source->isCanvasStyleType() == true) {
             auto canvasStyle = source->getCanvasStyleValue();
-            if (canvasStyle.isCanvasGradientValue()) {
+            if (canvasStyle.isCanvasGradientValue() == true) {
                 auto gradientValue =
                     canvasStyle.getCanvasGradientValue()->nativeGradient();
                 cairo_set_source(
                     m_canvas,
                     ((NativeGradientCairo*)gradientValue.get())->pattern());
 
-            } else if (canvasStyle.isCanvasPatternValue()) {
+            } else if (canvasStyle.isCanvasPatternValue() == true) {
                 auto nativePattern =
                     (NativePatternCairo*)(canvasStyle.getCanvasPatternValue()
                                               ->nativePattern()
                                               .get());
-                if (nativePattern->isEmpyPattern()) {
+                if (nativePattern->isEmpyPattern() == true) {
                     return;
                 }
 
@@ -386,15 +417,15 @@ class CanvasCairo : public Canvas {
                 bool repeatX = nativePattern->repeatX();
                 bool repeatY = nativePattern->repeatY();
 
-                if (!repeatX) {
+                if (repeatX == false) {
                     clipRect.setX(patternRect.x());
                     clipRect.setWidth(patternRect.width());
                 }
-                if (!repeatY) {
+                if (repeatY == false) {
                     clipRect.setY(patternRect.y());
                     clipRect.setHeight(patternRect.height());
                 }
-                if (!repeatX || !repeatY) {
+                if (repeatX == false || repeatY == false) {
                     cairo_rectangle(m_canvas, clipRect.x(), clipRect.y(),
                                     clipRect.width(), clipRect.height());
                     cairo_clip(m_canvas);
@@ -413,6 +444,9 @@ public:
     CanvasCairo(WebView* webView, void* buffer, int width, int height,
                 int stride)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(buffer != nullptr);
+
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
@@ -422,12 +456,19 @@ public:
         {
             initFromBuffer(buffer, width, height, stride);
         }
+
+        STARFISH_ASSERT(m_canvas != nullptr);
+        STARFISH_ASSERT(m_surface != nullptr);
+
         init();
         save();
     }
 
     CanvasCairo(WebView* webView, CanvasSurface* data)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(data != nullptr);
+
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -438,12 +479,18 @@ public:
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
 
+        STARFISH_ASSERT(m_canvas != nullptr);
+        STARFISH_ASSERT(m_surface != nullptr);
+
         init();
         save();
     }
 
     CanvasCairo(WebView* webView, NativeImageData* data)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(data != nullptr);
+
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
@@ -453,21 +500,25 @@ public:
         {
             initFromNativeImageData(data);
         }
+
+        STARFISH_ASSERT(m_canvas != nullptr);
+        STARFISH_ASSERT(m_surface != nullptr);
+
         init();
         save();
     }
 
     ~CanvasCairo()
     {
-        while (m_state.size()) {
+        while (m_state.size() != 0) {
             restore();
         }
         STARFISH_ASSERT(m_state.size() == 0);
-        if (m_shouldDestroyCairo) {
+        if (m_shouldDestroyCairo == true) {
             cairo_destroy(m_canvas);
         }
         cairo_surface_flush(m_surface);
-        if (m_shouldDestroySurface) {
+        if (m_shouldDestroySurface == true) {
             cairo_surface_destroy(m_surface);
         }
     }
@@ -483,7 +534,7 @@ public:
 #endif
     }
 
-    virtual void clearColor(const Unit::Color& clr)
+    virtual void clearColor(const Unit::Color& clr) override
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::clear");
         cairo_save(m_canvas);
@@ -497,104 +548,126 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void flush()
+    virtual void flush() override
     {
         cairo_surface_flush(m_surface);
     }
 
     // state
-    virtual void save()
+    virtual void save() override
     {
         checkError();
-        CanvasStateCairo state;
-        if (m_state.size()) {
-            auto& lastState = m_state.back();
-            state.m_fillSource = lastState.m_fillSource;
-            state.m_strokeSource = lastState.m_strokeSource;
-            state.m_layerOpacity = lastState.m_layerOpacity;
-            state.m_font = lastState.m_font;
-            state.m_visible = lastState.m_visible;
-            state.m_textDecorationData = lastState.m_textDecorationData;
-            state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
-            state.m_pathTM = lastState.m_pathTM;
-            state.m_globalAlpha = lastState.m_globalAlpha;
-            state.m_compositeOperator = lastState.m_compositeOperator;
-            state.m_blendMode = lastState.m_blendMode;
-            state.m_dashOffset = lastState.m_dashOffset;
-            state.m_dashes = lastState.m_dashes;
+
+        CanvasStateCairo* state = nullptr;
+
+        if (m_stateMemoryPool.size() != 0) {
+            state = m_stateMemoryPool.back();
+            m_stateMemoryPool.pop_back();
+        } else {
+            state = new CanvasStateCairo();
+        }
+
+        if (m_state.size() != 0) {
+            auto lastState = m_state.back();
+            state->m_fillSource = lastState->m_fillSource;
+            state->m_strokeSource = lastState->m_strokeSource;
+            state->m_layerOpacity = lastState->m_layerOpacity;
+            state->m_font = lastState->m_font;
+            state->m_visible = lastState->m_visible;
+            state->m_textDecorationData = lastState->m_textDecorationData;
+            state->m_hasNonInvertableCTM = lastState->m_hasNonInvertableCTM;
+            state->m_pathTM = lastState->m_pathTM;
+            state->m_globalAlpha = lastState->m_globalAlpha;
+            state->m_compositeOperator = lastState->m_compositeOperator;
+            state->m_blendMode = lastState->m_blendMode;
+            state->m_dashOffset = lastState->m_dashOffset;
+            state->m_dashes = lastState->m_dashes;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
     }
 
     // pop state stack and restore state
-    virtual void restore()
+    virtual void restore() override
     {
         checkError();
+
+        auto toStore = m_state.back();
+        memset(toStore, 0, sizeof(CanvasStateCairo));
+        m_stateMemoryPool.push_back(toStore);
+
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
         m_shouldApplyCanvasFillStrokeSource = true;
+
+        while (m_state.size() * 2 < m_stateMemoryPool.size()) {
+            m_stateMemoryPool.pop_back();
+        }
     }
 
     // transformations (default transform is the identity matrix)
-    virtual void scale(double x, double y)
+    virtual void scale(double x, double y) override
     {
         cairo_scale(m_canvas, x, y);
     }
 
-    virtual void scale(double x, double y, double ox, double oy)
+    void scale(double x, double y, double ox, double oy)
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    virtual void rotate(double angle)
+    virtual void rotate(double angle) override
     {
         cairo_rotate(m_canvas, angle);
     }
 
-    virtual void rotate(double angle, double ox, double oy)
+    void rotate(double angle, double ox, double oy)
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    virtual void translate(double x, double y)
+    virtual void translate(double x, double y) override
     {
         cairo_translate(m_canvas, x, y);
     }
 
-    virtual void translate(LayoutUnit x, LayoutUnit y)
+    virtual void translate(LayoutUnit x, LayoutUnit y) override
     {
         translate(x.toDouble(), y.toDouble());
     }
 
-    virtual void beginOpacityLayer(float c)
+    virtual void beginOpacityLayer(float c) override
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
-        lastState().m_layerOpacity =
+        lastState()->m_layerOpacity =
             std::max<float>(0, std::min<float>(1.0, c));
         cairo_push_group(m_canvas);
     }
 
-    virtual void endOpacityLayer()
+    virtual void endOpacityLayer() override
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
         cairo_pop_group_to_source(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
+        cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity);
         restore();
     }
 
-    virtual void clip(const Unit::Rect& rt)
+    virtual void clip(const Unit::Rect& rt) override
     {
         cairo_rectangle(m_canvas, rt.x(), rt.y(), rt.width(), rt.height());
         cairo_clip(m_canvas);
     }
-    virtual void clipPath(Path* path)
+
+    virtual void clipPath(Path* path) override
     {
+        STARFISH_ASSERT(path != nullptr);
+
         setPathAsNewPathOnCurrentContext(path);
         clipPath();
     }
-    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
+
+    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt) override
     {
         if (rt.width() == 0 || rt.height() == 0) {
             clip(Unit::Rect(0, 0, 0, 0));
@@ -663,7 +736,7 @@ public:
         return deviceRect;
     }
 
-    virtual void unsetDevicePixelRatio()
+    virtual void unsetDevicePixelRatio() override
     {
         scale(1 / m_webView->screenInfo().devicePixelRatio,
               1 / m_webView->screenInfo().devicePixelRatio);
@@ -675,74 +748,73 @@ public:
               m_webView->screenInfo().devicePixelRatio);
     }
 
-    virtual void setFillColor(const Unit::Color& clr)
+    virtual void setFillColor(const Unit::Color& clr) override
     {
-        auto source = CanvasFillStrokeSource(clr);
-        setFillSource(source);
+        setFillSource(new CanvasFillStrokeSource(clr));
     }
 
-    virtual void setFillSource(CanvasFillStrokeSource& source)
+    virtual void setFillSource(CanvasFillStrokeSource* source) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!source.isCanvasAvailableSource()) {
+        STARFISH_ASSERT(source != nullptr);
+
+        if (source->isCanvasAvailableSource() == false) {
             return;
         }
-        lastState().m_fillSource = source;
+        lastState()->m_fillSource = source;
         m_shouldApplyCanvasFillStrokeSource = true;
     }
 
-    virtual CanvasFillStrokeSource fillSource()
+    virtual CanvasFillStrokeSource* fillSource() override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        return lastState().m_fillSource;
+        return lastState()->m_fillSource;
     }
 
-    virtual void setStrokeColor(const Unit::Color& clr)
+    virtual void setStrokeColor(const Unit::Color& clr) override
     {
-        auto source = CanvasFillStrokeSource(clr);
-        setStrokeSource(source);
+        setStrokeSource(new CanvasFillStrokeSource(clr));
     }
 
-    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    virtual void setStrokeSource(CanvasFillStrokeSource* source) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!source.isCanvasAvailableSource()) {
+        STARFISH_ASSERT(source != nullptr);
+
+        if (source->isCanvasAvailableSource() == false) {
             return;
         }
-        lastState().m_strokeSource = source;
+        lastState()->m_strokeSource = source;
         m_shouldApplyCanvasFillStrokeSource = true;
     }
 
-    virtual CanvasFillStrokeSource strokeSource()
+    virtual CanvasFillStrokeSource* strokeSource() override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        return lastState().m_strokeSource;
+        return lastState()->m_strokeSource;
     }
 
-    virtual void setGlobalAlpha(float c)
+    virtual void setGlobalAlpha(float c) override
     {
-        lastState().m_globalAlpha = std::max<float>(0, std::min<float>(1.0, c));
+        lastState()->m_globalAlpha =
+            std::max<float>(0, std::min<float>(1.0, c));
         m_shouldApplyCanvasFillStrokeSource = true;
     }
 
-    virtual float globalAlpha()
+    virtual float globalAlpha() override
     {
-        return lastState().m_globalAlpha;
+        return lastState()->m_globalAlpha;
     }
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,
-                                      CanvasBlendMode mode)
+                                      CanvasBlendMode mode) override
     {
-        lastState().m_compositeOperator = oper;
-        lastState().m_blendMode = mode;
+        lastState()->m_compositeOperator = oper;
+        lastState()->m_blendMode = mode;
 
         cairo_operator_t newOperator = CAIRO_OPERATOR_OVER;
 
         // Source from webkit project:
         // Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp :
         // toCairoOperator,toCairoCompositeOperator
-        if (lastState().m_blendMode != CanvasBlendMode::Normal) {
-            switch (lastState().m_blendMode) {
+        if (lastState()->m_blendMode != CanvasBlendMode::Normal) {
+            switch (lastState()->m_blendMode) {
             case CanvasBlendMode::Multiply:
                 newOperator = CAIRO_OPERATOR_MULTIPLY;
                 break;
@@ -792,7 +864,7 @@ public:
                 newOperator = CAIRO_OPERATOR_OVER;
             }
         } else {
-            switch (lastState().m_compositeOperator) {
+            switch (lastState()->m_compositeOperator) {
             case CanvasCompositeOperator::Clear:
                 newOperator = CAIRO_OPERATOR_CLEAR;
                 break;
@@ -845,70 +917,71 @@ public:
         cairo_set_operator(m_canvas, newOperator);
     }
 
-    virtual CanvasCompositeOperator compositeOperator()
+    virtual CanvasCompositeOperator compositeOperator() override
     {
-        return lastState().m_compositeOperator;
+        return lastState()->m_compositeOperator;
     }
 
-    virtual CanvasBlendMode blendMode()
+    virtual CanvasBlendMode blendMode() override
     {
-        return lastState().m_blendMode;
+        return lastState()->m_blendMode;
     }
 
-    virtual void setVisible(bool visible)
+    virtual void setVisible(bool visible) override
     {
-        lastState().m_visible = visible;
+        lastState()->m_visible = visible;
     }
 
-    virtual void setNonInvertableCTM(bool validation)
+    virtual void setNonInvertableCTM(bool validation) override
     {
-        lastState().m_hasNonInvertableCTM = validation;
+        lastState()->m_hasNonInvertableCTM = validation;
     }
 
-    virtual bool hasNonInvertableCTM()
+    virtual bool hasNonInvertableCTM() override
     {
-        return lastState().m_hasNonInvertableCTM;
+        return lastState()->m_hasNonInvertableCTM;
     }
 
-    virtual void setPathTransformMatrix(const SkMatrix& matrix)
+    virtual void setPathTransformMatrix(const SkMatrix& matrix) override
     {
-        lastState().m_pathTM = matrix;
+        lastState()->m_pathTM = matrix;
     }
 
-    virtual SkMatrix pathTransformMatrix()
+    virtual SkMatrix pathTransformMatrix() override
     {
-        return lastState().m_pathTM;
+        return lastState()->m_pathTM;
     }
 
-    virtual void setFont(Font* font)
+    virtual void setFont(Font* font) override
     {
-        lastState().m_font = font;
+        STARFISH_ASSERT(font != nullptr);
+        lastState()->m_font = font;
     }
 
-    virtual void resetTextDecorationData()
+    virtual void resetTextDecorationData() override
     {
-        lastState().m_textDecorationData.reset();
+        lastState()->m_textDecorationData.reset();
     }
 
-    virtual void mergeTextDecorationData(ComputedStyle* style)
+    virtual void mergeTextDecorationData(ComputedStyle* style) override
     {
-        lastState().m_textDecorationData.merge(style);
+        STARFISH_ASSERT(style != nullptr);
+        lastState()->m_textDecorationData.merge(style);
     }
 
-    virtual TextDecorationData textDecorationData()
+    virtual TextDecorationData textDecorationData() override
     {
-        return lastState().m_textDecorationData;
+        return lastState()->m_textDecorationData;
     }
 
-    virtual void setTextDecorationData(TextDecorationData d)
+    virtual void setTextDecorationData(TextDecorationData d) override
     {
-        lastState().m_textDecorationData = d;
+        lastState()->m_textDecorationData = d;
     }
 
-    virtual void punchHole(const Unit::Rect& rt)
+    virtual void punchHole(const Unit::Rect& rt) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
@@ -941,40 +1014,36 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawRect(const Unit::Rect& rt)
+    virtual void drawRect(const Unit::Rect& rt) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         drawCairoRect(xx, yy, ww, hh);
     }
 
-    virtual void drawRect(const LayoutRect& rt)
+    virtual void drawRect(const LayoutRect& rt) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         drawCairoRect(xx, yy, ww, hh);
     }
 
-    virtual void strokeRect(const Unit::Rect& rt)
+    virtual void strokeRect(const Unit::Rect& rt) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         strokeCairoRect(xx, yy, ww, hh);
     }
 
-    virtual void strokeRect(const LayoutRect& rt)
+    virtual void strokeRect(const LayoutRect& rt) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
@@ -982,9 +1051,9 @@ public:
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
-                          LayoutLocation p3, LayoutLocation p4)
+                          LayoutLocation p3, LayoutLocation p4) override
     {
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         cairo_save(m_canvas);
@@ -1003,21 +1072,21 @@ public:
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
                           const StringView& sv,
-                          bool shouldSkipUnresolvedWebFont)
+                          bool shouldSkipUnresolvedWebFont) override
     {
-        int size = lastState().m_font->size();
-        if (!lastState().m_visible || size == 0 || sv.length() == 0) {
+        int size = lastState()->m_font->size();
+        if (lastState()->m_visible == false || size == 0 || sv.length() == 0) {
             return;
         }
 
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawText");
 
-        LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+        LayoutSize sz(stringWidth, lastState()->m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
         applyCanvasFillStrokeSourceIfNeeds();
 #ifdef STARFISH_ENABLE_TEST
-        if (g_enablePixelTest) {
+        if (g_enablePixelTest == true) {
             drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
         } else {
             drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y(), false,
@@ -1033,16 +1102,16 @@ public:
 
     virtual void drawStrokeText(LayoutUnit x, LayoutUnit y,
                                 LayoutUnit stringWidth, const StringView& sv,
-                                bool shouldSkipUnresolvedWebFont)
+                                bool shouldSkipUnresolvedWebFont) override
     {
-        int size = lastState().m_font->size();
-        if (!lastState().m_visible || size == 0 || sv.length() == 0) {
+        int size = lastState()->m_font->size();
+        if (lastState()->m_visible == false || size == 0 || sv.length() == 0) {
             return;
         }
 
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawStrokeText");
 
-        LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+        LayoutSize sz(stringWidth, lastState()->m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
         applyCanvasFillStrokeSourceIfNeeds(true);
@@ -1055,6 +1124,8 @@ public:
                                         ImageRenderingValue imageRenderingMode,
                                         size_t targetWidth, size_t targetHeight)
     {
+        STARFISH_ASSERT(resizePattern != nullptr);
+
         auto anti = cairo_get_antialias(m_canvas);
         cairo_filter_t autoFilterMode;
         if (anti == CAIRO_ANTIALIAS_NONE) {
@@ -1082,6 +1153,7 @@ public:
                         double surfaceWidth, double surfaceHeight,
                         ImageRenderingValue imageRenderingMode)
     {
+        STARFISH_ASSERT(localSurface != nullptr);
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawImageCairo");
 
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
@@ -1090,8 +1162,9 @@ public:
         ww = dst.width();
         hh = dst.height();
 
-        if (ww == 0 || hh == 0)
+        if (ww == 0 || hh == 0) {
             return;
+        }
 
         cairo_save(m_canvas);
         cairo_pattern_t* resizePattern;
@@ -1112,8 +1185,8 @@ public:
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
         cairo_clip(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity *
-                                             lastState().m_globalAlpha);
+        cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
+                                             lastState()->m_globalAlpha);
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_pattern_destroy(resizePattern);
@@ -1132,9 +1205,11 @@ public:
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
+                           ImageRenderingValue imageRenderingMode) override
     {
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(data != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
 
@@ -1160,16 +1235,18 @@ public:
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
                            const Unit::Rect& dst,
                            const DrawImageInfo& borderinfo,
-                           ImageRenderingValue imageRenderingMode)
+                           ImageRenderingValue imageRenderingMode) override
     {
+        STARFISH_ASSERT(data != nullptr);
+
         cairo_save(m_canvas);
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
 
         bool surfaceWasCreated = false;
         cairo_surface_t* srcImage = (cairo_surface_t*)data->unwrap();
-        if (!srcImage) {
+        if (srcImage == nullptr) {
             surfaceWasCreated = true;
             srcImage = cairo_image_surface_create_for_data(
                 (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
@@ -1193,7 +1270,7 @@ public:
         }
 
         cairo_surface_t* image = srcImage;
-        if (src.x() || src.y() || src.width() != data->width() ||
+        if (src.x() != 0 || src.y() != 0 || src.width() != data->width() ||
             src.height() != data->height()) {
             image = cairo_surface_create_for_rectangle(
                 srcImage, src.x(), src.y(), src.width(), src.height());
@@ -1207,7 +1284,7 @@ public:
             drawRepeatImageCairo(image, dst, src.width(), src.height(),
                                  borderinfo, imageRenderingMode);
         }
-        if (surfaceWasCreated) {
+        if (surfaceWasCreated == true) {
             cairo_surface_destroy(srcImage);
         }
         if (srcImage != image) {
@@ -1216,13 +1293,15 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
-                                      const Unit::Rect& dst, float imageWidth,
-                                      float imageHeight,
-                                      const DrawImageInfo& borderinfo,
-                                      ImageRenderingValue imageRenderingMode)
+    void drawRepeatImageCairo(cairo_surface_t* localSurface,
+                              const Unit::Rect& dst, float imageWidth,
+                              float imageHeight,
+                              const DrawImageInfo& borderinfo,
+                              ImageRenderingValue imageRenderingMode)
     {
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(localSurface != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
 
@@ -1252,7 +1331,7 @@ public:
         cairo_matrix_t matrix;
 
         cairo_surface_t* image = localSurface;
-        if (scaledWidth && scaledHeight) {
+        if (scaledWidth != 0 && scaledHeight != 0) {
             pattern = cairo_pattern_create_for_surface(image);
 
             cairo_matrix_init_scale(&matrix, hScale, vScale);
@@ -1268,20 +1347,22 @@ public:
             cairo_rectangle(m_canvas, 0.0, 0.0, ww, hh);
 
             cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity *
-                                                 lastState().m_globalAlpha);
+            cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
+                                                 lastState()->m_globalAlpha);
 
             cairo_pattern_destroy(pattern);
         }
         cairo_restore(m_canvas);
     }
 
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat,
-                                 ImageRenderingValue imageRenderingMode)
+    virtual void drawRepeatImage(
+        NativeImageData* data, const Unit::Rect& dst, float imageWidth,
+        float imageHeight, bool xRepeat, bool yRepeat,
+        ImageRenderingValue imageRenderingMode) override
     {
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(data != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
 
@@ -1293,13 +1374,14 @@ public:
         hh = dst.height();
 
         float x = 0.0, y = 0.0;
-        if (xRepeat) {
+        if (xRepeat == true) {
             x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
                 imageWidth;
         } else {
             xx += dst.x();
         }
-        if (yRepeat) {
+
+        if (yRepeat == true) {
             y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
                 imageHeight;
         } else {
@@ -1312,7 +1394,7 @@ public:
         cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
 
         bool surfaceWasCreated = false;
-        if (!image) {
+        if (image == nullptr) {
             surfaceWasCreated = true;
             image = cairo_image_surface_create_for_data(
                 (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
@@ -1320,7 +1402,7 @@ public:
         }
 
         double surfaceWidth = data->width(), surfaceHeight = data->height();
-        if (surfaceWidth && surfaceHeight) {
+        if (surfaceWidth != 0 && surfaceHeight != 0) {
             pattern = cairo_pattern_create_for_surface(image);
             cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
                                     surfaceHeight / imageHeight);
@@ -1336,13 +1418,13 @@ public:
             cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
             cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity *
-                                                 lastState().m_globalAlpha);
+            cairo_paint_with_alpha(m_canvas, lastState()->m_layerOpacity *
+                                                 lastState()->m_globalAlpha);
 
             cairo_pattern_destroy(pattern);
         }
 
-        if (surfaceWasCreated) {
+        if (surfaceWasCreated == true) {
             cairo_surface_destroy(image);
         }
         cairo_restore(m_canvas);
@@ -1350,10 +1432,11 @@ public:
 
     virtual void drawLinearGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info,
-                                    NativeGradient* gradient)
+                                    NativeGradient* gradient) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(info != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
 
@@ -1368,10 +1451,11 @@ public:
 
     virtual void drawRadialGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info,
-                                    NativeGradient* gradient)
+                                    NativeGradient* gradient) override
     {
-        STARFISH_ASSERT(m_canvas != nullptr);
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(info != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
 
@@ -1382,10 +1466,10 @@ public:
         cairo_clip(m_canvas);
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
 
-        if (info->secondRadius && info->firstRadius > info->secondRadius) {
+        if (info->secondRadius != 0 && info->firstRadius > info->secondRadius) {
             cairo_scale(m_canvas, 1,
                         1 * (info->secondRadius / info->firstRadius));
-        } else if (info->secondRadius &&
+        } else if (info->secondRadius != 0 &&
                    info->firstRadius < info->secondRadius) {
             cairo_scale(m_canvas, 1 * (info->firstRadius / info->secondRadius),
                         1);
@@ -1397,7 +1481,7 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void postMatrix(const SkMatrix& matrix)
+    virtual void postMatrix(const SkMatrix& matrix) override
     {
         cairo_matrix_t result_matrix;
         cairo_matrix_init_identity(&result_matrix);
@@ -1414,7 +1498,7 @@ public:
         checkError();
     }
 
-    virtual void setMatrix(const SkMatrix& matrix)
+    virtual void setMatrix(const SkMatrix& matrix) override
     {
         cairo_matrix_t cm;
         cairo_matrix_init(&cm, matrix.getScaleX(), matrix.getSkewY(),
@@ -1424,7 +1508,7 @@ public:
         checkError();
     }
 
-    virtual SkMatrix currentTransformMatrix()
+    virtual SkMatrix currentTransformMatrix() override
     {
         cairo_matrix_t matrix;
         cairo_get_matrix(m_canvas, &matrix);
@@ -1440,7 +1524,7 @@ public:
         return m;
     }
 
-    virtual void applyMatrixTo(LayoutLocation& lp)
+    virtual void applyMatrixTo(LayoutLocation& lp) override
     {
         double x = lp.x();
         double y = lp.y();
@@ -1452,7 +1536,7 @@ public:
         lp.setY(y);
     }
 
-    virtual void applyMatrixTo(LayoutRect& lp)
+    virtual void applyMatrixTo(LayoutRect& lp) override
     {
         double x = lp.x();
         double y = lp.y();
@@ -1464,64 +1548,70 @@ public:
         lp.setY(y);
     }
 
-    virtual CanvasLineCap lineCap()
+    virtual CanvasLineCap lineCap() override
     {
         auto cap = cairo_get_line_cap(m_canvas);
         return CanvasCairoUtils::cairoLineCapToCavansLineCap(cap);
     }
 
-    virtual void setLineCap(CanvasLineCap lineCap)
+    virtual void setLineCap(CanvasLineCap lineCap) override
     {
         cairo_line_cap_t cap =
             CanvasCairoUtils::cavansLineCapToCairoLineCap(lineCap);
         cairo_set_line_cap(m_canvas, cap);
     }
 
-    virtual CanvasLineJoin lineJoine()
+    virtual CanvasLineJoin lineJoine() override
     {
         auto join = cairo_get_line_join(m_canvas);
         return CanvasCairoUtils::cairoLineJoinToCanvasLineJoin(join);
     }
 
-    virtual void setLineJoin(CanvasLineJoin lineJoin)
+    virtual void setLineJoin(CanvasLineJoin lineJoin) override
     {
         cairo_line_join_t join =
             CanvasCairoUtils::canvasLineJoinToCairoLineJoin(lineJoin);
         cairo_set_line_join(m_canvas, join);
     }
 
-    virtual double miterLimit()
+    virtual double miterLimit() override
     {
         return cairo_get_miter_limit(m_canvas);
     }
 
-    virtual void setMiterLimit(double limit)
+    virtual void setMiterLimit(double limit) override
     {
         cairo_set_miter_limit(m_canvas, limit);
     }
 
-    virtual void beginPath()
+    virtual void beginPath() override
     {
         cairo_new_path(m_canvas);
     }
-    virtual void closePath()
+
+    virtual void closePath() override
     {
         cairo_close_path(m_canvas);
     }
-    virtual void moveTo(float x, float y)
+
+    virtual void moveTo(float x, float y) override
     {
         cairo_move_to(m_canvas, x, y);
     }
-    virtual void lineTo(float x, float y)
+
+    virtual void lineTo(float x, float y) override
     {
         cairo_line_to(m_canvas, x, y);
     }
+
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
-                         float y3)
+                         float y3) override
     {
         cairo_curve_to(m_canvas, x1, y1, x2, y2, x3, y3);
     }
-    virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
+
+    virtual void quadraticCurveTo(float x1, float y1, float x2,
+                                  float y2) override
     {
         double x0, y0;
         cairo_get_current_point(m_canvas, &x0, &y0);
@@ -1530,78 +1620,92 @@ public:
                        2.0 / 3.0 * x1 + 1.0 / 3.0 * x2,
                        2.0 / 3.0 * y1 + 1.0 / 3.0 * y2, x2, y2);
     }
+
     virtual void arc(double xc, double yc, double radius, double angle1,
-                     double angle2)
+                     double angle2) override
     {
         cairo_arc(m_canvas, xc, yc, radius, angle1, angle2);
     }
+
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
-                             double angle2)
+                             double angle2) override
     {
         cairo_arc_negative(m_canvas, xc, yc, radius, angle1, angle2);
     }
-    virtual void stroke()
+
+    virtual void stroke() override
     {
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             cairo_close_path(m_canvas);
             return;
         }
         applyCanvasFillStrokeSourceIfNeeds(true);
         cairo_stroke(m_canvas);
     }
-    virtual void strokePreserve()
+
+    virtual void strokePreserve() override
     {
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         applyCanvasFillStrokeSourceIfNeeds(true);
         cairo_stroke_preserve(m_canvas);
     }
-    virtual void strokePath(Path* path)
+
+    virtual void strokePath(Path* path) override
     {
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(path != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
         setPathAsNewPathOnCurrentContext(path);
         stroke();
     }
-    virtual void fill()
+
+    virtual void fill() override
     {
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             cairo_close_path(m_canvas);
             return;
         }
         applyCanvasFillStrokeSourceIfNeeds();
         cairo_fill(m_canvas);
     }
-    virtual void fillPreserve()
+
+    virtual void fillPreserve() override
     {
-        if (!lastState().m_visible) {
+        if (lastState()->m_visible == false) {
             return;
         }
         applyCanvasFillStrokeSourceIfNeeds();
         cairo_fill_preserve(m_canvas);
     }
-    virtual void fillPath(Path* path)
+
+    virtual void fillPath(Path* path) override
     {
-        if (!lastState().m_visible) {
+        STARFISH_ASSERT(path != nullptr);
+
+        if (lastState()->m_visible == false) {
             return;
         }
         setPathAsNewPathOnCurrentContext(path);
         fill();
     }
-    virtual void clipPath()
+
+    virtual void clipPath() override
     {
         cairo_clip(m_canvas);
     }
-    virtual void clipPathPreserve()
+
+    virtual void clipPathPreserve() override
     {
         cairo_clip_preserve(m_canvas);
     }
 
-    virtual void setFillRule(bool shouldUseNonZeroFillRule)
+    virtual void setFillRule(bool shouldUseNonZeroFillRule) override
     {
-        if (shouldUseNonZeroFillRule) {
+        if (shouldUseNonZeroFillRule == true) {
             cairo_set_fill_rule(m_canvas,
                                 cairo_fill_rule_t::CAIRO_FILL_RULE_WINDING);
         } else {
@@ -1610,76 +1714,76 @@ public:
         }
     }
 
-    virtual float lineWidth()
+    virtual float lineWidth() override
     {
         return cairo_get_line_width(m_canvas);
     }
 
-    virtual void setLineWidth(float width)
+    virtual void setLineWidth(float width) override
     {
         cairo_set_line_width(m_canvas, width);
     }
 
-    virtual void setDash(const std::vector<double>& dashes)
+    virtual void setDash(const std::vector<double>& dashes) override
     {
-        lastState().m_dashes = dashes;
+        lastState()->m_dashes = dashes;
         updateDashAndDashOffset();
     }
 
-    virtual std::vector<double> dash()
+    virtual std::vector<double> dash() override
     {
-        return lastState().m_dashes;
+        return lastState()->m_dashes;
     }
 
-    virtual double dashOffset()
+    virtual double dashOffset() override
     {
-        return lastState().m_dashOffset;
+        return lastState()->m_dashOffset;
     }
 
-    virtual void setDashOffset(double offset)
+    virtual void setDashOffset(double offset) override
     {
-        lastState().m_dashOffset = offset;
+        lastState()->m_dashOffset = offset;
         updateDashAndDashOffset();
     }
 
     void updateDashAndDashOffset()
     {
-        if (std::all_of(lastState().m_dashes.begin(),
-                        lastState().m_dashes.end(),
+        if (std::all_of(lastState()->m_dashes.begin(),
+                        lastState()->m_dashes.end(),
                         [](double& dash) { return !dash; })) {
             cairo_set_dash(m_canvas, 0, 0, 0);
         } else {
-            cairo_set_dash(m_canvas, lastState().m_dashes.data(),
-                           lastState().m_dashes.size(),
-                           lastState().m_dashOffset);
+            cairo_set_dash(m_canvas, lastState()->m_dashes.data(),
+                           lastState()->m_dashes.size(),
+                           lastState()->m_dashOffset);
         }
         checkError();
     }
 
-    CanvasStateCairo& lastState()
+    CanvasStateCairo* lastState()
     {
-        STARFISH_ASSERT(m_state.size());
+        STARFISH_ASSERT(m_state.size() != 0);
         return m_state[m_state.size() - 1];
     }
 
-    virtual void resetMatrixAndClip(bool needsApplyDPR)
+    virtual void resetMatrixAndClip(bool needsApplyDPR) override
     {
         cairo_reset_clip(m_canvas);
         cairo_identity_matrix(m_canvas);
-        if (needsApplyDPR) {
+        if (needsApplyDPR == true) {
             applyDevicePixelRatio();
         }
     }
 
-    virtual void resetMatrix(bool needsApplyDPR)
+    virtual void resetMatrix(bool needsApplyDPR) override
     {
         cairo_identity_matrix(m_canvas);
-        if (needsApplyDPR) {
+        if (needsApplyDPR == true) {
             applyDevicePixelRatio();
         }
     }
 
-    virtual void resetClip()
+    virtual void resetClip() override
     {
         cairo_reset_clip(m_canvas);
     }
@@ -1689,26 +1793,28 @@ private:
     void drawAhemBoxCairo(cairo_t* canvas, LayoutRect rect,
                           const StringView& sv, LayoutUnit dx, LayoutUnit dy)
     {
-        if (g_enablePixelTest) {
+        STARFISH_ASSERT(canvas != nullptr);
+
+        if (g_enablePixelTest == true) {
             LayoutUnit x = rect.x();
             LayoutUnit y = rect.y();
 
             if (sv.originalString() != String::emptyString &&
                 sv.originalString()->charAt(sv.start()) != ' ') {
-                float h = lastState().m_font->size();
+                float h = lastState()->m_font->size();
                 float xx = x;
                 for (size_t i = sv.start(); i < sv.end(); i++) {
                     char32_t ch = sv.originalString()->charAt(i);
                     if (ch == 160) { // nbsp
-                    } else if (String::isFixedWidthChar(ch) ||
-                               String::isZeroWidthChar(ch)) {
+                    } else if ((String::isFixedWidthChar(ch) == true) ||
+                               (String::isZeroWidthChar(ch) == true)) {
                         // Fixed-width spaces
                         size_t num = Font::spaceSizeNumerator(ch);
                         xx += h * ((float)num / SPACE_SIZE_DENOMINATOR);
                         continue;
                     } else {
                         if (ch != 'p') {
-                            Font* fnt = lastState().m_font;
+                            Font* fnt = lastState()->m_font;
                             if (fnt->style() == FontStyleItalic) {
                                 float offset = h * 0.3;
                                 float littleLeft = offset * 0.167;
@@ -1741,7 +1847,7 @@ private:
                             cairo_fill(canvas);
                         }
                     }
-                    xx += h + lastState().m_font->letterSpacing();
+                    xx += h + lastState()->m_font->letterSpacing();
                 }
             }
         }
@@ -1808,7 +1914,7 @@ private:
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
         FT_Face lastFontFace = nullptr;
-        FontImplCairo* f = (FontImplCairo*)lastState().m_font;
+        FontImplCairo* f = (FontImplCairo*)lastState()->m_font;
         int size = f->size();
         auto stringAccessData = sv.bufferAccessData();
 
@@ -1836,7 +1942,7 @@ private:
         cairo_matrix_t identityMatrix;
         cairo_matrix_init_identity(&identityMatrix);
 
-        if (cairoBackendCanUseSimpleFontPath(f, sv)) {
+        if (cairoBackendCanUseSimpleFontPath(f, sv) == true) {
             LayoutUnit letterSpacingValueSoFar;
 
             for (size_t i = 0; i < stringAccessData.length; i++) {
@@ -1844,8 +1950,9 @@ private:
                           std::pair<unsigned, LayoutUnit>>
                     g = cairoBackendInternalLoadGlyph(
                         f, stringAccessData.charAt(i));
-                if (g.second.first) {
-                    if (shouldSkipUnresolvedWebFont) { // skip webfont enabled
+                if (g.second.first != 0) {
+                    if (shouldSkipUnresolvedWebFont ==
+                        true) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX &&
                             f->seenUnresolvedWebFontIndex() <= g.first.second) {
                             xBias += g.second.second;
@@ -1853,8 +1960,8 @@ private:
                         }
                     }
                     if (lastFontFace != g.first.first->freetypeFace()) {
-                        if (glyphCount) {
-                            if (isStroke) {
+                        if (glyphCount != 0) {
+                            if (isStroke == true) {
                                 drawStrokeGlyphs(canvas, lastFontFace,
                                                  sizeMatrix, identityMatrix,
                                                  glyphs, glyphCount,
@@ -1875,7 +1982,8 @@ private:
                     letterSpacingValueSoFar += letterSpacingValueSoFar;
                     xBias += g.second.second + letterSpacing;
                 } else {
-                    if (shouldSkipUnresolvedWebFont) { // skip webfont enabled
+                    if (shouldSkipUnresolvedWebFont ==
+                        true) { // skip webfont enabled
                         if (f->seenUnresolvedWebFontIndex() != SIZE_MAX) {
                             xBias += f->spaceWidth();
                             continue;
@@ -1925,8 +2033,8 @@ private:
                         shouldSkipUnresolvedWebFont) {
                     } else {
                         if (run.m_ftFace != lastFontFace) {
-                            if (glyphCount) {
-                                if (isStroke) {
+                            if (glyphCount != 0) {
+                                if (isStroke == true) {
                                     drawStrokeGlyphs(canvas, lastFontFace,
                                                      sizeMatrix, identityMatrix,
                                                      glyphs, glyphCount,
@@ -1957,8 +2065,8 @@ private:
             }
         }
 
-        if (glyphCount) {
-            if (isStroke) {
+        if (glyphCount != 0) {
+            if (isStroke == true) {
                 drawStrokeGlyphs(canvas, lastFontFace, sizeMatrix,
                                  identityMatrix, glyphs, glyphCount,
                                  lineWidth());
@@ -1981,7 +2089,9 @@ private:
                                  const StringView& sv, LayoutUnit dx,
                                  LayoutUnit dy)
     {
-        FontImplCairo* f = (FontImplCairo*)lastState().m_font;
+        STARFISH_ASSERT(canvas != nullptr);
+
+        FontImplCairo* f = (FontImplCairo*)lastState()->m_font;
         FontFaceImplCairo* fc = (FontFaceImplCairo*)f->fontFaceList()[0];
         FT_Face face = fc->freetypeFace();
         int intSize(f->size() + 0.5f);
@@ -1990,14 +2100,14 @@ private:
 
         float lineWidth =
             face->underline_thickness / (float)fc->m_unitsPerEM * intSize;
-        if (lastState().m_textDecorationData.hasUnderLine()) {
+        if (lastState()->m_textDecorationData.hasUnderLine() == true) {
             cairo_set_line_width(canvas, lineWidth);
 
             cairo_set_source_rgba(
-                canvas, lastState().m_textDecorationData.underLineColor().R(),
-                lastState().m_textDecorationData.underLineColor().G(),
-                lastState().m_textDecorationData.underLineColor().B(),
-                lastState().m_textDecorationData.underLineColor().A());
+                canvas, lastState()->m_textDecorationData.underLineColor().R(),
+                lastState()->m_textDecorationData.underLineColor().G(),
+                lastState()->m_textDecorationData.underLineColor().B(),
+                lastState()->m_textDecorationData.underLineColor().A());
 
             float y = face->underline_position / (float)fc->m_unitsPerEM *
                           intSize / 72 +
@@ -2007,18 +2117,19 @@ private:
             cairo_stroke(canvas);
         }
 
-        if (lastState().m_textDecorationData.hasLineThrough()) {
+        if (lastState()->m_textDecorationData.hasLineThrough() == true) {
             cairo_set_line_width(canvas, lineWidth);
 
             cairo_set_source_rgba(
-                canvas, lastState().m_textDecorationData.lineThroughColor().R(),
-                lastState().m_textDecorationData.lineThroughColor().G(),
-                lastState().m_textDecorationData.lineThroughColor().B(),
-                lastState().m_textDecorationData.lineThroughColor().A());
+                canvas,
+                lastState()->m_textDecorationData.lineThroughColor().R(),
+                lastState()->m_textDecorationData.lineThroughColor().G(),
+                lastState()->m_textDecorationData.lineThroughColor().B(),
+                lastState()->m_textDecorationData.lineThroughColor().A());
 
             float y =
-                (lastState().m_font->metrics().m_ascender) -
-                intSize * (lastState().m_font->metrics().m_xheightRate) / 2;
+                (lastState()->m_font->metrics().m_ascender) -
+                intSize * (lastState()->m_font->metrics().m_xheightRate) / 2;
 
             cairo_move_to(canvas, 0, y);
             cairo_line_to(canvas, rect.width(), y);
@@ -2028,36 +2139,38 @@ private:
         cairo_translate(canvas, -dx, -dy);
     }
 
-    virtual bool canRejectPainting(const LayoutRect& rect)
+    virtual bool canRejectPainting(const LayoutRect& rect) override
     {
         double x1, x2;
         double y1, y2;
         cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
         LayoutRect c(x1, y1, x2 - x1, y2 - y1);
-        if (c.intersects(rect)) {
+        if (c.intersects(rect) == true) {
             return false;
         } else {
             return true;
         }
     }
 
-    virtual void setNeedsNoneAntialias()
+    virtual void setNeedsNoneAntialias() override
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_NONE);
     }
 
-    virtual void setNeedsFastAntialias()
+    virtual void setNeedsFastAntialias() override
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
     }
 
-    virtual void setNeedsGoodQualityAntialias()
+    virtual void setNeedsGoodQualityAntialias() override
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_GOOD);
     }
 
     void setPathAsNewPathOnCurrentContext(Path* path)
     {
+        STARFISH_ASSERT(path != nullptr);
+
         cairo_new_path(m_canvas);
         PathCairo* pathCairo = (PathCairo*)path;
 
@@ -2066,7 +2179,7 @@ private:
         cairo_path_destroy(p);
     }
 
-    virtual void markDirtyRect(const Unit::Rect& rt)
+    virtual void markDirtyRect(const Unit::Rect& rt) override
     {
         STARFISH_ASSERT(m_surface);
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
@@ -2075,7 +2188,8 @@ private:
 
 protected:
     WebView* m_webView;
-    std::vector<CanvasStateCairo> m_state;
+    GCVector<CanvasStateCairo*> m_state{};
+    GCVector<CanvasStateCairo*> m_stateMemoryPool{};
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
 

@@ -39,51 +39,6 @@ CanvasFillStrokeSource::CanvasFillStrokeSource(CanvasStyle canvasStyle)
 {
 }
 
-CanvasFillStrokeSource::CanvasFillStrokeSource(
-    const CanvasFillStrokeSource& other)
-{
-    if (this == &other) {
-        return;
-    }
-
-    m_type = other.m_type;
-    switch (m_type) {
-    case CanvasFillStrokeSourceType::Invalid:
-    case CanvasFillStrokeSourceType::Color:
-        m_value.m_color = other.m_value.m_color;
-        break;
-    case CanvasFillStrokeSourceType::CanvasStyle:
-        m_value.m_canvasStyle = other.m_value.m_canvasStyle;
-        break;
-    default:
-        STARFISH_ASSERT_NOT_REACHED();
-        break;
-    }
-}
-
-CanvasFillStrokeSource& CanvasFillStrokeSource::operator=(
-    const CanvasFillStrokeSource& other)
-{
-    if (this == &other) {
-        return *this;
-    }
-
-    m_type = other.m_type;
-    switch (m_type) {
-    case CanvasFillStrokeSourceType::Invalid:
-    case CanvasFillStrokeSourceType::Color:
-        m_value.m_color = other.m_value.m_color;
-        break;
-    case CanvasFillStrokeSourceType::CanvasStyle:
-        m_value.m_canvasStyle = other.m_value.m_canvasStyle;
-        break;
-    default:
-        STARFISH_ASSERT_NOT_REACHED();
-        break;
-    }
-    return *this;
-}
-
 bool CanvasFillStrokeSource::isCanvasAvailableSource()
 {
     if (isInvalidType()) {
