@@ -26,6 +26,27 @@ enum class CreatedIdType { UNIQUE, SHARED };
 
 #define ID_INITIAL_VALUE 0
 
+class IDGenerator {
+    using StrategyFunc = std::function<uint32_t()>;
+
+public:
+    static uint32_t sequence();
+    static uint32_t random();
+
+    IDGenerator(StrategyFunc strategy = random)
+        : m_strategyFn(strategy)
+    {
+    }
+
+    uint32_t getNewId()
+    {
+        return m_strategyFn();
+    }
+
+private:
+    StrategyFunc m_strategyFn;
+};
+
 template <typename T>
 class Id {
     friend struct IdHash;
@@ -55,14 +76,9 @@ public:
 
     static Id<T> generate()
     {
-        static unsigned currentId;
+        static IDGenerator generator;
 
-        if (UNLIKELY(currentId == std::numeric_limits<unsigned>::max())) {
-            STARFISH_LOG_WARN(
-                "the Id count is reset since it reaches the end of its value.");
-            currentId = ID_INITIAL_VALUE;
-        }
-        return Id<T>(++currentId);
+        return Id<T>(generator.getNewId());
     }
 
     std::string toString() const
@@ -82,13 +98,13 @@ public:
     }
 
 private:
-    explicit Id(unsigned id)
+    explicit Id(uint32_t id)
         : m_id(id)
         , m_createdType(CreatedIdType::UNIQUE)
     {
     }
 
-    unsigned m_id;
+    uint32_t m_id;
     CreatedIdType m_createdType;
 };
 

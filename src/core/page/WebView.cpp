@@ -741,12 +741,12 @@ BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
     std::uniform_int_distribution<uint32_t> distribution;
 
 #ifdef STARFISH_32
-    a.m_a = distribution(m_randEngine);
-    a.m_b = distribution(m_randEngine);
-    a.m_c = distribution(m_randEngine);
+    a.m_a = distribution(randomEngine());
+    a.m_b = distribution(randomEngine());
+    a.m_c = distribution(randomEngine());
 #else
-    a.m_a = distribution(m_randEngine);
-    a.m_b = distribution(m_randEngine);
+    a.m_a = distribution(randomEngine());
+    a.m_b = distribution(randomEngine());
 #endif
 
     m_urlMediaSourceBlobStore.insert(a);

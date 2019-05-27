@@ -213,16 +213,12 @@ public:
     LWE::WebSecurityMode getWebSecurityMode() const;
     void setWebSecurityMode(LWE::WebSecurityMode value);
 
-    std::mt19937& randEngine()
-    {
-        return m_randEngine;
-    }
+    std::mt19937& randomEngine();
 
 protected:
     WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
             String* customUserAgentString);
 
-    std::mt19937 m_randEngine;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
 
     // options

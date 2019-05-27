@@ -26,13 +26,13 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/extra/Console.h"
+#include "core/util/RandomEngine.h"
 
 namespace Starfish {
 
 WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* customUserAgentString)
     : StarfishHoldable(starfish)
-    , m_randEngine((unsigned int)time(NULL))
     , m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_customUserAgentString(customUserAgentString)
@@ -232,12 +232,12 @@ BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr)
 
     std::uniform_int_distribution<uint32_t> distribution;
 #ifdef STARFISH_32
-    a.m_a = distribution(m_randEngine);
-    a.m_b = distribution(m_randEngine);
-    a.m_c = distribution(m_randEngine);
+    a.m_a = distribution(randomEngine());
+    a.m_b = distribution(randomEngine());
+    a.m_c = distribution(randomEngine());
 #else
-    a.m_a = distribution(m_randEngine);
-    a.m_b = distribution(m_randEngine);
+    a.m_a = distribution(randomEngine());
+    a.m_b = distribution(randomEngine());
 #endif
 
     m_urlBlobStore.insert(a);
@@ -355,6 +355,11 @@ void WebBase::callPublicWebViewHandler(
         env);
 }
 
+std::mt19937& WebBase::randomEngine()
+{
+    return RandomEngine::instance().mt19937();
+}
+
 LWE::WebSecurityMode WebBase::getWebSecurityMode() const
 {
     return m_webSecurityMode;
@@ -364,4 +369,4 @@ void WebBase::setWebSecurityMode(LWE::WebSecurityMode value)
 {
     m_webSecurityMode = value;
 }
-}
+} // namespace Starfish
