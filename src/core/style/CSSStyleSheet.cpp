@@ -280,6 +280,8 @@ void CSSStyleSheet::collectStyleRules(
                                   viewportDependentResult,
                                   deviceDependentResult);
             }
+        } else if (rule->isKeyframesRule() == true) {
+            m_keyframes.push_back(rule->asStyleRuleKeyframes());
         }
         iter++;
     }

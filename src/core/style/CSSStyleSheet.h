@@ -35,6 +35,7 @@ class Node;
 class StyleRule;
 class StyleRuleBase;
 class StyleRuleImport;
+class StyleRuleKeyframes;
 class URL;
 
 class RuleSet : public gc {
@@ -63,6 +64,11 @@ public:
         return m_universalRules;
     }
 
+    GCVector<StyleRuleKeyframes*>& keyframes()
+    {
+        return m_keyframes;
+    }
+
     void clear()
     {
         m_idRules.clear();
@@ -80,6 +86,7 @@ private:
         m_tagRules;
     GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
         m_universalRules;
+    GCVector<StyleRuleKeyframes*> m_keyframes;
 };
 
 class CSSStyleSheet : public StyleSheet {
@@ -110,6 +117,11 @@ public:
         return m_importRules;
     }
 
+    GCVector<StyleRuleKeyframes*>& keyframes()
+    {
+        return m_keyframes;
+    }
+
     GCVector<StyleRuleBase*>& childRules()
     {
         return m_childRules;
@@ -129,6 +141,12 @@ public:
     {
         m_styleRules.clear();
         m_styleRules.shrink_to_fit();
+    }
+
+    void clearKeyframesRules()
+    {
+        m_keyframes.clear();
+        m_keyframes.shrink_to_fit();
     }
 
     void willRemovedFromDocument();
@@ -208,6 +226,7 @@ protected:
     GCVector<StyleRuleBase*> m_childRules;
     GCVector<StyleRuleImport*> m_importRules;
     GCVector<std::pair<StyleRule*, ResourceURL*>> m_styleRules;
+    GCVector<StyleRuleKeyframes*> m_keyframes;
     GCVector<CSSRule*> m_childRuleWrappers;
 
     bool m_disabled : 1;

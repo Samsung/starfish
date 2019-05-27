@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,39 +17,25 @@
  *  USA
  */
 
-#ifndef __StarfishAnimationTimingFunction__
-#define __StarfishAnimationTimingFunction__
+#include "StarfishConfig.h"
+#include "core/animation/CubicBezier.h"
+#include "core/animation/Steps.h"
+#include "core/animation/TimingFunction.h"
 
 namespace Starfish {
-
-class CubicBezier;
-class Steps;
-
-class AnimationTimingFunction : public gc {
-public:
-    virtual ~AnimationTimingFunction()
-    {
+bool TimingFunction::operator==(const TimingFunction& b) const
+{
+    if (isCubicBezier() && b.isCubicBezier()) {
+        return *(asCubicBezier()) == *(b.asCubicBezier());
     }
-    virtual float getValue(float x) = 0;
-    virtual String* toString() const = 0;
-    virtual bool isCubicBezier() const
-    {
-        return false;
+    if (isSteps() && b.isSteps()) {
+        return *(asSteps()) == *(b.asSteps());
     }
-    virtual bool isSteps() const
-    {
-        return false;
-    }
-    CubicBezier* asCubicBezier() const
-    {
-        return (CubicBezier*)this;
-    }
-    Steps* asSteps() const
-    {
-        return (Steps*)this;
-    }
-    bool operator==(const AnimationTimingFunction& b) const;
-    bool operator!=(const AnimationTimingFunction& b) const;
-};
+    return false;
 }
-#endif
+
+bool TimingFunction::operator!=(const TimingFunction& b) const
+{
+    return !operator==(b);
+}
+}

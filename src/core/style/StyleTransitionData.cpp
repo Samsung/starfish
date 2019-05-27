@@ -18,8 +18,8 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/animation/AnimationTimingFunction.h"
 #include "core/animation/CubicBezier.h"
+#include "core/animation/TimingFunction.h"
 #include "core/style/Style.h"
 #include "core/style/StyleTransitionData.h"
 
@@ -60,7 +60,7 @@ bool StyleTransitionLayer::operator!=(const StyleTransitionLayer& b) const
     return !operator==(b);
 }
 
-AnimationTimingFunction* StyleTransitionData::defaultTimingFunction()
+TimingFunction* StyleTransitionData::defaultTimingFunction()
 {
     return new CubicBezier(0.25, 0.1, 0.25, 1);
 }
@@ -78,9 +78,9 @@ bool StyleTransitionData::operator==(const StyleTransitionData& b) const
         if (duration(i) != b.duration(i)) {
             return false;
         }
-        AnimationTimingFunction* t1 = timingFunction(i);
-        AnimationTimingFunction* t2 = b.timingFunction(i);
-        if (t1 != t2 && (!t1 || !t2 || *t1 != *t2)) {
+        TimingFunction* t1 = timingFunction(i);
+        TimingFunction* t2 = b.timingFunction(i);
+        if (t1 != t2 && (t1 == nullptr || t2 == nullptr || *t1 != *t2)) {
             return false;
         }
         if (delay(i) != b.delay(i)) {

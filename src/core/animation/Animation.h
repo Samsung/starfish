@@ -28,7 +28,7 @@ namespace Starfish {
 class Node;
 class PlatformWindow;
 class StyleTransformDataGroup;
-class AnimationTimingFunction;
+class TimingFunction;
 
 class AnimatedValue : public gc {
     enum ValueType ENSURE_ENUM_UNSIGNED {
@@ -209,13 +209,19 @@ bool applyTransitionIfNeeds(
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
         canceledAnimationProgress); // returns true if animation registered
 
+bool applyAnimationIfNeeds(
+    Element* element, NULLABLE ComputedStyle* oldStyle,
+    NULLABLE Frame* oldFrame, ComputedStyle* newStyle,
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+        canceledAnimationProgress);
+
 class ActiveAnimationTask : public gc {
 public:
     ActiveAnimationTask(Element* target,
                         CSSStyleValuePair::KeyKind targetProperty,
                         const AnimatedValue& from, const AnimatedValue& to,
                         uint64_t durationInms, uint64_t delayInms,
-                        AnimationTimingFunction* timingFunction);
+                        TimingFunction* timingFunction);
 
     virtual ~ActiveAnimationTask()
     {
@@ -306,7 +312,7 @@ protected:
     uint64_t m_startTimeMs;
     uint64_t m_durationMs;
     uint64_t m_delayMs;
-    AnimationTimingFunction* m_timingFunction;
+    TimingFunction* m_timingFunction;
 };
 
 class ActiveOpacityAnimationTask : public ActiveAnimationTask {
@@ -316,10 +322,12 @@ public:
                                const AnimatedValue& from,
                                const AnimatedValue& to, uint64_t durationInms,
                                uint64_t delayInms,
-                               AnimationTimingFunction* timingFunction)
+                               TimingFunction* timingFunction)
         : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                               delayInms, timingFunction)
     {
+        STARFISH_ASSERT(target != nullptr);
+        STARFISH_ASSERT(timingFunction != nullptr);
     }
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -360,7 +368,7 @@ public:
                                  const AnimatedValue& from,
                                  const AnimatedValue& to, uint64_t durationInms,
                                  uint64_t delayInms,
-                                 AnimationTimingFunction* timingFunction,
+                                 TimingFunction* timingFunction,
                                  StyleTransformDataGroup* orgTransformValue);
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -379,10 +387,12 @@ public:
                              CSSStyleValuePair::KeyKind targetProperty,
                              const AnimatedValue& from, const AnimatedValue& to,
                              uint64_t durationInms, uint64_t delayInms,
-                             AnimationTimingFunction* timingFunction)
+                             TimingFunction* timingFunction)
         : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                               delayInms, timingFunction)
     {
+        STARFISH_ASSERT(target != nullptr);
+        STARFISH_ASSERT(timingFunction != nullptr);
     }
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -395,7 +405,7 @@ public:
                               const AnimatedValue& from,
                               const AnimatedValue& to, uint64_t durationInms,
                               uint64_t delayInms,
-                              AnimationTimingFunction* timingFunction,
+                              TimingFunction* timingFunction,
                               Length originalToValue,
                               size_t indexForBgLayer = 0);
     void execute(float progress, ComputedStyle* style) override;
@@ -415,7 +425,7 @@ public:
                                   const AnimatedValue& from,
                                   const AnimatedValue& to,
                                   uint64_t durationInms, uint64_t delayInms,
-                                  AnimationTimingFunction* timingFunction,
+                                  TimingFunction* timingFunction,
                                   LengthSize originalToValue,
                                   size_t indexForBgLayer = 0);
     void execute(float progress, ComputedStyle* style) override;

@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class AnimationTimingFunction;
+class TimingFunction;
 class StyleTransitionData;
 
 class StyleTransitionLayer : public gc {
@@ -66,12 +66,12 @@ private:
         m_delay = delay;
     }
 
-    AnimationTimingFunction* timingFunction() const
+    TimingFunction* timingFunction() const
     {
         return m_timingFunction;
     }
 
-    void setTimingFunction(AnimationTimingFunction* f)
+    void setTimingFunction(NULLABLE TimingFunction* f)
     {
         m_timingFunction = f;
     }
@@ -81,7 +81,7 @@ private:
 
 private:
     CSSStyleValuePair::KeyKind m_property;
-    AnimationTimingFunction* m_timingFunction;
+    TimingFunction* m_timingFunction;
     CSSTime m_duration;
     CSSTime m_delay;
 };
@@ -95,7 +95,7 @@ public:
         , m_delaySize(0)
     {
     }
-    static AnimationTimingFunction* defaultTimingFunction();
+    static TimingFunction* defaultTimingFunction();
 
     size_t size() const
     {
@@ -168,7 +168,7 @@ public:
         return m_layers[p].delay();
     }
 
-    AnimationTimingFunction* timingFunction(size_t layer) const
+    TimingFunction* timingFunction(size_t layer) const
     {
         STARFISH_ASSERT(m_timingFunctionSize <= m_layers.size());
         if (m_timingFunctionSize == 0) {
@@ -197,9 +197,9 @@ public:
         m_layers[layer].setDelay(delay);
     }
 
-    void setTimingFunction(AnimationTimingFunction* f, size_t layer)
+    void setTimingFunction(TimingFunction* f, size_t layer)
     {
-        STARFISH_ASSERT(f);
+        STARFISH_ASSERT(f != nullptr);
         resizeIfNeeds(layer, m_timingFunctionSize);
         m_layers[layer].setTimingFunction(f);
     }
