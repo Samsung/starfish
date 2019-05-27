@@ -463,15 +463,15 @@ public:
         lastState().m_fillColor = clr;
     }
 
-    virtual void setFillSource(CanvasFillStrokeSource& source)
+    virtual void setFillSource(CanvasFillStrokeSource* source)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    virtual CanvasFillStrokeSource fillSource()
+    virtual CanvasFillStrokeSource* fillSource()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return CanvasFillStrokeSource();
+        return new CanvasFillStrokeSource();
     }
 
     virtual void setStrokeColor(const Unit::Color& clr)
@@ -480,15 +480,15 @@ public:
         lastState().m_strokeColor = clr;
     }
 
-    virtual void setStrokeSource(CanvasFillStrokeSource& source)
+    virtual void setStrokeSource(CanvasFillStrokeSource* source)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    virtual CanvasFillStrokeSource strokeSource()
+    virtual CanvasFillStrokeSource* strokeSource()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return CanvasFillStrokeSource();
+        return new CanvasFillStrokeSource();
     }
 
     virtual void setGlobalAlpha(float c)

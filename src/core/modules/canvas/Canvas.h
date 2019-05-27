@@ -105,10 +105,10 @@ namespace CanvasCompositing {
         sizeof(canvasBlendModeNames) / sizeof(*canvasBlendModeNames);
 }
 
-class CanvasState {
+class CanvasState : public gc {
 public:
-    CanvasFillStrokeSource m_fillSource;
-    CanvasFillStrokeSource m_strokeSource;
+    CanvasFillStrokeSource* m_fillSource;
+    CanvasFillStrokeSource* m_strokeSource;
     float m_layerOpacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
@@ -122,7 +122,17 @@ public:
     bool m_visible;
     bool m_hasNonInvertableCTM;
 
+protected:
     CanvasState();
+
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        STARFISH_ASSERT(obj_bitmap != nullptr);
+
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_fillSource));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_strokeSource));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_font));
+    }
 };
 
 struct CanvasSurfaceTextureInfo {
@@ -296,12 +306,12 @@ public:
     virtual void resetMatrix(bool needsApplyDPR = true) = 0;
 
     virtual void setFillColor(const Unit::Color& clr) = 0;
-    virtual void setFillSource(CanvasFillStrokeSource& source) = 0;
-    virtual CanvasFillStrokeSource fillSource() = 0;
+    virtual void setFillSource(CanvasFillStrokeSource* source) = 0;
+    virtual CanvasFillStrokeSource* fillSource() = 0;
 
     virtual void setStrokeColor(const Unit::Color& clr) = 0;
-    virtual void setStrokeSource(CanvasFillStrokeSource& source) = 0;
-    virtual CanvasFillStrokeSource strokeSource() = 0;
+    virtual void setStrokeSource(CanvasFillStrokeSource* source) = 0;
+    virtual CanvasFillStrokeSource* strokeSource() = 0;
 
     virtual void setGlobalAlpha(float c) = 0;
     virtual float globalAlpha() = 0;

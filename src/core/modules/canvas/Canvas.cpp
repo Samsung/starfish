@@ -258,8 +258,8 @@ CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
 }
 
 CanvasState::CanvasState()
-    : m_fillSource(Unit::Color())
-    , m_strokeSource(Unit::Color())
+    : m_fillSource(new CanvasFillStrokeSource(Unit::Color()))
+    , m_strokeSource(new CanvasFillStrokeSource(Unit::Color()))
     , m_layerOpacity(1.0f)
     , m_font(nullptr)
     , m_textDecorationData()
