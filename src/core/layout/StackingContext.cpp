@@ -938,12 +938,12 @@ void StackingContext::computeStackingContextProperties(
     computeTransformMatrix();
 
     m_hasFilterEffect = false;
-    if ((owner()->style()->hasAvailableFilter() ||
-         m_ancestorsThatHasFilters.size())) {
+    if ((owner()->style()->hasAvailableFilter() == true ||
+         m_ancestorsThatHasFilters.size() != 0)) {
         m_hasFilterEffect = true;
     }
 
-    if (m_owner->isRootElement()) {
+    if (m_owner->isRootElement() == true) {
         compositingState.documentOwners.push_back(this);
     }
 
@@ -953,10 +953,11 @@ void StackingContext::computeStackingContextProperties(
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
 
     // check self visibility
-    if (selfNeedsGraphicsBuffer && m_owner->isBoxesInvisibleFromHere()) {
+    if (selfNeedsGraphicsBuffer == true &&
+        m_owner->isBoxesInvisibleFromHere() == true) {
         selfNeedsGraphicsBuffer = false;
     }
-    if (selfNeedsGraphicsBuffer &&
+    if (selfNeedsGraphicsBuffer == true &&
         m_owner->style()->visibility() == HiddenVisibilityValue) {
         bool everyDesendentBoxIsHidden = true;
         m_owner->iterateChildFrameBox(
@@ -966,7 +967,7 @@ void StackingContext::computeStackingContextProperties(
                     everyDesendentBoxIsHidden = false;
                 }
             });
-        if (everyDesendentBoxIsHidden) {
+        if (everyDesendentBoxIsHidden == true) {
             selfNeedsGraphicsBuffer = false;
         }
     }
@@ -979,24 +980,24 @@ void StackingContext::computeStackingContextProperties(
                             m_owner->isRunningTransformAnimation();
 
 #if !defined(STARFISH_ENABLE_TEST)
-    if (m_owner->isRootElement()) {
+    if (m_owner->isRootElement() == true) {
         FrameBlockBox* fb = m_owner->asFrameBlockBox();
-        if (isRootContext()) {
+        if (isRootContext() == true) {
             fb = m_owner->node()
                      ->document()
                      ->frame()
                      ->asFrameBox()
                      ->asFrameBlockBox();
         }
-        if ((fb->hasBiggerContentThanFrameWidth() ||
-             fb->hasBiggerContentThanFrameHeight())) {
+        if ((fb->hasBiggerContentThanFrameWidth() == true ||
+             fb->hasBiggerContentThanFrameHeight() == true)) {
             compositedBySelf = true;
         }
     }
 #endif
 
-    if (compositingState.seenCompsitedLayer() && !isRootContext() &&
-        m_owner->isAbsolutePositioned()) {
+    if (compositingState.seenCompsitedLayer() == true &&
+        isRootContext() == false && m_owner->isAbsolutePositioned() == true) {
         SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
         auto windowRect = computeBoxExtent(
             LayoutRect(0, 0, m_owner->width(), m_owner->height()),
@@ -1006,13 +1007,13 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
-    if (Compositor::supportsFilterEffect(
-            1, 1) /* test whatever compostior supports filter */ &&
-        m_hasFilterEffect) {
+    if (Compositor::supportsFilterEffect(1, 1) ==
+            true /* test whatever compostior supports filter */ &&
+        m_hasFilterEffect == true) {
         compositedBySelf = true;
     }
 
-    if (compositedBySelf) {
+    if (compositedBySelf == true) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
     } else {
@@ -1020,7 +1021,8 @@ void StackingContext::computeStackingContextProperties(
     }
     bool willBeComposited = compositedBySelf;
 
-    if (!willBeComposited && compositingState.seenCompsitedLayer() &&
+    if (willBeComposited == false &&
+        compositingState.seenCompsitedLayer() == true &&
         compositingState.compositedDocuments.find(
             m_owner->node()->document()) !=
             compositingState.compositedDocuments.end()) {
@@ -1030,7 +1032,7 @@ void StackingContext::computeStackingContextProperties(
         StackingContext* p = parent();
         StackingContext* compositedAncestor = nullptr;
         while (p) {
-            if (compositingState.isCompsitedLayer(p, &ancestorIndex)) {
+            if (compositingState.isCompsitedLayer(p, &ancestorIndex) == true) {
                 compositedAncestor = p;
                 break;
             }
@@ -1044,68 +1046,78 @@ void StackingContext::computeStackingContextProperties(
         auto parentExtent =
             compositingState.screenExtentPerLayer(compositedAncestor);
 
-        if (compositedAncestor->owner()->isRootElement()) {
+        if (compositedAncestor->owner()->isRootElement() == true) {
             parentIsRootElementLayer = true;
         }
 
-        if (parentIsRootElementLayer ||
-            (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) &&
-             parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) &&
-             parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
+        if (parentIsRootElementLayer == true ||
+            (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) ==
+                 true &&
+             parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) ==
+                 true &&
+             parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) ==
+                 true &&
              parentExtent.containsInVisual(selfExtent.maxX(),
-                                           selfExtent.maxY())) ||
-            (compositedAncestor->owner()->shouldApplyOverflow())) {
+                                           selfExtent.maxY()) == true) ||
+            (compositedAncestor->owner()->shouldApplyOverflow() == true)) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonNotCoveredByParent;
         }
 
-        if (canConveredByParentCompositedLayer) {
+        if (canConveredByParentCompositedLayer == true) {
             auto& cv = compositingState.compositedLayers;
             for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
                 if (cv[i]->owner()->document() == owner()->document()) {
                     auto extent = compositingState.screenExtentPerLayer(cv[i]);
-                    if (extent.intersects(selfExtent)) {
+                    if (extent.intersects(selfExtent) == true) {
                         isCollapsedWithSilbingLayer = true;
                         reason = NeedsGraphicsLayerReason::
                             NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
+                        break;
+                    }
+
+                    if (cv[i]->owner()->isRunningTransformAnimation() == true) {
+                        isCollapsedWithSilbingLayer = true;
+                        reason = NeedsGraphicsLayerReason::
+                            NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
                         break;
                     }
                 }
             }
         }
 
-        if (canConveredByParentCompositedLayer &&
-            !isCollapsedWithSilbingLayer) {
+        if (canConveredByParentCompositedLayer == true &&
+            isCollapsedWithSilbingLayer == false) {
         } else {
             willBeComposited = true;
         }
     }
 
-    if (willBeComposited) {
+    if (willBeComposited == true) {
         for (size_t i = 0; i < compositingState.documentOwners.size(); i++) {
-            if (compositingState.documentOwners[i]->isRootContext() ||
-                compositingState.documentOwners[i]
-                    ->owner()
-                    ->asFrameBlockBox()
-                    ->hasBiggerContentThanFrameWidth() ||
-                compositingState.documentOwners[i]
-                    ->owner()
-                    ->asFrameBlockBox()
-                    ->hasBiggerContentThanFrameHeight()) {
+            if ((compositingState.documentOwners[i]->isRootContext() == true) ||
+                (compositingState.documentOwners[i]
+                     ->owner()
+                     ->asFrameBlockBox()
+                     ->hasBiggerContentThanFrameWidth() == true) ||
+                (compositingState.documentOwners[i]
+                     ->owner()
+                     ->asFrameBlockBox()
+                     ->hasBiggerContentThanFrameHeight() == true)) {
                 if (compositingState.compositedLayers.size() == 0) {
                     STARFISH_ASSERT(
                         compositingState.documentOwners[i]->isRootContext());
                 }
-                if (!compositingState.isCompsitedLayer(
-                        compositingState.documentOwners[i])) {
+                if (compositingState.isCompsitedLayer(
+                        compositingState.documentOwners[i]) == false) {
                     compositingState.pushCompsitedLayer(
                         compositingState.documentOwners[i]);
                 }
             }
         }
-        if (!compositingState.isCompsitedLayer(this)) {
+        if (compositingState.isCompsitedLayer(this) == false) {
             compositingState.pushCompsitedLayer(this);
         }
     }
@@ -1141,8 +1153,8 @@ void StackingContext::computeStackingContextProperties(
         iter++;
     }
 
-    if (m_owner->isRootElement()) {
-        if (compositingState.isCompsitedLayer(this)) {
+    if (m_owner->isRootElement() == true) {
+        if (compositingState.isCompsitedLayer(this) == true) {
             willBeComposited = true;
             m_needsGraphicsBufferReason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
@@ -2741,7 +2753,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
                 compositor->setFillColor(Unit::Color(0, 0, 255, 64));
                 break;
-            case NeedsGraphicsLayerReasonSiblingLayerNeedsComposite:
+            case NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation:
                 compositor->setFillColor(Unit::Color(0, 255, 255, 64));
                 break;
             default:
