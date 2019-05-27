@@ -276,6 +276,7 @@ void BrowsingContext::resolveStyleIfNeeds()
                     }
 
                     sheet->clearStyleRules();
+                    sheet->clearKeyframesRules();
                     sheet->collectRulesFromImportedSheet(
                         sheet->importRules(), webFonts, viewportDependentResult,
                         deviceDependentResult);
@@ -291,6 +292,12 @@ void BrowsingContext::resolveStyleIfNeeds()
                         sheet->styleRules()[j]);
                 }
                 offset += rules;
+
+                size_t keyframes = sheet->keyframes().size();
+                for (size_t k = 0; k < keyframes; k++) {
+                    document()->styleResolver().addToKeyframesRule(
+                        sheet->keyframes()[k]);
+                }
             }
 
 #if !defined(PORT_CANVAS_BACKEND_MOCK)

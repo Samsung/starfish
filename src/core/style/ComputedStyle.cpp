@@ -230,23 +230,22 @@ StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
     return nullptr;
 }
 
-AnimationTimingFunction* ComputedStyle::knownTransitionTimingFunction(
-    TransitionTimingFunctionValue v)
+TimingFunction* ComputedStyle::knownTimingFunction(TimingFunctionValue v)
 {
     switch (v) {
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseValue:
+    case TimingFunctionValue::TimingFunctionEaseValue:
         return new CubicBezier(0.25, 0.1, 0.25, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionLinearValue:
+    case TimingFunctionValue::TimingFunctionLinearValue:
         return new CubicBezier(0, 0, 1, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInValue:
+    case TimingFunctionValue::TimingFunctionEaseInValue:
         return new CubicBezier(0.42, 0, 1, 1);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseOutValue:
+    case TimingFunctionValue::TimingFunctionEaseOutValue:
         return new CubicBezier(0.0, 0.0, 0.58, 1.0);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionEaseInOutValue:
+    case TimingFunctionValue::TimingFunctionEaseInOutValue:
         return new CubicBezier(0.42, 0.0, 0.58, 1.0);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionStepStartValue:
+    case TimingFunctionValue::TimingFunctionStepStartValue:
         return new Steps(1, false);
-    case TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue:
+    case TimingFunctionValue::TimingFunctionStepEndValue:
         return new Steps(1, true);
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

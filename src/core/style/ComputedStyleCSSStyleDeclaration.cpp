@@ -1243,14 +1243,69 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(
-                CSSStyleValuePair::AnimationTimingFunctionValueKind,
+                CSSStyleValuePair::TimingFunctionPointerKind,
                 StyleTransitionData::defaultTimingFunction());
         } else {
             ValueList* list = new ValueList(ValueList::CommaSeparator);
             for (size_t i = 0; i < layerSize; i++) {
                 p.multiValue()->emplace_back(
-                    CSSStyleValuePair::AnimationTimingFunctionValueKind,
+                    CSSStyleValuePair::TimingFunctionPointerKind,
                     style->transitionTimingFunction(i));
+            }
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::AnimationName: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationName);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size = style->animation()
+                          ? style->animation()->animationNameListSize()
+                          : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(CSSStyleValuePair::StringValueKind,
+                                         String::fromUTF8("none"));
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::StringValueKind,
+                    style->animation()->animationName(i));
+            }
+        }
+
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::AnimationDuration: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDuration);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size =
+            style->animation() ? style->animation()->durationSize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                             style->animationDuration(i));
+            }
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::AnimationTimingFunction: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationTimingFunction);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size =
+            style->animation() ? style->animation()->timingFunctionSize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(
+                CSSStyleValuePair::TimingFunctionValueKind,
+                TimingFunctionValue::TimingFunctionEaseValue);
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::TimingFunctionPointerKind,
+                    style->animation()->timingFunction(i));
             }
         }
         addValuePair(p);

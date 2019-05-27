@@ -616,11 +616,6 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void computeTransition(Element* element, ComputedStyle* oldStyle,
-                       Frame* oldFrame, ComputedStyle* style,
-                       ComputedStyleDamage& damage,
-                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
-
 static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
                                                      ComputedStyle* newStyle,
                                                      bool* damagedKeys)
@@ -721,6 +716,10 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         ComputedStyleDamage::ComputedStyleDamageNone) {
                         computeTransition(pseudoNode, ocs, pseudoNode->frame(),
                                           ncs, damage, damagedKeys);
+                        // TODO: We need to check whether this function call is
+                        // necessary.
+                        computeAnimation(pseudoNode, ocs, pseudoNode->frame(),
+                                         ncs, damage);
 
                         if ((damage & ComputedStyleDamage::
                                           ComputedStyleDamageInherited) ||

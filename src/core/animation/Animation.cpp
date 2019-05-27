@@ -23,7 +23,7 @@
 #include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/animation/AnimationUtil.h"
-#include "core/animation/AnimationTimingFunction.h"
+#include "core/animation/TimingFunction.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/TransitionEvent.h"
@@ -73,7 +73,7 @@ void AnimationExecutor::checkActiveAnimationExecutorInWebView()
 ActiveAnimationTask::ActiveAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, AnimationTimingFunction* timingFunction)
+    uint64_t delayInms, TimingFunction* timingFunction)
     : m_property(targetProperty)
     , m_targetElement(target)
     , m_fromValue(from)
@@ -83,6 +83,8 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_delayMs(delayInms)
     , m_timingFunction(timingFunction)
 {
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
 }
 
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
@@ -159,6 +161,7 @@ float ActiveAnimationTask::computeProgress(float fraction)
 
 void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
 {
+    STARFISH_ASSERT(style != nullptr);
     float from = m_fromValue.getFloat();
     float to = m_toValue.getFloat();
     float newOpacity = from * (1 - progress) + to * progress;
@@ -167,6 +170,7 @@ void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
 
 bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
+    STARFISH_ASSERT(newStyle != nullptr);
     if (newStyle->opacity() != m_toValue.getFloat()) {
         return false;
     }
@@ -343,7 +347,7 @@ static SkMatrix recomposing2DMatrix(
 ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, AnimationTimingFunction* timingFunction,
+    uint64_t delayInms, TimingFunction* timingFunction,
     StyleTransformDataGroup* orgTransformValue)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
@@ -351,6 +355,8 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     , m_decomposedFrom(decomposing2DMatrix(m_fromValue.getMatrix()))
     , m_decomposedTo(decomposing2DMatrix(m_toValue.getMatrix()))
 {
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
     if (orgTransformValue) {
         StyleTransformDataGroup* newOrgData = new StyleTransformDataGroup();
         for (size_t i = 0; i < orgTransformValue->size(); i++) {
@@ -363,6 +369,7 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
 
 void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 {
+    STARFISH_ASSERT(style != nullptr);
     SkMatrix from = m_fromValue.getMatrix();
     SkMatrix to = m_toValue.getMatrix();
     Element* current = targetElement();
@@ -401,6 +408,7 @@ void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 
 bool ActiveTransformAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
+    STARFISH_ASSERT(newStyle != nullptr);
     if (newStyle->transforms() == nullptr) {
         if (m_originalTransformValue == nullptr) {
             return true;
@@ -431,6 +439,7 @@ void ActiveTransformAnimationTask::detachFromElement(ComputedStyle* style)
 
 void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
 {
+    STARFISH_ASSERT(style != nullptr);
     Unit::Color from = m_fromValue.getColor();
     Unit::Color to = m_toValue.getColor();
 
@@ -464,6 +473,7 @@ void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
 
 bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
+    STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
         if (newStyle->backgroundColor() == m_toValue.getColor()) {
             return true;
@@ -509,17 +519,20 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, AnimationTimingFunction* timingFunction,
-    Length originalToValue, size_t indexForBgLayer)
+    uint64_t delayInms, TimingFunction* timingFunction, Length originalToValue,
+    size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
     , m_originalToValue(originalToValue)
     , m_indexForBgLayer(indexForBgLayer)
 {
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
 }
 
 void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
 {
+    STARFISH_ASSERT(style != nullptr);
     Length newLength;
     if (m_toValue.getLength().isPercent()) {
         float fromPercent = m_fromValue.getLength().percent();
@@ -675,6 +688,7 @@ bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
 
 bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
+    STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::Width) {
         if (m_originalToValue == newStyle->width()) {
             return true;
@@ -786,13 +800,15 @@ bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, AnimationTimingFunction* timingFunction,
+    uint64_t delayInms, TimingFunction* timingFunction,
     LengthSize originalToValue, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
     , m_originalToValue(originalToValue)
     , m_indexForBgLayer(indexForBgLayer)
 {
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(timingFunction != nullptr);
 }
 
 static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
@@ -828,6 +844,7 @@ static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
 void ActiveLengthSizeAnimationTask::execute(float progress,
                                             ComputedStyle* style)
 {
+    STARFISH_ASSERT(style != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
         style->setBackgroundSize(
             interpolateLengthSize(progress, m_fromValue, m_toValue),
@@ -853,6 +870,7 @@ bool ActiveLengthSizeAnimationTask::isKindOfTransitionProperty(
 
 bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
+    STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
         if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
             newStyle->backgroundSizeIsLength(m_indexForBgLayer) &&
@@ -908,7 +926,13 @@ bool applyTransitionIfNeeds(
     const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
         canceledAnimationProgress)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(oldStyle != nullptr);
+    STARFISH_ASSERT(oldFrame != nullptr);
+    STARFISH_ASSERT(newStyle != nullptr);
+    STARFISH_ASSERT(damagedKeys != nullptr);
     bool ret = false;
+
     StyleTransitionData* data = newStyle->transition();
     AnimationExecutor* executor = element->document()->animationExecutor();
 
@@ -1714,6 +1738,139 @@ bool applyTransitionIfNeeds(
         // <- length series
 
         if (gotTransition) {
+            // TODO reduce animation duration here with
+            // canceledAnimationProgress
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+
+bool applyAnimationIfNeeds(
+    Element* element, NULLABLE ComputedStyle* fromStyle,
+    NULLABLE Frame* fromFrame, ComputedStyle* toStyle,
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+        canceledAnimationProgress)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(toStyle != nullptr);
+
+    bool ret = false;
+
+    StyleAnimationKeyframe* fromKeyframe =
+        toStyle->animation()->animationKeyframe(0);
+    StyleAnimationKeyframe* toKeyframe =
+        toStyle->animation()->animationKeyframe(1);
+
+    AnimationExecutor* executor = element->document()->animationExecutor();
+
+    // all keyframes should be handled here.
+    for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
+        if (toKeyframe->duration().toTimeValue() == 0) {
+            continue;
+        }
+
+        bool gotTransition = false;
+        CSSStyleValuePair toProperty,
+            fromProperty = fromKeyframe->properties()[i];
+        CSSStyleValuePair::KeyKind fromPropertyKeyKind = fromProperty.keyKind();
+
+        if (toKeyframe != nullptr) {
+            for (size_t k = 0; k < toKeyframe->propertySize(); k++) {
+                if (fromPropertyKeyKind ==
+                    toKeyframe->properties()[k].keyKind()) {
+                    toProperty = toKeyframe->properties()[k];
+                    break;
+                }
+            }
+        }
+
+        if (toProperty.keyKind() == CSSStyleValuePair::KeyKind::Unknown) {
+            toProperty = fromProperty;
+        }
+
+        auto duration = toKeyframe->duration().toTimeValue();
+        auto delay = fromKeyframe->delay().toTimeValue();
+        auto timingFunction = fromKeyframe->timingFunction();
+
+        // color series
+        if (fromPropertyKeyKind == CSSStyleValuePair::BackgroundColor) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BackgroundColor);
+            if (found == false) {
+                Unit::Color fromValue, toValue;
+                if (fromProperty.valueKind() ==
+                    CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    fromValue = fromProperty.colorValue();
+                } else if (fromProperty.valueKind() ==
+                           CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                    fromValue = NamedColor::namedColorToColor(
+                        fromProperty.namedColorValue());
+                } else {
+                    // TODO: Consider how to handle in this case.
+                    STARFISH_ASSERT_NOT_REACHED();
+                }
+
+                if (toProperty.valueKind() ==
+                    CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    toValue = toProperty.colorValue();
+                } else if (toProperty.valueKind() ==
+                           CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                    toValue = NamedColor::namedColorToColor(
+                        toProperty.namedColorValue());
+                } else {
+                    // TODO: Consider how to handle in this case.
+                    STARFISH_ASSERT_NOT_REACHED();
+                }
+
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BackgroundColor,
+                    AnimatedValue(fromValue), AnimatedValue(toValue), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, toStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (fromPropertyKeyKind == CSSStyleValuePair::Color) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Color);
+            if (found == false) {
+                Unit::Color fromValue, toValue;
+                if (fromProperty.valueKind() ==
+                    CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    fromValue = fromProperty.colorValue();
+                } else if (fromProperty.valueKind() ==
+                           CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                    fromValue = NamedColor::namedColorToColor(
+                        fromProperty.namedColorValue());
+                } else {
+                    // TODO: Consider how to handle in this case.
+                    STARFISH_ASSERT_NOT_REACHED();
+                }
+
+                if (toProperty.valueKind() ==
+                    CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    toValue = toProperty.colorValue();
+                } else if (toProperty.valueKind() ==
+                           CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+                    toValue = NamedColor::namedColorToColor(
+                        toProperty.namedColorValue());
+                } else {
+                    // TODO: Consider how to handle in this case.
+                    STARFISH_ASSERT_NOT_REACHED();
+                }
+
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::Color, AnimatedValue(fromValue),
+                    AnimatedValue(toValue), duration, delay, timingFunction);
+                executor->registerAnimation(task, toStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (gotTransition == true) {
             // TODO reduce animation duration here with
             // canceledAnimationProgress
             ret = true;

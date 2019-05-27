@@ -42,7 +42,7 @@
 namespace Starfish {
 
 class AncestorSelectorFilter;
-class AnimationTimingFunction;
+class TimingFunction;
 class CalcData;
 class ComputedStyle;
 class StyleRule;
@@ -54,6 +54,7 @@ class MediaQuerySet;
 class MediaQueryEvaluator;
 class Node;
 class RuleSet;
+class StyleRuleKeyframes;
 class MutablePropertyValue;
 class CSSCounterFunction;
 class CSSGradientValue;
@@ -430,14 +431,14 @@ enum ImageRenderingValue ENSURE_ENUM_UNSIGNED {
     ImageRenderingPixelatedValue,
 };
 
-enum TransitionTimingFunctionValue ENSURE_ENUM_UNSIGNED {
-    TransitionTimingFunctionEaseValue,
-    TransitionTimingFunctionLinearValue,
-    TransitionTimingFunctionEaseInValue,
-    TransitionTimingFunctionEaseOutValue,
-    TransitionTimingFunctionEaseInOutValue,
-    TransitionTimingFunctionStepStartValue,
-    TransitionTimingFunctionStepEndValue,
+enum TimingFunctionValue ENSURE_ENUM_UNSIGNED {
+    TimingFunctionEaseValue,
+    TimingFunctionLinearValue,
+    TimingFunctionEaseInValue,
+    TimingFunctionEaseOutValue,
+    TimingFunctionEaseInOutValue,
+    TimingFunctionStepStartValue,
+    TimingFunctionStepEndValue,
 };
 
 enum BoxSizingValue ENSURE_ENUM_UNSIGNED {
@@ -726,7 +727,11 @@ class CSSFilterFunction;
     F(TransitionDuration, transitionDuration, "transition-duration") \
     F(TransitionProperty, transitionProperty, "transition-property") \
     F(TransitionTimingFunction, transitionTimingFunction,            \
-      "transition-timing-function")
+      "transition-timing-function")                                  \
+    F(AnimationName, animationName, "animation-name")                \
+    F(AnimationDuration, animationDuration, "animation-duration")    \
+    F(AnimationTimingFunction, animationTimingFunction,              \
+      "animation-timing-function")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -966,8 +971,8 @@ public:
         TransformFunctions,
 
         // transition
-        TransitionTimingFunctionValueKind,
-        AnimationTimingFunctionValueKind,
+        TimingFunctionValueKind,
+        TimingFunctionPointerKind,
 
         // content
         Attr,
@@ -1440,10 +1445,10 @@ public:
         return m_value.m_cssPropertyNameValue;
     }
 
-    TransitionTimingFunctionValue transitionTimingFunctionValue() const
+    TimingFunctionValue timingFunctionValue() const
     {
-        STARFISH_ASSERT(m_valueKind == TransitionTimingFunctionValueKind);
-        return m_value.m_transitionTimingFunction;
+        STARFISH_ASSERT(m_valueKind == TimingFunctionValueKind);
+        return m_value.m_timingFunctionValue;
     }
 
     BoxValue boxValue() const
@@ -1632,10 +1637,10 @@ public:
         return m_value.m_stringValue;
     }
 
-    AnimationTimingFunction* animationTimingFunctionValue() const
+    TimingFunction* timingFunctionPointerValue() const
     {
-        STARFISH_ASSERT(m_valueKind == AnimationTimingFunctionValueKind);
-        return m_value.m_animationTimingFunction;
+        STARFISH_ASSERT(m_valueKind == TimingFunctionPointerKind);
+        return m_value.m_timingFunction;
     }
 
     CSSFilterFunction* filterFunctionValue() const
@@ -1692,7 +1697,7 @@ public:
         TableLayoutValue m_tableLayout;
         EmptyCellsValue m_emptyCells;
         KeyKind m_cssPropertyNameValue;
-        TransitionTimingFunctionValue m_transitionTimingFunction;
+        TimingFunctionValue m_timingFunctionValue;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
         FlexDirectionValue m_flexDirection;
@@ -1720,7 +1725,7 @@ public:
         WidthHeightKeywordValue m_widthHeightKeywordValue;
         PointerEventsValue m_pointerEventsValue;
         BoxDecorationBreakValue m_boxDecorationBreakValue;
-        AnimationTimingFunction* m_animationTimingFunction;
+        TimingFunction* m_timingFunction;
         CSSFilterFunction* m_filterFunction;
 
         ValueData(int v)
@@ -1915,8 +1920,8 @@ public:
             : m_time(v)
         {
         }
-        ValueData(TransitionTimingFunctionValue v)
-            : m_transitionTimingFunction(v)
+        ValueData(TimingFunctionValue v)
+            : m_timingFunctionValue(v)
         {
         }
         ValueData(BoxSizingValue v)
@@ -2038,9 +2043,10 @@ public:
         {
         }
 
-        ValueData(AnimationTimingFunction* v)
-            : m_animationTimingFunction(v)
+        ValueData(TimingFunction* v)
+            : m_timingFunction(v)
         {
+            STARFISH_ASSERT(v != nullptr);
         }
 
         ValueData(CSSFilterFunction* v)
@@ -2088,8 +2094,8 @@ public:
             return m_value.m_textOverflowData;
         case GradientValueKind:
             return m_value.m_gradientValue;
-        case AnimationTimingFunctionValueKind:
-            return m_value.m_animationTimingFunction;
+        case TimingFunctionPointerKind:
+            return m_value.m_timingFunction;
         case FilterFunctionValueKind:
             return m_value.m_filterFunction;
         default:
@@ -2284,16 +2290,17 @@ public:
         m_value.m_cssPropertyNameValue = v;
     }
 
-    void setTransitionTimingFunctionValue(TransitionTimingFunctionValue v)
+    void setTimingFunctionValue(TimingFunctionValue v)
     {
-        m_valueKind = TransitionTimingFunctionValueKind;
-        m_value.m_transitionTimingFunction = v;
+        m_valueKind = TimingFunctionValueKind;
+        m_value.m_timingFunctionValue = v;
     }
 
-    void setAnimationTimingFunctionValue(AnimationTimingFunction* v)
+    void setTimingFunctionPointerValue(TimingFunction* v)
     {
-        m_valueKind = AnimationTimingFunctionValueKind;
-        m_value.m_animationTimingFunction = v;
+        STARFISH_ASSERT(v != nullptr);
+        m_valueKind = TimingFunctionPointerKind;
+        m_value.m_timingFunction = v;
     }
 
     void setFilterFunctionValue(CSSFilterFunction* v)
@@ -2389,6 +2396,11 @@ public:
     bool updateValueLayerTransitionDuration(const CSSTokenVector& tokens);
     bool updateValueLayerTransitionTimingFunction(const CSSTokenVector& tokens);
     bool updateValueLayerTransitionDelay(const CSSTokenVector& tokens);
+
+    bool updateValueUnitAnimationTimingFunction(const CSSTokenValue& value);
+    bool updateValueLayerAnimationName(const CSSTokenVector& tokens);
+    bool updateValueLayerAnimationDuration(const CSSTokenVector& tokens);
+    bool updateValueLayerAnimationTimingFunction(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;
@@ -3010,6 +3022,7 @@ public:
 
     StyleResolver(Document* document);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
+    void addToKeyframesRule(StyleRuleKeyframes* rule);
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {

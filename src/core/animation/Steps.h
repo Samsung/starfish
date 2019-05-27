@@ -21,11 +21,11 @@
 #ifndef __StarfishSteps__
 #define __StarfishSteps__
 
-#include "core/animation/AnimationTimingFunction.h"
+#include "core/animation/TimingFunction.h"
 
 namespace Starfish {
 
-class Steps : public AnimationTimingFunction {
+class Steps : public TimingFunction {
 public:
     Steps(size_t numberOfSteps, bool isEndDirection)
         : m_isEndDirection(isEndDirection)

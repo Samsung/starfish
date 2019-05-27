@@ -30,6 +30,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/Style.h"
+#include "core/style/StyleAnimationData.h"
 #include "core/style/StyleBackgroundData.h"
 #include "core/style/StyleTransformData.h"
 #include "core/style/StyleTransformOrigin.h"
@@ -101,6 +102,7 @@ public:
         Transforms,
         TransformOrigin,
         Transition,
+        Animation,
         TextDecorationColor,
         TextDecorationStyle,
         TextUnderlinePosition,
@@ -163,6 +165,7 @@ public:
         StyleTransformDataGroup* m_transforms;
         StyleTransformOrigin* m_transformOrigin;
         StyleTransitionData* m_transition;
+        StyleAnimationData* m_animation;
         ContentDataGroup* m_content;
         OutlineData* m_outline;
         BorderRadiusData* m_borderRadius;
@@ -249,9 +252,16 @@ public:
         {
         }
 
+        RareComputedStyleValue(StyleAnimationData* animation)
+            : m_animation(animation)
+        {
+            STARFISH_ASSERT(animation != nullptr);
+        }
+
         RareComputedStyleValue(ContentDataGroup* content)
             : m_content(content)
         {
+            STARFISH_ASSERT(content != nullptr);
         }
 
         RareComputedStyleValue(OutlineData* outline)
@@ -553,6 +563,7 @@ public:
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
                TransformOrigin);
     GETTER_PTR(StyleTransitionData, transition, transition, Transition);
+    GETTER_PTR(StyleAnimationData, animation, animation, Animation);
     GETTER_PTR(ContentDataGroup, content, content, Content);
     GETTER_PTR(OutlineData, outline, outline, Outline);
     GETTER_PTR(BorderRadiusData, borderRadius, borderRadius, BorderRadius);
@@ -2153,13 +2164,31 @@ public:
         return CSSTime(0);
     }
 
-    AnimationTimingFunction* transitionTimingFunction(size_t layer = 0)
+    TimingFunction* transitionTimingFunction(size_t layer = 0)
     {
         StyleTransitionData* t = transition();
         if (t) {
             return t->timingFunction(layer);
         }
         return StyleTransitionData::defaultTimingFunction();
+    }
+
+    CSSTime animationDuration(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->duration(layer);
+        }
+        return CSSTime(0);
+    }
+
+    TimingFunction* animationTimingFunction(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->timingFunction(layer);
+        }
+        return StyleAnimationKeyframe::defaultTimingFunction();
     }
 
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
@@ -2180,17 +2209,71 @@ public:
         m_rareComputedStyleData.ensureTransition()->setDelay(duration, layer);
     }
 
-    void setTransitionTimingFunction(AnimationTimingFunction* v,
-                                     size_t layer = 0)
+    void setTransitionTimingFunction(TimingFunction* v, size_t layer = 0)
     {
+        STARFISH_ASSERT(v != nullptr);
         m_rareComputedStyleData.ensureTransition()->setTimingFunction(v, layer);
     }
 
-    void setTransitionTimingFunction(TransitionTimingFunctionValue v,
-                                     size_t layer = 0)
+    void setTransitionTimingFunction(TimingFunctionValue v, size_t layer = 0)
     {
         m_rareComputedStyleData.ensureTransition()->setTimingFunction(
-            knownTransitionTimingFunction(v), layer);
+            knownTimingFunction(v), layer);
+    }
+
+    StyleAnimationData* animation()
+    {
+        return m_rareComputedStyleData.animation();
+    }
+
+    size_t animationNameSize()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->animationNameListSize();
+        }
+        return 0;
+    }
+
+    size_t animationKeyframeSize()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->animationKeyframeListSize();
+        }
+        return 0;
+    }
+
+    String* animationName(size_t index = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->animationName(index);
+        }
+        return String::emptyString;
+    }
+
+    void setAnimationName(String* name)
+    {
+        STARFISH_ASSERT(name != nullptr);
+        m_rareComputedStyleData.ensureAnimation()->setAnimationName(name);
+    }
+
+    void setAnimationDuration(CSSTime duration, size_t layer = 0)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setDuration(duration);
+    }
+
+    void setAnimationTimingFunction(TimingFunctionValue v)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setTimingFunction(
+            knownTimingFunction(v));
+    }
+
+    void setAnimationTimingFunction(TimingFunction* f)
+    {
+        STARFISH_ASSERT(f != nullptr);
+        m_rareComputedStyleData.ensureAnimation()->setTimingFunction(f);
     }
 
     void resetTransitionProperties()
@@ -2222,6 +2305,30 @@ public:
         StyleTransitionData* t = transition();
         if (t) {
             t->shrinkTimingFunctions(0);
+        }
+    }
+
+    void resetAnimationNames()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearAnimationNames();
+        }
+    }
+
+    void resetAnimationDurations()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearDurations();
+        }
+    }
+
+    void resetAnimationTimingFunctions()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearTimingFunctions();
         }
     }
 
@@ -3589,8 +3696,7 @@ public:
         m_inheritedStyles.m_cssCustomValues.push_back(v);
     }
 
-    static AnimationTimingFunction* knownTransitionTimingFunction(
-        TransitionTimingFunctionValue v);
+    static TimingFunction* knownTimingFunction(TimingFunctionValue v);
 
     void* operator new(size_t size);
     void* operator new(size_t /* size */, void* p)
@@ -3707,6 +3813,15 @@ protected:
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys);
+
+void computeTransition(Element* element, ComputedStyle* oldStyle,
+                       Frame* oldFrame, ComputedStyle* style,
+                       ComputedStyleDamage& damage,
+                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
+
+void computeAnimation(Element* element, NULLABLE ComputedStyle* oldStyle,
+                      NULLABLE Frame* oldFrame, ComputedStyle* style,
+                      ComputedStyleDamage& damage);
 }
 
 #endif

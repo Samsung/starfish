@@ -20,11 +20,11 @@
 #ifndef __StarfishCubicBezier__
 #define __StarfishCubicBezier__
 
-#include "core/animation/AnimationTimingFunction.h"
+#include "core/animation/TimingFunction.h"
 
 namespace Starfish {
 
-class CubicBezier : public AnimationTimingFunction {
+class CubicBezier : public TimingFunction {
 public:
     CubicBezier(float X1, float Y1, float X2, float Y2);
     float getValue(float x) override;
