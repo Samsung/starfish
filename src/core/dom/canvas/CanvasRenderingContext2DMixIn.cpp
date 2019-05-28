@@ -55,6 +55,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/dom/Text.h"
 #include "core/modules/canvas/NativeGradient.h"
+#include "core/dom/canvas/TextMetrics.h"
 
 #ifndef CRASH
 #define CRASH STARFISH_CRASH
@@ -1238,6 +1239,14 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
     }
 
     drawTextNormal(text, x, y, maxWidth, useMaxWidth, true);
+}
+
+TextMetrics* CanvasRenderingContext2DMixIn::measureText(String* text)
+{
+    STARFISH_ASSERT(text != nullptr);
+    return new TextMetrics(executionContext(),
+                           m_font->measureText(StringView(text)), 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0);
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float dx,

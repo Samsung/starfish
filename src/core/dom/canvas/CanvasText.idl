@@ -8,5 +8,5 @@ interface CanvasText {
   // text (see also the CanvasPathDrawingStyles and CanvasTextDrawingStyles interfaces)
   void fillText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
   void strokeText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
-  [Unimplemented]TextMetrics measureText(DOMString text);
+  TextMetrics measureText(DOMString text);
 };

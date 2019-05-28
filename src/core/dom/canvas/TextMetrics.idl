@@ -1,0 +1,22 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#textmetrics
+
+[STARFISH_ENABLE_CANVAS,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker)]
+interface TextMetrics {
+  // x-direction
+  readonly attribute double width; // advance width
+  [Unimplemented] readonly attribute double actualBoundingBoxLeft;
+  [Unimplemented] readonly attribute double actualBoundingBoxRight;
+
+  // y-direction
+  [Unimplemented] readonly attribute double fontBoundingBoxAscent;
+  [Unimplemented] readonly attribute double fontBoundingBoxDescent;
+  [Unimplemented] readonly attribute double actualBoundingBoxAscent;
+  [Unimplemented] readonly attribute double actualBoundingBoxDescent;
+  [Unimplemented] readonly attribute double emHeightAscent;
+  [Unimplemented] readonly attribute double emHeightDescent;
+  [Unimplemented] readonly attribute double hangingBaseline;
+  [Unimplemented] readonly attribute double alphabeticBaseline;
+  [Unimplemented] readonly attribute double ideographicBaseline;
+};
