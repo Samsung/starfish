@@ -716,11 +716,10 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         ComputedStyleDamage::ComputedStyleDamageNone) {
                         computeTransition(pseudoNode, ocs, pseudoNode->frame(),
                                           ncs, damage, damagedKeys);
-                        // TODO: We need to check whether this function call is
-                        // necessary.
+#if defined(STARFISH_ENABLE_ANIMATION)
                         computeAnimation(pseudoNode, ocs, pseudoNode->frame(),
                                          ncs, damage);
-
+#endif
                         if ((damage & ComputedStyleDamage::
                                           ComputedStyleDamageInherited) ||
                             (damage & ComputedStyleDamage::

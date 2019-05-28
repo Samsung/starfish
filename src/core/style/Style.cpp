@@ -7549,11 +7549,9 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* oldStyle = element->style();
         Frame* oldFrame = element->frame();
 
-        if (style->transitionLayerSize() > 0) {
-            computeTransition(element, oldStyle, oldFrame, style, damage,
-                              damagedKeys);
-        }
-
+        computeTransition(element, oldStyle, oldFrame, style, damage,
+                          damagedKeys);
+#if defined(STARFISH_ENABLE_ANIMATION)
         if (style->animationNameSize() > 0) {
             computeAnimationKeyframes(resolver, element, oldStyle, oldFrame,
                                       style, damage);
@@ -7561,6 +7559,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 computeAnimation(element, oldStyle, oldFrame, style, damage);
             }
         }
+#endif
 
         {
 // #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
