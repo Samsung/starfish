@@ -1772,7 +1772,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 canvas->drawRepeatImage(id, Unit::Rect(x, y, paintingW, imgH),
                                         imgW, imgH, true, false,
                                         imageRenderingValue);
-            } else if (type.isGradient() == true ) {
+            } else if (type.isGradient() == true) {
                 paintRepeatGradient(canvas, box, style, idx,
                                     Unit::Rect(x, y, paintingW, imgH), imgW,
                                     imgH, true, false, imageRenderingValue);
