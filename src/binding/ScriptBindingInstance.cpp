@@ -30,6 +30,7 @@
 #include "core/page/Window.h"
 #else
 #include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #endif
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)

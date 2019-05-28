@@ -47,8 +47,13 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
 namespace Starfish {
 
 #if defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#define STARFISH_GLOBAL_BINDING_CLASS ServiceWorkerGlobalScope
+class ServiceWorkerGlobalScope;
+#else
 #define STARFISH_GLOBAL_BINDING_CLASS WorkerGlobalScope
 class WorkerGlobalScope;
+#endif /* defined(STARFISH_ENABLE_SERVICE_WORKER) */ 
 #else
 #define STARFISH_GLOBAL_BINDING_CLASS Window
 class Window;

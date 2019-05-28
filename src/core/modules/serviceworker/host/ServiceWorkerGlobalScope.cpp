@@ -20,6 +20,9 @@
 #ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingWorkerInstance.h"
+#include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -27,10 +30,17 @@ namespace Starfish {
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
                                                    ResourceURL* url,
                                                    String* charSet)
-    : WorkerGlobalScope(webWorker, url, charSet)
+    : WorkerGlobalScope(webWorker)
 {
-    STARFISH_ASSERT(webWorker != nullptr && url != nullptr &&
-                    charSet != nullptr);
+    STARFISH_ASSERT(webWorker != nullptr);
+    STARFISH_ASSERT(url != nullptr);
+    STARFISH_ASSERT(charSet != nullptr);
+
+    m_scriptBindingInstance =
+        new ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>(
+            webWorker->scriptEngineInstance(), this);
+
+    initGlobalScope(url, charSet);
 }
 
 void* ServiceWorkerGlobalScope::operator new(size_t size)

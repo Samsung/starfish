@@ -24,6 +24,7 @@
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/dom/ErrorEvent.h"
 #include <EscargotPublic.h>
 
@@ -31,32 +32,40 @@ namespace Starfish {
 
 using namespace Escargot;
 
-static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
-                                           ValueRef* key) 
-{
-    STARFISH_ASSERT(state != nullptr && key != nullptr);
-    String* name = toBrowserString(state, key);
-    WorkerGlobalScope* self = fetchGlobalObject(state->context());
+template class ScriptBindingWorkerInstance<WorkerGlobalScope>;
+template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 
-    if (name->equals("self")) {
+static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
+                                           ValueRef* key)
+{
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(key != nullptr);
+    String* name = toBrowserString(state, key);
+    auto self = fetchGlobalObject(state->context());
+
+    if (name->equals("self") == true) {
         return self->scriptValue();
     }
 
     return ValueRef::createEmpty();
 }
 
-ScriptBindingWorkerInstance::ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-    WorkerGlobalScope* workerGlobalScope)
+template <typename T>
+ScriptBindingWorkerInstance<T>::ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+    T* workerGlobalScope)
     : ScriptBindingInstance(engineInstance)
     , m_ownerWorkerGlobalScope(workerGlobalScope)
 {
-    STARFISH_ASSERT(engineInstance != nullptr && workerGlobalScope != nullptr);
+    STARFISH_ASSERT(engineInstance != nullptr);
+    STARFISH_ASSERT(workerGlobalScope != nullptr);
 }
 
-void ScriptBindingWorkerInstance::initJavaScriptBinding(
+template <typename T>
+void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
     Escargot::ContextRef* context, Escargot::ExecutionStateRef* state)
 {
-    STARFISH_ASSERT(context != nullptr && state != nullptr);
+    STARFISH_ASSERT(context != nullptr);
+    STARFISH_ASSERT(state != nullptr);
     ScriptBindingInstance::initJavaScriptBinding(context, state);
 
     fnEventTarget();
@@ -68,24 +77,28 @@ void ScriptBindingWorkerInstance::initJavaScriptBinding(
     context->setVirtualIdentifierCallback(virtualIdentifierCallback);
 }
 
-void ScriptBindingWorkerInstance::destroy()
+template <typename T>
+void ScriptBindingWorkerInstance<T>::destroy()
 {
     ScriptBindingInstance::destroy();
 }
 
-Window* ScriptBindingWorkerInstance::ownerWindow()
+template <typename T>
+Window* ScriptBindingWorkerInstance<T>::ownerWindow()
 {
     STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
 }
 
-Document* ScriptBindingWorkerInstance::ownerDocument()
+template <typename T>
+Document* ScriptBindingWorkerInstance<T>::ownerDocument()
 {
     STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
 }
 
-void ScriptBindingWorkerInstance::dispatchErrorEventToGlobalScope(
+template <typename T>
+void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
     ErrorEventInit& errorInfo)
 {
     m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);

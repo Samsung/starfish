@@ -31,6 +31,7 @@
 #include "core/page/WebView.h"
 #else
 #include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #include <EscargotPublic.h>
