@@ -37,6 +37,8 @@ typedef void (*TimerHandler)(void* data);
 
 class WorkerGlobalScope : public EventTarget, public GlobalScope {
 public:
+    WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWorkerGlobalScope() const override;
@@ -91,7 +93,8 @@ public:
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
 protected:
-    WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);
+    WorkerGlobalScope(WebWorker* webWorker);
+
     WebWorker* m_webWorker;
     ScriptBindingInstance* m_scriptBindingInstance;
     ExecutionContext* m_executionContext;
@@ -110,6 +113,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
     }
+
+    void initGlobalScope(ResourceURL* url, String* charSet);
 
 private:
     void importScript(ResourceURL* url);

@@ -2,7 +2,6 @@
 
 [
   STARFISH_WEBWORKER_HOST,
-  PrimaryGlobal,
   Exposed=Worker,
   NoInterfaceObject
 ]

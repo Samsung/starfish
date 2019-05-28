@@ -25,19 +25,20 @@
 namespace Starfish {
 
 class WorkerGlobalScope;
+class ServiceWorkerGlobalScope;
 
+template <typename T>
 class ScriptBindingWorkerInstance final : public ScriptBindingInstance {
 public:
-    ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-        WorkerGlobalScope* workerGlobalScope);
-
+    explicit ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
+        T* workerGlobalScope);
     Window* ownerWindow() override;
     Document* ownerDocument() override;
 
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
     void destroy() override;
 private:
-    WorkerGlobalScope* m_ownerWorkerGlobalScope;
+    T* m_ownerWorkerGlobalScope;
 
     void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
 };

@@ -29,13 +29,22 @@
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerLocation.h"
 #include "core/modules/worker/host/WorkerNavigator.h"
-#include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
+
+WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
+    : EventTarget()
+    , GlobalScope(webWorker)
+    , m_webWorker(webWorker)
+{
+    STARFISH_ASSERT(webWorker != nullptr);
+}
 
 WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
                                      String* charSet)
@@ -43,11 +52,21 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
 {
-    STARFISH_ASSERT(webWorker != nullptr && url != nullptr &&
-                    charSet != nullptr);
+    STARFISH_ASSERT(webWorker != nullptr);
+    STARFISH_ASSERT(url != nullptr);
+    STARFISH_ASSERT(charSet != nullptr);
 
-    m_scriptBindingInstance = new ScriptBindingWorkerInstance(
-        webWorker->scriptEngineInstance(), this);
+    m_scriptBindingInstance =
+        new ScriptBindingWorkerInstance<WorkerGlobalScope>(
+            webWorker->scriptEngineInstance(), this);
+
+    initGlobalScope(url, charSet);
+}
+
+void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
+{
+    STARFISH_ASSERT(url != nullptr);
+    STARFISH_ASSERT(charSet != nullptr);
 
     m_executionContext = new ExecutionContext(this, m_scriptBindingInstance,
                                               url, charSet, this, false);

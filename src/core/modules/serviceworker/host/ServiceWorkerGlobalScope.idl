@@ -1,6 +1,11 @@
 // https://w3c.github.io/ServiceWorker/#serviceworkerglobalscope
 
-[STARFISH_WEBWORKER_HOST, Global=(Worker,ServiceWorker), Exposed=Worker]
+[
+  STARFISH_WEBWORKER_HOST,
+  PrimaryGlobal,
+  Global=(Worker,ServiceWorker),
+  Exposed=Worker
+]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   //[SameObject] readonly attribute Clients clients;
   //[SameObject] readonly attribute ServiceWorkerRegistration registration;
