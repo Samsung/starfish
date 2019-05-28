@@ -251,9 +251,9 @@ private:
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
     void fillText(String* text, float x, float y, float maxWidth,
-                  bool useMaxWidth);
+                  bool isMaxWidthProvided);
     void strokeText(String* text, float x, float y, float maxWidth,
-                    bool useMaxWidth);
+                    bool isMaxWidthProvided);
     bool canUseFastPathText(String* text, bool shouldApplyMaxWidth);
     bool isLtrDirection();
     void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
