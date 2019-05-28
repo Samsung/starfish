@@ -745,7 +745,7 @@ http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.NaN.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.bound.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.fontface.html
-#http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.large-manual.html
+http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.large-manual.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.negative.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.small.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.fill.maxWidth.zero.html

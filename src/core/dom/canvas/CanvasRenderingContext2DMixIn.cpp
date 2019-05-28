@@ -1209,7 +1209,8 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
 }
 
 void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
-                                             float maxWidth, bool useMaxWidth)
+                                             float maxWidth,
+                                             bool isMaxWidthProvided)
 {
     STARFISH_ASSERT(text != nullptr);
 
@@ -1217,7 +1218,13 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
         return;
     }
 
-    if (canUseFastPathText(text, useMaxWidth)) {
+    bool useMaxWidth = false;
+    if (isMaxWidthProvided == true &&
+        m_font->measureText(StringView(text)) > maxWidth) {
+        useMaxWidth = true;
+    }
+
+    if (canUseFastPathText(text, useMaxWidth) == true) {
         fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
         return;
     }
@@ -1226,14 +1233,21 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
 }
 
 void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
-                                               float maxWidth, bool useMaxWidth)
+                                               float maxWidth,
+                                               bool isMaxWidthProvided)
 {
     STARFISH_ASSERT(text != nullptr);
     if (isInfOrNan(x) == true || isInfOrNan(y) == true) {
         return;
     }
 
-    if (canUseFastPathText(text, useMaxWidth)) {
+    bool useMaxWidth = false;
+    if (isMaxWidthProvided == true &&
+        m_font->measureText(StringView(text)) > maxWidth) {
+        useMaxWidth = true;
+    }
+
+    if (canUseFastPathText(text, useMaxWidth) == true) {
         strokeTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
         return;
     }
