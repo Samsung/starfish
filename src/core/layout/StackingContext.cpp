@@ -45,6 +45,7 @@ namespace Starfish {
 
 struct StackingContext::ComputeStackingContextContext {
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
+    std::unordered_map<StackingContext*, LayoutRect> clippedExtentPerLayer;
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
     std::unordered_map<StackingContext*, bool> compositeFlagInfoBecauseSelf;
     std::vector<StackingContext*> compositedLayers;
@@ -55,10 +56,12 @@ struct StackingContext::ComputeStackingContextContext {
     ComputeStackingContextContext(StackingContext* rootLayer)
         : rootLayer(rootLayer)
     {
+        STARFISH_ASSERT(rootLayer != nullptr);
     }
 
     LayoutRect screenExtentPerLayer(StackingContext* c)
     {
+        STARFISH_ASSERT(c != nullptr);
         {
             auto iter = extentPerLayer.find(c);
             if (iter != extentPerLayer.end()) {
@@ -72,15 +75,50 @@ struct StackingContext::ComputeStackingContextContext {
         return rt;
     }
 
+    // screenExtent after overflow applies
+    LayoutRect clippedScreenExtentPerLayer(StackingContext* c)
+    {
+        STARFISH_ASSERT(c != nullptr);
+
+        {
+            auto iter = clippedExtentPerLayer.find(c);
+            if (iter != clippedExtentPerLayer.end()) {
+                return iter->second;
+            }
+        }
+
+        LayoutRect rt = screenExtentPerLayer(c);
+
+        Frame* f = c->owner()->layoutParent();
+
+        while (f != nullptr) {
+            if (f->shouldApplyOverflow() == true) {
+                LayoutRect parentExtent =
+                    f->asFrameBox()->computeScreenExtent();
+                rt = LayoutRect::overlappedRect(parentExtent, rt);
+                if (rt.isEmpty() == true) {
+                    break;
+                }
+            }
+            f = f->layoutParent();
+        }
+
+        clippedExtentPerLayer.insert(std::make_pair(c, rt));
+        return rt;
+    }
+
     void pushCompsitedLayer(StackingContext* c)
     {
-        STARFISH_ASSERT(!isCompsitedLayer(c));
+        STARFISH_ASSERT(c != nullptr);
+        STARFISH_ASSERT(isCompsitedLayer(c) == false);
+
         compositedLayers.push_back(c);
         compositedDocuments.insert(c->m_owner->node()->document());
     }
 
     bool isCompsitedLayer(StackingContext* c, size_t* idx = nullptr)
     {
+        STARFISH_ASSERT(c != nullptr);
         for (size_t i = 0; i < compositedLayers.size(); i++) {
             if (compositedLayers.at(i) == c) {
                 if (idx) {
@@ -95,18 +133,6 @@ struct StackingContext::ComputeStackingContextContext {
     bool seenCompsitedLayer()
     {
         return compositedLayers.size();
-    }
-
-    bool isOverlapWithAlreadyCompositedLayer(StackingContext* a)
-    {
-        auto extentA = screenExtentPerLayer(a);
-        for (size_t i = 0; i < compositedLayers.size(); i++) {
-            auto extentB = screenExtentPerLayer(compositedLayers.at(i));
-            if (extentA.intersects(extentB)) {
-                return true;
-            }
-        }
-        return false;
     }
 };
 
@@ -1070,7 +1096,8 @@ void StackingContext::computeStackingContextProperties(
             auto& cv = compositingState.compositedLayers;
             for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
                 if (cv[i]->owner()->document() == owner()->document()) {
-                    auto extent = compositingState.screenExtentPerLayer(cv[i]);
+                    auto extent =
+                        compositingState.clippedScreenExtentPerLayer(cv[i]);
                     if (extent.intersects(selfExtent) == true) {
                         isCollapsedWithSilbingLayer = true;
                         reason = NeedsGraphicsLayerReason::
@@ -1079,10 +1106,38 @@ void StackingContext::computeStackingContextProperties(
                     }
 
                     if (cv[i]->owner()->isRunningTransformAnimation() == true) {
-                        isCollapsedWithSilbingLayer = true;
-                        reason = NeedsGraphicsLayerReason::
-                            NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
-                        break;
+                        // find never collapsed case by overflow: hidden;
+                        Frame* f = cv[i]->owner();
+                        bool foundOverflow = false;
+                        LayoutRect clippedExtentRect;
+                        while (f != nullptr) {
+                            if (f->isAncestorOf(owner()) == true) {
+                                break;
+                            }
+                            if (f->shouldApplyOverflow() == true) {
+                                foundOverflow = true;
+                                clippedExtentRect =
+                                    f->asFrameBox()->computeScreenExtent();
+                            }
+                            f = f->layoutParent();
+                        }
+
+                        if (foundOverflow == true) {
+                            if (clippedExtentRect.intersects(selfExtent) ==
+                                true) {
+                                isCollapsedWithSilbingLayer = true;
+                                reason = NeedsGraphicsLayerReason::
+                                    NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
+                            }
+                        } else {
+                            isCollapsedWithSilbingLayer = true;
+                            reason = NeedsGraphicsLayerReason::
+                                NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
+                        }
+
+                        if (isCollapsedWithSilbingLayer == true) {
+                            break;
+                        }
                     }
                 }
             }
@@ -1793,10 +1848,27 @@ static LayoutRect computeWindowRectOnScreen(StackingContext* ctx)
     return windowRect;
 }
 
+bool canSkipFillGraphicsBufferDueToOpacityIsZero(
+    StackingContext* stackingContext)
+{
+    STARFISH_ASSERT(stackingContext != nullptr);
+
+    if (stackingContext->needsGraphicsBuffer() == true &&
+        stackingContext->owner()->style()->opacity() == 0 &&
+        stackingContext->owner()->isRunningOpacityAnimation() == false) {
+        return true;
+    }
+
+    return false;
+}
+
 bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 {
-    if (needsGraphicsBuffer()) {
-        if (!owner()->hasOwnGraphicsBufferMethod()) {
+    if (needsGraphicsBuffer() == true) {
+        if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
+            return false;
+        }
+        if (owner()->hasOwnGraphicsBufferMethod() == false) {
             LayoutRect visibleRect = StackingContext::visibleRect();
             LayoutUnit minX = visibleRect.x();
             LayoutUnit maxX = visibleRect.maxX();
@@ -2044,6 +2116,10 @@ bool StackingContext::fillGraphicsBufferContents(
 
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
+
+    if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
+        return false;
+    }
 
     if (bufferWidth == 0 || bufferHeight == 0) {
         return drawnSomething;
