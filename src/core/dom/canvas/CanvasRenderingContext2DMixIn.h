@@ -159,7 +159,7 @@ public:
     void fillText(String* text, float x, float y, float maxWidth);
     void strokeText(String* text, float x, float y);
     void strokeText(String* text, float x, float y, float maxWidth);
-
+    TextMetrics* measureText(String* text);
     // CanvasDrawImage
     void drawImage(CanvasImageSource image, float dx, float dy);
     void drawImage(CanvasImageSource image, float dx, float dy, float dw,
