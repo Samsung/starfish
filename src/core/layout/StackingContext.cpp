@@ -2794,8 +2794,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         m_rareData->m_graphicsBufferHolder->bufferHeight() -
                             coveredRowsCount);
 
-                    if (m_rareData->m_graphicsBufferHolder
-                            ->m_surfaces[tileIndex]) {
+                    if (tileIndex < m_rareData->m_graphicsBufferHolder
+                                        ->m_surfaces.size() &&
+                        m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex] != nullptr) {
                         compositor->drawSurface(
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex],
