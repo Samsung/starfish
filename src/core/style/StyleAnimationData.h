@@ -255,6 +255,31 @@ public:
         return m_durationList.size();
     }
 
+    void clearDelays()
+    {
+        m_delayList.clear();
+    }
+
+    void setDelay(CSSTime delay)
+    {
+        m_delayList.push_back(delay);
+    }
+
+    CSSTime delay(size_t idx) const
+    {
+        size_t size = m_delayList.size();
+        if (size == 0) {
+            return CSSTime(0.0);
+        }
+        uint16_t p = idx % size;
+        return m_delayList[p];
+    }
+
+    size_t delaySize() const
+    {
+        return m_delayList.size();
+    }
+
     enum Direction { NORMAL, REVERSE, ALTERNATE_NORMAL, ALTERNATE_REVERSE };
     enum FillMode { NONE, FORWARDS, BACKWARDS, BOTH, AUTO };
     enum PlayState { PAUSED, RUNNING };
@@ -264,6 +289,7 @@ private:
     GCVector<StyleAnimationKeyframe*> m_keyframeList;
 
     GCAtomicVector<CSSTime> m_durationList;
+    GCAtomicVector<CSSTime> m_delayList;
     GCAtomicVector<double> m_iterationCountList;
     GCAtomicVector<Direction> m_directionList;
     GCAtomicVector<FillMode> m_fileModeList;
