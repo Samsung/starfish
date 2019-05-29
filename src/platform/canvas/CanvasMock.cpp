@@ -30,6 +30,9 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/NativePattern.h"
 #include "core/style/UnitHelper.h"
+#include "core/dom/canvas/CanvasDirection.h"
+#include "core/dom/canvas/CanvasTextAlign.h"
+#include "core/dom/canvas/CanvasTextBaseline.h"
 
 namespace Starfish {
 
@@ -415,6 +418,55 @@ public:
     virtual CanvasBlendMode blendMode()
     {
         return CanvasBlendMode::Normal;
+    }
+
+    virtual void setOriginalFontStr(String* fontStr)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual Font* font()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual String* originalFontStr()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return nullptr;
+    }
+
+    virtual void setCanvasTextAlign(CanvasTextAlign textAlign)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasTextAlign canvasTextAlign()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasTextAlign::Start;
+    }
+
+    virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasTextBaseline canvasTextBaseline()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasTextBaseline::Alphabetic;
+    }
+
+    virtual void setCanvasTextDirection(CanvasDirection textDirection)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasDirection canvasTextDirection()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasDirection::Inherit;
     }
 
 protected:

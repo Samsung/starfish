@@ -39,6 +39,9 @@ struct GradientDrawingInfo;
 
 enum class CanvasLineCap : int;
 enum class CanvasLineJoin : int;
+enum class CanvasTextAlign : int;
+enum class CanvasTextBaseline : int;
+enum class CanvasDirection : int;
 
 // https://drafts.fxtf.org/compositing/#compositemode
 
@@ -118,6 +121,10 @@ public:
     CanvasBlendMode m_blendMode;
     double m_dashOffset;
     std::vector<double> m_dashes;
+    CanvasTextAlign m_canvasTextAlign;
+    CanvasTextBaseline m_canvasTextBaseline;
+    CanvasDirection m_canvasDirection;
+    String* m_canvasFontOrginalStr;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
@@ -391,6 +398,15 @@ public:
     virtual bool hasNonInvertableCTM() = 0;
     virtual void setPathTransformMatrix(const SkMatrix& marix) = 0;
     virtual SkMatrix pathTransformMatrix() = 0;
+    virtual void setOriginalFontStr(String* fontStr) = 0;
+    virtual Font* font() = 0;
+    virtual String* originalFontStr() = 0;
+    virtual void setCanvasTextAlign(CanvasTextAlign textAlign) = 0;
+    virtual CanvasTextAlign canvasTextAlign() = 0;
+    virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline) = 0;
+    virtual CanvasTextBaseline canvasTextBaseline() = 0;
+    virtual void setCanvasTextDirection(CanvasDirection textDirection) = 0;
+    virtual CanvasDirection canvasTextDirection() = 0;
 
     virtual bool canRejectPainting(const LayoutRect& rect)
     {
