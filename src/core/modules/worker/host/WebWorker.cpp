@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_WEBWORKER_HOST
 
 #include <EscargotPublic.h>
 
@@ -27,12 +27,10 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/dom/ExecutionContext.h"
 
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-#include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/worker/host/WebWorker.h"
 
@@ -47,25 +45,29 @@ WebWorker::WebWorker(Starfish* starfish, const char* locale,
     STARFISH_ASSERT(timezoneID != nullptr);
     STARFISH_ASSERT(customUserAgentString != nullptr);
     STARFISH_ASSERT(isMainThread() == true);
-
-    m_SWContextManager = ServiceWorkerContextManager::instance();
-    m_SWContextManager->init(threadPool());
-
-    m_SWServer = ServiceWorkerServer::instance();
-    m_SWServer->init(threadPool());
-    m_SWServer->start();
 }
 
 WebWorker::~WebWorker()
 {
-    if (m_SWContextManager != nullptr) {
-        m_SWContextManager->destroy();
-        m_SWContextManager = nullptr;
+    if (m_workerGlobalScope != nullptr) {
+        m_workerGlobalScope->dispose();
+        m_workerGlobalScope = nullptr;
     }
 
-    if (m_SWServer != nullptr) {
-        m_SWServer->destroy();
-        m_SWServer = nullptr;
+    if (m_threadPool != nullptr) {
+        m_threadPool->destroy();
+        m_threadPool = nullptr;
+    }
+
+    if (m_messageLoop != nullptr) {
+        m_messageLoop->destroy();
+        m_messageLoop = nullptr;
+    }
+
+    if (m_timer != nullptr) {
+        m_timer->clear(nullptr);
+        m_timer->destroy();
+        m_timer = nullptr;
     }
 }
 
@@ -78,18 +80,10 @@ WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
     STARFISH_ASSERT(timezoneID != nullptr);
     STARFISH_ASSERT(customUserAgentString != nullptr);
 
-#ifdef PORT_NEEDS_THREADED_PUBLIC_API
-    return (WebWorker*)MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        WebWorker* webWorker =
-            new WebWorker(starfish, locale, timezoneID, customUserAgentString);
-        return (size_t)webWorker;
-    });
-#else
     return new WebWorker(starfish, locale, timezoneID, customUserAgentString);
-#endif
 }
 
-void WebWorker::destory()
+void WebWorker::destroy()
 {
     this->~WebWorker();
 }
@@ -148,29 +142,25 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-void WebWorker::loadJavaScript(const std::string& scriptURL)
+WorkerGlobalScope* WebWorker::createGlobalScope(String* scriptURL)
 {
-#ifdef STARFISH_WEBWORKER_HOST
-    m_messageLoop->runOnMainThreadAsync([=]() -> void {
-        clearBlobURLStore();
+    STARFISH_ASSERT(scriptURL != nullptr);
 
-        clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+    clearBlobURLStore();
 
-        if (m_workerGlobalScope) {
-            m_workerGlobalScope->dispose();
-        }
+    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
-        removeScriptEngineInstance();
-        createScriptEngineInstance();
-        ResourceURL* resourceURL =
-            new ResourceURL(String::fromUTF8(scriptURL.data()));
-        m_workerGlobalScope = new ServiceWorkerGlobalScope(
-            this, resourceURL, String::createASCIIString("UTF-8"));
+    if (m_workerGlobalScope != nullptr) {
+        m_workerGlobalScope->dispose();
+    }
 
-        m_workerGlobalScope->workerScriptController()->loadJavaScript(
-            resourceURL);
-    });
-#endif
+    removeScriptEngineInstance();
+    createScriptEngineInstance();
+    ResourceURL* resourceURL = new ResourceURL(scriptURL);
+    m_workerGlobalScope = new ServiceWorkerGlobalScope(
+        this, resourceURL, String::createASCIIString("UTF-8"));
+
+    return m_workerGlobalScope;
 }
 
 } // namespace Starfish

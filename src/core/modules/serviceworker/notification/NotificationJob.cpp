@@ -25,6 +25,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/notification/NotificationService.h"
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
 namespace Starfish {
@@ -68,10 +69,10 @@ void NotificationJob::runNotification(Promise* promise)
 void NotificationJob::showNotification(Promise* promise)
 {
     STARFISH_ASSERT(promise != nullptr);
-    ServiceWorkerAgent* agent = ServiceWorkerAgent::instance();
-    STARFISH_ASSERT(agent != nullptr);
-    if (agent->replaceNotification(m_options) == false) {
-        agent->appendNotification(m_options);
+    auto service = ServiceWorkerAgent::instance()->notificationService();
+    STARFISH_ASSERT(service != nullptr);
+    if (service->replaceNotification(m_options) == false) {
+        service->appendNotification(m_options);
     }
 
     // TODO: request notification to agent

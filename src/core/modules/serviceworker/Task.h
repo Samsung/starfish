@@ -65,7 +65,7 @@ public:
     void destroy()
     {
         for (auto const& it : m_taskMap) {
-            (it.second)->destory();
+            (it.second)->destroy();
         }
     }
 
