@@ -650,6 +650,23 @@ struct MainSizeFixer {
     bool m_isMainAxisInInlineAxis;
 };
 
+static void callingLayoutForFlexItem(FrameBox* flexItem,
+                                     LayoutContext& layoutContext,
+                                     Frame::LayoutWantToResolve resolveWhat)
+{
+    STARFISH_ASSERT(flexItem != nullptr);
+
+    if ((resolveWhat & Frame::ResolveWidth) != 0) {
+        flexItem->layout(layoutContext, Frame::ResolveWidth);
+    }
+
+    if ((resolveWhat & Frame::ResolveHeight) != 0) {
+        flexItem->markContentWidthDamaged();
+        flexItem->layout(layoutContext, Frame::ResolveHeight);
+        flexItem->clearContentWidthDamaged();
+    }
+}
+
 void FlexFormattingContext::computeCrossSize()
 {
     size_t lines = m_currentLineIdx + 1;
@@ -693,22 +710,25 @@ void FlexFormattingContext::computeCrossSize()
             }
 
             flexItem->markNeedsLayout();
-            if (m_isMainAxisInInlineAxis) {
+            if (m_isMainAxisInInlineAxis == true) {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
-                if (flexItem->isFrameReplaced()) {
+                if (flexItem->isFrameReplaced() == true) {
                     // height of FrameReplaced is computed at ResolveWidth
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                flexItem->layout(m_layoutContext, resolveWhat);
+                callingLayoutForFlexItem(flexItem, m_layoutContext,
+                                         resolveWhat);
             } else {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveWidth;
-                if (!isStretchFlexItem) {
+                if (isStretchFlexItem == false) {
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
-                flexItem->layout(m_layoutContext, resolveWhat);
+                callingLayoutForFlexItem(flexItem, m_layoutContext,
+                                         resolveWhat);
             }
+
             if (shouldAlignAtFirstBaseline) {
                 auto it = m_layoutContext.firstLineAscender(
                     flexItem->asFrameBlockBox());
@@ -790,8 +810,8 @@ void FlexFormattingContext::computeCrossSize()
                            flexLine.m_lineHeight - flexItem->marginHeight()));
             }
             flexItem->markNeedsLayout();
-            flexItem->layout(m_layoutContext,
-                             Frame::LayoutWantToResolve::ResolveHeight);
+            callingLayoutForFlexItem(flexItem, m_layoutContext,
+                                     Frame::LayoutWantToResolve::ResolveHeight);
             style->setHeight(Length());
         } else {
             MainSizeFixer fixer(flexItem, false);
@@ -806,8 +826,8 @@ void FlexFormattingContext::computeCrossSize()
                            flexLine.m_lineHeight - flexItem->marginWidth()));
             }
             flexItem->markNeedsLayout();
-            flexItem->layout(m_layoutContext,
-                             Frame::LayoutWantToResolve::ResolveAll);
+            callingLayoutForFlexItem(flexItem, m_layoutContext,
+                                     Frame::LayoutWantToResolve::ResolveAll);
             style->setWidth(Length());
         }
     }
