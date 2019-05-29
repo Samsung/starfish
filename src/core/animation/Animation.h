@@ -223,6 +223,13 @@ public:
                         uint64_t durationInms, uint64_t delayInms,
                         TimingFunction* timingFunction);
 
+    ActiveAnimationTask(Element* target,
+                        CSSStyleValuePair::KeyKind targetProperty,
+                        const GCVector<AnimatedValue*>& animatedValues,
+                        const GCAtomicVector<double>& keyframeNames,
+                        const GCVector<TimingFunction*>& timingFunctions,
+                        uint64_t delayInms, uint64_t durationInms);
+
     virtual ~ActiveAnimationTask()
     {
     }
@@ -299,6 +306,11 @@ public:
             m_startTimeMs = d;
         }
     }
+    enum TYPE { TRANSITION_TYPE, ANIMATION_TYPE };
+    TYPE type()
+    {
+        return m_type;
+    }
 
 protected:
     float computeProgress(float fraction);
@@ -313,6 +325,13 @@ protected:
     uint64_t m_durationMs;
     uint64_t m_delayMs;
     TimingFunction* m_timingFunction;
+
+    TYPE m_type;
+    unsigned int m_frameIdx;
+
+    GCVector<AnimatedValue*> m_values;
+    GCAtomicVector<double> m_offsets;
+    GCVector<TimingFunction*> m_timingFunctions;
 };
 
 class ActiveOpacityAnimationTask : public ActiveAnimationTask {
@@ -394,6 +413,19 @@ public:
         STARFISH_ASSERT(target != nullptr);
         STARFISH_ASSERT(timingFunction != nullptr);
     }
+
+    ActiveColorAnimationTask(Element* target,
+                             CSSStyleValuePair::KeyKind targetProperty,
+                             const GCVector<AnimatedValue*>& values,
+                             const GCAtomicVector<double>& offsets,
+                             const GCVector<TimingFunction*>& timingFunctions,
+                             uint64_t durationInms, uint64_t delayInms)
+        : ActiveAnimationTask(target, targetProperty, values, offsets,
+                              timingFunctions, durationInms, delayInms)
+    {
+        STARFISH_ASSERT(target != nullptr);
+    }
+
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
 };
@@ -458,6 +490,7 @@ public:
 
     bool hasActiveAnimiation(Element* element, CSSStyleValuePair::KeyKind p)
     {
+        STARFISH_ASSERT(element != nullptr);
         bool found = false;
         for (size_t i = 0; i < m_activeAnimations.size(); i++) {
             if (m_activeAnimations[i]->targetElement() == element &&
@@ -471,6 +504,8 @@ public:
 
     void registerAnimation(ActiveAnimationTask* a, ComputedStyle* style)
     {
+        STARFISH_ASSERT(a != nullptr);
+        STARFISH_ASSERT(style != nullptr);
         m_activeAnimations.push_back(a);
         a->attachToElement(style);
         a->fireStartEvent();

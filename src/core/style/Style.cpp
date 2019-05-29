@@ -7000,7 +7000,9 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     {
         auto& activeAnimations = executor->activeAnimations();
         for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element) {
+            if (activeAnimations[i]->targetElement() == element &&
+                activeAnimations[i]->type() ==
+                    ActiveAnimationTask::TRANSITION_TYPE) {
                 bool shouldRemove = false;
                 bool isCancel = true;
                 // time is up
@@ -7346,16 +7348,22 @@ static void computeAnimationKeyframes(StyleResolver* resolver, Element* element,
         CSSTime duration = style->animation()->duration(i);
         if (duration.toTimeValue() > 0) {
             double prevKeyframeName = 0.0;
+            StyleAnimationKeyframe* prevKeyframe =
+                animationKeyframeList.front();
             for (auto curKeyframe : animationKeyframeList) {
+                if (curKeyframe->keyframeName() == 0) {
+                    continue;
+                }
                 if (curKeyframe->keyframeName() - prevKeyframeName == 0) {
-                    curKeyframe->setDuration(CSSTime(0));
+                    prevKeyframe->setDuration(CSSTime(0));
                 } else {
-                    curKeyframe->setDuration(CSSTime(
+                    prevKeyframe->setDuration(CSSTime(
                         duration.toTimeValue() *
                         (curKeyframe->keyframeName() - prevKeyframeName)));
                 }
 
                 prevKeyframeName = curKeyframe->keyframeName();
+                prevKeyframe = curKeyframe;
             }
         }
 
@@ -7389,7 +7397,9 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
     {
         auto& activeAnimations = executor->activeAnimations();
         for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element) {
+            if (activeAnimations[i]->targetElement() == element &&
+                activeAnimations[i]->type() ==
+                    ActiveAnimationTask::ANIMATION_TYPE) {
                 bool shouldRemove = false;
                 bool isCancel = true;
                 // time is up
