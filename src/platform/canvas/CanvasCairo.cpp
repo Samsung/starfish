@@ -582,6 +582,10 @@ public:
             state->m_blendMode = lastState->m_blendMode;
             state->m_dashOffset = lastState->m_dashOffset;
             state->m_dashes = lastState->m_dashes;
+            state->m_canvasTextAlign = lastState->m_canvasTextAlign;
+            state->m_canvasTextBaseline = lastState->m_canvasTextBaseline;
+            state->m_canvasDirection = lastState->m_canvasDirection;
+            state->m_canvasFontOrginalStr = lastState->m_canvasFontOrginalStr;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -950,6 +954,52 @@ public:
     virtual SkMatrix pathTransformMatrix() override
     {
         return lastState()->m_pathTM;
+    }
+
+    virtual void setOriginalFontStr(String* fontStr)
+    {
+        STARFISH_ASSERT(fontStr != nullptr);
+        lastState()->m_canvasFontOrginalStr = fontStr;
+    }
+
+    virtual Font* font()
+    {
+        return lastState()->m_font;
+    }
+
+    virtual String* originalFontStr()
+    {
+        return lastState()->m_canvasFontOrginalStr;
+    }
+
+    virtual void setCanvasTextAlign(CanvasTextAlign textAlign)
+    {
+        lastState()->m_canvasTextAlign = textAlign;
+    }
+
+    virtual CanvasTextAlign canvasTextAlign()
+    {
+        return lastState()->m_canvasTextAlign;
+    }
+
+    virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline)
+    {
+        lastState()->m_canvasTextBaseline = textBaseline;
+    }
+
+    virtual CanvasTextBaseline canvasTextBaseline()
+    {
+        return lastState()->m_canvasTextBaseline;
+    }
+
+    virtual void setCanvasTextDirection(CanvasDirection textDirection)
+    {
+        lastState()->m_canvasDirection = textDirection;
+    }
+
+    virtual CanvasDirection canvasTextDirection()
+    {
+        return lastState()->m_canvasDirection;
     }
 
     virtual void setFont(Font* font) override

@@ -24,6 +24,11 @@
 #include "Starfish.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/canvas/CanvasDirection.h"
+#include "core/dom/canvas/CanvasTextAlign.h"
+#include "core/dom/canvas/CanvasTextBaseline.h"
 
 namespace Starfish {
 
@@ -269,6 +274,10 @@ CanvasState::CanvasState()
     , m_blendMode(CanvasBlendMode::Normal)
     , m_dashOffset(0.0f)
     , m_dashes()
+    , m_canvasTextAlign(CanvasTextAlign::Start)
+    , m_canvasTextBaseline(CanvasTextBaseline::Alphabetic)
+    , m_canvasDirection(CanvasDirection::Inherit)
+    , m_canvasFontOrginalStr(nullptr)
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
 {

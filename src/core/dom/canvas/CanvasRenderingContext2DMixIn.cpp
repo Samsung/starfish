@@ -279,7 +279,6 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
-    , m_canvasTextAlign(CanvasTextAlign::Start)
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -341,9 +340,6 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_canvas->setGlobalAlpha(1.0f);
 
     setFont(String::fromUTF8("10px sans-serif")); // default font
-    m_canvasTextBaseline = CanvasTextBaseline::Alphabetic;
-    m_canvasTextAlign = CanvasTextAlign::Start;
-    m_canvasDirection = CanvasDirection::Inherit;
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -1004,7 +1000,7 @@ void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
                                                      StringView text)
 {
     m_canvas->save();
-    m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+    m_canvas->translate(0, -(float)m_canvas->font()->metrics().m_ascender);
     m_canvas->drawText(x, y, LayoutUnit(0), text, false);
     m_canvas->restore();
 }
@@ -1014,18 +1010,19 @@ void CanvasRenderingContext2DMixIn::strokeTextFastPath(LayoutUnit x,
                                                        StringView text)
 {
     m_canvas->save();
-    m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+    m_canvas->translate(0, -(float)m_canvas->font()->metrics().m_ascender);
     m_canvas->drawStrokeText(x, y, LayoutUnit(0), text, false);
     m_canvas->restore();
 }
 
 bool CanvasRenderingContext2DMixIn::isLtrDirection()
 {
-    if (m_canvasDirection == CanvasDirection::Ltr) {
+    CanvasDirection canvasDirection = m_canvas->canvasTextDirection();
+    if (canvasDirection == CanvasDirection::Ltr) {
         return true;
     }
-    if (m_canvasDirection == CanvasDirection::Inherit) {
-        if (m_ownerHTMLCanvasElement->style()) {
+    if (canvasDirection == CanvasDirection::Inherit) {
+        if (m_ownerHTMLCanvasElement->style() != nullptr) {
             if (m_ownerHTMLCanvasElement->style()->direction() ==
                 DirectionValue::LtrDirectionValue) {
                 return true;
@@ -1046,6 +1043,9 @@ bool CanvasRenderingContext2DMixIn::canUseFastPathText(String* text,
     STARFISH_ASSERT(text != nullptr);
     // check text direction
     UBiDiDirection dir;
+    CanvasTextAlign canvasTextAlign = m_canvas->canvasTextAlign();
+    CanvasTextBaseline canvasTextBaseline = m_canvas->canvasTextBaseline();
+
     StringView(text, 0, text->length())
         .peekUTF16Buffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
@@ -1058,10 +1058,10 @@ bool CanvasRenderingContext2DMixIn::canUseFastPathText(String* text,
             },
             &dir);
     if (dir == UBIDI_LTR && !shouldApplyMaxWidth &&
-        m_canvasTextBaseline == CanvasTextBaseline::Alphabetic) {
+        canvasTextBaseline == CanvasTextBaseline::Alphabetic) {
         if (isLtrDirection() == true) {
-            if (m_canvasTextAlign == CanvasTextAlign::Left ||
-                m_canvasTextAlign == CanvasTextAlign::Start) {
+            if (canvasTextAlign == CanvasTextAlign::Left ||
+                canvasTextAlign == CanvasTextAlign::Start) {
                 return true;
             }
         }
@@ -1076,17 +1076,20 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
 {
     STARFISH_ASSERT(text != nullptr);
 
+    Font* font = m_canvas->font();
+
     ComputedStyle style =
         ComputedStyle(executionContext()->document()->style());
-    style.setFont(m_font);
+    style.setFont(font);
     style.setDisplay(DisplayValue::BlockDisplayValue);
     style.setWidth(Length(Length::Fixed, 0));
     style.setWhiteSpace(WhiteSpaceValue::NoWrapWhiteSpaceValue);
 
     // CanvasTextDrawingStyles.direction
-    if (m_canvasDirection == CanvasDirection::Ltr) {
+    CanvasDirection canvasDirection = m_canvas->canvasTextDirection();
+    if (canvasDirection == CanvasDirection::Ltr) {
         style.setDirection(DirectionValue::LtrDirectionValue);
-    } else if (m_canvasDirection == CanvasDirection::Rtl) {
+    } else if (canvasDirection == CanvasDirection::Rtl) {
         style.setDirection(DirectionValue::RtlDirectionValue);
     } else {
         if (m_ownerHTMLCanvasElement->style() != nullptr) {
@@ -1104,7 +1107,7 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     Text textNode = Text(executionContext()->document(), text);
 
     ComputedStyle textStyle = ComputedStyle(&style);
-    textStyle.setFont(m_font);
+    textStyle.setFont(font);
 
     FrameText frameText = FrameText(&textNode, &textStyle);
     textNode.setFrame(&frameText);
@@ -1127,18 +1130,19 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     // CanvasTextDrawingStyles.textBaseline
     paintCtx.m_canvas->translate(x, y);
 
-    if (m_canvasTextBaseline == CanvasTextBaseline::Top) {
-    } else if (m_canvasTextBaseline == CanvasTextBaseline::Hanging) {
+    CanvasTextBaseline canvasTextBaseline = m_canvas->canvasTextBaseline();
+    if (canvasTextBaseline == CanvasTextBaseline::Top) {
+    } else if (canvasTextBaseline == CanvasTextBaseline::Hanging) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    } else if (m_canvasTextBaseline == CanvasTextBaseline::Middle) {
-        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_fontHeight /
-                                            2);
-    } else if (m_canvasTextBaseline == CanvasTextBaseline::Ideographic) {
+    } else if (canvasTextBaseline == CanvasTextBaseline::Middle) {
+        paintCtx.m_canvas->translate(0,
+                                     -(float)font->metrics().m_fontHeight / 2);
+    } else if (canvasTextBaseline == CanvasTextBaseline::Ideographic) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    } else if (m_canvasTextBaseline == CanvasTextBaseline::Bottom) {
-        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_fontHeight);
+    } else if (canvasTextBaseline == CanvasTextBaseline::Bottom) {
+        paintCtx.m_canvas->translate(0, -(float)font->metrics().m_fontHeight);
     } else {
-        paintCtx.m_canvas->translate(0, -(float)m_font->metrics().m_ascender);
+        paintCtx.m_canvas->translate(0, -(float)font->metrics().m_ascender);
     }
 
     float width = 0;
@@ -1149,22 +1153,23 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
         }
     });
 
+    CanvasTextAlign canvasTextAlign = m_canvas->canvasTextAlign();
     // CanvasTextDrawingStyles.textAlign
-    if (m_canvasTextAlign == CanvasTextAlign::End) {
+    if (canvasTextAlign == CanvasTextAlign::End) {
         if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-width, 0);
         } else {
             paintCtx.m_canvas->translate(width, 0);
         }
-    } else if (m_canvasTextAlign == CanvasTextAlign::Left) {
+    } else if (canvasTextAlign == CanvasTextAlign::Left) {
         if (isLtrDirection() == false) {
             paintCtx.m_canvas->translate(width, 0);
         }
-    } else if (m_canvasTextAlign == CanvasTextAlign::Right) {
+    } else if (canvasTextAlign == CanvasTextAlign::Right) {
         if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-width, 0);
         }
-    } else if (m_canvasTextAlign == CanvasTextAlign::Center) {
+    } else if (canvasTextAlign == CanvasTextAlign::Center) {
         if (isLtrDirection() == true) {
             paintCtx.m_canvas->translate(-(width / 2), 0);
         } else {
@@ -1220,7 +1225,7 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
 
     bool useMaxWidth = false;
     if (isMaxWidthProvided == true &&
-        m_font->measureText(StringView(text)) > maxWidth) {
+        m_canvas->font()->measureText(StringView(text)) > maxWidth) {
         useMaxWidth = true;
     }
 
@@ -1243,7 +1248,7 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
 
     bool useMaxWidth = false;
     if (isMaxWidthProvided == true &&
-        m_font->measureText(StringView(text)) > maxWidth) {
+        m_canvas->font()->measureText(StringView(text)) > maxWidth) {
         useMaxWidth = true;
     }
 
@@ -1259,8 +1264,8 @@ TextMetrics* CanvasRenderingContext2DMixIn::measureText(String* text)
 {
     STARFISH_ASSERT(text != nullptr);
     return new TextMetrics(executionContext(),
-                           m_font->measureText(StringView(text)), 0, 0, 0, 0, 0,
-                           0, 0, 0, 0, 0, 0);
+                           m_canvas->font()->measureText(StringView(text)), 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float dx,
@@ -1907,14 +1912,12 @@ CanvasRenderingContext2DMixIn::CanvasImageSourceToNativeImageData(
 
 String* CanvasRenderingContext2DMixIn::font()
 {
-    STARFISH_ASSERT(m_fontStr != nullptr);
-    return m_fontStr;
+    return m_canvas->originalFontStr();
 }
 
 void CanvasRenderingContext2DMixIn::setFont(String* font)
 {
     STARFISH_ASSERT(font != nullptr);
-    m_fontStr = font;
     // Parsing
     auto raw = font->toUTF8NonGCString();
     CSSTokenVector tokens;
@@ -2025,17 +2028,13 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
                                   FontKerningValue::FontKerningAutoValue);
 
     STARFISH_ASSERT(new_font != nullptr);
-
-    // TODO :
-    if (new_font != m_font) {
-        m_canvas->setFont(new_font);
-        m_font = new_font;
-    }
+    m_canvas->setFont(new_font);
+    m_canvas->setOriginalFontStr(font);
 }
 
 String* CanvasRenderingContext2DMixIn::textAlign()
 {
-    return canvasTextAlignToString(m_canvasTextAlign);
+    return canvasTextAlignToString(m_canvas->canvasTextAlign());
 }
 
 void CanvasRenderingContext2DMixIn::setTextAlign(String* value)
@@ -2043,13 +2042,13 @@ void CanvasRenderingContext2DMixIn::setTextAlign(String* value)
     STARFISH_ASSERT(value != nullptr);
     CanvasTextAlign textAlign;
     if (stringToCanvasTextAlign(value, textAlign) == true) {
-        m_canvasTextAlign = textAlign;
+        m_canvas->setCanvasTextAlign(textAlign);
     }
 }
 
 String* CanvasRenderingContext2DMixIn::textBaseline()
 {
-    return canvasTextBaselineToString(m_canvasTextBaseline);
+    return canvasTextBaselineToString(m_canvas->canvasTextBaseline());
 }
 
 void CanvasRenderingContext2DMixIn::setTextBaseline(String* value)
@@ -2057,17 +2056,17 @@ void CanvasRenderingContext2DMixIn::setTextBaseline(String* value)
     STARFISH_ASSERT(value != nullptr);
     CanvasTextBaseline textBaseline;
     if (stringToCanvasTextBaseline(value, textBaseline) == true) {
-        m_canvasTextBaseline = textBaseline;
+        m_canvas->setCanvasTextBaseline(textBaseline);
     }
 }
 
 String* CanvasRenderingContext2DMixIn::direction()
 {
     if (m_ownerHTMLCanvasElement->style() != nullptr) {
-        return canvasDirectionToString(m_canvasDirection,
+        return canvasDirectionToString(m_canvas->canvasTextDirection(),
                                        m_ownerHTMLCanvasElement->style());
     }
-    return canvasDirectionToString(m_canvasDirection,
+    return canvasDirectionToString(m_canvas->canvasTextDirection(),
                                    executionContext()->document()->style());
 }
 
@@ -2076,7 +2075,7 @@ void CanvasRenderingContext2DMixIn::setDirection(String* value)
     STARFISH_ASSERT(value != nullptr);
     CanvasDirection direction;
     if (stringToCanvasDirection(value, direction) == true) {
-        m_canvasDirection = direction;
+        m_canvas->setCanvasTextDirection(direction);
     }
 }
 }

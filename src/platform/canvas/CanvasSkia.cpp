@@ -49,6 +49,9 @@
 
 #include "core/modules/canvas/Path.h"
 #include "platform/canvas/PathSkia.h"
+#include "core/dom/canvas/CanvasDirection.h"
+#include "core/dom/canvas/CanvasTextAlign.h"
+#include "core/dom/canvas/CanvasTextBaseline.h"
 
 #define CLAMP(value, min, max) \
     (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
@@ -1121,6 +1124,55 @@ public:
     virtual SkMatrix pathTransformMatrix()
     {
         return lastState().m_pathTM;
+    }
+
+    virtual void setOriginalFontStr(String* fontStr)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual Font* font()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual String* originalFontStr()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return nullptr;
+    }
+
+    virtual void setCanvasTextAlign(CanvasTextAlign textAlign)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasTextAlign canvasTextAlign()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasTextAlign::Start;
+    }
+
+    virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasTextBaseline canvasTextBaseline()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasTextBaseline::Alphabetic;
+    }
+
+    virtual void setCanvasTextDirection(CanvasDirection textDirection)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasDirection canvasTextDirection()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasDirection::Inherit;
     }
 
     virtual void beginPath()
