@@ -17,10 +17,13 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasLineCap__
-#define __StarfishCanvasLineCap__
+#ifndef __StarfishImageSmoothingQuality__
+#define __StarfishImageSmoothingQuality__
 
 namespace Starfish {
-enum class CanvasLineCap { Butt, Round, Square };
+enum class ImageSmoothingQuality { Low, Medium, High };
+
+ImageRenderingValue toImageRenderingValue(bool imageSmoothingEnabled,
+                                          ImageSmoothingQuality quality);
 }
 #endif

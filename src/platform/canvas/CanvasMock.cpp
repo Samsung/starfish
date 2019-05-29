@@ -24,6 +24,7 @@
 #include "core/style/Style.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -108,6 +109,8 @@ class CanvasMock : public Canvas {
 public:
     CanvasMock(WebView* webView)
     {
+        STARFISH_ASSERT(webView != nullptr);
+
         m_webView = webView;
     }
 
@@ -235,12 +238,11 @@ public:
 
     virtual void setDash(const std::vector<double>& dashes)
     {
-        return std::vector<double>();
     }
 
     virtual std::vector<double> dash()
     {
-        return lastState().m_dashes;
+        return std::vector<double>();
     }
 
     virtual double dashOffset()
@@ -365,6 +367,24 @@ public:
     {
     }
 
+    virtual bool imageSmoothingEnabled()
+    {
+        return false;
+    }
+
+    virtual void setImageSmoothingEnabled(bool value)
+    {
+    }
+
+    virtual ImageSmoothingQuality imageSmoothingQuality()
+    {
+        return ImageSmoothingQuality::Low;
+    }
+
+    virtual void setImageSmoothingQuality(ImageSmoothingQuality quality)
+    {
+    }
+
     virtual void setStrokeColor(const Unit::Color& clr)
     {
     }
@@ -473,19 +493,28 @@ protected:
     WebView* m_webView;
 };
 
-Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
 {
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
     return new CanvasMock(webView);
 }
 
 Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
     return new CanvasMock(webView);
 }
 
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
     return new CanvasMock(webView);
 }
 

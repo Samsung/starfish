@@ -220,6 +220,9 @@ public:
     CanvasSkia(WebView* webView, void* buffer, int width, int height,
                int stride)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(buffer != nullptr);
+
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
         m_webView = webView;
@@ -238,6 +241,9 @@ public:
 
     CanvasSkia(WebView* webView, CanvasSurface* data)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(data != nullptr);
+
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -252,6 +258,9 @@ public:
 
     CanvasSkia(WebView* webView, NativeImageData* data)
     {
+        STARFISH_ASSERT(webView != nullptr);
+        STARFISH_ASSERT(data != nullptr);
+
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = false;
         m_webView = webView;
@@ -1101,6 +1110,26 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
+    virtual bool imageSmoothingEnabled()
+    {
+        return lastState().m_imageSmoothingEnabled;
+    }
+
+    virtual void setImageSmoothingEnabled(bool value)
+    {
+        lastState().m_imageSmoothingEnabled = value;
+    }
+
+    virtual ImageSmoothingQuality imageSmoothingQuality()
+    {
+        return lastState().m_imageSmoothingQuality;
+    }
+
+    virtual void setImageSmoothingQuality(ImageSmoothingQuality quality)
+    {
+        lastState().m_imageSmoothingQuality = quality;
+    }
+
     virtual void setVisible(bool visible)
     {
         lastState().m_visible = visible;
@@ -1415,20 +1444,29 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Canvas* Canvas::create(WebView* webview, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
 {
-    return new CanvasSkia(webview, data);
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
+    return new CanvasSkia(webView, data);
 }
 
-Canvas* Canvas::create(WebView* starfish, uint8_t* data, size_t w, size_t h,
+Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
-    return new CanvasSkia(starfish, data, w, h, stride);
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
+    return new CanvasSkia(webView, data, w, h, stride);
 }
 
-Canvas* Canvas::create(WebView* webview, NativeImageData* data)
+Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
-    return new CanvasSkia(webview, data);
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
+    return new CanvasSkia(webView, data);
 }
 
 NativeImageData* NativeImageData::attach(Canvas* canvas)

@@ -22,8 +22,8 @@
 #define __StarfishCanvasCairoUtils__
 
 namespace Starfish {
-enum class CanvasLineCap : int;
-enum class CanvasLineJoin : int;
+enum class CanvasLineCap;
+enum class CanvasLineJoin;
 
 namespace CanvasCairoUtils {
     CanvasLineCap cairoLineCapToCavansLineCap(const cairo_line_cap_t& cap);

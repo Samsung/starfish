@@ -17,10 +17,26 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasLineCap__
-#define __StarfishCanvasLineCap__
+#include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 
 namespace Starfish {
-enum class CanvasLineCap { Butt, Round, Square };
+
+ImageRenderingValue toImageRenderingValue(bool imageSmoothingEnabled,
+                                          ImageSmoothingQuality quality)
+{
+    ImageRenderingValue ret =
+        ImageRenderingValue::ImageRenderingCrispEdgesValue;
+
+    if (imageSmoothingEnabled == true) {
+        if (quality == ImageSmoothingQuality::Low ||
+            quality == ImageSmoothingQuality::Medium) {
+            ret = ImageRenderingValue::ImageRenderingAutoValue;
+        } else if (quality == ImageSmoothingQuality::High) {
+            ret = ImageRenderingValue::ImageRenderingPixelatedValue;
+        }
+    }
+    return ret;
 }
-#endif
+}

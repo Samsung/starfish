@@ -749,3 +749,6 @@ http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.draw.stroke.unaffected.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.measure.width.basic.html
 http://web-platform.test:8000/2dcontext/drawing-text-to-the-canvas/2d.text.measure.width.empty.html
+#
+#
+http://web-platform.test:8000/2dcontext/image-smoothing/imagesmoothing.html

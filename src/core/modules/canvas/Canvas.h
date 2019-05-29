@@ -37,11 +37,12 @@ class Path;
 
 struct GradientDrawingInfo;
 
-enum class CanvasLineCap : int;
-enum class CanvasLineJoin : int;
-enum class CanvasTextAlign : int;
-enum class CanvasTextBaseline : int;
-enum class CanvasDirection : int;
+enum class CanvasLineCap;
+enum class CanvasLineJoin;
+enum class CanvasTextAlign;
+enum class CanvasTextBaseline;
+enum class CanvasDirection;
+enum class ImageSmoothingQuality;
 
 // https://drafts.fxtf.org/compositing/#compositemode
 
@@ -125,6 +126,8 @@ public:
     CanvasTextBaseline m_canvasTextBaseline;
     CanvasDirection m_canvasDirection;
     String* m_canvasFontOrginalStr;
+    bool m_imageSmoothingEnabled;
+    ImageSmoothingQuality m_imageSmoothingQuality;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
@@ -267,7 +270,12 @@ protected:
     }
 
 public:
-    static Canvas* create(WebView* webView, CanvasSurface* data);
+    enum CanvasFlag {
+        PlainElement = 0,
+        CanvasElement = 1,
+    };
+    static Canvas* create(WebView* webView, CanvasSurface* data,
+                          CanvasFlag flag = PlainElement);
     static Canvas* create(WebView* webView, uint8_t* data, size_t w, size_t h,
                           size_t stride);
     static Canvas* create(WebView* webView, NativeImageData* data);
@@ -296,6 +304,11 @@ public:
     virtual void setLineJoin(CanvasLineJoin lineJoin) = 0;
     virtual double miterLimit() = 0;
     virtual void setMiterLimit(double limit) = 0;
+
+    virtual bool imageSmoothingEnabled() = 0;
+    virtual void setImageSmoothingEnabled(bool value) = 0;
+    virtual ImageSmoothingQuality imageSmoothingQuality() = 0;
+    virtual void setImageSmoothingQuality(ImageSmoothingQuality quality) = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;
     virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)

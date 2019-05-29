@@ -184,6 +184,9 @@ section are supported.
 |  | method | void transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f) | Replace the current transformation matrix with the result of multiplying the current transformation matrix and paramter. |
 |  | method | void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f) | Replace the current transformation matrix with parameter. |
 |  | method | void resetTransform() | Reset the current transformation matrix to the identity matrix. |
+| [CanvasImageSmoothing ](https://html.spec.whatwg.org/multipage/canvas.html#canvasimagesmoothing) | interface mixin | CanvasImageSmoothing |  |
+|  | attribute | imageSmoothingEnabled | Determines whether scaled images are smoothed (true, default) or not (false) |
+|  | attribute | imageSmoothingQuality | Set/Get the quality of image smoothing. |
 | [CanvasFillStrokeStyles ](https://html.spec.whatwg.org/multipage/canvas.html#canvasfillstrokestyles) | interface mixin | CanvasFillStrokeStyles |  |
 |  | attribute | strokeStyle | Specifies the color, gradient, or pattern to use for the strokes (outlines) around shapes. |
 |  | attribute | fillStyle | Specifies the color, gradient, or pattern to use inside shapes. |
