@@ -17,30 +17,23 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__ServiceWorkerContextManager__)
-#define __ServiceWorkerContextManager__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#ifndef __StarfishNotificationService__
+#define __StarfishNotificationService__
+
+#include "core/modules/serviceworker/notification/NotificationOptions.h"
 
 namespace Starfish {
 
-class ThreadPool;
-class ServiceWorkerData;
-
-class ServiceWorkerContextManager {
+class NotificationService : public gc {
 public:
-    static ServiceWorkerContextManager* instance();
-    void init(ThreadPool* threadPool);
-    void destroy();
-
-    virtual ~ServiceWorkerContextManager();
-
-    void runServiceWorker(ServiceWorkerData* serviceWorker);
-    void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
+    void appendNotification(NotificationOptions& options);
+    bool replaceNotification(NotificationOptions& options);
 
 private:
-    static ServiceWorkerContextManager* m_instance;
+    GCVector<NotificationOptions> m_notificationList;
 };
-
-} // namespace Starfish
+}
 
 #endif
+#endif /* STARFISH_ENABLE_SERVICE_WORKER */

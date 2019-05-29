@@ -29,6 +29,8 @@ enum class ServiceWorkerRunningState {
     NotRunning,
 };
 
+class WorkerGlobalScope;
+
 class ServiceWorkerData : public Archivable {
 public:
     String* scriptURL{ String::emptyString };
@@ -43,12 +45,14 @@ public:
     // on both client and host.
     DEFINE_GETTER_SETTER(bool, hasPendingEvents, HasPendingEvents);
     DEFINE_GETTER_SETTER(ServiceWorkerRunningState, runningState, RunningState);
+    DEFINE_GETTER_SETTER(WorkerGlobalScope*, globalObject, GlobalObject);
 
 private:
     ServiceWorkerRunningState m_runningState{
         ServiceWorkerRunningState::NotRunning
     };
     bool m_hasPendingEvents{ false };
+    NULLABLE WorkerGlobalScope* m_globalObject{ nullptr };
 };
 
 } // namespace Starfish

@@ -22,8 +22,7 @@
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
 #include "Starfish.h"
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerExecutor.h"
 #include <functional>
 #include <cstdio>
 #include <signal.h>
@@ -44,35 +43,43 @@ static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
     g_workerDoneFlag = 1;
 }
 
+static inline bool startsWith(const std::string& string,
+                              const std::string& prefix)
+{
+    return (string.size() >= prefix.size()) &&
+           (string.compare(0, prefix.size(), prefix) == 0);
+}
+
 int main(int argc, char* argv[])
 {
     STARFISH_ASSERT(argv != nullptr);
     STARFISH_LOG_INFO("WORKER STARTS\n");
 
-    if (argc < 2) {
-        puts("please specify URL and baseURL");
-        return -1;
-    }
+    std::string scriptURL = "";
 
-    std::string scriptURL = argv[1];
+    for (int i = 1; i < argc; i++) {
+        std::string arg(argv[i]);
+
+        std::string option("--run-script=");
+        if (startsWith(arg, option) == true) {
+            scriptURL = arg.substr(option.size());
+        }
+    }
 
     LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
                          "/tmp/Starfish_WebWorkerCookies.txt", "/tmp");
 
-    // Create ServiceWorkerAgent
-    Starfish::ServiceWorkerAgent::instance()->registerOnStatusChangedHandler(
-        [](Starfish::ServiceWorkerAgent::State state) {
-            if (state == Starfish::ServiceWorkerAgent::State::Terminated) {
+    Starfish::ServiceWorkerExecutor::initialize(LWE::g_starfishInstance);
+
+    Starfish::ServiceWorkerExecutor::registerOnStatusChangedHandler(
+        [](Starfish::ServiceWorkerAgentState state) {
+            if (state == Starfish::ServiceWorkerAgentState::Terminated) {
                 g_workerDoneFlag = 1;
             }
         });
 
-    Starfish::WebWorker* webWorker = Starfish::WebWorker::create(
-        LWE::g_starfishInstance, "ko-KR", "Asia/Seoul",
-        Starfish::String::emptyString);
-
     if (scriptURL.empty() == false) {
-        webWorker->loadJavaScript(scriptURL);
+        Starfish::ServiceWorkerExecutor::runServiceWorker(scriptURL);
     }
 
     struct sigaction act;
@@ -89,7 +96,7 @@ int main(int argc, char* argv[])
         usleep(100);
     }
 
-    webWorker->destory();
+    Starfish::ServiceWorkerExecutor::finalize();
 
     LWE::LWE::Finalize();
 

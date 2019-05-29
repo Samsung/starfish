@@ -86,8 +86,9 @@ void WorkerGlobalScope::dispatchErrorEvent(ErrorEventInit& errorInfo)
 
 void WorkerGlobalScope::dispose()
 {
-    if (m_scriptBindingInstance) {
+    if (m_scriptBindingInstance != nullptr) {
         m_scriptBindingInstance->destroy();
+        m_scriptBindingInstance = nullptr;
     }
 }
 

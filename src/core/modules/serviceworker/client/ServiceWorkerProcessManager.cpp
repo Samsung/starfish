@@ -46,7 +46,7 @@
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 namespace LWE {
 extern Starfish::Starfish* g_starfishInstance;
 }
@@ -121,8 +121,8 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
     // create mock instances
-    if (m_webWorker != nullptr) {
-        m_webWorker->destory();
+    if (m_agent != nullptr) {
+        m_agent->destroy();
     }
 
 #endif
@@ -164,8 +164,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
         // create mock instances
-        m_webWorker = WebWorker::create(LWE::g_starfishInstance, "ko-KR",
-                                        "Asia/Seoul", String::emptyString);
+        m_agent = ServiceWorkerAgent::create(LWE::g_starfishInstance);
 #else
         // TODO: extract process creation
         // TODO: check if instance exists

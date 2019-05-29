@@ -20,44 +20,99 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
+
+#include "core/util/Archivable.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/notification/NotificationService.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServer.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 
 namespace Starfish {
 
+#if !defined(SERVICE_WORKER_THREAD_POOL_SIZE)
+#define SERVICE_WORKER_THREAD_POOL_SIZE 1
+#endif
+
 ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
 
-ServiceWorkerAgent* ServiceWorkerAgent::instance()
+ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish)
 {
-    if (m_instance == nullptr) {
-        m_instance = new ServiceWorkerAgent();
-    }
+    STARFISH_ASSERT(m_instance == nullptr);
+    STARFISH_ASSERT(starfish != nullptr);
 
-    STARFISH_ASSERT(m_instance != nullptr);
+    m_instance = new (NoGC) ServiceWorkerAgent(starfish);
+
     return m_instance;
 }
 
-void ServiceWorkerAgent::appendNotification(NotificationOptions& options)
+ServiceWorkerAgent* ServiceWorkerAgent::instance()
 {
-    m_notificationList.push_back(options);
+    STARFISH_ASSERT(m_instance != nullptr);
+
+    return m_instance;
 }
 
-bool ServiceWorkerAgent::replaceNotification(NotificationOptions& currentOption)
+ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
+    : m_starfish(starfish)
+    , m_messageLoop(new MessageLoop())
+    , m_threadPool(
+          new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop))
+    , m_SWServer(ServiceWorkerServer::instance())
+    , m_notificationService(new NotificationService())
 {
-    if (currentOption.tag()->isEmpty() == true) {
-        return false;
+    STARFISH_ASSERT(starfish != nullptr);
+
+    m_SWServer->init(m_threadPool);
+    m_SWServer->start();
+}
+
+ServiceWorkerAgent::~ServiceWorkerAgent()
+{
+}
+
+bool ServiceWorkerAgent::isCreated()
+{
+    return (m_instance != nullptr);
+}
+
+void ServiceWorkerAgent::destroy()
+{
+    STARFISH_ASSERT(m_instance != nullptr);
+
+    if (m_SWServer != nullptr) {
+        m_SWServer->destroy();
+        m_SWServer = nullptr;
     }
 
-    auto iter = m_notificationList.begin();
-    while (iter != m_notificationList.end()) {
-        auto& option = *iter;
-        if (option.origin()->equals(currentOption.origin()) == true) {
-            *iter = currentOption;
-            return true;
-        }
-
-        iter++;
+#if defined(STARFISH_WEBWORKER_HOST)
+    for (const auto& webWorker : m_webWorkerList) {
+        webWorker->destroy();
     }
-    return false;
+    m_webWorkerList.clear();
+#endif
+
+    if (m_threadPool != nullptr) {
+        m_threadPool->destroy();
+        m_threadPool = nullptr;
+    }
+
+    if (m_messageLoop != nullptr) {
+        m_messageLoop->destroy();
+        m_messageLoop = nullptr;
+    }
+
+    m_instance->ServiceWorkerAgent::~ServiceWorkerAgent();
+    GC_FREE(m_instance);
+    m_instance = nullptr;
 }
 
 void ServiceWorkerAgent::onWebWorkerTerminated(WebWorker* worker)
@@ -66,10 +121,73 @@ void ServiceWorkerAgent::onWebWorkerTerminated(WebWorker* worker)
 }
 
 void ServiceWorkerAgent::registerOnStatusChangedHandler(
-    const std::function<void(State)>& func)
+    ServiceWorkerAgentStateHandler func)
 {
+    STARFISH_ASSERT(func != nullptr);
     m_clientFunc = func;
 }
 
-} // namespace Starfish
+void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
+{
+#if defined(STARFISH_WEBWORKER_HOST)
+    STARFISH_ASSERT(serviceWorker != nullptr);
+    // https://w3c.github.io/ServiceWorker/#run-service-worker
+
+    // 4.1 Call the JavaScript InitializeHostDefinedRealm() abstract
+    // operation with the following customizations:
+
+    // - For the global object, create a new ServiceWorkerGlobalScope object.
+    // Let workerGlobalScope be the created object.
+    WebWorker* webWorker = WebWorker::create(m_starfish, "ko-KR", "Asia/Seoul",
+                                             String::emptyString);
+    auto workerGlobalScope =
+        webWorker->createGlobalScope(serviceWorker->scriptURL);
+    m_webWorkerList.push_back(webWorker);
+    // - Let realmExecutionContext be the created JavaScript execution context.
+
+    // 4.2 Set serviceWorker’s global object to workerGlobalScope.
+    serviceWorker->setGlobalObject(workerGlobalScope);
+    // 4.3 Let workerEventLoop be a newly created event loop.
+
+    // 4.4 Let settingsObject be a new environment settings object whose
+    // algorithms are defined as follows:
+
+    // 4.11. If serviceWorker is an active worker, and there are any tasks
+    // queued in serviceWorker’s containing service worker registration’s
+    // task queues, queue them to serviceWorker’s event loop’s task queues
+    // in the same order using their original task sources.
+
+    // 4.12 Let evaluationStatus be the result of running the classic script
+    // script if script is a classic script, otherwise, the result of running
+    // the module script script if script is a module script.
+    ScriptLoadResult evaluationStatus =
+        workerGlobalScope->workerScriptController()->loadJavaScript(
+            workerGlobalScope->executionContext()->documentURI());
+    if (evaluationStatus != ScriptLoadResult::Success) {
+        STARFISH_LOG_WARN("Fail to load script: %s\n",
+                          CSTR(serviceWorker->scriptURL));
+        return;
+    }
+
+// 4.15. Run the responsible event loop specified by settingsObject until
+// it is destroyed.
+
+// 4.16. Empty workerGlobalScope’s list of active timers.
+#endif /* STARFISH_WEBWORKER_HOST */
+}
+
+void ServiceWorkerAgent::runServiceWorker(String* scriptURL)
+{
+    STARFISH_ASSERT(scriptURL != nullptr);
+    ServiceWorkerData* data = new ServiceWorkerData();
+    data->scriptURL = scriptURL;
+    runServiceWorker(data);
+}
+
+void ServiceWorkerAgent::abortServiceWorkerScript(
+    ServiceWorkerData* serviceWorker)
+{
+    STARFISH_ASSERT(serviceWorker != nullptr);
+}
+}
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

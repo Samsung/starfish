@@ -21,34 +21,53 @@
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
-#include "core/modules/serviceworker/notification/NotificationOptions.h"
-
 namespace Starfish {
 
 class WebWorker;
+class MessageLoop;
+class ThreadPool;
+class ServiceWorkerData;
+class NotificationService;
+class ServiceWorkerServer;
+
+enum class ServiceWorkerAgentState {
+    Terminated,
+};
+
+using ServiceWorkerAgentStateHandler = void (*)(ServiceWorkerAgentState);
 
 class ServiceWorkerAgent : public gc {
 public:
-    enum class State {
-        Terminated,
-    };
-
+    static ServiceWorkerAgent* create(Starfish* starfish);
+    static bool isCreated();
     static ServiceWorkerAgent* instance();
 
-    void appendNotification(NotificationOptions& options);
-
-    bool replaceNotification(NotificationOptions& options);
+    void destroy();
 
     void onWebWorkerTerminated(WebWorker* worker);
-    void registerOnStatusChangedHandler(const std::function<void(State)>& cb);
+    void registerOnStatusChangedHandler(ServiceWorkerAgentStateHandler cb);
+
+    void runServiceWorker(ServiceWorkerData* serviceWorker);
+    void runServiceWorker(String* scriptURL);
+    void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
+
+    NotificationService* notificationService()
+    {
+        return m_notificationService;
+    }
 
 private:
-    ServiceWorkerAgent() = default;
-    virtual ~ServiceWorkerAgent() = default;
+    ServiceWorkerAgent(Starfish* starfish);
+    virtual ~ServiceWorkerAgent();
 
     static ServiceWorkerAgent* m_instance;
-    GCVector<NotificationOptions> m_notificationList;
-    std::function<void(State)> m_clientFunc{ nullptr };
+    Starfish* m_starfish;
+    MessageLoop* m_messageLoop;
+    ThreadPool* m_threadPool;
+    ServiceWorkerServer* m_SWServer;
+    NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
+    NotificationService* m_notificationService;
+    GCVector<WebWorker*> m_webWorkerList;
 };
 }
 #endif

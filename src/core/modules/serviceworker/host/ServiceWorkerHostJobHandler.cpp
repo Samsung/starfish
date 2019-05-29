@@ -41,8 +41,8 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerContextManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
@@ -328,7 +328,7 @@ void ServiceWorkerHostJobHandler::runServiceWorker(
     // substeps in that context:
 
     auto startServiceWorker = [](size_t handle, void* data) {
-        ServiceWorkerContextManager::instance()->runServiceWorker(
+        ServiceWorkerAgent::instance()->runServiceWorker(
             castTo<ServiceWorkerData*>(data));
     };
 
@@ -502,8 +502,7 @@ void ServiceWorkerHostJobHandler::terminateServiceWorker(
     // 4. Remove all the items from serviceWorker’s set of extended events.
 
     // 6. Abort the script currently running in serviceWorker.
-    ServiceWorkerContextManager::instance()->abortServiceWorkerScript(
-        serviceWorker);
+    ServiceWorkerAgent::instance()->abortServiceWorkerScript(serviceWorker);
 }
 
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,

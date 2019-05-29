@@ -79,7 +79,6 @@ private:
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
     GCVector<ServiceWorkerHostConnection*> m_connections;
-    ServiceWorkerContextManager* m_SWContextManager{ nullptr };
     bool m_isTerminating{ false };
     ServiceWorkerServerClient* m_client{ nullptr };
 };

@@ -29,7 +29,7 @@ class ThreadPool;
 class IThread;
 class IORunnable;
 class GlobalScope;
-class WebWorker;
+class ServiceWorkerAgent;
 class PushServiceAgent;
 
 struct ProcessData {
@@ -78,7 +78,7 @@ private:
     ServiceWorkerClientConnection* m_connection{ nullptr };
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
-    WebWorker* m_webWorker{ nullptr };
+    ServiceWorkerAgent* m_agent{ nullptr };
 #endif
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
