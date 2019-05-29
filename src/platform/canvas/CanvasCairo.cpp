@@ -31,6 +31,7 @@
 #include "core/style/Style.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -401,11 +402,14 @@ class CanvasCairo : public Canvas {
                 STARFISH_ASSERT(status == CAIRO_STATUS_SUCCESS);
                 STARFISH_ASSERT(surface != nullptr);
 
-                auto width = cairo_image_surface_get_width(surface);
-                auto height = cairo_image_surface_get_height(surface);
+                ImageRenderingValue imageRenderingValue = toImageRenderingValue(
+                    imageSmoothingEnabled(), imageSmoothingQuality());
+                setImageRenderingModeToPattern(pattern, imageRenderingValue);
 
                 cairo_set_source(m_canvas, pattern);
 
+                auto width = cairo_image_surface_get_width(surface);
+                auto height = cairo_image_surface_get_height(surface);
                 auto currentPath = cairo_copy_path(m_canvas);
                 cairo_new_path(m_canvas);
 
@@ -464,7 +468,7 @@ public:
         save();
     }
 
-    CanvasCairo(WebView* webView, CanvasSurface* data)
+    CanvasCairo(WebView* webView, CanvasSurface* data, CanvasFlag flag)
     {
         STARFISH_ASSERT(webView != nullptr);
         STARFISH_ASSERT(data != nullptr);
@@ -475,6 +479,7 @@ public:
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
+        m_flag = flag;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -586,6 +591,8 @@ public:
             state->m_canvasTextBaseline = lastState->m_canvasTextBaseline;
             state->m_canvasDirection = lastState->m_canvasDirection;
             state->m_canvasFontOrginalStr = lastState->m_canvasFontOrginalStr;
+            state->m_imageSmoothingEnabled = lastState->m_imageSmoothingEnabled;
+            state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -1171,31 +1178,30 @@ public:
     }
 
     void setImageRenderingModeToPattern(cairo_pattern_t* resizePattern,
-                                        ImageRenderingValue imageRenderingMode,
-                                        size_t targetWidth, size_t targetHeight)
+                                        ImageRenderingValue imageRenderingMode)
     {
         STARFISH_ASSERT(resizePattern != nullptr);
-
-        auto anti = cairo_get_antialias(m_canvas);
-        cairo_filter_t autoFilterMode;
-        if (anti == CAIRO_ANTIALIAS_NONE) {
-            autoFilterMode = CAIRO_FILTER_FAST;
-        } else {
-            autoFilterMode = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
+        if (imageRenderingMode == ImageRenderingCrispEdgesValue) {
+            cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_NEAREST);
+        } else if (imageRenderingMode == ImageRenderingAutoValue) {
+            if (m_flag == CanvasFlag::PlainElement) {
+                cairo_filter_t filter;
+                auto anti = cairo_get_antialias(m_canvas);
+                if (anti == CAIRO_ANTIALIAS_NONE) {
+                    filter = CAIRO_FILTER_FAST;
+                } else {
+                    filter = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
                                                           : CAIRO_FILTER_FAST;
-        }
-
-#if defined(STARFISH_ANDROID)
-        autoFilterMode = CAIRO_FILTER_FAST;
-#endif
-        if (imageRenderingMode == ImageRenderingAutoValue) {
-            cairo_pattern_set_filter(resizePattern, autoFilterMode);
+                }
+                cairo_pattern_set_filter(resizePattern, filter);
+            } else {
+                STARFISH_ASSERT(m_flag == CanvasFlag::CanvasElement);
+                cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_BILINEAR);
+            }
         } else if (imageRenderingMode == ImageRenderingPixelatedValue) {
             // TODO PixelatedValue should affect when painting bigger image than
             // original only
             cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_GAUSSIAN);
-        } else if (imageRenderingMode == ImageRenderingCrispEdgesValue) {
-            cairo_pattern_set_filter(resizePattern, CAIRO_FILTER_NEAREST);
         }
     }
 
@@ -1226,8 +1232,7 @@ public:
         cairo_matrix_init_identity(&matrix);
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
-        setImageRenderingModeToPattern(resizePattern, imageRenderingMode, ww,
-                                       hh);
+        setImageRenderingModeToPattern(resizePattern, imageRenderingMode);
         cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
 
         cairo_set_source(m_canvas, resizePattern);
@@ -1388,7 +1393,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            setImageRenderingModeToPattern(pattern, imageRenderingMode, ww, hh);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);
@@ -1459,7 +1464,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            setImageRenderingModeToPattern(pattern, imageRenderingMode, ww, hh);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);
@@ -1632,6 +1637,27 @@ public:
     virtual void setMiterLimit(double limit) override
     {
         cairo_set_miter_limit(m_canvas, limit);
+    }
+
+    virtual bool imageSmoothingEnabled() override
+    {
+        return lastState()->m_imageSmoothingEnabled;
+    }
+
+    virtual void setImageSmoothingEnabled(bool value) override
+    {
+        lastState()->m_imageSmoothingEnabled = value;
+    }
+
+    virtual ImageSmoothingQuality imageSmoothingQuality() override
+    {
+        return lastState()->m_imageSmoothingQuality;
+    }
+
+    virtual void setImageSmoothingQuality(
+        ImageSmoothingQuality quality) override
+    {
+        lastState()->m_imageSmoothingQuality = quality;
     }
 
     virtual void beginPath() override
@@ -2246,21 +2272,31 @@ protected:
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
     bool m_shouldApplyCanvasFillStrokeSource;
+    CanvasFlag m_flag{ PlainElement };
 };
 
-Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
 {
-    return new CanvasCairo(webView, data);
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
+    return new CanvasCairo(webView, data, flag);
 }
 
 Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
     return new CanvasCairo(webView, data, w, h, w * 4);
 }
 
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
+    STARFISH_ASSERT(webView != nullptr);
+    STARFISH_ASSERT(data != nullptr);
+
     return new CanvasCairo(webView, data);
 }
 
@@ -2316,13 +2352,10 @@ public:
     {
     }
 
-    virtual void disposeNativeImageData() override
-    {
-    }
-
     void* operator new(size_t size)
     {
-        return GC_MALLOC(size);
+        return GC_GENERIC_MALLOC(sizeof(CanvasAttachableNativeImageCairo),
+                                 NativeImageData::nativeImageDataGCKind());
     }
 
 private:

@@ -21,6 +21,7 @@
 #include "core/style/Style.h"
 #include "Canvas.h"
 #include "CanvasFillStrokeSource.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "Starfish.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
@@ -278,6 +279,8 @@ CanvasState::CanvasState()
     , m_canvasTextBaseline(CanvasTextBaseline::Alphabetic)
     , m_canvasDirection(CanvasDirection::Inherit)
     , m_canvasFontOrginalStr(nullptr)
+    , m_imageSmoothingEnabled(true)
+    , m_imageSmoothingQuality(ImageSmoothingQuality::Low)
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
 {

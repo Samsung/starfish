@@ -21,6 +21,6 @@
 #define __StarfishCanvasLineCap__
 
 namespace Starfish {
-enum class CanvasLineCap : int { Butt, Round, Square };
+enum class CanvasLineCap { Butt, Round, Square };
 }
 #endif

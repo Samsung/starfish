@@ -8,7 +8,7 @@ enum ImageSmoothingQuality { "low", "medium", "high" };
  NoInterfaceObject]
 interface CanvasImageSmoothing {
   // image smoothing
-  [Unimplemented] attribute boolean imageSmoothingEnabled; // (default true)
-  [Unimplemented] attribute ImageSmoothingQuality imageSmoothingQuality; // (default low)
+  attribute boolean imageSmoothingEnabled; // (default true)
+  attribute ImageSmoothingQuality imageSmoothingQuality; // (default low)
 
 };

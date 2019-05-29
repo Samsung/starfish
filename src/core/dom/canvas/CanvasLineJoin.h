@@ -21,6 +21,6 @@
 #define __StarfishCanvasLineJoin__
 
 namespace Starfish {
-enum class CanvasLineJoin : int { Round, Bevel, Miter };
+enum class CanvasLineJoin { Round, Bevel, Miter };
 }
 #endif

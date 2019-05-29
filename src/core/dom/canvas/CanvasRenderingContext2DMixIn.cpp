@@ -37,6 +37,7 @@
 #include "core/dom/canvas/CanvasTextAlign.h"
 #include "core/dom/canvas/CanvasTextBaseline.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/modules/canvas/Path.h"
 #include "core/dom/canvas/Path2D.h"
@@ -73,12 +74,19 @@
 
 namespace Starfish {
 
-static inline CanvasFillRule stringToCanvasFillRule(NULLABLE String* rule)
+static inline bool stringToCanvasFillRule(String* rule, CanvasFillRule& out)
 {
-    if (rule && rule->equals("evenodd")) {
-        return CanvasFillRule::EvenOdd;
+    STARFISH_ASSERT(rule != nullptr);
+
+    if (rule->equals("evenodd", 7) == true) {
+        out = CanvasFillRule::EvenOdd;
+        return true;
+    } else if (rule->equals("nonzero", 7) == true) {
+        out = CanvasFillRule::NonZero;
+        return true;
     }
-    return CanvasFillRule::NonZero;
+
+    return false;
 }
 
 static inline String* canvasLineCapToString(CanvasLineCap lineCap)
@@ -87,7 +95,11 @@ static inline String* canvasLineCapToString(CanvasLineCap lineCap)
         return String::createASCIIString("round");
     } else if (lineCap == CanvasLineCap::Square) {
         return String::createASCIIString("square");
+    } else if (lineCap == CanvasLineCap::Butt) {
+        return String::createASCIIString("butt");
     }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("butt");
 }
 
@@ -101,7 +113,11 @@ static inline String* canvasTextAlignToString(CanvasTextAlign textAlign)
         return String::createASCIIString("right");
     } else if (textAlign == CanvasTextAlign::Center) {
         return String::createASCIIString("center");
+    } else if (textAlign == CanvasTextAlign::Start) {
+        return String::createASCIIString("start");
     }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("start");
 }
 
@@ -118,7 +134,11 @@ static inline String* canvasTextBaselineToString(
         return String::createASCIIString("ideographic");
     } else if (textBaseline == CanvasTextBaseline::Bottom) {
         return String::createASCIIString("bottom");
+    } else if (textBaseline == CanvasTextBaseline::Alphabetic) {
+        return String::createASCIIString("alphabetic");
     }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("alphabetic");
 }
 
@@ -133,94 +153,100 @@ static inline String* canvasDirectionToString(CanvasDirection direction,
         }
     } else if (direction == CanvasDirection::Rtl) {
         return String::createASCIIString("rtl");
+    } else if (direction == CanvasDirection::Ltr) {
+        return String::createASCIIString("ltr");
     }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("ltr");
 }
 
-static inline bool stringToCanvasTextAlign(NULLABLE String* textAlign,
+static inline bool stringToCanvasTextAlign(String* textAlign,
                                            CanvasTextAlign& out)
 {
-    if (textAlign) {
-        if (textAlign->equals("start")) {
-            out = CanvasTextAlign::Start;
-            return true;
-        } else if (textAlign->equals("end")) {
-            out = CanvasTextAlign::End;
-            return true;
-        } else if (textAlign->equals("left")) {
-            out = CanvasTextAlign::Left;
-            return true;
-        } else if (textAlign->equals("right")) {
-            out = CanvasTextAlign::Right;
-            return true;
-        } else if (textAlign->equals("center")) {
-            out = CanvasTextAlign::Center;
-            return true;
-        }
+    STARFISH_ASSERT(textAlign != nullptr);
+
+    if (textAlign->equals("start", 5) == true) {
+        out = CanvasTextAlign::Start;
+        return true;
+    } else if (textAlign->equals("end", 3) == true) {
+        out = CanvasTextAlign::End;
+        return true;
+    } else if (textAlign->equals("left", 4) == true) {
+        out = CanvasTextAlign::Left;
+        return true;
+    } else if (textAlign->equals("right", 5) == true) {
+        out = CanvasTextAlign::Right;
+        return true;
+    } else if (textAlign->equals("center", 6) == true) {
+        out = CanvasTextAlign::Center;
+        return true;
     }
     return false;
 }
 
-static inline bool stringToCanvasTextBaseline(NULLABLE String* textBaseline,
+static inline bool stringToCanvasTextBaseline(String* textBaseline,
                                               CanvasTextBaseline& out)
 {
-    if (textBaseline) {
-        if (textBaseline->equals("top")) {
-            out = CanvasTextBaseline::Top;
-            return true;
-        } else if (textBaseline->equals("hanging")) {
-            out = CanvasTextBaseline::Hanging;
-            return true;
-        } else if (textBaseline->equals("middle")) {
-            out = CanvasTextBaseline::Middle;
-            return true;
-        } else if (textBaseline->equals("alphabetic")) {
-            out = CanvasTextBaseline::Alphabetic;
-            return true;
-        } else if (textBaseline->equals("ideographic")) {
-            out = CanvasTextBaseline::Ideographic;
-            return true;
-        } else if (textBaseline->equals("bottom")) {
-            out = CanvasTextBaseline::Bottom;
-            return true;
-        }
+    STARFISH_ASSERT(textBaseline != nullptr);
+
+    if (textBaseline->equals("top", 3) == true) {
+        out = CanvasTextBaseline::Top;
+        return true;
+    } else if (textBaseline->equals("hanging", 7) == true) {
+        out = CanvasTextBaseline::Hanging;
+        return true;
+    } else if (textBaseline->equals("middle", 6) == true) {
+        out = CanvasTextBaseline::Middle;
+        return true;
+    } else if (textBaseline->equals("alphabetic", 10) == true) {
+        out = CanvasTextBaseline::Alphabetic;
+        return true;
+    } else if (textBaseline->equals("ideographic", 11) == true) {
+        out = CanvasTextBaseline::Ideographic;
+        return true;
+    } else if (textBaseline->equals("bottom", 6) == true) {
+        out = CanvasTextBaseline::Bottom;
+        return true;
     }
+
     return false;
 }
 
-static inline bool stringToCanvasDirection(NULLABLE String* canvasDirection,
+static inline bool stringToCanvasDirection(String* canvasDirection,
                                            CanvasDirection& out)
 {
-    if (canvasDirection) {
-        if (canvasDirection->equals("ltr")) {
-            out = CanvasDirection::Ltr;
-            return true;
-        } else if (canvasDirection->equals("rtl")) {
-            out = CanvasDirection::Rtl;
-            return true;
-        } else if (canvasDirection->equals("inherit")) {
-            out = CanvasDirection::Inherit;
-            return true;
-        }
+    STARFISH_ASSERT(canvasDirection != nullptr);
+
+    if (canvasDirection->equals("ltr", 3) == true) {
+        out = CanvasDirection::Ltr;
+        return true;
+    } else if (canvasDirection->equals("rtl", 3) == true) {
+        out = CanvasDirection::Rtl;
+        return true;
+    } else if (canvasDirection->equals("inherit", 7) == true) {
+        out = CanvasDirection::Inherit;
+        return true;
     }
+
     return false;
 }
 
-static inline bool stringToCanvasLineCap(NULLABLE String* lineCap,
-                                         CanvasLineCap& out)
+static inline bool stringToCanvasLineCap(String* lineCap, CanvasLineCap& out)
 {
-    if (lineCap) {
-        if (lineCap->equals("round")) {
-            out = CanvasLineCap::Round;
-            return true;
-        } else if (lineCap->equals("square")) {
-            out = CanvasLineCap::Square;
-            return true;
-        } else if (lineCap->equals("butt")) {
-            out = CanvasLineCap::Butt;
-            return true;
-        }
+    STARFISH_ASSERT(lineCap != nullptr);
+
+    if (lineCap->equals("round", 5) == true) {
+        out = CanvasLineCap::Round;
+        return true;
+    } else if (lineCap->equals("square", 6) == true) {
+        out = CanvasLineCap::Square;
+        return true;
+    } else if (lineCap->equals("butt", 4) == true) {
+        out = CanvasLineCap::Butt;
+        return true;
     }
+
     return false;
 }
 
@@ -230,45 +256,82 @@ static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
         return String::createASCIIString("round");
     } else if (lineJoin == CanvasLineJoin::Bevel) {
         return String::createASCIIString("bevel");
+    } else if (lineJoin == CanvasLineJoin::Miter) {
+        return String::createASCIIString("miter");
     }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("miter");
 }
 
-static inline bool stringToCanvasLineJoin(NULLABLE String* lineJoin,
-                                          CanvasLineJoin& out)
+static inline bool stringToCanvasLineJoin(String* lineJoin, CanvasLineJoin& out)
 {
-    if (lineJoin) {
-        if (lineJoin->equals("round")) {
-            out = CanvasLineJoin::Round;
-            return true;
-        } else if (lineJoin->equals("bevel")) {
-            out = CanvasLineJoin::Bevel;
-            return true;
-        } else if (lineJoin->equals("miter")) {
-            out = CanvasLineJoin::Miter;
-            return true;
-        }
+    STARFISH_ASSERT(lineJoin != nullptr);
+
+    if (lineJoin->equals("round", 5) == true) {
+        out = CanvasLineJoin::Round;
+        return true;
+    } else if (lineJoin->equals("bevel", 5) == true) {
+        out = CanvasLineJoin::Bevel;
+        return true;
+    } else if (lineJoin->equals("miter", 5) == true) {
+        out = CanvasLineJoin::Miter;
+        return true;
+    }
+
+    return false;
+}
+
+static inline String* imageSmoothingQualityToString(
+    ImageSmoothingQuality quality)
+{
+    if (quality == ImageSmoothingQuality::Low) {
+        return String::createASCIIString("low");
+    } else if (quality == ImageSmoothingQuality::Medium) {
+        return String::createASCIIString("medium");
+    } else if (quality == ImageSmoothingQuality::High) {
+        return String::createASCIIString("high");
+    }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return String::createASCIIString("low");
+}
+
+static inline bool stringToImageSmoothingQuality(String* quality,
+                                                 ImageSmoothingQuality& out)
+{
+    STARFISH_ASSERT(quality != nullptr);
+
+    if (quality->equals("low", 3) == true) {
+        out = ImageSmoothingQuality::Low;
+        return true;
+    } else if (quality->equals("medium", 6) == true) {
+        out = ImageSmoothingQuality::Medium;
+        return true;
+    } else if (quality->equals("high", 4) == true) {
+        out = ImageSmoothingQuality::High;
+        return true;
     }
     return false;
 }
 
-static inline bool stringToColor(NULLABLE String* color, Unit::Color& out)
+static inline bool stringToColor(String* color, Unit::Color& out)
 {
-    if (color) {
-        CSSTokenValue token(color->toUTF8NonGCString());
-        CSSStyleValuePair pair;
-        if (pair.updateValueUnitColor(token)) {
-            if (pair.valueKind() ==
-                CSSStyleValuePair::ValueKind::ColorValueKind) {
-                out = pair.colorValue();
-                return true;
-            } else if (pair.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                out = NamedColor::namedColorToColor(pair.namedColorValue());
-                return true;
-            }
+    STARFISH_ASSERT(color != nullptr);
+
+    CSSTokenValue token(color->toUTF8NonGCString());
+    CSSStyleValuePair pair;
+    if (pair.updateValueUnitColor(token) == true) {
+        if (pair.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+            out = pair.colorValue();
+            return true;
+        } else if (pair.valueKind() ==
+                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            out = NamedColor::namedColorToColor(pair.namedColorValue());
+            return true;
         }
     }
+
     return false;
 }
 
@@ -300,10 +363,11 @@ void CanvasRenderingContext2DMixIn::initialize()
     auto w = ow;
     auto h = oh;
 
-    if (!ow || isInfOrNan(ow)) {
+    if (ow == 0 || isInfOrNan(ow) == true) {
         w = 1;
     }
-    if (!oh || isInfOrNan(oh)) {
+
+    if (oh == 0 || isInfOrNan(oh) == true) {
         h = 1;
     }
 
@@ -315,31 +379,33 @@ void CanvasRenderingContext2DMixIn::initialize()
     w = std::min(w, MAX_NATIVE_SURFACE_WIDTH);
     h = std::min(h, MAX_NATIVE_SURFACE_HEIGHT);
 
-    STARFISH_ASSERT(w);
-    STARFISH_ASSERT(h);
+    STARFISH_ASSERT(w != 0);
+    STARFISH_ASSERT(h != 0);
 
     m_canvasSurface = CanvasSurface::create(
         m_ownerHTMLCanvasElement->webView()->platformWindow(), w, h,
         CanvasSurface::CanvasElement);
     m_canvas =
-        Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface);
+        Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,
+                       Canvas::CanvasFlag::CanvasElement);
     m_canvas->unsetDevicePixelRatio();
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     m_canvasPath = new CanvasPath(executionContext());
     auto black = Unit::Color(0, 0, 0, 255);
-    setLineWidth(1.0f);                 // default 1.0
-    setLineCap(CanvasLineCap::Butt);    // default "butt"
-    setLineJoin(CanvasLineJoin::Miter); // default "miter"
-    setMiterLimit(10.0f);
 
-    setLineDash(GCAtomicVector<double>()); // default empty
-    setLineDashOffset(0.0f);               // default 0.0
+    setLineWidth(1.0f);                                   // default 1.0
+    setLineCap(CanvasLineCap::Butt);                      // default "butt"
+    setLineJoin(CanvasLineJoin::Miter);                   // default "miter"
+    setMiterLimit(10.0f);                                 // default 10
+    setLineDash(GCAtomicVector<double>());                // default empty
+    setLineDashOffset(0.0f);                              // default 0.0
+    setImageSmoothingEnabled(true);                       // defauilt true
+    setImageSmoothingQuality(ImageSmoothingQuality::Low); // default low
+    setFont(String::fromUTF8("10px sans-serif"));         // default font
 
     m_canvas->setFillColor(black);
     m_canvas->setStrokeColor(black);
     m_canvas->setGlobalAlpha(1.0f);
-
-    setFont(String::fromUTF8("10px sans-serif")); // default font
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -390,7 +456,7 @@ String* CanvasRenderingContext2DMixIn::lineCap()
 void CanvasRenderingContext2DMixIn::setLineCap(String* value)
 {
     CanvasLineCap cap;
-    if (stringToCanvasLineCap(value, cap)) {
+    if (stringToCanvasLineCap(value, cap) == true) {
         setLineCap(cap);
     }
 }
@@ -409,7 +475,7 @@ String* CanvasRenderingContext2DMixIn::lineJoin()
 void CanvasRenderingContext2DMixIn::setLineJoin(String* value)
 {
     CanvasLineJoin join;
-    if (stringToCanvasLineJoin(value, join)) {
+    if (stringToCanvasLineJoin(value, join) == true) {
         setLineJoin(join);
     }
 }
@@ -426,7 +492,7 @@ float CanvasRenderingContext2DMixIn::miterLimit()
 
 void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
 {
-    if (limit <= 0 || isInfOrNan(limit)) {
+    if (limit <= 0 || isInfOrNan(limit) == true) {
         return;
     }
     m_canvas->setMiterLimit(limit);
@@ -435,7 +501,7 @@ void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
 void CanvasRenderingContext2DMixIn::setLineDash(GCAtomicVector<double> segments)
 {
     for (auto& segment : segments) {
-        if (isInfOrNan(segment) || segment < 0) {
+        if (isInfOrNan(segment) == true || segment < 0) {
             return;
         }
     }
@@ -469,7 +535,7 @@ double CanvasRenderingContext2DMixIn::lineDashOffset()
 
 void CanvasRenderingContext2DMixIn::setLineDashOffset(double offset)
 {
-    if (isInfOrNan(offset)) {
+    if (isInfOrNan(offset) == true) {
         return;
     }
     m_canvas->setDashOffset(offset);
@@ -540,12 +606,13 @@ void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
                                               float d, float e, float f,
                                               bool needResetMatrix)
 {
-    if (isInfOrNan(a) || isInfOrNan(b) || isInfOrNan(c) || isInfOrNan(d) ||
-        isInfOrNan(e) || isInfOrNan(f)) {
+    if (isInfOrNan(a) == true || isInfOrNan(b) == true ||
+        isInfOrNan(c) == true || isInfOrNan(d) == true ||
+        isInfOrNan(e) == true || isInfOrNan(f) == true) {
         return;
     }
 
-    if (needResetMatrix) {
+    if (needResetMatrix == true) {
         resetTransform();
     }
 
@@ -558,7 +625,7 @@ void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
     matrix.set(3, b);
     matrix.set(4, d);
     matrix.set(5, f);
-    if (matrix.invert(&invertMatrix)) {
+    if (matrix.invert(&invertMatrix) == true) {
         m_canvasPath->setShouldDisable(false);
         m_canvasPath->path()->postMatrix(matrix);
 
@@ -608,7 +675,7 @@ float CanvasRenderingContext2DMixIn::globalAlpha()
 
 void CanvasRenderingContext2DMixIn::setGlobalAlpha(float value)
 {
-    if (isInfOrNan(value) || value < .0f || value > 1.f) {
+    if (isInfOrNan(value) == true || value < .0f || value > 1.f) {
         return;
     }
     m_canvas->setGlobalAlpha(value);
@@ -635,20 +702,52 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasCompositeOperatorNames;
          ++i) {
-        if (value->equals(CanvasCompositing::canvasCompositeOperatorNames[i])) {
+        if (value->equals(CanvasCompositing::canvasCompositeOperatorNames[i]) ==
+            true) {
             cco = static_cast<CanvasCompositeOperator>(i);
             m_canvas->setCompositeOperator(cco, cbm);
             return;
         }
     }
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; ++i) {
-        if (value->equals(CanvasCompositing::canvasBlendModeNames[i])) {
+        if (value->equals(CanvasCompositing::canvasBlendModeNames[i]) == true) {
             cbm = static_cast<CanvasBlendMode>(i);
             cco = CanvasCompositeOperator::SourceOver;
             m_canvas->setCompositeOperator(cco, cbm);
             return;
         }
     }
+}
+
+bool CanvasRenderingContext2DMixIn::imageSmoothingEnabled()
+{
+    return m_canvas->imageSmoothingEnabled();
+}
+
+void CanvasRenderingContext2DMixIn::setImageSmoothingEnabled(bool value)
+{
+    m_canvas->setImageSmoothingEnabled(value);
+}
+
+String* CanvasRenderingContext2DMixIn::imageSmoothingQuality()
+{
+    return imageSmoothingQualityToString(m_canvas->imageSmoothingQuality());
+}
+
+void CanvasRenderingContext2DMixIn::setImageSmoothingQuality(String* value)
+{
+    STARFISH_ASSERT(value != nullptr);
+
+    ImageSmoothingQuality quality;
+    if (stringToImageSmoothingQuality(value, quality) == true) {
+        setImageSmoothingQuality(quality);
+    }
+}
+
+void CanvasRenderingContext2DMixIn::setImageSmoothingQuality(
+    ImageSmoothingQuality quality)
+{
+    m_canvas->setImageSmoothingQuality(quality);
 }
 
 CanvasStyle CanvasRenderingContext2DMixIn::fillStyle()
@@ -667,7 +766,7 @@ void CanvasRenderingContext2DMixIn::setFillStyle(CanvasStyle value)
 {
     if (value.isDOMStringValue() == true) {
         Unit::Color color;
-        if (stringToColor(value.getDOMStringValue(), color)) {
+        if (stringToColor(value.getDOMStringValue(), color) == true) {
             m_canvas->setFillColor(color);
         }
     } else if (value.isNoneValue() == false) {
@@ -691,7 +790,7 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(CanvasStyle value)
 {
     if (value.isDOMStringValue() == true) {
         Unit::Color color;
-        if (stringToColor(value.getDOMStringValue(), color)) {
+        if (stringToColor(value.getDOMStringValue(), color) == true) {
             m_canvas->setStrokeColor(color);
         }
     } else if (value.isNoneValue() == false) {
@@ -739,14 +838,14 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
 
     bool repeatX = false;
     bool repeatY = false;
-    if (repetition->equals("repeat")) {
+    if (repetition->equals("repeat", 6) == true) {
         repeatX = true;
         repeatY = true;
-    } else if (repetition->equals("repeat-x")) {
+    } else if (repetition->equals("repeat-x", 8) == true) {
         repeatX = true;
-    } else if (repetition->equals("repeat-y")) {
+    } else if (repetition->equals("repeat-y", 8) == true) {
         repeatY = true;
-    } else if (repetition->equals("no-repeat") == false) {
+    } else if (repetition->equals("no-repeat", 9) == false) {
         throw new DOMException(executionContext(),
                                DOMException::Code::SYNTAX_ERR,
                                "The repetition is not one of 'repeat', "
@@ -1395,14 +1494,18 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
     if (adjustDstRect.isEmpty() == true) {
         return;
     }
-    // TODO : Apply Image CanvasImageSmoothing
-    // FIXME : The result of the test below is 150 pass, 1 fail, I guess one
-    // failure is because of image smoothing.
+
+    // FIXME : The result of the test below is 150 pass, 1 fail
     // http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/drawimage_canvas.html
     DrawImageInfo drawImageInfo = { 1.0, 1.0,
                                     BorderImageRepeatValue::StretchValue,
                                     BorderImageRepeatValue::StretchValue };
-    m_canvas->drawImage(nativeImageData, src, dst, drawImageInfo);
+
+    ImageRenderingValue imageRenderingValue = toImageRenderingValue(
+        m_canvas->imageSmoothingEnabled(), m_canvas->imageSmoothingQuality());
+
+    m_canvas->drawImage(nativeImageData, src, dst, drawImageInfo,
+                        imageRenderingValue);
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
@@ -1703,7 +1806,11 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 
     m_ownerHTMLCanvasElement->setNeedsComposite();
 
-    auto rule = stringToCanvasFillRule(fillRule);
+    CanvasFillRule rule;
+    if (stringToCanvasFillRule(fillRule, rule) == false) {
+        rule = CanvasFillRule::NonZero;
+    }
+
     if (path->isEmpty() == false) {
         m_canvas->save();
         if (rule == CanvasFillRule::NonZero) {
@@ -1753,7 +1860,10 @@ void CanvasRenderingContext2DMixIn::clip(Path* path, String* fillRule)
         return;
     }
 
-    auto rule = stringToCanvasFillRule(fillRule);
+    CanvasFillRule rule;
+    if (stringToCanvasFillRule(fillRule, rule) == false) {
+        rule = CanvasFillRule::NonZero;
+    }
 
     if (path->isEmpty() == false) {
         if (rule == CanvasFillRule::NonZero) {
@@ -1785,7 +1895,11 @@ bool CanvasRenderingContext2DMixIn::isPointInPath(Path* path, float x, float y,
         return false;
     }
 
-    auto rule = stringToCanvasFillRule(fillRule);
+    CanvasFillRule rule;
+    if (stringToCanvasFillRule(fillRule, rule) == false) {
+        rule = CanvasFillRule::NonZero;
+    }
+
     float xx, yy;
     getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
     return (path->isPointInPath(xx, yy, rule) == true);

@@ -41,11 +41,12 @@ class HTMLCanvasElement;
 class NativeImageData;
 class HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement;
 
-enum class CanvasLineCap : int;
-enum class CanvasLineJoin : int;
-enum class CanvasTextAlign : int;
-enum class CanvasTextBaseline : int;
-enum class CanvasDirection : int;
+enum class CanvasLineCap;
+enum class CanvasLineJoin;
+enum class CanvasTextAlign;
+enum class CanvasTextBaseline;
+enum class CanvasDirection;
+enum class ImageSmoothingQuality;
 
 typedef HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement
     CanvasImageSource;
@@ -98,6 +99,10 @@ public:
     void setGlobalCompositeOperation(String* value);
 
     // CanvasImageSmoothing
+    bool imageSmoothingEnabled();
+    void setImageSmoothingEnabled(bool value);
+    String* imageSmoothingQuality();
+    void setImageSmoothingQuality(String* value);
 
     // CanvasFillStrokeStyles
     CanvasStyle fillStyle();
@@ -245,6 +250,7 @@ private:
                                                     float& uy);
     void setLineCap(CanvasLineCap lineCap);
     void setLineJoin(CanvasLineJoin lineJoin);
+    void setImageSmoothingQuality(ImageSmoothingQuality quality);
     void transform(float a, float b, float c, float d, float e, float f,
                    bool needResetMatrix);
     void fillText(String* text, float x, float y, float maxWidth,

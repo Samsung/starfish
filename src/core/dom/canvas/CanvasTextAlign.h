@@ -21,6 +21,6 @@
 #define __StarfishCanvasTextAlign__
 
 namespace Starfish {
-enum class CanvasTextAlign : int { Start, End, Left, Right, Center };
+enum class CanvasTextAlign { Start, End, Left, Right, Center };
 }
 #endif

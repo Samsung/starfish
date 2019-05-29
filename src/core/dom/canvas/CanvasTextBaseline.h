@@ -21,7 +21,7 @@
 #define __StarfishCanvasTextBaseline__
 
 namespace Starfish {
-enum class CanvasTextBaseline : int {
+enum class CanvasTextBaseline {
     Top,
     Hanging,
     Middle,

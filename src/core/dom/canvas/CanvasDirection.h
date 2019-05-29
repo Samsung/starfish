@@ -21,6 +21,6 @@
 #define __StarfishCanvasDirection__
 
 namespace Starfish {
-enum class CanvasDirection : int { Ltr, Rtl, Inherit };
+enum class CanvasDirection { Ltr, Rtl, Inherit };
 }
 #endif

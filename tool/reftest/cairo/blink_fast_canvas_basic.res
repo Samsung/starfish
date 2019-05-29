@@ -139,10 +139,10 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-constructo
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-workers.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled-patterns.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled-repaint.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled-repaint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled-zero-size.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingQuality.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingQuality-pixel.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingQuality-pixel.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-incremental-repaint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-incremental-repaint-2.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-invalid-fillstyle.html
