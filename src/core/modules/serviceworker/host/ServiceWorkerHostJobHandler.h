@@ -65,6 +65,8 @@ public:
                                  const char* target,
                                  NULLABLE ServiceWorkerData* source);
     void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
+    NULLABLE ServiceWorkerData* getNewestWorker(
+        ServiceWorkerRegistrationData* registration);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,

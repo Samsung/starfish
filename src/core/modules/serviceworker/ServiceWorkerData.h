@@ -30,6 +30,46 @@ enum class ServiceWorkerRunningState {
 };
 
 class WorkerGlobalScope;
+using ScriptResourceMapKey_t = String;   // URL
+using ScriptResourceMapValue_t = String; // Responses
+
+struct ScriptResourceMapKeyComparator {
+    bool operator()(const ScriptResourceMapKey_t*& lhs,
+                    const ScriptResourceMapKey_t*& rhs) const
+    {
+        // TODO: use this on ServiceWorkerRegistrationKeyComparator
+        size_t l1 = lhs->length();
+        size_t l2 = rhs->length();
+        size_t lmin = std::min(l1, l2);
+        size_t c = 0, pos = 0;
+
+        while ((pos < lmin) && (lhs->charAt(c) == rhs->charAt(c))) {
+            ++c;
+            ++pos;
+        }
+
+        if (pos < lmin) {
+            return (lhs->charAt(c) < rhs->charAt(c)) ? true : false;
+        }
+
+        if (l1 == l2) {
+            return true;
+        }
+
+        return (l1 < l2) ? true : false;
+    }
+};
+
+using ScriptResourceMap_t =
+    GCMap<ScriptResourceMapKey_t*, ScriptResourceMapValue_t*,
+          ScriptResourceMapKeyComparator>;
+
+class ScriptResource : public gc {
+public:
+    String* script{ String::emptyString };
+    String* httpsState{ String::emptyString };
+    String* referrerPolicy{ String::emptyString };
+};
 
 class ServiceWorkerData : public Archivable {
 public:
@@ -46,6 +86,14 @@ public:
     DEFINE_GETTER_SETTER(bool, hasPendingEvents, HasPendingEvents);
     DEFINE_GETTER_SETTER(ServiceWorkerRunningState, runningState, RunningState);
     DEFINE_GETTER_SETTER(WorkerGlobalScope*, globalObject, GlobalObject);
+    DEFINE_GETTER_SETTER(WorkerType, type, Type);
+    DEFINE_GETTER_SETTER(NULLABLE ScriptResourceMap_t*, urlToScriptResourceMap,
+                         UrlToScriptResourceMap);
+
+    ScriptResource& scriptResource()
+    {
+        return m_scriptResource;
+    }
 
 private:
     ServiceWorkerRunningState m_runningState{
@@ -53,6 +101,9 @@ private:
     };
     bool m_hasPendingEvents{ false };
     NULLABLE WorkerGlobalScope* m_globalObject{ nullptr };
+    ScriptResourceMap_t* m_urlToScriptResourceMap{ nullptr };
+    WorkerType m_type{ WorkerType::Classic };
+    ScriptResource m_scriptResource;
 };
 
 } // namespace Starfish

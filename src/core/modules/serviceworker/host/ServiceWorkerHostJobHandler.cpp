@@ -29,6 +29,10 @@
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "platform/network/http/HTTPStatus.h"
 
 #include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
@@ -46,6 +50,146 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
+
+class FetchClient : public ResourceRequestClient {
+public:
+    FetchClient(ServiceWorkerHostJobHandler* jobHandler, ServiceWorkerJob* job,
+                NULLABLE ServiceWorkerData* data,
+                ServiceWorkerRegistrationData* registration)
+        : m_jobHandler(jobHandler)
+        , m_job(job)
+        , m_serviveWorker(data)
+        , m_registration(registration)
+    {
+        STARFISH_ASSERT(jobHandler != nullptr);
+        STARFISH_ASSERT(job != nullptr);
+        STARFISH_ASSERT(registration != nullptr);
+    }
+
+    void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
+    {
+        STARFISH_ASSERT(request != nullptr);
+        ProgressState progState = request->progressState();
+    }
+
+    void onReadyStateChange(NULLABLE ResourceRequest* request,
+                            bool fromExplicit)
+    {
+        if (request == nullptr) {
+            // TODO: STARFISH_ASSERT(request != nullptr);
+            continuePendingUpdateJob(nullptr);
+            return;
+        }
+
+        if (request->readyState() == ReadyState::Done) {
+            if ((request->isError() == false) &&
+                (request->status() == HTTPStatusCode::HTTP_STATUS_OK)) {
+                auto& response = request->response();
+                String* text =
+                    String::fromUTF8(response.data(), response.size());
+
+                response.clear();
+                response.shrink_to_fit();
+            }
+        }
+    }
+
+    void continuePendingUpdateJob(NULLABLE ResourceRequest* request)
+    {
+        auto job = m_job;
+        auto registration = m_registration;
+        NULLABLE auto newestWorker = m_serviveWorker;
+
+        // 5. Let httpsState be "none".
+        String* httpsState = String::createASCIIString("none");
+
+        // 6. Let referrerPolicy be the empty string.
+        String* referrerPolicy = String::emptyString;
+
+        // 7. Let hasUpdatedResources be false.
+        bool hasUpdatedResources = false;
+
+        // 8. Let updatedResourceMap be an ordered map where the keys are URLs
+        // and the values are responses.
+        auto updatedResourceMap = new ScriptResourceMap_t;
+
+        // NOTE: the steps, 9.1 - 9.6, are done in `update`
+
+        // NOTE: 9.7 verify a MIME type from the response’s header list.
+
+        // NOTE: 9.8 - 9.14 verify Service-Worker-Allowed header in Appendix B:
+        // Extended HTTP headers.
+
+        // NOTE: 9.15 - 9.18 verify scopeString with scopeURL and maxScopeString
+
+        // 9.22 Let map be newestWorker’s script resource map if newestWorker is
+        // not null, and null otherwise.
+        ScriptResourceMap_t* map = nullptr;
+        if (newestWorker != nullptr) {
+            map = newestWorker->urlToScriptResourceMap();
+        }
+
+        // TODO (b): 9.23 If a) map is null or b) map[url]'s body is not
+        // byte-for-byte identical with response’s body, set hasUpdatedResources
+        // to true.
+        if (map == nullptr) {
+            hasUpdatedResources = true;
+        } else {
+            // 9.24 Else if newestWorker’s classic scripts imported flag is set
+        }
+
+        // Else, continue the rest of these steps after the algorithm’s
+        // asynchronous completion, with `script` being the asynchronous
+        // completion value.
+
+        // NOTE: we currenlty use response's body for script.
+        // TODO: create a struct, script resource (a script).
+        String* script = String::emptyString;
+
+        // 10. If hasUpdatedResources is false, then:
+        if (hasUpdatedResources == false) {
+            // 10.1. Invoke Resolve Job Promise with job and registration.
+            m_jobHandler->resolveJobPromise(job, registration);
+            // 10.2. Invoke Finish Job with job and abort these steps.
+            m_jobHandler->finishJob(job);
+            return;
+        }
+
+        // 11. Let worker be a new service worker.
+        auto worker = new ServiceWorkerData();
+
+        worker->registrationId = registration->id;
+
+        // 12. Set 1) worker’s script url to job’s script url, 2) worker’s
+        // script resource to script, 3) worker’s type to job’s worker type, and
+        // 4) worker’s script resource map to updatedResourceMap.
+        worker->scriptURL = job->data()->scriptURL;
+        worker->setType(job->data()->workerType);
+        worker->setUrlToScriptResourceMap(updatedResourceMap);
+        worker->scriptResource().script = script;
+
+        // 13. Append url to worker’s set of used scripts.
+        // 14. Set worker’s script resource’s HTTPS state to httpsState.
+        worker->scriptResource().httpsState = httpsState;
+        // 15. Set worker’s script resource’s referrer policy to referrerPolicy.
+        worker->scriptResource().referrerPolicy = referrerPolicy;
+
+        // 16. Invoke Run Service Worker algorithm given worker
+        m_jobHandler->runServiceWorker(worker);
+        // TODO: 16.1 If evaluationStatus is an abrupt completion or
+        // evaluationStatus.[[Value]] is empty, then:
+
+        // 16.2 Else, invoke Install algorithm with job, worker, and
+        // registration as its arguments.
+        m_jobHandler->install(job, worker, registration);
+    }
+
+private:
+    ServiceWorkerHostJobHandler* m_jobHandler;
+    ServiceWorkerJob* m_job;
+    ServiceWorkerData* m_serviveWorker;
+    ServiceWorkerRegistrationData* m_registration;
+};
 
 #define REGISTRATION_INSTALLING "installing"
 #define REGISTRATION_WAITING "waiting"
@@ -98,6 +242,8 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
         // 5.2. Invoke Run Job with jobQueue.
         runJob(jobQueue);
     } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+
         // 6. Else:
         // 6.1 Let lastJob be the element at the back of jobQueue.
 
@@ -252,6 +398,35 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
     update(job);
 }
 
+NULLABLE ServiceWorkerData* ServiceWorkerHostJobHandler::getNewestWorker(
+    ServiceWorkerRegistrationData* registration)
+{
+    STARFISH_ASSERT(registration != nullptr);
+
+    // https://w3c.github.io/ServiceWorker/#get-newest-worker
+
+    // 1. Run the following steps atomically.
+    // 2. Let newestWorker be null.
+    ServiceWorkerData* newestWorker = nullptr;
+
+    if (registration->installingWorker != nullptr) {
+        // 3. If registration’s installing worker is not null, set newestWorker
+        // to registration’s installing worker.
+        newestWorker = registration->installingWorker;
+    } else if (registration->waitingWorker != nullptr) {
+        // 4. Else if registration’s waiting worker is not null, set
+        // newestWorker to registration’s waiting worker.
+        newestWorker = registration->waitingWorker;
+    } else if (registration->activeWorker != nullptr) {
+        // 5. Else if registration’s active worker is not null, set newestWorker
+        // to registration’s active worker.
+        newestWorker = registration->activeWorker;
+    }
+
+    // 6. Return newestWorker.
+    return newestWorker;
+}
+
 void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
@@ -273,41 +448,45 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
         return;
     }
 
-    // 7. Let hasUpdatedResources be false.
-    bool hasUpdatedResources = false;
+    // 3. Let newestWorker be the result of running `Get Newest Worker
+    // algorithm` passing registration as the argument.
+    NULLABLE auto newestWorker = getNewestWorker(registration);
 
-    // 12. Let scopeURL be registration’s scope url.
-    String* scopeURL = job->data()->scopeURL;
-
-    // FIXME: simulate resource update for now.
-    hasUpdatedResources = true;
-
-    // 10. If hasUpdatedResources is false, then:
-    if (hasUpdatedResources == false) {
-        // 10.1. Invoke Resolve Job Promise with job and registration.
-        resolveJobPromise(job, registration);
-
-        // 10.2. Invoke Finish Job with job and abort these steps.
+    // 4. If job’s job type is update, and newestWorker is not null and its
+    // script url does not equal job’s script url, then:
+    if ((job->data()->type == ServiceWorkerJobType::Update) &&
+        (newestWorker != nullptr) &&
+        (newestWorker->scriptURL->equals(job->data()->scriptURL) == false)) {
+        // 4.1 Invoke Reject Job Promise with job and TypeError.
+        rejectJobPromise(
+            job, new ErrorData(
+                     ExceptionCode::SCRIPT_TYPE_ERR,
+                     "Cannot update a service worker with a requested script "
+                     "URL whose newest worker has a different script URL"));
+        // 4.2 Invoke Finish Job with job and abort these steps.
         finishJob(job);
-        return;
     }
 
-    // 11. Let worker be a new service worker.
-    auto worker = new ServiceWorkerData();
+    // NOTE: 5-8 is handled in `continuePendingUpdateJob`
 
-    worker->registrationId = registration->id;
+    // 9. Switching on job’s worker type, run these substeps with the
+    // following options:
 
-    // 12. Set worker’s script url to job’s script url,
-    // TODO: worker’s script resource to script, and worker’s type to job’s
-    // worker type.
-    worker->scriptURL = job->data()->scriptURL;
+    // 9.6 Fetch request, and asynchronously wait to run the remaining
+    // steps as part of fetch’s process response for the response response.
 
-    // 16. Invoke Run Service Worker algorithm given worker
-    runServiceWorker(worker);
+    RequestData* requestData = new RequestData();
+    requestData->m_url = new ResourceURL(job->data()->scriptURL);
+    requestData->m_destination = RequestDestination::Script;
+    requestData->m_syncLevel = RequestSyncLevel::NeverSync;
 
-    // 16.2 Else, invoke Install algorithm with job, worker, and registration as
-    // its arguments.
-    install(job, worker, registration);
+    FetchClient* client =
+        new FetchClient(this, job, newestWorker, registration);
+
+    // NOTE: simulating `script fetch` is done with invoking onReadyStateChange.
+    // TODOE: fetch a script url using ResourceRequest given the above
+    // requestData.
+    client->onReadyStateChange(nullptr, true);
 }
 
 void ServiceWorkerHostJobHandler::runServiceWorker(
