@@ -1827,96 +1827,101 @@ bool applyAnimationIfNeeds(
 
     AnimationExecutor* executor = element->document()->animationExecutor();
 
-    // TODO: Consider multiple Keyframes at-rules.
-
-    double duration = style->animation()->duration(0).toTimeValue();
-    if (duration == 0.0) {
+    if (style->animation() == nullptr) {
         return false;
     }
-
-    double delay = style->animation()->delay(0).toTimeValue();
-    // TODO: If delay has a negative value, it should be reflected to duration.
-    // That is, the animation should start as if it had already been playing for
-    // N seconds/milliseconds.
-
-    StyleAnimationKeyframe* fromKeyframe =
-        style->animation()->animationKeyframe(0);
-    if (fromKeyframe == nullptr) {
-        return false;
-    }
-
-    size_t keyframeSize = style->animation()->animationKeyframeListSize();
-
-    for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
-        CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
-        CSSStyleValuePair::KeyKind fromKeyKind = fromProperty.keyKind();
-
-        AnimatedValue* value = animatedValue(fromProperty);
-        if (value == nullptr) {
-            continue;
+    StyleAnimationData* animation = style->animation();
+    size_t keyframesSize = animation->keyframesSize();
+    for (size_t s = 0; s < keyframesSize; s++) {
+        double duration = animation->duration(s).toTimeValue();
+        if (duration == 0.0) {
+            return false;
         }
 
-        GCVector<AnimatedValue*> values;
-        GCAtomicVector<double> offsets;
-        GCVector<TimingFunction*> timingFunctions;
+        double delay = animation->delay(s).toTimeValue();
+        // TODO: If delay has a negative value, it should be reflected to
+        // duration. That is, the animation should start as if it had already
+        // been playing for N seconds/milliseconds.
 
-        values.push_back(value);
-        offsets.push_back(fromKeyframe->keyframeName());
-        timingFunctions.push_back(fromKeyframe->timingFunction());
+        AnimationKeyframes keyframes = animation->keyframes(s);
+        AnimationKeyframe* fromKeyframe = keyframes.keyframe(0);
+        if (fromKeyframe == nullptr) {
+            return false;
+        }
 
-        for (size_t k = 1; k < keyframeSize; k++) {
-            auto keyframe = style->animation()->animationKeyframe(k);
+        size_t keyframeSize = keyframes.keyframeListSize();
+        for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
+            CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
+            CSSStyleValuePair::KeyKind fromKeyKind = fromProperty.keyKind();
 
-            if (keyframe != nullptr) {
-                auto property = keyframe->properties()[i];
-                if (fromKeyKind != property.keyKind()) {
-                    STARFISH_ASSERT_NOT_REACHED();
-                }
-                if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown) {
-                    property = fromProperty;
-                }
-
-                value = animatedValue(property);
-                if (value == nullptr) {
-                    continue;
-                }
-                values.push_back(value);
-                offsets.push_back(keyframe->keyframeName());
-                timingFunctions.push_back(keyframe->timingFunction());
+            AnimatedValue* value = animatedValue(fromProperty);
+            if (value == nullptr) {
+                continue;
             }
-        }
 
-        bool gotTransition = false;
+            GCVector<AnimatedValue*> values;
+            GCAtomicVector<double> offsets;
+            GCVector<TimingFunction*> timingFunctions;
 
-        // color series
-        if (fromKeyKind == CSSStyleValuePair::BackgroundColor) {
-            bool found = executor->hasActiveAnimiation(
-                element, CSSStyleValuePair::BackgroundColor);
-            if (found == false) {
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BackgroundColor, values,
-                    offsets, timingFunctions, duration, delay);
-                executor->registerAnimation(task, style);
-                gotTransition = true;
+            values.push_back(value);
+            offsets.push_back(fromKeyframe->keyframeName());
+            timingFunctions.push_back(fromKeyframe->timingFunction());
+
+            for (size_t k = 1; k < keyframeSize; k++) {
+                auto keyframe = keyframes.keyframe(k);
+
+                if (keyframe != nullptr) {
+                    auto property = keyframe->properties()[i];
+                    if (fromKeyKind != property.keyKind()) {
+                        STARFISH_ASSERT_NOT_REACHED();
+                    }
+                    if (property.keyKind() ==
+                        CSSStyleValuePair::KeyKind::Unknown) {
+                        property = fromProperty;
+                    }
+
+                    value = animatedValue(property);
+                    if (value == nullptr) {
+                        continue;
+                    }
+                    values.push_back(value);
+                    offsets.push_back(keyframe->keyframeName());
+                    timingFunctions.push_back(keyframe->timingFunction());
+                }
             }
-        }
 
-        if (fromKeyKind == CSSStyleValuePair::Color) {
-            bool found = executor->hasActiveAnimiation(
-                element, CSSStyleValuePair::Color);
-            if (found == false) {
-                auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::Color, values, offsets,
-                    timingFunctions, duration, delay);
-                executor->registerAnimation(task, style);
-                gotTransition = true;
+            bool gotTransition = false;
+
+            // color series
+            if (fromKeyKind == CSSStyleValuePair::BackgroundColor) {
+                bool found = executor->hasActiveAnimiation(
+                    element, CSSStyleValuePair::BackgroundColor);
+                if (found == false) {
+                    auto task = new ActiveColorAnimationTask(
+                        element, CSSStyleValuePair::BackgroundColor, values,
+                        offsets, timingFunctions, duration, delay);
+                    executor->registerAnimation(task, style);
+                    gotTransition = true;
+                }
             }
-        }
 
-        if (gotTransition == true) {
-            // TODO reduce animation duration here with
-            // canceledAnimationProgress
-            ret = true;
+            if (fromKeyKind == CSSStyleValuePair::Color) {
+                bool found = executor->hasActiveAnimiation(
+                    element, CSSStyleValuePair::Color);
+                if (found == false) {
+                    auto task = new ActiveColorAnimationTask(
+                        element, CSSStyleValuePair::Color, values, offsets,
+                        timingFunctions, duration, delay);
+                    executor->registerAnimation(task, style);
+                    gotTransition = true;
+                }
+            }
+
+            if (gotTransition == true) {
+                // TODO reduce animation duration here with
+                // canceledAnimationProgress
+                ret = true;
+            }
         }
     }
 
