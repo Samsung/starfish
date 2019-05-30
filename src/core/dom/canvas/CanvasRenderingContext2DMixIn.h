@@ -263,6 +263,7 @@ private:
     void strokeTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
     void drawTextNormal(String* text, float x, float y, float maxWidth,
                         bool shouldApplyMaxWidth, bool isStroke);
+    void updateFontIfNeeds();
 
     DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
         CanvasImageSource image);

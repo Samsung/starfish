@@ -1312,6 +1312,17 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     paintCtx.m_canvas->restore();
 }
 
+void CanvasRenderingContext2DMixIn::updateFontIfNeeds()
+{
+    if (executionContext()->document()->canvasWebFontState() !=
+        m_canvas->canvasWebFontState()) {
+        // font resolve
+        setFont(m_canvas->originalFontStr());
+        m_canvas->setCanvasWebFontState(
+            executionContext()->document()->canvasWebFontState());
+    }
+}
+
 void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
                                              float maxWidth,
                                              bool isMaxWidthProvided)
@@ -1327,6 +1338,8 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
         m_canvas->font()->measureText(StringView(text)) > maxWidth) {
         useMaxWidth = true;
     }
+
+    updateFontIfNeeds();
 
     if (canUseFastPathText(text, useMaxWidth) == true) {
         fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
@@ -1351,6 +1364,8 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
         useMaxWidth = true;
     }
 
+    updateFontIfNeeds();
+
     if (canUseFastPathText(text, useMaxWidth) == true) {
         strokeTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
         return;
@@ -1362,6 +1377,7 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
 TextMetrics* CanvasRenderingContext2DMixIn::measureText(String* text)
 {
     STARFISH_ASSERT(text != nullptr);
+    updateFontIfNeeds();
     return new TextMetrics(executionContext(),
                            m_canvas->font()->measureText(StringView(text)), 0,
                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0);

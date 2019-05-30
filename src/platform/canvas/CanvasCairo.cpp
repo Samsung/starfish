@@ -593,6 +593,7 @@ public:
             state->m_canvasFontOrginalStr = lastState->m_canvasFontOrginalStr;
             state->m_imageSmoothingEnabled = lastState->m_imageSmoothingEnabled;
             state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
+            state->m_canvasFontState = lastState->m_canvasFontState;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -967,6 +968,16 @@ public:
     {
         STARFISH_ASSERT(fontStr != nullptr);
         lastState()->m_canvasFontOrginalStr = fontStr;
+    }
+
+    virtual void setCanvasWebFontState(size_t version)
+    {
+        lastState()->m_canvasFontState = version;
+    }
+
+    virtual size_t canvasWebFontState()
+    {
+        return lastState()->m_canvasFontState;
     }
 
     virtual Font* font()

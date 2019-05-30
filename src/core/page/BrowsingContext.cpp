@@ -224,6 +224,7 @@ public:
         resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
         STARFISH_LOG_INFO("WebFont %s is downloaded\n",
                           m_familyName->toUTF8NonGCString().data());
+        resource()->loader()->document()->updateCanvasWebFontState();
     }
 
     virtual void didLoadCanceled()

@@ -563,6 +563,14 @@ public:
 
     uint64_t createdTick();
 
+    void updateCanvasWebFontState()
+    {
+        m_webFontResolveVersionForCanvas++;
+    }
+    size_t canvasWebFontState()
+    {
+        return m_webFontResolveVersionForCanvas;
+    }
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -742,6 +750,7 @@ protected:
                    std::equal_to<GradientDrawingInfo*>>* m_nativeGradientCache;
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
     size_t m_nativeGradientCacheToTalSize;
+    size_t m_webFontResolveVersionForCanvas;
 };
 }
 

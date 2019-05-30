@@ -128,6 +128,7 @@ public:
     String* m_canvasFontOrginalStr;
     bool m_imageSmoothingEnabled;
     ImageSmoothingQuality m_imageSmoothingQuality;
+    size_t m_canvasFontState;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
@@ -142,6 +143,8 @@ protected:
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_fillSource));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_strokeSource));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_font));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(CanvasState, m_canvasFontOrginalStr));
     }
 };
 
@@ -412,6 +415,8 @@ public:
     virtual void setPathTransformMatrix(const SkMatrix& marix) = 0;
     virtual SkMatrix pathTransformMatrix() = 0;
     virtual void setOriginalFontStr(String* fontStr) = 0;
+    virtual void setCanvasWebFontState(size_t version) = 0;
+    virtual size_t canvasWebFontState() = 0;
     virtual Font* font() = 0;
     virtual String* originalFontStr() = 0;
     virtual void setCanvasTextAlign(CanvasTextAlign textAlign) = 0;

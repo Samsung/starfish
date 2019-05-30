@@ -281,6 +281,7 @@ CanvasState::CanvasState()
     , m_canvasFontOrginalStr(nullptr)
     , m_imageSmoothingEnabled(true)
     , m_imageSmoothingQuality(ImageSmoothingQuality::Low)
+    , m_canvasFontState(0)
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
 {
