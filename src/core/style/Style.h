@@ -3036,7 +3036,7 @@ public:
         return m_sheets;
     }
 
-    RuleSet* ruleSet()
+    RuleSet* ruleSet() const
     {
         return m_ruleSet;
     }

@@ -2121,7 +2121,7 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
 
 static void applyAnimationName(Element* element, ComputedStyle* style,
                                ComputedStyle* parentStyle,
-                               CSSStyleValuePair& item)
+                               CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2130,15 +2130,16 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationName(String::fromUTF8("none"));
+        style->setAnimationName(String::fromUTF8("none"), index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
             ->style()
             ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setAnimationName(parentStyle->animationName(), index);
         break;
     case CSSStyleValuePair::StringValueKind:
-        style->setAnimationName(item.stringValue());
+        style->setAnimationName(item.stringValue(), index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -2147,7 +2148,7 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
 
 static void applyAnimationDuration(Element* element, ComputedStyle* style,
                                    ComputedStyle* parentStyle,
-                                   CSSStyleValuePair& item)
+                                   CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2156,24 +2157,24 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationDuration(CSSTime(0));
+        style->setAnimationDuration(CSSTime(0), index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
             ->style()
             ->markSomeNonInheritMemberExplicitlyInherited();
-        style->setTransitionDuration(parentStyle->animationDuration());
+        style->setTransitionDuration(parentStyle->animationDuration(), index);
         break;
     case CSSStyleValuePair::Time:
-        style->setAnimationDuration(item.timeValue());
+        style->setAnimationDuration(item.timeValue(), index);
         break;
     case CSSStyleValuePair::CalcValueKind: {
         CalcData* calcData = item.calcValue();
         CalcValueType type = calcData->type();
         if (type.isTime() == true) {
-            style->setAnimationDuration(calcData->timeValue());
+            style->setAnimationDuration(calcData->timeValue(), index);
         } else {
-            style->setAnimationDuration(CSSTime(0));
+            style->setAnimationDuration(CSSTime(0), index);
         }
         break;
     }
@@ -2184,7 +2185,7 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
 
 static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
                                          ComputedStyle* parentStyle,
-                                         CSSStyleValuePair& item)
+                                         CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2193,20 +2194,21 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
-        style->setAnimationTimingFunction(TimingFunctionEaseValue);
+        style->setAnimationTimingFunction(TimingFunctionEaseValue, index);
         break;
     case CSSStyleValuePair::Inherit:
         element->parentNode()
             ->style()
             ->markSomeNonInheritMemberExplicitlyInherited();
         style->setAnimationTimingFunction(
-            parentStyle->animationTimingFunction());
+            parentStyle->animationTimingFunction(), index);
         break;
     case CSSStyleValuePair::TimingFunctionValueKind:
-        style->setAnimationTimingFunction(item.timingFunctionValue());
+        style->setAnimationTimingFunction(item.timingFunctionValue(), index);
         break;
     case CSSStyleValuePair::TimingFunctionPointerKind:
-        style->setAnimationTimingFunction(item.timingFunctionPointerValue());
+        style->setAnimationTimingFunction(item.timingFunctionPointerValue(),
+                                          index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -3761,12 +3763,14 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::AnimationName:
             style->resetAnimationNames();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationName(element, style, parentStyle, cssValues[k]);
+                applyAnimationName(element, style, parentStyle, cssValues[k],
+                                   0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 STARFISH_ASSERT(list != nullptr);
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationName(element, style, parentStyle, (*list)[i]);
+                    applyAnimationName(element, style, parentStyle, (*list)[i],
+                                       i);
                 }
             }
             break;
@@ -3774,13 +3778,13 @@ void StyleResolver::apply(Element* element,
             style->resetAnimationDurations();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyAnimationDuration(element, style, parentStyle,
-                                       cssValues[k]);
+                                       cssValues[k], 0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 STARFISH_ASSERT(list != nullptr);
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationDuration(element, style, parentStyle,
-                                           (*list)[i]);
+                                           (*list)[i], i);
                 }
             }
             break;
@@ -3788,13 +3792,13 @@ void StyleResolver::apply(Element* element,
             style->resetAnimationTimingFunctions();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyAnimationTimingFunction(element, style, parentStyle,
-                                             cssValues[k]);
+                                             cssValues[k], 0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 STARFISH_ASSERT(list != nullptr);
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationTimingFunction(element, style, parentStyle,
-                                                 (*list)[i]);
+                                                 (*list)[i], i);
                 }
             }
             break;
@@ -7131,13 +7135,12 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 }
 
 // Find keyframes that are matched with name in rule set.
-static StyleRuleKeyframes* findKeyframesRule(StyleResolver* resolver,
-                                             ComputedStyle* style, String* name)
+static StyleRuleKeyframes* findStyleRuleKeyframes(const StyleResolver& resolver,
+                                                  String* name)
 {
-    STARFISH_ASSERT(resolver != nullptr);
-    STARFISH_ASSERT(style != nullptr);
     STARFISH_ASSERT(name != nullptr);
-    GCVector<StyleRuleKeyframes*> keyframes = resolver->ruleSet()->keyframes();
+    const GCVector<StyleRuleKeyframes*>& keyframes =
+        resolver.ruleSet()->keyframes();
     size_t size = keyframes.size();
     for (size_t i = 0; i < size; i++) {
         if (keyframes[i]->name()->equals(name) == true) {
@@ -7147,27 +7150,26 @@ static StyleRuleKeyframes* findKeyframesRule(StyleResolver* resolver,
     return nullptr;
 }
 
-static StyleAnimationKeyframe* findStyleAnimationKeyframe(
-    GCVector<StyleAnimationKeyframe*>& animationKeyframeList, double key)
+static AnimationKeyframe* findAnimationKeyframe(
+    GCVector<AnimationKeyframe*>& keyframeList, double key)
 {
-    size_t size = animationKeyframeList.size();
+    size_t size = keyframeList.size();
     for (size_t i = 0; i < size; i++) {
-        if (animationKeyframeList[i]->keyframeName() == key) {
-            return animationKeyframeList[i];
+        if (keyframeList[i]->keyframeName() == key) {
+            return keyframeList[i];
         }
     }
 
-    StyleAnimationKeyframe* animationKeyframe = nullptr;
+    AnimationKeyframe* keyframe = nullptr;
     if (size == 0) {
-        animationKeyframe = new StyleAnimationKeyframe();
+        keyframe = new AnimationKeyframe();
     } else {
-        animationKeyframe =
-            new StyleAnimationKeyframe(*animationKeyframeList[size - 1]);
+        keyframe = new AnimationKeyframe(*keyframeList[size - 1]);
     }
-    animationKeyframe->setKeyframeName(key);
-    animationKeyframeList.push_back(animationKeyframe);
+    keyframe->setKeyframeName(key);
+    keyframeList.push_back(keyframe);
 
-    return animationKeyframe;
+    return keyframe;
 }
 
 static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
@@ -7194,14 +7196,13 @@ static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
     }
 }
 
-static void setPropertyIfNeeds(
-    GCVector<StyleAnimationKeyframe*>& animationKeyframeList,
-    CSSStyleValuePair property)
+static void setPropertyIfNeeds(GCVector<AnimationKeyframe*>& keyframeList,
+                               CSSStyleValuePair property)
 {
-    auto frame = animationKeyframeList.rbegin();
+    auto frame = keyframeList.rbegin();
     (*frame)->setProperty(property.keyKind(), property);
 
-    for (auto keyframe : animationKeyframeList) {
+    for (auto keyframe : keyframeList) {
         size_t idx = keyframe->keyKindIndex(property.keyKind());
         if (idx == SIZE_MAX) {
             keyframe->setProperty(property.keyKind(), CSSStyleValuePair());
@@ -7209,58 +7210,50 @@ static void setPropertyIfNeeds(
     }
 }
 
-static void computeAnimationKeyframes(StyleResolver* resolver, Element* element,
-                                      ComputedStyle* NULLABLE oldStyle,
-                                      NULLABLE Frame* oldFrame,
-                                      ComputedStyle* style,
-                                      ComputedStyleDamage& damage)
+void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
+                               ComputedStyle* NULLABLE oldStyle,
+                               NULLABLE Frame* oldFrame, ComputedStyle* style,
+                               ComputedStyleDamage& damage)
 {
-    STARFISH_ASSERT(resolver != nullptr);
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
 
-    StyleAnimationData* data = style->animation();
-    if (data == nullptr) {
+    StyleAnimationData* animation = style->animation();
+    if (animation == nullptr) {
         return;
     }
 
-    // TODO : We should consider multiple keyframes at-rules.
-    // Ex) Though now we handle multiple KEYFRAME, we need a class type to
-    // manage multiple KEYFRAMES. And we need to treat a case that has same
-    // properties at multiple KEYFRAMES.
-    size_t size = data->animationNameListSize();
-    for (size_t i = 0; i < size; i++) {
-        String* name = style->animationName(i);
+    size_t animationNameSize = animation->animationNameSize();
+    for (size_t i = 0; i < animationNameSize; i++) {
+        String* name = animation->animationName(i);
         if (name->equals(String::emptyString) == true ||
             name->equalsIgnoreCase("none") == true) {
             continue;
         }
 
         StyleRuleKeyframes* styleKeyframes =
-            findKeyframesRule(resolver, style, name);
+            findStyleRuleKeyframes(resolver, name);
         if (styleKeyframes == nullptr) {
             continue;
         }
 
-        TimingFunction* timing = style->animation()->timingFunction(i);
-        const GCVector<StyleRuleBase*>& styleKeyframeList =
-            styleKeyframes->keyframes();
+        TimingFunction* timing = animation->timingFunction(i);
+        auto& styleKeyframeList = styleKeyframes->keyframes();
         size_t styleKeyframeListSize = styleKeyframeList.size();
 
-        GCVector<StyleAnimationKeyframe*> animationKeyframeList;
+        GCVector<AnimationKeyframe*> keyframeList;
         for (size_t j = 0; j < styleKeyframeListSize; j++) {
             StyleRuleKeyframe* styleKeyframe =
                 styleKeyframeList[j]->asStyleRuleKeyframe();
-            GCAtomicVector<double> keyNameList = styleKeyframe->keyList();
-            StyleAnimationKeyframe* animationKeyframe =
-                findStyleAnimationKeyframe(animationKeyframeList,
-                                           keyNameList[0]);
-            TimingFunction* propertyTiming = timing;
+            GCAtomicVector<double> keyList = styleKeyframe->keyList();
+            AnimationKeyframe* animationKeyframe =
+                findAnimationKeyframe(keyframeList, keyList[0]);
+            TimingFunction* keyframeTiming = timing;
 
             const GCAtomicVector<CSSStyleValuePair>& cssValues =
                 styleKeyframe->styleDeclaration()->cssValues();
-            size_t cssPropertySize = cssValues.size();
-            for (size_t k = 0; k < cssPropertySize; k++) {
+            size_t cssValueSize = cssValues.size();
+            for (size_t k = 0; k < cssValueSize; k++) {
                 CSSStyleValuePair::KeyKind p = cssValues[k].keyKind();
                 if (p == CSSStyleValuePair::KeyKind::AnimationTimingFunction) {
                     CSSStyleValuePair::ValueKind valueKind =
@@ -7271,7 +7264,7 @@ static void computeAnimationKeyframes(StyleResolver* resolver, Element* element,
                         element->parentElement()->style() != nullptr &&
                         element->parentElement()->style()->animation() !=
                             nullptr) {
-                        propertyTiming = element->parentElement()
+                        keyframeTiming = element->parentElement()
                                              ->style()
                                              ->animation()
                                              ->timingFunction(0);
@@ -7282,94 +7275,92 @@ static void computeAnimationKeyframes(StyleResolver* resolver, Element* element,
                         STARFISH_ASSERT(value.valueKind() ==
                                         CSSStyleValuePair::ValueKind::
                                             TimingFunctionPointerKind);
-                        propertyTiming = value.timingFunctionPointerValue();
+                        keyframeTiming = value.timingFunctionPointerValue();
                     } else {
-                        propertyTiming =
-                            StyleAnimationKeyframe::defaultTimingFunction();
+                        keyframeTiming =
+                            AnimationKeyframe::defaultTimingFunction();
                     }
                 } else if (isAnimationAffectingProperty(p) == false) {
-                    setPropertyIfNeeds(animationKeyframeList, cssValues[k]);
+                    setPropertyIfNeeds(keyframeList, cssValues[k]);
                 }
             }
-            animationKeyframe->setTimingFunction(propertyTiming);
+            animationKeyframe->setTimingFunction(keyframeTiming);
 
-            for (size_t k = 1; k < keyNameList.size(); k++) {
-                NULLABLE StyleAnimationKeyframe* clone =
-                    new StyleAnimationKeyframe(*animationKeyframe);
-                clone->setKeyframeName(keyNameList[k]);
-                animationKeyframeList.push_back(clone);
+            for (size_t k = 1; k < keyList.size(); k++) {
+                AnimationKeyframe* clone =
+                    new AnimationKeyframe(*animationKeyframe);
+                clone->setKeyframeName(keyList[k]);
+                keyframeList.push_back(clone);
             }
         }
 
-        std::stable_sort(
-            animationKeyframeList.begin(), animationKeyframeList.end(),
-            [](StyleAnimationKeyframe* a, StyleAnimationKeyframe* b) {
-                STARFISH_ASSERT(a != nullptr);
-                STARFISH_ASSERT(b != nullptr);
-                return a->keyframeName() < b->keyframeName();
-            });
+        std::stable_sort(keyframeList.begin(), keyframeList.end(),
+                         [](AnimationKeyframe* a, AnimationKeyframe* b) {
+                             STARFISH_ASSERT(a != nullptr);
+                             STARFISH_ASSERT(b != nullptr);
+                             return a->keyframeName() < b->keyframeName();
+                         });
 
         // merge duplicate KEYFRAMEs if needs.
         size_t target_index = 0;
-        for (size_t j = 1; j < animationKeyframeList.size(); j++) {
-            if (animationKeyframeList[j]->keyframeName() !=
-                animationKeyframeList[target_index]->keyframeName()) {
+        for (size_t j = 1; j < keyframeList.size(); j++) {
+            if (keyframeList[j]->keyframeName() !=
+                keyframeList[target_index]->keyframeName()) {
                 target_index++;
-                animationKeyframeList[target_index] = animationKeyframeList[j];
+                keyframeList[target_index] = keyframeList[j];
             }
         }
-        if (animationKeyframeList.empty() == false) {
-            animationKeyframeList.resize(target_index + 1);
+        if (keyframeList.empty() == false) {
+            keyframeList.resize(target_index + 1);
         }
 
         // add 0% and 100% KEYFRAMEs if absent.
-        StyleAnimationKeyframe* start = new StyleAnimationKeyframe();
+        AnimationKeyframe* start = new AnimationKeyframe();
         start->setTimingFunction(timing);
-        if (animationKeyframeList.empty() == true) {
-            animationKeyframeList.push_back(start);
-        } else if (animationKeyframeList.front()->keyframeName() != 0.0) {
-            for (auto keyKind : animationKeyframeList.front()->keyKinds()) {
+        if (keyframeList.empty() == true) {
+            keyframeList.push_back(start);
+        } else if (keyframeList.front()->keyframeName() != 0.0) {
+            for (auto keyKind : keyframeList.front()->keyKinds()) {
                 start->setProperty(keyKind, CSSStyleValuePair());
             }
-            animationKeyframeList.insert(animationKeyframeList.begin(), start);
+            keyframeList.insert(keyframeList.begin(), start);
         }
-        if (animationKeyframeList.back()->keyframeName() != 1.0) {
-            NULLABLE StyleAnimationKeyframe* end =
-                new StyleAnimationKeyframe(*animationKeyframeList.back());
+        if (keyframeList.back()->keyframeName() != 1.0) {
+            AnimationKeyframe* end =
+                new AnimationKeyframe(*keyframeList.back());
             end->setKeyframeName(1.0);
             end->setTimingFunction(timing);
-            animationKeyframeList.push_back(end);
+            keyframeList.push_back(end);
         }
 
-        STARFISH_ASSERT(animationKeyframeList.front()->keyframeName() == 0.0);
-        STARFISH_ASSERT(animationKeyframeList.back()->keyframeName() == 1.0);
+        STARFISH_ASSERT(keyframeList.front()->keyframeName() == 0.0);
+        STARFISH_ASSERT(keyframeList.back()->keyframeName() == 1.0);
 
         // apply duration into each KEYFRAME
-        CSSTime duration = style->animation()->duration(i);
+        CSSTime duration = animation->duration(i);
         if (duration.toTimeValue() > 0) {
-            double prevKeyframeName = 0.0;
-            StyleAnimationKeyframe* prevKeyframe =
-                animationKeyframeList.front();
-            for (auto curKeyframe : animationKeyframeList) {
+            double preKeyframeName = 0.0;
+            auto preKeyframe = keyframeList.front();
+            for (auto curKeyframe : keyframeList) {
                 if (curKeyframe->keyframeName() == 0) {
                     continue;
                 }
-                if (curKeyframe->keyframeName() - prevKeyframeName == 0) {
-                    prevKeyframe->setDuration(CSSTime(0));
+                if (curKeyframe->keyframeName() - preKeyframeName == 0) {
+                    preKeyframe->setDuration(CSSTime(0));
                 } else {
-                    prevKeyframe->setDuration(CSSTime(
+                    preKeyframe->setDuration(CSSTime(
                         duration.toTimeValue() *
-                        (curKeyframe->keyframeName() - prevKeyframeName)));
+                        (curKeyframe->keyframeName() - preKeyframeName)));
                 }
 
-                prevKeyframeName = curKeyframe->keyframeName();
-                prevKeyframe = curKeyframe;
+                preKeyframeName = curKeyframe->keyframeName();
+                preKeyframe = curKeyframe;
             }
         }
 
-        for (auto keyframe : animationKeyframeList) {
-            style->animation()->setAnimationKeyframe(keyframe);
-        }
+        animation->keyframes(i).keyframeList().clear();
+        animation->keyframes(i).keyframeList().assign(keyframeList.begin(),
+                                                      keyframeList.end());
     }
 }
 
@@ -7379,6 +7370,7 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(toStyle != nullptr);
+    STARFISH_ASSERT(toStyle->animation() != nullptr);
 
     bool needsToCheckActiveAnimationExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
@@ -7425,26 +7417,31 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
                         shouldRemove = true;
                     } else {
                         bool found = false;
-                        for (size_t k = 0;
-                             k < data->animationKeyframeListSize(); k++) {
-                            StyleAnimationKeyframe* keyframe =
-                                data->animationKeyframe(k);
-                            for (auto& prop : keyframe->properties()) {
-                                if (prop.keyKind() ==
-                                    CSSStyleValuePair::KeyKind::All) {
-                                    found = true;
-                                    break;
-                                }
-                                if (activeAnimations[i]
-                                        ->isKindOfTransitionProperty(
-                                            prop.keyKind()) == true) {
-                                    found = true;
-                                    break;
+
+                        for (size_t j = 0; j < data->keyframesSize(); j++) {
+                            auto keyframes = data->keyframes(j);
+                            if (keyframes.keyframeListSize() > 0) {
+                                auto keyframe = keyframes.keyframe(0);
+                                for (auto& prop : keyframe->properties()) {
+                                    if (prop.keyKind() ==
+                                        CSSStyleValuePair::KeyKind::All) {
+                                        found = true;
+                                        break;
+                                    }
+                                    if (activeAnimations[i]
+                                            ->isKindOfTransitionProperty(
+                                                prop.keyKind()) == true) {
+                                        found = true;
+                                        break;
+                                    }
                                 }
                             }
-                            if (found == false) {
-                                shouldRemove = true;
+                            if (found == true) {
+                                break;
                             }
+                        }
+                        if (found == false) {
+                            shouldRemove = true;
                         }
                     }
                 }
@@ -7473,7 +7470,7 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
 
     // check new animation
     if (toStyle->display() != DisplayValue::NoneDisplayValue &&
-        toStyle->animationKeyframeSize() > 0 &&
+        toStyle->animation()->allKeyframeListSize() > 0 &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
         element->isVisible() == false &&
         applyAnimationIfNeeds(element, fromStyle, fromFrame, toStyle,
@@ -7563,9 +7560,9 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                           damagedKeys);
 #if defined(STARFISH_ENABLE_ANIMATION)
         if (style->animationNameSize() > 0) {
-            computeAnimationKeyframes(resolver, element, oldStyle, oldFrame,
+            computeAnimationKeyframes(*resolver, element, oldStyle, oldFrame,
                                       style, damage);
-            if (style->animationKeyframeSize() > 0) {
+            if (style->animation()->allKeyframeListSize() > 0) {
                 computeAnimation(element, oldStyle, oldFrame, style, damage);
             }
         }

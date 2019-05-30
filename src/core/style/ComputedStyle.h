@@ -2188,7 +2188,7 @@ public:
         if (a != nullptr) {
             return a->timingFunction(layer);
         }
-        return StyleAnimationKeyframe::defaultTimingFunction();
+        return AnimationKeyframe::defaultTimingFunction();
     }
 
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
@@ -2230,16 +2230,7 @@ public:
     {
         StyleAnimationData* a = animation();
         if (a != nullptr) {
-            return a->animationNameListSize();
-        }
-        return 0;
-    }
-
-    size_t animationKeyframeSize()
-    {
-        StyleAnimationData* a = animation();
-        if (a != nullptr) {
-            return a->animationKeyframeListSize();
+            return a->animationNameSize();
         }
         return 0;
     }
@@ -2253,27 +2244,28 @@ public:
         return String::emptyString;
     }
 
-    void setAnimationName(String* name)
+    void setAnimationName(String* name, size_t index)
     {
         STARFISH_ASSERT(name != nullptr);
-        m_rareComputedStyleData.ensureAnimation()->setAnimationName(name);
+        m_rareComputedStyleData.ensureAnimation()->setAnimationName(name,
+                                                                    index);
     }
 
-    void setAnimationDuration(CSSTime duration, size_t layer = 0)
+    void setAnimationDuration(CSSTime duration, size_t index)
     {
-        m_rareComputedStyleData.ensureAnimation()->setDuration(duration);
+        m_rareComputedStyleData.ensureAnimation()->setDuration(duration, index);
     }
 
-    void setAnimationTimingFunction(TimingFunctionValue v)
+    void setAnimationTimingFunction(TimingFunctionValue v, size_t index)
     {
         m_rareComputedStyleData.ensureAnimation()->setTimingFunction(
-            knownTimingFunction(v));
+            knownTimingFunction(v), index);
     }
 
-    void setAnimationTimingFunction(TimingFunction* f)
+    void setAnimationTimingFunction(TimingFunction* f, size_t index)
     {
         STARFISH_ASSERT(f != nullptr);
-        m_rareComputedStyleData.ensureAnimation()->setTimingFunction(f);
+        m_rareComputedStyleData.ensureAnimation()->setTimingFunction(f, index);
     }
 
     void resetTransitionProperties()
@@ -3822,6 +3814,11 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 void computeAnimation(Element* element, NULLABLE ComputedStyle* oldStyle,
                       NULLABLE Frame* oldFrame, ComputedStyle* style,
                       ComputedStyleDamage& damage);
+
+void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
+                               ComputedStyle* NULLABLE oldStyle,
+                               NULLABLE Frame* oldFrame, ComputedStyle* style,
+                               ComputedStyleDamage& damage);
 }
 
 #endif

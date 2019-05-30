@@ -1259,9 +1259,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationName);
         p.setValueList(new ValueList(ValueList::CommaSeparator));
-        size_t size = style->animation()
-                          ? style->animation()->animationNameListSize()
-                          : 0;
+        size_t size =
+            style->animation() ? style->animation()->animationNameSize() : 0;
         if (size == 0) {
             p.multiValue()->emplace_back(CSSStyleValuePair::StringValueKind,
                                          String::fromUTF8("none"));

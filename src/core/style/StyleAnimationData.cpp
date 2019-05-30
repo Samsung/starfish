@@ -24,7 +24,7 @@
 #include "core/style/StyleAnimationData.h"
 
 namespace Starfish {
-TimingFunction* StyleAnimationKeyframe::defaultTimingFunction()
+TimingFunction* AnimationKeyframe::defaultTimingFunction()
 {
     return new CubicBezier(0.25, 0.1, 0.25, 1);
 }
