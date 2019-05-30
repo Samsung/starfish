@@ -1160,6 +1160,17 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
+    virtual void setCanvasWebFontState(size_t version)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual size_t canvasWebFontState()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 0;
+    }
+
     virtual Font* font()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1474,5 +1485,5 @@ NativeImageData* NativeImageData::attach(Canvas* canvas)
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return nullptr;
 }
-}
+} // namespace Starfish
 #endif

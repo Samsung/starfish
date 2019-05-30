@@ -136,6 +136,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 #endif
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheToTalSize(0)
+    , m_webFontResolveVersionForCanvas(0)
 {
     setBaseURL(fallbackBaseURL());
 
