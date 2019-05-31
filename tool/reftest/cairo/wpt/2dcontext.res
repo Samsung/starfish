@@ -1,4 +1,4 @@
-#http://web-platform.test:8000/2dcontext/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
+http://web-platform.test:8000/2dcontext/drawing-paths-to-the-canvas/canvas_complexshapes_ispointInpath_001.htm
 #http://web-platform.test:8000/2dcontext/drawing-paths-to-the-canvas/canvas_focus_drawFocusIfNeeded_AAPI_001-manual.html
 #
 #
@@ -483,7 +483,7 @@ http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.fi
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.font.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.globalAlpha.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.globalCompositeOperation.html
-#http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
+http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.lineCap.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.lineJoin.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.lineWidth.html
