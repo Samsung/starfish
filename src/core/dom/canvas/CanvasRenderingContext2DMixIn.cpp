@@ -1232,12 +1232,15 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     CanvasTextBaseline canvasTextBaseline = m_canvas->canvasTextBaseline();
     if (canvasTextBaseline == CanvasTextBaseline::Top) {
     } else if (canvasTextBaseline == CanvasTextBaseline::Hanging) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        // http: // wiki.apache.org/xmlgraphics-fop/LineLayout/AlignmentHandling
+        paintCtx.m_canvas->translate(0,
+                                     -(float)font->metrics().m_ascender * 0.2);
     } else if (canvasTextBaseline == CanvasTextBaseline::Middle) {
         paintCtx.m_canvas->translate(0,
                                      -(float)font->metrics().m_fontHeight / 2);
     } else if (canvasTextBaseline == CanvasTextBaseline::Ideographic) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        paintCtx.m_canvas->translate(0, -(float)font->metrics().m_ascender +
+                                            (float)font->metrics().m_descender);
     } else if (canvasTextBaseline == CanvasTextBaseline::Bottom) {
         paintCtx.m_canvas->translate(0, -(float)font->metrics().m_fontHeight);
     } else {
@@ -2208,7 +2211,7 @@ void CanvasRenderingContext2DMixIn::setDirection(String* value)
         m_canvas->setCanvasTextDirection(direction);
     }
 }
-}
+} // namespace Starfish
 #undef NEEDS_UNPREMULTIPLIED
 #undef CRASH
 #endif

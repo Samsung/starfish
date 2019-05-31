@@ -13,7 +13,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas_arc_largeangles.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-2d-imageData-create-nonfinite.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-destroy-iframe.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-detachment.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-detachment.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-alphaImageData-behavior.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-360-winding.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-connecting-line.html
@@ -21,9 +21,9 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-negative-radius.
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-zero-lineto.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-bezier-same-endpoint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-image.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-clipping.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-color.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-gradient.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-clipping.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-color.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-gradient.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-image.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-color-over-pattern.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-fill-style.html
@@ -41,8 +41,8 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-pattern-ove
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-pattern-over-image.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-pattern-over-pattern.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-shadow.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-text.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-transforms.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-text.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-transforms.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-solid.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clearRect.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clip-rule.html
@@ -98,15 +98,15 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fill-rule.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillStyle-no-quirks-parsing.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillStyle-strokeStyle-stringification.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillText-invalid-maxWidth.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillText-invalid-maxWidth.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillText-zeroSizeGradient.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fill-zeroSizeGradient.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-filter-origin-clean.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-filter-value.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-font-cache.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-font-consistency.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-font-consistency.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-font-ex-units-crash.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-frameless-document-text.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-frameless-document-text.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getContext-invalid.html
 test/cairo/reftest/vendor/blink/fast/canvas/canvas-getImageData.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-invalid.html // Failed, equally with major browsers.
@@ -216,7 +216,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeRect-alpha-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeRect-gradient-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeRect-zeroSizeGradient.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeText-invalid-maxWidth.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeText-invalid-maxWidth.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeText-strokes-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeText-zeroSizeGradient.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-stroke-zeroSizeGradient.html
@@ -230,7 +230,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toBlob-toDataURL-race-imageEncoder-jpeg.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toBlob-toDataURL-race-imageEncoder-webp.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toBlob-webp-maximum-quality.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-to-canvas.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-to-canvas.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toDataURL-case-insensitive-mimetype.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toDataURL-crash.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-toDataURL-jpeg-crash.html
@@ -292,12 +292,12 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/pattern-with-transform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/shadow-huge-blur.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/shadow-offset-1.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/strokeText-missing-args.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/text-globalAlpha.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/text-globalAlpha.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/toDataURL-alpha.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/toDataURL-noData.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/toDataURL-supportedTypes.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/transformed-canvas-reset.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/translate-text.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/translate-text.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/unclosed-canvas-1.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/unclosed-canvas-2.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/unclosed-canvas-3.html

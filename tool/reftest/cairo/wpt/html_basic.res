@@ -890,7 +890,7 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/
 #http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/embed-document.html
 #http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/embed-dimension.html
 #http://web-platform.test:8000/html/semantics/embedded-content/the-embed-element/document-getters-return-null-for-cross-origin.html
-#http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/type.replace.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/type.replace.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/type.prototype.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/type.name.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/type.extend.html
