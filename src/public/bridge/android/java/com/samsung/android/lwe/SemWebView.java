@@ -37,6 +37,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AbsoluteLayout;
+import android.net.Uri;
 
 import java.lang.reflect.Constructor;
 import dalvik.system.PathClassLoader;
@@ -164,6 +165,7 @@ public class SemWebView extends SurfaceView {
         }
 
         if (isPlatformCode) {
+            Log.d(sTag, "Running platform code...");
             try {
                 if (pcl == null) {
                     if (!checkSignature(getContext())) {
@@ -199,11 +201,22 @@ public class SemWebView extends SurfaceView {
             }
 
             Log.e(sTag, "LweWebView creation failed");
-            return null;
         } else {
-            Log.d(sTag, "LweWebView creation succeed: apk lib");
-            return new LweWebViewImpl();
+            Log.d(sTag, "Running downloadable code...");
+            // We use reflection to create an instance of LweWebViewImpl(), as
+            // LweWebViewImpl.java is not included in the platform, and
+            // without the actual implementation, a build error occurs.
+            try {
+                LweWebView lweWebView =
+                    (LweWebView)Class.forName(LweWebViewImpl).getConstructor(String.class).newInstance();
+                Log.d(sTag, "LweWebView creation succeed: apk lib");
+                return lweWebView;
+            } catch (Exception e) {
+                Log.e(sTag, "cannot create LweWebViewImpl");
+            }
         }
+
+        return null;
     }
 
     /**
@@ -501,6 +514,7 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void setWebViewClient(SemWebViewClient client) {
+
         if (canUseLWE()) {
             mLWEWebView.setWebViewClient(client);
         } else {
@@ -529,11 +543,22 @@ public class SemWebView extends SurfaceView {
                     mSemWebViewClient.onPageFinished(mSemWebview, url);
                 }
 
-
                 @Override
                 public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    class MyWebResourceRequestImpl implements SemWebResourceRequest {
+                        String mUrl;
+
+                        public MyWebResourceRequestImpl(String url) {
+                            mUrl = url;
+                        }
+
+                        public Uri getUrl() {
+                            return Uri.parse(mUrl);
+                        }
+                    }
+
                     mSemWebViewClient.onReceivedError(
-                        mSemWebview, new WebResourceRequestImpl(request.getUrl().toString()),
+                        mSemWebview, new MyWebResourceRequestImpl(request.getUrl().toString()),
                         new SemWebResourceError(error.getErrorCode(), error.getDescription()));
                 }
 
