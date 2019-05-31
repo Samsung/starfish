@@ -82,9 +82,11 @@ JsonReader::JsonReader(const char* json)
     , mStack()
     , mError(false)
 {
+    STARFISH_ASSERT(json != nullptr);
+
     mDocument = new rapidjson::Document;
     DOCUMENT->Parse(json);
-    if (DOCUMENT->HasParseError()) {
+    if (DOCUMENT->HasParseError() == true) {
         mError = true;
     } else {
         mStack = new JsonReaderStack;
@@ -102,9 +104,9 @@ JsonReader::~JsonReader()
 // Archive concept
 JsonReader& JsonReader::StartObject()
 {
-    if (!mError) {
-        if (CURRENT.IsObject() &&
-            TOP.state == JsonReaderStackItem::BeforeStart) {
+    if (mError == false) {
+        if ((CURRENT.IsObject() == true) &&
+            (TOP.state == JsonReaderStackItem::BeforeStart)) {
             TOP.state = JsonReaderStackItem::Started;
         } else {
             mError = true;
@@ -115,8 +117,9 @@ JsonReader& JsonReader::StartObject()
 
 JsonReader& JsonReader::EndObject()
 {
-    if (!mError) {
-        if (CURRENT.IsObject() && TOP.state == JsonReaderStackItem::Started) {
+    if (mError == false) {
+        if ((CURRENT.IsObject() == true) &&
+            (TOP.state == JsonReaderStackItem::Started)) {
             Next();
         } else {
             mError = true;
@@ -129,8 +132,9 @@ JsonReader& JsonReader::Member(const char* name)
 {
     STARFISH_ASSERT(name != nullptr);
 
-    if (!mError) {
-        if (CURRENT.IsObject() && TOP.state == JsonReaderStackItem::Started) {
+    if (mError == false) {
+        if ((CURRENT.IsObject() == true) &&
+            (TOP.state == JsonReaderStackItem::Started)) {
             rapidjson::Value::ConstMemberIterator memberItr =
                 CURRENT.FindMember(name);
             if (memberItr != CURRENT.MemberEnd()) {
@@ -150,8 +154,8 @@ bool JsonReader::HasMember(const char* name) const
 {
     STARFISH_ASSERT(name != nullptr);
 
-    if (!mError && CURRENT.IsObject() &&
-        TOP.state == JsonReaderStackItem::Started) {
+    if ((mError == false) && (CURRENT.IsObject() == true) &&
+        (TOP.state == JsonReaderStackItem::Started)) {
         return CURRENT.HasMember(name);
     }
 
@@ -160,15 +164,17 @@ bool JsonReader::HasMember(const char* name) const
 
 JsonReader& JsonReader::StartArray(size_t* size)
 {
-    if (!mError) {
-        if (CURRENT.IsArray() &&
-            TOP.state == JsonReaderStackItem::BeforeStart) {
+    STARFISH_ASSERT(size != nullptr);
+
+    if (mError == false) {
+        if ((CURRENT.IsArray() == true) &&
+            (TOP.state == JsonReaderStackItem::BeforeStart)) {
             TOP.state = JsonReaderStackItem::Started;
-            if (size) {
+            if (size != nullptr) {
                 *size = CURRENT.Size();
             }
 
-            if (!CURRENT.Empty()) {
+            if (CURRENT.Empty() == false) {
                 const rapidjson::Value* value = &CURRENT[TOP.index];
                 STACK->push(JsonReaderStackItem(
                     value, JsonReaderStackItem::BeforeStart));
@@ -184,8 +190,9 @@ JsonReader& JsonReader::StartArray(size_t* size)
 
 JsonReader& JsonReader::EndArray()
 {
-    if (!mError) {
-        if (CURRENT.IsArray() && TOP.state == JsonReaderStackItem::Closed) {
+    if (mError == false) {
+        if ((CURRENT.IsArray() == true) &&
+            (TOP.state == JsonReaderStackItem::Closed)) {
             Next();
         } else {
             mError = true;
@@ -196,8 +203,8 @@ JsonReader& JsonReader::EndArray()
 
 JsonReader& JsonReader::operator&(bool& b)
 {
-    if (!mError) {
-        if (CURRENT.IsBool()) {
+    if (mError == false) {
+        if (CURRENT.IsBool() == true) {
             b = CURRENT.GetBool();
             Next();
         } else {
@@ -209,8 +216,8 @@ JsonReader& JsonReader::operator&(bool& b)
 
 JsonReader& JsonReader::operator&(unsigned& u)
 {
-    if (!mError) {
-        if (CURRENT.IsUint()) {
+    if (mError == false) {
+        if (CURRENT.IsUint() == true) {
             u = CURRENT.GetUint();
             Next();
         } else {
@@ -222,8 +229,8 @@ JsonReader& JsonReader::operator&(unsigned& u)
 
 JsonReader& JsonReader::operator&(int& i)
 {
-    if (!mError) {
-        if (CURRENT.IsInt()) {
+    if (mError == false) {
+        if (CURRENT.IsInt() == true) {
             i = CURRENT.GetInt();
             Next();
         } else {
@@ -235,8 +242,8 @@ JsonReader& JsonReader::operator&(int& i)
 
 JsonReader& JsonReader::operator&(double& d)
 {
-    if (!mError) {
-        if (CURRENT.IsNumber()) {
+    if (mError == false) {
+        if (CURRENT.IsNumber() == true) {
             d = CURRENT.GetDouble();
             Next();
         } else {
@@ -248,8 +255,8 @@ JsonReader& JsonReader::operator&(double& d)
 
 JsonReader& JsonReader::operator&(std::string& s)
 {
-    if (!mError) {
-        if (CURRENT.IsString()) {
+    if (mError == false) {
+        if (CURRENT.IsString() == true) {
             s = CURRENT.GetString();
             Next();
         } else {
@@ -261,9 +268,10 @@ JsonReader& JsonReader::operator&(std::string& s)
 
 JsonReader& JsonReader::operator&(String*& s)
 {
-    if (!mError) {
-        if (CURRENT.IsString()) {
-            s = String::createASCIIString(CURRENT.GetString());
+    if (mError == false) {
+        if (CURRENT.IsString() == true) {
+            s = String::fromUTF8(CURRENT.GetString(),
+                                 CURRENT.GetStringLength());
             Next();
         } else {
             mError = true;
@@ -280,11 +288,11 @@ JsonReader& JsonReader::SetNull()
 
 void JsonReader::Next()
 {
-    if (!mError) {
-        STARFISH_ASSERT(!STACK->empty());
+    if (mError == false) {
+        STARFISH_ASSERT(STACK->empty() == false);
         STACK->pop();
 
-        if (!STACK->empty() && CURRENT.IsArray()) {
+        if ((STACK->empty() == false) && (CURRENT.IsArray() == true)) {
             if (TOP.state ==
                 JsonReaderStackItem::Started) { // Otherwise means reading array
                                                 // item pass end
@@ -408,8 +416,9 @@ JsonWriter& JsonWriter::operator&(std::string& s)
 
 JsonWriter& JsonWriter::operator&(String*& s)
 {
-    if (s) {
-        WRITER->String(CSTR(s), static_cast<rapidjson::SizeType>(s->length()));
+    if (s != nullptr) {
+        WRITER->String(s->toUTF8NonGCString().c_str(),
+                       static_cast<rapidjson::SizeType>(s->contentLength()));
     } else {
         WRITER->String("", static_cast<rapidjson::SizeType>(0));
     }
