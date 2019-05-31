@@ -179,6 +179,7 @@ file(GLOB PREBUILT_SHARED_LIBS
 list(REMOVE_ITEM PREBUILT_SHARED_LIBS
     ${PREBUILT_LIB_PATH}/libicui18n.so
     ${PREBUILT_LIB_PATH}/libicuuc.so
+    ${PREBUILT_LIB_PATH}/libcurl.so
 )
 
 file(COPY ${PREBUILT_SHARED_LIBS}
@@ -214,7 +215,7 @@ add_library( hb-lib SHARED IMPORTED )
 set_target_properties( hb-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libharfbuzz_ng.so )
 
 add_library( curl-lib SHARED IMPORTED )
-set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcurl.so )
+set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcurl.lwe.so )
 
 add_library( crypto-lib SHARED IMPORTED )
 set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcrypto.so )

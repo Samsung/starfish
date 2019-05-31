@@ -18,10 +18,10 @@ package com.samsung.android.lwe;
 
 import android.net.Uri;
 
-public class WebResourceRequestImpl implements SemWebResourceRequest {
+public class SemWebResourceRequestImpl implements SemWebResourceRequest {
     String mUrl;
 
-    WebResourceRequestImpl(String url) {
+    public SemWebResourceRequestImpl(String url) {
         mUrl = url;
     }
 

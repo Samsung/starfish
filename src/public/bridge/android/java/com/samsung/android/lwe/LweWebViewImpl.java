@@ -41,6 +41,7 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.net.Uri;
 
 import java.io.File;
 import java.io.BufferedReader;
@@ -520,7 +521,19 @@ public class LweWebViewImpl implements LweWebView {
 
     private void onReceivedError(int errorCode, String url) {
         if (mWebViewClient != null) {
-            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(url),
+            class MyWebResourceRequestImpl implements SemWebResourceRequest {
+                String mUrl;
+
+                public MyWebResourceRequestImpl(String url) {
+                    mUrl = url;
+                }
+
+                public Uri getUrl() {
+                    return Uri.parse(mUrl);
+                }
+            }
+
+            mWebViewClient.onReceivedError(mLWEView, new MyWebResourceRequestImpl(url),
                     new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode),
                                             ErrorConverter.covertErrorDescription(errorCode)));
         }
@@ -540,8 +553,20 @@ public class LweWebViewImpl implements LweWebView {
 
     private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
+            class MyWebResourceRequestImpl implements SemWebResourceRequest {
+                String mUrl;
+
+                public MyWebResourceRequestImpl(String url) {
+                    mUrl = url;
+                }
+
+                public Uri getUrl() {
+                    return Uri.parse(mUrl);
+                }
+            }
+
             return mWebViewClient.shouldOverrideUrlLoading(mLWEView,
-                    new WebResourceRequestImpl(request));
+                    new MyWebResourceRequestImpl(request));
         }
         return false;
     }
