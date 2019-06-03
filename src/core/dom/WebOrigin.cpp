@@ -27,7 +27,7 @@ WebOrigin::WebOrigin()
 {
 }
 
-WebOrigin::WebOrigin(ResourceURL* url, bool isOpaque)
+WebOrigin::WebOrigin(NULLABLE ResourceURL* url, bool isOpaque)
     : m_originalURL(url)
     , m_isOpaque(isOpaque)
 {
@@ -35,7 +35,7 @@ WebOrigin::WebOrigin(ResourceURL* url, bool isOpaque)
 
 WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 {
-    if (url && url->isHTTPFamilyURL()) {
+    if (url != nullptr && url->isHTTPFamilyURL() == true) {
         return new WebOrigin(url, false);
     }
     return new WebOrigin();
@@ -44,7 +44,7 @@ WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
 String* WebOrigin::serialize() const
 {
-    if (isOpaque()) {
+    if (isOpaque() == true) {
         return String::createASCIIString("null");
     }
     // m_originalURL should not be null unless isOpaque is true
@@ -54,7 +54,7 @@ String* WebOrigin::serialize() const
 
 Nullable<String*> WebOrigin::domain() const
 {
-    if (isOpaque()) {
+    if (isOpaque() == true) {
         return nullptr;
     }
     // m_originalURL should not be null unless isOpaque is true
@@ -78,9 +78,12 @@ bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
     if (this == otherWebOrigin) {
         return true;
     }
-    // If A and B are the same opaque origin, then return true.
-    // TODO: comparing for the same opaque origin is not supported yet
-    if (isOpaque() || otherWebOrigin->isOpaque()) {
+
+    if ((isOpaque() == true) && (otherWebOrigin->isOpaque() == true)) {
+        return true;
+    }
+
+    if ((isOpaque() == true) || (otherWebOrigin->isOpaque() == true)) {
         return false;
     }
 
@@ -88,10 +91,12 @@ bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
     STARFISH_ASSERT(m_originalURL);
     STARFISH_ASSERT(otherWebOrigin->m_originalURL);
 
-    if (m_originalURL->protocol()->equals(
-            otherWebOrigin->m_originalURL->protocol()) &&
-        m_originalURL->host()->equals(otherWebOrigin->m_originalURL->host()) &&
-        m_originalURL->port()->equals(otherWebOrigin->m_originalURL->port())) {
+    if ((m_originalURL->protocol()->equals(
+             otherWebOrigin->m_originalURL->protocol()) == true) &&
+        (m_originalURL->host()->equals(otherWebOrigin->m_originalURL->host()) ==
+         true) &&
+        (m_originalURL->port()->equals(otherWebOrigin->m_originalURL->port()) ==
+         true)) {
         return true;
     }
 
@@ -104,9 +109,12 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
     if (this == otherWebOrigin) {
         return true;
     }
-    // If A and B are the same opaque origin, then return true.
-    // TODO: comparing for the same opaque origin is not supported yet
-    if (isOpaque() || otherWebOrigin->isOpaque()) {
+
+    if ((isOpaque() == true) && (otherWebOrigin->isOpaque() == true)) {
+        return true;
+    }
+
+    if (isOpaque() == true || otherWebOrigin->isOpaque() == true) {
         return false;
     }
 
@@ -114,16 +122,19 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
     STARFISH_ASSERT(m_originalURL);
     STARFISH_ASSERT(otherWebOrigin->m_originalURL);
 
-    if (m_originalURL->protocol()->equals(
-            otherWebOrigin->m_originalURL->protocol()) &&
-        domain().hasValue() && otherWebOrigin->domain().hasValue() &&
-        domain().getValue()->equals(otherWebOrigin->domain().getValue())) {
+    if ((m_originalURL->protocol()->equals(
+             otherWebOrigin->m_originalURL->protocol()) == true) &&
+        (domain().hasValue() == true) &&
+        (otherWebOrigin->domain().hasValue() == true) &&
+        (domain().getValue()->equals(otherWebOrigin->domain().getValue()) ==
+         true)) {
         return true;
-    } else if (isSameOrigin(otherWebOrigin) && !domain().hasValue() &&
-               !otherWebOrigin->domain().hasValue()) {
+    } else if ((isSameOrigin(otherWebOrigin) == true) &&
+               (domain().hasValue() == false) &&
+               (otherWebOrigin->domain().hasValue() == false)) {
         return true;
     }
 
     return false;
 }
-}
+} // namespace Starfish
