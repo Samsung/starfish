@@ -397,7 +397,7 @@ http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.basic.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.ensuresubpath.1.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.ensuresubpath.2.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.nextpoint.html
-#http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.nonfinite.details.html // needs a "for of"
+http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.nonfinite.details.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.lineTo.nonfinite.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.moveTo.basic.html
 http://web-platform.test:8000/2dcontext/path-objects/2d.path.moveTo.multiple.html
@@ -692,8 +692,8 @@ http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImag
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.alpha.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.apng.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.gif.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.poster.html
-#http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.broken.html // Bug : Decoding a corrupted png file should fail, but it did not fail.
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.poster.html
+http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.broken.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.canvas.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.clip.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.composite.html
