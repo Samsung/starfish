@@ -137,8 +137,9 @@ public:
                     if (mimeType.subtype()->contains("xml") ||
                         m_xhr->m_responseType ==
                             XMLHttpRequestResponseType::Document) {
-                        void* buffer = calloc(
-                            1, m_xhr->m_resourceRequest->response().size());
+                        void* buffer =
+                            malloc(m_xhr->m_resourceRequest->response().size());
+                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
@@ -148,7 +149,9 @@ public:
                         try {
                             m_xhr->m_responseXML = parser->parseFromString(
                                 String::fromUTF8(
-                                    static_cast<const char*>(buffer)),
+                                    static_cast<const char*>(buffer),
+                                    m_xhr->m_resourceRequest->response()
+                                        .size()),
                                 mimeTypeString);
                         } catch (DOMException* e) {
                             StringBuilder b;
@@ -197,9 +200,9 @@ public:
                             parseJSON(m_xhr->scriptBindingInstance(), text);
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Blob) {
-                        void* buffer = calloc(
-                            1, m_xhr->m_resourceRequest->response().size());
-                        STARFISH_RELEASE_ASSERT(buffer);
+                        void* buffer =
+                            malloc(m_xhr->m_resourceRequest->response().size());
+                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
@@ -212,9 +215,9 @@ public:
                         m_xhr->m_resourceRequest->response().shrink_to_fit();
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::ArrayBuffer) {
-                        void* buffer = calloc(
-                            1, m_xhr->m_resourceRequest->response().size());
-                        STARFISH_RELEASE_ASSERT(buffer);
+                        void* buffer =
+                            malloc(m_xhr->m_resourceRequest->response().size());
+                        STARFISH_RELEASE_ASSERT(buffer != nullptr);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
@@ -247,7 +250,8 @@ public:
                            ->document()
                            ->contentSecurityPolicy();
             auto resourceURL =
-                new ResourceURL(request->lastEffectiveURL().c_str());
+                new ResourceURL(request->lastEffectiveURL().data(),
+                                request->lastEffectiveURL().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
                 executionContext->document()->dispatchEventByUA(event);
@@ -680,10 +684,10 @@ String* XMLHttpRequest::getAllResponseHeaders()
             }
         }
 
-        sb.appendString(key.c_str());
+        sb.appendString(key.data(), key.size());
         sb.appendChar(':');
         sb.appendChar(' ');
-        sb.appendString(value.c_str());
+        sb.appendString(value.data(), value.size());
         sb.appendChar('\r');
         sb.appendChar('\n');
     }
@@ -697,9 +701,13 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         m_resourceRequest->isError()) {
         return nullptr;
     }
-    if (name->length() == 0 || !name->containsOnlyASCIIChars() ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie2)) {
+    STARFISH_ASSERT(HTTPHeaderMap::kSetCookie != nullptr);
+    STARFISH_ASSERT(HTTPHeaderMap::kSetCookie2 != nullptr);
+    if (name->length() == 0 || name->containsOnlyASCIIChars() == false ||
+        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie,
+                               strlen(HTTPHeaderMap::kSetCookie)) == true ||
+        name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie2,
+                               strlen(HTTPHeaderMap::kSetCookie2)) == true) {
         return nullptr;
     }
     auto n = name->toUTF8NonGCString();
@@ -713,8 +721,8 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
     for (const auto& pair : map) {
         const auto& key = pair.first;
         const auto& value = pair.second;
-        if (name->equalsIgnoreCase(key.data())) {
-            return String::createASCIIString(value.data());
+        if (name->equalsIgnoreCase(key.data(), key.size()) == true) {
+            return String::createASCIIString(value.data(), value.size());
         }
     }
 

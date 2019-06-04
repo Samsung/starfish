@@ -45,7 +45,7 @@ namespace Starfish {
 Message::Message(const char* msgname)
 {
     STARFISH_ASSERT(msgname != nullptr);
-    m_name = String::createASCIIString(msgname);
+    m_name = String::createASCIIString(msgname, strlen(msgname));
 }
 
 std::string Message::name()

@@ -1693,7 +1693,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                             if (((Sender*)data)->kind ==
                                 CSSStyleValuePair::KeyKind::CustomProperty) {
                                 ((Sender*)data)->key =
-                                    String::createASCIIString(name);
+                                    String::fromUTF8(name, len);
                             }
 #ifndef NDEBUG
                             // ignore vendor prefix & CSS Custom Variables
@@ -1967,7 +1967,8 @@ void CSSParser::addUnknownAtRule()
 
 void CSSParser::reportError(const char* aMsg)
 {
-    m_error = String::createASCIIString(aMsg);
+    STARFISH_ASSERT(aMsg != nullptr);
+    m_error = String::createASCIIString(aMsg, strlen(aMsg));
 }
 
 static CSSParser::AllowedRulesType computeNewAllowedRules(
@@ -3431,7 +3432,9 @@ String* MediaQueryExpValue::cssText() const
     StringBuilder output;
     if (isValue) {
         output.appendString(String::fromFloat(value));
-        output.appendString(unitTypeToString(unit));
+        const char* s = unitTypeToString(unit);
+        STARFISH_ASSERT(s != nullptr);
+        output.appendString(s, strlen(s));
     } else if (isRatio) {
         output.appendString(String::fromFloat(numerator));
         output.appendChar('/');

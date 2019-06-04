@@ -267,7 +267,8 @@ void HTMLTrackElement::generateCues()
             return;
         }
 
-        String* id = String::fromUTF8(cue.identifier.c_str());
+        String* id =
+            String::fromUTF8(cue.identifier.data(), cue.identifier.size());
         double startTime = (cue.start_time.presentation()) / 1000.f;
         double endTime = (cue.stop_time.presentation()) / 1000.f;
         String* newline = String::fromUTF8("\n");
@@ -278,8 +279,10 @@ void HTMLTrackElement::generateCues()
         iter_t i = cue.payload.begin();
         const iter_t j = cue.payload.end();
         while (i != j) {
-            payload = payload->concat(String::fromUTF8((*i++).c_str()))
-                          ->concat(newline);
+            payload =
+                payload->concat(String::fromUTF8((*i).data(), (*i).size()))
+                    ->concat(newline);
+            i++;
         }
 
         VTTCue* newcue = new VTTCue(m_document, startTime, endTime, payload);
@@ -345,7 +348,7 @@ void HTMLTrackElement::setDefaultAttr(bool value)
     if (value) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
-            setAttribute(name, String::fromUTF8(""));
+            setAttribute(name, String::emptyString);
         }
     } else {
         removeAttribute(name);

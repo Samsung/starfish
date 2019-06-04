@@ -105,7 +105,9 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
     String* base64Value;
 
     for (size_t i = 0; i < supportedPrefixesLength; i++) {
-        auto prefix = String::createASCIIString(supportedPrefixes[i].prefix);
+        STARFISH_ASSERT(supportedPrefixes[i].prefix != nullptr);
+        auto prefix = String::createASCIIString(
+            supportedPrefixes[i].prefix, strlen(supportedPrefixes[i].prefix));
 
         if (source->startsWith(prefix)) {
             auto prefixLength = prefix->length();

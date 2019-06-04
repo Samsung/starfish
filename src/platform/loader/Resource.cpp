@@ -54,32 +54,50 @@ void Resource::request(RequestData* requestData, bool allowCache)
             if (url->asDocumentURL()->formSubmitData()) {
                 FormSubmitData* formSubmitData =
                     url->asDocumentURL()->formSubmitData();
-                if (url->isHTTPFamilyURL()) {
+                if (url->isHTTPFamilyURL() == true) {
+                    STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
+                    STARFISH_ASSERT(HTTPHeaderMap::kContentType != nullptr);
+                    STARFISH_ASSERT(HTTPHeaderMap::kAcceptCharset != nullptr);
+                    STARFISH_ASSERT(HTTPHeaderMap::kOrigin != nullptr);
+                    STARFISH_ASSERT(HTTPHeaderMap::kPragma != nullptr);
+                    STARFISH_ASSERT(HTTPHeaderMap::kCacheControl != nullptr);
+
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kAccept),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kAccept,
+                            strlen(HTTPHeaderMap::kAccept)),
                         String::createASCIIString(
                             "text/html,application/xhtml+xml,application/"
                             "xml;q=0.9,image/webp,image/apng,*/*;q=0.8"));
                     m_resourceRequest->m_requestData->m_method =
                         formSubmitData->m_method;
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kContentType),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kContentType,
+                            strlen(HTTPHeaderMap::kContentType)),
                         ResourceRequest::encodeType(formSubmitData->m_enctype));
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(
-                            HTTPHeaderMap::kAcceptCharset),
+                            HTTPHeaderMap::kAcceptCharset,
+                            strlen(HTTPHeaderMap::kAcceptCharset)),
                         String::createASCIIString("utf-8"));
 
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kOrigin),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kOrigin,
+                            strlen(HTTPHeaderMap::kOrigin)),
                         m_resourceRequest->m_requestData->m_referrer->origin());
 
                     String* nocache = String::createASCIIString("no-cache");
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kPragma),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kPragma,
+                            strlen(HTTPHeaderMap::kPragma)),
                         nocache);
                     m_resourceRequest->setRequestHeader(
-                        String::createASCIIString(HTTPHeaderMap::kCacheControl),
+                        String::createASCIIString(
+                            HTTPHeaderMap::kCacheControl,
+                            strlen(HTTPHeaderMap::kCacheControl)),
                         nocache);
 
                     if (formSubmitData->m_method->equals("GET")) {

@@ -115,7 +115,7 @@ public:
         } else if (m_type == FrType) {
             char temp[100];
             snprintf(temp, sizeof(temp), "%.1f", m_fr);
-            String* value = String::fromUTF8(temp);
+            String* value = String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
             builder.appendString(value);
             builder.appendString("fr");
         }

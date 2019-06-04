@@ -142,7 +142,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
                 "data:image/png;base64," +
                 StringUtils::toBase64(ImageUtils::encodePNG(
                     canvasSurface->mapBuffer(), width, height, stride));
-            return String::fromUTF8(result.c_str());
+            return String::fromUTF8(result.data(), result.size());
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

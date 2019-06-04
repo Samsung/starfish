@@ -506,14 +506,14 @@ void ResourceURL::resolvePositions()
     m_usernameEnd = m_passwordEnd = m_usernameStart;
 
     // host
-    pos = m_urlString->find("/", m_usernameStart);
+    pos = m_urlString->find("/", 1, m_usernameStart);
     if (pos != SIZE_MAX) {
         m_hostEnd = m_portEnd = pos;
 
-        size_t pos2 = m_urlString->find("?", pos);
+        size_t pos2 = m_urlString->find("?", 1, pos);
         if (pos2 != SIZE_MAX) {
             m_pathEnd = pos2;
-            size_t pos3 = m_urlString->find("#", pos);
+            size_t pos3 = m_urlString->find("#", 1, pos);
             if (pos3 != SIZE_MAX) {
                 m_searchEnd = pos3;
                 if (m_searchEnd < m_pathEnd) {
@@ -524,7 +524,7 @@ void ResourceURL::resolvePositions()
                 m_searchEnd = m_hashEnd = m_urlString->length();
             }
         } else {
-            size_t pos3 = m_urlString->find("#", pos);
+            size_t pos3 = m_urlString->find("#", 1, pos);
             if (pos3 != SIZE_MAX) {
                 m_pathEnd = m_searchEnd = pos3;
                 m_hashEnd = m_urlString->length();
@@ -536,7 +536,7 @@ void ResourceURL::resolvePositions()
         size_t pos2 = m_urlString->find("?");
         if (pos2 != SIZE_MAX) {
             m_hostEnd = m_portEnd = m_pathEnd = pos2;
-            size_t pos3 = m_urlString->find("#", pos2);
+            size_t pos3 = m_urlString->find("#", 1, pos2);
             if (pos3 != SIZE_MAX) {
                 m_searchEnd = pos3;
                 m_hashEnd = m_urlString->length();
@@ -556,22 +556,22 @@ void ResourceURL::resolvePositions()
     }
 
     // username & password & port
-    pos = m_urlString->find("@", m_usernameStart);
+    pos = m_urlString->find("@", 1, m_usernameStart);
     if (pos != SIZE_MAX && pos < m_hostEnd) {
         m_usernameEnd = m_passwordEnd = pos;
 
         // ':' for username
-        pos = m_urlString->find(":", m_usernameStart);
+        pos = m_urlString->find(":", 1, m_usernameStart);
         if (pos != SIZE_MAX && pos < m_usernameEnd) {
             m_usernameEnd = pos;
         }
         // ':' for port
-        pos = m_urlString->find(":", m_usernameEnd + 1);
+        pos = m_urlString->find(":", 1, m_usernameEnd + 1);
         if (pos != SIZE_MAX && m_passwordEnd < pos && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
     } else { // no username & password
-        pos = m_urlString->find(":", m_passwordEnd);
+        pos = m_urlString->find(":", 1, m_passwordEnd);
         if (pos != SIZE_MAX && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
@@ -642,7 +642,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         } else if (isBaseUrlValid) {
             size_t pos = baseURL->find("://");
             STARFISH_ASSERT(pos != SIZE_MAX);
-            size_t pos2 = baseURL->find("/", pos + 3);
+            size_t pos2 = baseURL->find("/", 1, pos + 3);
             if (pos2 != SIZE_MAX) {
                 baseURL = baseURL->substring(0, pos2);
                 url = baseURL->concat(url);
@@ -678,7 +678,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
             size_t f = baseURL->find("://");
             STARFISH_ASSERT(f != SIZE_MAX);
             f += 3;
-            size_t f2 = baseURL->find("/", f);
+            size_t f2 = baseURL->find("/", 1, f);
             if (f2 != SIZE_MAX) {
                 baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
             }
@@ -785,7 +785,7 @@ String* ResourceURL::baseURI() const
 
     size_t pos = m_urlString->find("://");
     STARFISH_ASSERT(pos != SIZE_MAX);
-    size_t pos2 = m_urlString->find("/", pos + 3);
+    size_t pos2 = m_urlString->find("/", 1, pos + 3);
     if (pos2 != SIZE_MAX) {
         return m_urlString->substring(0, m_urlString->lastIndexOf('/') + 1);
     } else {

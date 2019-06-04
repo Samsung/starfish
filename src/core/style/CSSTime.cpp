@@ -63,9 +63,11 @@ String* CSSTime::toString() const
     ss << m_value;
     std::string stdStr = ss.str();
     if (m_kind == S) {
-        return String::fromUTF8(stdStr.append("s").c_str());
+        stdStr.append("s");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == MS) {
-        return String::fromUTF8(stdStr.append("ms").c_str());
+        stdStr.append("ms");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

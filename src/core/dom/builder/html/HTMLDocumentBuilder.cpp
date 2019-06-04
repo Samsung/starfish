@@ -147,7 +147,8 @@ public:
             // TODO: In 'iframe' case also, check CSP
             auto csp = headers.find("Content-Security-Policy");
             if (csp != headers.end()) {
-                String* value = String::createASCIIString(csp->second.data());
+                String* value = String::createASCIIString(csp->second.data(),
+                                                          csp->second.size());
                 m_resource->loader()
                     ->document()
                     ->contentSecurityPolicy()
@@ -164,7 +165,8 @@ public:
         auto it = headers.find(HTTPHeaderMap::kXFrameOptions);
         m_isAllowedResponse = true;
         if (it != headers.end()) {
-            String* value = String::createASCIIString(it->second.data());
+            String* value =
+                String::createASCIIString(it->second.data(), it->second.size());
             if (value->equalsIgnoreCase("deny")) {
                 m_isAllowedResponse = false;
             } else if (value->equalsIgnoreCase("sameorigin")) {
@@ -201,9 +203,13 @@ public:
         if (request->isRedirected()) {
             auto csp = browsingContext->document()->contentSecurityPolicy();
             auto resourceURL =
-                new ResourceURL(request->lastEffectiveURL().c_str());
+                new ResourceURL(request->lastEffectiveURL().data(),
+                                request->lastEffectiveURL().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
+                STARFISH_ASSERT(event != nullptr);
+                STARFISH_ASSERT(executionContext != nullptr);
+
                 auto parentBrowsingContext = executionContext->document()
                                                  ->browsingContext()
                                                  ->parentBrowsingContext();
@@ -271,7 +277,7 @@ public:
         if (it != headers.end()) {
             m_builder.document()->m_referrerPolicy =
                 ReferrerURL::policyFromString(
-                    String::fromUTF8(it->second.data()));
+                    String::fromUTF8(it->second.data(), it->second.size()));
         }
 
         if (!mimetype.stringWithoutParameter()->startsWith("image/", false)) {
@@ -361,10 +367,13 @@ public:
                     }
 
                     if (charSetInMeta.length()) {
-                        m = String::fromUTF8(charSetInMeta.data());
+                        m = String::fromUTF8(charSetInMeta.data(),
+                                             charSetInMeta.size());
                     }
                 } else {
-                    m = String::fromUTF8(er.m_encoding);
+                    m = String::fromUTF8(
+                        er.m_encoding,
+                        strnlen(er.m_encoding, sizeof(er.m_encoding)));
                 }
             }
 
@@ -372,12 +381,15 @@ public:
                 m = m_resource->resourceRequest()->responseMimeType();
             }
 
-            TextConverter* converter = new TextConverter(
-                m, String::createASCIIString("UTF-8"),
-                m_buffer.data() + er.m_skip, m_buffer.size() - er.m_skip);
-            m_htmlSource = converter->convert(
-                m_buffer.data() + er.m_skip, m_buffer.size() - er.m_skip, true);
-            m_builder.document()->setCharacterSet(converter->encoding());
+            if (m_buffer.size() != 0) {
+                TextConverter* converter = new TextConverter(
+                    m, String::createASCIIString("UTF-8"),
+                    m_buffer.data() + er.m_skip, m_buffer.size() - er.m_skip);
+                m_htmlSource =
+                    converter->convert(m_buffer.data() + er.m_skip,
+                                       m_buffer.size() - er.m_skip, true);
+                m_builder.document()->setCharacterSet(converter->encoding());
+            }
         } else if (m == String::emptyString) {
             m = m_resource->resourceRequest()->responseMimeType();
         }
@@ -391,7 +403,8 @@ public:
         if (!(m_resource->resourceRequest()->lastEffectiveURL() == "")) {
             // Change documentURI and last history when request was redirected.
             ResourceURL* newURL = new ResourceURL(String::createASCIIString(
-                m_resource->resourceRequest()->lastEffectiveURL().data()));
+                m_resource->resourceRequest()->lastEffectiveURL().data(),
+                m_resource->resourceRequest()->lastEffectiveURL().size()));
             m_builder.document()->setDocumentURI(newURL);
             m_builder.document()->setBaseURL(newURL);
             m_builder.document()->setWebOrigin(

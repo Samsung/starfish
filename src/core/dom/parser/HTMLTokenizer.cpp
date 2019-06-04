@@ -77,20 +77,6 @@ static inline char32_t toLowerCase(char32_t cc)
     return cc + lowerCaseOffset;
 }
 
-static inline bool vectorEqualsString(const GCAtomicVector<char>& vector,
-                                      String* string)
-{
-    if (vector.size() != string->length()) {
-        return false;
-    }
-
-    if (!string->length()) {
-        return true;
-    }
-
-    return string->equals(vector.data());
-}
-
 static inline bool isEndTagBufferingState(HTMLTokenizer::State state)
 {
     switch (state) {
@@ -1753,7 +1739,8 @@ void HTMLTokenizer::updateStateFor(String* tagName)
 
 inline bool HTMLTokenizer::temporaryBufferIs(String* expectedString)
 {
-    return expectedString->equals(m_temporaryBuffer.data());
+    return expectedString->equals(m_temporaryBuffer.data(),
+                                  m_temporaryBuffer.size());
 }
 
 inline bool HTMLTokenizer::temporaryBufferIs(const char* expectedString)

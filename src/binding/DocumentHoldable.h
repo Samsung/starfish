@@ -38,6 +38,7 @@ public:
 
     Document* document() const
     {
+        STARFISH_ASSERT(m_document != nullptr);
         return m_document;
     }
 

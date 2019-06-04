@@ -33,7 +33,7 @@ namespace Starfish {
 
 ErrorData::ErrorData(ExceptionCode exceptionCode, const char* rawMessage)
     : code(exceptionCode)
-    , message(String::createASCIIString(rawMessage))
+    , message(String::fromUTF8(rawMessage, strlen(rawMessage)))
 {
     STARFISH_ASSERT(rawMessage != nullptr);
 }

@@ -432,31 +432,6 @@ size_t String::lastIndexOf(char32_t ch) const
     return SIZE_MAX;
 }
 
-bool String::equalsIgnoreCase(const char* str) const
-{
-#ifndef NDEBUG
-    {
-        const char* c = str;
-        while (*c) {
-            STARFISH_ASSERT(!(*c & 0x80));
-            c++;
-        }
-    }
-#endif
-    auto data = bufferAccessData();
-    size_t srcLen = strlen(str);
-
-    if (srcLen != data.length) {
-        return false;
-    }
-    for (size_t i = 0; i < data.length; i++) {
-        if (tolower(data.charAt(i)) != tolower((char32_t)str[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool String::equalsIgnoreCase(const char* str, size_t strLen) const
 {
 #ifndef NDEBUG
@@ -480,30 +455,6 @@ bool String::equalsIgnoreCase(const char* str, size_t strLen) const
     return true;
 }
 
-bool String::equals(const char* str) const
-{
-    size_t srcLen = 0;
-    for (; str[srcLen]; srcLen++) {
-    }
-
-    auto data = bufferAccessData();
-
-    if (srcLen != data.length) {
-        return false;
-    }
-
-    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return memcmp(data.asciiData(), str, data.length) == 0;
-    } else {
-        for (size_t i = 0; i < data.length; i++) {
-            if (data.charAt(i) != (char32_t)str[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-}
-
 bool String::equals(const char* str, size_t strLen) const
 {
     auto data = bufferAccessData();
@@ -520,24 +471,6 @@ bool String::equals(const char* str, size_t strLen) const
         }
         return true;
     }
-}
-
-bool String::equals(const char32_t* str) const
-{
-    auto data = bufferAccessData();
-    size_t srcLen = 0;
-    for (; str[srcLen]; srcLen++) {
-    }
-
-    if (srcLen != data.length) {
-        return false;
-    }
-    for (size_t i = 0; i < data.length; i++) {
-        if (data.charAt(i) != str[i]) {
-            return false;
-        }
-    }
-    return true;
 }
 
 bool String::equals(const char32_t* str, size_t strLen) const
@@ -714,6 +647,10 @@ bool isBMP(char32_t ch)
 
 String* String::fromUTF8(const char* src, size_t len)
 {
+    if (len != 0) {
+        STARFISH_ASSERT(src != nullptr);
+    }
+
     bool isAllBMP = true;
     bool isAllASCII = true;
     for (unsigned i = 0; i < len;) {
@@ -737,13 +674,6 @@ String* String::fromUTF8(const char* src, size_t len)
     } else {
         return new StringDataUTF32(src, len);
     }
-}
-
-String* String::fromUTF8(const char* str)
-{
-    const char* p = str;
-    size_t len = strlen(str);
-    return fromUTF8(str, len);
 }
 
 String* String::fromUTF16(const char16_t* src, size_t len)
@@ -809,14 +739,14 @@ String* String::createASCIIString(const char c)
     return new StringDataASCII(s);
 }
 
-String* String::createASCIIString(const char* str)
+String* String::createASCIIString(const char* str, size_t len)
 {
-    return new StringDataASCII(str);
+    return new StringDataASCII(str, len);
 }
 
-String* String::createASCIIStringWithNoGC(const char* str)
+String* String::createASCIIStringWithNoGC(const char* str, size_t len)
 {
-    return new StringDataNonGCASCII(str);
+    return new StringDataNonGCASCII(str, len);
 }
 
 String* String::createUTF32String(const UTF32StringDataNonGCStd& src)
@@ -1132,19 +1062,18 @@ String* String::concat(const char32_t c)
     return builder.finalize();
 }
 
-String* String::concat(const char* src)
+String* String::concat(const char* src, size_t srcLen)
 {
     if (length() == 0) {
-        return String::createASCIIString(src);
+        return String::createASCIIString(src, srcLen);
     }
-    size_t srcLen = strlen(src);
     if (srcLen == 0) {
         return this;
     }
 
     StringBuilder builder;
     builder.appendString(this);
-    builder.appendString(src);
+    builder.appendString(src, srcLen);
     return builder.finalize();
 }
 
@@ -1200,14 +1129,14 @@ String* String::fromFloat(float f)
 {
     char buf[256];
     snprintf(buf, sizeof(buf), "%g", f);
-    return String::fromUTF8(buf);
+    return String::fromUTF8(buf, strnlen(buf, sizeof(buf)));
 }
 
 String* String::fromDouble(double d)
 {
     char buf[256];
     snprintf(buf, sizeof(buf), "%g", d);
-    return String::fromUTF8(buf);
+    return String::fromUTF8(buf, strnlen(buf, sizeof(buf)));
 }
 
 String* String::fromInt(int i)
@@ -1215,9 +1144,10 @@ String* String::fromInt(int i)
 #if defined(STARFISH_ANDROID)
     char buf[256];
     snprintf(buf, sizeof(buf), "%d", i);
-    return String::fromUTF8(buf);
+    return String::fromUTF8(buf, strnlen(buf, sizeof(buf)));
 #else
-    return String::fromUTF8(std::to_string(i).c_str());
+    std::string str = std::to_string(i);
+    return String::fromUTF8(str.data(), str.size());
 #endif
 }
 
@@ -1226,9 +1156,10 @@ String* String::fromInt64(int64_t i)
 #if defined(STARFISH_ANDROID)
     char buf[256];
     snprintf(buf, sizeof(buf), "%lld", (long long)i);
-    return String::fromUTF8(buf);
+    return String::fromUTF8(buf, strnlen(buf, sizeof(buf)));
 #else
-    return String::fromUTF8(std::to_string(i).c_str());
+    std::string str = std::to_string(i);
+    return String::fromUTF8(str.data(), str.size());
 #endif
 }
 
@@ -1778,10 +1709,10 @@ bool String::isASCIIStringData(const char* str)
     return true;
 }
 
-bool String::startsWith(const char* str, bool caseSensitive)
+bool String::startsWith(const char* str, size_t len, bool caseSensitive)
 {
     STARFISH_ASSERT(isASCIIStringData(str));
-    StringDataOnStackASCII tmpStr(str, strlen(str));
+    StringDataOnStackASCII tmpStr(str, len);
     bool ret = startsWith(&tmpStr, caseSensitive);
     return ret;
 }
@@ -1815,10 +1746,10 @@ bool String::startsWith(String* str, bool caseSensitive)
     return true;
 }
 
-bool String::endsWith(const char* str, bool caseSensitive)
+bool String::endsWith(const char* str, size_t len, bool caseSensitive)
 {
     STARFISH_ASSERT(isASCIIStringData(str));
-    StringDataOnStackASCII tmpStr(str, strlen(str));
+    StringDataOnStackASCII tmpStr(str, len);
     bool ret = endsWith(&tmpStr, caseSensitive);
     return ret;
 }
@@ -1886,11 +1817,11 @@ size_t String::find(String* str, size_t pos)
     return SIZE_MAX;
 }
 
-size_t String::find(const char* str, size_t pos)
+size_t String::find(const char* str, size_t len, size_t pos)
 {
     auto dstData = bufferAccessData();
 
-    const size_t srcLen = strlen(str);
+    const size_t srcLen = len;
     const size_t dstLen = dstData.length;
 
     if (srcLen == 0) {
@@ -1988,9 +1919,9 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
     return SIZE_MAX;
 }
 
-bool String::contains(const char* str, bool caseSensitive)
+bool String::contains(const char* str, size_t len, bool caseSensitive)
 {
-    StringDataOnStackASCII tmpStr(str, strlen(str));
+    StringDataOnStackASCII tmpStr(str, len);
     return contains(&tmpStr, caseSensitive);
 }
 
@@ -2285,11 +2216,11 @@ void StringBuilder::appendPiece(String* str, size_t s, size_t e)
     }
 }
 
-void StringBuilder::appendPiece(const char* str)
+void StringBuilder::appendPiece(const char* str, size_t len)
 {
     StringBuilderPiece piece;
     piece.m_start = 0;
-    piece.m_end = strlen(str);
+    piece.m_end = len;
     piece.m_raw = str;
     piece.m_type = StringBuilderPiece::Type::ConstChar;
     if (piece.m_end) {

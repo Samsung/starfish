@@ -207,7 +207,7 @@ CacheControl HTTPUtil::parseCacheControl(std::string directives)
     // https://tools.ietf.org/html/rfc7234#page-21
     // See 5.2, 5.2.1, 5.2.2
 
-    String* str = String::fromUTF8(directives.data());
+    String* str = String::fromUTF8(directives.data(), directives.size());
 
     GCVector<StringView> tokens;
     StringUtils::tokenize(str, ",", 1, tokens);
@@ -247,27 +247,29 @@ HTTPFreshnessInfo HTTPUtil::getHTTPFreshnessInfoFromHeaders(
 
     auto it = headers.find(HTTPHeaderMap::kDate);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
+        String* value =
+            String::createASCIIString(it->second.data(), it->second.size());
         double parsedDate = parseDate(instance, value);
-        if (!std::isnan(parsedDate)) {
+        if (std::isnan(parsedDate) == false) {
             info.date = parsedDate / 1000.0;
         }
     }
 
     it = headers.find(HTTPHeaderMap::kAge);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
+        String* value =
+            String::createASCIIString(it->second.data(), it->second.size());
         info.age = String::parseInt64(value);
     }
 
     it = headers.find(HTTPHeaderMap::kLastModified);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
+        String* value =
+            String::createASCIIString(it->second.data(), it->second.size());
         double parsedDate = parseDate(instance, value);
         if (!std::isnan(parsedDate)) {
             info.lastModified = parsedDate / 1000.0;
         }
-        String* utc = timeToUTCString(instance, info.lastModified * 1000);
     }
 
     it = headers.find(HTTPHeaderMap::kETag);
@@ -290,7 +292,8 @@ HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
 
     it = headers.find(HTTPHeaderMap::kContentLength);
     if (it != headers.end()) {
-        String* value = String::createASCIIString(it->second.data());
+        String* value =
+            String::createASCIIString(it->second.data(), it->second.size());
         info.contentLength = String::parseInt64(value);
     }
 

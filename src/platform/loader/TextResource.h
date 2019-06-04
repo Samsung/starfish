@@ -41,8 +41,10 @@ public:
     virtual void prepare()
     {
         if (m_resourceRequest) {
+            STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
             m_resourceRequest->setRequestHeader(
-                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString(HTTPHeaderMap::kAccept,
+                                          strlen(HTTPHeaderMap::kAccept)),
                 String::createASCIIString(
                     "text/html,text/plain,text/javascript,text/"
                     "ecmascript,application/x-javascript,text/*"));

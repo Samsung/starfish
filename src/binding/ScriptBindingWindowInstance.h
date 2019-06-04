@@ -25,19 +25,21 @@ namespace Starfish {
 
 class ScriptBindingWindowInstance final : public ScriptBindingInstance {
 public:
-    ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance, Window* ownerWindow);
+    ScriptBindingWindowInstance(ScriptEngineInstance* engineInstance,
+                                Window* ownerWindow);
 
     void destroy() override;
 
     Window* ownerWindow() override;
     Document* ownerDocument() override;
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
+
 private:
     Window* m_ownerWindow;
 
-    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+    void initJavaScriptBinding(Escargot::ContextRef* context,
+                               Escargot::ExecutionStateRef* state) override;
 };
-
 }
 
 #endif

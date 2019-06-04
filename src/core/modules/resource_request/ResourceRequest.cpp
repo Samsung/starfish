@@ -189,17 +189,19 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         auto& headerMap = m_responseHeaders->httpHeaderMap()->headerMap();
         auto it = headerMap.find(HTTPHeaderMap::kContentType);
         if (it != headerMap.end()) {
-            m_responseData->m_mimeType = String::fromUTF8(it->second.data());
+            m_responseData->m_mimeType =
+                String::fromUTF8(it->second.data(), it->second.size());
         }
 
         it = headerMap.find(HTTPHeaderMap::kContentLanguage);
         if (it != headerMap.end()) {
             size_t pos = it->second.find(";");
             if (pos != std::string::npos) {
-                m_contentLanguage = String::fromUTF8(it->second.data());
-            } else {
                 m_contentLanguage =
-                    String::fromUTF8(it->second.substr(0, pos).data());
+                    String::fromUTF8(it->second.data(), it->second.size());
+            } else {
+                auto str = it->second.substr(0, pos);
+                m_contentLanguage = String::fromUTF8(str.data(), str.size());
             }
         }
 
@@ -218,12 +220,12 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 
         for (const auto& value : values) {
             m_responseData->m_corsExposedHeaderNameList.push_back(
-                String::createASCIIString(value.data()));
+                String::fromUTF8(value.data(), value.size()));
         }
 
         // TODO : https://fetch.spec.whatwg.org/#ref-for-concept-response-type
-        auto resURL = new ResourceURL(
-            String::createASCIIString(m_lastEffectiveURL.data()));
+        auto resURL = new ResourceURL(String::createASCIIString(
+            m_lastEffectiveURL.data(), m_lastEffectiveURL.size()));
 
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
         if (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&

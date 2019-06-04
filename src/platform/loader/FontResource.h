@@ -37,9 +37,10 @@ class FontResource : public Resource {
 public:
     virtual void prepare()
     {
-        if (m_resourceRequest) {
+        if (m_resourceRequest != nullptr) {
             m_resourceRequest->setRequestHeader(
-                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString(HTTPHeaderMap::kAccept,
+                                          strlen(HTTPHeaderMap::kAccept)),
                 String::createASCIIString(
                     "application/x-font-ttf,application/x-font-woff"));
         }

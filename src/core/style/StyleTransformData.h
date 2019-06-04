@@ -175,7 +175,7 @@ public:
         } else {
             return String::emptyString;
         }
-        return String::fromUTF8(temp);
+        return String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
     }
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,

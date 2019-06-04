@@ -797,8 +797,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 }
 
-ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
-                              size_t len)
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
+                                          void* bufferSrc, size_t len)
 {
     STARFISH_ASSERT(instance != nullptr);
     STARFISH_ASSERT(bufferSrc != nullptr);
@@ -809,7 +809,8 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, void*
     state->destroy();
     return obj;
 }
-ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, size_t len)
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
+                                          size_t len)
 {
     STARFISH_ASSERT(instance != nullptr);
     ContextRef* ctx = instance->scriptContext();
@@ -1030,5 +1031,4 @@ AttributeEventFunction::AttributeEventFunction(EventTarget* target)
 {
     m_target = target;
 }
-
 }

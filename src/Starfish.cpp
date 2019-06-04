@@ -59,12 +59,17 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 Starfish::Starfish(const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath)
-    : m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
+    : m_localStorageFilePath(
+          String::fromUTF8(localStorageFilePath, strlen(localStorageFilePath)))
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , m_httpCache(nullptr)
 #endif
     , m_webViewInstanceCount(0)
 {
+    STARFISH_RELEASE_ASSERT(localStorageFilePath != nullptr);
+    STARFISH_RELEASE_ASSERT(cookieStoreFilePath != nullptr);
+    STARFISH_RELEASE_ASSERT(httpCacheDirectorypath != nullptr);
+
     registerMainThread();
     if (!g_starfishGlobalInit) {
         g_starfishGlobalInit = true;
@@ -109,9 +114,9 @@ Starfish::Starfish(const char* localStorageFilePath,
 
     initNetworkSharedResourceManager(cookieStoreFilePath);
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    if (httpCacheDirectorypath != nullptr) {
-        auto nullable =
-            HTTPCache::getInstance((String::fromUTF8(httpCacheDirectorypath)));
+    if (strlen(httpCacheDirectorypath) != 0) {
+        auto nullable = HTTPCache::getInstance((String::fromUTF8(
+            httpCacheDirectorypath, strlen(httpCacheDirectorypath))));
         if (nullable.hasValue()) {
             m_httpCache = nullable.getValue();
         }

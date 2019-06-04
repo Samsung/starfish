@@ -23,7 +23,7 @@
 
 namespace Starfish {
 
-const char* DOMException::s_names[] = {
+static const char* s_names[] = {
     "DOMException",
     "IndexSizeError",
     "",
@@ -52,7 +52,10 @@ const char* DOMException::s_names[] = {
     "DataCloneError",
 };
 
-const char* DOMException::s_descriptions[] = {
+const size_t s_domExceptionNameCount = sizeof(s_names) / sizeof(size_t);
+static_assert(s_domExceptionNameCount == 26, "");
+
+static const char* s_descriptions[] = {
     "Unspecified DOM Exception.", "The index is not in the allowed range.", "",
     "The operation would yield an incorrect node tree.",
     "The object is in the wrong document.",
@@ -72,6 +75,10 @@ const char* DOMException::s_descriptions[] = {
     "The object can not be cloned.",
 };
 
+const size_t s_domExceptionDescriptionsCount =
+    sizeof(s_descriptions) / sizeof(size_t);
+static_assert(s_domExceptionDescriptionsCount == 26, "");
+
 DOMException::DOMException(ExecutionContext* executionContext, Code code,
                            const char* message)
     : ScriptWrappable(this)
@@ -80,37 +87,47 @@ DOMException::DOMException(ExecutionContext* executionContext, Code code,
     , m_name(String::emptyString)
 {
     if (code < SCRIPT_ERROR) {
-        if (!message) {
-            message = s_descriptions[code];
+        if (message == nullptr) {
+            if (m_code < s_domExceptionDescriptionsCount) {
+                message = s_descriptions[m_code];
+            } else {
+                message = "";
+            }
         }
     } else {
-        if (!message) {
+        if (message == nullptr) {
             message = "";
         }
 
         if (code == SCRIPT_ERROR) {
-            overrideScriptObject(scriptTypeError(scriptBindingInstance(),
-                                                 String::fromUTF8(message)));
+            overrideScriptObject(
+                scriptTypeError(scriptBindingInstance(),
+                                String::fromUTF8(message, strlen(message))));
         } else if (code == SCRIPT_EVAL_ERR) {
-            overrideScriptObject(scriptEvalError(scriptBindingInstance(),
-                                                 String::fromUTF8(message)));
+            overrideScriptObject(
+                scriptEvalError(scriptBindingInstance(),
+                                String::fromUTF8(message, strlen(message))));
         } else if (code == SCRIPT_RANGE_ERR) {
-            overrideScriptObject(scriptRangeError(scriptBindingInstance(),
-                                                  String::fromUTF8(message)));
+            overrideScriptObject(
+                scriptRangeError(scriptBindingInstance(),
+                                 String::fromUTF8(message, strlen(message))));
         } else if (code == SCRIPT_REFERENCE_ERR) {
             overrideScriptObject(scriptReferenceError(
-                scriptBindingInstance(), String::fromUTF8(message)));
+                scriptBindingInstance(),
+                String::fromUTF8(message, strlen(message))));
         } else if (code == SCRIPT_TYPE_ERR) {
-            overrideScriptObject(scriptTypeError(scriptBindingInstance(),
-                                                 String::fromUTF8(message)));
+            overrideScriptObject(
+                scriptTypeError(scriptBindingInstance(),
+                                String::fromUTF8(message, strlen(message))));
         } else if (code == SCRIPT_URI_ERR) {
-            overrideScriptObject(scriptURIError(scriptBindingInstance(),
-                                                String::fromUTF8(message)));
+            overrideScriptObject(
+                scriptURIError(scriptBindingInstance(),
+                               String::fromUTF8(message, strlen(message))));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
-    m_message = String::fromUTF8(message);
+    m_message = String::fromUTF8(message, strlen(message));
 }
 
 DOMException::DOMException(ExecutionContext* executionContext, String* message,
@@ -121,6 +138,18 @@ DOMException::DOMException(ExecutionContext* executionContext, String* message,
     , m_message(message)
     , m_name(name)
 {
+}
+
+String* DOMException::name()
+{
+    if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
+        return m_name;
+    }
+    if (m_code < s_domExceptionNameCount) {
+        return String::fromUTF8(s_names[m_code], strlen(s_names[m_code]));
+    } else {
+        return m_name;
+    }
 }
 
 ScriptBindingInstance* DOMException::scriptBindingInstance()

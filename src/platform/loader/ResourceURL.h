@@ -48,9 +48,10 @@ public:
     static String* createPercentEncodingString(String* src, bool forForm);
     static String* createPercentDecodingString(String* src);
 
-    ResourceURL(const char* url)
-        : ResourceURL(String::createASCIIString(url))
+    ResourceURL(const char* url, size_t len)
+        : ResourceURL(String::fromUTF8(url, len))
     {
+        STARFISH_ASSERT(strlen(url) == len);
     }
     ResourceURL(String* url);
     ResourceURL(String* url, String* baseURL);
@@ -82,7 +83,7 @@ public:
 
     static ResourceURL* aboutBlankURL()
     {
-        return new ResourceURL("about:blank");
+        return new ResourceURL("about:blank", sizeof("about:blank") - 1);
     }
 
     static String* mergeDocumentURIWithURIString(

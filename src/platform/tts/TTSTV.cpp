@@ -168,11 +168,11 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
                                const char* errorMsg)
 {
     STARFISH_LOG_ERROR("[TTS] Occurred Error [ID:%d] : %s", id, errorMsg);
-    if (t) {
+    if (t != nullptr) {
         SpeechSynthesisUtterance* u = findUtterance(t, id);
-        if (u) {
+        if (u != nullptr) {
             ErrorEventInit errorInfo;
-            errorInfo.setMessage(String::fromUTF8(errorMsg));
+            errorInfo.setMessage(String::fromUTF8(errorMsg, strlen(errorMsg)));
             errorInfo.setError(
                 ValueRef::create(StringRef::fromASCII(errorCode)));
             Event* errorEvent = new ErrorEvent(
@@ -185,9 +185,9 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
 
         // NOTE : Code below is required in case of accessibility.
         Element* element = t->element();
-        if (!u && element) {
+        if (u == nullptr && element != nullptr) {
             ErrorEventInit errorInfo;
-            errorInfo.setMessage(String::fromUTF8(errorMsg));
+            errorInfo.setMessage(String::fromUTF8(errorMsg, strlen(errorMsg)));
             errorInfo.setError(
                 ValueRef::create(StringRef::fromASCII(errorCode)));
             element->window()->dispatchErrorEvent(errorInfo);
@@ -205,7 +205,7 @@ static void errorCB(tts_h handle, int utteranceId, tts_error_e reason,
 static void dispatchStartEvent(TTS* t, int id)
 {
     STARFISH_LOG_INFO("[TTS] Started Speaking! [ID:%d]\n", id);
-    if (t) {
+    if (t != nullptr) {
         SpeechSynthesisUtterance* u = findUtterance(t, id);
         if (u) {
             t->setUtterance(u);
@@ -274,9 +274,9 @@ static bool supportedVoiceCB(tts_h handle, const char* language, int voiceType,
                              void* data)
 {
     TTS* t = (TTS*)data;
-    if (t) {
-        t->supportedVoiceList().insert(
-            std::make_pair(String::fromUTF8(language), voiceType));
+    if (t != nullptr) {
+        t->supportedVoiceList().insert(std::make_pair(
+            String::fromUTF8(language, strlen(language)), voiceType));
         return true;
     }
     return false;
@@ -287,8 +287,9 @@ static void defaultVoiceChangedCB(tts_h handle, const char* prevLang,
                                   int curVoiceType, void* data)
 {
     TTS* t = (TTS*)data;
-    if (t) {
-        t->changeDefaultVoice(String::fromUTF8(curLang), curVoiceType);
+    if (t != nullptr) {
+        t->changeDefaultVoice(String::fromUTF8(curLang, strlen(curLang)),
+                              curVoiceType);
     }
 }
 
@@ -371,7 +372,7 @@ int TTS::createHandle()
         m_defaultLanguage = String::fromUTF8("en_GB");
         m_defaultVoiceType = TTS_VOICE_TYPE_AUTO;
     } else {
-        m_defaultLanguage = String::fromUTF8(lang);
+        m_defaultLanguage = String::fromUTF8(lang, strlen(lang));
         m_defaultVoiceType = voiceType;
         free(lang);
     }

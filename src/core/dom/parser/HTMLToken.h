@@ -397,7 +397,8 @@ public:
     const Attribute* getAttributeItem(const QualifiedName& name) const
     {
         for (unsigned i = 0; i < m_attributes.size(); ++i) {
-            if (name.localName()->equals(m_attributes[i].name.data())) {
+            if (name.localName()->equals(m_attributes[i].name.data(),
+                                         m_attributes[i].name.size())) {
                 return &m_attributes[i];
             }
         }

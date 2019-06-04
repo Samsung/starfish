@@ -79,14 +79,7 @@ public:
         m_message = message;
     }
 
-    String* name()
-    {
-        if (m_code == DOM_EXCEPTION && m_name->length() > 0) {
-            return m_name;
-        }
-        return String::fromUTF8(s_names[m_code]);
-    }
-
+    String* name();
     uint16_t code()
     {
         return m_code;
@@ -97,8 +90,6 @@ private:
     uint16_t m_code;
     String* m_message;
     String* m_name;
-    static const char* s_names[];
-    static const char* s_descriptions[];
 };
 }
 

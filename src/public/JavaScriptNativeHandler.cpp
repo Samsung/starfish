@@ -42,7 +42,9 @@ JavaScriptNativeHandler::JavaScriptNativeHandler(
 
 String* JavaScriptNativeHandler::callNativeHandler(String* param)
 {
-    STARFISH_ASSERT(m_callback);
-    return String::fromUTF8(m_callback(param->toUTF8NonGCString()).c_str());
+    STARFISH_ASSERT(param != nullptr);
+    STARFISH_ASSERT(m_callback != nullptr);
+    auto returnValue = m_callback(param->toUTF8NonGCString());
+    return String::fromUTF8(returnValue.data(), returnValue.size());
 }
 }

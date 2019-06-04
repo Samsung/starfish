@@ -354,14 +354,31 @@ public:
     static String* const inheritString;
     static String* const unsetString;
 
-    static String* fromUTF8(const char* src);
+    template <size_t N>
+    static String* fromUTF8(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return fromUTF8(str, N - 1);
+    }
     static String* fromUTF8(const char* src, size_t len);
     static String* fromUTF16(const char16_t* src, size_t len);
     static String* fromStringView(StringView view);
     static String* fromStringView(String* view);
     static String* createASCIIString(const char c);
-    static String* createASCIIString(const char* src);
-    static String* createASCIIStringWithNoGC(const char* src);
+    template <size_t N>
+    static String* createASCIIString(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return createASCIIString(str, N - 1);
+    }
+    static String* createASCIIString(const char* src, size_t len);
+    template <size_t N>
+    static String* createASCIIStringWithNoGC(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return createASCIIStringWithNoGC(str, N - 1);
+    }
+    static String* createASCIIStringWithNoGC(const char* src, size_t len);
     static String* createUTF32String(const UTF32String& src);
     static String* createUTF32String(const UTF32StringDataNonGCStd& src);
     static String* createUTF32String(char32_t c);
@@ -412,14 +429,32 @@ public:
     }
 
     bool equals(const String* str) const;
-    bool equals(const char* str) const;
+
+    template <size_t N>
+    bool equals(const char (&str)[N]) const
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return equals(str, N - 1);
+    }
+
     bool equals(const char* str, size_t strLen) const;
 
     bool equalsIgnoreCase(const String* str) const;
-    bool equalsIgnoreCase(const char* str) const;
+    template <size_t N>
+    bool equalsIgnoreCase(const char (&str)[N]) const
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return equalsIgnoreCase(str, N - 1);
+    }
     bool equalsIgnoreCase(const char* str, size_t strLen) const;
 
-    bool equals(const char32_t* str) const;
+    template <size_t N>
+    bool equals(const char32_t (&str)[N]) const
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return equals(str, N - 1);
+    }
+
     bool equals(const char32_t* str, size_t strLen) const;
 
     size_t indexOf(char32_t ch) const;
@@ -559,7 +594,13 @@ public:
 
     String* concat(const char32_t c);
     String* concat(const char c);
-    String* concat(const char* str);
+    template <size_t N>
+    String* concat(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return concat(str, N - 1);
+    }
+    String* concat(const char* str, size_t srcLen);
     String* concat(String* str);
     String* trim();
 
@@ -569,18 +610,43 @@ public:
     UTF32String toUTF32String();
     UTF8String toUTF8String();
 
-    bool startsWith(const char* str, bool caseSensitive = true);
+    template <size_t N>
+    bool startsWith(const char (&str)[N], bool caseSensitive = true)
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return startsWith(str, N - 1, caseSensitive);
+    }
+
+    bool startsWith(const char* str, size_t len, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
 
-    bool endsWith(const char* str, bool caseSensitive = true);
+    template <size_t N>
+    bool endsWith(const char (&str)[N], bool caseSensitive = true)
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return endsWith(str, N - 1, caseSensitive);
+    }
+    bool endsWith(const char* str, size_t len, bool caseSensitive = true);
     bool endsWith(String* str, bool caseSensitive = true);
 
-    size_t find(const char* str, size_t pos = 0);
+    template <size_t N>
+    size_t find(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return find(str, N - 1, 0);
+    }
+    size_t find(const char* str, size_t len, size_t pos);
     size_t find(const char ch, size_t pos = 0);
     size_t find(String* str, size_t pos = 0);
     size_t find(String* str, size_t pos, bool caseSensitive);
 
-    bool contains(const char* str, bool caseSensitive = true);
+    template <size_t N>
+    bool contains(const char (&str)[N], bool caseSensitive = true)
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return contains(str, N - 1, caseSensitive);
+    }
+    bool contains(const char* str, size_t len, bool caseSensitive = true);
     bool contains(String* str, bool caseSensitive = true);
 
     static bool isASCIIPrintableKey(char c)
@@ -684,16 +750,11 @@ public:
             SimpleStringBufferHolder<char>::TakeBufferValue);
     }
 
-    StringDataASCII(const char* str)
-        : String()
-        , m_data(str, strlen(str))
-    {
-    }
-
     StringDataASCII(const char* str, size_t len)
         : String()
         , m_data(str, len)
     {
+        STARFISH_ASSERT(str != nullptr);
     }
 
     virtual size_t length() const override
@@ -761,8 +822,8 @@ protected:
 
 class StringDataNonGCASCII : public String {
 public:
-    StringDataNonGCASCII(const char* str)
-        : m_data(str)
+    StringDataNonGCASCII(const char* str, size_t len)
+        : m_data(str, len)
     {
     }
 
@@ -1152,7 +1213,7 @@ class StringBuilder {
     };
 
     void appendPiece(char32_t ch);
-    void appendPiece(const char* str);
+    void appendPiece(const char* str, size_t len);
     void appendPiece(String* str, size_t s, size_t e);
 
 public:
@@ -1204,9 +1265,17 @@ public:
     {
         return m_contentLength;
     }
-    void appendString(const char* str)
+
+    template <size_t N>
+    void appendString(const char (&str)[N])
     {
-        appendPiece(str);
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        appendPiece(str, N - 1);
+    }
+
+    void appendString(const char* str, size_t len)
+    {
+        appendPiece(str, len);
     }
 
     void appendChar(char32_t ch)

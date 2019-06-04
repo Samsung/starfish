@@ -363,12 +363,18 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     info.availableRect.setHeight(height);
     info.devicePixelRatio = devicePixelRatio;
 
+    STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
+    STARFISH_RELEASE_ASSERT(locale != nullptr);
+    STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
+
     ::Starfish::WebView* webView = ::Starfish::WebView::create(
         g_starfishInstance, locale, timezoneID, width, height,
-        LWE_DEFAULT_FONT_SIZE,
-        Starfish::String::createASCIIString(defaultFontName), info,
-        Starfish::String::fromUTF8(customUserAgentString.data()),
-        Starfish::String::fromUTF8(builtinPolyfillPathString.data()));
+        LWE_DEFAULT_FONT_SIZE, Starfish::String::createASCIIString(
+                                   defaultFontName, strlen(defaultFontName)),
+        info, Starfish::String::fromUTF8(customUserAgentString.data(),
+                                         customUserAgentString.size()),
+        Starfish::String::fromUTF8(builtinPolyfillPathString.data(),
+                                   builtinPolyfillPathString.size()));
     return webView;
 }
 
@@ -385,6 +391,10 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 #endif
+
+    STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
+    STARFISH_RELEASE_ASSERT(locale != nullptr);
+    STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
     return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
@@ -424,6 +434,10 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 #endif
+
+    STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
+    STARFISH_RELEASE_ASSERT(locale != nullptr);
+    STARFISH_RELEASE_ASSERT(timezoneID != nullptr);
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
     return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
@@ -683,7 +697,7 @@ void WebContainer::LoadURL(const std::string& url)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
     TO_WEBVIEW(m_impl)
-        ->loadHTMLDocument(Starfish::String::fromUTF8(url.data()));
+        ->loadHTMLDocument(Starfish::String::fromUTF8(url.data(), url.size()));
 
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -703,7 +717,8 @@ void WebContainer::LoadData(const std::string& data)
     if (data.size() > 0) {
         auto dataURI = Starfish::StringUtils::toBase64HTMLDataURI(data);
         TO_WEBVIEW(m_impl)
-            ->loadHTMLDocument(Starfish::String::fromUTF8(dataURI.data()));
+            ->loadHTMLDocument(
+                Starfish::String::fromUTF8(dataURI.data(), dataURI.size()));
     } else {
         TO_WEBVIEW(m_impl)
             ->loadHTMLDocument(Starfish::String::fromUTF8("about:blank"));
@@ -764,10 +779,10 @@ void WebContainer::AddJavaScriptInterface(
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
-    Starfish::String* objectName =
-        Starfish::String::fromUTF8(exposedObjectName.c_str());
-    Starfish::String* functionName =
-        Starfish::String::fromUTF8(jsFunctionName.c_str());
+    Starfish::String* objectName = Starfish::String::fromUTF8(
+        exposedObjectName.data(), exposedObjectName.size());
+    Starfish::String* functionName = Starfish::String::fromUTF8(
+        jsFunctionName.data(), jsFunctionName.size());
 
     TO_WEBVIEW(m_impl)
         ->addJavaScriptNativeInterface(
@@ -792,7 +807,8 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
 
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)
-              ->evaluateJavaScript(Starfish::String::fromUTF8(script.c_str()))
+              ->evaluateJavaScript(
+                  Starfish::String::fromUTF8(script.data(), script.size()))
               ->toUTF8NonGCString();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 
@@ -816,9 +832,12 @@ void WebContainer::EvaluateJavaScript(
         p->webview->messageLoop()->addIdler(
             p->webview->mainBrowsingContext()->window(),
             [](size_t handle, void* data) {
+                STARFISH_ASSERT(data != nullptr);
                 Params* p = (Params*)data;
                 p->webview->evaluateJavaScript(
-                    Starfish::String::fromUTF8(p->script.c_str()), p->cb);
+                    Starfish::String::fromUTF8(p->script.data(),
+                                               p->script.size()),
+                    p->cb);
                 delete p;
             },
             p);
@@ -826,10 +845,13 @@ void WebContainer::EvaluateJavaScript(
         p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             p->webview->mainBrowsingContext()->window(),
             [](size_t handle, void* data) {
+                STARFISH_ASSERT(data != nullptr);
                 Params* p = (Params*)data;
 
                 p->webview->evaluateJavaScript(
-                    Starfish::String::fromUTF8(p->script.c_str()), p->cb);
+                    Starfish::String::fromUTF8(p->script.data(),
+                                               p->script.size()),
+                    p->cb);
                 delete p;
             },
             p);
@@ -887,7 +909,8 @@ void WebContainer::SetSettings(const Settings& settings)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
-            Starfish::String::fromUTF8(settings.GetUserAgentString().c_str()));
+            Starfish::String::fromUTF8(settings.GetUserAgentString().data(),
+                                       settings.GetUserAgentString().size()));
     TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
 #ifdef STARFISH_ENABLE_TTS
     TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
@@ -919,10 +942,10 @@ void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
-    Starfish::String* objectName =
-        Starfish::String::fromUTF8(exposedObjectName.c_str());
-    Starfish::String* functionName =
-        Starfish::String::fromUTF8(jsFunctionName.c_str());
+    Starfish::String* objectName = Starfish::String::fromUTF8(
+        exposedObjectName.data(), exposedObjectName.size());
+    Starfish::String* functionName = Starfish::String::fromUTF8(
+        jsFunctionName.data(), jsFunctionName.size());
 
     TO_WEBVIEW(m_impl)
         ->removeJavaScriptNativeInterface(objectName, functionName);
@@ -1196,7 +1219,7 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
-            Starfish::String::fromUTF8(userAgent.c_str()));
+            Starfish::String::fromUTF8(userAgent.data(), userAgent.size()));
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 

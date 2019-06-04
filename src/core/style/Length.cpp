@@ -297,7 +297,7 @@ String* Length::dumpString() const
     } else if (isInheritableNumber()) {
         snprintf(temp, sizeof(temp), "%.1f(num)", inheritableNumber());
     }
-    return String::fromUTF8(temp);
+    return String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
 }
 
 Length operator*(const Length& a, const float b)

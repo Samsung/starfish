@@ -47,7 +47,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
     size_t charset = mimetype->find("charset=");
     if (charset != SIZE_MAX) {
         charset += 8;
-        size_t semi = mimetype->find(";", charset);
+        size_t semi = mimetype->find(";", 1, charset);
         String* type;
         if (semi != SIZE_MAX) {
             type = mimetype->substring(charset, semi - charset);
@@ -57,7 +57,9 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
         auto utf8Data = type->toUTF8NonGCString();
         m_converter = ucnv_open(utf8Data.data(), &err);
         if (!U_FAILURE(err)) {
-            m_encoding = String::fromUTF8(ucnv_getName(m_converter, &err));
+            const char* str = ucnv_getName(m_converter, &err);
+            STARFISH_ASSERT(str != nullptr);
+            m_encoding = String::fromUTF8(str, strlen(str));
             registerFinalizer();
             return;
         } else {
@@ -137,7 +139,8 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
         m_converter = nullptr;
     }
 
-    m_encoding = String::fromUTF8(bestCharset);
+    STARFISH_ASSERT(bestCharset != nullptr);
+    m_encoding = String::fromUTF8(bestCharset, strlen(bestCharset));
     registerFinalizer();
 }
 
@@ -152,7 +155,7 @@ TextConverter::~TextConverter()
 String* TextConverter::convert(const char* bytes, size_t len,
                                bool isEndOfStream)
 {
-    if (m_converter) {
+    if (m_converter != nullptr) {
         UErrorCode err;
         err = U_ZERO_ERROR;
 
@@ -214,7 +217,11 @@ String* TextConverter::convert(const char* bytes, size_t len,
         }
         return String::createASCIIStringFromUTF32Source(str);
     }
-    return String::fromUTF8(bytes, len);
+    if (len != 0) {
+        return String::fromUTF8(bytes, len);
+    } else {
+        return String::emptyString;
+    }
 }
 
 void TextConverter::registerFinalizer()

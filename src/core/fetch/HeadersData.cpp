@@ -61,29 +61,38 @@ bool HeadersData::isValidHTTPHeaderValue(const String* value)
     return true;
 }
 
+static bool equalsIgnoreCaseWrapper(const String* name, const char* str)
+{
+    STARFISH_ASSERT(name != nullptr);
+    STARFISH_ASSERT(str != nullptr);
+    return name->equalsIgnoreCase(str, strlen(str));
+}
+
 bool HeadersData::isForbiddenHeaderName(const String* name)
 {
     // https://fetch.spec.whatwg.org/#forbidden-header-name
-    if (name->equalsIgnoreCase(HTTPHeaderMap::kAcceptCharset) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kAcceptEncoding) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestHeaders) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestMethod) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kConnection) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kContentLanguage) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kCookie) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kCookie2) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kDate) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kDNT) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kExpect) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kHost) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kKeepAlive) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kOrigin) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kReferer) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kTE) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kTrailer) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kTransferEncoding) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kUpgrade) ||
-        name->equalsIgnoreCase(HTTPHeaderMap::kVia)) {
+    if (equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kAcceptCharset) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kAcceptEncoding) ||
+        equalsIgnoreCaseWrapper(name,
+                                HTTPHeaderMap::kAccessControlRequestHeaders) ||
+        equalsIgnoreCaseWrapper(name,
+                                HTTPHeaderMap::kAccessControlRequestMethod) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kConnection) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kContentLanguage) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kCookie) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kCookie2) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kDate) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kDNT) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kExpect) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kHost) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kKeepAlive) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kOrigin) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kReferer) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kTE) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kTrailer) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kTransferEncoding) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kUpgrade) ||
+        equalsIgnoreCaseWrapper(name, HTTPHeaderMap::kVia)) {
         return true;
     }
     return false;
@@ -158,8 +167,9 @@ Nullable<String*> HeadersData::get(String* name, bool* typeErrorOccurred)
 
     Nullable<std::string> value =
         noCheckValidGet(name->toLower()->toUTF8NonGCString());
-    if (value.hasValue()) {
-        return String::fromUTF8(value.getValue().data());
+    if (value.hasValue() == true) {
+        return String::fromUTF8(value.getValue().data(),
+                                value.getValue().size());
     }
     return nullptr;
 }
@@ -230,9 +240,11 @@ void HeadersData::setGuard(Guard guard)
 String* HeadersData::extractMIMEType()
 {
     auto mimeType = noCheckValidGet("content-type");
-    if (!mimeType.hasValue()) {
+    if (mimeType.hasValue() == false) {
         return String::emptyString;
     }
-    return String::fromUTF8(mimeType.getValue().data())->toLower();
+    return String::fromUTF8(mimeType.getValue().data(),
+                            mimeType.getValue().size())
+        ->toLower();
 }
 }
