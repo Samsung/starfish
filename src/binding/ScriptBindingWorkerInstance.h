@@ -31,18 +31,19 @@ template <typename T>
 class ScriptBindingWorkerInstance final : public ScriptBindingInstance {
 public:
     explicit ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-        T* workerGlobalScope);
+                                         T* workerGlobalScope);
     Window* ownerWindow() override;
     Document* ownerDocument() override;
 
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
     void destroy() override;
+
 private:
     T* m_ownerWorkerGlobalScope;
 
-    void initJavaScriptBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state) override;
+    void initJavaScriptBinding(Escargot::ContextRef* context,
+                               Escargot::ExecutionStateRef* state) override;
 };
-
 }
 
 #endif

@@ -381,7 +381,7 @@ ServiceWorkerRequest* ServiceWorkerContainer::createRequest(
     auto request = new ServiceWorkerRequest();
     request->id = RequestId::generate();
     request->contextId = executionContext()->globalScope()->uid();
-    request->name = String::createASCIIString(requestName);
+    request->name = String::createASCIIString(requestName, strlen(requestName));
     request->origin = executionContext()->webOrigin()->serialize();
     request->setPromise(promise);
     return request;

@@ -91,10 +91,11 @@ public:
         return m_localName;
     }
 
-    bool hasSameLocalName(const char* str) const
+    template <size_t N>
+    bool hasSameLocalName(const char (&str)[N]) const
     {
-        if (m_localName.string()) {
-            return m_localName.string()->equals(str);
+        if (m_localName.string() != nullptr) {
+            return m_localName.string()->equals(str, N - 1);
         }
         return false;
     }
@@ -149,10 +150,11 @@ public:
         m_prefix = other.m_prefix;
     }
 
-    bool hasSamePrefix(const char* str) const
+    template <size_t N>
+    bool hasSamePrefix(const char (&str)[N]) const
     {
-        if (m_prefix.string()) {
-            return m_prefix.string()->equals(str);
+        if (m_prefix.string() != nullptr) {
+            return m_prefix.string()->equals(str, N - 1);
         }
         return false;
     }
@@ -194,10 +196,11 @@ public:
         return m_namespaceURI;
     }
 
-    bool hasSameNamespaceURI(const char* str) const
+    template <size_t N>
+    bool hasSameNamespaceURI(const char (&str)[N]) const
     {
-        if (m_namespaceURI.string()) {
-            return m_namespaceURI.string()->equals(str);
+        if (m_namespaceURI.string() != nullptr) {
+            return m_namespaceURI.string()->equals(str, N - 1);
         }
         return false;
     }

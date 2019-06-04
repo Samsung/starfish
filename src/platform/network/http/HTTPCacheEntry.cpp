@@ -195,6 +195,12 @@ bool HTTPCacheEntry::isFresh() const
     return freshnessLifetime > currentAge;
 }
 
+static void appendStringHelper(StringBuilder& builder, const char* str)
+{
+    STARFISH_ASSERT(str != nullptr);
+    builder.appendString(str, strlen(str));
+}
+
 String* HTTPCacheEntry::toString() const
 {
     Locker<Mutex> locker(*m_mutex);
@@ -207,91 +213,96 @@ String* HTTPCacheEntry::toString() const
     //  rquestTime(UINT) responeTime(UINT) lastModified(UINT) Etag(STRING)
     //  entryFilePath(STRING) lastModificationTime(UINT) byteLength(UINT)
 
+    STARFISH_ASSERT(isMainThread() == true);
+
     char buf[256];
     StringBuilder builder;
     snprintf(buf, sizeof(buf), "%zu", copied->m_url->urlString()->hashValue());
     std::string entryKey(buf);
-    builder.appendString(entryKey.data());
-    builder.appendString(kSeparator);
+    builder.appendString(entryKey.data(), entryKey.size());
+    appendStringHelper(builder, kSeparator);
 
     builder.appendString(url()->urlString());
-    builder.appendString(kSeparator);
+    appendStringHelper(builder, kSeparator);
 
     // cache-contorl
     copied->m_cacheControl.noCache ? builder.appendString("1")
                                    : builder.appendString("0");
-    builder.appendString(kSeparator);
+    appendStringHelper(builder, kSeparator);
     m_cacheControl.mustRevalidate ? builder.appendString("1")
                                   : builder.appendString("0");
-    builder.appendString(kSeparator);
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju", copied->m_cacheControl.maxAge);
     std::string maxAge(buf);
 
-    builder.appendString(maxAge.data());
-    builder.appendString(kSeparator);
+    builder.appendString(maxAge.data(), maxAge.size());
+    appendStringHelper(builder, kSeparator);
 
     // http content-xxx
     std::string contentLanguage =
         (copied->m_httpContentInfo.contentLanguage.size())
             ? copied->m_httpContentInfo.contentLanguage
             : "null";
-    builder.appendString(contentLanguage.data());
-    builder.appendString(kSeparator);
+    builder.appendString(contentLanguage.data(), contentLanguage.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%zu", copied->m_httpContentInfo.contentLength);
     std::string contentLength(buf);
-    builder.appendString(contentLength.data());
-    builder.appendString(kSeparator);
+    builder.appendString(contentLength.data(), contentLength.size());
+    appendStringHelper(builder, kSeparator);
     std::string contentType = (copied->m_httpContentInfo.contentType.size())
                                   ? copied->m_httpContentInfo.contentType
                                   : "null";
-    builder.appendString(contentType.data());
-    builder.appendString(kSeparator);
+    builder.appendString(contentType.data(), contentType.size());
+    appendStringHelper(builder, kSeparator);
     std::string contentTransferEncoding =
         (copied->m_httpContentInfo.contentTransferEncoding.size())
             ? copied->m_httpContentInfo.contentTransferEncoding
             : "null";
-    builder.appendString(contentTransferEncoding.data());
-    builder.appendString(kSeparator);
+    builder.appendString(contentTransferEncoding.data(),
+                         contentTransferEncoding.size());
+    appendStringHelper(builder, kSeparator);
 
     // http freshness info
     snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.date);
     std::string date(buf);
-    builder.appendString(date.data());
-    builder.appendString(kSeparator);
+    builder.appendString(date.data(), date.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.age);
     std::string age(buf);
-    builder.appendString(age.data());
-    builder.appendString(kSeparator);
+    builder.appendString(age.data(), age.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.requestTime);
     std::string requestTime(buf);
-    builder.appendString(requestTime.data());
-    builder.appendString(kSeparator);
+    builder.appendString(requestTime.data(), requestTime.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.responseTime);
     std::string responseTime(buf);
-    builder.appendString(responseTime.data());
-    builder.appendString(kSeparator);
+    builder.appendString(responseTime.data(), responseTime.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju", copied->m_httpFreshnessInfo.lastModified);
     std::string lastModified(buf);
-    builder.appendString(lastModified.data());
-    builder.appendString(kSeparator);
+    builder.appendString(lastModified.data(), lastModified.size());
+    appendStringHelper(builder, kSeparator);
     // See https://tools.ietf.org/html/rfc7232#section-2.3
     std::string etag = (copied->m_httpFreshnessInfo.etag.size())
                            ? copied->m_httpFreshnessInfo.etag
                            : "null";
-    builder.appendString(etag.data());
-    builder.appendString(kSeparator);
+    builder.appendString(etag.data(), etag.size());
+    appendStringHelper(builder, kSeparator);
 
     // entry File info
-    builder.appendString(copied->m_entryFileInfo.entryFilePath.data());
-    builder.appendString(kSeparator);
+    builder.appendString(copied->m_entryFileInfo.entryFilePath.data(),
+                         copied->m_entryFileInfo.entryFilePath.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%ju",
              copied->m_entryFileInfo.lastModificationTime);
     std::string lastModificationTime(buf);
-    builder.appendString(lastModificationTime.data());
-    builder.appendString(kSeparator);
+    builder.appendString(lastModificationTime.data(),
+                         lastModificationTime.size());
+    appendStringHelper(builder, kSeparator);
     snprintf(buf, sizeof(buf), "%zu", copied->m_entryFileInfo.byteLength);
     std::string byteLength(buf);
-    builder.appendString(byteLength.data());
+    builder.appendString(byteLength.data(), byteLength.size());
 
     return builder.finalize();
 }

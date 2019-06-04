@@ -266,11 +266,13 @@ static String* transformetoNetscapeCookieFormat(
 
     builder.appendString(domain);
     builder.appendString("\t");
-    builder.appendString(allowSubDomain);
+    STARFISH_ASSERT(allowSubDomain != nullptr);
+    builder.appendString(allowSubDomain, strlen(allowSubDomain));
     builder.appendString("\t");
     builder.appendString(path);
     builder.appendString("\t");
-    builder.appendString(secure);
+    STARFISH_ASSERT(secure != nullptr);
+    builder.appendString(secure, strlen(secure));
     builder.appendString("\t");
     builder.appendString(expiresStr);
     builder.appendString("\t");
@@ -488,7 +490,8 @@ String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
         String* path = url->pathname();
         StringBuilder cookiesBuilder;
         for (struct curl_slist* p = cookieList; p; p = p->next) {
-            String* cookie = String::fromUTF8(p->data);
+            STARFISH_ASSERT(p->data != nullptr);
+            String* cookie = String::fromUTF8(p->data, strlen(p->data));
             appendMatchingCookie(cookie, domain, path, cookiesBuilder);
         }
         cookies = cookiesBuilder.finalize();

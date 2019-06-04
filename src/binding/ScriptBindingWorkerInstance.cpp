@@ -36,7 +36,7 @@ template class ScriptBindingWorkerInstance<WorkerGlobalScope>;
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 
 static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
-                                           ValueRef* key)
+                                                       ValueRef* key)
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(key != nullptr);
@@ -51,8 +51,8 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
 }
 
 template <typename T>
-ScriptBindingWorkerInstance<T>::ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-    T* workerGlobalScope)
+ScriptBindingWorkerInstance<T>::ScriptBindingWorkerInstance(
+    ScriptEngineInstance* engineInstance, T* workerGlobalScope)
     : ScriptBindingInstance(engineInstance)
     , m_ownerWorkerGlobalScope(workerGlobalScope)
 {
@@ -106,23 +106,23 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 
 // TODO: Remove mockup function
 #define BINDING_WORKER_MOCKUP_INTERFACE(F) \
-    F(CSS)  \
-    F(CSSKeywordValue) \
-    F(CSSNumericValue) \
-    F(CSSStyleValue) \
-    F(DOMStringList) \
-    F(EventSource) \
-    F(FormData) \
-    F(Option) \
+    F(CSS)                                 \
+    F(CSSKeywordValue)                     \
+    F(CSSNumericValue)                     \
+    F(CSSStyleValue)                       \
+    F(DOMStringList)                       \
+    F(EventSource)                         \
+    F(FormData)                            \
+    F(Option)                              \
     F(Image)
 
-#define FOR_EACH_BINDING_FN(exportName)             \
-Escargot::FunctionObjectRef* binding##exportName(   \
-    ScriptBindingInstance* scriptBindingInstance)   \
-{                                                   \
-     STARFISH_ASSERT_NOT_REACHED();                 \
-     return nullptr;                                \
-}
+#define FOR_EACH_BINDING_FN(exportName)               \
+    Escargot::FunctionObjectRef* binding##exportName( \
+        ScriptBindingInstance* scriptBindingInstance) \
+    {                                                 \
+        STARFISH_ASSERT_NOT_REACHED();                \
+        return nullptr;                               \
+    }
 
 BINDING_WORKER_MOCKUP_INTERFACE(FOR_EACH_BINDING_FN)
 #undef FOR_EACH_BINDING_FN

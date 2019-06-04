@@ -110,36 +110,45 @@ static void buildDocumentFromXML(
 
         attr = node->first_attribute();
         while (attr) {
+            STARFISH_ASSERT(attr->name() != nullptr);
+            STARFISH_ASSERT(attr->value() != nullptr);
             if (namespaceURI ==
                 starfish->staticStrings()->m_xhtmlNamespaceURI) {
                 newNode->asElement()->setAttribute(
                     QualifiedName(AtomicString::emptyAtomicString(),
                                   AtomicString::createAttrAtomicString(
                                       starfish, attr->name())),
-                    String::fromUTF8(attr->value()));
+                    String::fromUTF8(attr->value(), attr->value_size()));
             } else {
                 newNode->asElement()->setAttribute(
                     QualifiedName(AtomicString::emptyAtomicString(),
                                   AtomicString::createAtomicString(
                                       starfish, attr->name())),
-                    String::fromUTF8(attr->value()));
+                    String::fromUTF8(attr->value(), attr->value_size()));
             }
 
             attr = attr->next_attribute();
         }
     } else if (node->type() == rapidxml::node_type::node_comment) {
-        newNode =
-            parent->document()->createComment(String::fromUTF8(node->value()));
+        STARFISH_ASSERT(node->value() != nullptr);
+        newNode = parent->document()->createComment(
+            String::fromUTF8(node->value(), node->value_size()));
     } else if (node->type() == rapidxml::node_type::node_doctype) {
+        STARFISH_ASSERT(node->value() != nullptr);
+        STARFISH_ASSERT(node->name() != nullptr);
         newNode = new DocumentType(
-            parent->document(), String::fromUTF8(node->name()),
-            String::fromUTF8(node->value()), String::emptyString);
+            parent->document(),
+            String::fromUTF8(node->name(), node->name_size()),
+            String::fromUTF8(node->value(), node->value_size()),
+            String::emptyString);
     } else if (node->type() == rapidxml::node_type::node_cdata) {
+        STARFISH_ASSERT(node->value() != nullptr);
         newNode = parent->document()->createCDATASection(
-            String::fromUTF8(node->value()));
+            String::fromUTF8(node->value(), node->value_size()));
     } else if (node->type() == rapidxml::node_type::node_data) {
-        newNode =
-            parent->document()->createTextNode(String::fromUTF8(node->value()));
+        STARFISH_ASSERT(node->value() != nullptr);
+        newNode = parent->document()->createTextNode(
+            String::fromUTF8(node->value(), node->value_size()));
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -193,8 +202,9 @@ Document* DOMParser::parseFromString(String* str, String* type)
             char buffer[16];
             strncpy(buffer, err.where<char>(), 16);
             errStr += buffer;
-            return DOMParser::parseFromString(String::fromUTF8(errStr.data()),
-                                              String::fromUTF8("text/html"));
+            return DOMParser::parseFromString(
+                String::fromUTF8(errStr.data(), errStr.size()),
+                String::fromUTF8("text/html"));
         } catch (DOMException* e) {
             return DOMParser::parseFromString(e->message(),
                                               String::fromUTF8("text/html"));

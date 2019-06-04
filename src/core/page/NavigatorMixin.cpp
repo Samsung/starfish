@@ -48,9 +48,9 @@ String* NavigatorMixin::platform()
     // Unix-like systems
     struct utsname osname;
     if (uname(&osname) == 0) {
-        platformName.appendString(osname.sysname);
+        platformName.appendString(osname.sysname, strlen(osname.sysname));
         platformName.appendString(String::spaceString);
-        platformName.appendString(osname.machine);
+        platformName.appendString(osname.machine, strlen(osname.machine));
     }
 #else
     OSVERSIONINFO info;
@@ -68,6 +68,8 @@ String* NavigatorMixin::platform()
 
 String* NavigatorMixin::language()
 {
-    return String::fromUTF8(executionContext()->webBase()->locale().getName());
+    const char* name = executionContext()->webBase()->locale().getName();
+    STARFISH_ASSERT(name != nullptr);
+    return String::fromUTF8(name, strlen(name));
 }
 }

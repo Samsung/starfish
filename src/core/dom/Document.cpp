@@ -189,7 +189,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     setStyle(m_styleResolver->resolveDocumentStyle(this));
     StaticStrings* sstrs = m_window->starfish()->staticStrings();
 
-    const char* ua =
+    const char ua[] =
 #include "core/style/UserAgentStyleSheet.css"
         ;
     // we assume that there is no important rule in ua-sheet

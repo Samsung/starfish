@@ -333,9 +333,7 @@ void Body::pushResponseData(ResourceRequest* request)
 
 void Body::copyBody(Body* body)
 {
-    if (body->contentType()) {
-        m_contentType = String::createASCIIString(CSTR(body->contentType()));
-    }
+    m_contentType = body->contentType();
 
     auto srcBody = body->bodyInit();
     if (srcBody.hasValue()) {

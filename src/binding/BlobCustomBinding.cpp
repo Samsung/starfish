@@ -31,9 +31,10 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
 {
     // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
     if (argCount == 0) {
-        ExecutionContext* executionContext = fetchExecutionContext(state->context());
-        Blob* b =
-            new Blob(executionContext, 0, String::emptyString, nullptr, false, false);
+        ExecutionContext* executionContext =
+            fetchExecutionContext(state->context());
+        Blob* b = new Blob(executionContext, 0, String::emptyString, nullptr,
+                           false, false);
         return b->scriptValue();
     }
     ValueRef* firstArg = argv[0];
@@ -111,7 +112,8 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         type = toBrowserString(state, arg0);
     }
 
-    ExecutionContext* executionContext = fetchExecutionContext(state->context());
+    ExecutionContext* executionContext =
+        fetchExecutionContext(state->context());
     Blob* newBlob =
         new Blob(executionContext, totalByteLength, type, buffer, false, false);
     return newBlob->scriptValue();

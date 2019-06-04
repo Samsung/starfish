@@ -56,7 +56,7 @@ String* UnsupportedFilterFunction::toString() const
     char container[100];
     const char* name = CSSFilterFunction::typeToString(m_type);
     snprintf(container, sizeof(container), "%s(not supported) ", name);
-    return String::fromUTF8(container);
+    return String::fromUTF8(container, strnlen(container, sizeof(container)));
 }
 
 CSSFilterFunction* UnsupportedFilterFunction::toCSSFilterFunction() const
@@ -92,7 +92,7 @@ String* BlurFilterFunction::toString() const
     char container[100];
     auto valueString = m_stdDeviation.dumpString()->toUTF8NonGCString();
     snprintf(container, sizeof(container), "blur(%s) ", valueString.data());
-    return String::fromUTF8(container);
+    return String::fromUTF8(container, strnlen(container, sizeof(container)));
 }
 
 CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const

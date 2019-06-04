@@ -91,8 +91,7 @@ void Response::handleBodyInit(Nullable<BodyInit>& body)
 
         setBodyInit(body.getValue());
 
-        if (m_contentType != nullptr &&
-            !m_headers.noCheckValidHas("content-type")) {
+        if (m_headers.noCheckValidHas("content-type") == false) {
             m_headers.noCheckValidSet("content-type",
                                       m_contentType->toUTF8NonGCString());
         }
@@ -177,8 +176,8 @@ void Response::copyResponseData(Response* src)
     setRedirected(src->redirected());
     setStatus(src->status());
     setType(src->typeValue());
-    setStatusText(String::createASCIIString(
-        src->statusText()->toUTF8NonGCString().data()));
+    auto utf8Data = src->statusText()->toUTF8NonGCString();
+    setStatusText(String::fromUTF8(utf8Data.data(), utf8Data.size()));
 }
 
 String* Response::url()

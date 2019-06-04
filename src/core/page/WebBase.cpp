@@ -34,7 +34,7 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* customUserAgentString)
     : StarfishHoldable(starfish)
     , m_locale(icu::Locale::createFromName(locale))
-    , m_timezoneID(String::fromUTF8(timezoneID))
+    , m_timezoneID(String::fromUTF8(timezoneID, strlen(timezoneID)))
     , m_customUserAgentString(customUserAgentString)
     , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
@@ -215,7 +215,7 @@ String* WebBase::blobURLStoreToString(BlobURLStore store, String* origin)
     snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
 #endif
-    return String::createASCIIString(url.data());
+    return String::createASCIIString(url.data(), url.size());
 }
 
 BlobURLStore WebBase::addBlobInBlobURLStore(Blob* ptr)

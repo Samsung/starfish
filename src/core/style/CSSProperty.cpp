@@ -122,7 +122,9 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
 
 String* CSSPropertyHelper::toGCString(CSSStyleValuePair::KeyKind property)
 {
-    return String::createASCIIString(toString(property));
+    const char* str = toString(property);
+    STARFISH_ASSERT(str != nullptr);
+    return String::createASCIIString(str, strlen(str));
 }
 
 const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
@@ -146,7 +148,9 @@ const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
 String* CSSPropertyHelper::toCamelCaseGCString(
     CSSStyleValuePair::KeyKind property)
 {
-    return String::createASCIIString(toCamelCaseString(property));
+    const char* str = toCamelCaseString(property);
+    STARFISH_ASSERT(str != nullptr);
+    return String::createASCIIString(str, strlen(str));
 }
 
 const char* CSSPropertyHelper::toCamelCaseString(

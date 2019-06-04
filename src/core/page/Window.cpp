@@ -252,7 +252,8 @@ void Window::postMessage(Window* source, ScriptValue message,
     } catch (DOMException* e) {
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         e->message()->toUTF8NonGCString().data());
-        e->setMessage(String::fromUTF8(msg));
+        STARFISH_ASSERT(msg != nullptr);
+        e->setMessage(String::fromUTF8(msg, strlen(msg)));
         throw e;
     }
 

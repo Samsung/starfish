@@ -199,9 +199,11 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
     return ValueRef::createUndefined();
 }
 
-void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context, ExecutionStateRef* state)
+void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
+                                                  ExecutionStateRef* state)
 {
-    STARFISH_ASSERT(context != nullptr && state != nullptr);
+    STARFISH_ASSERT(context != nullptr);
+    STARFISH_ASSERT(state != nullptr);
     // binding names first
     GlobalObjectRef* globalObject = context->globalObject();
 #define DECLARE_NAME_FOR_BINDING(exportName)                                   \
@@ -211,9 +213,11 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context, Execution
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
                 ScriptBindingInstance* instance;                               \
-                if (self->isGlobalObject() && self->extraData()) {             \
-                    instance = ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData()) \
-                        ->scriptBindingInstance();                             \
+                if (self->isGlobalObject() == true &&                          \
+                    self->extraData() != nullptr) {                            \
+                    instance =                                                 \
+                        ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData())    \
+                            ->scriptBindingInstance();                         \
                 } else {                                                       \
                     instance = fetchScriptBindingInstance(state->context());   \
                 }                                                              \
@@ -223,9 +227,11 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context, Execution
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
                 ScriptBindingInstance* instance;                               \
-                if (self->isGlobalObject() && self->extraData()) {             \
-                    instance = ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData()) \
-                        ->scriptBindingInstance();                             \
+                if (self->isGlobalObject() == true &&                          \
+                    self->extraData() != nullptr) {                            \
+                    instance =                                                 \
+                        ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData())    \
+                            ->scriptBindingInstance();                         \
                 } else {                                                       \
                     instance = fetchScriptBindingInstance(state->context());   \
                 }                                                              \

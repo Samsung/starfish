@@ -76,13 +76,18 @@ String* CSSAngle::toString() const
     ss << m_value;
     std::string stdStr = ss.str();
     if (m_kind == DEG) {
-        return String::fromUTF8(stdStr.append("deg").c_str());
+        stdStr.append("deg");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == RAD) {
-        return String::fromUTF8(stdStr.append("rad").c_str());
+        stdStr.append("rad");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == GRAD) {
-        return String::fromUTF8(stdStr.append("grad").c_str());
+        stdStr.append("grad");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == TURN) {
-        return String::fromUTF8(stdStr.append("turn").c_str());
+        stdStr.append("turn");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
+        ;
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

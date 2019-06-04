@@ -144,7 +144,7 @@ public:
         } else if (m_type == NumberType) {
             char temp[100];
             snprintf(temp, sizeof(temp), "%f", m_number);
-            return String::fromUTF8(temp);
+            return String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
         }
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }

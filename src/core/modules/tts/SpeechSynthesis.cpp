@@ -134,7 +134,9 @@ GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
         auto iter = list.begin();
         while (iter != list.end()) {
             String* lang = iter->first;
-            String* name = String::fromUTF8(voiceTypeToString(iter->second));
+            const char* str = voiceTypeToString(iter->second);
+            STARFISH_ASSERT(str != nullptr);
+            String* name = String::fromUTF8(str, strlen(str));
             String* uri = name->concat('/')->concat(lang);
 
             SpeechSynthesisVoice* speechVoice = new SpeechSynthesisVoice(

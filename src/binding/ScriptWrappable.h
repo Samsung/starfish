@@ -37,7 +37,8 @@ class ExecutionStateRef;
 class ArrayBufferObjectRef;
 class ArrayBufferViewRef;
 class Uint8ClampedArrayObjectRef;
-template <typename T> struct NullablePtr;
+template <typename T>
+struct NullablePtr;
 typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  ValueRef* thisValue,
                                                  size_t argc, ValueRef** argv,
@@ -53,7 +54,7 @@ class ServiceWorkerGlobalScope;
 #else
 #define STARFISH_GLOBAL_BINDING_CLASS WorkerGlobalScope
 class WorkerGlobalScope;
-#endif /* defined(STARFISH_ENABLE_SERVICE_WORKER) */ 
+#endif /* defined(STARFISH_ENABLE_SERVICE_WORKER) */
 #else
 #define STARFISH_GLOBAL_BINDING_CLASS Window
 class Window;
@@ -169,9 +170,10 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
 
-ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
-                              size_t len);
-ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance, size_t len);
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
+                                          void* bufferSrc, size_t len);
+ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
+                                          size_t len);
 
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance);
@@ -211,7 +213,7 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
     virtual void init(ScriptBindingInstance* instance, void* domObjectPointer) \
         override;                                                              \
     virtual bool is##className() const override;                               \
-    virtual ScriptBindingInstance* scriptBindingInstance() override; 
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
@@ -249,11 +251,12 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
     Window* window = (Window*)state->context()->globalObject()->extraData();
 
 #define GENERATE_WORKERGLOBALSCOPE()                                         \
-   if (!(thisValue->isUndefinedOrNull() ||                                   \
+    if (!(thisValue->isUndefinedOrNull() == true ||                          \
           thisValue->toObject(state) == state->context()->globalObject())) { \
         THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
     }                                                                        \
-    WorkerGlobalScope* originalObj = (WorkerGlobalScope*)state->context()->globalObject()->extraData();
+    WorkerGlobalScope* originalObj =                                         \
+        (WorkerGlobalScope*)state->context()->globalObject()->extraData();
 
 class ScriptWrappable : public gc {
 public:

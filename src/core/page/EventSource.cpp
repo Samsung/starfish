@@ -90,7 +90,8 @@ public:
             String* charsetValue = String::emptyString;
             auto it = headerMap.find(HTTPHeaderMap::kContentType);
             if (it != headerMap.end()) {
-                String* values = String::fromUTF8(it->second.data());
+                String* values =
+                    String::fromUTF8(it->second.data(), it->second.size());
                 GCVector<StringView> tokens;
                 StringUtils::tokenize(values, ";", 1, tokens);
 
@@ -256,11 +257,13 @@ void EventSource::connect()
     }
 
     if (m_parser && !m_parser->lastEventId()->isEmpty()) {
-        m_resourceRequest->deleteRequestHeader(
-            String::createASCIIString(HTTPHeaderMap::kLastEventID));
+        STARFISH_ASSERT(HTTPHeaderMap::kLastEventID != nullptr);
+        m_resourceRequest->deleteRequestHeader(String::createASCIIString(
+            HTTPHeaderMap::kLastEventID, strlen(HTTPHeaderMap::kLastEventID)));
 
         m_resourceRequest->setRequestHeader(
-            String::createASCIIString(HTTPHeaderMap::kLastEventID),
+            String::createASCIIString(HTTPHeaderMap::kLastEventID,
+                                      strlen(HTTPHeaderMap::kLastEventID)),
             m_parser->lastEventId());
     }
 
@@ -297,17 +300,23 @@ void EventSource::start(String* method)
 
     m_resourceRequest->open(reqData);
 
+    STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
     m_resourceRequest->setRequestHeader(
-        String::createASCIIString(HTTPHeaderMap::kAccept),
+        String::createASCIIString(HTTPHeaderMap::kAccept,
+                                  strlen(HTTPHeaderMap::kAccept)),
         String::createASCIIString("text/event-stream"));
 
+    STARFISH_ASSERT(HTTPHeaderMap::kCacheControl != nullptr);
     m_resourceRequest->setRequestHeader(
-        String::createASCIIString(HTTPHeaderMap::kCacheControl),
+        String::createASCIIString(HTTPHeaderMap::kCacheControl,
+                                  strlen(HTTPHeaderMap::kCacheControl)),
         String::createASCIIString("no-cache"));
 
-    if (m_parser && !m_parser->lastEventId()->isEmpty()) {
+    if (m_parser != nullptr && m_parser->lastEventId()->isEmpty() == false) {
+        STARFISH_ASSERT(HTTPHeaderMap::kLastEventID != nullptr);
         m_resourceRequest->setRequestHeader(
-            String::createASCIIString(HTTPHeaderMap::kLastEventID),
+            String::createASCIIString(HTTPHeaderMap::kLastEventID,
+                                      strlen(HTTPHeaderMap::kLastEventID)),
             m_parser->lastEventId());
     }
 

@@ -686,13 +686,17 @@ String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
     STARFISH_ASSERT(m_canvas != nullptr);
 
     if (m_canvas->blendMode() != CanvasBlendMode::Normal) {
-        return String::fromUTF8(
+        const char* p =
             CanvasCompositing::canvasBlendModeNames[static_cast<unsigned>(
-                m_canvas->blendMode())]);
+                m_canvas->blendMode())];
+        STARFISH_ASSERT(p != nullptr);
+        return String::fromUTF8(p, strlen(p));
     }
-    return String::fromUTF8(
+    const char* p =
         CanvasCompositing::canvasCompositeOperatorNames[static_cast<unsigned>(
-            m_canvas->compositeOperator())]);
+            m_canvas->compositeOperator())];
+    STARFISH_ASSERT(p != nullptr);
+    return String::fromUTF8(p, strlen(p));
 }
 
 void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
@@ -702,7 +706,9 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasCompositeOperatorNames;
          ++i) {
-        if (value->equals(CanvasCompositing::canvasCompositeOperatorNames[i]) ==
+        if (value->equals(
+                CanvasCompositing::canvasCompositeOperatorNames[i],
+                strlen(CanvasCompositing::canvasCompositeOperatorNames[i])) ==
             true) {
             cco = static_cast<CanvasCompositeOperator>(i);
             m_canvas->setCompositeOperator(cco, cbm);
@@ -710,7 +716,9 @@ void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
         }
     }
     for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; ++i) {
-        if (value->equals(CanvasCompositing::canvasBlendModeNames[i]) == true) {
+        if (value->equals(CanvasCompositing::canvasBlendModeNames[i],
+                          strlen(CanvasCompositing::canvasBlendModeNames[i])) ==
+            true) {
             cbm = static_cast<CanvasBlendMode>(i);
             cco = CanvasCompositeOperator::SourceOver;
             m_canvas->setCompositeOperator(cco, cbm);

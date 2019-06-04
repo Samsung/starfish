@@ -148,7 +148,9 @@ String* CSSFilterFunction::toString() const
         return m_data.toString();
     }
     StringBuilder result;
-    result.appendString(typeToString(m_type));
+    auto str = typeToString(m_type);
+    STARFISH_ASSERT(str != nullptr);
+    result.appendString(str, strlen(str));
     result.appendString("(");
     result.appendString(m_data.toString());
     result.appendString(")");

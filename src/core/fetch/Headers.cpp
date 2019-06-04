@@ -55,8 +55,10 @@ public:
             return false;
         }
 
-        key = String::fromUTF8(m_iterator->first.data());
-        value = String::fromUTF8(m_iterator->second.data());
+        key = String::fromUTF8(m_iterator->first.data(),
+                               m_iterator->first.size());
+        value = String::fromUTF8(m_iterator->second.data(),
+                                 m_iterator->second.size());
         m_iterator++;
         return true;
     }

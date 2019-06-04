@@ -455,42 +455,49 @@ static const char* uax14SafeReverse =
     "($CL | $CP) $CM* ($NU | $IS | $SY);"
     "$dictionary $dictionary;";
 
+static void stringAppendHelper(StringBuilder& builder, const char* str)
+{
+    STARFISH_ASSERT(str != nullptr);
+    builder.appendString(str, strlen(str));
+}
+
 static String* makeRule(LineBreakIteratorMode mode, bool isCJK)
 {
     StringBuilder builder;
 
-    builder.appendString(uax14Prologue);
-    builder.appendString(uax14AssignmentsBefore);
+    stringAppendHelper(builder, uax14Prologue);
+    stringAppendHelper(builder, uax14AssignmentsBefore);
     switch (mode) {
     case LineBreakIteratorModeUAX14:
-        builder.appendString(isCJK ? uax14AssignmentsCustomDefaultCJK
-                                   : uax14AssignmentsCustomDefaultNonCJK);
+        stringAppendHelper(builder, isCJK
+                                        ? uax14AssignmentsCustomDefaultCJK
+                                        : uax14AssignmentsCustomDefaultNonCJK);
         break;
     case LineBreakIteratorModeUAX14Loose:
-        builder.appendString(isCJK ? uax14AssignmentsCustomLooseCJK
-                                   : uax14AssignmentsCustomLooseNonCJK);
+        stringAppendHelper(builder, isCJK ? uax14AssignmentsCustomLooseCJK
+                                          : uax14AssignmentsCustomLooseNonCJK);
         break;
     case LineBreakIteratorModeUAX14Normal:
-        builder.appendString(isCJK ? uax14AssignmentsCustomNormalCJK
-                                   : uax14AssignmentsCustomNormalNonCJK);
+        stringAppendHelper(builder, isCJK ? uax14AssignmentsCustomNormalCJK
+                                          : uax14AssignmentsCustomNormalNonCJK);
         break;
     case LineBreakIteratorModeUAX14Strict:
-        builder.appendString(isCJK ? uax14AssignmentsCustomStrictCJK
-                                   : uax14AssignmentsCustomStrictNonCJK);
+        stringAppendHelper(builder, isCJK ? uax14AssignmentsCustomStrictCJK
+                                          : uax14AssignmentsCustomStrictNonCJK);
         break;
     }
-    builder.appendString(uax14AssignmentsAfter);
-    builder.appendString(uax14Forward);
-    builder.appendString(uax14Reverse);
-    builder.appendString(uax14SafeForward);
-    builder.appendString(uax14SafeReverse);
+    stringAppendHelper(builder, uax14AssignmentsAfter);
+    stringAppendHelper(builder, uax14Forward);
+    stringAppendHelper(builder, uax14Reverse);
+    stringAppendHelper(builder, uax14SafeForward);
+    stringAppendHelper(builder, uax14SafeReverse);
     return builder.finalize();
 }
 
 static String* makeLocaleWithBreakKeyword(BreakIteratorInfo& info)
 {
     StringBuilder builder;
-    builder.appendString(info.m_locale.getBaseName());
+    stringAppendHelper(builder, info.m_locale.getBaseName());
     builder.appendString("@break=");
     switch (info.m_mode) {
     case LineBreakIteratorModeUAX14:

@@ -716,6 +716,7 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         ComputedStyleDamage::ComputedStyleDamageNone) {
                         computeTransition(pseudoNode, ocs, pseudoNode->frame(),
                                           ncs, damage, damagedKeys);
+
 #if defined(STARFISH_ENABLE_ANIMATION)
                         if (ocs->animationNameSize() > 0) {
                             computeAnimationKeyframes(

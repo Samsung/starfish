@@ -594,8 +594,8 @@ size_t GridFormattingContext::convertToRealLine(String* str, size_t pos,
             }
         } else if (parser.consumeString(CSSPropertyParser::AllowWithoutUnit)) {
             auto name = parser.parsedString();
-            GridArea* area =
-                getNamedGridArea(String::createASCIIString(name.c_str()));
+            GridArea* area = getNamedGridArea(
+                String::createASCIIString(name.data(), name.size()));
             if (area) {
                 if (type == COLUMNSTART) {
                     return area->m_columnStart;

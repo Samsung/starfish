@@ -228,8 +228,9 @@ public:
     {
         auto itr = headers.find("Content-type");
         if (itr != headers.end()) {
-            String* mimetype = String::createASCIIString(itr->second.c_str());
-            if (mimetype->contains("application", false)) {
+            String* mimetype =
+                String::fromUTF8(itr->second.data(), itr->second.size());
+            if (mimetype->contains("application", false) == true) {
                 checkHeader(false, headers);
                 return;
             }
@@ -238,8 +239,8 @@ public:
         itr = headers.find("Content-Disposition");
         if (itr != headers.end()) {
             String* contentDisposition =
-                String::createASCIIString(itr->second.c_str());
-            if (contentDisposition->contains("attachment")) {
+                String::fromUTF8(itr->second.data(), itr->second.size());
+            if (contentDisposition->contains("attachment") == true) {
                 checkHeader(false, headers);
                 return;
             }

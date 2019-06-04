@@ -42,9 +42,11 @@ class ImageResource : public Resource {
 public:
     virtual void prepare()
     {
-        if (m_resourceRequest) {
+        if (m_resourceRequest != nullptr) {
+            STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
             m_resourceRequest->setRequestHeader(
-                String::createASCIIString(HTTPHeaderMap::kAccept),
+                String::createASCIIString(HTTPHeaderMap::kAccept,
+                                          strlen(HTTPHeaderMap::kAccept)),
                 String::createASCIIString("*/*"));
         }
     }

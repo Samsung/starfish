@@ -183,8 +183,10 @@ void Inspector::commandEvaluator(size_t, void* data)
 {
     Request* r = (Request*)data;
     if (std::string(r->document["command"].GetString()) == "eval") {
+        const char* str = r->document["content"].GetString();
+        STARFISH_ASSERT(str != nullptr);
         String* result = r->inspector->m_webView->evaluateJavaScript(
-            String::fromUTF8(r->document["content"].GetString()));
+            String::fromUTF8(str, strlen(str)));
         if (result->length()) {
             r->inspector->sendInfoMessage(result);
         }

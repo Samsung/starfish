@@ -89,8 +89,8 @@ bool FetchUtils::isCorsSafelistedRequestHeader(const std::string name,
         if (isCorsUnsafeRequestHeaderValue(value)) {
             return false;
         }
-        MimeType mimeType =
-            MimeType::parseFromString(String::createASCIIString(value.data()));
+        MimeType mimeType = MimeType::parseFromString(
+            String::fromUTF8(value.data(), value.size()));
         if (!mimeType.isValid()) {
             return false;
         }
@@ -195,7 +195,7 @@ bool FetchUtils::isCORSsafelistedResponseHeaderName(
     } else {
         if (exposedNames) {
             for (auto const& exposedName : *exposedNames) {
-                if (exposedName->equalsIgnoreCase(name.data())) {
+                if (exposedName->equalsIgnoreCase(name.data(), name.size())) {
                     return true;
                 }
             }
@@ -213,32 +213,41 @@ bool FetchUtils::isForbiddenResponseHeaderName(const std::string& name)
     return false;
 }
 
+static bool equalsIgnoreCaseWrapper(const String* name, const char* str)
+{
+    STARFISH_ASSERT(name != nullptr);
+    STARFISH_ASSERT(str != nullptr);
+    return name->equalsIgnoreCase(str, strlen(str));
+}
+
 // https://fetch.spec.whatwg.org/#forbidden-header-name
 bool FetchUtils::isForbiddenHeaderName(String* name)
 {
     auto lower = name->toLower();
     if (lower->startsWith("proxy-") || lower->startsWith("sec-") ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAcceptCharset) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAcceptEncoding) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestHeaders) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestMethod) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kConnection) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kContentLength) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kCookie) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kCookie2) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kDate) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kDNT) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kExpect) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kHost) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kKeepAlive) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kOrigin) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kReferer) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTE) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTrailer) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTransferEncoding) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kUpgrade) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kUserAgent) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kVia)) {
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kAcceptCharset) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kAcceptEncoding) ||
+        equalsIgnoreCaseWrapper(lower,
+                                HTTPHeaderMap::kAccessControlRequestHeaders) ||
+        equalsIgnoreCaseWrapper(lower,
+                                HTTPHeaderMap::kAccessControlRequestMethod) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kConnection) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kContentLength) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kCookie) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kCookie2) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kDate) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kDNT) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kExpect) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kHost) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kKeepAlive) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kOrigin) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kReferer) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kTE) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kTrailer) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kTransferEncoding) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kUpgrade) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kUserAgent) ||
+        equalsIgnoreCaseWrapper(lower, HTTPHeaderMap::kVia)) {
         return true;
     }
     return false;

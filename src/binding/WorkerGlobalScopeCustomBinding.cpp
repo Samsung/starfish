@@ -39,7 +39,7 @@ struct TimeOutData : public gc {
     }
     void* listener;
     GCVector<ScriptValue> argVector;
-    GlobalScope *globalScope;
+    GlobalScope* globalScope;
 };
 
 static void timeoutHandler(void* data)
@@ -47,17 +47,17 @@ static void timeoutHandler(void* data)
     STARFISH_ASSERT(data != nullptr);
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
-    ScriptBindingInstance* instance = td->globalScope->executionContext()
-        ->scriptBindingInstance();
+    ScriptBindingInstance* instance =
+        td->globalScope->executionContext()->scriptBindingInstance();
 
-    callScriptFunction(instance, ValueRef::create(fn),
-                       td->argVector.data(), td->argVector.size(),
-                       scriptUndefined());
+    callScriptFunction(instance, ValueRef::create(fn), td->argVector.data(),
+                       td->argVector.size(), scriptUndefined());
 }
 
 ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
-                                   ValueRef* thisValue, size_t argc,
-                                   ValueRef** argv, bool isNewExpression)
+                                              ValueRef* thisValue, size_t argc,
+                                              NULLABLE ValueRef** argv,
+                                              bool isNewExpression)
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(thisValue != nullptr);
@@ -67,7 +67,8 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
         COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "1", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setTimeout", "WorkerGlobalScope", reason);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setTimeout",
+                        "WorkerGlobalScope", reason);
         THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
@@ -93,8 +94,8 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
         String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
-        td->listener = createScriptFunction(originalObj->scriptBindingInstance(),
-                                            name, 1, bodyStr, error);
+        td->listener = createScriptFunction(
+            originalObj->scriptBindingInstance(), name, 1, bodyStr, error);
     }
 
     // Call native function (nargs: 3)
@@ -105,8 +106,9 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
 }
 
 ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
-                                    ValueRef* thisValue, size_t argc,
-                                    ValueRef** argv, bool isNewExpression)
+                                               ValueRef* thisValue, size_t argc,
+                                               NULLABLE ValueRef** argv,
+                                               bool isNewExpression)
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(thisValue != nullptr);
@@ -116,8 +118,8 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
         COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setInterval", "WorkerGlobalScope",
-                        reason);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "setInterval",
+                        "WorkerGlobalScope", reason);
         THROW_EXCEPTION(msg);
     }
     // Declare native value (empty when type is void)
@@ -143,8 +145,8 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
         String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
-        td->listener = createScriptFunction(originalObj->scriptBindingInstance(),
-                                            name, 1, bodyStr, error);
+        td->listener = createScriptFunction(
+            originalObj->scriptBindingInstance(), name, 1, bodyStr, error);
     }
 
     // Call native function (nargs: 3)

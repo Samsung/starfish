@@ -46,9 +46,9 @@ void customExit(int returnCode)
     fflush(stdout);
     fflush(stderr);
 
-    // TODO enable this every port
-    // --hide-window + EFL window is not working correctly
-    // because EFL throws error
+// TODO enable this every port
+// --hide-window + EFL window is not working correctly
+// because EFL throws error
 #ifdef PORT_WEBVIEW_BRIDGE_GLFW
     g_exitCode = returnCode;
     raise(SIGINT);
@@ -57,7 +57,6 @@ void customExit(int returnCode)
 #endif
 }
 #endif
-
 
 namespace Starfish {
 
@@ -69,7 +68,7 @@ struct TimeOutData : public gc {
     }
     void* listener;
     GCVector<ScriptValue> argVector;
-    GlobalScope *globalScope;
+    GlobalScope* globalScope;
 };
 
 struct ScreenShotTimeOutData : public gc {
@@ -81,12 +80,11 @@ static void timeoutHandler(void* data)
 {
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
-    ScriptBindingInstance* instance = td->globalScope->executionContext()
-        ->scriptBindingInstance();
+    ScriptBindingInstance* instance =
+        td->globalScope->executionContext()->scriptBindingInstance();
 
-    callScriptFunction(instance, ValueRef::create(fn),
-                       td->argVector.data(), td->argVector.size(),
-                       scriptUndefined());
+    callScriptFunction(instance, ValueRef::create(fn), td->argVector.data(),
+                       td->argVector.size(), scriptUndefined());
 }
 
 ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
@@ -191,19 +189,19 @@ static void requestAnimationFrameHandler(void* data)
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
 
-    double DOMHighResTimeStamp = (td->globalScope->webBase()->lastRenderingTick() -
-                                  td->globalScope->executionContext()->createdTick()) /
-                                 1000.0;
+    double DOMHighResTimeStamp =
+        (td->globalScope->webBase()->lastRenderingTick() -
+         td->globalScope->executionContext()->createdTick()) /
+        1000.0;
     GCVector<ScriptValue> newArgVector;
     newArgVector.reserve(1 + td->argVector.size());
     newArgVector.push_back(createScriptValue(DOMHighResTimeStamp));
     newArgVector.insert(newArgVector.end(), td->argVector.begin(),
                         td->argVector.end());
-    ScriptBindingInstance* instance = td->globalScope->executionContext()
-        ->scriptBindingInstance();
-    callScriptFunction(instance, ValueRef::create(fn),
-                       newArgVector.data(), newArgVector.size(),
-                       scriptUndefined());
+    ScriptBindingInstance* instance =
+        td->globalScope->executionContext()->scriptBindingInstance();
+    callScriptFunction(instance, ValueRef::create(fn), newArgVector.data(),
+                       newArgVector.size(), scriptUndefined());
 }
 
 ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
@@ -364,9 +362,13 @@ static ValueRef* networkDisableFunction(ExecutionStateRef* state,
 }
 
 static ValueRef* webSecurityEnableFunction(ExecutionStateRef* state,
-                                       ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
+                                           ValueRef* thisValue, size_t argc,
+                                           NULLABLE ValueRef** argv,
+                                           bool isNewExpression)
 {
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(thisValue != nullptr);
+
     GENERATE_WINDOW();
 
     window->webView()->setWebSecurityMode(LWE::WebSecurityMode::Enable);
@@ -374,8 +376,9 @@ static ValueRef* webSecurityEnableFunction(ExecutionStateRef* state,
 }
 
 static ValueRef* webSecurityDisableFunction(ExecutionStateRef* state,
-                                       ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
+                                            ValueRef* thisValue, size_t argc,
+                                            ValueRef** argv,
+                                            bool isNewExpression)
 {
     GENERATE_WINDOW();
 
@@ -403,8 +406,7 @@ static void screenShotTimeoutHandler(void* data)
     ScriptBindingInstance* instance = std->window->scriptBindingInstance();
     callScriptFunction(
         instance, ValueRef::create(p), nullptr, 0,
-        ValueRef::create(
-           instance->scriptContext()->globalObject()));
+        ValueRef::create(instance->scriptContext()->globalObject()));
 }
 
 static ValueRef* screenShotFunction(ExecutionStateRef* state,
@@ -424,7 +426,8 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
 
     window->screenShot(path,
                        [](void* data) {
-                           ScreenShotTimeOutData* d = static_cast<ScreenShotTimeOutData*>(data);
+                           ScreenShotTimeOutData* d =
+                               static_cast<ScreenShotTimeOutData*>(data);
                            d->window->setTimeout(screenShotTimeoutHandler, 1,
                                                  d);
                        },
@@ -434,18 +437,24 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
 
 static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
                                                 ValueRef* thisValue,
-                                                size_t argc, ValueRef** argv,
+                                                size_t argc,
+                                                NULLABLE ValueRef** argv,
                                                 bool isNewExpression)
 {
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(thisValue != nullptr);
+
     GENERATE_WINDOW();
 
     char buff[1024];
     getcwd(buff, 1024);
-    String* path =
-        String::fromUTF8(buff)
-            ->concat(String::fromUTF8("/"))
-            ->concat(String::fromUTF8(
-                getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
+
+    const char* filePath =
+        getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : "";
+
+    String* path = String::fromUTF8(buff, strnlen(buff, sizeof(buff)))
+                       ->concat(String::fromUTF8("/"))
+                       ->concat(String::fromUTF8(filePath, strlen(filePath)));
 
     ScreenShotTimeOutData* d = new ScreenShotTimeOutData();
     d->window = window;
@@ -453,7 +462,8 @@ static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
 
     window->screenShot(path->toUTF8NonGCString(),
                        [](void* data) {
-                           ScreenShotTimeOutData* d = static_cast<ScreenShotTimeOutData*>(data);
+                           ScreenShotTimeOutData* d =
+                               static_cast<ScreenShotTimeOutData*>(data);
                            d->window->setTimeout(screenShotTimeoutHandler, 1,
                                                  d);
                        },
@@ -513,8 +523,12 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
 
 static ValueRef* simulateClickFunction(ExecutionStateRef* state,
                                        ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
+                                       NULLABLE ValueRef** argv,
+                                       bool isNewExpression)
 {
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(thisValue != nullptr);
+
     GENERATE_WINDOW();
 
     ValueRef* arg0 = argv[0];
@@ -527,9 +541,13 @@ static ValueRef* simulateClickFunction(ExecutionStateRef* state,
 }
 
 static ValueRef* simulateMouseDownFunction(ExecutionStateRef* state,
-                                       ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
+                                           ValueRef* thisValue, size_t argc,
+                                           NULLABLE ValueRef** argv,
+                                           bool isNewExpression)
 {
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(thisValue != nullptr);
+
     GENERATE_WINDOW();
 
     ValueRef* arg0 = argv[0];
@@ -542,9 +560,13 @@ static ValueRef* simulateMouseDownFunction(ExecutionStateRef* state,
 }
 
 static ValueRef* simulateMouseUpFunction(ExecutionStateRef* state,
-                                       ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
+                                         ValueRef* thisValue, size_t argc,
+                                         NULLABLE ValueRef** argv,
+                                         bool isNewExpression)
 {
+    STARFISH_ASSERT(state != nullptr);
+    STARFISH_ASSERT(thisValue != nullptr);
+
     GENERATE_WINDOW();
 
     ValueRef* arg0 = argv[0];

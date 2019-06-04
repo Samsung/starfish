@@ -257,8 +257,8 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                 c->index++;
                 if (block->isVariable()) {
                     Variable* variable = (Variable*)block;
-                    String* key =
-                        String::createASCIIString(variable->m_value.c_str());
+                    String* key = String::fromUTF8(variable->m_value.data(),
+                                                   variable->m_value.size());
 
                     for (size_t k = 0; k < cssCustomValues.size(); k++) {
                         MutablePropertyValue customProperty =

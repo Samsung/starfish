@@ -170,33 +170,47 @@ String* CSSLength::toString() const
     UTF8StringDataNonGCStd stdStr =
         String::fromFloat(m_value)->toUTF8NonGCString();
     if (m_kind == PX) {
-        return String::fromUTF8(stdStr.append("px").c_str());
+        stdStr.append("px");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == CM) {
-        return String::fromUTF8(stdStr.append("cm").c_str());
+        stdStr.append("cm");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == MM) {
-        return String::fromUTF8(stdStr.append("mm").c_str());
+        stdStr.append("mm");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == INCH) {
-        return String::fromUTF8(stdStr.append("in").c_str());
+        stdStr.append("in");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == PC) {
-        return String::fromUTF8(stdStr.append("pc").c_str());
+        stdStr.append("pc");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == PT) {
-        return String::fromUTF8(stdStr.append("pt").c_str());
+        stdStr.append("pt");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == EM) {
-        return String::fromUTF8(stdStr.append("em").c_str());
+        stdStr.append("em");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == EX) {
-        return String::fromUTF8(stdStr.append("ex").c_str());
+        stdStr.append("ex");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VW) {
-        return String::fromUTF8(stdStr.append("vw").c_str());
+        stdStr.append("vw");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VH) {
-        return String::fromUTF8(stdStr.append("vh").c_str());
+        stdStr.append("vh");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VMIN) {
-        return String::fromUTF8(stdStr.append("vmin").c_str());
+        stdStr.append("vmin");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VMAX) {
-        return String::fromUTF8(stdStr.append("vmax").c_str());
+        stdStr.append("vmax");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == REM) {
-        return String::fromUTF8(stdStr.append("rem").c_str());
+        stdStr.append("rem");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == CH) {
-        return String::fromUTF8(stdStr.append("ch").c_str());
+        stdStr.append("ch");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }

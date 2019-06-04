@@ -38,7 +38,9 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
             m_converter = new TextConverter(m_preferredEncoding);
         }
     }
-    m_text = m_text->concat(m_converter->convert(buffer, length, true));
+    if (length != 0) {
+        m_text = m_text->concat(m_converter->convert(buffer, length, true));
+    }
 
     Resource::didDataReceived(buffer, length);
 }
