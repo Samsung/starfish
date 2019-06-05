@@ -243,7 +243,7 @@ public:
 
     CSSKeyframeRule(StyleRuleKeyframe* keyframeRule, CSSStyleSheet* parent);
 
-    String* cssText();
+    String* cssText() override;
     String* keyText() const;
     void setKeyText(String* text);
     CSSStyleDeclaration* style();
@@ -270,8 +270,8 @@ public:
     virtual bool isCSSKeyframesRule() const override;
 
     CSSKeyframesRule(StyleRuleKeyframes* keyframesRule, CSSStyleSheet* parent);
-    String* cssText();
-    CSSRuleList* cssRules();
+    String* cssText() override;
+    CSSRuleList* cssRules() override;
     StyleRuleKeyframes* keyframesRule() const
     {
         return m_keyframesRule;
