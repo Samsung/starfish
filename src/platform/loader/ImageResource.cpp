@@ -221,7 +221,6 @@ void ImageResource::didLoadFinished()
                                         d->imageResource
                                             ->Resource::didLoadFailed();
                                     }
-
                                 },
                                 d);
 
@@ -234,9 +233,9 @@ void ImageResource::didLoadFinished()
     }
 #endif
     if (m_resourceRequest->response().size() != 0) {
-        m_imageData = NativeImageData::create(
-            m_resourceRequest->response(),
-            std::move(url()->urlString()->toUTF8NonGCString()));
+        m_imageData =
+            NativeImageData::create(m_resourceRequest->response(),
+                                    url()->urlString()->toUTF8NonGCString());
     }
 
     if (!m_imageData) {

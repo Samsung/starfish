@@ -51,7 +51,7 @@ public:
         return false;
     }
 
-    bool supportsFocus()
+    bool supportsFocus() override
     {
         return true;
     }
