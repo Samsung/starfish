@@ -1174,6 +1174,7 @@ public:
     virtual Font* font()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return lastState().m_font;
     }
 
     virtual String* originalFontStr()
