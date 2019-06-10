@@ -119,6 +119,18 @@ Default values are in **bold**.
 * --define 'build_profile [ tv | mobile | headless | wearable | **all** ]'<br>
   Genereate RPMs for TV, mobile, headless and wearable platforms.
 
+## How to Compile: Android
+### Prerequisite
+```
+export ANDROID_HOME=$HOME/Your/Android/Sdk
+```
+android-ndk-r16b
+
+### Compile LWE
+```
+cd build/android/apk
+gradle build
+```
 
 ## Testing
 ### Prerequisite
@@ -208,7 +220,7 @@ ninja -C out/release starfish.x64.release
 #### Build options
 The following build options are supported when generating ninja script using gyp.
 Default values are in **bold**.
-   
+
 * -Dcomponent=[ executable | **static_library** | shared_library ]<br>
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>

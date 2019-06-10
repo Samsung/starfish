@@ -56,5 +56,16 @@ star.version.revision = 11
 ext['android.disableResourceValidation'] = true
 
 apply from: 'sec/common.gradle'
-apply from: 'lwe.gradle'
+apply from: '../apk_root/lwe.gradle'
+
+android {
+    sourceSets {
+        main {
+            java {
+                srcDir '../../../../src/public/bridge/android/java'
+            }
+            res.srcDirs = ['../../../../src/public/bridge/android/res']
+        }
+    }
+}
 

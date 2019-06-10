@@ -1,0 +1,80 @@
+
+android {
+    defaultConfig {
+        applicationId "com.samsung.android.lwe"
+        minSdkVersion 28
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                arguments "-DCMAKE_VERBOSE_MAKEFILE:BOOL=OFF", "-DANDROID_STL=c++_static", "-DLTO=0", "-DSTARFISH_ANDROID_OS=9"
+            }
+        }
+        ndk {
+            abiFilters "arm64-v8a","armeabi-v7a"
+        }
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+    lintOptions {
+        abortOnError false
+    }
+    aaptOptions
+    {
+        cruncherEnabled = false
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+            debuggable = true
+            jniDebuggable true
+            renderscriptDebuggable true
+        }
+        release {
+            signingConfig signingConfigs.release
+            debuggable = false
+            jniDebuggable true
+            renderscriptDebuggable true
+            if (apiCodeNum <= 21.1F) {
+                runProguard true
+            } else {
+                minifyEnabled false //TODO temporary false, need to setup proguard-rules (for all application)
+            }
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+    sourceSets {
+        main {
+            java {
+                srcDir 'src/starfish/src/public/bridge/android/java'
+            }
+            res.srcDirs = ['src/starfish/src/public/bridge/android/res']
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+    jcenter()
+    maven {
+        url "https://maven.google.com"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
