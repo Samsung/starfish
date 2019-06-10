@@ -1344,13 +1344,12 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
         return;
     }
 
+    updateFontIfNeeds();
     bool useMaxWidth = false;
     if (isMaxWidthProvided == true &&
         m_canvas->font()->measureText(StringView(text)) > maxWidth) {
         useMaxWidth = true;
     }
-
-    updateFontIfNeeds();
 
     if (canUseFastPathText(text, useMaxWidth) == true) {
         fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
@@ -1369,13 +1368,12 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
         return;
     }
 
+    updateFontIfNeeds();
     bool useMaxWidth = false;
     if (isMaxWidthProvided == true &&
         m_canvas->font()->measureText(StringView(text)) > maxWidth) {
         useMaxWidth = true;
     }
-
-    updateFontIfNeeds();
 
     if (canUseFastPathText(text, useMaxWidth) == true) {
         strokeTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
