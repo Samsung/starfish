@@ -286,9 +286,9 @@ public:
         return std::min(result, 1.0f);
     }
 
-    void fireStartEvent();
-    void fireEndEvent();
-    void fireCancelEvent();
+    void fireTransitionStartEvent();
+    void fireTransitionEndEvent();
+    void fireTransitionCancelEvent();
 
     void updateDuration(uint64_t d)
     {
@@ -470,12 +470,60 @@ protected:
     size_t m_indexForBgLayer;
 };
 
+struct ActiveElementAnimation : public gc {
+    String* m_name;
+    Element* m_element;
+
+    ActiveElementAnimation(String* name, Element* element)
+        : m_name(name)
+        , m_element(element)
+        , m_hash(0)
+    {
+        STARFISH_ASSERT(name != nullptr);
+        STARFISH_ASSERT(element != nullptr);
+    }
+
+    size_t hashValue() const;
+    bool equals(const ActiveElementAnimation* src) const;
+
+private:
+    mutable size_t m_hash;
+};
+}
+
+namespace std {
+template <>
+struct hash<Starfish::ActiveElementAnimation*> {
+    std::size_t operator()(const Starfish::ActiveElementAnimation* value) const
+    {
+        return value->hashValue();
+    }
+};
+
+template <>
+struct equal_to<Starfish::ActiveElementAnimation*> {
+    bool operator()(const Starfish::ActiveElementAnimation* lhs,
+                    const Starfish::ActiveElementAnimation* rhs) const
+    {
+        return lhs->equals(rhs);
+    }
+};
+}
+
+namespace Starfish {
+
 class AnimationExecutor : public gc {
 public:
     AnimationExecutor(Window* window)
         : m_window(window)
     {
+        STARFISH_ASSERT(window != nullptr);
         m_window = window;
+        m_activeAnimations =
+            new GCUnorderedMap<ActiveElementAnimation*,
+                               GCVector<ActiveAnimationTask*>,
+                               std::hash<ActiveElementAnimation*>,
+                               std::equal_to<ActiveElementAnimation*>>();
     }
 
     Window* window()
@@ -483,39 +531,109 @@ public:
         return m_window;
     }
 
-    GCVector<ActiveAnimationTask*>& activeAnimations()
+    GCVector<ActiveAnimationTask*>& activeTransitions()
     {
-        return m_activeAnimations;
+        return m_activeTransitions;
     }
 
-    bool hasActiveAnimiation(Element* element, CSSStyleValuePair::KeyKind p)
+    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>,
+                   std::hash<ActiveElementAnimation*>,
+                   std::equal_to<ActiveElementAnimation*>>&
+    activeAnimations()
+    {
+        return *m_activeAnimations;
+    }
+
+    void dispose()
+    {
+        if (m_activeTransitions.size() > 0) {
+            m_activeTransitions.clear();
+        }
+        if (m_activeAnimations != nullptr) {
+            for (auto& animations : *m_activeAnimations) {
+                animations.second.clear();
+            }
+            m_activeAnimations->clear();
+            m_activeAnimations = nullptr;
+        }
+    }
+
+    bool hasActiveTransition(Element* element, CSSStyleValuePair::KeyKind p)
     {
         STARFISH_ASSERT(element != nullptr);
-        bool found = false;
-        for (size_t i = 0; i < m_activeAnimations.size(); i++) {
-            if (m_activeAnimations[i]->targetElement() == element &&
-                m_activeAnimations[i]->property() == p) {
-                found = true;
-                break;
+        for (size_t i = 0; i < m_activeTransitions.size(); i++) {
+            if (m_activeTransitions[i]->targetElement() == element &&
+                m_activeTransitions[i]->property() == p) {
+                return true;
             }
         }
-        return found;
+        return false;
     }
 
-    void registerAnimation(ActiveAnimationTask* a, ComputedStyle* style)
+    void registerTransition(ActiveAnimationTask* task, ComputedStyle* style)
     {
-        STARFISH_ASSERT(a != nullptr);
+        STARFISH_ASSERT(task != nullptr);
         STARFISH_ASSERT(style != nullptr);
-        m_activeAnimations.push_back(a);
-        a->attachToElement(style);
-        a->fireStartEvent();
+        m_activeTransitions.push_back(task);
+        task->attachToElement(style);
+        task->fireTransitionStartEvent();
     }
 
-    void checkActiveAnimationExecutorInWebView();
+    void removeActiveAnimationTaskIfNeeds(Element* element,
+                                          CSSStyleValuePair::KeyKind p)
+    {
+        STARFISH_ASSERT(element != nullptr);
+
+        for (auto animations = m_activeAnimations->begin();
+             animations != m_activeAnimations->end(); animations++) {
+            for (auto task = (*animations).second.begin();
+                 task != (*animations).second.end();) {
+                if ((*task)->targetElement() == element &&
+                    (*task)->property() == p) {
+                    task = (*animations).second.erase(task);
+                } else {
+                    task++;
+                }
+            }
+        }
+    }
+
+    void registerAnimation(ActiveAnimationTask* task, ComputedStyle* style,
+                           String* name)
+    {
+        STARFISH_ASSERT(task != nullptr);
+        STARFISH_ASSERT(style != nullptr);
+        STARFISH_ASSERT(name != nullptr);
+
+        ActiveElementAnimation* key =
+            new ActiveElementAnimation(name, task->targetElement());
+        auto iter = m_activeAnimations->find(key);
+        if (iter == m_activeAnimations->end()) {
+            GCVector<ActiveAnimationTask*> v;
+            v.push_back(task);
+            m_activeAnimations->insert(std::make_pair(key, v));
+        } else {
+            // Because all of tasks with same property are already removed in
+            // removeActiveAnimationTaskIfNeeds(), just add the task to vector.
+            iter->second.push_back(task);
+        }
+    }
+
+    void checkActiveExecutorInWebView();
+
+    void fireAnimationStartEvent(Element* element, String* name);
+    void fireAnimationEndEvent(Element* element, String* name,
+                               float elapsedTime);
+    void fireAnimationCancelEvent(Element* element, String* name,
+                                  float elapsedTime);
 
 private:
     Window* m_window;
-    GCVector<ActiveAnimationTask*> m_activeAnimations;
+    GCVector<ActiveAnimationTask*> m_activeTransitions;
+    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>,
+                   std::hash<ActiveElementAnimation*>,
+                   std::equal_to<ActiveElementAnimation*>>* m_activeAnimations;
 };
 }
+
 #endif

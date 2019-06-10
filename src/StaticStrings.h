@@ -522,6 +522,9 @@ public:
     QualifiedName m_onmessage;
     QualifiedName m_messageerror;
     QualifiedName m_onmessageerror;
+    QualifiedName m_animationstart;
+    QualifiedName m_animationend;
+    QualifiedName m_animationcancel;
     QualifiedName m_transitionstart;
     QualifiedName m_transitionend;
     QualifiedName m_transitioncancel;

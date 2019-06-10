@@ -515,6 +515,12 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "messageerror"));
     m_onmessageerror = QualifiedName(
         AtomicString::createAtomicString(starfish, "onmessageerror"));
+    m_animationstart = QualifiedName(
+        AtomicString::createAtomicString(starfish, "animationstart"));
+    m_animationend = QualifiedName(
+        AtomicString::createAtomicString(starfish, "animationend"));
+    m_animationcancel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "animationcancel"));
     m_transitionstart = QualifiedName(
         AtomicString::createAtomicString(starfish, "transitionstart"));
     m_transitionend = QualifiedName(

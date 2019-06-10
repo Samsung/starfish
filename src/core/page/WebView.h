@@ -238,6 +238,11 @@ public:
         return m_activeAnimationExecutor.size();
     }
 
+    GCVector<AnimationExecutor*>& activeAnimationExecutor()
+    {
+        return m_activeAnimationExecutor;
+    }
+
     bool needsComposite()
     {
         return m_needsComposite;

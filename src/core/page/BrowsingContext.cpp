@@ -463,8 +463,8 @@ void BrowsingContext::resolveStyleIfNeeds()
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
 
-        if (document()->animationExecutor()->activeAnimations().size() != 0) {
-            auto& l = document()->animationExecutor()->activeAnimations();
+        if (document()->animationExecutor()->activeTransitions().size() > 0) {
+            auto& l = document()->animationExecutor()->activeTransitions();
             uint64_t currentTick = tickCount();
             bool canceled = false;
             for (size_t i = 0; i < l.size(); i++) {
@@ -480,21 +480,65 @@ void BrowsingContext::resolveStyleIfNeeds()
                     l[i]->targetElement()->style()->display() ==
                         DisplayValue::NoneDisplayValue) {
                     canceled = true;
-                    l[i]->fireCancelEvent();
+                    l[i]->fireTransitionCancelEvent();
                     l[i]->detachFromElement(nullptr);
                     l.erase(i);
                     i--;
                 }
             }
 
-            if (canceled) {
-                document()
-                    ->animationExecutor()
-                    ->checkActiveAnimationExecutorInWebView();
+            if (canceled == true) {
+                document()->animationExecutor()->checkActiveExecutorInWebView();
             }
 
-            if (!webView()->inRendering()) {
+            if (webView()->inRendering() == false) {
                 webView()->setNeedsRendering();
+            }
+        }
+
+        if (document()->animationExecutor()->activeAnimations().size() > 0) {
+            auto& animations =
+                document()->animationExecutor()->activeAnimations();
+            for (auto& animation : animations) {
+                uint64_t currentTick = tickCount();
+                uint64_t cancelTick = 0;
+                bool canceled = false;
+                for (auto task = animation.second.begin();
+                     task != animation.second.end();) {
+                    if (webView()->inRendering() != true) {
+                        // when in rendering, start time is updated by
+                        // WebView::rendering()
+                        // because other steps(painting, layout) can take too
+                        // long(ex. longer than duration)
+                        (*task)->initializeStartTimeIfNeeded(currentTick);
+                    }
+                    if (((*task)->targetElement()->isInDocumentScope() ==
+                         false) ||
+                        ((*task)->targetElement()->style() == nullptr) ||
+                        (*task)->targetElement()->style()->display() ==
+                            DisplayValue::NoneDisplayValue) {
+                        canceled = true;
+                        (*task)->detachFromElement(nullptr);
+                        task = animation.second.erase(task);
+
+                        float progress = (*task)->fraction(currentTick);
+                        cancelTick = (*task)->duration() * progress / 1000;
+                    } else {
+                        task++;
+                    }
+                }
+                if (canceled == true) {
+                    Element* e = animation.first->m_element;
+                    String* n = animation.first->m_name;
+                    document()->animationExecutor()->fireAnimationCancelEvent(
+                        e, n, cancelTick);
+                    document()
+                        ->animationExecutor()
+                        ->checkActiveExecutorInWebView();
+                }
+                if (webView()->inRendering() == false) {
+                    webView()->setNeedsRendering();
+                }
             }
         }
     }

@@ -6981,8 +6981,8 @@ bool StyleResolver::checkPseudoElement(Element* element,
     }
 }
 
-void computeTransition(Element* element, ComputedStyle* oldStyle,
-                       Frame* oldFrame, ComputedStyle* style,
+void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
+                       NULLABLE Frame* oldFrame, ComputedStyle* style,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
@@ -6991,7 +6991,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
 
     bool needsToCheckActiveAnimationExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
-    bool elementHasAnimation = false;
+    bool elementHasTransition = false;
     bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
     bool isRunningTransformAnimationBefore =
         element->isRunningTransformAnimation();
@@ -7004,7 +7004,7 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
         canceledAnimationProgress;
     // check transition have to remove
     {
-        auto& activeAnimations = executor->activeAnimations();
+        auto& activeAnimations = executor->activeTransitions();
         for (size_t i = 0; i < activeAnimations.size(); i++) {
             if (activeAnimations[i]->targetElement() == element &&
                 activeAnimations[i]->type() ==
@@ -7018,21 +7018,21 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                 }
 
                 // element invisible
-                if (!shouldRemove &&
+                if (shouldRemove == false &&
                     style->display() == DisplayValue::NoneDisplayValue) {
                     shouldRemove = true;
                 }
 
                 // transition targetToValue changed
-                if (!shouldRemove &&
-                    !activeAnimations[i]->taskCanContinue(style)) {
+                if (shouldRemove == false &&
+                    activeAnimations[i]->taskCanContinue(style) == false) {
                     shouldRemove = true;
                 }
 
                 // transition property gone || other properties changed
-                if (!shouldRemove) {
+                if (shouldRemove == false) {
                     StyleTransitionData* data = style->transition();
-                    if (!data) {
+                    if (data == nullptr) {
                         shouldRemove = true;
                     } else {
                         bool found = false;
@@ -7043,27 +7043,27 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                                 break;
                             }
                             if (activeAnimations[i]->isKindOfTransitionProperty(
-                                    data->property(j))) {
+                                    data->property(j)) == true) {
                                 found = true;
                                 break;
                             }
                         }
-                        if (!found) {
+                        if (found == false) {
                             shouldRemove = true;
                         }
                     }
                 }
 
-                if (shouldRemove) {
-                    if (!isCancel) {
+                if (shouldRemove == true) {
+                    if (isCancel == false) {
                         damagedKeys[activeAnimations[i]->property()] = false;
-                        activeAnimations[i]->fireEndEvent();
+                        activeAnimations[i]->fireTransitionEndEvent();
                     } else {
                         auto key = activeAnimations[i]->property();
                         float progress = activeAnimations[i]->fraction(tick);
                         canceledAnimationProgress.push_back(
                             std::make_pair(key, progress));
-                        activeAnimations[i]->fireCancelEvent();
+                        activeAnimations[i]->fireTransitionCancelEvent();
                     }
                     activeAnimations[i]->detachFromElement(style);
                     activeAnimations.erase(i);
@@ -7071,30 +7071,32 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveAnimationExecutorInWebView = true;
                 } else {
-                    elementHasAnimation = true;
+                    elementHasTransition = true;
                 }
             }
         }
     }
 
     // check new transition
-    if (oldStyle && oldStyle->display() != DisplayValue::NoneDisplayValue &&
+    if (oldStyle != nullptr &&
+        oldStyle->display() != DisplayValue::NoneDisplayValue &&
         style->display() != DisplayValue::NoneDisplayValue &&
-        style->transitionLayerSize() &&
+        style->transitionLayerSize() > 0 &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone) {
         if (applyTransitionIfNeeds(element, oldStyle, oldFrame, style,
-                                   damagedKeys, canceledAnimationProgress)) {
-            elementHasAnimation = true;
+                                   damagedKeys,
+                                   canceledAnimationProgress) == true) {
+            elementHasTransition = true;
             needsToCheckActiveAnimationExecutorInWebView = true;
         }
     }
 
     // apply transition
-    if (elementHasAnimation) {
-        auto& activeAnimations = executor->activeAnimations();
-        for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element) {
-                activeAnimations[i]->step(tick, style);
+    if (elementHasTransition == true) {
+        auto& activeTransitions = executor->activeTransitions();
+        for (size_t i = 0; i < activeTransitions.size(); i++) {
+            if (activeTransitions[i]->targetElement() == element) {
+                activeTransitions[i]->step(tick, style);
             }
         }
 
@@ -7105,11 +7107,11 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    if (needsToRecomputeStylePropertyDamage) {
+    if (needsToRecomputeStylePropertyDamage == true) {
         damage = ComputedStyleDamage::ComputedStyleDamageNone;
         memset(damagedKeys, 0, sizeof(damagedKeys));
 
-        if (!element->frame()) {
+        if (element->frame() == nullptr) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         }
@@ -7131,8 +7133,8 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
         }
     }
 
-    if (needsToCheckActiveAnimationExecutorInWebView) {
-        executor->checkActiveAnimationExecutorInWebView();
+    if (needsToCheckActiveAnimationExecutorInWebView == true) {
+        executor->checkActiveExecutorInWebView();
     }
 }
 
@@ -7374,7 +7376,7 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
     STARFISH_ASSERT(toStyle != nullptr);
     STARFISH_ASSERT(toStyle->animation() != nullptr);
 
-    bool needsToCheckActiveAnimationExecutorInWebView = false;
+    bool needsToCheckActiveExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
     bool elementHasAnimation = false;
     bool isRunningOpacityAnimationBefore = element->isRunningOpacityAnimation();
@@ -7385,51 +7387,65 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
     STARFISH_ASSERT(executor != nullptr);
 
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
+    float cancelTick = 0;
+    float endTick = 0;
     std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
         canceledAnimationProgress;
     // check animation have to remove
-    {
-        auto& activeAnimations = executor->activeAnimations();
-        for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element &&
-                activeAnimations[i]->type() ==
-                    ActiveAnimationTask::ANIMATION_TYPE) {
-                bool shouldRemove = false;
-                bool isCancel = true;
-                // time is up
-                if (activeAnimations[i]->fraction(tick) >= 1) {
-                    shouldRemove = true;
-                    isCancel = false;
-                }
 
-                // element invisible
-                if (shouldRemove == false &&
-                    toStyle->display() == DisplayValue::NoneDisplayValue) {
-                    shouldRemove = true;
-                }
+    if (element->style() != nullptr &&
+        element->style()->animation() != nullptr) {
+        auto animation = element->style()->animation();
+        size_t nameSize = animation->animationNameSize();
 
-                // TODO : Do we need to check a function
-                // 'activeAnimations[i]->taskCanContinue(toStyle)'. Refer to
-                // transition code.
+        for (size_t n = 0; n < nameSize; n++) {
+            String* name = animation->animationName(n);
+            if (name == String::emptyString || name->equals("none") == true) {
+                continue;
+            }
+            ActiveElementAnimation* key =
+                new ActiveElementAnimation(name, element);
+            auto iter = executor->activeAnimations().find(key);
+            if (iter == executor->activeAnimations().end()) {
+                continue;
+            }
 
-                // animation property gone || other properties changed
-                if (shouldRemove == false) {
-                    StyleAnimationData* data = toStyle->animation();
-                    if (data == nullptr) {
+            bool needsToFireAnimationEndEvent = false;
+            bool needsToFireAnimationCancelEvent = false;
+            auto& activeAnimations = iter->second;
+            for (size_t i = 0; i < activeAnimations.size(); i++) {
+                if (activeAnimations[i]->targetElement() == element &&
+                    activeAnimations[i]->type() ==
+                        ActiveAnimationTask::ANIMATION_TYPE) {
+                    bool shouldRemove = false;
+                    bool isCancel = true;
+                    // time is up
+                    if (activeAnimations[i]->fraction(tick) >= 1) {
                         shouldRemove = true;
-                    } else {
-                        bool found = false;
+                        isCancel = false;
+                    }
 
-                        for (size_t j = 0; j < data->keyframesSize(); j++) {
-                            auto keyframes = data->keyframes(j);
+                    // element invisible
+                    if (shouldRemove == false &&
+                        toStyle->display() == DisplayValue::NoneDisplayValue) {
+                        shouldRemove = true;
+                    }
+
+                    // TODO : Do we need to check a function
+                    // 'activeAnimations[i]->taskCanContinue(toStyle)'. Refer to
+                    // transition code.
+
+                    // animation property gone || other properties changed
+                    if (shouldRemove == false) {
+                        StyleAnimationData* data = toStyle->animation();
+                        if (data == nullptr) {
+                            shouldRemove = true;
+                        } else {
+                            bool found = false;
+                            auto keyframes = animation->keyframes(n);
                             if (keyframes.keyframeListSize() > 0) {
                                 auto keyframe = keyframes.keyframe(0);
                                 for (auto& prop : keyframe->properties()) {
-                                    if (prop.keyKind() ==
-                                        CSSStyleValuePair::KeyKind::All) {
-                                        found = true;
-                                        break;
-                                    }
                                     if (activeAnimations[i]
                                             ->isKindOfTransitionProperty(
                                                 prop.keyKind()) == true) {
@@ -7438,34 +7454,43 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
                                     }
                                 }
                             }
-                            if (found == true) {
-                                break;
+                            if (found == false) {
+                                shouldRemove = true;
                             }
                         }
-                        if (found == false) {
-                            shouldRemove = true;
-                        }
                     }
-                }
 
-                if (shouldRemove == true) {
-                    if (isCancel == false) {
-                        activeAnimations[i]->fireEndEvent();
+                    if (shouldRemove == true) {
+                        if (isCancel == false) {
+                            endTick = activeAnimations[i]->duration() / 1000;
+                            needsToFireAnimationEndEvent = true;
+                        } else {
+                            auto key = activeAnimations[i]->property();
+                            float progress =
+                                activeAnimations[i]->fraction(tick);
+                            canceledAnimationProgress.push_back(
+                                std::make_pair(key, progress));
+
+                            cancelTick = activeAnimations[i]->duration() *
+                                         progress / 1000;
+                            needsToFireAnimationCancelEvent = true;
+                        }
+                        // FIXME
+                        activeAnimations[i]->detachFromElement(toStyle);
+                        activeAnimations.erase(i);
+                        i--;
+                        needsToRecomputeStylePropertyDamage = true;
+                        needsToCheckActiveExecutorInWebView = true;
                     } else {
-                        auto key = activeAnimations[i]->property();
-                        float progress = activeAnimations[i]->fraction(tick);
-                        canceledAnimationProgress.push_back(
-                            std::make_pair(key, progress));
-                        activeAnimations[i]->fireCancelEvent();
+                        elementHasAnimation = true;
                     }
-                    activeAnimations[i]->detachFromElement(toStyle);
-                    activeAnimations.erase(i);
-                    i--;
-                    needsToRecomputeStylePropertyDamage = true;
-                    needsToCheckActiveAnimationExecutorInWebView = true;
-                } else {
-                    elementHasAnimation = true;
                 }
+            }
+
+            if (needsToFireAnimationCancelEvent == true) {
+                executor->fireAnimationCancelEvent(element, name, cancelTick);
+            } else if (needsToFireAnimationEndEvent == true) {
+                executor->fireAnimationEndEvent(element, name, endTick);
             }
         }
     }
@@ -7479,15 +7504,26 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
                               canceledAnimationProgress) == true) {
         element->markIsVisible();
         elementHasAnimation = true;
-        needsToCheckActiveAnimationExecutorInWebView = true;
+        needsToCheckActiveExecutorInWebView = true;
     }
 
     // apply transition
-    if (elementHasAnimation == true) {
-        auto& activeAnimations = executor->activeAnimations();
-        for (size_t i = 0; i < activeAnimations.size(); i++) {
-            if (activeAnimations[i]->targetElement() == element) {
-                activeAnimations[i]->step(tick, toStyle);
+    if (element->style() != nullptr && elementHasAnimation == true) {
+        StyleAnimationData* animation = element->style()->animation();
+        size_t nameSize = animation->animationNameSize();
+        for (size_t n = 0; n < nameSize; n++) {
+            ActiveElementAnimation* key = new ActiveElementAnimation(
+                animation->animationName(n), element);
+            auto iter = executor->activeAnimations().find(key);
+            if (iter == executor->activeAnimations().end()) {
+                continue;
+            }
+
+            auto& activeAnimations = iter->second;
+            for (size_t i = 0; i < activeAnimations.size(); i++) {
+                if (activeAnimations[i]->targetElement() == element) {
+                    activeAnimations[i]->step(tick, toStyle);
+                }
             }
         }
 
@@ -7501,8 +7537,8 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
     // TODO: Do we need to check damages of ComputedStyle?
     // Refer to transition code.
 
-    if (needsToCheckActiveAnimationExecutorInWebView == true) {
-        executor->checkActiveAnimationExecutorInWebView();
+    if (needsToCheckActiveExecutorInWebView == true) {
+        executor->checkActiveExecutorInWebView();
     }
 }
 
