@@ -335,6 +335,7 @@ test/cairo/internal-test/css/background/background_radialgradient5.html
 test/cairo/internal-test/css/background/background_radialgradient6.html
 test/cairo/internal-test/css/background/background_radialgradient7.html
 test/cairo/internal-test/css/background/background_radialgradient8.html
+test/cairo/internal-test/css/animation/parse-animation.html
 test/cairo/internal-test/css/transition/parse-transition.html
 test/cairo/internal-test/css/legacy/body_legacy_attrs.html
 test/cairo/internal-test/css/style/style-content-with-quotes.html

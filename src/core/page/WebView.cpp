@@ -1518,20 +1518,39 @@ RenderResult WebView::rendering(bool force)
     if (m_activeAnimationExecutor.size()) {
         uint64_t tick = tickCount();
         for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
-            auto& a = m_activeAnimationExecutor[i]->activeAnimations();
-            for (size_t j = 0; j < a.size(); j++) {
-                a[j]->initializeStartTimeIfNeeded(tick);
-
-                if (a[j]->targetElement()->isPseudoElement()) {
+            auto& transitions =
+                m_activeAnimationExecutor[i]->activeTransitions();
+            for (auto task : transitions) {
+                task->initializeStartTimeIfNeeded(tick);
+                if (task->targetElement()->isPseudoElement() == true) {
                     // we should give damage on parent element
                     // because style of pseudo element is computed by
                     // its parent element
-                    a[j]->targetElement()
+                    task->targetElement()
                         ->asPseudoElement()
                         ->originElement()
                         ->setNeedsStyleRecalcForAnimation();
                 } else {
-                    a[j]->targetElement()->setNeedsStyleRecalcForAnimation();
+                    task->targetElement()->setNeedsStyleRecalcForAnimation();
+                }
+            }
+
+            auto& animations = m_activeAnimationExecutor[i]->activeAnimations();
+            for (auto& animation : animations) {
+                for (auto task : animation.second) {
+                    task->initializeStartTimeIfNeeded(tick);
+                    if (task->targetElement()->isPseudoElement() == true) {
+                        // we should give damage on parent element
+                        // because style of pseudo element is computed by
+                        // its parent element
+                        task->targetElement()
+                            ->asPseudoElement()
+                            ->originElement()
+                            ->setNeedsStyleRecalcForAnimation();
+                    } else {
+                        task->targetElement()
+                            ->setNeedsStyleRecalcForAnimation();
+                    }
                 }
             }
         }

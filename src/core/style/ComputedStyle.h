@@ -3806,8 +3806,8 @@ protected:
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys);
 
-void computeTransition(Element* element, ComputedStyle* oldStyle,
-                       Frame* oldFrame, ComputedStyle* style,
+void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
+                       NULLABLE Frame* oldFrame, ComputedStyle* style,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 

@@ -749,6 +749,16 @@ void Document::dispose()
         m_nativeGradientCacheLRUList.clear();
         m_nativeGradientCache = nullptr;
     }
+
+    if (m_animationExecutor != nullptr) {
+        auto& v = window()->webView()->activeAnimationExecutor();
+        for (size_t i = 0; i < v.size(); i++) {
+            if (v[i] == m_animationExecutor) {
+                v[i]->dispose();
+                v.erase(i);
+            }
+        }
+    }
 }
 
 String* Document::characterSet()
