@@ -62,9 +62,9 @@ android {
     sourceSets {
         main {
             java {
-                srcDir '../../../../src/public/bridge/android/java'
+                srcDir '../../../src/public/bridge/android/java'
             }
-            res.srcDirs = ['../../../../src/public/bridge/android/res']
+            res.srcDirs = ['../../../src/public/bridge/android/res']
         }
     }
 }

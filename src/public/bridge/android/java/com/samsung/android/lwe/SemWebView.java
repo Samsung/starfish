@@ -174,12 +174,30 @@ public class SemWebView extends SurfaceView {
                     }
 
                     PackageManager packageManager = getContext().getPackageManager();
-                    String path = packageManager.getPackageInfo(PACKAGE_NAME, 0).applicationInfo.nativeLibraryDir;
-                    if(!getContext().getApplicationInfo().nativeLibraryDir.endsWith("64")&&!path.endsWith("arm")){
-                        path = path.substring(0,path.length()-2);
+                    String dexPath = packageManager.getPackageInfo(PACKAGE_NAME, 0).applicationInfo.publicSourceDir;
+                    Log.d(sTag, "dexPath: " + dexPath);
+
+                    String nativeLibDir = packageManager.getPackageInfo(PACKAGE_NAME, 0).applicationInfo.nativeLibraryDir;
+                    Log.d(sTag, "nativeLibraryDir: " + nativeLibDir);
+
+                    boolean is64BitDevice = nativeLibDir.endsWith("arm64");
+                    boolean is64BitApp = getContext().getApplicationInfo().nativeLibraryDir.endsWith("arm64");
+
+                    String libLoadingPath = "";
+                    if (is64BitDevice) {
+                        if (is64BitApp) {
+                            libLoadingPath += nativeLibDir;
+                            libLoadingPath += ":" + dexPath + "!/lib/arm64-v8a";
+                        } else { // 32 bit app
+                            libLoadingPath += nativeLibDir.substring(0, nativeLibDir.length() - 2);
+                            libLoadingPath += ":" + dexPath + "!/lib/armeabi-v7a";
+                        }
+                    } else { // 32 bit device
+                        libLoadingPath += nativeLibDir;
+                        libLoadingPath += ":" + dexPath + "!/lib/armeabi-v7a";
                     }
-                    String dexpath = packageManager.getPackageInfo(PACKAGE_NAME, 0).applicationInfo.publicSourceDir;
-                    pcl = new PathClassLoader(dexpath, path, getContext().getClassLoader());
+
+                    pcl = new PathClassLoader(dexPath, libLoadingPath, getContext().getClassLoader());
                 }
 
                 if (pcl == null) {
