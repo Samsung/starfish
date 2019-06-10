@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 # ESCARGOT THIRDPARTY
-IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl")))
+IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_skia")))
 # GIT SUBMODULE
     EXECUTE_PROCESS (
         WORKING_DIRECTORY ${STARFISH_ROOT}
@@ -171,13 +171,38 @@ ENDIF()
 # LIBSKIA
 #######################################################
 IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
-    SET (BUILD_TYPE "Release")
+    SET (SKIA_DIR ${THIRD_PARTY_ROOT}/android/skia/)
+    SET (SKIA_BUILD_ARGS "is_component_build=true" "is_rgba=true" "target_cpu=\\\"x64\\\"")
+    SET (SKIA_BUILD_TYPE "Release")
     IF (${MODE} STREQUAL "debug")
-        SET (BUILD_TYPE "Debug")
+        SET (SKIA_BUILD_TYPE "Debug") 
+        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=true")
+    ELSE()
+        SET (SKIA_BUILD_TYPE "Release")
+        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=false")
     ENDIF()
-    ADD_CUSTOM_COMMAND (OUTPUT ${OUTPUT_DIRECTORY}/lib/libskia.so
-                        DEPENDS ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so
-                        COMMAND cp ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/lib/.
+    SET(SKIA_LOCAL_TARGET ${SKIA_DIR}/out/${SKIA_BUILD_TYPE}/Shared/libskia.so)
+    SET(SKIA_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libskia.so)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${SKIA_DIR}
+                        COMMENT "BUILD SKIA"
+                        COMMAND echo "BUILD SKIA"
+                        COMMAND bin/gn gen out/${SKIA_BUILD_TYPE}/Shared --args="${SKIA_BUILD_ARGS}"
+                        COMMAND ninja -d explain -C out/${SKIA_BUILD_TYPE}/Shared -t clean
+                        COMMAND ninja -d explain -C out/${SKIA_BUILD_TYPE}/Shared
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_TARGET}
+                        WORKING_DIRECTORY ${SKIA_DIR}
+                        DEPENDS ${SKIA_LOCAL_TARGET}
+                        COMMENT "COPY SKIA"
+                        COMMAND cp ${SKIA_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_TARGET (skia
+                       DEPENDS ${SKIA_TARGET}
+                       COMMAND echo "SKIA TARGET"
     )
 ENDIF()
 
@@ -283,6 +308,10 @@ SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse w
 
 IF (NOT ${BACKEND} STREQUAL "efl_skia")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} skia_matrix)
+ENDIF()
+
+IF (${BACKEND} STREQUAL "efl_skia")
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${SKIA_TARGET})
 ENDIF()
 
 IF (NOT ${HOST} STREQUAL "tizen")
