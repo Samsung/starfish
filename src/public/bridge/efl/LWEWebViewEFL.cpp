@@ -565,6 +565,10 @@ public:
             WebViewEFL* wv = (WebViewEFL*)data;
             int w, h;
             evas_object_geometry_get(wv->m_mainBox, NULL, NULL, &w, &h);
+            if (w == 0 || h == 0) {
+                STARFISH_LOG_WARN("the main box has a zero size\n");
+                return;
+            }
             evas_object_resize(wv->m_graphicsAdapter, w, h);
 
 #if defined(PORT_WINDOW_BACKEND_GL)
