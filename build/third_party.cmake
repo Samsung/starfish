@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 # ESCARGOT THIRDPARTY
-IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_skia")))
+IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_skia_gl")))
 # GIT SUBMODULE
     EXECUTE_PROCESS (
         WORKING_DIRECTORY ${STARFISH_ROOT}
@@ -29,7 +29,7 @@ SET (THIRD_PARTY_DEFINITIONS ${LWE_DEFINES_MODE})
 #######################################################
 # SKIA_MATRIX
 #######################################################
-IF (NOT ${BACKEND} STREQUAL "efl_skia")
+IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
     FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
     FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
     ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
@@ -170,9 +170,9 @@ ENDIF()
 #######################################################
 # LIBSKIA
 #######################################################
-IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
+IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
     SET (SKIA_DIR ${THIRD_PARTY_ROOT}/android/skia/)
-    SET (SKIA_BUILD_ARGS "is_component_build=true" "is_rgba=true" "target_cpu=\\\"x64\\\"")
+    SET (SKIA_BUILD_ARGS "is_component_build=true" "target_cpu=\\\"x64\\\"")
     SET (SKIA_BUILD_TYPE "Release")
     IF (${MODE} STREQUAL "debug")
         SET (SKIA_BUILD_TYPE "Debug") 
@@ -181,6 +181,13 @@ IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
         SET (SKIA_BUILD_TYPE "Release")
         SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=false")
     ENDIF()
+
+    IF (${BACKEND} STREQUAL "efl_skia_gl")
+        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_rgba=true")
+    ELSEIF(${BACKEND} STREQUAL "efl_skia_gb")
+        SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_rgba=false")
+    ENDIF()
+
     SET(SKIA_LOCAL_TARGET ${SKIA_DIR}/out/${SKIA_BUILD_TYPE}/Shared/libskia.so)
     SET(SKIA_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libskia.so)
 
@@ -306,11 +313,11 @@ ADD_SUBDIRECTORY (third_party/escargot)
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${GC_TARGET} clipper escargot)
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse webm)
 
-IF (NOT ${BACKEND} STREQUAL "efl_skia")
+IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} skia_matrix)
 ENDIF()
 
-IF (${BACKEND} STREQUAL "efl_skia")
+IF (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${SKIA_TARGET})
 ENDIF()
 
