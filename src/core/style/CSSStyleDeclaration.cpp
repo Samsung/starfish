@@ -3552,6 +3552,37 @@ void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
     addCSSValuePair(CSSStyleValuePair::AnimationTimingFunction, result);
 }
 
+void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
+                                            bool isImportant)
+{
+    STARFISH_ASSERT(value != nullptr);
+    if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
+        return;
+    }
+    // TODO handle var() case
+    CSSTokenVector layers;
+    if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
+        return;
+    }
+    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    size_t layerSize = layers.size();
+    for (size_t i = 0; i < layerSize; i++) {
+        CSSStyleValuePair sub;
+        CSSTokenVector tokens;
+        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
+            sub.updateValueLayerAnimationDelay(tokens) == false) {
+            return;
+        }
+        list->push_back(sub);
+    }
+    CSSStyleValuePair result;
+    result.setFlagImportant(isImportant);
+    result.setValueList(list);
+    addCSSValuePair(CSSStyleValuePair::AnimationDelay, result);
+}
+
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
     CSSStyleDeclaration* src, CSSRule* parentRule)
     : CSSStyleDeclaration(parentRule->parentStyleSheet()

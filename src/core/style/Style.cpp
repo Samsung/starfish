@@ -2185,6 +2185,43 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
     }
 }
 
+static void applyAnimationDelay(Element* element, ComputedStyle* style,
+                                ComputedStyle* parentStyle,
+                                CSSStyleValuePair& item, size_t index)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setAnimationDelay(CSSTime(0), index);
+        break;
+    case CSSStyleValuePair::Inherit:
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setTransitionDelay(parentStyle->animationDelay(), index);
+        break;
+    case CSSStyleValuePair::Time:
+        style->setAnimationDelay(item.timeValue(), index);
+        break;
+    case CSSStyleValuePair::CalcValueKind: {
+        CalcData* calcData = item.calcValue();
+        CalcValueType type = calcData->type();
+        if (type.isTime() == true) {
+            style->setAnimationDelay(calcData->timeValue(), index);
+        } else {
+            style->setAnimationDelay(CSSTime(0), index);
+        }
+        break;
+    }
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
 static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
                                          ComputedStyle* parentStyle,
                                          CSSStyleValuePair& item, size_t index)
@@ -3801,6 +3838,20 @@ void StyleResolver::apply(Element* element,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationTimingFunction(element, style, parentStyle,
                                                  (*list)[i], i);
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AnimationDelay:
+            style->resetAnimationDelays();
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyAnimationDelay(element, style, parentStyle, cssValues[k],
+                                    0);
+            } else {
+                ValueList* list = cssValues[k].multiValue();
+                STARFISH_ASSERT(list != nullptr);
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    applyAnimationDelay(element, style, parentStyle, (*list)[i],
+                                        i);
                 }
             }
             break;
@@ -7180,7 +7231,7 @@ static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
     //      case CSSStyleValuePair::KeyKind::Animation:
-    //      case CSSStyleValuePair::KeyKind::AnimationDelay:
+    case CSSStyleValuePair::KeyKind::AnimationDelay:
     //      case CSSStyleValuePair::KeyKind::AnimationDirection:
     case CSSStyleValuePair::KeyKind::AnimationDuration:
     //      case CSSStyleValuePair::KeyKind::AnimationFillMode:
@@ -13655,6 +13706,12 @@ bool CSSStyleValuePair::updateValueLayerAnimationTimingFunction(
         return false;
     }
     return updateValueUnitAnimationTimingFunction(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueLayerAnimationDelay(
+    const CSSTokenVector& tokens)
+{
+    return updateValueTime(tokens, CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueUnitFilterFunction(

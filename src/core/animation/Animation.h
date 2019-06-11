@@ -278,11 +278,12 @@ public:
 
     float fraction(uint64_t tickCount) const
     {
-        if (tickCount < m_startTimeMs) {
+        if (tickCount < (m_startTimeMs + m_delayMs)) {
             return 0;
         }
-        uint64_t timeDiff = tickCount - m_startTimeMs;
+        uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
         float result = timeDiff / ((float)m_durationMs);
+
         return std::min(result, 1.0f);
     }
 
@@ -621,7 +622,7 @@ public:
 
     void checkActiveExecutorInWebView();
 
-    void fireAnimationStartEvent(Element* element, String* name);
+    void fireAnimationStartEvent(Element* element, String* name, double delay);
     void fireAnimationEndEvent(Element* element, String* name,
                                float elapsedTime);
     void fireAnimationCancelEvent(Element* element, String* name,

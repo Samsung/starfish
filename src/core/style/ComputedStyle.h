@@ -2191,6 +2191,15 @@ public:
         return AnimationKeyframe::defaultTimingFunction();
     }
 
+    CSSTime animationDelay(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->delay(layer);
+        }
+        return CSSTime(0);
+    }
+
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
                                size_t layer = 0)
     {
@@ -2268,6 +2277,11 @@ public:
         m_rareComputedStyleData.ensureAnimation()->setTimingFunction(f, index);
     }
 
+    void setAnimationDelay(CSSTime delay, size_t index)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setDelay(delay, index);
+    }
+
     void resetTransitionProperties()
     {
         StyleTransitionData* t = transition();
@@ -2324,6 +2338,13 @@ public:
         }
     }
 
+    void resetAnimationDelays()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearDelays();
+        }
+    }
 #define SET_SIDE(UPOS, ...)                                      \
     void set##UPOS(const Length& unit)                           \
     {                                                            \

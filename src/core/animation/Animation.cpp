@@ -71,7 +71,8 @@ void AnimationExecutor::checkActiveExecutorInWebView()
     }
 }
 
-void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name)
+void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
+                                                double delay)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
@@ -79,7 +80,11 @@ void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name)
     // element, name->toUTF8NonGCString().data());
     AnimationEventInit init;
     init.setAnimationName(name);
-    init.setElapsedTime(0);
+    if (delay < 0) {
+        init.setElapsedTime(-(delay / 1000));
+    } else {
+        init.setElapsedTime(0);
+    }
     init.setBubbles(true);
     init.setCancelable(false);
     // TODO add more information to init
@@ -183,6 +188,9 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     float f = 0;
     if (m_startTimeMs != 0) {
         f = fraction(currentTickCount);
+    }
+    if (f == 0) {
+        return;
     }
 
     execute(computeProgress(f), style);
@@ -1954,10 +1962,6 @@ bool applyAnimationIfNeeds(
         }
 
         double delay = animation->delay(s).toTimeValue();
-        // TODO: If delay has a negative value, it should be reflected to
-        // duration. That is, the animation should start as if it had already
-        // been playing for N seconds/milliseconds.
-
         size_t keyframeSize = keyframes.keyframeListSize();
         for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
             CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
@@ -2030,7 +2034,7 @@ bool applyAnimationIfNeeds(
         }
 
         if (ret == true) {
-            executor->fireAnimationStartEvent(element, name);
+            executor->fireAnimationStartEvent(element, name, delay);
         }
     }
 
