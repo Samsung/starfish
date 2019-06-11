@@ -322,10 +322,12 @@ public class LweWebViewImpl implements LweWebView {
         sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
         String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
         String cookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
-        String cachePath = "/data/local/tmp/Starfish-cache";
         File cachedDir = appContext.getCacheDir();
+        String cachePath = "";
         if (cachedDir != null) {
             cachePath = cachedDir.getAbsolutePath() + "/Starfish-cache";
+        } else {
+            cachePath = "/data/local/tmp/Starfish-cache";
         }
         init();
 
@@ -336,6 +338,7 @@ public class LweWebViewImpl implements LweWebView {
                 create(mWindowWidth, mWindowHeight, sDpr,
                         initialUAString, sLocale, sTimezone,
                         localStoragePath, cookiePath, cachePath);
+        mLWEView.setZOrderOnTop(true);
         mLWEView.getHolder().addCallback(
                 new SurfaceHolder.Callback() {
                     @Override
