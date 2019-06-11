@@ -167,6 +167,13 @@ public:
         return m_data.m_matrix;
     }
 
+    inline void* operator new(size_t size, void* p)
+    {
+        STARFISH_ASSERT(p != nullptr);
+        STARFISH_ASSERT(size == sizeof(AnimatedValue));
+        return p;
+    }
+
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(AnimatedValue));
@@ -244,16 +251,6 @@ public:
         return m_targetElement;
     }
 
-    AnimatedValue fromValue() const
-    {
-        return m_fromValue;
-    }
-
-    AnimatedValue toValue() const
-    {
-        return m_toValue;
-    }
-
     void step(uint64_t tickCount, ComputedStyle* style);
     virtual void execute(float progress, ComputedStyle* style)
     {
@@ -274,6 +271,11 @@ public:
     virtual bool isKindOfTransitionProperty(CSSStyleValuePair::KeyKind k)
     {
         return k == m_property;
+    }
+
+    virtual void resolveUnresolvedAnimatedValues()
+    {
+        m_isEveryAnimiatedValueResolved = true;
     }
 
     float fraction(uint64_t tickCount) const
@@ -313,21 +315,36 @@ public:
         return m_type;
     }
 
+    AnimatedValue* currentAnimatedFromValue();
+    AnimatedValue* currentAnimatedToValue();
+    TimingFunction* currentTimingFunction();
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        STARFISH_ASSERT(desc != nullptr);
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveAnimationTask, m_targetElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveAnimationTask, m_values));
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveAnimationTask, m_offsets));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ActiveAnimationTask, m_timingFunctions));
+    }
+
     float computeProgress(float fraction);
 
-    CSSStyleValuePair::KeyKind m_property;
-    Element* m_targetElement;
+    bool m_isEveryAnimiatedValueResolved : 1;
+    TYPE m_type : 1;
+    CSSStyleValuePair::KeyKind m_property : 8;
 
-    AnimatedValue m_fromValue;
-    AnimatedValue m_toValue;
+    Element* m_targetElement;
 
     uint64_t m_startTimeMs;
     uint64_t m_durationMs;
     uint64_t m_delayMs;
-    TimingFunction* m_timingFunction;
 
-    TYPE m_type;
     unsigned int m_frameIdx;
 
     GCVector<AnimatedValue*> m_values;
@@ -349,6 +366,14 @@ public:
         STARFISH_ASSERT(target != nullptr);
         STARFISH_ASSERT(timingFunction != nullptr);
     }
+
+    ActiveOpacityAnimationTask(Element* target,
+                               CSSStyleValuePair::KeyKind targetProperty,
+                               const GCVector<AnimatedValue*>& values,
+                               const GCAtomicVector<double>& offsets,
+                               const GCVector<TimingFunction*>& timingFunctions,
+                               uint64_t durationInms, uint64_t delayInms);
+
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual void attachToElement(ComputedStyle* style) override;
@@ -394,6 +419,17 @@ public:
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual void attachToElement(ComputedStyle* style) override;
     virtual void detachFromElement(ComputedStyle* style) override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        STARFISH_ASSERT(desc != nullptr);
+        ActiveAnimationTask::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveTransformAnimationTask,
+                                        m_originalTransformValue));
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     StyleTransformDataGroup* m_originalTransformValue;
@@ -441,10 +477,32 @@ public:
                               TimingFunction* timingFunction,
                               Length originalToValue,
                               size_t indexForBgLayer = 0);
+
+    ActiveLengthAnimationTask(Element* target,
+                              CSSStyleValuePair::KeyKind targetProperty,
+                              const GCVector<AnimatedValue*>& values,
+                              const GCAtomicVector<double>& offsets,
+                              const GCVector<TimingFunction*>& timingFunctions,
+                              uint64_t durationInms, uint64_t delayInms,
+                              size_t indexForBgLayer = 0);
+
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
         CSSStyleValuePair::KeyKind k) override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        STARFISH_ASSERT(desc != nullptr);
+        ActiveAnimationTask::fillGCDescriptor(desc);
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(ActiveLengthAnimationTask, m_originalToValue));
+    }
+
+    virtual void resolveUnresolvedAnimatedValues() override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     Length m_originalToValue;
@@ -465,6 +523,17 @@ public:
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
         CSSStyleValuePair::KeyKind k) override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        STARFISH_ASSERT(desc != nullptr);
+        ActiveAnimationTask::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveLengthSizeAnimationTask,
+                                        m_originalToValue));
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     LengthSize m_originalToValue;

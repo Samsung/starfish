@@ -717,19 +717,10 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                         computeTransition(pseudoNode, ocs, pseudoNode->frame(),
                                           ncs, damage, damagedKeys);
 
-#if defined(STARFISH_ENABLE_ANIMATION)
-                        if (ocs->animationNameSize() > 0) {
-                            computeAnimationKeyframes(
-                                pseudoNode->document()->styleResolver(),
-                                pseudoNode, oldStyle, pseudoNode->frame(), ocs,
-                                damage);
-                            if (ocs->animation()->allKeyframeListSize() > 0) {
-                                computeAnimation(pseudoNode, ocs,
-                                                 pseudoNode->frame(), ncs,
-                                                 damage);
-                            }
-                        }
-#endif
+                        // TODO
+                        // implement CSS animtion for pseudo element
+                        // here when we can tracking psuedo element is appear
+
                         if ((damage & ComputedStyleDamage::
                                           ComputedStyleDamageInherited) ||
                             (damage & ComputedStyleDamage::
