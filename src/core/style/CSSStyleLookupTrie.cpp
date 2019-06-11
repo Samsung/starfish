@@ -759,7 +759,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // List-Style-Type
         // Grid-Column-End
         // Grid-Column-Gap
+        // Animation-Delay
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animation-delay", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationDelay;
+            }
+            break;
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::JustifyContent;
@@ -1776,6 +1782,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 14:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animationDelay", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationDelay;
+            }
+            break;
         case 'j':
             if (memcmp(data, "justifyContent", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::JustifyContent;

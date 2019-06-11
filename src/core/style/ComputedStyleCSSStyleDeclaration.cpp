@@ -1309,6 +1309,21 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::AnimationDelay: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDelay);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size = style->animation() ? style->animation()->delaySize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(CSSStyleValuePair::Time,
+                                             style->animationDelay(i));
+            }
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
