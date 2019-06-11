@@ -519,10 +519,9 @@ void BrowsingContext::resolveStyleIfNeeds()
                             DisplayValue::NoneDisplayValue) {
                         canceled = true;
                         (*task)->detachFromElement(nullptr);
-                        task = animation.second.erase(task);
-
                         float progress = (*task)->fraction(currentTick);
                         cancelTick = (*task)->duration() * progress / 1000;
+                        task = animation.second.erase(task);
                     } else {
                         task++;
                     }
@@ -597,6 +596,19 @@ bool BrowsingContext::layoutIfNeeded()
         webView()->setNeedsComputeStackingContextProperties();
         m_needsLayout = false;
         ret = true;
+    }
+
+    if (document()->animationExecutor()->activeAnimations().size() != 0) {
+        auto& activeAnimations =
+            document()->animationExecutor()->activeAnimations();
+        auto iter = activeAnimations.begin();
+        while (iter != activeAnimations.end()) {
+            auto& l = iter->second;
+            for (size_t i = 0; i < l.size(); i++) {
+                l[i]->resolveUnresolvedAnimatedValues();
+            }
+            iter++;
+        }
     }
 
     document()->resourceLoader().cachePruning();

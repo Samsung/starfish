@@ -138,19 +138,21 @@ ActiveAnimationTask::ActiveAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
     uint64_t delayInms, TimingFunction* timingFunction)
-    : m_property(targetProperty)
+    : m_isEveryAnimiatedValueResolved(true)
+    , m_type(TRANSITION_TYPE)
+    , m_property(targetProperty)
     , m_targetElement(target)
-    , m_fromValue(from)
-    , m_toValue(to)
     , m_startTimeMs(0)
     , m_durationMs(durationInms)
     , m_delayMs(delayInms)
-    , m_timingFunction(timingFunction)
-    , m_type(TRANSITION_TYPE)
     , m_frameIdx(0)
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
+
+    m_values.push_back(new AnimatedValue(from));
+    m_values.push_back(new AnimatedValue(to));
+    m_timingFunctions.push_back(timingFunction);
 }
 
 ActiveAnimationTask::ActiveAnimationTask(
@@ -159,12 +161,13 @@ ActiveAnimationTask::ActiveAnimationTask(
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
     uint64_t delayInms)
-    : m_property(targetProperty)
+    : m_isEveryAnimiatedValueResolved(false)
+    , m_type(ANIMATION_TYPE)
+    , m_property(targetProperty)
     , m_targetElement(target)
     , m_startTimeMs(0)
     , m_durationMs(durationInms)
     , m_delayMs(delayInms)
-    , m_type(ANIMATION_TYPE)
     , m_frameIdx(0)
 {
     STARFISH_ASSERT(target != nullptr);
@@ -172,13 +175,24 @@ ActiveAnimationTask::ActiveAnimationTask(
     STARFISH_ASSERT(offsets.size() > 1);
     STARFISH_ASSERT(timingFunctions.size() > 1);
 
-    m_fromValue = *values[0];
-    m_toValue = *values[1];
-    m_timingFunction = timingFunctions[0];
-
     m_values.assign(values.begin(), values.end());
     m_offsets.assign(offsets.begin(), offsets.end());
     m_timingFunctions.assign(timingFunctions.begin(), timingFunctions.end());
+}
+
+void* ActiveAnimationTask::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ActiveAnimationTask));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (typeInited == false) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveAnimationTask)] = { 0 };
+        fillGCDescriptor(obj_bitmap);
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ActiveAnimationTask));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
@@ -189,7 +203,8 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     if (m_startTimeMs != 0) {
         f = fraction(currentTickCount);
     }
-    if (f == 0) {
+
+    if (f == 0 && m_type == ANIMATION_TYPE) {
         return;
     }
 
@@ -249,6 +264,21 @@ void ActiveAnimationTask::fireTransitionCancelEvent()
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
+AnimatedValue* ActiveAnimationTask::currentAnimatedFromValue()
+{
+    return m_values[m_frameIdx];
+}
+
+AnimatedValue* ActiveAnimationTask::currentAnimatedToValue()
+{
+    return m_values[m_frameIdx + 1];
+}
+
+TimingFunction* ActiveAnimationTask::currentTimingFunction()
+{
+    return m_timingFunctions[m_frameIdx];
+}
+
 float ActiveAnimationTask::computeProgress(float fraction)
 {
     STARFISH_ASSERT(fraction >= 0.0f);
@@ -259,20 +289,30 @@ float ActiveAnimationTask::computeProgress(float fraction)
                   (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
         if (f > 1.0) {
             f = 0;
-            m_fromValue = m_toValue;
             m_frameIdx++;
-            m_toValue = *m_values[m_frameIdx + 1];
         }
-        return m_timingFunctions[m_frameIdx]->getValue(f);
+        fraction = f;
     }
-    return m_timingFunction->getValue(fraction);
+    return currentTimingFunction()->getValue(fraction);
+}
+
+ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    uint64_t delayInms)
+    : ActiveAnimationTask(target, targetProperty, values, offsets,
+                          timingFunctions, durationInms, delayInms)
+{
+    STARFISH_ASSERT(target != nullptr);
 }
 
 void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
-    float from = m_fromValue.getFloat();
-    float to = m_toValue.getFloat();
+    float from = currentAnimatedFromValue()->getFloat();
+    float to = currentAnimatedToValue()->getFloat();
     float newOpacity = from * (1 - progress) + to * progress;
     style->setOpacity(newOpacity);
 }
@@ -280,7 +320,7 @@ void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
 bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
-    if (newStyle->opacity() != m_toValue.getFloat()) {
+    if (newStyle->opacity() != currentAnimatedToValue()->getFloat()) {
         return false;
     }
     return true;
@@ -461,8 +501,9 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
     , m_originalTransformValue(nullptr)
-    , m_decomposedFrom(decomposing2DMatrix(m_fromValue.getMatrix()))
-    , m_decomposedTo(decomposing2DMatrix(m_toValue.getMatrix()))
+    , m_decomposedFrom(
+          decomposing2DMatrix(currentAnimatedFromValue()->getMatrix()))
+    , m_decomposedTo(decomposing2DMatrix(currentAnimatedToValue()->getMatrix()))
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
@@ -476,11 +517,28 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
 }
 
+void* ActiveTransformAnimationTask::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ActiveTransformAnimationTask));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (typeInited == false) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveTransformAnimationTask)] = {
+            0
+        };
+        fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(ActiveTransformAnimationTask));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
-    SkMatrix from = m_fromValue.getMatrix();
-    SkMatrix to = m_toValue.getMatrix();
+    SkMatrix from = currentAnimatedFromValue()->getMatrix();
+    SkMatrix to = currentAnimatedToValue()->getMatrix();
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
 
@@ -550,8 +608,8 @@ void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
-    Unit::Color from = m_fromValue.getColor();
-    Unit::Color to = m_toValue.getColor();
+    Unit::Color from = currentAnimatedFromValue()->getColor();
+    Unit::Color to = currentAnimatedToValue()->getColor();
 
     unsigned char r = from.r() * (1 - progress) + to.r() * progress;
     unsigned char g = from.g() * (1 - progress) + to.g() * progress;
@@ -585,39 +643,45 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
-        if (newStyle->backgroundColor() == m_toValue.getColor()) {
+        if (newStyle->backgroundColor() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
-        if (newStyle->border().bottom().color() == m_toValue.getColor()) {
+        if (newStyle->border().bottom().color() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
-        if (newStyle->border().left().color() == m_toValue.getColor()) {
+        if (newStyle->border().left().color() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
-        if (newStyle->border().right().color() == m_toValue.getColor()) {
+        if (newStyle->border().right().color() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
-        if (newStyle->border().top().color() == m_toValue.getColor()) {
+        if (newStyle->border().top().color() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
-        if (newStyle->color() == m_toValue.getColor()) {
+        if (newStyle->color() == currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
-        if (newStyle->caretColor() == m_toValue.getColor()) {
+        if (newStyle->caretColor() == currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
-        if (newStyle->outlineColor() == m_toValue.getColor()) {
+        if (newStyle->outlineColor() == currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
-        if (newStyle->textDecorationColor() == m_toValue.getColor()) {
+        if (newStyle->textDecorationColor() ==
+            currentAnimatedToValue()->getColor()) {
             return true;
         }
     } else {
@@ -640,20 +704,185 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     STARFISH_ASSERT(timingFunction != nullptr);
 }
 
+ActiveLengthAnimationTask::ActiveLengthAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    uint64_t delayInms, size_t indexForBgLayer)
+    : ActiveAnimationTask(target, targetProperty, values, offsets,
+                          timingFunctions, durationInms, delayInms)
+    , m_indexForBgLayer(indexForBgLayer)
+{
+    STARFISH_ASSERT(target != nullptr);
+}
+
+void* ActiveLengthAnimationTask::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ActiveLengthAnimationTask));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (typeInited == false) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthAnimationTask)] = { 0 };
+        fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(ActiveLengthAnimationTask));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
+{
+    if (m_isEveryAnimiatedValueResolved == false) {
+        Frame* frm = m_targetElement->frame();
+        FrameBox* cb = containingBlock(frm);
+
+        LayoutUnit parentLength;
+        bool isValueKindDependsOnParentFixedHeight = false;
+        bool hasParentHeightFixedHeight = false;
+
+        if (cb != nullptr) {
+            switch (m_property) {
+            case CSSStyleValuePair::Width:
+            case CSSStyleValuePair::MaxWidth:
+            case CSSStyleValuePair::MinWidth:
+            case CSSStyleValuePair::MarginTop:
+            case CSSStyleValuePair::MarginRight:
+            case CSSStyleValuePair::MarginBottom:
+            case CSSStyleValuePair::MarginLeft:
+            case CSSStyleValuePair::BorderTop:
+            case CSSStyleValuePair::BorderRight:
+            case CSSStyleValuePair::BorderBottom:
+            case CSSStyleValuePair::BorderLeft:
+            case CSSStyleValuePair::PaddingTop:
+            case CSSStyleValuePair::PaddingRight:
+            case CSSStyleValuePair::PaddingBottom:
+            case CSSStyleValuePair::PaddingLeft:
+                parentLength = cb->contentWidth();
+                break;
+            case CSSStyleValuePair::Left:
+            case CSSStyleValuePair::Right:
+                parentLength = cb->contentWidth();
+                break;
+            case CSSStyleValuePair::Top:
+            case CSSStyleValuePair::Bottom:
+                parentLength = cb->contentHeight();
+                break;
+            case CSSStyleValuePair::Height:
+            case CSSStyleValuePair::MaxHeight:
+            case CSSStyleValuePair::MinHeight:
+                isValueKindDependsOnParentFixedHeight = true;
+                hasParentHeightFixedHeight =
+                    LayoutContext::parentHasFixedHeight(frm);
+                parentLength = cb->contentHeight();
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        } else {
+            switch (m_property) {
+            case CSSStyleValuePair::Width:
+            case CSSStyleValuePair::MaxWidth:
+            case CSSStyleValuePair::MinWidth:
+            case CSSStyleValuePair::MarginTop:
+            case CSSStyleValuePair::MarginRight:
+            case CSSStyleValuePair::MarginBottom:
+            case CSSStyleValuePair::MarginLeft:
+            case CSSStyleValuePair::BorderTop:
+            case CSSStyleValuePair::BorderRight:
+            case CSSStyleValuePair::BorderBottom:
+            case CSSStyleValuePair::BorderLeft:
+            case CSSStyleValuePair::PaddingTop:
+            case CSSStyleValuePair::PaddingRight:
+            case CSSStyleValuePair::PaddingBottom:
+            case CSSStyleValuePair::PaddingLeft:
+            case CSSStyleValuePair::Left:
+            case CSSStyleValuePair::Right:
+            case CSSStyleValuePair::Top:
+            case CSSStyleValuePair::Bottom:
+                break;
+            case CSSStyleValuePair::Height:
+            case CSSStyleValuePair::MaxHeight:
+            case CSSStyleValuePair::MinHeight:
+                isValueKindDependsOnParentFixedHeight = true;
+                hasParentHeightFixedHeight = false;
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        }
+
+        // A = height-kind with parent fixed height
+        // B = height-kind without parent fixed height
+        // value    | width-kind       | A                | B
+        // auto     | auto             | auto             | auto
+        // fixed    | fixed            | fixed            | fixed
+        // percent  | convert as fixed | convert as fixed | invalid value
+
+        for (size_t i = 0; i < m_values.size(); i++) {
+            STARFISH_ASSERT(m_values[i]->isLength() == true);
+            if (m_values[i]->getLength().isAuto() == false) {
+                STARFISH_ASSERT(m_values[i]->getLength().isDefinite(true) ==
+                                true);
+                if (m_values[i]->getLength().isDefinite(
+                        isValueKindDependsOnParentFixedHeight == false ||
+                        hasParentHeightFixedHeight == true) == true) {
+                    new (m_values[i]) AnimatedValue(Length(
+                        Length::Fixed, m_values[i]->getLength().specifiedValue(
+                                           parentLength, m_targetElement)));
+                } else {
+                    new (m_values[i]) AnimatedValue();
+                }
+            }
+        }
+    }
+
+    ActiveAnimationTask::resolveUnresolvedAnimatedValues();
+}
+
 void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
     Length newLength;
-    if (m_toValue.getLength().isPercent()) {
-        float fromPercent = m_fromValue.getLength().percent();
-        float toPercent = m_toValue.getLength().percent();
-        newLength = Length(Length::Percent,
-                           interpolate(fromPercent, toPercent, progress));
+
+    if (m_isEveryAnimiatedValueResolved == false) {
+        newLength = currentAnimatedFromValue()->getLength();
     } else {
-        float fromFixed = m_fromValue.getLength().fixed();
-        float toFixed = m_toValue.getLength().fixed();
-        newLength =
-            Length(Length::Fixed, interpolate(fromFixed, toFixed, progress));
+        AnimatedValue* fromValue = currentAnimatedFromValue();
+        AnimatedValue* toValue = currentAnimatedToValue();
+
+        if (fromValue->isLength() == false || toValue->isLength() == false) {
+            // newLength remains as auto
+        } else if (fromValue->getLength().isAuto() == true ||
+                   toValue->getLength().isAuto() == true) {
+            if (progress < 0.5f) {
+                if (fromValue->isLength() == true) {
+                    newLength = fromValue->getLength();
+                } else {
+                    newLength = Length();
+                }
+            } else {
+                if (toValue->isLength() == true) {
+                    newLength = toValue->getLength();
+                } else {
+                    newLength = Length();
+                }
+            }
+        } else {
+            if (toValue->getLength().isPercent() == true) {
+                float fromPercent = fromValue->getLength().percent();
+                float toPercent = toValue->getLength().percent();
+                newLength =
+                    Length(Length::Percent,
+                           interpolate(fromPercent, toPercent, progress));
+            } else {
+                float fromFixed = fromValue->getLength().fixed();
+                float toFixed = toValue->getLength().fixed();
+                newLength = Length(Length::Fixed,
+                                   interpolate(fromFixed, toFixed, progress));
+            }
+        }
     }
 
     if (m_property == CSSStyleValuePair::KeyKind::Width) {
@@ -921,6 +1150,23 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     STARFISH_ASSERT(timingFunction != nullptr);
 }
 
+void* ActiveLengthSizeAnimationTask::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ActiveLengthSizeAnimationTask));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (typeInited == false) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ActiveLengthSizeAnimationTask)] = {
+            0
+        };
+        fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap,
+                                   GC_WORD_LEN(ActiveLengthSizeAnimationTask));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
                                         AnimatedValue toValue)
 {
@@ -957,7 +1203,8 @@ void ActiveLengthSizeAnimationTask::execute(float progress,
     STARFISH_ASSERT(style != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
         style->setBackgroundSize(
-            interpolateLengthSize(progress, m_fromValue, m_toValue),
+            interpolateLengthSize(progress, *currentAnimatedFromValue(),
+                                  *currentAnimatedToValue()),
             m_indexForBgLayer);
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -1013,17 +1260,19 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
     return kind == a || kind == b || kind == c;
 }
 
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                         \
-    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
-    STARFISH_ASSERT(m_fromValue.getLength().isFixed() &&             \
-                    m_toValue.getLength().isFixed());
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                             \
+    STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&            \
+                    currentAnimatedToValue()->isLength());               \
+    STARFISH_ASSERT(currentAnimatedFromValue()->getLength().isFixed() && \
+                    currentAnimatedToValue()->getLength().isFixed());
 
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()              \
-    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
-    STARFISH_ASSERT((m_fromValue.getLength().isFixed() &&            \
-                     m_toValue.getLength().isFixed()) ||             \
-                    (m_fromValue.getLength().isPercent() &&          \
-                     m_toValue.getLength().isPercent()));
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()                     \
+    STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&               \
+                    currentAnimatedToValue()->isLength());                  \
+    STARFISH_ASSERT((currentAnimatedFromValue()->getLength().isFixed() &&   \
+                     currentAnimatedToValue()->getLength().isFixed()) ||    \
+                    (currentAnimatedFromValue()->getLength().isPercent() && \
+                     currentAnimatedToValue()->getLength().isPercent()));
 
 #define _DAMAGED_KEYS(PropName, ...) (damagedKeys[PropName])
 #define NEED_TRANSITION(...)       \
@@ -1897,7 +2146,7 @@ bool applyTransitionIfNeeds(
     return ret;
 }
 
-AnimatedValue* animatedValue(const CSSStyleValuePair& property)
+static AnimatedValue* animatedValue(const CSSStyleValuePair& property)
 {
     switch (property.keyKind()) {
     case CSSStyleValuePair::Color:
@@ -1911,7 +2160,53 @@ AnimatedValue* animatedValue(const CSSStyleValuePair& property)
                 NamedColor::namedColorToColor(property.namedColorValue()));
         } else {
             // TODO: Consider how to handle in this case.
-            STARFISH_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            return new AnimatedValue(Unit::Color(0, 0, 0, 0));
+        }
+        break;
+    case CSSStyleValuePair::Width:
+    case CSSStyleValuePair::MaxWidth:
+    case CSSStyleValuePair::MinWidth:
+    case CSSStyleValuePair::MarginTop:
+    case CSSStyleValuePair::MarginRight:
+    case CSSStyleValuePair::MarginBottom:
+    case CSSStyleValuePair::MarginLeft:
+    case CSSStyleValuePair::BorderTop:
+    case CSSStyleValuePair::BorderRight:
+    case CSSStyleValuePair::BorderBottom:
+    case CSSStyleValuePair::BorderLeft:
+    case CSSStyleValuePair::PaddingTop:
+    case CSSStyleValuePair::PaddingRight:
+    case CSSStyleValuePair::PaddingBottom:
+    case CSSStyleValuePair::PaddingLeft:
+    case CSSStyleValuePair::Height:
+    case CSSStyleValuePair::MaxHeight:
+    case CSSStyleValuePair::MinHeight:
+    case CSSStyleValuePair::Left:
+    case CSSStyleValuePair::Right:
+    case CSSStyleValuePair::Top:
+    case CSSStyleValuePair::Bottom:
+        if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            return new AnimatedValue(property.lengthValue());
+        } else if (property.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            return new AnimatedValue(property.lengthValue());
+        } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+            return new AnimatedValue(Length());
+        } else if (property.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Percentage) {
+            return new AnimatedValue(
+                Length(Length::Percent, property.percentageValue()));
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            return new AnimatedValue(Length(Length::Fixed, 0));
+        }
+    case CSSStyleValuePair::Opacity:
+        if (property.valueKind() == CSSStyleValuePair::ValueKind::Number) {
+            return new AnimatedValue(property.numberValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            return nullptr;
         }
         break;
     default:
@@ -1951,7 +2246,7 @@ bool applyAnimationIfNeeds(
             continue;
         }
 
-        AnimationKeyframes keyframes = animation->keyframes(s);
+        AnimationKeyframes& keyframes = animation->keyframes(s);
         if (keyframes.keyframeList().size() == 0) {
             continue;
         }
@@ -2003,7 +2298,7 @@ bool applyAnimationIfNeeds(
                 }
             }
 
-            bool gotTransition = false;
+            bool gotAnimation = false;
 
             // color series
             if (fromKeyKind == CSSStyleValuePair::BackgroundColor) {
@@ -2013,7 +2308,7 @@ bool applyAnimationIfNeeds(
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
                 executor->registerAnimation(task, style, name);
-                gotTransition = true;
+                gotAnimation = true;
             }
 
             if (fromKeyKind == CSSStyleValuePair::Color) {
@@ -2023,10 +2318,42 @@ bool applyAnimationIfNeeds(
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
                 executor->registerAnimation(task, style, name);
-                gotTransition = true;
+                gotAnimation = true;
             }
 
-            if (gotTransition == true) {
+// length series
+
+#define APPLY_LENGTH_ANIMATION(propertyName)                           \
+    if (fromKeyKind == CSSStyleValuePair::propertyName) {              \
+        auto task = new ActiveLengthAnimationTask(                     \
+            element, CSSStyleValuePair::propertyName, values, offsets, \
+            timingFunctions, duration, delay);                         \
+        executor->removeActiveAnimationTaskIfNeeds(                    \
+            element, CSSStyleValuePair::propertyName);                 \
+        executor->registerAnimation(task, style, name);                \
+        gotAnimation = true;                                           \
+    }
+
+            APPLY_LENGTH_ANIMATION(Width)
+            APPLY_LENGTH_ANIMATION(Height)
+            APPLY_LENGTH_ANIMATION(MinWidth)
+            APPLY_LENGTH_ANIMATION(MaxWidth)
+            APPLY_LENGTH_ANIMATION(MinHeight)
+            APPLY_LENGTH_ANIMATION(MaxHeight)
+
+#undef APPLY_LENGTH_ANIMATION
+
+            if (fromKeyKind == CSSStyleValuePair::Opacity) {
+                auto task = new ActiveOpacityAnimationTask(
+                    element, CSSStyleValuePair::Opacity, values, offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::Opacity);
+                executor->registerAnimation(task, style, name);
+                gotAnimation = true;
+            }
+
+            if (gotAnimation == true) {
                 // TODO reduce animation duration here with
                 // canceledAnimationProgress
                 ret = true;

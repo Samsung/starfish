@@ -2202,7 +2202,7 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
         element->parentNode()
             ->style()
             ->markSomeNonInheritMemberExplicitlyInherited();
-        style->setTransitionDelay(parentStyle->animationDelay(), index);
+        style->setAnimationDelay(parentStyle->animationDelay(), index);
         break;
     case CSSStyleValuePair::Time:
         style->setAnimationDelay(item.timeValue(), index);
@@ -7032,8 +7032,43 @@ bool StyleResolver::checkPseudoElement(Element* element,
     }
 }
 
-void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
-                       NULLABLE Frame* oldFrame, ComputedStyle* style,
+static void recomputeStyleDamageInAnimation(
+    Element* element, ComputedStyle* oldStyle, ComputedStyle* style,
+    ComputedStyleDamage& damage,
+    bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize],
+    bool isRunningOpacityAnimationBefore,
+    bool isRunningTransformAnimationBefore, bool isRunningOpacityAnimationAfter,
+    bool isRunningTransformAnimationAfter)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(oldStyle != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+
+    damage = ComputedStyleDamage::ComputedStyleDamageNone;
+    memset(damagedKeys, 0, sizeof(damagedKeys));
+
+    if (element->frame() == nullptr) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+    }
+
+    damage = (ComputedStyleDamage)(damage |
+                                   compareStyle(oldStyle, style, damagedKeys));
+
+    if (isRunningOpacityAnimationAfter != isRunningOpacityAnimationBefore &&
+        style->opacity() == 1) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamageEstablishesStackingContext);
+    }
+    if (isRunningTransformAnimationAfter != isRunningTransformAnimationBefore &&
+        (style->transforms() == nullptr || style->transforms()->size() == 0)) {
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamageEstablishesStackingContext);
+    }
+}
+
+void computeTransition(Element* element, ComputedStyle* oldStyle,
+                       Frame* oldFrame, ComputedStyle* style,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
@@ -7159,29 +7194,10 @@ void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
         element->isRunningTransformAnimation();
 
     if (needsToRecomputeStylePropertyDamage == true) {
-        damage = ComputedStyleDamage::ComputedStyleDamageNone;
-        memset(damagedKeys, 0, sizeof(damagedKeys));
-
-        if (element->frame() == nullptr) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
-        }
-
-        damage = (ComputedStyleDamage)(
-            damage | compareStyle(oldStyle, style, damagedKeys));
-
-        if (isRunningOpacityAnimationAfter != isRunningOpacityAnimationBefore &&
-            style->opacity() == 1) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamageEstablishesStackingContext);
-        }
-        if (isRunningTransformAnimationAfter !=
-                isRunningTransformAnimationBefore &&
-            (style->transforms() == nullptr ||
-             style->transforms()->size() == 0)) {
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamageEstablishesStackingContext);
-        }
+        recomputeStyleDamageInAnimation(
+            element, oldStyle, style, damage, damagedKeys,
+            isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
+            isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
     }
 
     if (needsToCheckActiveAnimationExecutorInWebView == true) {
@@ -7419,13 +7435,14 @@ void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
     }
 }
 
-void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
+void computeAnimation(StyleResolver& resolver, Element* element,
+                      NULLABLE ComputedStyle* fromStyle,
                       NULLABLE Frame* fromFrame, ComputedStyle* toStyle,
-                      ComputedStyleDamage& damage)
+                      ComputedStyleDamage& damage,
+                      bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize])
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(toStyle != nullptr);
-    STARFISH_ASSERT(toStyle->animation() != nullptr);
 
     bool needsToCheckActiveExecutorInWebView = false;
     bool needsToRecomputeStylePropertyDamage = false;
@@ -7436,6 +7453,13 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
 
     AnimationExecutor* executor = element->document()->animationExecutor();
     STARFISH_ASSERT(executor != nullptr);
+
+    StyleAnimationData* animationData = toStyle->animation();
+
+    if (animationData != nullptr) {
+        computeAnimationKeyframes(resolver, element, fromStyle, fromFrame,
+                                  toStyle, damage);
+    }
 
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
     float cancelTick = 0;
@@ -7481,10 +7505,6 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
                         toStyle->display() == DisplayValue::NoneDisplayValue) {
                         shouldRemove = true;
                     }
-
-                    // TODO : Do we need to check a function
-                    // 'activeAnimations[i]->taskCanContinue(toStyle)'. Refer to
-                    // transition code.
 
                     // animation property gone || other properties changed
                     if (shouldRemove == false) {
@@ -7548,14 +7568,15 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
 
     // check new animation
     if (toStyle->display() != DisplayValue::NoneDisplayValue &&
-        toStyle->animation()->allKeyframeListSize() > 0 &&
+        animationData != nullptr &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-        element->isVisible() == false &&
-        applyAnimationIfNeeds(element, fromStyle, fromFrame, toStyle,
-                              canceledAnimationProgress) == true) {
-        element->markIsVisible();
-        elementHasAnimation = true;
-        needsToCheckActiveExecutorInWebView = true;
+        element->doesExistInFrameTree() == false) {
+        if (animationData->allKeyframeListSize() > 0 &&
+            applyAnimationIfNeeds(element, fromStyle, fromFrame, toStyle,
+                                  canceledAnimationProgress) == true) {
+            elementHasAnimation = true;
+            needsToCheckActiveExecutorInWebView = true;
+        }
     }
 
     // apply transition
@@ -7585,8 +7606,12 @@ void computeAnimation(Element* element, NULLABLE ComputedStyle* fromStyle,
     bool isRunningTransformAnimationAfter =
         element->isRunningTransformAnimation();
 
-    // TODO: Do we need to check damages of ComputedStyle?
-    // Refer to transition code.
+    if (fromStyle != nullptr && needsToRecomputeStylePropertyDamage == true) {
+        recomputeStyleDamageInAnimation(
+            element, fromStyle, toStyle, damage, damagedKeys,
+            isRunningOpacityAnimationBefore, isRunningTransformAnimationBefore,
+            isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
+    }
 
     if (needsToCheckActiveExecutorInWebView == true) {
         executor->checkActiveExecutorInWebView();
@@ -7648,14 +7673,10 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         computeTransition(element, oldStyle, oldFrame, style, damage,
                           damagedKeys);
 #if defined(STARFISH_ENABLE_ANIMATION)
-        if (style->animationNameSize() > 0) {
-            computeAnimationKeyframes(*resolver, element, oldStyle, oldFrame,
-                                      style, damage);
-            if (style->animation()->allKeyframeListSize() > 0) {
-                computeAnimation(element, oldStyle, oldFrame, style, damage);
-            }
-        }
+        computeAnimation(*resolver, element, oldStyle, oldFrame, style, damage,
+                         damagedKeys);
 #endif
+        element->markDoesExistInFrameTree();
 
         {
 // #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
@@ -7742,12 +7763,13 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
     STARFISH_ASSERT(element != nullptr);
 
-    element->clearIsVisible();
+    element->clearDoesExistInFrameTree();
+
     Node* child = element->firstChild();
-    while (child) {
-        if (child->isElement()) {
+    while (child != nullptr) {
+        if (child->isElement() == true) {
             child->clearNeedsStyleRecalc();
-            if (child->style()) {
+            if (child->style() != nullptr) {
                 ctx.pushIntoComputedStylePool(child->style());
                 child->setStyle(nullptr);
                 clearStyle(ctx, child->asElement());

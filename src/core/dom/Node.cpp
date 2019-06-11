@@ -2307,11 +2307,13 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
 
 static void clearStyle(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     Node* child = element->firstChild();
-    while (child) {
-        if (child->isElement()) {
+    while (child != nullptr) {
+        if (child->isElement() == true) {
             child->clearNeedsStyleRecalc();
-            if (child->style()) {
+            if (child->style() != nullptr) {
                 child->setStyle(nullptr);
                 clearStyle(child->asElement());
             }
@@ -2324,6 +2326,7 @@ static void clearStyle(Element* element)
 
 void Node::didNodeRemovedFromDocumentTree()
 {
+    clearDoesExistInFrameTree();
     setState(NodeStateNormal, false);
     setStyle(nullptr);
     if (isElement()) {

@@ -113,7 +113,6 @@ public:
         , m_didAttributeChangedCorrectlyInvoked(true)
 #endif
         , m_id(AtomicString::emptyAtomicString())
-        , m_isVisible(false)
     {
         STARFISH_ASSERT(document != nullptr);
     }
@@ -397,21 +396,6 @@ public:
     virtual void onGlobalPointingEvent(float x, float y,
                                        GlobalPointingEventKind kind) override;
 
-    void markIsVisible()
-    {
-        m_isVisible = true;
-    }
-
-    void clearIsVisible()
-    {
-        m_isVisible = false;
-    }
-
-    bool isVisible()
-    {
-        return m_isVisible;
-    }
-
 protected:
     void setFocused(bool flag)
     {
@@ -450,7 +434,6 @@ private:
     bool m_didAttributeChangedCorrectlyInvoked;
 #endif
     AtomicString m_id;
-    bool m_isVisible;
     GCVector<AtomicString> m_classNames;
     GCVector<Attribute> m_attributes;
 };

@@ -137,6 +137,7 @@ protected:
         , m_needsFrameTreeBuild(true)
         , m_childNeedsFrameTreeBuild(true)
         , m_isConnected(false)
+        , m_doesExistInFrameTree(false)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
@@ -777,6 +778,21 @@ public:
         m_isRunningTransformAnimation = false;
     }
 
+    void markDoesExistInFrameTree()
+    {
+        m_doesExistInFrameTree = true;
+    }
+
+    void clearDoesExistInFrameTree()
+    {
+        m_doesExistInFrameTree = false;
+    }
+
+    bool doesExistInFrameTree()
+    {
+        return m_doesExistInFrameTree;
+    }
+
     bool hasQuote()
     {
         if (m_style != nullptr) {
@@ -828,6 +844,7 @@ protected:
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
     bool m_isConnected : 1;
+    bool m_doesExistInFrameTree : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;
