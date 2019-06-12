@@ -31,7 +31,7 @@
 #include "core/modules/serviceworker/Connection.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/modules/serviceworker/ProgramOptions.h"
+
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"

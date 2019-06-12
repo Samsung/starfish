@@ -21,7 +21,6 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/threading/IRunnable.h"

@@ -17,30 +17,16 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-
-#include "StarfishConfig.h"
-
-#include "core/modules/serviceworker/ProgramOptions.h"
+#include "core/util/ProgramOptions.h"
 
 namespace Starfish {
 
-bool ProgramOptions::has(const char* key)
-{
-    STARFISH_ASSERT(key != nullptr);
-    auto it = m_map.find(key);
-    if (it != m_map.end()) {
-        return true;
-    }
-    return false;
-}
+class GlobalOptions : public ProgramOptions {
+public:
+    static GlobalOptions& instance();
 
-bool ProgramOptions::is(const char* key)
-{
-    STARFISH_ASSERT(key != nullptr);
-    return get<bool>(key);
-}
+private:
+    GlobalOptions();
+};
 
 } // namespace Starfish
-
-#endif

@@ -17,8 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishProgramOptions__)
+#ifndef __StarfishProgramOptions__
 #define __StarfishProgramOptions__
 
 #include <cstdio>

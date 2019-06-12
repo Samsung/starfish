@@ -19,15 +19,9 @@
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
+#include "core/util/GlobalOptions.h"
+
 namespace Starfish {
-
-class WorkerConfig : public ProgramOptions {
-public:
-    static WorkerConfig& instance();
-
-private:
-    WorkerConfig();
-};
 
 #define GETTIME()                                            \
     std::chrono::duration<double>(                           \
@@ -51,17 +45,17 @@ private:
         }                                                                     \
     } while (0)
 
-#define WORKER_LOG_IF_ALLOWED(lvl, fmt, ...)                                 \
-    LOG_IF_ALLOWED(WorkerConfig::instance().get<int>("DEBUG_WORKER") >= lvl, \
-                   WorkerConfig::instance().get("app").c_str(), fmt,         \
+#define WORKER_LOG_IF_ALLOWED(lvl, fmt, ...)                                  \
+    LOG_IF_ALLOWED(GlobalOptions::instance().get<int>("DEBUG_WORKER") >= lvl, \
+                   GlobalOptions::instance().get("app").c_str(), fmt,         \
                    ##__VA_ARGS__)
 
-#define SWCLIENT_LOG_IF_ALLOWED(lvl, fmt, ...)                               \
-    LOG_IF_ALLOWED(WorkerConfig::instance().get<int>("DEBUG_WORKER") >= lvl, \
+#define SWCLIENT_LOG_IF_ALLOWED(lvl, fmt, ...)                                \
+    LOG_IF_ALLOWED(GlobalOptions::instance().get<int>("DEBUG_WORKER") >= lvl, \
                    "CLIT", fmt, ##__VA_ARGS__)
 
-#define SWHOST_LOG_IF_ALLOWED(lvl, fmt, ...)                                 \
-    LOG_IF_ALLOWED(WorkerConfig::instance().get<int>("DEBUG_WORKER") >= lvl, \
+#define SWHOST_LOG_IF_ALLOWED(lvl, fmt, ...)                                  \
+    LOG_IF_ALLOWED(GlobalOptions::instance().get<int>("DEBUG_WORKER") >= lvl, \
                    "HOST", fmt, ##__VA_ARGS__)
 
 #else // else defined(NDEBUG)

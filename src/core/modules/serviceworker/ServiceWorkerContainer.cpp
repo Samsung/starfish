@@ -26,7 +26,7 @@
 #include "core/modules/serviceworker/Task.h"
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/serviceworker/ProgramOptions.h"
+
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "platform/process/base/ProcessType.h"

@@ -31,7 +31,6 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/dom/ExecutionContext.h"
 
-#include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/Message.h"
 #include "core/modules/serviceworker/IORunnable.h"
@@ -76,7 +75,7 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
 
 void ServiceWorkerProcessManager::init()
 {
-    WorkerConfig::instance().set("app", "CLIT");
+    GlobalOptions::instance().set("app", "CLIT");
 
     Message::init();
 

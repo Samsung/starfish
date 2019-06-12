@@ -32,7 +32,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/ProgramOptions.h"
+
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/IORunnable.h"
