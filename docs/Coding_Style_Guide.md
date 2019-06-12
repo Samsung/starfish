@@ -22,8 +22,12 @@ inclusion of header files. The format of the identifier name should be
 ```
 
 ### Use `#include` only in `.cpp` files
-To prevent possible loops in header file inclusion, include header files only
-in `.cpp` files. In this case, the order of header file inclusion is important.
+To prevent possible loops in header file inclusion, try to your best to include header files only
+in .cpp files. In this case, the order of header file inclusion is important.
+
+'including headers in a header' is allowed for the followings. otherwise, try to use forward declarations.
+* Class Inheritance
+* Class member as an instance
 
 ## Formatting
 ### Indentation
@@ -239,7 +243,10 @@ Do not use try-catch statements except throwing a DOMException.
 ### Basic principle
 * When using a pointer type variable, be sure to add the Assertions statement if you do not want to consider the situation where the value is nullptr, if you do not want to add assertions, be sure to write your defense code.
 * In our strategy, Starfish will be terminated along with an error message when a memory allocation attempt fails.
-* When not using GC allocators, write an assertion after memory allocation.
+* If you use c-style allocator like malloc/free, you should check allocation fail.
+* Don't use native(not GC) operator new [] like new char[1240000]
+* While you don't use GC allocator, check before dereferencing with ASSERT or if, depends on the expected behavior what you want to achieve.
+
 ### Add an assertion in the following situations.
 * If the function argument is a pointer type
 ```cpp
@@ -247,6 +254,12 @@ void A::functionA(B* arg1, int arg2) {
     STARFISH_ASSERT(arg1 != nullptr);
 }
 ```
+
+* Don't make String* as nullptr
+Use String::emptyString instead of nullptr.
+If you want to make String* as nullptr, Use Nullable<String*>
+
+
 ### Handling a nullable pointer
 
 There are the following choices where you handle a pointer which can be nullable.
@@ -354,12 +367,16 @@ Make sure your code is obvious and readable with the following conventions.
 - if (verbose && strlen(verbose))
 + if ((verbose != nullptr) && (strlen(verbose) > 0))
 
-// Avoiding conditions with logical operators such as (`!`) is preferred.
-// By just using `(!any) or (any)` it's not explicit what you want. 
-// Rely on the condition itself than variable names like `ptr`.
-- if (!any) // The counter of `any` could be read as `nullptr`, `false`, etc.
-+ if (any == nullptr) 
+// Regarding readability, The primary rule is to use explicit expression consists of left and right operand
+// and not to use single operand logical operator such as (`!`). You can use single operand logical expression
+// only if function/member name is boolean-identifiable. acceptable formats are "isXXX", "shouldXXX", "didXXX" or "flagXXX".
+// Other cases are not recommended to omit the right operand.
+bool isLoaded();
+bool sunnyToday();
+int howMuchLoaded();
 
-- if (!o.isLoaded() && ptr == nullptr)
-+ if ((o.isLoaded() == false) && ptr == nullptr)
+- if (!isLoaded() && howMuchLoaded() && ptr)
+- if (sunnyToday())
++ if (!isLoaded() && howMuchLoaded() != 0 && ptr != nullptr)
++ if (sunnyToday() == true)
 ```
