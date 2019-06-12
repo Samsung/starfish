@@ -17,36 +17,36 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishCastServer__)
-#define __StarfishCastServer__
+#ifdef STARFISH_ENABLE_CAST_SERVICE
+
+#include <httplib.h>
+
+#include "StarfishConfig.h"
+#include "core/modules/cast/DIALRunnable.h"
 
 namespace Starfish {
 
-class IThread;
-class ThreadPool;
-class MessageLoop;
-class SSDPRunnable;
-class DIALRunnable;
+DIALRunnable::DIALRunnable(MessageLoop* messageLoop)
+    : BaseRunnable(messageLoop)
+    , m_server(new httplib::Server())
+{
+    STARFISH_ASSERT(messageLoop != nullptr);
+    STARFISH_ASSERT(m_server != nullptr);
+}
 
-class CastServer final : public gc {
-public:
-    static CastServer* instance();
-    void destroy();
-    bool start();
+bool DIALRunnable::doRun()
+{
+    return true;
+}
 
-private:
-    CastServer();
-    ~CastServer() = default;
+void DIALRunnable::stop()
+{
+    BaseRunnable::stop();
 
-    static CastServer* m_instance;
-
-    IThread* m_discoveryThread{ nullptr };
-    IThread* m_appControlThread{ nullptr };
-    SSDPRunnable* m_ssdp{ nullptr };
-    DIALRunnable* m_dialRunnable{ nullptr };
-    ThreadPool* m_threadPool{ nullptr };
-    MessageLoop* m_messageLoop{ nullptr };
-};
+    m_server->stop();
+    delete m_server;
+}
 
 } // namespace Starfish
+
 #endif

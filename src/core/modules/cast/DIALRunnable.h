@@ -17,50 +17,27 @@
  *  USA
  */
 
-#ifndef __StarfishBaseRunnable__
-#define __StarfishBaseRunnable__
+#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishDIALRunnable__)
+#define __StarfishDIALRunnable__
 
-#include "core/modules/threading/IRunnable.h"
+#include "core/modules/cast/BaseRunnable.h"
+
+namespace httplib {
+class Server;
+}
 
 namespace Starfish {
 
-class MessageLoop;
+class ThreadPool;
 
-class BaseRunnable : public IRunnable {
+class DIALRunnable : public BaseRunnable {
 public:
-    class Client : public gc {
-    public:
-        virtual ~Client()
-        {
-        }
-        virtual void onStopped() = 0;
-    };
-
-    BaseRunnable(MessageLoop* messageLoop);
-    virtual ~BaseRunnable();
-
-    void run() override;
-    virtual void stop() override;
-    void setStopper(std::future<void>&& stopper) override;
-
-    void addClient(Client* client);
-
-protected:
-    virtual bool preRun();
-    virtual bool doRun();
-    virtual void postRun();
-    bool isStopRequested();
+    DIALRunnable(MessageLoop* messageLoop);
+    bool doRun() override;
+    void stop() override;
 
 private:
-    MessageLoop* m_messageLoop;
-    GCVector<Client*> m_clients;
-
-    std::atomic_bool m_isClientsUpdated;
-    std::atomic_bool m_isStopped;
-    std::future<void> m_stopper;
-
-    std::mutex m_mutex;
-    std::condition_variable m_cv;
+    httplib::Server* m_server;
 };
 
 } // namespace Starfish

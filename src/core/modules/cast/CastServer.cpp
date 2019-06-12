@@ -24,6 +24,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
+#include "core/modules/cast/DIALRunnable.h"
 
 #include "core/modules/cast/SSDPRunnable.h"
 #include "core/modules/cast/CastServer.h"
@@ -50,6 +51,11 @@ void CastServer::destroy()
         m_instance->~CastServer();
         m_instance = nullptr;
     }
+
+    if (m_appControlThread != nullptr) {
+        m_appControlThread->stop();
+        m_appControlThread = nullptr;
+    }
 }
 
 CastServer::CastServer()
@@ -60,6 +66,7 @@ CastServer::CastServer()
     m_appControlThread = new AdaptedThread(m_threadPool);
 
     m_ssdp = new SSDPRunnable(m_messageLoop);
+    m_dialRunnable = new DIALRunnable(m_messageLoop);
 }
 
 bool CastServer::start()
@@ -67,7 +74,7 @@ bool CastServer::start()
     // start discovering services
     m_discoveryThread->start(m_ssdp);
 
-    // TODO: run application server
+    m_appControlThread->start(m_dialRunnable);
 
     return false;
 }
