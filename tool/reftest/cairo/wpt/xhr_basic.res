@@ -59,7 +59,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-defer-scripts.html
 #http://web-platform.test:8000/xhr/open-url-javascript-window-2.htm
 #http://web-platform.test:8000/xhr/open-url-multi-window-2.htm
 http://web-platform.test:8000/xhr/access-control-preflight-request-header-sorted.htm
-#http://web-platform.test:8000/xhr/overridemimetype-open-state-force-utf-8.htm
+http://web-platform.test:8000/xhr/overridemimetype-open-state-force-utf-8.htm
 #http://web-platform.test:8000/xhr/response-json.htm
 #http://web-platform.test:8000/xhr/send-response-event-order.htm
 #http://web-platform.test:8000/xhr/responsetext-decoding.htm
@@ -219,7 +219,7 @@ http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted
 http://web-platform.test:8000/xhr/open-after-abort.htm
 http://web-platform.test:8000/xhr/open-method-insecure.htm
 #http://web-platform.test:8000/xhr/abort-during-done.htm
-#http://web-platform.test:8000/xhr/overridemimetype-open-state-force-xml.htm
+http://web-platform.test:8000/xhr/overridemimetype-open-state-force-xml.htm
 #http://web-platform.test:8000/xhr/send-authentication-cors-basic-setrequestheader.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-network-error-sync.htm
 #http://web-platform.test:8000/xhr/event-load.htm
@@ -241,7 +241,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overridesexpires.html
 #http://web-platform.test:8000/xhr/open-url-multi-window-3.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic-setrequestheader-existing-session.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-not-hang-scriptloader.html
-#http://web-platform.test:8000/xhr/overridemimetype-headers-received-state-force-shiftjis.htm
+http://web-platform.test:8000/xhr/overridemimetype-headers-received-state-force-shiftjis.htm
 http://web-platform.test:8000/xhr/access-control-basic-post-success-no-content-type.htm
 #http://web-platform.test:8000/xhr/event-loadend.htm
 #http://web-platform.test:8000/xhr/firing-events-http-content-length.html
@@ -257,7 +257,7 @@ http://web-platform.test:8000/xhr/progressevent-constructor.html
 #http://web-platform.test:8000/xhr/send-authentication-basic-setrequestheader.htm
 http://web-platform.test:8000/xhr/historical.html
 http://web-platform.test:8000/xhr/getallresponseheaders-cookies.htm
-#http://web-platform.test:8000/xhr/overridemimetype-unsent-state-force-shiftjis.htm
+http://web-platform.test:8000/xhr/overridemimetype-unsent-state-force-shiftjis.htm
 http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-400.htm
 #http://web-platform.test:8000/xhr/overridemimetype-invalid-mime-type.htm
 #http://web-platform.test:8000/xhr/send-entity-body-get-head-async.htm

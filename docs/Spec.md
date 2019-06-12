@@ -1612,6 +1612,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | method    | void abort()    | Cancels any network activity. |
 | | method    | ByteString getAllResponseHeaders()    | Returns a string that contains all response headers. |
 | | method    | ByteString? getResponseHeader(ByteString name)    | Return the combined value given name and response’s header list. |
+| | method    | overrideMimeType()    | overrideMimeType(mime) specifies a MIME type other than the one provided by the server to be used instead when interpreting the data being transferred in a request.|
 
 
 \* The readyState code are as follows.

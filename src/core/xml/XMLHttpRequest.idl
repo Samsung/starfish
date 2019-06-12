@@ -60,7 +60,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   readonly attribute ByteString statusText;
   ByteString? getResponseHeader(ByteString name);
   ByteString getAllResponseHeaders();
-  [Unimplemented] void overrideMimeType(DOMString mime);
+  void overrideMimeType(DOMString mime);
   attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
   [RaisesException] readonly attribute DOMString responseText;

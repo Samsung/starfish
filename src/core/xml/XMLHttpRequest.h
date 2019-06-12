@@ -119,6 +119,7 @@ public:
 
     void setRequestHeader(String* header, String* value);
 
+    void overrideMimeType(String* mime);
     String* getAllResponseHeaders();
     Nullable<String*> getResponseHeader(String* name);
 
@@ -134,6 +135,9 @@ protected:
     XMLHttpRequestResponseType m_responseType;
     bool m_withCredentials;
     XMLHttpRequestUpload* m_upload;
+
+    // overrideMimeType
+    String* m_overrideMimeType;
 
     // for responseType = "text"
     String* m_responseText;
