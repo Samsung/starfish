@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 #include "core/dom/DOMMatrixReadOnly.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
@@ -114,7 +116,108 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
     , m_is2D(true)
 {
     STARFISH_ASSERT(executionContext != nullptr);
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    bool isValid = false;
+    if (value.isDOMStringValue()) {
+        CSSStyleValuePair pair;
+
+        String* param = value.getDOMStringValue();
+        // parsing string
+        auto str = param->toUTF8NonGCString();
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(), str.length());
+        if (pair.updateValueTransform(tokens, true)) {
+            if (pair.valueKind() ==
+                CSSStyleValuePair::ValueKind::TransformFunctions) {
+                CSSTransformFunctions* funcs = pair.transformValue();
+                for (unsigned c = 0; c < funcs->size(); c++) {
+                    CSSTransformFunction f = (*funcs)[c];
+                    int valueSize = f.values()->size();
+                    float* dValues = ALLOCA(valueSize * sizeof(float), float);
+                    for (int i = 0; i < valueSize; i++) {
+                        const CSSStyleValuePair& item = (*f.values())[i];
+                        if (item.valueKind() ==
+                            CSSStyleValuePair::ValueKind::Number) {
+                            dValues[i] = item.numberValue();
+                        }
+                    }
+                    if (f.kind() == CSSTransformFunction::Kind::Matrix) {
+                        set2DMatrix(dValues[0], dValues[1], dValues[2],
+                                    dValues[3], dValues[4], dValues[5]);
+                        isValid = true;
+                    } else if (f.kind() ==
+                               CSSTransformFunction::Kind::Matrix3D) {
+                        set3DMatrix(
+                            dValues[0], dValues[1], dValues[2], dValues[3],
+                            dValues[4], dValues[5], dValues[6], dValues[7],
+                            dValues[8], dValues[9], dValues[10], dValues[11],
+                            dValues[12], dValues[13], dValues[14], dValues[15]);
+                        isValid = true;
+                    }
+                }
+            }
+        } else {
+            // https://drafts.fxtf.org/geometry/#ref-for-parse-a-string-into-an-abstract-matrix
+            throw new DOMException(m_executionContext,
+                                   DOMException::Code::SYNTAX_ERR,
+                                   "Failed to parse a string into an matrix");
+        }
+
+    } else if (value.isSequenceValue()) {
+        GCAtomicVector<double> param = value.getSequenceValue();
+        if (param.size() == 6) {
+            set2DMatrix(param[0], param[1], param[2], param[3], param[4],
+                        param[5]);
+            isValid = true;
+        } else if (param.size() == 16) {
+            set3DMatrix(param[0], param[1], param[2], param[3], param[4],
+                        param[5], param[6], param[7], param[8], param[9],
+                        param[10], param[11], param[12], param[13], param[14],
+                        param[15]);
+            isValid = true;
+        }
+    }
+    if (!isValid) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Failed to construct DOMMatrix");
+    }
+}
+
+void DOMMatrixReadOnly::set2DMatrix(double val1, double val2, double val3,
+                                    double val4, double val5, double val6)
+{
+    m_is2D = true;
+    m_matrix.setDouble(0, 0, val1);
+    m_matrix.setDouble(0, 1, val2);
+    m_matrix.setDouble(1, 0, val3);
+    m_matrix.setDouble(1, 1, val4);
+    m_matrix.setDouble(3, 0, val5);
+    m_matrix.setDouble(3, 1, val6);
+}
+void DOMMatrixReadOnly::set3DMatrix(double val1, double val2, double val3,
+                                    double val4, double val5, double val6,
+                                    double val7, double val8, double val9,
+                                    double val10, double val11, double val12,
+                                    double val13, double val14, double val15,
+                                    double val16)
+{
+    m_is2D = false;
+    m_matrix.setDouble(0, 0, val1);
+    m_matrix.setDouble(0, 1, val2);
+    m_matrix.setDouble(0, 2, val3);
+    m_matrix.setDouble(0, 3, val4);
+    m_matrix.setDouble(1, 0, val5);
+    m_matrix.setDouble(1, 1, val6);
+    m_matrix.setDouble(1, 2, val7);
+    m_matrix.setDouble(1, 3, val8);
+    m_matrix.setDouble(2, 0, val9);
+    m_matrix.setDouble(2, 1, val10);
+    m_matrix.setDouble(2, 2, val11);
+    m_matrix.setDouble(2, 3, val12);
+    m_matrix.setDouble(3, 0, val13);
+    m_matrix.setDouble(3, 1, val14);
+    m_matrix.setDouble(3, 2, val15);
+    m_matrix.setDouble(3, 3, val16);
 }
 
 double DOMMatrixReadOnly::a() const

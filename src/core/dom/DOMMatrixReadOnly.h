@@ -88,6 +88,13 @@ public:
                              DeserializingMap& memory) const override;
 
 private:
+    void set2DMatrix(double val1, double val2, double val3, double val4,
+                     double val5, double val6);
+    void set3DMatrix(double val1, double val2, double val3, double val4,
+                     double val5, double val6, double val7, double val8,
+                     double val9, double val10, double val11, double val12,
+                     double val13, double val14, double val15, double val16);
+
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
     bool m_is2D;

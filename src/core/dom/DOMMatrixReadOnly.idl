@@ -1,6 +1,7 @@
 // https://drafts.fxtf.org/geometry/#DOMMatrix
 [Constructor(optional (DOMString or sequence<unrestricted double>) init),
  ConstructorCallWith=ExecutionContext,
+ RaisesException=Constructor,
  Exposed=(Window,Worker),
  Serializable
  ]
