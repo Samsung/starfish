@@ -2,6 +2,7 @@
 [Constructor(optional (DOMString or sequence<unrestricted double>) init),
  ConstructorCallWith=ExecutionContext,
  Exposed=(Window,Worker),
+ RaisesException=Constructor,
  Serializable,
  LegacyWindowAlias=(SVGMatrix,WebKitCSSMatrix)]
 interface DOMMatrix : DOMMatrixReadOnly {
