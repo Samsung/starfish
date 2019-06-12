@@ -26,6 +26,7 @@ class IThread;
 class ThreadPool;
 class MessageLoop;
 class SSDPRunnable;
+class DIALRunnable;
 
 class CastServer final : public gc {
 public:
@@ -42,7 +43,7 @@ private:
     IThread* m_discoveryThread{ nullptr };
     IThread* m_appControlThread{ nullptr };
     SSDPRunnable* m_ssdp{ nullptr };
-
+    DIALRunnable* m_dialRunnable{ nullptr };
     ThreadPool* m_threadPool{ nullptr };
     MessageLoop* m_messageLoop{ nullptr };
 };

@@ -114,3 +114,7 @@
 	path = third_party/android/prebuilt_10.0
 	url = git@github.sec.samsung.net:lws-submodules/prebuilt_10.0.git
 	ignore = untracked
+[submodule "third_party/httplib"]
+	path = third_party/httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+	ignore = untracked

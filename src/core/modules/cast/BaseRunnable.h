@@ -40,7 +40,7 @@ public:
     virtual ~BaseRunnable();
 
     void run() override;
-    void stop() override;
+    virtual void stop() override;
     void setStopper(std::future<void>&& stopper) override;
 
     void addClient(Client* client);
