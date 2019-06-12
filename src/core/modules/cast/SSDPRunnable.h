@@ -17,19 +17,25 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishSSDPServer__)
-#define __StarfishSSDPServer__
+#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishSSDPRunnable__)
+#define __StarfishSSDPRunnable__
 
+#include <netinet/in.h>
 #include "core/modules/cast/BaseRunnable.h"
 
 namespace Starfish {
 
 class ThreadPool;
 
-class SSDPServer : public BaseRunnable {
+class SSDPRunnable : public BaseRunnable {
 public:
-    SSDPServer(MessageLoop* messageLoop);
+    SSDPRunnable(MessageLoop* messageLoop);
+    bool preRun() override;
     bool doRun() override;
+
+private:
+    bool initSocket();
+    int m_socket{ -1 };
 };
 
 } // namespace Starfish

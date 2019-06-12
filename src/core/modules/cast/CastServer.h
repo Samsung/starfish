@@ -25,7 +25,7 @@ namespace Starfish {
 class IThread;
 class ThreadPool;
 class MessageLoop;
-class SSDPServer;
+class SSDPRunnable;
 
 class CastServer final : public gc {
 public:
@@ -39,9 +39,9 @@ private:
 
     static CastServer* m_instance;
 
-    IThread* m_ssdpThread{ nullptr };
-    IThread* m_cpThread{ nullptr };
-    SSDPServer* m_ssdpServer{ nullptr };
+    IThread* m_discoveryThread{ nullptr };
+    IThread* m_appControlThread{ nullptr };
+    SSDPRunnable* m_ssdp{ nullptr };
 
     ThreadPool* m_threadPool{ nullptr };
     MessageLoop* m_messageLoop{ nullptr };

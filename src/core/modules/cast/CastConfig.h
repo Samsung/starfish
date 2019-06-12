@@ -17,25 +17,20 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_CAST_SERVICE
-
-#include "StarfishConfig.h"
-
-#include "core/modules/cast/SSDPServer.h"
+#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishCastConfig__)
+#define __StarfishCastConfig__
 
 namespace Starfish {
 
-SSDPServer::SSDPServer(MessageLoop* messageLoop)
-    : BaseRunnable(messageLoop)
-{
-    STARFISH_ASSERT(messageLoop != nullptr);
-}
+#define SSDP_GROUP "239.255.255.250"
+#define SSDP_PORT 1900
+#define SSDP_ST "urn:dial-multiscreen-org:service:dial:1"
 
-bool SSDPServer::doRun()
-{
-    // TODO: Implement ssdp
-    return false;
-}
+#define LOCATION_PORT 5696
+#define LOCATION_DESC "/deviceDescription.xml"
+
+extern const char* templateDeviceDescription;
+extern const char* templateMSearchResponse;
 
 } // namespace Starfish
 

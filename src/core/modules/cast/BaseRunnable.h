@@ -46,12 +46,12 @@ public:
     void addClient(Client* client);
 
 protected:
+    virtual bool preRun();
     virtual bool doRun();
     virtual void postRun();
-
-private:
     bool isStopRequested();
 
+private:
     MessageLoop* m_messageLoop;
     GCVector<Client*> m_clients;
 

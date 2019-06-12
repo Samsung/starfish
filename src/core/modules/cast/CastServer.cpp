@@ -25,7 +25,7 @@
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
 
-#include "core/modules/cast/SSDPServer.h"
+#include "core/modules/cast/SSDPRunnable.h"
 #include "core/modules/cast/CastServer.h"
 
 #define CAST_SERVER_THREAD_POOL_SIZE 5
@@ -56,14 +56,16 @@ CastServer::CastServer()
 {
     m_messageLoop = new MessageLoop();
     m_threadPool = new ThreadPool(CAST_SERVER_THREAD_POOL_SIZE, m_messageLoop);
-    m_ssdpServer = new SSDPServer(m_messageLoop);
-    m_ssdpThread = new AdaptedThread(m_threadPool);
-    m_cpThread = new AdaptedThread(m_threadPool);
+    m_discoveryThread = new AdaptedThread(m_threadPool);
+    m_appControlThread = new AdaptedThread(m_threadPool);
+
+    m_ssdp = new SSDPRunnable(m_messageLoop);
 }
 
 bool CastServer::start()
 {
-    m_ssdpThread->start(m_ssdpServer);
+    // start discovering services
+    m_discoveryThread->start(m_ssdp);
 
     // TODO: run application server
 
