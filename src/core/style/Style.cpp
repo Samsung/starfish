@@ -270,6 +270,139 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
     }
 }
 
+void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
+{
+    STARFISH_ASSERT(style != nullptr);
+
+    for (unsigned c = 0; c < this->size(); c++) {
+        CSSTransformFunction f = this->at(c);
+        int valueSize = f.values()->size();
+        float* dValues = ALLOCA(valueSize * sizeof(float), float);
+        for (int i = 0; i < valueSize; i++) {
+            const CSSStyleValuePair& item = (*f.values())[i];
+            if (item.valueKind() == CSSStyleValuePair::ValueKind::Number) {
+                dValues[i] = item.numberValue();
+            } else if (item.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Angle) {
+                dValues[i] = item.angleValue().toDegreeValue();
+            } else if (item.valueKind() ==
+                       CSSStyleValuePair::ValueKind::CalcValueKind) {
+                CalcData* calcData = item.calcValue();
+                CalcValueType type = calcData->type();
+                if (type.isAngle() == true) {
+                    dValues[i] = calcData->angleValue().toDegreeValue();
+                }
+            }
+        }
+
+        switch (f.kind()) {
+        case CSSTransformFunction::Kind::Matrix:
+            style->setTransformMatrix(dValues[0], dValues[1], dValues[2],
+                                      dValues[3], dValues[4], dValues[5]);
+
+            if (dValues[0] != dValues[3] || dValues[1] != 0 ||
+                dValues[2] != 0) {
+                style->rareComputedStyleData()
+                    ->ensureTransforms()
+                    ->m_hasComplexTransform = true;
+            }
+            break;
+        case CSSTransformFunction::Kind::Translate3D:
+        case CSSTransformFunction::Kind::Translate: {
+            Length a, b(Length::Fixed, 0);
+            Nullable<Length> nA = convertValueToLength(
+                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            if (nA.hasValue() == true) {
+                a = nA.getValue();
+            } else {
+                break;
+            }
+            if (valueSize > 1) {
+                Nullable<Length> nB = convertValueToLength(
+                    (*f.values())[1].valueKind(), (*f.values())[1].value());
+                if (nB.hasValue()) {
+                    b = nB.getValue();
+                } else {
+                    break;
+                }
+            }
+            if (f.kind() == CSSTransformFunction::Kind::Translate3D) {
+                style->rareComputedStyleData()
+                    ->ensureTransforms()
+                    ->m_has3DTransform = true;
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+            style->setTransformTranslate(a, b);
+            break;
+        }
+        case CSSTransformFunction::Kind::TranslateX: {
+            Nullable<Length> a = convertValueToLength(
+                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            if (a.hasValue() == true) {
+                style->setTransformTranslate(a.getValue(),
+                                             Length(Length::Fixed, 0));
+            }
+        } break;
+        case CSSTransformFunction::Kind::TranslateY: {
+            Nullable<Length> a = convertValueToLength(
+                (*f.values())[0].valueKind(), (*f.values())[0].value());
+            if (a.hasValue() == true) {
+                style->setTransformTranslate(Length(Length::Fixed, 0),
+                                             a.getValue());
+            }
+        } break;
+        case CSSTransformFunction::Kind::Scale:
+            if (valueSize == 1) {
+                style->setTransformScale(dValues[0], dValues[0]);
+            } else if (valueSize == 2) {
+                style->setTransformScale(dValues[0], dValues[1]);
+            } else {
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+            break;
+        case CSSTransformFunction::Kind::ScaleX:
+            style->setTransformScale(dValues[0], 1);
+            break;
+        case CSSTransformFunction::Kind::ScaleY:
+            style->setTransformScale(1, dValues[0]);
+            break;
+        case CSSTransformFunction::Kind::Rotate:
+            style->setTransformRotate(dValues[0]);
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_hasComplexTransform = true;
+            break;
+        case CSSTransformFunction::Kind::Skew:
+        case CSSTransformFunction::Kind::SkewX:
+            if (valueSize == 2) {
+                style->setTransformSkew(dValues[0], dValues[1]);
+            } else {
+                style->setTransformSkew(dValues[0], 0);
+            }
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_hasComplexTransform = true;
+            break;
+        case CSSTransformFunction::Kind::SkewY:
+            style->setTransformSkew(0, dValues[0]);
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_hasComplexTransform = true;
+            break;
+        default:
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_hasComplexTransform = true;
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_has3DTransform = true;
+            STARFISH_LOG_INFO("Transform: [%d] property is unimplemented\n",
+                              (int)f.kind());
+            // STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+    }
+}
+
 String* CSSTransformFunctions::toString()
 {
     StringBuilder builder;
@@ -4576,136 +4709,7 @@ void StyleResolver::apply(Element* element,
                     cssValues[k].valueKind() ==
                     CSSStyleValuePair::ValueKind::TransformFunctions);
                 CSSTransformFunctions* funcs = cssValues[k].transformValue();
-                for (unsigned c = 0; c < funcs->size(); c++) {
-                    CSSTransformFunction f = (*funcs)[c];
-                    int valueSize = f.values()->size();
-                    float* dValues = ALLOCA(valueSize * sizeof(float), float);
-                    for (int i = 0; i < valueSize; i++) {
-                        const CSSStyleValuePair& item = (*f.values())[i];
-                        if (item.valueKind() ==
-                            CSSStyleValuePair::ValueKind::Number) {
-                            dValues[i] = item.numberValue();
-                        } else if (item.valueKind() ==
-                                   CSSStyleValuePair::ValueKind::Angle) {
-                            dValues[i] = item.angleValue().toDegreeValue();
-                        } else if (item.valueKind() ==
-                                   CSSStyleValuePair::ValueKind::
-                                       CalcValueKind) {
-                            CalcData* calcData = item.calcValue();
-                            CalcValueType type = calcData->type();
-                            if (type.isAngle()) {
-                                dValues[i] =
-                                    calcData->angleValue().toDegreeValue();
-                            }
-                        }
-                    }
-
-                    switch (f.kind()) {
-                    case CSSTransformFunction::Kind::Matrix:
-                        style->setTransformMatrix(dValues[0], dValues[1],
-                                                  dValues[2], dValues[3],
-                                                  dValues[4], dValues[5]);
-
-                        if (dValues[0] != dValues[3] || dValues[1] ||
-                            dValues[2]) {
-                            style->m_rareComputedStyleData.ensureTransforms()
-                                ->m_hasComplexTransform = true;
-                        }
-                        break;
-                    case CSSTransformFunction::Kind::Translate3D:
-                    case CSSTransformFunction::Kind::Translate: {
-                        Length a, b(Length::Fixed, 0);
-                        Nullable<Length> nA =
-                            convertValueToLength((*f.values())[0].valueKind(),
-                                                 (*f.values())[0].value());
-                        if (nA.hasValue()) {
-                            a = nA.getValue();
-                        } else {
-                            break;
-                        }
-                        if (valueSize > 1) {
-                            Nullable<Length> nB = convertValueToLength(
-                                (*f.values())[1].valueKind(),
-                                (*f.values())[1].value());
-                            if (nB.hasValue()) {
-                                b = nB.getValue();
-                            } else {
-                                break;
-                            }
-                        }
-                        if (f.kind() ==
-                            CSSTransformFunction::Kind::Translate3D) {
-                            style->m_rareComputedStyleData.ensureTransforms()
-                                ->m_has3DTransform = true;
-                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                        }
-                        style->setTransformTranslate(a, b);
-                        break;
-                    }
-                    case CSSTransformFunction::Kind::TranslateX: {
-                        Nullable<Length> a =
-                            convertValueToLength((*f.values())[0].valueKind(),
-                                                 (*f.values())[0].value());
-                        if (a.hasValue()) {
-                            style->setTransformTranslate(
-                                a.getValue(), Length(Length::Fixed, 0));
-                        }
-                    } break;
-                    case CSSTransformFunction::Kind::TranslateY: {
-                        Nullable<Length> a =
-                            convertValueToLength((*f.values())[0].valueKind(),
-                                                 (*f.values())[0].value());
-                        if (a.hasValue()) {
-                            style->setTransformTranslate(
-                                Length(Length::Fixed, 0), a.getValue());
-                        }
-                    } break;
-                    case CSSTransformFunction::Kind::Scale:
-                        if (valueSize == 1) {
-                            style->setTransformScale(dValues[0], dValues[0]);
-                        } else if (valueSize == 2) {
-                            style->setTransformScale(dValues[0], dValues[1]);
-                        } else {
-                            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-                        }
-                        break;
-                    case CSSTransformFunction::Kind::ScaleX:
-                        style->setTransformScale(dValues[0], 1);
-                        break;
-                    case CSSTransformFunction::Kind::ScaleY:
-                        style->setTransformScale(1, dValues[0]);
-                        break;
-                    case CSSTransformFunction::Kind::Rotate:
-                        style->setTransformRotate(dValues[0]);
-                        style->m_rareComputedStyleData.ensureTransforms()
-                            ->m_hasComplexTransform = true;
-                        break;
-                    case CSSTransformFunction::Kind::Skew:
-                    case CSSTransformFunction::Kind::SkewX:
-                        if (valueSize == 2) {
-                            style->setTransformSkew(dValues[0], dValues[1]);
-                        } else {
-                            style->setTransformSkew(dValues[0], 0);
-                        }
-                        style->m_rareComputedStyleData.ensureTransforms()
-                            ->m_hasComplexTransform = true;
-                        break;
-                    case CSSTransformFunction::Kind::SkewY:
-                        style->setTransformSkew(0, dValues[0]);
-                        style->m_rareComputedStyleData.ensureTransforms()
-                            ->m_hasComplexTransform = true;
-                        break;
-                    default:
-                        style->m_rareComputedStyleData.ensureTransforms()
-                            ->m_hasComplexTransform = true;
-                        style->m_rareComputedStyleData.ensureTransforms()
-                            ->m_has3DTransform = true;
-                        STARFISH_LOG_INFO(
-                            "Transform: [%d] property is unimplemented\n",
-                            (int)f.kind());
-                        // STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
-                }
+                funcs->toTransformDataGroup(style);
             }
             break;
         case CSSStyleValuePair::KeyKind::TransformOrigin:

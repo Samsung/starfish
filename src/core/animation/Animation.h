@@ -39,7 +39,8 @@ class AnimatedValue : public gc {
         LENGTH_SIZE,
         FLOAT,
         INT,
-        MATRIX
+        MATRIX,
+        TRANSFORM_DATA,
     };
 
 public:
@@ -90,6 +91,14 @@ public:
         m_type = MATRIX;
     }
 
+    AnimatedValue(StyleTransformDataGroup* transform)
+    {
+        STARFISH_ASSERT(transform != nullptr);
+
+        m_data.m_transformData = transform;
+        m_type = TRANSFORM_DATA;
+    }
+
     bool isColor() const
     {
         return m_type == COLOR;
@@ -123,6 +132,11 @@ public:
     bool isLayoutUnit() const
     {
         return m_type == LAYOUT_UNIT;
+    }
+
+    bool isTransformData() const
+    {
+        return m_type == TRANSFORM_DATA;
     }
 
     Unit::Color getColor() const
@@ -167,6 +181,12 @@ public:
         return m_data.m_matrix;
     }
 
+    StyleTransformDataGroup* getTransformData() const
+    {
+        STARFISH_ASSERT(m_type == TRANSFORM_DATA);
+        return m_data.m_transformData;
+    }
+
     inline void* operator new(size_t size, void* p)
     {
         STARFISH_ASSERT(p != nullptr);
@@ -202,6 +222,7 @@ protected:
         float m_float;
         int m_int;
         SkMatrix m_matrix;
+        StyleTransformDataGroup* m_transformData;
         ValueData()
             : m_int(0)
         {
@@ -276,6 +297,11 @@ public:
     virtual void resolveUnresolvedAnimatedValues()
     {
         m_isEveryAnimiatedValueResolved = true;
+    }
+
+    virtual void didAnimationFrameChanged()
+    {
+        STARFISH_ASSERT(m_type == ANIMATION_TYPE);
     }
 
     float fraction(uint64_t tickCount) const
@@ -415,6 +441,17 @@ public:
                                  uint64_t delayInms,
                                  TimingFunction* timingFunction,
                                  StyleTransformDataGroup* orgTransformValue);
+
+    ActiveTransformAnimationTask(
+        Element* target, CSSStyleValuePair::KeyKind targetProperty,
+        const GCVector<AnimatedValue*>& values,
+        const GCAtomicVector<double>& offsets,
+        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+        uint64_t delayInms);
+
+    virtual void resolveUnresolvedAnimatedValues() override;
+    virtual void didAnimationFrameChanged() override;
+
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual void attachToElement(ComputedStyle* style) override;

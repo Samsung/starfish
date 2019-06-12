@@ -865,6 +865,7 @@ protected:
 
 class CSSTransformFunctions : public GCVector<CSSTransformFunction> {
 public:
+    void toTransformDataGroup(ComputedStyle* style);
     String* toString();
 };
 

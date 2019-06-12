@@ -2117,10 +2117,6 @@ bool StackingContext::fillGraphicsBufferContents(
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
-    if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
-        return false;
-    }
-
     if (bufferWidth == 0 || bufferHeight == 0) {
         return drawnSomething;
     }
@@ -2181,6 +2177,11 @@ bool StackingContext::fillGraphicsBufferContents(
         }
         return drawnSomething;
     }
+
+    if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
+        return false;
+    }
+
     size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
     size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
     size_t wTextureCount =

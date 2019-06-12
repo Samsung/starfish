@@ -290,6 +290,7 @@ float ActiveAnimationTask::computeProgress(float fraction)
         if (f > 1.0) {
             f = 0;
             m_frameIdx++;
+            didAnimationFrameChanged();
         }
         fraction = f;
     }
@@ -501,12 +502,11 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
     , m_originalTransformValue(nullptr)
-    , m_decomposedFrom(
-          decomposing2DMatrix(currentAnimatedFromValue()->getMatrix()))
-    , m_decomposedTo(decomposing2DMatrix(currentAnimatedToValue()->getMatrix()))
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
+    STARFISH_ASSERT(m_values.size() == 2);
+
     if (orgTransformValue != nullptr) {
         StyleTransformDataGroup* newOrgData = new StyleTransformDataGroup();
         for (size_t i = 0; i < orgTransformValue->size(); i++) {
@@ -514,7 +514,65 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
         }
         m_originalTransformValue = newOrgData;
     }
+
+    m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
+    m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
+
     matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+}
+
+ActiveTransformAnimationTask::ActiveTransformAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    uint64_t delayInms)
+    : ActiveAnimationTask(target, targetProperty, values, offsets,
+                          timingFunctions, durationInms, delayInms)
+    , m_originalTransformValue(nullptr)
+{
+    STARFISH_ASSERT(target != nullptr);
+}
+
+void ActiveTransformAnimationTask::didAnimationFrameChanged()
+{
+    ActiveAnimationTask::didAnimationFrameChanged();
+
+    m_decomposedFrom =
+        decomposing2DMatrix(currentAnimatedFromValue()->getMatrix());
+    m_decomposedTo = decomposing2DMatrix(currentAnimatedToValue()->getMatrix());
+
+    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+}
+
+void ActiveTransformAnimationTask::resolveUnresolvedAnimatedValues()
+{
+    if (m_isEveryAnimiatedValueResolved == false) {
+        Frame* frm = m_targetElement->frame();
+
+        if (frm->isTransformable() == true) {
+            for (size_t i = 0; i < m_values.size(); i++) {
+                STARFISH_ASSERT(m_values[i]->isTransformData() == true);
+                new (m_values[i])
+                    AnimatedValue(ComputedStyle::transformToMatrix(
+                        m_values[i]->getTransformData(),
+                        frm->asFrameBox()->width(), frm->asFrameBox()->height(),
+                        frm));
+            }
+        } else {
+            for (size_t i = 0; i < m_values.size(); i++) {
+                STARFISH_ASSERT(m_values[i]->isTransformData() == true);
+                new (m_values[i]) AnimatedValue(SkMatrix::I());
+            }
+        }
+
+        m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
+        m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
+
+        matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+    }
+
+    ActiveAnimationTask::resolveUnresolvedAnimatedValues();
 }
 
 void* ActiveTransformAnimationTask::operator new(size_t size)
@@ -537,8 +595,6 @@ void* ActiveTransformAnimationTask::operator new(size_t size)
 void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
-    SkMatrix from = currentAnimatedFromValue()->getMatrix();
-    SkMatrix to = currentAnimatedToValue()->getMatrix();
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
 
@@ -2146,8 +2202,11 @@ bool applyTransitionIfNeeds(
     return ret;
 }
 
-static AnimatedValue* animatedValue(const CSSStyleValuePair& property)
+static AnimatedValue* animatedValue(ComputedStyle* elementStyle,
+                                    const CSSStyleValuePair& property)
 {
+    STARFISH_ASSERT(elementStyle != nullptr);
+
     switch (property.keyKind()) {
     case CSSStyleValuePair::Color:
     case CSSStyleValuePair::BackgroundColor:
@@ -2209,6 +2268,18 @@ static AnimatedValue* animatedValue(const CSSStyleValuePair& property)
             return nullptr;
         }
         break;
+    case CSSStyleValuePair::Transform:
+        if (property.valueKind() ==
+            CSSStyleValuePair::ValueKind::TransformFunctions) {
+            auto transformValue = property.transformValue();
+            ComputedStyle receiver(elementStyle);
+            transformValue->toTransformDataGroup(&receiver);
+            STARFISH_ASSERT(receiver.transforms() != nullptr);
+            return new AnimatedValue(receiver.transforms());
+        } else {
+            return nullptr;
+        }
+        break;
     default:
         break;
     }
@@ -2262,7 +2333,7 @@ bool applyAnimationIfNeeds(
             CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
             CSSStyleValuePair::KeyKind fromKeyKind = fromProperty.keyKind();
 
-            AnimatedValue* value = animatedValue(fromProperty);
+            AnimatedValue* value = animatedValue(style, fromProperty);
             if (value == nullptr) {
                 continue;
             }
@@ -2288,7 +2359,7 @@ bool applyAnimationIfNeeds(
                         property = fromProperty;
                     }
 
-                    value = animatedValue(property);
+                    value = animatedValue(style, property);
                     if (value == nullptr) {
                         continue;
                     }
@@ -2349,6 +2420,16 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
+                executor->registerAnimation(task, style, name);
+                gotAnimation = true;
+            }
+
+            if (fromKeyKind == CSSStyleValuePair::Transform) {
+                auto task = new ActiveTransformAnimationTask(
+                    element, CSSStyleValuePair::Transform, values, offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::Transform);
                 executor->registerAnimation(task, style, name);
                 gotAnimation = true;
             }
