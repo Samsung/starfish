@@ -134,6 +134,12 @@ public:
                 if (!request->isError()) {
                     auto mimeType =
                         MimeType::parseFromString(request->responseMimeType());
+                    auto mimeString = request->responseMimeType();
+                    if (m_xhr->m_overrideMimeType != nullptr) {
+                        mimeType = MimeType::parseFromString(
+                            m_xhr->m_overrideMimeType);
+                        mimeString = m_xhr->m_overrideMimeType;
+                    }
                     if (mimeType.subtype()->contains("xml") ||
                         m_xhr->m_responseType ==
                             XMLHttpRequestResponseType::Document) {
@@ -178,8 +184,7 @@ public:
                                m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Text) {
                         TextConverter textConverter(
-                            m_xhr->m_resourceRequest->responseMimeType(),
-                            String::fromUTF8("UTF-8"),
+                            mimeString, String::fromUTF8("UTF-8"),
                             m_xhr->m_resourceRequest->response().data(),
                             m_xhr->m_resourceRequest->response().size());
                         m_xhr->m_responseText = textConverter.convert(
@@ -189,8 +194,7 @@ public:
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Json) {
                         TextConverter cvt(
-                            m_xhr->m_resourceRequest->responseMimeType(),
-                            String::fromUTF8("UTF-8"),
+                            mimeString, String::fromUTF8("UTF-8"),
                             m_xhr->m_resourceRequest->response().data(),
                             m_xhr->m_resourceRequest->response().size());
                         String* text = cvt.convert(
@@ -209,8 +213,7 @@ public:
                         m_xhr->m_responseBlob = new ::Starfish::Blob(
                             m_xhr->executionContext(),
                             m_xhr->m_resourceRequest->response().size(),
-                            m_xhr->m_resourceRequest->responseMimeType(),
-                            buffer, false, false);
+                            mimeString, buffer, false, false);
                         m_xhr->m_resourceRequest->response().clear();
                         m_xhr->m_resourceRequest->response().shrink_to_fit();
                     } else if (m_xhr->m_responseType ==
@@ -283,7 +286,7 @@ XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
         STARFISH_LOG_INFO("XMLHttpRequest::~XMLHttpRequest\n");
     }, NULL, NULL, NULL);
     */
-
+    m_overrideMimeType = nullptr;
     m_responseType = XMLHttpRequestResponseType::Empty;
     initResponseData();
     m_resourceRequest->addResourceRequestClient(
@@ -657,6 +660,27 @@ void XMLHttpRequest::setRequestHeader(String* header, String* value)
     }
 
     m_resourceRequest->setRequestHeader(header, value);
+}
+
+void XMLHttpRequest::overrideMimeType(String* mime)
+{
+    // If the state is LOADING or DONE, throw an "InvalidStateError" exception.
+    if (m_resourceRequest->readyState() == ReadyState::Loading ||
+        m_resourceRequest->readyState() == ReadyState::Done) {
+        throw new DOMException(
+            executionContext(), DOMException::INVALID_STATE_ERR,
+            "The override MIME type cannot be set if the object's state is "
+            "LOADING or DONE.");
+    } else {
+        mime = mime->trim();
+        auto mimeType = MimeType::parseFromString(mime);
+        if (mimeType.isValid()) {
+            m_overrideMimeType = mime;
+        } else {
+            m_overrideMimeType =
+                String::createASCIIString("application/octet-stream");
+        }
+    }
 }
 
 String* XMLHttpRequest::getAllResponseHeaders()
