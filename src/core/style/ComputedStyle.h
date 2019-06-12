@@ -1321,6 +1321,9 @@ public:
 
     StyleTransformDataGroup* transforms(Frame* frame = nullptr);
 
+    static SkMatrix transformToMatrix(StyleTransformDataGroup* transform,
+                                      LayoutUnit containerWidth,
+                                      LayoutUnit containerHeight, Frame* f);
     SkMatrix transformsToMatrix(LayoutUnit containerWidth,
                                 LayoutUnit containerHeight, Frame* f,
                                 bool isTransformable);

@@ -211,14 +211,14 @@ bool ComputedStyle::has3DTransforms(Frame* frame)
     }
 }
 
-StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
+StyleTransformDataGroup* ComputedStyle::transforms(NULLABLE Frame* frame)
 {
-    if (!hasRareComputeStyleData()) {
+    if (hasRareComputeStyleData() == false) {
         return nullptr;
     }
 
     // https://www.w3.org/TR/css-transforms-1/#transformable-element
-    if (frame && !frame->isTransformable()) {
+    if (frame != nullptr && frame->isTransformable() == false) {
         return nullptr;
     }
 
@@ -2106,22 +2106,16 @@ inline double deg2rad(float degree)
     return degree * M_PI / 180;
 }
 
-SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
-                                           LayoutUnit containerHeight, Frame* f,
-                                           bool isTransformable)
+SkMatrix ComputedStyle::transformToMatrix(StyleTransformDataGroup* transforms,
+                                          LayoutUnit containerWidth,
+                                          LayoutUnit containerHeight, Frame* f)
 {
+    STARFISH_ASSERT(transforms != nullptr);
+    STARFISH_ASSERT(f != nullptr);
+    STARFISH_ASSERT(f->isTransformable() == true);
+
     SkMatrix matrix;
     matrix.reset();
-
-    if (!hasRareComputeStyleData()) {
-        return matrix;
-    }
-
-    StyleTransformDataGroup* transforms = m_rareComputedStyleData.transforms();
-
-    if (!transforms || !isTransformable) {
-        return matrix;
-    }
 
     for (size_t i = 0; i < transforms->size(); i++) {
         StyleTransformData t = transforms->at(i);
@@ -2159,6 +2153,25 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
     //         matrix.get(4), matrix.get(5),
     //              matrix.get(6), matrix.get(7), matrix.get(8));
     return matrix;
+}
+
+SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
+                                           LayoutUnit containerHeight, Frame* f,
+                                           bool isTransformable)
+{
+    STARFISH_ASSERT(f != nullptr);
+
+    if (hasRareComputeStyleData() == false) {
+        return SkMatrix::I();
+    }
+
+    StyleTransformDataGroup* transforms = m_rareComputedStyleData.transforms();
+
+    if (transforms == nullptr || isTransformable == false) {
+        return SkMatrix::I();
+    }
+
+    return transformToMatrix(transforms, containerWidth, containerHeight, f);
 }
 
 ComputedStyle* ComputedStyle::cachedPseudoStyle(PseudoElementType pseudoType)

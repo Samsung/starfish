@@ -280,7 +280,7 @@ bool operator!=(const StyleTransformData& a, const StyleTransformData& b)
 }
 
 class StyleTransformDataGroup : public gc {
-    friend class StyleResolver;
+    friend class CSSTransformFunctions;
 
 public:
     StyleTransformDataGroup()
