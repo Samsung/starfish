@@ -34,7 +34,6 @@
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "platform/network/http/HTTPStatus.h"
 
-#include "core/modules/serviceworker/ProgramOptions.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ErrorData.h"

@@ -21,31 +21,24 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/ProgramOptions.h"
-#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/util/ProgramOptions.h"
 
 namespace Starfish {
 
-WorkerConfig& WorkerConfig::instance()
+bool ProgramOptions::has(const char* key)
 {
-    static WorkerConfig instance;
-    return instance;
+    STARFISH_ASSERT(key != nullptr);
+    auto it = m_map.find(key);
+    if (it != m_map.end()) {
+        return true;
+    }
+    return false;
 }
 
-WorkerConfig::WorkerConfig()
+bool ProgramOptions::is(const char* key)
 {
-#if !defined(NDEBUG)
-    const char* verbose = getenv("DEBUG_WORKER");
-
-    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
-        set("DEBUG_WORKER", std::atoi(verbose));
-        STARFISH_LOG_INFO("DEBUG_WORKER: %d\n", std::atoi(verbose));
-    } else {
-        set("DEBUG_WORKER", 0);
-        STARFISH_LOG_INFO("DEBUG_WORKER: %d\n", 0);
-    }
-
-#endif
+    STARFISH_ASSERT(key != nullptr);
+    return get<bool>(key);
 }
 
 } // namespace Starfish
