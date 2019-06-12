@@ -49,6 +49,10 @@ BaseRunnable::~BaseRunnable()
 
 void BaseRunnable::run()
 {
+    if (preRun() == false) {
+        return;
+    }
+
     auto timeout = std::chrono::milliseconds(CV_STATUS_TIMEOUT_MS);
 
     while (isStopRequested() == false) {
@@ -67,6 +71,11 @@ void BaseRunnable::run()
     };
 
     postRun();
+}
+
+bool BaseRunnable::preRun()
+{
+    return true;
 }
 
 bool BaseRunnable::doRun()
