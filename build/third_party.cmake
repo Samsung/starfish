@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 # ESCARGOT THIRDPARTY
-IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_skia_gl")))
+IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_skia_gl") OR (${BACKEND} STREQUAL "efl_skia_gb")))
 # GIT SUBMODULE
     EXECUTE_PROCESS (
         WORKING_DIRECTORY ${STARFISH_ROOT}
