@@ -74,22 +74,22 @@ String* keyValueToCode(KeyValue v)
 {
     if (v >= AKey && v <= ZKey) {
         char ch = v - AKey + 'A';
-        char buf[16] = "Key";
+        char buf[5] = "Key";
         buf[3] = ch;
         buf[4] = 0;
         return String::createASCIIString(buf);
     } else if (v >= LowerAKey && v <= LowerZKey) {
         char ch = v - LowerAKey + 'A';
-        char buf[16] = "Key";
+        char buf[5] = "Key";
         buf[3] = ch;
         buf[4] = 0;
         return String::createASCIIString(buf);
     } else if (v >= Digit0Key && v <= Digit9Key) {
         char ch = v - Digit0Key + '0';
-        char buf[16] = "Digit";
+        char buf[7] = "Digit";
         buf[5] = ch;
         buf[6] = 0;
-        return String::createASCIIString(ch);
+        return String::createASCIIString(buf);
     } else if (v == EnterKey) {
         return String::createASCIIString("Enter");
     } else if (v == EscapeKey) {
