@@ -36,6 +36,8 @@ public:
     bool doRun() override;
     void stop() override;
 
+    void createApp(const char* appName);
+
 private:
     httplib::Server* m_server;
     CastConfig* m_config;

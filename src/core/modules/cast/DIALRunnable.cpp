@@ -23,9 +23,12 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/cast/CastConfig.h"
+#include "core/modules/cast/CastApplication.h"
 #include "core/modules/cast/DIALRunnable.h"
 
 namespace Starfish {
+
+#define CAST_DIAL_BUFFER_SIZE 256
 
 DIALRunnable::DIALRunnable(MessageLoop* messageLoop, CastConfig* config)
     : BaseRunnable(messageLoop)
@@ -39,7 +42,39 @@ DIALRunnable::DIALRunnable(MessageLoop* messageLoop, CastConfig* config)
 
 bool DIALRunnable::doRun()
 {
-    return true;
+    char buffer[CAST_DIAL_BUFFER_SIZE];
+    snprintf(buffer, CAST_DIAL_BUFFER_SIZE, "http://%s:%d%s",
+             m_config->localAddress()->toUTF8NonGCString().data(),
+             LOCATION_PORT, CAST_APP_URL);
+    std::string appURL(buffer);
+
+    m_server->Get(LOCATION_DESC, [appURL](const httplib::Request& req,
+                                          httplib::Response& res) {
+        STARFISH_LOG_INFO("CAST - GET: %s\n", LOCATION_DESC);
+
+        res.set_header("Application-URL", appURL.data());
+        res.set_content(CastConfig::templateDeviceDescription,
+                        strlen(CastConfig::templateDeviceDescription),
+                        "text/xml");
+    });
+
+    CastApplication youtubeApp(m_server, std::string("YouTube"));
+
+#if !defined(NDEBUG)
+    m_server->Get(R"(/(.*))",
+                  [](const httplib::Request& req, httplib::Response& res) {
+                      STARFISH_LOG_INFO("CAST - GET: %s\n", req.path.data());
+                  });
+
+    m_server->Post(R"(/(.*))",
+                   [](const httplib::Request& req, httplib::Response& res) {
+                       STARFISH_LOG_INFO("CAST - POST: %s\n", req.path.data());
+                   });
+#endif
+
+    m_server->listen(m_config->localAddress()->toUTF8NonGCString().data(),
+                     LOCATION_PORT);
+    return false;
 }
 
 void DIALRunnable::stop()
