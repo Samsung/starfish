@@ -27,8 +27,11 @@
 namespace Starfish {
 class DOMMatrix : public DOMMatrixReadOnly {
 public:
+    static DOMMatrix* Create(DOMMatrixReadOnly* domMatrix);
+
     DOMMatrix(ExecutionContext* executionContext);
     DOMMatrix(ExecutionContext* executionContext, DOMStringOrSequence value);
+    DOMMatrix(ExecutionContext* executionContext, SkMatrix44 matrix, bool is2D);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMMatrix)
 
@@ -55,14 +58,40 @@ public:
     void setM43(double value);
     void setM44(double value);
 
+    DOMMatrix* translateSelf(double tx = 0, double ty = 0, double tz = 0);
+    DOMMatrix* scaleSelf(double sx = 1);
+    DOMMatrix* scaleSelf(double sx, double sy, double sz = 1, double ox = 0,
+                         double oy = 0, double oz = 0);
+    DOMMatrix* scale3dSelf(double scale = 1, double ox = 0, double oy = 0,
+                           double oz = 0);
+    DOMMatrix* rotateSelf(double rot_x, double rot_y, double rot_z);
+    DOMMatrix* rotateFromVectorSelf(double x, double y);
+    DOMMatrix* rotateAxisAngleSelf(double x = 0, double y = 0, double z = 0,
+                                   double angle = 0);
+
     ExecutionContext* executionContext()
     {
         return DOMMatrixReadOnly::executionContext();
     }
 
+    void setMatrix(SkMatrix44 matrix)
+    {
+        DOMMatrixReadOnly::setMatrix(matrix);
+    }
+
     SkMatrix44& matrix()
     {
         return DOMMatrixReadOnly::matrix();
+    }
+
+    bool is2D()
+    {
+        return DOMMatrixReadOnly::is2D();
+    }
+
+    void setIs2D(bool is2D)
+    {
+        DOMMatrixReadOnly::setIs2D(is2D);
     }
 
     virtual bool isSerializable() const override;
@@ -71,5 +100,5 @@ public:
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const override;
 };
-}
+} // namespace Starfish
 #endif

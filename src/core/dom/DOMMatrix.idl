@@ -38,16 +38,16 @@ interface DOMMatrix : DOMMatrixReadOnly {
     // Mutable transform methods
     [Unimplemented] DOMMatrix multiplySelf(optional DOMMatrixInit other);
     [Unimplemented] DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
-    [Unimplemented] DOMMatrix translateSelf(optional unrestricted double tx = 0,
+    DOMMatrix translateSelf(optional unrestricted double tx = 0,
                             optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
-    [Unimplemented] DOMMatrix scaleSelf(optional unrestricted double scaleX = 1,
+    DOMMatrix scaleSelf(optional unrestricted double scaleX = 1,
                         optional unrestricted double scaleY,
                         optional unrestricted double scaleZ = 1,
                         optional unrestricted double originX = 0,
                         optional unrestricted double originY = 0,
                         optional unrestricted double originZ = 0);
-    [Unimplemented] DOMMatrix scale3dSelf(optional unrestricted double scale = 1,
+    DOMMatrix scale3dSelf(optional unrestricted double scale = 1,
                           optional unrestricted double originX = 0,
                           optional unrestricted double originY = 0,
                           optional unrestricted double originZ = 0);

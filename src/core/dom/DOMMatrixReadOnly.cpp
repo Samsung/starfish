@@ -21,6 +21,7 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/DOMMatrixReadOnly.h"
+#include "core/dom/DOMMatrix.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
@@ -220,6 +221,16 @@ void DOMMatrixReadOnly::set3DMatrix(double val1, double val2, double val3,
     m_matrix.setDouble(3, 3, val16);
 }
 
+DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
+                                     SkMatrix44 matrix, bool is2D)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+    , m_matrix(matrix)
+    , m_is2D(is2D)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
+}
+
 double DOMMatrixReadOnly::a() const
 {
     return m_matrix.getDouble(0, 0);
@@ -395,6 +406,59 @@ String* DOMMatrixReadOnly::toString()
     return sb.finalize();
 }
 
+DOMMatrix* DOMMatrixReadOnly::translate(double tx, double ty, double tz)
+{
+    return DOMMatrix::Create(this)->translateSelf(tx, ty, tz);
+}
+
+DOMMatrix* DOMMatrixReadOnly::scale(double sx)
+{
+    return scale(sx, sx);
+}
+
+DOMMatrix* DOMMatrixReadOnly::scale(double sx, double sy, double sz, double ox,
+                                    double oy, double oz)
+{
+    return DOMMatrix::Create(this)->scaleSelf(sx, sy, sz, ox, oy, oz);
+}
+
+DOMMatrix* DOMMatrixReadOnly::scaleNonUniform(double sx, double sy)
+{
+    return DOMMatrix::Create(this)->scaleSelf(sx, sy, 1, 0, 0, 0);
+}
+
+DOMMatrix* DOMMatrixReadOnly::scale3d(double scale, double ox, double oy,
+                                      double oz)
+{
+    return DOMMatrix::Create(this)->scale3dSelf(scale, ox, oy, oz);
+}
+
+DOMMatrix* DOMMatrixReadOnly::rotate(double rot_x)
+{
+    return DOMMatrix::Create(this)->rotateSelf(0, 0, rot_x);
+}
+
+DOMMatrix* DOMMatrixReadOnly::rotate(double rot_x, double rot_y)
+{
+    return DOMMatrix::Create(this)->rotateSelf(rot_x, rot_y, 0);
+}
+
+DOMMatrix* DOMMatrixReadOnly::rotate(double rot_x, double rot_y, double rot_z)
+{
+    return DOMMatrix::Create(this)->rotateSelf(rot_x, rot_y, rot_z);
+}
+
+DOMMatrix* DOMMatrixReadOnly::rotateFromVector(double x, double y)
+{
+    return DOMMatrix::Create(this)->rotateFromVectorSelf(x, y);
+}
+
+DOMMatrix* DOMMatrixReadOnly::rotateAxisAngle(double x, double y, double z,
+                                              double angle)
+{
+    return DOMMatrix::Create(this)->rotateAxisAngleSelf(x, y, z, angle);
+}
+
 ScriptBindingInstance* DOMMatrixReadOnly::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
@@ -410,4 +474,4 @@ void DOMMatrixReadOnly::deserialize(SerializedData* serialized,
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
-}
+} // namespace Starfish

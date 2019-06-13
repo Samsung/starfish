@@ -23,6 +23,13 @@
 
 namespace Starfish {
 
+DOMMatrix* DOMMatrix::Create(DOMMatrixReadOnly* domMatrix)
+{
+    STARFISH_ASSERT(domMatrix != nullptr);
+    return new DOMMatrix(domMatrix->executionContext(), domMatrix->matrix(),
+                         domMatrix->is2D());
+}
+
 DOMMatrix::DOMMatrix(ExecutionContext* executionContext)
     : DOMMatrixReadOnly(executionContext)
 {
@@ -32,6 +39,13 @@ DOMMatrix::DOMMatrix(ExecutionContext* executionContext)
 DOMMatrix::DOMMatrix(ExecutionContext* executionContext,
                      DOMStringOrSequence value)
     : DOMMatrixReadOnly(executionContext, value)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
+}
+
+DOMMatrix::DOMMatrix(ExecutionContext* executionContext, SkMatrix44 matrix,
+                     bool is2D)
+    : DOMMatrixReadOnly(executionContext, matrix, is2D)
 {
     STARFISH_ASSERT(executionContext != nullptr);
 }
@@ -78,11 +92,17 @@ void DOMMatrix::setM12(double value)
 
 void DOMMatrix::setM13(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(2, 0, value);
 }
 
 void DOMMatrix::setM14(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(3, 0, value);
 }
 
@@ -98,31 +118,49 @@ void DOMMatrix::setM22(double value)
 
 void DOMMatrix::setM23(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(2, 1, value);
 }
 
 void DOMMatrix::setM24(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(3, 1, value);
 }
 
 void DOMMatrix::setM31(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(0, 2, value);
 }
 
 void DOMMatrix::setM32(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(1, 2, value);
 }
 
 void DOMMatrix::setM33(double value)
 {
+    if (value != 1) {
+        setIs2D(false);
+    }
     matrix().setDouble(2, 2, value);
 }
 
 void DOMMatrix::setM34(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(3, 2, value);
 }
 
@@ -138,12 +176,111 @@ void DOMMatrix::setM42(double value)
 
 void DOMMatrix::setM43(double value)
 {
+    if (value != 0) {
+        setIs2D(false);
+    }
     matrix().setDouble(2, 3, value);
 }
 
 void DOMMatrix::setM44(double value)
 {
+    if (value != 1) {
+        setIs2D(false);
+    }
     matrix().setDouble(3, 3, value);
+}
+
+DOMMatrix* DOMMatrix::translateSelf(double tx, double ty, double tz)
+{
+    // https://www.w3.org/TR/geometry-1/#dom-dommatrix-translateself
+    if ((tx != 0) && (ty != 0) && (tz != 0)) {
+        return this;
+    }
+
+    if (tz != 0) {
+        setIs2D(false);
+    }
+
+    matrix().preTranslate(tx, ty, tz);
+    return this;
+}
+
+DOMMatrix* DOMMatrix::scaleSelf(double sx)
+{
+    return scaleSelf(sx, sx);
+}
+
+DOMMatrix* DOMMatrix::scaleSelf(double sx, double sy, double sz, double ox,
+                                double oy, double oz)
+{
+    // https://www.w3.org/TR/geometry-1/#dom-dommatrix-scaleself
+    if ((sz != 1) || (oz != 0)) {
+        setIs2D(false);
+    }
+
+    if ((sx == 1) && (sy == 1) && (sz == 1)) {
+        return this;
+    }
+
+    bool hasTranslation = false;
+    if ((ox != 0) || (oy != 0) || (oz != 0)) {
+        hasTranslation = true;
+        translateSelf(ox, oy, oz);
+    }
+    matrix().postScale(sx, sy, sz);
+    if (hasTranslation) {
+        translateSelf(-ox, -oy, -oz);
+    }
+
+    return this;
+}
+
+DOMMatrix* DOMMatrix::scale3dSelf(double scale, double ox, double oy, double oz)
+{
+    return scaleSelf(scale, scale, scale, ox, oy, oz);
+}
+
+DOMMatrix* DOMMatrix::rotateSelf(double rot_x, double rot_y, double rot_z)
+{
+    // https://www.w3.org/TR/geometry-1/#dom-dommatrix-rotateself
+    SkMatrix44 mat = SkMatrix44::I();
+
+    if (rot_z != 0) {
+        mat.setRotateAbout(0, 0, 1, rot_z);
+    }
+
+    if (rot_y != 0) {
+        mat.setRotateAbout(0, 1, 0, rot_y);
+        setIs2D(false);
+    }
+
+    if (rot_x != 0) {
+        mat.setRotateAbout(1, 0, 0, rot_x);
+        setIs2D(false);
+    }
+
+    setMatrix(matrix() * mat);
+    return this;
+}
+
+DOMMatrix* DOMMatrix::rotateFromVectorSelf(double x, double y)
+{
+    rotateSelf(0, 0, atan2(y, x) * 180.0 / SK_MScalarPI);
+    return this;
+}
+
+DOMMatrix* DOMMatrix::rotateAxisAngleSelf(double x, double y, double z,
+                                          double angle)
+{
+    SkMatrix44 mat = SkMatrix44::I();
+
+    mat.setRotateDegreesAbout(x, y, z, angle);
+    if ((x != 0) || (y != 0)) {
+        setIs2D(false);
+    }
+    setMatrix(matrix() * mat);
+
+    return this;
 }
 
 ScriptBindingInstance* DOMMatrix::scriptBindingInstance()
@@ -161,4 +298,4 @@ void DOMMatrix::deserialize(SerializedData* serialized,
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
-}
+} // namespace Starfish
