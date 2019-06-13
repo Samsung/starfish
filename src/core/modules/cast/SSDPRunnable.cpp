@@ -31,10 +31,12 @@
 
 namespace Starfish {
 
-SSDPRunnable::SSDPRunnable(MessageLoop *messageLoop)
+SSDPRunnable::SSDPRunnable(MessageLoop *messageLoop, CastConfig *config)
     : BaseRunnable(messageLoop)
+    , m_config(config)
 {
     STARFISH_ASSERT(messageLoop != nullptr);
+    STARFISH_ASSERT(config != nullptr);
 }
 
 bool SSDPRunnable::preRun()
@@ -55,10 +57,13 @@ bool SSDPRunnable::doRun()
         0,
     };
 
-    // TODO: replace the loopback address with real ip
-    int msearchResDataLen =
-        snprintf(msearchResData, sizeof(msearchResData),
-                 templateMSearchResponse, "127.0.0.1", LOCATION_PORT, "");
+    auto localAddrString = m_config->localAddress();
+
+    int msearchResDataLen = snprintf(
+        msearchResData, sizeof(msearchResData), templateMSearchResponse,
+        localAddrString->toUTF8NonGCString().c_str(), LOCATION_PORT, "");
+
+    // STARFISH_LOG_INFO("%s\n", msearchResData);
 
     while (isStopRequested() == false) {
         std::this_thread::sleep_for(std::chrono::milliseconds(RECV_SLEEP_MS));
@@ -98,6 +103,7 @@ bool SSDPRunnable::initSocket()
     struct sockaddr_in socketAddr;
     struct ip_mreq mreq;
     int allowMultipleSocketsToUseTheSamePort = 1;
+    auto localAddrString = m_config->localAddress();
 
     m_socket = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 
@@ -124,8 +130,8 @@ bool SSDPRunnable::initSocket()
 
     // join the multicast group
     mreq.imr_multiaddr.s_addr = inet_addr(SSDP_GROUP);
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
-    // TODO: check if INADDR_ANY is reachable
+    mreq.imr_interface.s_addr =
+        inet_addr(localAddrString->toUTF8NonGCString().c_str());
     if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&mreq,
                    sizeof(mreq)) < 0) {
         return false;

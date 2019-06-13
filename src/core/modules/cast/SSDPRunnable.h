@@ -25,17 +25,18 @@
 
 namespace Starfish {
 
-class ThreadPool;
+class CastConfig;
 
 class SSDPRunnable : public BaseRunnable {
 public:
-    SSDPRunnable(MessageLoop* messageLoop);
+    SSDPRunnable(MessageLoop* messageLoop, CastConfig* config);
     bool preRun() override;
     bool doRun() override;
 
 private:
     bool initSocket();
     int m_socket{ -1 };
+    CastConfig* m_config;
 };
 
 } // namespace Starfish

@@ -22,16 +22,19 @@
 #include <httplib.h>
 
 #include "StarfishConfig.h"
+#include "core/modules/cast/CastConfig.h"
 #include "core/modules/cast/DIALRunnable.h"
 
 namespace Starfish {
 
-DIALRunnable::DIALRunnable(MessageLoop* messageLoop)
+DIALRunnable::DIALRunnable(MessageLoop* messageLoop, CastConfig* config)
     : BaseRunnable(messageLoop)
     , m_server(new httplib::Server())
+    , m_config(config)
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(m_server != nullptr);
+    STARFISH_ASSERT(config != nullptr);
 }
 
 bool DIALRunnable::doRun()

@@ -28,16 +28,17 @@ class Server;
 
 namespace Starfish {
 
-class ThreadPool;
+class CastConfig;
 
 class DIALRunnable : public BaseRunnable {
 public:
-    DIALRunnable(MessageLoop* messageLoop);
+    DIALRunnable(MessageLoop* messageLoop, CastConfig* config);
     bool doRun() override;
     void stop() override;
 
 private:
     httplib::Server* m_server;
+    CastConfig* m_config;
 };
 
 } // namespace Starfish

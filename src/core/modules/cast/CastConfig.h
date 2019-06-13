@@ -32,6 +32,16 @@ namespace Starfish {
 extern const char* templateDeviceDescription;
 extern const char* templateMSearchResponse;
 
+class CastConfig : public gc {
+public:
+    CastConfig() = default;
+
+    DEFINE_GETTER_SETTER(String*, localAddress, LocalAddress);
+
+private:
+    String* m_localAddress{ String::emptyString };
+};
+
 } // namespace Starfish
 
 #endif

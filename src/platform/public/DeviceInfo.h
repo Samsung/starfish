@@ -17,37 +17,15 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishCastServer__)
-#define __StarfishCastServer__
+#ifndef __StarfishDeviceInfo__
+#define __StarfishDeviceInfo__
 
 namespace Starfish {
 
-class IThread;
-class ThreadPool;
-class MessageLoop;
-class CastConfig;
-class SSDPRunnable;
-class DIALRunnable;
-
-class CastServer final : public gc {
+class DeviceInfo {
 public:
-    static CastServer* instance();
-    void destroy();
-    bool start();
-
-private:
-    CastServer();
-    ~CastServer() = default;
-
-    static CastServer* m_instance;
-
-    IThread* m_discoveryThread{ nullptr };
-    IThread* m_castReceiverThread{ nullptr };
-    SSDPRunnable* m_ssdp{ nullptr };
-    DIALRunnable* m_dialRunnable{ nullptr };
-    ThreadPool* m_threadPool{ nullptr };
-    MessageLoop* m_messageLoop{ nullptr };
-    CastConfig* m_config{ nullptr };
+    static bool getLocalIPAddress(std::string interfaceName,
+                                  std::string& ipAddressQueried);
 };
 
 } // namespace Starfish
