@@ -14,10 +14,10 @@ CMakeFiles
 build.ninja
 rules.ninja
 
-build/android/build_aar/app/app/build/
-build/android/build_aar/app/build/
-build/android/build_aar/app/local.properties
-build/android/build_shell/app/build
+build/android/**/build/
+build/android/**/jniLibs/
+build/android/**/*.iml
+build/android/**/local.properties
 
 # Binding Generator generated
 src/binding/*Binding.cpp
