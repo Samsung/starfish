@@ -74,6 +74,6 @@ interface DOMMatrixReadOnly {
     [Unimplemented,NewObject] Float32Array toFloat32Array();
     [Unimplemented,NewObject] Float64Array toFloat64Array();
 
-    [Unimplemented,Exposed=Window] stringifier;
+    [Exposed=Window] stringifier;
     [Unimplemented,Default] object toJSON();
 };

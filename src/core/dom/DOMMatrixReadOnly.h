@@ -61,6 +61,8 @@ public:
     double m43() const;
     double m44() const;
 
+    String* toString();
+
     bool is2D()
     {
         return m_is2D;
