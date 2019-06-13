@@ -53,14 +53,16 @@ bool SSDPRunnable::doRun()
     std::vector<char> buffer(MAX_BUFFER_SIZE, 0x00);
     std::string receivedString;
 
-    char msearchResData[sizeof(templateMSearchResponse) + MAX_BUFFER_SIZE] = {
+    char msearchResData[sizeof(CastConfig::templateMSearchResponse) +
+                        MAX_BUFFER_SIZE] = {
         0,
     };
 
     auto localAddrString = m_config->localAddress();
 
     int msearchResDataLen = snprintf(
-        msearchResData, sizeof(msearchResData), templateMSearchResponse,
+        msearchResData, sizeof(msearchResData),
+        CastConfig::templateMSearchResponse,
         localAddrString->toUTF8NonGCString().c_str(), LOCATION_PORT, "");
 
     // STARFISH_LOG_INFO("%s\n", msearchResData);

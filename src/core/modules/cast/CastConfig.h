@@ -28,13 +28,15 @@ namespace Starfish {
 
 #define LOCATION_PORT 5696
 #define LOCATION_DESC "/deviceDescription.xml"
-
-extern const char* templateDeviceDescription;
-extern const char* templateMSearchResponse;
+#define CAST_APP_URL "/apps"
 
 class CastConfig : public gc {
 public:
     CastConfig() = default;
+
+    static const char* templateDeviceDescription;
+    static const char* templateMSearchResponse;
+    static const char* templateCastAppInfo;
 
     DEFINE_GETTER_SETTER(String*, localAddress, LocalAddress);
 

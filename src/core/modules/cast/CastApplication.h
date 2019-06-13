@@ -17,10 +17,9 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishDIALRunnable__)
-#define __StarfishDIALRunnable__
-
-#include "core/modules/cast/BaseRunnable.h"
+#if defined(STARFISH_ENABLE_CAST_SERVICE) && \
+    !defined(__StarfishCastApplication__)
+#define __StarfishCastApplication__
 
 namespace httplib {
 class Server;
@@ -30,19 +29,10 @@ namespace Starfish {
 
 class CastConfig;
 
-class DIALRunnable : public BaseRunnable {
+class CastApplication {
 public:
-    DIALRunnable(MessageLoop* messageLoop, CastConfig* config);
-    bool doRun() override;
-    void stop() override;
-
-    void createApp(const char* appName);
-
-private:
-    httplib::Server* m_server;
-    CastConfig* m_config;
+    CastApplication(httplib::Server* server, const std::string& appName);
 };
 
 } // namespace Starfish
-
 #endif
