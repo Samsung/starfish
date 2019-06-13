@@ -25,6 +25,7 @@ namespace Starfish {
 class IThread;
 class ThreadPool;
 class MessageLoop;
+class CastConfig;
 class SSDPRunnable;
 class DIALRunnable;
 
@@ -41,11 +42,12 @@ private:
     static CastServer* m_instance;
 
     IThread* m_discoveryThread{ nullptr };
-    IThread* m_appControlThread{ nullptr };
+    IThread* m_castReceiverThread{ nullptr };
     SSDPRunnable* m_ssdp{ nullptr };
     DIALRunnable* m_dialRunnable{ nullptr };
     ThreadPool* m_threadPool{ nullptr };
     MessageLoop* m_messageLoop{ nullptr };
+    CastConfig* m_config{ nullptr };
 };
 
 } // namespace Starfish

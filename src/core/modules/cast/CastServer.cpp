@@ -21,11 +21,13 @@
 
 #include "StarfishConfig.h"
 
+#include "platform/public/DeviceInfo.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/cast/DIALRunnable.h"
 
+#include "core/modules/cast/CastConfig.h"
 #include "core/modules/cast/SSDPRunnable.h"
 #include "core/modules/cast/CastServer.h"
 
@@ -52,33 +54,43 @@ void CastServer::destroy()
         m_instance = nullptr;
     }
 
-    if (m_appControlThread != nullptr) {
-        m_appControlThread->stop();
-        m_appControlThread = nullptr;
+    if (m_castReceiverThread != nullptr) {
+        m_castReceiverThread->stop();
+        m_castReceiverThread = nullptr;
     }
 }
 
 CastServer::CastServer()
 {
+    m_config = new CastConfig();
     m_messageLoop = new MessageLoop();
     m_threadPool = new ThreadPool(CAST_SERVER_THREAD_POOL_SIZE, m_messageLoop);
-    m_discoveryThread = new AdaptedThread(m_threadPool);
-    m_appControlThread = new AdaptedThread(m_threadPool);
-
-    m_ssdp = new SSDPRunnable(m_messageLoop);
-    m_dialRunnable = new DIALRunnable(m_messageLoop);
 }
 
 bool CastServer::start()
 {
+    // fill up the configuration
+    std::string ip;
+    if (DeviceInfo::getLocalIPAddress("", ip) == false) {
+        return false;
+    }
+    m_config->setLocalAddress(
+        String::createASCIIString(ip.c_str(), ip.length()));
+
+    m_discoveryThread = new AdaptedThread(m_threadPool);
+    m_castReceiverThread = new AdaptedThread(m_threadPool);
+    m_ssdp = new SSDPRunnable(m_messageLoop, m_config);
+    m_dialRunnable = new DIALRunnable(m_messageLoop, m_config);
+
     // start discovering services
     m_discoveryThread->start(m_ssdp);
 
-    m_appControlThread->start(m_dialRunnable);
+    // start cast receiver services
+    m_castReceiverThread->start(m_dialRunnable);
 
     return false;
 }
 
-} // namespace daeyeon
+} // namespace Starfish
 
 #endif
