@@ -369,7 +369,7 @@ Make sure your code is obvious and readable with the following conventions.
 
 // Regarding readability, The primary rule is to use explicit expression consists of left and right operand
 // and not to use single operand logical operator such as (`!`). You can use single operand logical expression
-// only if function/member name is boolean-identifiable. acceptable formats are "isXXX", "shouldXXX", "didXXX" or "flagXXX".
+// only if function/member name is boolean-identifiable. acceptable formats are "isXXX", "shouldXXX", "didXXX" ,"hasXXX" , "inXXX" or "flagXXX".
 // Other cases are not recommended to omit the right operand.
 bool isLoaded();
 bool sunnyToday();
