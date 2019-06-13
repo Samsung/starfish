@@ -330,6 +330,71 @@ double DOMMatrixReadOnly::m44() const
     return m_matrix.getDouble(3, 3);
 }
 
+String* DOMMatrixReadOnly::toString()
+{
+    // https://drafts.fxtf.org/geometry/#dommatrixreadonly-stringification-behavior
+    StringBuilder sb;
+    if (is2D()) {
+        sb.appendString(String::createASCIIString("matrix("));
+
+        sb.appendString(String::fromInt(m11()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m12()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m21()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m22()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m41()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m42()));
+    } else {
+        sb.appendString(String::createASCIIString("matrix3d("));
+
+        sb.appendString(String::fromInt(m11()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m12()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m13()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m14()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m21()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m22()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m23()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m24()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m41()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m42()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m43()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m44()));
+    }
+    sb.appendString(String::createASCIIString(")"));
+    return sb.finalize();
+}
+
 ScriptBindingInstance* DOMMatrixReadOnly::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
