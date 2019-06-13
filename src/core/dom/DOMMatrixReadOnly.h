@@ -28,6 +28,7 @@
 #include "DOMExceptionOr.h"
 
 namespace Starfish {
+class DOMMatrix;
 class DOMMatrixReadOnly : public ScriptWrappable, public Serializable {
 public:
     static DOMExceptionOr<void> validateAndFixup(
@@ -36,6 +37,9 @@ public:
     DOMMatrixReadOnly(ExecutionContext* executionContext);
     DOMMatrixReadOnly(ExecutionContext* executionContext,
                       DOMStringOrSequence value);
+    DOMMatrixReadOnly(ExecutionContext* executionContext, SkMatrix44 matrix,
+                      bool is2D);
+
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMMatrixReadOnly)
 
     double a() const;
@@ -63,19 +67,45 @@ public:
 
     String* toString();
 
+    DOMMatrix* translate(double tx = 0, double ty = 0, double tz = 0);
+
+    DOMMatrix* scale(double sx = 1);
+    DOMMatrix* scale(double sx, double sy, double sz = 1, double ox = 0,
+                     double oy = 0, double oz = 0);
+    DOMMatrix* scaleNonUniform(double sx = 1, double sy = 1);
+    DOMMatrix* scale3d(double scale = 1, double ox = 0, double oy = 0,
+                       double oz = 0);
+
+    DOMMatrix* rotate(double rot_x);
+    DOMMatrix* rotate(double rot_x, double rot_y);
+    DOMMatrix* rotate(double rot_x, double rot_y, double rot_z);
+    DOMMatrix* rotateFromVector(double x, double y);
+    DOMMatrix* rotateAxisAngle(double x = 0, double y = 0, double z = 0,
+                               double angle = 0);
+
     bool is2D()
     {
         return m_is2D;
     }
 
+    void setIs2D(bool is2D)
+    {
+        m_is2D = is2D;
+    }
+
     bool isIdentity()
     {
-        return (m_is2D && (m_matrix == SkMatrix44::I()));
+        return (m_matrix == SkMatrix44::I());
     }
 
     ExecutionContext* executionContext()
     {
         return m_executionContext;
+    }
+
+    void setMatrix(SkMatrix44 matrix)
+    {
+        m_matrix = matrix;
     }
 
     SkMatrix44& matrix()
@@ -101,5 +131,5 @@ private:
     SkMatrix44 m_matrix;
     bool m_is2D;
 };
-}
+} // namespace Starfish
 #endif
