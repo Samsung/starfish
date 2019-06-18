@@ -1297,7 +1297,7 @@ void InlineBoxLayoutParentBox::computeVisibleRect(
 {
     FrameBox::ComputeVisibleRectContextFragment f(ctx, this);
 
-    if (isLineBox() == false && tryUniteVisibleRect(ctx) == false) {
+    if (!isLineBox() && !tryUniteVisibleRect(ctx)) {
         return;
     }
     for (size_t i = 0; i < m_boxes.size(); i++) {

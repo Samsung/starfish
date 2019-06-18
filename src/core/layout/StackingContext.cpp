@@ -168,6 +168,15 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         dontSplitGraphicsBufferCond = true;
     }
 
+    LayoutRect screenRect(0, 0, screenWidth, screenHeight);
+    // if buffer is smaller than screen && whole content will be shown on
+    // screen
+    // we don't need to divide buffer
+    if (screenRect.containsInVisual(sc->screenExtent()) &&
+        bufferWidth <= screenWidth && bufferHeight <= screenHeight) {
+        dontSplitGraphicsBufferCond = true;
+    }
+
     if (dontSplitGraphicsBufferCond) {
         m_tileDataWidth = m_bufferWidth;
         m_horizontalTileCount = 1;
@@ -1074,6 +1083,21 @@ void StackingContext::computeStackingContextProperties(
             parentIsRootElementLayer = true;
         }
 
+        bool thereIsOverflowHiddenBetweenSelfAndCompositedAncestor = false;
+        {
+            Frame* f = m_owner;
+            while (f != nullptr) {
+                if (f->shouldApplyOverflow()) {
+                    thereIsOverflowHiddenBetweenSelfAndCompositedAncestor =
+                        true;
+                }
+                if (f == compositedAncestor->owner()) {
+                    break;
+                }
+                f = f->layoutParent();
+            }
+        }
+
         if (parentIsRootElementLayer ||
             (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) ==
                  true &&
@@ -1083,7 +1107,7 @@ void StackingContext::computeStackingContextProperties(
                  true &&
              parentExtent.containsInVisual(selfExtent.maxX(),
                                            selfExtent.maxY())) ||
-            (compositedAncestor->owner()->shouldApplyOverflow())) {
+            thereIsOverflowHiddenBetweenSelfAndCompositedAncestor) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
@@ -1115,14 +1139,15 @@ void StackingContext::computeStackingContextProperties(
                             if (f->shouldApplyOverflow()) {
                                 foundOverflow = true;
                                 clippedExtentRect =
-                                    f->asFrameBox()->computeScreenExtent();
+                                    compositingState
+                                        .clippedScreenExtentPerLayer(cv[i]);
+                                break;
                             }
                             f = f->layoutParent();
                         }
 
                         if (foundOverflow) {
-                            if (clippedExtentRect.intersects(selfExtent) ==
-                                true) {
+                            if (clippedExtentRect.intersects(selfExtent)) {
                                 isCollapsedWithSilbingLayer = true;
                                 reason = NeedsGraphicsLayerReason::
                                     NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
