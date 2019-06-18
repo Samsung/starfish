@@ -23,7 +23,6 @@
 namespace Starfish {
 
 class TimingFunction;
-
 class AnimationKeyframe : public gc {
 public:
     static TimingFunction* defaultTimingFunction();
@@ -143,6 +142,7 @@ public:
         , m_duration(0)
         , m_delay(0)
         , m_timingFunction(AnimationKeyframe::defaultTimingFunction())
+        , m_iterationCount(1.0f)
     {
     }
 
@@ -188,6 +188,16 @@ public:
         return m_delay;
     }
 
+    void setIterationCount(float d)
+    {
+        m_iterationCount = d;
+    }
+
+    float iterationCount() const
+    {
+        return m_iterationCount;
+    }
+
     size_t keyframeListSize()
     {
         return m_keyframeList.size();
@@ -209,6 +219,7 @@ private:
     CSSTime m_duration;
     CSSTime m_delay;
     TimingFunction* m_timingFunction;
+    float m_iterationCount;
     GCVector<AnimationKeyframe*> m_keyframeList;
 };
 
@@ -219,6 +230,7 @@ public:
         , m_durationSize(0)
         , m_timingFunctionSize(0)
         , m_delaySize(0)
+        , m_iterationCountSize(0)
     {
     }
 
@@ -371,6 +383,33 @@ public:
         return m_delaySize;
     }
 
+    // animation-iteration-count //////////////////////////
+    void clearIterationCounts()
+    {
+        m_iterationCountSize = 0;
+    }
+
+    void setIterationCount(float value, size_t index)
+    {
+        resizeIfNeeds(index, m_iterationCountSize);
+        m_keyframes[index].setIterationCount(value);
+    }
+
+    float iterationCount(size_t index) const
+    {
+        STARFISH_ASSERT(m_iterationCountSize <= m_keyframes.size());
+        if (m_iterationCountSize == 0) {
+            return 1;
+        }
+        uint16_t p = index % m_iterationCountSize;
+        return m_keyframes[p].iterationCount();
+    }
+
+    size_t iterationCountSize() const
+    {
+        return m_iterationCountSize;
+    }
+
     enum Direction { NORMAL, REVERSE, ALTERNATE_NORMAL, ALTERNATE_REVERSE };
     enum FillMode { NONE, FORWARDS, BACKWARDS, BOTH, AUTO };
     enum PlayState { PAUSED, RUNNING };
@@ -381,6 +420,7 @@ private:
     size_t m_durationSize;
     size_t m_timingFunctionSize;
     size_t m_delaySize;
+    size_t m_iterationCountSize;
 };
 }
 

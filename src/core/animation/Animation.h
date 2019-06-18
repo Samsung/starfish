@@ -335,6 +335,7 @@ public:
             m_startTimeMs = d;
         }
     }
+
     enum TYPE { TRANSITION_TYPE, ANIMATION_TYPE };
     TYPE type()
     {
@@ -359,7 +360,7 @@ protected:
                    GC_WORD_OFFSET(ActiveAnimationTask, m_timingFunctions));
     }
 
-    float computeProgress(float fraction);
+    float computeProgress(float& fraction);
 
     bool m_isEveryAnimiatedValueResolved : 1;
     TYPE m_type : 1;
@@ -372,6 +373,7 @@ protected:
     uint64_t m_delayMs;
 
     unsigned int m_frameIdx;
+    unsigned int m_frameSize;
 
     GCVector<AnimatedValue*> m_values;
     GCAtomicVector<double> m_offsets;
@@ -580,10 +582,19 @@ protected:
 struct ActiveElementAnimation : public gc {
     String* m_name;
     Element* m_element;
+    double m_duration;
+    double m_delay;
+    float m_iterationStart;
+    float m_iterationCount;
 
-    ActiveElementAnimation(String* name, Element* element)
+    ActiveElementAnimation(String* name, Element* element,
+                           float iterationCount = 1.0f)
         : m_name(name)
         , m_element(element)
+        , m_duration(0)
+        , m_delay(0)
+        , m_iterationStart(iterationCount)
+        , m_iterationCount(iterationCount)
         , m_hash(0)
     {
         STARFISH_ASSERT(name != nullptr);
@@ -706,14 +717,15 @@ public:
     }
 
     void registerAnimation(ActiveAnimationTask* task, ComputedStyle* style,
-                           String* name)
+                           String* name, float iterationCount)
     {
         STARFISH_ASSERT(task != nullptr);
         STARFISH_ASSERT(style != nullptr);
         STARFISH_ASSERT(name != nullptr);
 
-        ActiveElementAnimation* key =
-            new ActiveElementAnimation(name, task->targetElement());
+        task->attachToElement(style);
+        ActiveElementAnimation* key = new ActiveElementAnimation(
+            name, task->targetElement(), iterationCount);
         auto iter = m_activeAnimations->find(key);
         if (iter == m_activeAnimations->end()) {
             GCVector<ActiveAnimationTask*> v;
