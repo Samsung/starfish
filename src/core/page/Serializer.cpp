@@ -256,7 +256,7 @@ static SerializedTypedData* serializeInternal(
             type = SerializedTypedData::Date;
             data = new SerializedPrimitiveValueData(
                 obj->asDateObject()->primitiveValue());
-        } else if (obj->isRegExpObject()) {
+        } else if (obj->isRegExpObject(state)) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;

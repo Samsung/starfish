@@ -41,7 +41,7 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
 
     auto callee = state->resolveCallee();
     if (callee) {
-        void* data = callee->asObject()->extraData();
+        void* data = callee.getValue()->asObject()->extraData();
         if (data) {
             ScriptWrappable* w = (ScriptWrappable*)data;
             if (w->isAttributeEventFunction()) {

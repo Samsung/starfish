@@ -421,7 +421,7 @@ ScriptObject toCalleeObject(Escargot::ExecutionStateRef* state)
 {
     auto callee = state->resolveCallee();
     if (callee) {
-        return callee->asObject();
+        return callee.getValue()->asObject();
     }
     return nullptr;
 }
