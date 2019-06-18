@@ -92,11 +92,11 @@ struct StackingContext::ComputeStackingContextContext {
         Frame* f = c->owner()->layoutParent();
 
         while (f != nullptr) {
-            if (f->shouldApplyOverflow() == true) {
+            if (f->shouldApplyOverflow()) {
                 LayoutRect parentExtent =
                     f->asFrameBox()->computeScreenExtent();
                 rt = LayoutRect::overlappedRect(parentExtent, rt);
-                if (rt.isEmpty() == true) {
+                if (rt.isEmpty()) {
                     break;
                 }
             }
@@ -110,7 +110,7 @@ struct StackingContext::ComputeStackingContextContext {
     void pushCompsitedLayer(StackingContext* c)
     {
         STARFISH_ASSERT(c != nullptr);
-        STARFISH_ASSERT(isCompsitedLayer(c) == false);
+        STARFISH_ASSERT(!isCompsitedLayer(c));
 
         compositedLayers.push_back(c);
         compositedDocuments.insert(c->m_owner->node()->document());
@@ -964,12 +964,12 @@ void StackingContext::computeStackingContextProperties(
     computeTransformMatrix();
 
     m_hasFilterEffect = false;
-    if ((owner()->style()->hasAvailableFilter() == true ||
+    if ((owner()->style()->hasAvailableFilter() ||
          m_ancestorsThatHasFilters.size() != 0)) {
         m_hasFilterEffect = true;
     }
 
-    if (m_owner->isRootElement() == true) {
+    if (m_owner->isRootElement()) {
         compositingState.documentOwners.push_back(this);
     }
 
@@ -979,11 +979,10 @@ void StackingContext::computeStackingContextProperties(
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
 
     // check self visibility
-    if (selfNeedsGraphicsBuffer == true &&
-        m_owner->isBoxesInvisibleFromHere() == true) {
+    if (selfNeedsGraphicsBuffer && m_owner->isBoxesInvisibleFromHere()) {
         selfNeedsGraphicsBuffer = false;
     }
-    if (selfNeedsGraphicsBuffer == true &&
+    if (selfNeedsGraphicsBuffer &&
         m_owner->style()->visibility() == HiddenVisibilityValue) {
         bool everyDesendentBoxIsHidden = true;
         m_owner->iterateChildFrameBox(
@@ -993,7 +992,7 @@ void StackingContext::computeStackingContextProperties(
                     everyDesendentBoxIsHidden = false;
                 }
             });
-        if (everyDesendentBoxIsHidden == true) {
+        if (everyDesendentBoxIsHidden) {
             selfNeedsGraphicsBuffer = false;
         }
     }
@@ -1006,24 +1005,24 @@ void StackingContext::computeStackingContextProperties(
                             m_owner->isRunningTransformAnimation();
 
 #if !defined(STARFISH_ENABLE_TEST)
-    if (m_owner->isRootElement() == true) {
+    if (m_owner->isRootElement()) {
         FrameBlockBox* fb = m_owner->asFrameBlockBox();
-        if (isRootContext() == true) {
+        if (isRootContext()) {
             fb = m_owner->node()
                      ->document()
                      ->frame()
                      ->asFrameBox()
                      ->asFrameBlockBox();
         }
-        if ((fb->hasBiggerContentThanFrameWidth() == true ||
-             fb->hasBiggerContentThanFrameHeight() == true)) {
+        if ((fb->hasBiggerContentThanFrameWidth() ||
+             fb->hasBiggerContentThanFrameHeight())) {
             compositedBySelf = true;
         }
     }
 #endif
 
-    if (compositingState.seenCompsitedLayer() == true &&
-        isRootContext() == false && m_owner->isAbsolutePositioned() == true) {
+    if (compositingState.seenCompsitedLayer() && !isRootContext() &&
+        m_owner->isAbsolutePositioned()) {
         SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
         auto windowRect = computeBoxExtent(
             LayoutRect(0, 0, m_owner->width(), m_owner->height()),
@@ -1035,11 +1034,11 @@ void StackingContext::computeStackingContextProperties(
 
     if (Compositor::supportsFilterEffect(1, 1) ==
             true /* test whatever compostior supports filter */ &&
-        m_hasFilterEffect == true) {
+        m_hasFilterEffect) {
         compositedBySelf = true;
     }
 
-    if (compositedBySelf == true) {
+    if (compositedBySelf) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
     } else {
@@ -1047,8 +1046,7 @@ void StackingContext::computeStackingContextProperties(
     }
     bool willBeComposited = compositedBySelf;
 
-    if (willBeComposited == false &&
-        compositingState.seenCompsitedLayer() == true &&
+    if (!willBeComposited && compositingState.seenCompsitedLayer() &&
         compositingState.compositedDocuments.find(
             m_owner->node()->document()) !=
             compositingState.compositedDocuments.end()) {
@@ -1058,7 +1056,7 @@ void StackingContext::computeStackingContextProperties(
         StackingContext* p = parent();
         StackingContext* compositedAncestor = nullptr;
         while (p) {
-            if (compositingState.isCompsitedLayer(p, &ancestorIndex) == true) {
+            if (compositingState.isCompsitedLayer(p, &ancestorIndex)) {
                 compositedAncestor = p;
                 break;
             }
@@ -1072,11 +1070,11 @@ void StackingContext::computeStackingContextProperties(
         auto parentExtent =
             compositingState.screenExtentPerLayer(compositedAncestor);
 
-        if (compositedAncestor->owner()->isRootElement() == true) {
+        if (compositedAncestor->owner()->isRootElement()) {
             parentIsRootElementLayer = true;
         }
 
-        if (parentIsRootElementLayer == true ||
+        if (parentIsRootElementLayer ||
             (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) ==
                  true &&
              parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) ==
@@ -1084,37 +1082,37 @@ void StackingContext::computeStackingContextProperties(
              parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) ==
                  true &&
              parentExtent.containsInVisual(selfExtent.maxX(),
-                                           selfExtent.maxY()) == true) ||
-            (compositedAncestor->owner()->shouldApplyOverflow() == true)) {
+                                           selfExtent.maxY())) ||
+            (compositedAncestor->owner()->shouldApplyOverflow())) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonNotCoveredByParent;
         }
 
-        if (canConveredByParentCompositedLayer == true) {
+        if (canConveredByParentCompositedLayer) {
             auto& cv = compositingState.compositedLayers;
             for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
                 if (cv[i]->owner()->document() == owner()->document()) {
                     auto extent =
                         compositingState.clippedScreenExtentPerLayer(cv[i]);
-                    if (extent.intersects(selfExtent) == true) {
+                    if (extent.intersects(selfExtent)) {
                         isCollapsedWithSilbingLayer = true;
                         reason = NeedsGraphicsLayerReason::
                             NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
                         break;
                     }
 
-                    if (cv[i]->owner()->isRunningTransformAnimation() == true) {
+                    if (cv[i]->owner()->isRunningTransformAnimation()) {
                         // find never collapsed case by overflow: hidden;
                         Frame* f = cv[i]->owner();
                         bool foundOverflow = false;
                         LayoutRect clippedExtentRect;
                         while (f != nullptr) {
-                            if (f->isAncestorOf(owner()) == true) {
+                            if (f->isAncestorOf(owner())) {
                                 break;
                             }
-                            if (f->shouldApplyOverflow() == true) {
+                            if (f->shouldApplyOverflow()) {
                                 foundOverflow = true;
                                 clippedExtentRect =
                                     f->asFrameBox()->computeScreenExtent();
@@ -1122,7 +1120,7 @@ void StackingContext::computeStackingContextProperties(
                             f = f->layoutParent();
                         }
 
-                        if (foundOverflow == true) {
+                        if (foundOverflow) {
                             if (clippedExtentRect.intersects(selfExtent) ==
                                 true) {
                                 isCollapsedWithSilbingLayer = true;
@@ -1135,7 +1133,7 @@ void StackingContext::computeStackingContextProperties(
                                 NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
                         }
 
-                        if (isCollapsedWithSilbingLayer == true) {
+                        if (isCollapsedWithSilbingLayer) {
                             break;
                         }
                     }
@@ -1143,36 +1141,36 @@ void StackingContext::computeStackingContextProperties(
             }
         }
 
-        if (canConveredByParentCompositedLayer == true &&
-            isCollapsedWithSilbingLayer == false) {
+        if (canConveredByParentCompositedLayer &&
+            !isCollapsedWithSilbingLayer) {
         } else {
             willBeComposited = true;
         }
     }
 
-    if (willBeComposited == true) {
+    if (willBeComposited) {
         for (size_t i = 0; i < compositingState.documentOwners.size(); i++) {
-            if ((compositingState.documentOwners[i]->isRootContext() == true) ||
+            if ((compositingState.documentOwners[i]->isRootContext()) ||
                 (compositingState.documentOwners[i]
                      ->owner()
                      ->asFrameBlockBox()
-                     ->hasBiggerContentThanFrameWidth() == true) ||
+                     ->hasBiggerContentThanFrameWidth()) ||
                 (compositingState.documentOwners[i]
                      ->owner()
                      ->asFrameBlockBox()
-                     ->hasBiggerContentThanFrameHeight() == true)) {
+                     ->hasBiggerContentThanFrameHeight())) {
                 if (compositingState.compositedLayers.size() == 0) {
                     STARFISH_ASSERT(
                         compositingState.documentOwners[i]->isRootContext());
                 }
-                if (compositingState.isCompsitedLayer(
-                        compositingState.documentOwners[i]) == false) {
+                if (!compositingState.isCompsitedLayer(
+                        compositingState.documentOwners[i])) {
                     compositingState.pushCompsitedLayer(
                         compositingState.documentOwners[i]);
                 }
             }
         }
-        if (compositingState.isCompsitedLayer(this) == false) {
+        if (!compositingState.isCompsitedLayer(this)) {
             compositingState.pushCompsitedLayer(this);
         }
     }
@@ -1208,8 +1206,8 @@ void StackingContext::computeStackingContextProperties(
         iter++;
     }
 
-    if (m_owner->isRootElement() == true) {
-        if (compositingState.isCompsitedLayer(this) == true) {
+    if (m_owner->isRootElement()) {
+        if (compositingState.isCompsitedLayer(this)) {
             willBeComposited = true;
             m_needsGraphicsBufferReason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
@@ -1853,9 +1851,9 @@ bool canSkipFillGraphicsBufferDueToOpacityIsZero(
 {
     STARFISH_ASSERT(stackingContext != nullptr);
 
-    if (stackingContext->needsGraphicsBuffer() == true &&
+    if (stackingContext->needsGraphicsBuffer() &&
         stackingContext->owner()->style()->opacity() == 0 &&
-        stackingContext->owner()->isRunningOpacityAnimation() == false) {
+        !stackingContext->owner()->isRunningOpacityAnimation()) {
         return true;
     }
 
@@ -1864,11 +1862,11 @@ bool canSkipFillGraphicsBufferDueToOpacityIsZero(
 
 bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 {
-    if (needsGraphicsBuffer() == true) {
-        if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
+    if (needsGraphicsBuffer()) {
+        if (canSkipFillGraphicsBufferDueToOpacityIsZero(this)) {
             return false;
         }
-        if (owner()->hasOwnGraphicsBufferMethod() == false) {
+        if (!owner()->hasOwnGraphicsBufferMethod()) {
             LayoutRect visibleRect = StackingContext::visibleRect();
             LayoutUnit minX = visibleRect.x();
             LayoutUnit maxX = visibleRect.maxX();
@@ -1878,6 +1876,15 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
             size_t bufferHeight = (int)(maxY - minY);
 
             if (bufferWidth && bufferHeight) {
+                ensureRareData();
+                if (!m_rareData->m_graphicsBufferHolder) {
+                    m_rareData->m_graphicsBufferHolder =
+                        new GraphicsBufferHolder(
+                            bufferWidth, bufferHeight,
+                            m_owner->node()->window()->innerWidth(),
+                            m_owner->node()->window()->innerHeight(), this);
+                }
+
                 size_t wTileSize =
                     m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
                 size_t hTileSize =
@@ -2117,6 +2124,10 @@ bool StackingContext::fillGraphicsBufferContents(
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
+    if (canSkipFillGraphicsBufferDueToOpacityIsZero(this)) {
+        return false;
+    }
+
     if (bufferWidth == 0 || bufferHeight == 0) {
         return drawnSomething;
     }
@@ -2176,10 +2187,6 @@ bool StackingContext::fillGraphicsBufferContents(
             iter->second.graphicsBufferHolder = nullptr;
         }
         return drawnSomething;
-    }
-
-    if (canSkipFillGraphicsBufferDueToOpacityIsZero(this) == true) {
-        return false;
     }
 
     size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
