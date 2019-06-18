@@ -647,9 +647,11 @@ bool isBMP(char32_t ch)
 
 String* String::fromUTF8(const char* src, size_t len)
 {
-    if (len != 0) {
-        STARFISH_ASSERT(src != nullptr);
+    if (len == 0) {
+        return String::emptyString;
     }
+
+    STARFISH_ASSERT(src != nullptr);
 
     bool isAllBMP = true;
     bool isAllASCII = true;
