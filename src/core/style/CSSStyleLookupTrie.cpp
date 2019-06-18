@@ -1156,10 +1156,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 #endif
     case 25:
         // border-bottom-left-radius
+        // animation-iteration-count
         // animation-timing-function
         switch (data[0]) {
 #if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+            if (memcmp(data, "animation-iteration-count", 25) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationIterationCount;
+            }
             if (memcmp(data, "animation-timing-function", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationTimingFunction;
             }
@@ -2114,6 +2118,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         switch (data[0]) {
 #if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+            if (memcmp(data, "animationIterationCount", 23) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationIterationCount;
+            }
             if (memcmp(data, "animationTimingFunction", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationTimingFunction;
             }

@@ -732,7 +732,9 @@ class CSSFilterFunction;
     F(AnimationDuration, animationDuration, "animation-duration")    \
     F(AnimationTimingFunction, animationTimingFunction,              \
       "animation-timing-function")                                   \
-    F(AnimationDelay, animationDelay, "animation-delay")
+    F(AnimationDelay, animationDelay, "animation-delay")             \
+    F(AnimationIterationCount, animationIterationCount,              \
+      "animation-iteration-count")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -2404,6 +2406,7 @@ public:
     bool updateValueLayerAnimationDuration(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationTimingFunction(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationDelay(const CSSTokenVector& tokens);
+    bool updateValueLayerAnimationIterationCount(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;

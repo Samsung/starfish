@@ -2203,6 +2203,15 @@ public:
         return CSSTime(0);
     }
 
+    float animationIterationCount(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->iterationCount(layer);
+        }
+        return 1;
+    }
+
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
                                size_t layer = 0)
     {
@@ -2285,6 +2294,12 @@ public:
         m_rareComputedStyleData.ensureAnimation()->setDelay(delay, index);
     }
 
+    void setAnimationIterationCount(float value, size_t index)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setIterationCount(value,
+                                                                     index);
+    }
+
     void resetTransitionProperties()
     {
         StyleTransitionData* t = transition();
@@ -2348,6 +2363,15 @@ public:
             a->clearDelays();
         }
     }
+
+    void resetAnimationIterationCount()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearIterationCounts();
+        }
+    }
+
 #define SET_SIDE(UPOS, ...)                                      \
     void set##UPOS(const Length& unit)                           \
     {                                                            \

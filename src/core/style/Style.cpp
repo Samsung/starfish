@@ -1641,7 +1641,7 @@ String* CSSStyleValuePair::toString() const
         }
         break;
     case CSSStyleValuePair::ValueKind::FlexBasisValueKind:
-        switch (FlexBasisValue()) {
+        switch (flexBasisValue()) {
         case ContentFlexBasisValue:
             return String::fromUTF8("content");
         default:
@@ -1850,6 +1850,7 @@ String* CSSStyleValuePair::toString() const
         STARFISH_ASSERT(timingFunctionPointerValue());
         return timingFunctionPointerValue()->toString();
     }
+
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
@@ -2381,6 +2382,34 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
     case CSSStyleValuePair::TimingFunctionPointerKind:
         style->setAnimationTimingFunction(item.timingFunctionPointerValue(),
                                           index);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
+                                         ComputedStyle* parentStyle,
+                                         CSSStyleValuePair& item, size_t index)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setAnimationIterationCount(1.0, index);
+        break;
+    case CSSStyleValuePair::Inherit:
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setAnimationIterationCount(
+            parentStyle->animationIterationCount(), index);
+        break;
+    case CSSStyleValuePair::Number:
+        style->setAnimationIterationCount(item.numberValue(), index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -3985,6 +4014,20 @@ void StyleResolver::apply(Element* element,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationDelay(element, style, parentStyle, (*list)[i],
                                         i);
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AnimationIterationCount:
+            style->resetAnimationIterationCount();
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyAnimationIterationCount(element, style, parentStyle,
+                                             cssValues[k], 0);
+            } else {
+                ValueList* list = cssValues[k].multiValue();
+                STARFISH_ASSERT(list != nullptr);
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    applyAnimationIterationCount(element, style, parentStyle,
+                                                 (*list)[i], i);
                 }
             }
             break;
@@ -7255,7 +7298,7 @@ static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
     //      case CSSStyleValuePair::KeyKind::AnimationDirection:
     case CSSStyleValuePair::KeyKind::AnimationDuration:
     //      case CSSStyleValuePair::KeyKind::AnimationFillMode:
-    //      case CSSStyleValuePair::KeyKind::AnimationIterationCount:
+    case CSSStyleValuePair::KeyKind::AnimationIterationCount:
     case CSSStyleValuePair::KeyKind::AnimationName:
     //      case CSSStyleValuePair::KeyKind::AnimationPlayState:
     case CSSStyleValuePair::KeyKind::AnimationTimingFunction:
@@ -7492,6 +7535,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
             bool needsToFireAnimationEndEvent = false;
             bool needsToFireAnimationCancelEvent = false;
             auto& activeAnimations = iter->second;
+            auto iterationCount = iter->first->m_iterationCount;
             for (size_t i = 0; i < activeAnimations.size(); i++) {
                 if (activeAnimations[i]->targetElement() == element &&
                     activeAnimations[i]->type() ==
@@ -7499,9 +7543,12 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     bool shouldRemove = false;
                     bool isCancel = true;
                     // time is up
-                    if (activeAnimations[i]->fraction(tick) >= 1) {
+                    if (activeAnimations[i]->fraction(tick) >= 1 &&
+                        std::isinf(iterationCount) == false &&
+                        --iter->first->m_iterationStart < 1) {
                         shouldRemove = true;
                         isCancel = false;
+                        iter->first->m_iterationStart = iterationCount;
                     }
 
                     // element invisible
@@ -7583,7 +7630,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         }
     }
 
-    // apply transition
+    // apply animation
     if (element->style() != nullptr && elementHasAnimation == true) {
         StyleAnimationData* animation = element->style()->animation();
         size_t nameSize = animation->animationNameSize();
@@ -13738,6 +13785,25 @@ bool CSSStyleValuePair::updateValueLayerAnimationDelay(
     const CSSTokenVector& tokens)
 {
     return updateValueTime(tokens, CSSPropertyParser::AllowNegative);
+}
+
+bool CSSStyleValuePair::updateValueLayerAnimationIterationCount(
+    const CSSTokenVector& tokens)
+{
+    const CSSTokenValue& value = tokens[0];
+    if (STRING_VALUE_IS_STRING("infinite")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Number;
+        m_value.m_floatValue = std::numeric_limits<float>::infinity();
+    } else {
+        float f;
+        if (CSSPropertyParser::parseNumber(value.data(), 0, &f) == true) {
+            m_valueKind = CSSStyleValuePair::ValueKind::Number;
+            m_value.m_floatValue = f;
+        } else {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueUnitFilterFunction(

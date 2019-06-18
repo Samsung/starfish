@@ -146,6 +146,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_durationMs(durationInms)
     , m_delayMs(delayInms)
     , m_frameIdx(0)
+    , m_frameSize(2)
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
@@ -169,6 +170,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_durationMs(durationInms)
     , m_delayMs(delayInms)
     , m_frameIdx(0)
+    , m_frameSize(values.size())
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(values.size() > 1);
@@ -204,11 +206,19 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         f = fraction(currentTickCount);
     }
 
-    if (f == 0 && m_type == ANIMATION_TYPE) {
-        return;
-    }
+    //    if (f == 0 && m_type == ANIMATION_TYPE) {
+    //        return;
+    //    }
 
     execute(computeProgress(f), style);
+    if (m_type == ANIMATION_TYPE && f >= 1.0) {
+        m_frameIdx++;
+        if (m_frameIdx == m_frameSize - 1) {
+            m_frameIdx = 0;
+            m_startTimeMs = 0;
+        }
+        didAnimationFrameChanged();
+    }
 }
 
 void ActiveAnimationTask::fireTransitionStartEvent()
@@ -279,20 +289,14 @@ TimingFunction* ActiveAnimationTask::currentTimingFunction()
     return m_timingFunctions[m_frameIdx];
 }
 
-float ActiveAnimationTask::computeProgress(float fraction)
+float ActiveAnimationTask::computeProgress(float& fraction)
 {
     STARFISH_ASSERT(fraction >= 0.0f);
     STARFISH_ASSERT(fraction <= 1.0f);
 
     if (m_type == ANIMATION_TYPE) {
-        float f = (fraction - m_offsets[m_frameIdx]) /
-                  (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
-        if (f > 1.0) {
-            f = 0;
-            m_frameIdx++;
-            didAnimationFrameChanged();
-        }
-        fraction = f;
+        fraction = (fraction - m_offsets[m_frameIdx]) /
+                   (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
     }
     return currentTimingFunction()->getValue(fraction);
 }
@@ -2328,6 +2332,8 @@ bool applyAnimationIfNeeds(
         }
 
         double delay = animation->delay(s).toTimeValue();
+        float iterationCount = animation->iterationCount(s);
+
         size_t keyframeSize = keyframes.keyframeListSize();
         for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
             CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
@@ -2378,7 +2384,7 @@ bool applyAnimationIfNeeds(
                     offsets, timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
-                executor->registerAnimation(task, style, name);
+                executor->registerAnimation(task, style, name, iterationCount);
                 gotAnimation = true;
             }
 
@@ -2388,21 +2394,21 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
-                executor->registerAnimation(task, style, name);
+                executor->registerAnimation(task, style, name, iterationCount);
                 gotAnimation = true;
             }
 
 // length series
 
-#define APPLY_LENGTH_ANIMATION(propertyName)                           \
-    if (fromKeyKind == CSSStyleValuePair::propertyName) {              \
-        auto task = new ActiveLengthAnimationTask(                     \
-            element, CSSStyleValuePair::propertyName, values, offsets, \
-            timingFunctions, duration, delay);                         \
-        executor->removeActiveAnimationTaskIfNeeds(                    \
-            element, CSSStyleValuePair::propertyName);                 \
-        executor->registerAnimation(task, style, name);                \
-        gotAnimation = true;                                           \
+#define APPLY_LENGTH_ANIMATION(propertyName)                            \
+    if (fromKeyKind == CSSStyleValuePair::propertyName) {               \
+        auto task = new ActiveLengthAnimationTask(                      \
+            element, CSSStyleValuePair::propertyName, values, offsets,  \
+            timingFunctions, duration, delay);                          \
+        executor->removeActiveAnimationTaskIfNeeds(                     \
+            element, CSSStyleValuePair::propertyName);                  \
+        executor->registerAnimation(task, style, name, iterationCount); \
+        gotAnimation = true;                                            \
     }
 
             APPLY_LENGTH_ANIMATION(Width)
@@ -2420,7 +2426,7 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
-                executor->registerAnimation(task, style, name);
+                executor->registerAnimation(task, style, name, iterationCount);
                 gotAnimation = true;
             }
 
@@ -2430,7 +2436,7 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
-                executor->registerAnimation(task, style, name);
+                executor->registerAnimation(task, style, name, iterationCount);
                 gotAnimation = true;
             }
 
