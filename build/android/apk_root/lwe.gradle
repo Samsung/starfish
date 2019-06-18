@@ -4,7 +4,7 @@ android {
         applicationId "com.samsung.android.lwe"
         minSdkVersion 28
         targetSdkVersion 28
-        versionCode 1
+        resConfigs tristar.locale.full
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
@@ -38,11 +38,7 @@ android {
             debuggable = false
             jniDebuggable true
             renderscriptDebuggable true
-            if (apiCodeNum <= 21.1F) {
-                runProguard true
-            } else {
-                minifyEnabled false //TODO temporary false, need to setup proguard-rules (for all application)
-            }
+            minifyEnabled false //TODO temporary false, need to setup proguard-rules (for all application)
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
