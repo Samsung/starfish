@@ -453,12 +453,7 @@ void PlatformWindow::onResize()
         m_virtualCursorY = height() - 10;
     }
 #endif
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->window()->resize(
-            width() / webView()->screenInfo().devicePixelRatio,
-            height() / webView()->screenInfo().devicePixelRatio);
-        webView()->setNeedsPainting();
-    }
+    webView()->resize(width(), height());
 }
 
 #ifdef STARFISH_ENABLE_TEST

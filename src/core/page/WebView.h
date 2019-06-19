@@ -182,6 +182,7 @@ public:
     void blur();
     void pause();
     void resume();
+    void resize(uint32_t w, uint32_t h);
 
     bool isActive()
     {

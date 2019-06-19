@@ -582,10 +582,10 @@ public:
                 evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
             evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
-            wv->FetchWebContainer()->ResizeTo(w, h);
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 #endif
+            wv->FetchWebContainer()->ResizeTo(w, h);
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
                                        m_resizeHandler, this);
