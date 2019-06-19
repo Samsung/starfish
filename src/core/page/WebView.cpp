@@ -1713,6 +1713,21 @@ void WebView::resume()
     }
 }
 
+void WebView::resize(uint32_t width, uint32_t height)
+{
+    STARFISH_LOG_INFO("WebView::resize\n");
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->window()->resize(
+            width / screenInfo().devicePixelRatio,
+            height / screenInfo().devicePixelRatio);
+
+        m_prevDrawnStackingContextInfo.clear();
+        m_repaintRegionTrackerContext.clear();
+
+        setNeedsFullRepainting();
+    }
+}
+
 void WebView::onIdle()
 {
     clearActiveImageURLsInRenderingSet();
