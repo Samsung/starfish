@@ -25,14 +25,28 @@
 #include <SkMatrix44.h>
 #include "binding/DOMStringOrSequenceUnion.h"
 #include "core/dom/DOMMatrix2DInit.h"
+#include "core/dom/DOMMatrixInit.h"
 #include "DOMExceptionOr.h"
 
 namespace Starfish {
 class DOMMatrix;
 class DOMMatrixReadOnly : public ScriptWrappable, public Serializable {
 public:
-    static DOMExceptionOr<void> validateAndFixup(
-        ExecutionContext* executionContext, DOMMatrix2DInit& init);
+    static void validateAndFixup(ExecutionContext* executionContext,
+                                 DOMMatrix2DInit& init);
+
+    static void validateAndFixup(ExecutionContext* executionContext,
+                                 DOMMatrixInit& init);
+
+    static DOMMatrixReadOnly* fromMatrix(ExecutionContext* executionContext,
+                                         DOMMatrixInit& init);
+    static DOMMatrixReadOnly* fromMatrix(ExecutionContext* executionContext);
+
+    static DOMMatrixReadOnly* fromFloat32Array(
+        ExecutionContext* executionContext, ScriptFloat32Array array32);
+
+    static DOMMatrixReadOnly* fromFloat64Array(
+        ExecutionContext* executionContext, ScriptFloat64Array array64);
 
     DOMMatrixReadOnly(ExecutionContext* executionContext);
     DOMMatrixReadOnly(ExecutionContext* executionContext,
@@ -82,6 +96,12 @@ public:
     DOMMatrix* rotateFromVector(double x, double y);
     DOMMatrix* rotateAxisAngle(double x = 0, double y = 0, double z = 0,
                                double angle = 0);
+    DOMMatrix* skewX(double sx);
+    DOMMatrix* skewY(double sy);
+    DOMMatrix* multiply(DOMMatrixInit& init);
+    DOMMatrix* flipX();
+    DOMMatrix* flipY();
+    DOMMatrix* inverse();
 
     bool is2D()
     {
@@ -113,20 +133,23 @@ public:
         return m_matrix;
     }
 
+    ScriptFloat32Array toFloat32Array();
+    ScriptFloat64Array toFloat64Array();
+
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
     virtual SerializedData* serialize(SerializingMap& memory) override;
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const override;
 
-private:
-    void set2DMatrix(double val1, double val2, double val3, double val4,
-                     double val5, double val6);
-    void set3DMatrix(double val1, double val2, double val3, double val4,
-                     double val5, double val6, double val7, double val8,
-                     double val9, double val10, double val11, double val12,
-                     double val13, double val14, double val15, double val16);
+    void set2DMatrix(double m11, double m12, double m21, double m22, double m41,
+                     double m42);
+    void set3DMatrix(double m11, double m12, double m13, double m14, double m21,
+                     double m22, double m23, double m24, double m31, double m32,
+                     double m33, double m34, double m41, double m42, double m43,
+                     double m44);
 
+private:
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
     bool m_is2D;

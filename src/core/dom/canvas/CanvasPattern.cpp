@@ -57,12 +57,7 @@ ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
 
 void CanvasPattern::setTransform(DOMMatrix2DInit transform)
 {
-    auto exceptionOr =
-        DOMMatrixReadOnly::validateAndFixup(m_executionContext, transform);
-
-    if (exceptionOr.isDOMException()) {
-        throw exceptionOr.asDOMException();
-    }
+    DOMMatrixReadOnly::validateAndFixup(m_executionContext, transform);
 
     SkMatrix matrix = SkMatrix::I();
 

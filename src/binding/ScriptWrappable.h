@@ -36,7 +36,16 @@ class ScriptParserRef;
 class ExecutionStateRef;
 class ArrayBufferObjectRef;
 class ArrayBufferViewRef;
+class Uint8ArrayObjectRef;
+class Int8ArrayObjectRef;
+class Int16ArrayObjectRef;
+class Uint16ArrayObjectRef;
+class Uint32ArrayObjectRef;
+class Int32ArrayObjectRef;
 class Uint8ClampedArrayObjectRef;
+class Float32ArrayObjectRef;
+class Float64ArrayObjectRef;
+
 template <typename T>
 struct NullablePtr;
 typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
@@ -81,7 +90,15 @@ typedef Escargot::StringRef* ScriptString;
 typedef Escargot::FunctionObjectRef* ScriptFunction;
 typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
 typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
+typedef Escargot::Int8ArrayObjectRef* ScriptInt8Array;
+typedef Escargot::Uint8ArrayObjectRef* ScriptUint8Array;
+typedef Escargot::Int16ArrayObjectRef* ScriptInt16Array;
+typedef Escargot::Uint16ArrayObjectRef* ScriptUint16Array;
+typedef Escargot::Uint32ArrayObjectRef* ScriptUint32Array;
+typedef Escargot::Int32ArrayObjectRef* ScriptInt32Array;
 typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
+typedef Escargot::Float32ArrayObjectRef* ScriptFloat32Array;
+typedef Escargot::Float64ArrayObjectRef* ScriptFloat64Array;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
 typedef Escargot::NullablePtr<Escargot::ValueRef> ScriptNullableValue;
 
@@ -175,8 +192,16 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           size_t len);
 
+ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance);
+ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance);
+ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance);
+ScriptUint16Array createEmptyUint16Array(ScriptBindingInstance* instance);
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance);
+ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance);
+ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance);
+ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance);
+ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance);
 
 void registerJavaScriptNativeInterface(
     ScriptBindingInstance* instance, String* exposedObjectName,

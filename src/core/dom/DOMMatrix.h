@@ -29,6 +29,16 @@ class DOMMatrix : public DOMMatrixReadOnly {
 public:
     static DOMMatrix* Create(DOMMatrixReadOnly* domMatrix);
 
+    static DOMMatrix* fromFloat32Array(ExecutionContext* executionContext,
+                                       ScriptFloat32Array array32);
+
+    static DOMMatrix* fromFloat64Array(ExecutionContext* executionContext,
+                                       ScriptFloat64Array array64);
+
+    static DOMMatrix* fromMatrix(ExecutionContext* executionContext,
+                                 DOMMatrixInit& init);
+    static DOMMatrix* fromMatrix(ExecutionContext* executionContext);
+
     DOMMatrix(ExecutionContext* executionContext);
     DOMMatrix(ExecutionContext* executionContext, DOMStringOrSequence value);
     DOMMatrix(ExecutionContext* executionContext, SkMatrix44 matrix, bool is2D);
@@ -58,6 +68,10 @@ public:
     void setM43(double value);
     void setM44(double value);
 
+    DOMMatrix* multiplySelf(DOMMatrixInit& other);
+    DOMMatrix* multiplySelf();
+    DOMMatrix* preMultiplySelf();
+    DOMMatrix* preMultiplySelf(DOMMatrixInit& other);
     DOMMatrix* translateSelf(double tx = 0, double ty = 0, double tz = 0);
     DOMMatrix* scaleSelf(double sx = 1);
     DOMMatrix* scaleSelf(double sx, double sy, double sz = 1, double ox = 0,
@@ -68,6 +82,12 @@ public:
     DOMMatrix* rotateFromVectorSelf(double x, double y);
     DOMMatrix* rotateAxisAngleSelf(double x = 0, double y = 0, double z = 0,
                                    double angle = 0);
+
+    DOMMatrix* skewXSelf(double sx = 0);
+    DOMMatrix* skewYSelf(double sy = 0);
+
+    // DOMMatrix* perspectiveSelf(double p);
+    DOMMatrix* invertSelf();
 
     ExecutionContext* executionContext()
     {
@@ -99,6 +119,9 @@ public:
     virtual SerializedData* serialize(SerializingMap& memory) override;
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const override;
+
+private:
+    DOMMatrix* skew(double sx, double sy);
 };
 } // namespace Starfish
 #endif

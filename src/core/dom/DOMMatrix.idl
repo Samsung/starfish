@@ -6,9 +6,9 @@
  Serializable,
  LegacyWindowAlias=(SVGMatrix,WebKitCSSMatrix)]
 interface DOMMatrix : DOMMatrixReadOnly {
-    [Unimplemented,NewObject] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
-    [Unimplemented,NewObject] static DOMMatrix fromFloat32Array(Float32Array array32);
-    [Unimplemented,NewObject] static DOMMatrix fromFloat64Array(Float64Array array64);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrix fromMatrix(optional DOMMatrixInit other);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrix fromFloat32Array(Float32Array array32);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrix fromFloat64Array(Float64Array array64);
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     inherit attribute unrestricted double a;
@@ -36,8 +36,8 @@ interface DOMMatrix : DOMMatrixReadOnly {
     inherit attribute unrestricted double m44;
 
     // Mutable transform methods
-    [Unimplemented] DOMMatrix multiplySelf(optional DOMMatrixInit other);
-    [Unimplemented] DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
+    DOMMatrix multiplySelf(optional DOMMatrixInit other);
+    DOMMatrix preMultiplySelf(optional DOMMatrixInit other);
     DOMMatrix translateSelf(optional unrestricted double tx = 0,
                             optional unrestricted double ty = 0,
                             optional unrestricted double tz = 0);
@@ -60,9 +60,9 @@ interface DOMMatrix : DOMMatrixReadOnly {
                                   optional unrestricted double y = 0,
                                   optional unrestricted double z = 0,
                                   optional unrestricted double angle = 0);
-    [Unimplemented] DOMMatrix skewXSelf(optional unrestricted double sx = 0);
-    [Unimplemented] DOMMatrix skewYSelf(optional unrestricted double sy = 0);
-    [Unimplemented] DOMMatrix invertSelf();
+    DOMMatrix skewXSelf(optional unrestricted double sx = 0);
+    DOMMatrix skewYSelf(optional unrestricted double sy = 0);
+    DOMMatrix invertSelf();
 
     [Unimplemented,Exposed=Window] DOMMatrix setMatrixValue(DOMString transformList);
 };

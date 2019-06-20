@@ -30,6 +30,43 @@ DOMMatrix* DOMMatrix::Create(DOMMatrixReadOnly* domMatrix)
                          domMatrix->is2D());
 }
 
+DOMMatrix* DOMMatrix::fromFloat32Array(ExecutionContext* executionContext,
+                                       ScriptFloat32Array array32)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMMatrix* DOMMatrix::fromFloat64Array(ExecutionContext* executionContext,
+                                       ScriptFloat64Array array64)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMMatrix* DOMMatrix::fromMatrix(ExecutionContext* executionContext,
+                                 DOMMatrixInit& init)
+{
+    validateAndFixup(executionContext, init);
+    DOMMatrix* result = new DOMMatrix(executionContext);
+    if (init.is2D()) {
+        result->set2DMatrix(init.a(), init.b(), init.c(), init.d(), init.e(),
+                            init.f());
+    } else {
+        result->set3DMatrix(init.m11(), init.m12(), init.m13(), init.m14(),
+                            init.m21(), init.m22(), init.m23(), init.m24(),
+                            init.m31(), init.m32(), init.m33(), init.m34(),
+                            init.m41(), init.m42(), init.m43(), init.m44());
+    }
+    return result;
+}
+
+DOMMatrix* DOMMatrix::fromMatrix(ExecutionContext* executionContext)
+{
+    DOMMatrixInit matrix;
+    return fromMatrix(executionContext, matrix);
+}
+
 DOMMatrix::DOMMatrix(ExecutionContext* executionContext)
     : DOMMatrixReadOnly(executionContext)
 {
@@ -190,6 +227,29 @@ void DOMMatrix::setM44(double value)
     matrix().setDouble(3, 3, value);
 }
 
+DOMMatrix* DOMMatrix::multiplySelf()
+{
+    return this;
+}
+
+DOMMatrix* DOMMatrix::multiplySelf(DOMMatrixInit& other)
+{
+    setMatrix(matrix() * fromMatrix(executionContext(), other)->matrix());
+    return this;
+}
+
+DOMMatrix* DOMMatrix::preMultiplySelf()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMMatrix* DOMMatrix::preMultiplySelf(DOMMatrixInit& other)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
 DOMMatrix* DOMMatrix::translateSelf(double tx, double ty, double tz)
 {
     // https://www.w3.org/TR/geometry-1/#dom-dommatrix-translateself
@@ -281,6 +341,31 @@ DOMMatrix* DOMMatrix::rotateAxisAngleSelf(double x, double y, double z,
     setMatrix(matrix() * mat);
 
     return this;
+}
+
+DOMMatrix* DOMMatrix::skewXSelf(double sx)
+{
+    return skew(sx, 0);
+}
+
+DOMMatrix* DOMMatrix::skewYSelf(double sy)
+{
+    return skew(0, sy);
+}
+
+DOMMatrix* DOMMatrix::skew(double sx, double sy)
+{
+    SkMatrix44 mat = SkMatrix44::I();
+    mat.set(0, 1, std::tan(sx * SK_MScalarPI / 180.0));
+    mat.set(1, 0, std::tan(sy * SK_MScalarPI / 180.0));
+    matrix().preConcat(mat);
+    return this;
+}
+
+DOMMatrix* DOMMatrix::invertSelf()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
 }
 
 ScriptBindingInstance* DOMMatrix::scriptBindingInstance()
