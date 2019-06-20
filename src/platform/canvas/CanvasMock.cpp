@@ -183,7 +183,7 @@ public:
 
     virtual CanvasFillStrokeSource* fillSource()
     {
-        return CanvasFillStrokeSource();
+        return new CanvasFillStrokeSource();
     }
 
     virtual void setVisible(bool visible)
@@ -448,12 +448,13 @@ public:
     virtual Font* font()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return new Font();
     }
 
     virtual String* originalFontStr()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return nullptr;
+        return String::emptyString;
     }
 
     virtual void setCanvasWebFontState(size_t version)

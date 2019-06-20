@@ -17,12 +17,11 @@
  *  USA
  */
 
-#if defined(PORT_COMPOSITOR_BACKEND_MOCK)
-
-#include <SkMatrix.h>
-
 #include "StarfishConfig.h"
+#include <SkMatrix.h>
 #include "core/modules/canvas/Compositor.h"
+
+#if defined(PORT_COMPOSITOR_BACKEND_MOCK)
 
 namespace Starfish {
 
