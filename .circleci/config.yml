@@ -51,7 +51,7 @@ jobs:
           name: Build Release Apk
           working_directory: build/android/shell_standalone/
           command: ./gradlew :app:assembleRelease
-  build_x64_debug:
+  build_x64_glfw_debug:
     docker:
       - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
@@ -79,7 +79,7 @@ jobs:
             no_output_timeout: 10m
             name : Run test
             command: /root/workspace/run_test.sh
-  build_x64_release:
+  build_x64_glfw_release:
     docker:
       - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
@@ -95,10 +95,27 @@ jobs:
             name : Run build script
             no_output_timeout: 20m
             command: /root/workspace/build.sh x64_glfw_release
+  build_x64_efl_headless_debug:
+    docker:
+      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
+    working_directory: ~/starfish-workflows
+    environment:
+    resource_class: xlarge
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
+      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - checkout
+      - run:
+            name : Run build script
+            no_output_timeout: 20m
+            command: /root/workspace/build.sh x64_efl_headless
 workflows:
   version: 2
   build_All:
     jobs:
       - build_android
-      - build_x64_debug
-      - build_x64_release
+      - build_x64_glfw_debug
+      - build_x64_glfw_release
+      - build_x64_efl_headless_debug
