@@ -370,7 +370,9 @@ protected:
 
     uint64_t m_startTimeMs;
     uint64_t m_durationMs;
+    uint64_t m_startDelayMs;
     uint64_t m_delayMs;
+    bool m_isInDelayedTime;
 
     unsigned int m_frameIdx;
     unsigned int m_frameSize;
