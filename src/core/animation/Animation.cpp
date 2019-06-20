@@ -144,7 +144,9 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_targetElement(target)
     , m_startTimeMs(0)
     , m_durationMs(durationInms)
+    , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
+    , m_isInDelayedTime(true)
     , m_frameIdx(0)
     , m_frameSize(2)
 {
@@ -168,7 +170,9 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_targetElement(target)
     , m_startTimeMs(0)
     , m_durationMs(durationInms)
+    , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
+    , m_isInDelayedTime(true)
     , m_frameIdx(0)
     , m_frameSize(values.size())
 {
@@ -206,18 +210,23 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
         f = fraction(currentTickCount);
     }
 
-    //    if (f == 0 && m_type == ANIMATION_TYPE) {
-    //        return;
-    //    }
-
-    execute(computeProgress(f), style);
-    if (m_type == ANIMATION_TYPE && f >= 1.0) {
-        m_frameIdx++;
-        if (m_frameIdx == m_frameSize - 1) {
-            m_frameIdx = 0;
-            m_startTimeMs = 0;
+    if (m_type == ANIMATION_TYPE) {
+        if (f == 0 && m_isInDelayedTime == true) {
+            return;
         }
-        didAnimationFrameChanged();
+        execute(computeProgress(f), style);
+        if (f >= 1.0) {
+            m_frameIdx++;
+            if (m_frameIdx == m_frameSize - 1) {
+                m_frameIdx = 0;
+                m_startTimeMs = 0;
+                m_delayMs = 0;
+                m_isInDelayedTime = false;
+            }
+            didAnimationFrameChanged();
+        }
+    } else {
+        execute(computeProgress(f), style);
     }
 }
 
