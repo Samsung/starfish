@@ -153,7 +153,7 @@ ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
 ELSEIF (${CUSTOM} STREQUAL "headless")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_TIZEN_HEADLESS
-        -DSTARFISH_EFL_CAIRO_HEADLESS
+        -DSTARFISH_EFL_HEADLESS
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
         -DSTARFISH_ENABLE_MULTIMEDIA
@@ -177,6 +177,8 @@ ENDIF()
 
 IF (${BACKEND} STREQUAL "efl_cairo_gl")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_CAIRO)
+ELSEIF (${BACKEND} STREQUAL "efl_headless")
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_HEADLESS)
 ELSEIF (${BACKEND} STREQUAL "dali")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_DALI)
 ELSEIF (${BACKEND} STREQUAL "efl_skia_gl")
@@ -273,6 +275,8 @@ ELSEIF (${BACKEND} STREQUAL "efl" AND ${HOST} STREQUAL "tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf-evas efl-extension)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+ELSEIF (${BACKEND} STREQUAL "efl_headless" AND ${ARCH} STREQUAL "x64")
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${HOST} STREQUAL "tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)

@@ -34,6 +34,9 @@
 #include "core/dom/canvas/CanvasDirection.h"
 #include "core/dom/canvas/CanvasTextAlign.h"
 #include "core/dom/canvas/CanvasTextBaseline.h"
+#include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -448,7 +451,15 @@ public:
     virtual Font* font()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return new Font();
+        auto famliyName =
+            m_webView->initialFontFamilyDatas()[1].m_familyName.string();
+        return m_webView->mainBrowsingContext()
+            ->document()
+            ->fontSelector()
+            ->loadFont(&famliyName, 1, m_webView->defaultFontSize(),
+                       FontStyleValue::NormalFontStyleValue,
+                       FontWeightValue::NormalFontWeightValue, 0,
+                       FontKerningValue::FontKerningAutoValue);
     }
 
     virtual String* originalFontStr()
@@ -508,7 +519,6 @@ protected:
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)
 {
     STARFISH_ASSERT(webView != nullptr);
-    STARFISH_ASSERT(data != nullptr);
 
     return new CanvasMock(webView);
 }
@@ -517,7 +527,6 @@ Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
     STARFISH_ASSERT(webView != nullptr);
-    STARFISH_ASSERT(data != nullptr);
 
     return new CanvasMock(webView);
 }
@@ -525,7 +534,6 @@ Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
 Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
     STARFISH_ASSERT(webView != nullptr);
-    STARFISH_ASSERT(data != nullptr);
 
     return new CanvasMock(webView);
 }
