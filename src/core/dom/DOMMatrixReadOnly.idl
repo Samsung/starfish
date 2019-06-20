@@ -6,9 +6,9 @@
  Serializable
  ]
 interface DOMMatrixReadOnly {
-    [Unimplemented,NewObject] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other);
-    [Unimplemented,NewObject] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
-    [Unimplemented,NewObject] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrixReadOnly fromMatrix(optional DOMMatrixInit other);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrixReadOnly fromFloat32Array(Float32Array array32);
+    [NewObject, CallWith=ExecutionContext, RaisesException] static DOMMatrixReadOnly fromFloat64Array(Float64Array array64);
 
     // These attributes are simple aliases for certain elements of the 4x4 matrix
     readonly attribute unrestricted double a;
@@ -63,16 +63,16 @@ interface DOMMatrixReadOnly {
                                           optional unrestricted double y = 0,
                                           optional unrestricted double z = 0,
                                           optional unrestricted double angle = 0);
-    [Unimplemented,NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
-    [Unimplemented,NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
+    [NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
+    [NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
     [Unimplemented,NewObject] DOMMatrix multiply(optional DOMMatrixInit other);
-    [Unimplemented,NewObject] DOMMatrix flipX();
-    [Unimplemented,NewObject] DOMMatrix flipY();
-    [Unimplemented,NewObject] DOMMatrix inverse();
+    [NewObject] DOMMatrix flipX();
+    [NewObject] DOMMatrix flipY();
+    [NewObject] DOMMatrix inverse();
 
     [Unimplemented,NewObject] DOMPoint transformPoint(optional DOMPointInit point);
-    [Unimplemented,NewObject] Float32Array toFloat32Array();
-    [Unimplemented,NewObject] Float64Array toFloat64Array();
+    [NewObject] Float32Array toFloat32Array();
+    [NewObject] Float64Array toFloat64Array();
 
     [Exposed=Window] stringifier;
     [Unimplemented,Default] object toJSON();

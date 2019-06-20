@@ -821,6 +821,62 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
     return obj;
 }
 
+ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Int8ArrayObjectRef::create(state);
+}
+
+ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Uint8ArrayObjectRef::create(state);
+}
+
+ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Int16ArrayObjectRef::create(state);
+}
+
+ScriptUint16Array createEmptyUint16Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Uint16ArrayObjectRef::create(state);
+}
+
+ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Uint32ArrayObjectRef::create(state);
+}
+
+ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Int32ArrayObjectRef::create(state);
+}
+
+ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Float32ArrayObjectRef::create(state);
+}
+
+ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Float64ArrayObjectRef::create(state);
+}
+
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance)
 {

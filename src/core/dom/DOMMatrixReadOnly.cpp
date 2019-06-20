@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "EscargotPublic.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/DOMMatrixReadOnly.h"
@@ -36,41 +38,41 @@ static bool sameValueZero(double a, double b)
     return a == b;
 }
 
-DOMExceptionOr<void> DOMMatrixReadOnly::validateAndFixup(
-    ExecutionContext* executionContext, DOMMatrix2DInit& init)
+void DOMMatrixReadOnly::validateAndFixup(ExecutionContext* executionContext,
+                                         DOMMatrix2DInit& init)
 {
     STARFISH_ASSERT(executionContext != nullptr);
 
     // https://drafts.fxtf.org/geometry/#matrix-validate-and-fixup-2d
     if (init.hasA() && init.hasM11() && !sameValueZero(init.a(), init.m11())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.a and init.m11 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.a and init.m11 do not match");
     }
     if (init.hasB() && init.hasM12() && !sameValueZero(init.b(), init.m12())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.b and init.m12 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.b and init.m12 do not match");
     }
     if (init.hasC() && init.hasM21() && !sameValueZero(init.c(), init.m21())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.c and init.m21 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.c and init.m21 do not match");
     }
     if (init.hasD() && init.hasM22() && !sameValueZero(init.d(), init.m22())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.d and init.m22 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.d and init.m22 do not match");
     }
     if (init.hasE() && init.hasM41() && !sameValueZero(init.e(), init.m41())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.e and init.m41 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.e and init.m41 do not match");
     }
     if (init.hasF() && init.hasM42() && !sameValueZero(init.f(), init.m42())) {
-        return new DOMException(executionContext,
-                                DOMException::Code::SCRIPT_TYPE_ERR,
-                                "init.a and init.m11 do not match");
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "init.a and init.m11 do not match");
     }
 
     if (!init.hasM11()) {
@@ -96,8 +98,160 @@ DOMExceptionOr<void> DOMMatrixReadOnly::validateAndFixup(
     if (!init.hasM42()) {
         init.setM42(init.hasF() ? init.f() : 0);
     }
+}
 
-    return {};
+void DOMMatrixReadOnly::validateAndFixup(ExecutionContext* executionContext,
+                                         DOMMatrixInit& init)
+{
+    STARFISH_ASSERT(executionContext != nullptr);
+    // https://drafts.fxtf.org/geometry/#matrix-validate-and-fixup
+
+    DOMMatrix2DInit init_2d;
+    memcpy(&init_2d, &init, sizeof(DOMMatrix2DInit));
+    validateAndFixup(executionContext, init_2d);
+    memcpy(&init, &init_2d, sizeof(DOMMatrix2DInit));
+
+    if (((init.hasM13() && init.m13() != 0) ||
+         (init.hasM14() && init.m14() != 0) ||
+         (init.hasM23() && init.m23() != 0) ||
+         (init.hasM24() && init.m24() != 0) ||
+         (init.hasM31() && init.m31() != 0) ||
+         (init.hasM32() && init.m32() != 0) ||
+         (init.hasM34() && init.m34() != 0) ||
+         (init.hasM43() && init.m43() != 0)) ||
+        ((init.hasM33() && init.m13() != 1) ||
+         (init.hasM44() && init.m14() != 1))) {
+        if (init.hasIs2D()) {
+            if (init.is2D()) {
+                throw new DOMException(executionContext,
+                                       DOMException::Code::SCRIPT_TYPE_ERR, "");
+            }
+        } else {
+            init.setIs2D(false);
+        }
+    } else {
+        if (!init.hasIs2D()) {
+            init.setIs2D(true);
+        }
+    }
+}
+
+DOMMatrixReadOnly* DOMMatrixReadOnly::fromMatrix(
+    ExecutionContext* executionContext, DOMMatrixInit& init)
+{
+    validateAndFixup(executionContext, init);
+    DOMMatrixReadOnly* result = new DOMMatrixReadOnly(executionContext);
+    if (init.is2D()) {
+        result->set2DMatrix(init.a(), init.b(), init.c(), init.d(), init.e(),
+                            init.f());
+    } else {
+        result->set3DMatrix(init.m11(), init.m12(), init.m13(), init.m14(),
+                            init.m21(), init.m22(), init.m23(), init.m24(),
+                            init.m31(), init.m32(), init.m33(), init.m34(),
+                            init.m41(), init.m42(), init.m43(), init.m44());
+    }
+    return result;
+}
+
+DOMMatrixReadOnly* DOMMatrixReadOnly::fromFloat32Array(
+    ExecutionContext* executionContext, ScriptFloat32Array array32)
+{
+    ContextRef* ctx =
+        executionContext->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
+    DOMMatrixReadOnly* result = new DOMMatrixReadOnly(executionContext);
+    size_t arrayLength = array32->bytelength() / sizeof(float);
+
+    if (arrayLength != 6 && arrayLength != 16) {
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The sequence must contain 6 or 16 elements");
+    }
+
+    if (arrayLength == 6) {
+        result->set2DMatrix(
+            array32->get(state, ValueRef::create(0))->toNumber(state),
+            array32->get(state, ValueRef::create(1))->toNumber(state),
+            array32->get(state, ValueRef::create(2))->toNumber(state),
+            array32->get(state, ValueRef::create(3))->toNumber(state),
+            array32->get(state, ValueRef::create(4))->toNumber(state),
+            array32->get(state, ValueRef::create(5))->toNumber(state));
+    } else {
+        result->set3DMatrix(
+            array32->get(state, ValueRef::create(0))->toNumber(state),
+            array32->get(state, ValueRef::create(1))->toNumber(state),
+            array32->get(state, ValueRef::create(2))->toNumber(state),
+            array32->get(state, ValueRef::create(3))->toNumber(state),
+            array32->get(state, ValueRef::create(4))->toNumber(state),
+            array32->get(state, ValueRef::create(5))->toNumber(state),
+            array32->get(state, ValueRef::create(6))->toNumber(state),
+            array32->get(state, ValueRef::create(7))->toNumber(state),
+            array32->get(state, ValueRef::create(8))->toNumber(state),
+            array32->get(state, ValueRef::create(9))->toNumber(state),
+            array32->get(state, ValueRef::create(10))->toNumber(state),
+            array32->get(state, ValueRef::create(11))->toNumber(state),
+            array32->get(state, ValueRef::create(12))->toNumber(state),
+            array32->get(state, ValueRef::create(13))->toNumber(state),
+            array32->get(state, ValueRef::create(14))->toNumber(state),
+            array32->get(state, ValueRef::create(15))->toNumber(state));
+    }
+
+    return result;
+}
+
+DOMMatrixReadOnly* DOMMatrixReadOnly::fromFloat64Array(
+    ExecutionContext* executionContext, ScriptFloat64Array array64)
+{
+    DOMMatrixReadOnly* result = new DOMMatrixReadOnly(executionContext);
+    size_t arrayLength = array64->bytelength() / sizeof(double);
+
+    ContextRef* ctx =
+        executionContext->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
+    if (arrayLength != 6 && arrayLength != 16) {
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The sequence must contain 6 or 16 elements");
+    }
+
+    if (arrayLength == 6) {
+        result->set2DMatrix(
+            array64->get(state, ValueRef::create(0))->toNumber(state),
+            array64->get(state, ValueRef::create(1))->toNumber(state),
+            array64->get(state, ValueRef::create(2))->toNumber(state),
+            array64->get(state, ValueRef::create(3))->toNumber(state),
+            array64->get(state, ValueRef::create(4))->toNumber(state),
+            array64->get(state, ValueRef::create(5))->toNumber(state));
+    } else {
+        result->set3DMatrix(
+            array64->get(state, ValueRef::create(0))->toNumber(state),
+            array64->get(state, ValueRef::create(1))->toNumber(state),
+            array64->get(state, ValueRef::create(2))->toNumber(state),
+            array64->get(state, ValueRef::create(3))->toNumber(state),
+            array64->get(state, ValueRef::create(4))->toNumber(state),
+            array64->get(state, ValueRef::create(5))->toNumber(state),
+            array64->get(state, ValueRef::create(6))->toNumber(state),
+            array64->get(state, ValueRef::create(7))->toNumber(state),
+            array64->get(state, ValueRef::create(8))->toNumber(state),
+            array64->get(state, ValueRef::create(9))->toNumber(state),
+            array64->get(state, ValueRef::create(10))->toNumber(state),
+            array64->get(state, ValueRef::create(11))->toNumber(state),
+            array64->get(state, ValueRef::create(12))->toNumber(state),
+            array64->get(state, ValueRef::create(13))->toNumber(state),
+            array64->get(state, ValueRef::create(14))->toNumber(state),
+            array64->get(state, ValueRef::create(15))->toNumber(state));
+    }
+
+    return result;
+}
+
+DOMMatrixReadOnly* DOMMatrixReadOnly::fromMatrix(
+    ExecutionContext* executionContext)
+{
+    DOMMatrixInit matrix;
+    return fromMatrix(executionContext, matrix);
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext)
@@ -184,41 +338,42 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
     }
 }
 
-void DOMMatrixReadOnly::set2DMatrix(double val1, double val2, double val3,
-                                    double val4, double val5, double val6)
+void DOMMatrixReadOnly::set2DMatrix(double m11, double m12, double m21,
+                                    double m22, double m41, double m42)
 {
     m_is2D = true;
-    m_matrix.setDouble(0, 0, val1);
-    m_matrix.setDouble(0, 1, val2);
-    m_matrix.setDouble(1, 0, val3);
-    m_matrix.setDouble(1, 1, val4);
-    m_matrix.setDouble(3, 0, val5);
-    m_matrix.setDouble(3, 1, val6);
+    m_matrix.setDouble(0, 0, m11);
+    m_matrix.setDouble(1, 0, m12);
+    m_matrix.setDouble(0, 1, m21);
+    m_matrix.setDouble(1, 1, m22);
+    m_matrix.setDouble(0, 3, m41);
+    m_matrix.setDouble(1, 3, m42);
 }
-void DOMMatrixReadOnly::set3DMatrix(double val1, double val2, double val3,
-                                    double val4, double val5, double val6,
-                                    double val7, double val8, double val9,
-                                    double val10, double val11, double val12,
-                                    double val13, double val14, double val15,
-                                    double val16)
+
+void DOMMatrixReadOnly::set3DMatrix(double m11, double m12, double m13,
+                                    double m14, double m21, double m22,
+                                    double m23, double m24, double m31,
+                                    double m32, double m33, double m34,
+                                    double m41, double m42, double m43,
+                                    double m44)
 {
     m_is2D = false;
-    m_matrix.setDouble(0, 0, val1);
-    m_matrix.setDouble(0, 1, val2);
-    m_matrix.setDouble(0, 2, val3);
-    m_matrix.setDouble(0, 3, val4);
-    m_matrix.setDouble(1, 0, val5);
-    m_matrix.setDouble(1, 1, val6);
-    m_matrix.setDouble(1, 2, val7);
-    m_matrix.setDouble(1, 3, val8);
-    m_matrix.setDouble(2, 0, val9);
-    m_matrix.setDouble(2, 1, val10);
-    m_matrix.setDouble(2, 2, val11);
-    m_matrix.setDouble(2, 3, val12);
-    m_matrix.setDouble(3, 0, val13);
-    m_matrix.setDouble(3, 1, val14);
-    m_matrix.setDouble(3, 2, val15);
-    m_matrix.setDouble(3, 3, val16);
+    m_matrix.setDouble(0, 0, m11);
+    m_matrix.setDouble(1, 0, m12);
+    m_matrix.setDouble(2, 0, m13);
+    m_matrix.setDouble(3, 0, m14);
+    m_matrix.setDouble(0, 1, m21);
+    m_matrix.setDouble(1, 1, m22);
+    m_matrix.setDouble(2, 1, m23);
+    m_matrix.setDouble(3, 1, m24);
+    m_matrix.setDouble(0, 2, m31);
+    m_matrix.setDouble(1, 2, m32);
+    m_matrix.setDouble(2, 2, m33);
+    m_matrix.setDouble(3, 2, m34);
+    m_matrix.setDouble(0, 3, m41);
+    m_matrix.setDouble(1, 3, m42);
+    m_matrix.setDouble(2, 3, m43);
+    m_matrix.setDouble(3, 3, m44);
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
@@ -341,6 +496,78 @@ double DOMMatrixReadOnly::m44() const
     return m_matrix.getDouble(3, 3);
 }
 
+ScriptFloat32Array DOMMatrixReadOnly::toFloat32Array()
+{
+    static const int ArraySize = 16;
+    size_t byteSize = ArraySize * sizeof(float);
+
+    ContextRef* ctx =
+        executionContext()->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto scriptArrayBuffer = createScriptArrayBuffer(
+        executionContext()->scriptBindingInstance(), byteSize);
+    auto martixArrayBuffer = createScriptValue(scriptArrayBuffer);
+    auto float32Array =
+        createEmptyFloat32Array(executionContext()->scriptBindingInstance());
+    float32Array->setBuffer(
+        martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0, byteSize,
+        ArraySize);
+
+    float32Array->set(state, ValueRef::create(0), ValueRef::create(m11()));
+    float32Array->set(state, ValueRef::create(1), ValueRef::create(m12()));
+    float32Array->set(state, ValueRef::create(2), ValueRef::create(m13()));
+    float32Array->set(state, ValueRef::create(3), ValueRef::create(m14()));
+    float32Array->set(state, ValueRef::create(4), ValueRef::create(m21()));
+    float32Array->set(state, ValueRef::create(5), ValueRef::create(m22()));
+    float32Array->set(state, ValueRef::create(7), ValueRef::create(m24()));
+    float32Array->set(state, ValueRef::create(8), ValueRef::create(m31()));
+    float32Array->set(state, ValueRef::create(9), ValueRef::create(m32()));
+    float32Array->set(state, ValueRef::create(10), ValueRef::create(m33()));
+    float32Array->set(state, ValueRef::create(11), ValueRef::create(m34()));
+    float32Array->set(state, ValueRef::create(12), ValueRef::create(m41()));
+    float32Array->set(state, ValueRef::create(13), ValueRef::create(m42()));
+    float32Array->set(state, ValueRef::create(14), ValueRef::create(m43()));
+    float32Array->set(state, ValueRef::create(15), ValueRef::create(m44()));
+
+    return float32Array;
+}
+
+ScriptFloat64Array DOMMatrixReadOnly::toFloat64Array()
+{
+    static const int ArraySize = 16;
+    size_t byteSize = ArraySize * sizeof(double);
+
+    ContextRef* ctx =
+        executionContext()->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    auto scriptArrayBuffer = createScriptArrayBuffer(
+        executionContext()->scriptBindingInstance(), byteSize);
+    auto martixArrayBuffer = createScriptValue(scriptArrayBuffer);
+    auto float64Array =
+        createEmptyFloat64Array(executionContext()->scriptBindingInstance());
+    float64Array->setBuffer(
+        martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0, byteSize,
+        ArraySize);
+    float64Array->set(state, ValueRef::create(0), ValueRef::create(m11()));
+    float64Array->set(state, ValueRef::create(1), ValueRef::create(m12()));
+    float64Array->set(state, ValueRef::create(2), ValueRef::create(m13()));
+    float64Array->set(state, ValueRef::create(3), ValueRef::create(m14()));
+    float64Array->set(state, ValueRef::create(4), ValueRef::create(m21()));
+    float64Array->set(state, ValueRef::create(5), ValueRef::create(m22()));
+    float64Array->set(state, ValueRef::create(6), ValueRef::create(m23()));
+    float64Array->set(state, ValueRef::create(7), ValueRef::create(m24()));
+    float64Array->set(state, ValueRef::create(8), ValueRef::create(m31()));
+    float64Array->set(state, ValueRef::create(9), ValueRef::create(m32()));
+    float64Array->set(state, ValueRef::create(10), ValueRef::create(m33()));
+    float64Array->set(state, ValueRef::create(11), ValueRef::create(m34()));
+    float64Array->set(state, ValueRef::create(12), ValueRef::create(m41()));
+    float64Array->set(state, ValueRef::create(13), ValueRef::create(m42()));
+    float64Array->set(state, ValueRef::create(14), ValueRef::create(m43()));
+    float64Array->set(state, ValueRef::create(15), ValueRef::create(m44()));
+
+    return float64Array;
+}
+
 String* DOMMatrixReadOnly::toString()
 {
     // https://drafts.fxtf.org/geometry/#dommatrixreadonly-stringification-behavior
@@ -389,6 +616,18 @@ String* DOMMatrixReadOnly::toString()
         sb.appendString(String::createASCIIString(", "));
 
         sb.appendString(String::fromInt(m24()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m31()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m32()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m33()));
+        sb.appendString(String::createASCIIString(", "));
+
+        sb.appendString(String::fromInt(m34()));
         sb.appendString(String::createASCIIString(", "));
 
         sb.appendString(String::fromInt(m41()));
@@ -457,6 +696,38 @@ DOMMatrix* DOMMatrixReadOnly::rotateAxisAngle(double x, double y, double z,
                                               double angle)
 {
     return DOMMatrix::Create(this)->rotateAxisAngleSelf(x, y, z, angle);
+}
+
+DOMMatrix* DOMMatrixReadOnly::skewX(double sx)
+{
+    return DOMMatrix::Create(this)->skewXSelf(sx);
+}
+
+DOMMatrix* DOMMatrixReadOnly::skewY(double sy)
+{
+    return DOMMatrix::Create(this)->skewYSelf(sy);
+}
+
+DOMMatrix* DOMMatrixReadOnly::multiply(DOMMatrixInit& other)
+{
+    return DOMMatrix::Create(this)->multiplySelf(other);
+}
+
+DOMMatrix* DOMMatrixReadOnly::flipX()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMMatrix* DOMMatrixReadOnly::flipY()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMMatrix* DOMMatrixReadOnly::inverse()
+{
+    return DOMMatrix::Create(this)->invertSelf();
 }
 
 ScriptBindingInstance* DOMMatrixReadOnly::scriptBindingInstance()
