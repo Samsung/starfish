@@ -244,6 +244,9 @@ int main(int argc, char* argv[])
     elm_config_accel_preference_set(elmConfig);
 #else
     elm_config_accel_preference_set(elmConfig);
+#if !defined(STARFISH_TIZEN)
+    elm_config_preferred_engine_set("software_x11");
+#endif
 #endif
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_init();

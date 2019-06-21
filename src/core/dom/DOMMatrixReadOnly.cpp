@@ -111,16 +111,10 @@ void DOMMatrixReadOnly::validateAndFixup(ExecutionContext* executionContext,
     validateAndFixup(executionContext, init_2d);
     memcpy(&init, &init_2d, sizeof(DOMMatrix2DInit));
 
-    if (((init.hasM13() && init.m13() != 0) ||
-         (init.hasM14() && init.m14() != 0) ||
-         (init.hasM23() && init.m23() != 0) ||
-         (init.hasM24() && init.m24() != 0) ||
-         (init.hasM31() && init.m31() != 0) ||
-         (init.hasM32() && init.m32() != 0) ||
-         (init.hasM34() && init.m34() != 0) ||
-         (init.hasM43() && init.m43() != 0)) ||
-        ((init.hasM33() && init.m13() != 1) ||
-         (init.hasM44() && init.m14() != 1))) {
+    if ((init.m13() != 0 || init.m14() != 0 || init.m23() != 0 ||
+         init.m24() != 0 || init.m31() != 0 || init.m32() != 0 ||
+         init.m34() != 0 || init.m43() != 0) ||
+        (init.m13() != 1 || init.m14() != 1)) {
         if (init.hasIs2D()) {
             if (init.is2D()) {
                 throw new DOMException(executionContext,
