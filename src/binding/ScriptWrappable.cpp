@@ -613,11 +613,11 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                                ScriptValue thisValue)
 {
     ScriptValue result = ValueRef::createUndefined();
-    if (fn->isFunction()) {
+    if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
         SandBoxRef* sb = SandBoxRef::create(ctx);
         auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-            return fn->asFunction()->call(state, thisValue, argc, argv);
+            return fn->asObject()->call(state, thisValue, argc, argv);
         });
         sb->destroy();
         if (sbresult.error.hasValue()) {
@@ -655,11 +655,11 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                                         bool& error)
 {
     ScriptValue result = ValueRef::createUndefined();
-    if (fn->isFunction()) {
+    if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
         SandBoxRef* sb = SandBoxRef::create(ctx);
         auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-            return fn->asFunction()->call(state, thisValue, argc, argv);
+            return fn->asObject()->call(state, thisValue, argc, argv);
         });
         sb->destroy();
         if (sbresult.error.hasValue()) {
@@ -986,10 +986,7 @@ String* timeToUTCString(ScriptBindingInstance* instance, int64_t value)
 
 bool isCallableScriptValue(ScriptValue v)
 {
-    if (v->isFunction()) {
-        return true;
-    }
-    return false;
+    return v->isCallable();
 }
 
 bool isObjectScriptValue(ScriptValue v)

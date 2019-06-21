@@ -869,9 +869,30 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
     // NOTE Ignore step2 to try eviction when `bufferFull` caused by assumtion
     // failure of data size
 
-    if (maxAssume >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE) {
+    size_t maxBufferSize = STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
+
+    for (size_t i = 0; i < m_streamInfo.size(); i++) {
+        for (size_t j = 0; j < m_streamInfo[i].size(); j++) {
+            if (m_streamInfo[i][j]->isVideo()) {
+                if (m_streamInfo[i][j]->videoWidth() == 1920 ||
+                    m_streamInfo[i][j]->videoHeight() == 1080) {
+                    maxBufferSize = std::max(
+                        maxBufferSize,
+                        (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_1080P);
+                } else if (m_streamInfo[i][j]->videoHeight() > 1080 &&
+                           m_streamInfo[i][j]->videoWidth() > 1920) {
+                    maxBufferSize = std::max(
+                        maxBufferSize,
+                        (size_t)STARFISH_MAX_MEDIASOURCE_BUFFERSPACE_4K);
+                }
+            }
+        }
+    }
+
+    if (maxAssume >= maxBufferSize) {
         return false;
     }
+
     if (maxAssume >= m_parentMediaSource->availableBufferSize() / 4) {
         HTMLMediaElement* element = m_parentMediaSource->attachedMediaElement();
         double playbackPos = element ? element->currentTime() : 0;

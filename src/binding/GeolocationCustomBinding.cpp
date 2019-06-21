@@ -33,10 +33,11 @@ static void geopositionCallbackFunction(Document* document, Geoposition* pos,
                                         void* data)
 {
     if (data) {
-        FunctionObjectRef* fn = (FunctionObjectRef*)data;
+        ObjectRef* callable = (ObjectRef*)data;
         ValueRef* a = pos->scriptValue();
         callScriptFunction(document->scriptBindingInstance(),
-                           ValueRef::create(fn), &a, 1, scriptUndefined());
+                           ValueRef::create(callable), &a, 1,
+                           scriptUndefined());
     }
 }
 
@@ -44,10 +45,11 @@ static void geopositionErrorCallbackFunction(Document* document,
                                              PositionError* error, void* data)
 {
     if (data) {
-        FunctionObjectRef* fn = (FunctionObjectRef*)data;
+        ObjectRef* callable = (ObjectRef*)data;
         ValueRef* a = error->scriptValue();
         callScriptFunction(document->scriptBindingInstance(),
-                           ValueRef::create(fn), &a, 1, scriptUndefined());
+                           ValueRef::create(callable), &a, 1,
+                           scriptUndefined());
     }
 }
 
@@ -94,9 +96,9 @@ ValueRef* getCurrentPositionGeolocationFunction(ExecutionStateRef* state,
     ValueRef* cb1 = argc >= 2 ? argv[1] : scriptUndefined();
     originalObj->getCurrentPosition(
         geopositionCallbackFunction,
-        cb0->isFunction() ? cb0->asFunction() : nullptr,
+        cb0->isCallable() ? cb0->asObject() : nullptr,
         geopositionErrorCallbackFunction,
-        cb1->isFunction() ? cb1->asFunction() : nullptr, enableHighAccuracy,
+        cb1->isCallable() ? cb1->asObject() : nullptr, enableHighAccuracy,
         timeoutNumber, maximumAgeNumber);
 
     return scriptUndefined();
@@ -152,9 +154,9 @@ ValueRef* watchPositionGeolocationFunction(ExecutionStateRef* state,
 
     uint32_t result = originalObj->watchPosition(
         geopositionCallbackFunction,
-        cb0->isFunction() ? cb0->asFunction() : nullptr,
+        cb0->isCallable() ? cb0->asObject() : nullptr,
         geopositionErrorCallbackFunction,
-        cb1->isFunction() ? cb1->asFunction() : nullptr, enableHighAccuracy,
+        cb1->isCallable() ? cb1->asObject() : nullptr, enableHighAccuracy,
         timeoutNumber, maximumAgeNumber);
 
     return ValueRef::create(result);

@@ -51,7 +51,7 @@ ReadableStream::ReadableStream(ExecutionContext* executionContext,
 
     if (object->hasOwnProperty(state, startkey)) {
         auto startFunction = object->getOwnProperty(state, startkey);
-        if (startFunction->isFunction()) {
+        if (startFunction->isCallable()) {
             ScriptValue argv[] = { m_controller->scriptValue() };
 
             callScriptFunction(executionContext->scriptBindingInstance(),

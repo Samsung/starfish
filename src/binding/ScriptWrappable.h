@@ -87,7 +87,6 @@ typedef uint64_t DOMTimeStamp;
 typedef Escargot::ValueRef* ScriptValue;
 typedef Escargot::ObjectRef* ScriptObject;
 typedef Escargot::StringRef* ScriptString;
-typedef Escargot::FunctionObjectRef* ScriptFunction;
 typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
 typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
 typedef Escargot::Int8ArrayObjectRef* ScriptInt8Array;
