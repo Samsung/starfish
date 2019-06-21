@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "EscargotPublic.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMMatrix.h"
 #include "core/dom/ExecutionContext.h"
 
@@ -33,15 +35,95 @@ DOMMatrix* DOMMatrix::Create(DOMMatrixReadOnly* domMatrix)
 DOMMatrix* DOMMatrix::fromFloat32Array(ExecutionContext* executionContext,
                                        ScriptFloat32Array array32)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    ContextRef* ctx =
+        executionContext->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
+    DOMMatrix* result = new DOMMatrix(executionContext);
+    size_t arrayLength = array32->bytelength() / sizeof(float);
+
+    if (arrayLength != 6 && arrayLength != 16) {
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The sequence must contain 6 or 16 elements");
+    }
+
+    if (arrayLength == 6) {
+        result->set2DMatrix(
+            array32->get(state, ValueRef::create(0))->toNumber(state),
+            array32->get(state, ValueRef::create(1))->toNumber(state),
+            array32->get(state, ValueRef::create(2))->toNumber(state),
+            array32->get(state, ValueRef::create(3))->toNumber(state),
+            array32->get(state, ValueRef::create(4))->toNumber(state),
+            array32->get(state, ValueRef::create(5))->toNumber(state));
+    } else {
+        result->set3DMatrix(
+            array32->get(state, ValueRef::create(0))->toNumber(state),
+            array32->get(state, ValueRef::create(1))->toNumber(state),
+            array32->get(state, ValueRef::create(2))->toNumber(state),
+            array32->get(state, ValueRef::create(3))->toNumber(state),
+            array32->get(state, ValueRef::create(4))->toNumber(state),
+            array32->get(state, ValueRef::create(5))->toNumber(state),
+            array32->get(state, ValueRef::create(6))->toNumber(state),
+            array32->get(state, ValueRef::create(7))->toNumber(state),
+            array32->get(state, ValueRef::create(8))->toNumber(state),
+            array32->get(state, ValueRef::create(9))->toNumber(state),
+            array32->get(state, ValueRef::create(10))->toNumber(state),
+            array32->get(state, ValueRef::create(11))->toNumber(state),
+            array32->get(state, ValueRef::create(12))->toNumber(state),
+            array32->get(state, ValueRef::create(13))->toNumber(state),
+            array32->get(state, ValueRef::create(14))->toNumber(state),
+            array32->get(state, ValueRef::create(15))->toNumber(state));
+    }
+
+    return result;
 }
 
 DOMMatrix* DOMMatrix::fromFloat64Array(ExecutionContext* executionContext,
                                        ScriptFloat64Array array64)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    DOMMatrix* result = new DOMMatrix(executionContext);
+    size_t arrayLength = array64->bytelength() / sizeof(double);
+
+    ContextRef* ctx =
+        executionContext->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
+    if (arrayLength != 6 && arrayLength != 16) {
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The sequence must contain 6 or 16 elements");
+    }
+
+    if (arrayLength == 6) {
+        result->set2DMatrix(
+            array64->get(state, ValueRef::create(0))->toNumber(state),
+            array64->get(state, ValueRef::create(1))->toNumber(state),
+            array64->get(state, ValueRef::create(2))->toNumber(state),
+            array64->get(state, ValueRef::create(3))->toNumber(state),
+            array64->get(state, ValueRef::create(4))->toNumber(state),
+            array64->get(state, ValueRef::create(5))->toNumber(state));
+    } else {
+        result->set3DMatrix(
+            array64->get(state, ValueRef::create(0))->toNumber(state),
+            array64->get(state, ValueRef::create(1))->toNumber(state),
+            array64->get(state, ValueRef::create(2))->toNumber(state),
+            array64->get(state, ValueRef::create(3))->toNumber(state),
+            array64->get(state, ValueRef::create(4))->toNumber(state),
+            array64->get(state, ValueRef::create(5))->toNumber(state),
+            array64->get(state, ValueRef::create(6))->toNumber(state),
+            array64->get(state, ValueRef::create(7))->toNumber(state),
+            array64->get(state, ValueRef::create(8))->toNumber(state),
+            array64->get(state, ValueRef::create(9))->toNumber(state),
+            array64->get(state, ValueRef::create(10))->toNumber(state),
+            array64->get(state, ValueRef::create(11))->toNumber(state),
+            array64->get(state, ValueRef::create(12))->toNumber(state),
+            array64->get(state, ValueRef::create(13))->toNumber(state),
+            array64->get(state, ValueRef::create(14))->toNumber(state),
+            array64->get(state, ValueRef::create(15))->toNumber(state));
+    }
+
+    return result;
 }
 
 DOMMatrix* DOMMatrix::fromMatrix(ExecutionContext* executionContext,

@@ -27,29 +27,19 @@ struct DOMMatrixInit : public DOMMatrix2DInit {
 public:
     DOMMatrixInit();
 
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m13, M13);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m14, M14);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m23, M23);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m24, M24);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m31, M31);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m32, M32);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m33, M33);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m34, M34);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m43, M43);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, m44, M44);
+    DEFINE_GETTER_SETTER(double, m13, M13);
+    DEFINE_GETTER_SETTER(double, m14, M14);
+    DEFINE_GETTER_SETTER(double, m23, M23);
+    DEFINE_GETTER_SETTER(double, m24, M24);
+    DEFINE_GETTER_SETTER(double, m31, M31);
+    DEFINE_GETTER_SETTER(double, m32, M32);
+    DEFINE_GETTER_SETTER(double, m33, M33);
+    DEFINE_GETTER_SETTER(double, m34, M34);
+    DEFINE_GETTER_SETTER(double, m43, M43);
+    DEFINE_GETTER_SETTER(double, m44, M44);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, is2D, Is2D);
 
 private:
-    bool m_hasM13{ false };
-    bool m_hasM14{ false };
-    bool m_hasM23{ false };
-    bool m_hasM24{ false };
-    bool m_hasM31{ false };
-    bool m_hasM32{ false };
-    bool m_hasM33{ false };
-    bool m_hasM34{ false };
-    bool m_hasM43{ false };
-    bool m_hasM44{ false };
     bool m_hasIs2D{ false };
 
     double m_m13{ 0 };
