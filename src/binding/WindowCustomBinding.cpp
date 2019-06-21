@@ -115,7 +115,7 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
         value1 = arg1->toInt32(state);
     }
     // Handle argument arg0
-    if (argv[0]->isFunction()) {
+    if (argv[0]->isCallable()) {
         td->listener = argv[0]->asObject();
     } else {
         if (!window->checkSecurityPolicy()) {
@@ -164,7 +164,7 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
         value1 = arg1->toInt32(state);
     }
     // Handle argument arg0
-    if (argv[0]->isFunction()) {
+    if (argv[0]->isCallable()) {
         td->listener = argv[0]->asObject();
     } else {
         if (!window->checkSecurityPolicy()) {
@@ -187,7 +187,7 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
 static void requestAnimationFrameHandler(void* data)
 {
     TimeOutData* td = (TimeOutData*)data;
-    FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
+    ObjectRef* fn = (ObjectRef*)td->listener;
 
     double DOMHighResTimeStamp =
         (td->globalScope->webBase()->lastRenderingTick() -
@@ -294,7 +294,7 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
         td->argVector.push_back(argv[i]);
     }
     // Handle argument arg0
-    if (argv[0]->isFunction()) {
+    if (argv[0]->isCallable()) {
         td->listener = argv[0]->asObject();
     } else {
         String* bodyStr = toBrowserString(state, argv[0]);
@@ -402,7 +402,7 @@ static ValueRef* isPixelTestFunction(ExecutionStateRef* state,
 static void screenShotTimeoutHandler(void* data)
 {
     ScreenShotTimeOutData* std = static_cast<ScreenShotTimeOutData*>(data);
-    FunctionObjectRef* p = reinterpret_cast<FunctionObjectRef*>(std->arg);
+    ObjectRef* p = reinterpret_cast<ObjectRef*>(std->arg);
     ScriptBindingInstance* instance = std->window->scriptBindingInstance();
     callScriptFunction(
         instance, ValueRef::create(p), nullptr, 0,

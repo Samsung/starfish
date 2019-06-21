@@ -115,6 +115,13 @@ namespace Starfish {
         return;                       \
     }
 
+static const size_t s_mediaPlayerVideoBufferSize = 32 * 1024 * 1024;
+static const size_t s_mediaPlayerAudioBufferSize = 512 * 1024;
+static const size_t s_mediaPlayerEncryptedAudioBufferSize =
+    1024 * 1024; // TODO DRM Audio
+static const size_t s_mediaPlayerVideoMinThreshold = 80;
+static const size_t s_mediaPlayerAudioMinThreshold = 80;
+
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
@@ -1593,12 +1600,17 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
                                        mediaFormat);
     RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
-    // TODO Replace test value to real estimate value
     ret = player_set_media_stream_buffer_max_size(
-        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
-        m_videoStream->maxBufferSize());
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO, s_mediaPlayerVideoBufferSize);
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_max_size\n");
+
+    ret = player_set_media_stream_buffer_min_threshold(
+        m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
+        s_mediaPlayerVideoMinThreshold);
+
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_min_threshold\n");
 
     m_videoStream->setInitSegmentIndex(initSegmentIndex);
 }
@@ -1671,10 +1683,16 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
 
     ret = player_set_media_stream_buffer_max_size(
-        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
-        m_audioStream->maxBufferSize());
+        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO, s_mediaPlayerAudioBufferSize);
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_max_size\n");
+
+    ret = player_set_media_stream_buffer_min_threshold(
+        m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
+        s_mediaPlayerAudioMinThreshold);
+
+    RETURN_WHEN_PLAYER_ERROR(
+        "ERROR: player_set_media_stream_buffer_min_threshold\n");
 
     m_audioStream->setInitSegmentIndex(initSegmentIndex);
 }
