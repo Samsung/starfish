@@ -1721,9 +1721,6 @@ void WebView::resize(uint32_t width, uint32_t height)
             width / screenInfo().devicePixelRatio,
             height / screenInfo().devicePixelRatio);
 
-        m_prevDrawnStackingContextInfo.clear();
-        m_repaintRegionTrackerContext.clear();
-
         setNeedsFullRepainting();
     }
 }

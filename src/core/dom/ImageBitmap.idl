@@ -1,0 +1,8 @@
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmap
+
+[Exposed=(Window,Worker), Serializable, Transferable]
+interface ImageBitmap {
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  void close();
+};
