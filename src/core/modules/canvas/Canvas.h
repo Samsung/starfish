@@ -151,6 +151,8 @@ protected:
 struct CanvasSurfaceTextureInfo {
     struct CanvasSurfaceTextureInfoFragment {
         size_t textureID;
+        size_t textureWidth;
+        size_t textureHeight;
         float srcX;      // [0~1]
         float srcY;      // [0~1]
         float srcWidth;  // [0~1]

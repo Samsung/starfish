@@ -1277,7 +1277,18 @@ RenderResult WebView::rendering(bool force)
 
             renderResult.computedRepaintRect = repaintRect;
 
-            {
+            if (!m_needsComposite) {
+                // release every graphics buffer first
+                auto iter = prevDrawnStackingContextInfo.begin();
+                while (iter != prevDrawnStackingContextInfo.end()) {
+                    if (iter->second.graphicsBufferHolder) {
+                        iter->second.graphicsBufferHolder
+                            ->detachNativeBuffers();
+                        iter->second.graphicsBufferHolder = nullptr;
+                    }
+                    iter++;
+                }
+            } else {
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();
                 while (iter != prevDrawnStackingContextInfo.end()) {

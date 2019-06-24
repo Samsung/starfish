@@ -262,6 +262,11 @@ public:
         return m_eventModifierData;
     }
 
+    CompositorContext* compostiorContext()
+    {
+        return m_compostiorContext;
+    }
+
 protected:
     PlatformWindow(Starfish* starfish);
 
