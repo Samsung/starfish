@@ -62,6 +62,16 @@ public:
         return m_bufferHeight;
     }
 
+    size_t horizontalTileCount() const
+    {
+        return m_horizontalTileCount;
+    }
+
+    size_t verticalTileCount() const
+    {
+        return m_verticalTileCount;
+    }
+
     void flushSurfaces();
     void detachNativeBuffers();
 

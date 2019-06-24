@@ -111,6 +111,7 @@ public:
             m_compostiorContext = Compositor::initCompositorContext(this);
         }
 
+        m_compostiorContext->willRendering();
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
@@ -128,6 +129,7 @@ public:
                 delete c;
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
+            m_compostiorContext->didRendering();
             glSwapBuffers();
         } else {
 #if !defined(STARFISH_ENABLE_TEST)
@@ -149,6 +151,7 @@ public:
                     delete c;
                     webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
                 }
+                m_compostiorContext->didRendering();
                 glSwapBuffers();
             }
 #endif
@@ -174,14 +177,12 @@ public:
     virtual void willCompositing() override
     {
         glMakeCurrent();
-        if (!webView()->hasActiveAnimationExecutor()) {
-            if (m_glPaintingSurface) {
-                STARFISH_LOG_INFO(
-                    "WindowImplGL::willCompositing - remove "
-                    "m_glPaintingSurface\n");
-                m_glPaintingSurface->detachNativeBuffer();
-                m_glPaintingSurface = nullptr;
-            }
+        if (m_glPaintingSurface) {
+            STARFISH_LOG_INFO(
+                "WindowImplGL::willCompositing - remove "
+                "m_glPaintingSurface\n");
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
         }
     }
 
@@ -244,6 +245,8 @@ public:
 
 Canvas* WindowImplGL::preparePainting()
 {
+    LongTaskFinder p("WindowImplGL::preparePainting", 1);
+
     float DPR = webView()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
         webView()->setNeedsFullRepainting();
@@ -260,14 +263,12 @@ Canvas* WindowImplGL::preparePainting()
 Compositor* WindowImplGL::prepareCompositor()
 {
     LongTaskFinder p("WindowImplGL::prepareCompositor", 1);
-    if (!webView()->hasActiveAnimationExecutor()) {
-        if (m_glPaintingSurface) {
-            STARFISH_LOG_INFO(
-                "WindowImplGL::prepareCompositor - remove "
-                "m_glPaintingSurface\n");
-            m_glPaintingSurface->detachNativeBuffer();
-            m_glPaintingSurface = nullptr;
-        }
+    if (m_glPaintingSurface) {
+        STARFISH_LOG_INFO(
+            "WindowImplGL::prepareCompositor - remove "
+            "m_glPaintingSurface\n");
+        m_glPaintingSurface->detachNativeBuffer();
+        m_glPaintingSurface = nullptr;
     }
     return Compositor::create3D(webView(), m_compostiorContext);
 }

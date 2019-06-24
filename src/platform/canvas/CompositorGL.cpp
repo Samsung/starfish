@@ -527,7 +527,18 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     return shader;
 }
 
-class CompositorContext {
+inline static GLenum textureFormat()
+{
+    GLenum kind = GL_RGBA;
+#if defined(PORT_PIXEL_ORDER_BGRA)
+    if (g_isSupportBGRATexture) {
+        kind = GL_BGRA_EXT;
+    }
+#endif
+    return kind;
+}
+
+class CompositorContextGL : public CompositorContext {
 public:
     GLuint m_rectVertexShader;
     GLuint m_rectFragmentShader;
@@ -582,8 +593,13 @@ public:
 
     GLuint m_lastProgram;
 
-    CompositorContext()
+    std::vector<std::tuple<size_t, size_t, GLuint>> m_cachedTextures;
+
+    PlatformWindow* m_platformWindow;
+
+    CompositorContextGL(PlatformWindow* platformWindow)
     {
+        m_platformWindow = platformWindow;
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
         m_rectShaderProgramPosition = 0;
@@ -629,6 +645,144 @@ public:
         m_texBlurShaderProgramHTexPos = 0;
 
         m_lastProgram = 0;
+    }
+
+    ~CompositorContextGL()
+    {
+        glUseProgram(0);
+
+        cleanUpTextureCache();
+
+        if (m_texBlurShaderProgramW) {
+            glDetachShader(m_texBlurShaderProgramW, m_texVertexShader);
+            glDetachShader(m_texBlurShaderProgramW, m_texFragmentBlurShaderW);
+            glDeleteProgram(m_texBlurShaderProgramW);
+        }
+
+        if (m_texBlurShaderProgramEGLImageExternalW) {
+            glDetachShader(m_texBlurShaderProgramEGLImageExternalW,
+                           m_texVertexShader);
+            glDetachShader(m_texBlurShaderProgramEGLImageExternalW,
+                           m_texFragmentBlurShaderEGLImageExternalW);
+            glDeleteProgram(m_texBlurShaderProgramEGLImageExternalW);
+        }
+
+        if (m_texBlurShaderProgramH) {
+            glDetachShader(m_texBlurShaderProgramH, m_texVertexShader);
+            glDetachShader(m_texBlurShaderProgramH, m_texFragmentBlurShaderH);
+            glDeleteProgram(m_texBlurShaderProgramH);
+        }
+
+        if (m_texFragmentBlurShaderW) {
+            glDeleteShader(m_texFragmentBlurShaderW);
+        }
+
+        if (m_texFragmentBlurShaderH) {
+            glDeleteShader(m_texFragmentBlurShaderH);
+        }
+
+        if (m_texFragmentBlurShaderEGLImageExternalW) {
+            glDeleteShader(m_texFragmentBlurShaderEGLImageExternalW);
+        }
+
+        if (m_rectShaderProgram) {
+            glDetachShader(m_rectShaderProgram, m_rectVertexShader);
+            glDetachShader(m_rectShaderProgram, m_rectFragmentShader);
+            glDeleteProgram(m_rectShaderProgram);
+            glDeleteShader(m_rectVertexShader);
+            glDeleteShader(m_rectFragmentShader);
+        }
+
+        if (m_texShaderProgramEGLImageExternal) {
+            glDetachShader(m_texShaderProgramEGLImageExternal,
+                           m_texVertexShader);
+            glDetachShader(m_texShaderProgramEGLImageExternal,
+                           m_texFragmentShaderEGLImageExternal);
+            glDeleteProgram(m_texShaderProgramEGLImageExternal);
+            glDeleteShader(m_texFragmentShaderEGLImageExternal);
+        }
+
+        if (m_texShaderProgram) {
+            glDetachShader(m_texShaderProgram, m_texVertexShader);
+            glDetachShader(m_texShaderProgram, m_texFragmentShader);
+            glDeleteProgram(m_texShaderProgram);
+        }
+
+        if (m_texVertexShader) {
+            glDeleteShader(m_texVertexShader);
+        }
+
+        if (m_texFragmentShader) {
+            glDeleteShader(m_texFragmentShader);
+        }
+
+        glDeleteBuffers(1, &m_texTexPosBuffer);
+    }
+
+    void cleanUpTextureCache()
+    {
+        for (size_t i = 0; i < m_cachedTextures.size(); i++) {
+            glDeleteTextures(1, &std::get<2>(m_cachedTextures[i]));
+        }
+        std::vector<std::tuple<size_t, size_t, GLuint>>().swap(
+            m_cachedTextures);
+    }
+
+    void removeGenericTexture(GLuint textureID, size_t textureDataWidth,
+                              size_t textureDataHeight)
+    {
+        m_cachedTextures.push_back(
+            std::make_tuple(textureDataWidth, textureDataHeight, textureID));
+    }
+
+    GLuint generateGenericTexture(size_t textureDataWidth,
+                                  size_t textureDataHeight)
+    {
+        for (size_t i = 0; i < m_cachedTextures.size(); i++) {
+            if (std::get<0>(m_cachedTextures[i]) == textureDataWidth &&
+                std::get<1>(m_cachedTextures[i]) == textureDataHeight) {
+                GLuint textureID = std::get<2>(m_cachedTextures[i]);
+                m_cachedTextures.erase(m_cachedTextures.begin() + i);
+                return textureID;
+            }
+        }
+        GLuint textureID;
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        checkError();
+
+        glTexImage2D(GL_TEXTURE_2D, 0, textureFormat(), textureDataWidth,
+                     textureDataHeight, 0, textureFormat(), GL_UNSIGNED_BYTE,
+                     nullptr);
+        checkError();
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        if (g_isSupportTextureSwizzle) {
+            GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
+            glTexParameteriv(GL_TEXTURE_2D, TEXTURE_SWIZZLE_RGBA, swizzleMask);
+        }
+#endif
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        checkError();
+
+        return textureID;
+    }
+
+    virtual void willRendering()
+    {
+    }
+
+    virtual void didRendering()
+    {
+        cleanUpTextureCache();
     }
 
     GLuint rectProgram()
@@ -1127,93 +1281,12 @@ public:
 };
 
 void Compositor::destroyCompositorContext(PlatformWindow* wnd,
-                                          CompositorContext* ctx)
+                                          CompositorContext* ctxInput)
 {
-    if (ctx) {
-        glUseProgram(0);
-
-        if (ctx->m_texBlurShaderProgramW) {
-            glDetachShader(ctx->m_texBlurShaderProgramW,
-                           ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texBlurShaderProgramW,
-                           ctx->m_texFragmentBlurShaderW);
-            glDeleteProgram(ctx->m_texBlurShaderProgramW);
-        }
-
-        if (ctx->m_texBlurShaderProgramEGLImageExternalW) {
-            glDetachShader(ctx->m_texBlurShaderProgramEGLImageExternalW,
-                           ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texBlurShaderProgramEGLImageExternalW,
-                           ctx->m_texFragmentBlurShaderEGLImageExternalW);
-            glDeleteProgram(ctx->m_texBlurShaderProgramEGLImageExternalW);
-        }
-
-        if (ctx->m_texBlurShaderProgramH) {
-            glDetachShader(ctx->m_texBlurShaderProgramH,
-                           ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texBlurShaderProgramH,
-                           ctx->m_texFragmentBlurShaderH);
-            glDeleteProgram(ctx->m_texBlurShaderProgramH);
-        }
-
-        if (ctx->m_texFragmentBlurShaderW) {
-            glDeleteShader(ctx->m_texFragmentBlurShaderW);
-        }
-
-        if (ctx->m_texFragmentBlurShaderH) {
-            glDeleteShader(ctx->m_texFragmentBlurShaderH);
-        }
-
-        if (ctx->m_texFragmentBlurShaderEGLImageExternalW) {
-            glDeleteShader(ctx->m_texFragmentBlurShaderEGLImageExternalW);
-        }
-
-        if (ctx->m_rectShaderProgram) {
-            glDetachShader(ctx->m_rectShaderProgram, ctx->m_rectVertexShader);
-            glDetachShader(ctx->m_rectShaderProgram, ctx->m_rectFragmentShader);
-            glDeleteProgram(ctx->m_rectShaderProgram);
-            glDeleteShader(ctx->m_rectVertexShader);
-            glDeleteShader(ctx->m_rectFragmentShader);
-        }
-
-        if (ctx->m_texShaderProgramEGLImageExternal) {
-            glDetachShader(ctx->m_texShaderProgramEGLImageExternal,
-                           ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texShaderProgramEGLImageExternal,
-                           ctx->m_texFragmentShaderEGLImageExternal);
-            glDeleteProgram(ctx->m_texShaderProgramEGLImageExternal);
-            glDeleteShader(ctx->m_texFragmentShaderEGLImageExternal);
-        }
-
-        if (ctx->m_texShaderProgram) {
-            glDetachShader(ctx->m_texShaderProgram, ctx->m_texVertexShader);
-            glDetachShader(ctx->m_texShaderProgram, ctx->m_texFragmentShader);
-            glDeleteProgram(ctx->m_texShaderProgram);
-        }
-
-        if (ctx->m_texVertexShader) {
-            glDeleteShader(ctx->m_texVertexShader);
-        }
-
-        if (ctx->m_texFragmentShader) {
-            glDeleteShader(ctx->m_texFragmentShader);
-        }
-
-        glDeleteBuffers(1, &ctx->m_texTexPosBuffer);
-
+    if (ctxInput) {
+        CompositorContextGL* ctx = (CompositorContextGL*)ctxInput;
         delete ctx;
     }
-}
-
-inline static GLenum textureFormat()
-{
-    GLenum kind = GL_RGBA;
-#if defined(PORT_PIXEL_ORDER_BGRA)
-    if (g_isSupportBGRATexture) {
-        kind = GL_BGRA_EXT;
-    }
-#endif
-    return kind;
 }
 
 CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
@@ -1315,7 +1388,7 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         checkError();
     }
 
-    CompositorContext* compositorContext = new CompositorContext;
+    CompositorContextGL* compositorContext = new CompositorContextGL(wnd);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -1426,7 +1499,15 @@ public:
             if (ret) {
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
                     GLuint id = m_textureFragments[i].textureID;
-                    glDeleteTextures(1, &id);
+                    CompositorContextGL* ctx =
+                        (CompositorContextGL*)m_window->compostiorContext();
+                    if (ctx) {
+                        ctx->removeGenericTexture(
+                            id, m_textureFragments[i].textureWidth,
+                            m_textureFragments[i].textureHeight);
+                    } else {
+                        glDeleteTextures(1, &id);
+                    }
                 }
             }
 
@@ -1619,6 +1700,8 @@ public:
                 glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
                 checkError();
 
+                fragment.textureWidth = m_bufferWidth;
+                fragment.textureHeight = m_bufferHeight;
                 fragment.textureID = textureID;
                 fragment.srcX = 0;
                 fragment.srcY = 0;
@@ -1659,42 +1742,15 @@ public:
                     texureDataHeight = m_bufferHeight;
                 }
 
-                glGenTextures(1, &textureID);
-                glBindTexture(GL_TEXTURE_2D, textureID);
-                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                checkError();
-
-                glTexImage2D(GL_TEXTURE_2D, 0, textureFormat(), texureDataWidth,
-                             texureDataHeight, 0, textureFormat(),
-                             GL_UNSIGNED_BYTE, nullptr);
-                checkError();
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                                GL_LINEAR);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                                GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                                GL_CLAMP_TO_EDGE);
-
-#if defined(PORT_PIXEL_ORDER_BGRA)
-                if (g_isSupportTextureSwizzle) {
-                    GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED,
-                                            GL_ALPHA };
-                    glTexParameteriv(GL_TEXTURE_2D, TEXTURE_SWIZZLE_RGBA,
-                                     swizzleMask);
-                }
-#endif
-                checkError();
-
-                glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                checkError();
-
+                textureID =
+                    ((CompositorContextGL*)m_window->compostiorContext())
+                        ->generateGenericTexture(texureDataWidth,
+                                                 texureDataHeight);
                 CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
                     fragment;
                 fragment.textureID = textureID;
+                fragment.textureWidth = texureDataWidth;
+                fragment.textureHeight = texureDataHeight;
                 fragment.srcX = texureDataX / (float)m_bufferWidth;
                 fragment.srcY = texureDataY / (float)m_bufferHeight;
                 fragment.srcWidth = texureDataWidth / (float)m_bufferWidth;
@@ -1828,22 +1884,13 @@ public:
                 for (size_t x = 0; x < m_wTextureCount; x++) {
                     GLuint textureID;
 
-                    size_t textureDataX = coveredColsCount;
-                    size_t textureDataY = coveredRowsCount;
-                    size_t textureDataWidth =
-                        std::min((size_t)m_textureTileSize,
-                                 m_bufferWidth - coveredColsCount);
-                    size_t textureDataHeight =
-                        std::min((size_t)m_textureTileSize,
-                                 m_bufferHeight - coveredRowsCount);
-
-                    if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
-                        textureDataWidth = m_bufferWidth;
-                        textureDataHeight = m_bufferHeight;
-                    }
-
                     CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
                         fragment = m_textureFragments[fragmentIndex];
+
+                    size_t textureDataX = coveredColsCount;
+                    size_t textureDataY = coveredRowsCount;
+                    size_t textureDataWidth = fragment.textureWidth;
+                    size_t textureDataHeight = fragment.textureHeight;
 
                     Unit::Rect tRect(textureDataX, textureDataY,
                                      textureDataWidth, textureDataHeight);
@@ -2113,7 +2160,7 @@ public:
 
         m_seenFBOUsage = false;
         m_webView = webView;
-        m_compositorContext = compositorContext;
+        m_compositorContext = (CompositorContextGL*)compositorContext;
         m_screenMatrix = computeScreenMatrix();
 
         m_state.reserve(32);
@@ -2984,24 +3031,15 @@ public:
                 for (size_t y = 0; y < csGL->hTextureCount(); y++) {
                     size_t coveredColsCount = 0;
                     for (size_t x = 0; x < csGL->wTextureCount(); x++) {
+                        auto& fragment = textureInfo.fragments[i];
+
                         size_t texureDataX = coveredColsCount;
                         size_t texureDataY = coveredRowsCount;
-                        size_t texureDataWidth =
-                            std::min((size_t)csGL->textureTileSize(),
-                                     cs->bufferWidth() - coveredColsCount);
-                        size_t texureDataHeight =
-                            std::min((size_t)csGL->textureTileSize(),
-                                     cs->bufferHeight() - coveredRowsCount);
-
-                        if (csGL->m_flag &
-                            CanvasSurface::ElementHasFilterEffect) {
-                            texureDataWidth = cs->bufferWidth();
-                            texureDataHeight = cs->bufferHeight();
-                        }
+                        size_t texureDataWidth = fragment.textureWidth;
+                        size_t texureDataHeight = fragment.textureHeight;
 
                         float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-                        auto& fragment = textureInfo.fragments[i];
                         float oldW = dst.width();
                         float oldH = dst.height();
                         Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
@@ -3380,7 +3418,7 @@ public:
 protected:
     bool m_seenFBOUsage;
     WebView* m_webView;
-    CompositorContext* m_compositorContext;
+    CompositorContextGL* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
     std::vector<FBOState> m_fboState;
 

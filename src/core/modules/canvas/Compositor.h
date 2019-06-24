@@ -26,7 +26,15 @@ class NativeImageData;
 class PlatformWindow;
 class Canvas;
 class CanvasSurface;
-class CompositorContext;
+
+class CompositorContext {
+public:
+    virtual ~CompositorContext()
+    {
+    }
+    virtual void willRendering() = 0;
+    virtual void didRendering() = 0;
+};
 
 class Compositor : public gc {
 protected:
