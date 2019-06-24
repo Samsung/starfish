@@ -2,6 +2,12 @@
 
 typedef (DOMString or Function) TimerHandler;
 
+/*
+typedef (CanvasImageSource or
+         Blob or
+         ImageData) ImageBitmapSource;
+*/
+
 [PartialInterface,
  NoInterfaceObject,
  Exposed=(Window,Worker)]
