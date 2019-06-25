@@ -2,11 +2,10 @@
 
 typedef (DOMString or Function) TimerHandler;
 
-/*
+[STARFISH_ENABLE_CANVAS]
 typedef (CanvasImageSource or
          Blob or
          ImageData) ImageBitmapSource;
-*/
 
 [PartialInterface,
  NoInterfaceObject,
@@ -25,6 +24,6 @@ interface WindowOrWorkerGlobalScope {
   void clearInterval(optional long handle = 0);
 
   // ImageBitmap
-  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
-  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
+  [STARFISH_ENABLE_CANVAS, Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
+  [STARFISH_ENABLE_CANVAS, Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
 };
