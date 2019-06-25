@@ -889,6 +889,12 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
         }
     }
 
+    SOURCEBUFFER_LOG(
+        this,
+        "Run Code Frame Eviction algorithm update max Buffer size(new: %fMB)\n",
+        maxBufferSize / 1024.f / 1024.f);
+    m_parentMediaSource->setMaxBufferSize(maxBufferSize);
+
     if (maxAssume >= maxBufferSize) {
         return false;
     }

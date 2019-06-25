@@ -165,13 +165,17 @@ public:
 
     size_t availableBufferSize()
     {
-        return bufferFull() ? 0 : STARFISH_MAX_MEDIASOURCE_BUFFERSPACE -
-                                      m_usedBufferSize;
+        return bufferFull() ? 0 : m_maxBufferSize - m_usedBufferSize;
     }
 
     bool bufferFull()
     {
-        return m_usedBufferSize >= STARFISH_MAX_MEDIASOURCE_BUFFERSPACE;
+        return m_usedBufferSize >= m_maxBufferSize;
+    }
+
+    void setMaxBufferSize(size_t m)
+    {
+        m_maxBufferSize = m;
     }
     void evict(uint64_t start, uint64_t end);
 
@@ -191,6 +195,7 @@ protected:
     double m_duration;
     uint64_t m_shortestMediaDuration;
     size_t m_usedBufferSize;
+    size_t m_maxBufferSize;
 };
 
 class MediaSourceClient : public gc {

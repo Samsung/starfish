@@ -47,6 +47,7 @@ MediaSource::MediaSource(Document* document)
     , m_duration(std::numeric_limits<double>::quiet_NaN())
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
     , m_usedBufferSize(0)
+    , m_maxBufferSize(STARFISH_MAX_MEDIASOURCE_BUFFERSPACE)
 {
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
     GC_REGISTER_FINALIZER_NO_ORDER(
