@@ -91,7 +91,7 @@ public:
 void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                                         LayoutUnit containgBlockContentWidth)
 {
-    if (needToEstablishBlockFormattingContext()) {
+    if (needToEstablishKindsOfFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
             return;
         }
@@ -191,14 +191,15 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                           style()->height());
     ctx.setMarginInfo(this, &marginInfo);
 
-    if (needToEstablishBlockFormattingContext()) {
+    if (needToEstablishKindsOfFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
             if ((!isQuickLayout && blockContainer(this)->hasBlockFlow()) ||
-                blockContainer(this)->needToEstablishBlockFormattingContext()) {
+                blockContainer(this)
+                    ->needToEstablishKindsOfFormattingContext()) {
                 if (style()->position() ==
                         PositionValue::RelativePositionValue &&
                     isQuickLayout) {
@@ -419,14 +420,14 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll(
 
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
-    if (!needToEstablishBlockFormattingContext()) {
+    if (!needToEstablishKindsOfFormattingContext()) {
         Frame::quickLayout(ctx);
     }
 
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            if (child->needToEstablishBlockFormattingContext()) {
+            if (child->needToEstablishKindsOfFormattingContext()) {
                 child->layout(ctx, ResolveAll);
             } else {
                 child->quickLayout(ctx);
@@ -465,7 +466,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
         addToRelativePositionedBoxes(ctx);
     }
 
-    if (!needToEstablishBlockFormattingContext()) {
+    if (!needToEstablishKindsOfFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
         ctx.layoutRegisteredRelativePositionedBoxes(this);
     }

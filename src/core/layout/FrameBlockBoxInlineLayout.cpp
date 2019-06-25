@@ -912,7 +912,7 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
                 ctx->registerInlineBlockAscender(ascender,
                                                  box->asFrameBlockBox());
             } else {
-                if (box->needToEstablishBlockFormattingContext()) {
+                if (box->needToEstablishKindsOfFormattingContext()) {
                     box->layout(ctx->m_layoutContext,
                                 LayoutWantToResolve::ResolveAll);
                 } else {

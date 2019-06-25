@@ -1997,6 +1997,15 @@ void Frame::markNeedsLayout()
             }
             p = p->layoutParent();
         }
+    } else if (isGridItem()) {
+        Frame* p = layoutParent();
+        while (p) {
+            if (p->isFrameGridBox()) {
+                p->markNeedsLayout();
+                break;
+            }
+            p = p->layoutParent();
+        }
     }
 }
 }

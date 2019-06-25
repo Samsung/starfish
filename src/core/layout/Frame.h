@@ -1717,7 +1717,7 @@ public:
     void propagateMarkNeedsLayout()
     {
         for (Frame* f = this; f; f = f->parent()) {
-            if (f->needToEstablishBlockFormattingContext() ||
+            if (f->needToEstablishKindsOfFormattingContext() ||
                 f->isFrameDocument()) {
                 if (f->needsLayout()) {
                     break;
@@ -1831,6 +1831,12 @@ public:
             f = f->layoutParent();
         }
         return false;
+    }
+
+    bool needToEstablishKindsOfFormattingContext()
+    {
+        return needToEstablishBlockFormattingContext() || isFrameGridBox() ||
+               isFrameFlexibleBox();
     }
 
     bool needToEstablishBlockFormattingContext() const
