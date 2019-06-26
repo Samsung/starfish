@@ -65,7 +65,7 @@ interface DOMMatrixReadOnly {
                                           optional unrestricted double angle = 0);
     [NewObject] DOMMatrix skewX(optional unrestricted double sx = 0);
     [NewObject] DOMMatrix skewY(optional unrestricted double sy = 0);
-    [Unimplemented,NewObject] DOMMatrix multiply(optional DOMMatrixInit other);
+    [NewObject] DOMMatrix multiply(optional DOMMatrixInit other);
     [NewObject] DOMMatrix flipX();
     [NewObject] DOMMatrix flipY();
     [NewObject] DOMMatrix inverse();

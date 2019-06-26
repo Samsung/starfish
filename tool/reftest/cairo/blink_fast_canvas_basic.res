@@ -355,4 +355,4 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/canvas-getContext-cra
 test/cairo/reftest/vendor/blink_original/fast/dom/geometry-interfaces-dom-matrix.html
 #test/cairo/reftest/vendor/blink_original/fast/dom/geometry-interfaces-dom-matrix-translate.html
 #test/cairo/reftest/vendor/blink_original/fast/dom/geometry-interfaces-dom-matrix-scale.html
-#test/cairo/reftest/vendor/blink_original/fast/dom/geometry-interfaces-dom-matrix-multiply.html
+test/cairo/reftest/vendor/blink_original/fast/dom/geometry-interfaces-dom-matrix-multiply.html

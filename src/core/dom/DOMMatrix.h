@@ -114,6 +114,16 @@ public:
         DOMMatrixReadOnly::setIs2D(is2D);
     }
 
+    bool isValid()
+    {
+        return DOMMatrixReadOnly::isValid();
+    }
+
+    void makeInvalid()
+    {
+        DOMMatrixReadOnly::makeInvalid();
+    }
+
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
     virtual SerializedData* serialize(SerializingMap& memory) override;

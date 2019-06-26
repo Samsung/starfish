@@ -253,6 +253,7 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext)
     , m_executionContext(executionContext)
     , m_matrix(SkMatrix44::I())
     , m_is2D(true)
+    , m_isValid(true)
 {
     STARFISH_ASSERT(executionContext != nullptr);
 }
@@ -263,6 +264,7 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
     , m_executionContext(executionContext)
     , m_matrix(SkMatrix44::I())
     , m_is2D(true)
+    , m_isValid(true)
 {
     STARFISH_ASSERT(executionContext != nullptr);
     bool isValid = false;
@@ -702,6 +704,11 @@ DOMMatrix* DOMMatrixReadOnly::skewY(double sy)
     return DOMMatrix::Create(this)->skewYSelf(sy);
 }
 
+DOMMatrix* DOMMatrixReadOnly::multiply()
+{
+    return DOMMatrix::Create(this)->multiplySelf();
+}
+
 DOMMatrix* DOMMatrixReadOnly::multiply(DOMMatrixInit& other)
 {
     return DOMMatrix::Create(this)->multiplySelf(other);
@@ -709,14 +716,22 @@ DOMMatrix* DOMMatrixReadOnly::multiply(DOMMatrixInit& other)
 
 DOMMatrix* DOMMatrixReadOnly::flipX()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    DOMMatrix* result = DOMMatrix::Create(this);
+    result->setM11(-result->m11());
+    result->setM12(-result->m12());
+    result->setM13(-result->m13());
+    result->setM14(-result->m14());
+    return result;
 }
 
 DOMMatrix* DOMMatrixReadOnly::flipY()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    DOMMatrix* result = DOMMatrix::Create(this);
+    result->setM21(-result->m21());
+    result->setM22(-result->m22());
+    result->setM23(-result->m23());
+    result->setM24(-result->m24());
+    return result;
 }
 
 DOMMatrix* DOMMatrixReadOnly::inverse()
