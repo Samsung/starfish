@@ -311,25 +311,32 @@ void DOMMatrix::setM44(double value)
 
 DOMMatrix* DOMMatrix::multiplySelf()
 {
-    return this;
+    DOMMatrixInit init;
+    return multiplySelf(init);
 }
 
 DOMMatrix* DOMMatrix::multiplySelf(DOMMatrixInit& other)
 {
+    if (!other.is2D()) {
+        setIs2D(false);
+    }
     setMatrix(matrix() * fromMatrix(executionContext(), other)->matrix());
     return this;
 }
 
 DOMMatrix* DOMMatrix::preMultiplySelf()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    DOMMatrixInit init;
+    return preMultiplySelf(init);
 }
 
 DOMMatrix* DOMMatrix::preMultiplySelf(DOMMatrixInit& other)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    if (!other.is2D()) {
+        setIs2D(false);
+    }
+    setMatrix(fromMatrix(executionContext(), other)->matrix() * matrix());
+    return this;
 }
 
 DOMMatrix* DOMMatrix::translateSelf(double tx, double ty, double tz)
@@ -446,8 +453,14 @@ DOMMatrix* DOMMatrix::skew(double sx, double sy)
 
 DOMMatrix* DOMMatrix::invertSelf()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    SkMatrix44 result;
+    if (matrix().invert(&result)) {
+        setMatrix(result);
+    } else {
+        setIs2D(false);
+        makeInvalid();
+    }
+    return this;
 }
 
 ScriptBindingInstance* DOMMatrix::scriptBindingInstance()

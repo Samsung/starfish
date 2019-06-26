@@ -98,6 +98,7 @@ public:
                                double angle = 0);
     DOMMatrix* skewX(double sx);
     DOMMatrix* skewY(double sy);
+    DOMMatrix* multiply();
     DOMMatrix* multiply(DOMMatrixInit& init);
     DOMMatrix* flipX();
     DOMMatrix* flipY();
@@ -111,6 +112,16 @@ public:
     void setIs2D(bool is2D)
     {
         m_is2D = is2D;
+    }
+
+    bool isValid()
+    {
+        return m_isValid;
+    }
+
+    void makeInvalid()
+    {
+        m_isValid = false;
     }
 
     bool isIdentity()
@@ -153,6 +164,7 @@ private:
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
     bool m_is2D;
+    bool m_isValid;
 };
 } // namespace Starfish
 #endif
