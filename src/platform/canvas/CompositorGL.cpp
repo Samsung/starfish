@@ -599,6 +599,8 @@ public:
 
     CompositorContextGL(PlatformWindow* platformWindow)
     {
+        STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL\n");
+
         m_platformWindow = platformWindow;
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
@@ -649,6 +651,7 @@ public:
 
     ~CompositorContextGL()
     {
+        STARFISH_LOG_INFO("CompositorContextGL::~CompositorContextGL\n");
         glUseProgram(0);
 
         cleanUpTextureCache();
@@ -776,11 +779,16 @@ public:
         return textureID;
     }
 
-    virtual void willRendering()
+    virtual void willRendering() override
     {
     }
 
-    virtual void didRendering()
+    virtual void didRendering() override
+    {
+        cleanUpTextureCache();
+    }
+
+    virtual void onIdle() override
     {
         cleanUpTextureCache();
     }

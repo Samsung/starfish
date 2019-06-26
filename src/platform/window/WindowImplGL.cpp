@@ -232,6 +232,20 @@ public:
         PlatformWindow::pause();
     }
 
+    virtual void onClearDrawnBuffers() override
+    {
+        STARFISH_LOG_INFO("PlatformWindow::onIdle\n");
+
+        glMakeCurrent();
+
+        if (m_glPaintingSurface) {
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
+
+        m_compostiorContext->onIdle();
+    }
+
     uint32_t m_width;
     uint32_t m_height;
     CanvasSurface* m_glPaintingSurface;
