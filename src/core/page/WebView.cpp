@@ -384,25 +384,28 @@ void WebView::enterIdleMode()
     onIdle();
 
     // drop CanvasSurfaces if possible
-    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers) &&
-        m_didCompositeBefore) {
-        LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
-        auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
-        while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
-            StackingContext* sc = *iter;
-            iter++;
-            if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
-                auto holder = sc->graphicsBufferHolder();
-                if (holder) {
-                    for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
-                        if (holder->m_surfaces[i]) {
-                            holder->m_surfaces[i]->detachNativeBuffer();
-                            holder->m_surfaces[i] = nullptr;
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers)) {
+        if (m_didCompositeBefore) {
+            LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
+            auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+            while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
+                StackingContext* sc = *iter;
+                iter++;
+                if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
+                    auto holder = sc->graphicsBufferHolder();
+                    if (holder) {
+                        for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
+                            if (holder->m_surfaces[i]) {
+                                holder->m_surfaces[i]->detachNativeBuffer();
+                                holder->m_surfaces[i] = nullptr;
+                            }
                         }
                     }
                 }
             }
         }
+
+        platformWindow()->onClearDrawnBuffers();
     }
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {

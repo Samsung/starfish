@@ -257,6 +257,10 @@ public:
     {
     }
 
+    virtual void onClearDrawnBuffers()
+    {
+    }
+
     EventModifierData eventModifierData()
     {
         return m_eventModifierData;

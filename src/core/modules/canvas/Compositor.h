@@ -34,6 +34,7 @@ public:
     }
     virtual void willRendering() = 0;
     virtual void didRendering() = 0;
+    virtual void onIdle() = 0;
 };
 
 class Compositor : public gc {
