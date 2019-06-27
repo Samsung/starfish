@@ -23,6 +23,7 @@
 #include "core/fetch/Fetch.h"
 #include "core/modules/tts/SpeechSynthesis.h"
 #include "core/page/GlobalScope.h"
+#include "core/page/WindowOrWorkerGlobalScope.h"
 
 namespace Starfish {
 
@@ -245,6 +246,15 @@ public:
     uint32_t setInterval(TimerHandler handler, int32_t delay, void* data);
     void clearInterval(int32_t id);
 
+#ifdef STARFISH_ENABLE_CANVAS
+    Promise* createImageBitmap(
+        ExecutionContext* executionContext, ImageBitmapSource image,
+        ImageBitmapOptions options = ImageBitmapOptions());
+    Promise* createImageBitmap(
+        ExecutionContext* executionContext, ImageBitmapSource image, int32_t sx,
+        int32_t sy, int32_t sw, int32_t sh,
+        ImageBitmapOptions options = ImageBitmapOptions());
+#endif
     void alert();
     void alert(String* message);
 

@@ -7,8 +7,8 @@ typedef (HTMLImageElement or
 [STARFISH_ENABLE_CANVAS]
 typedef (HTMLOrSVGImageElement or
          HTMLVideoElement or
-         HTMLCanvasElement /*or
-         ImageBitmap or
+         HTMLCanvasElement or
+         ImageBitmap /*or
          OffscreenCanvas*/) CanvasImageSource;
 
 // mixin

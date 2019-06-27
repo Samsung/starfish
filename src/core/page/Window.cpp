@@ -56,7 +56,6 @@
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
 #include "platform/window/PlatformWindow.h"
-
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
@@ -610,6 +609,24 @@ void Window::clearInterval(int32_t id)
     webView()->timer()->removeTimer(id);
 }
 
+#ifdef STARFISH_ENABLE_CANVAS
+Promise* Window::createImageBitmap(ExecutionContext* executionContext,
+                                   ImageBitmapSource image,
+                                   ImageBitmapOptions options)
+{
+    return WindowOrWorkerGlobalScope::createImageBitmap(executionContext, image,
+                                                        options);
+}
+
+Promise* Window::createImageBitmap(ExecutionContext* executionContext,
+                                   ImageBitmapSource image, int32_t sx,
+                                   int32_t sy, int32_t sw, int32_t sh,
+                                   ImageBitmapOptions options)
+{
+    return WindowOrWorkerGlobalScope::createImageBitmap(
+        executionContext, image, sx, sy, sw, sh, options);
+}
+#endif
 void Window::alert()
 {
     alert(String::emptyString);
