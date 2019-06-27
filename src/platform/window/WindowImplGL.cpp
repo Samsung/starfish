@@ -234,16 +234,18 @@ public:
 
     virtual void onClearDrawnBuffers() override
     {
-        STARFISH_LOG_INFO("PlatformWindow::onIdle\n");
+        STARFISH_LOG_INFO("WindowImplGL::onClearDrawnBuffers\n");
 
-        glMakeCurrent();
+        if (m_compostiorContext) {
+            glMakeCurrent();
 
-        if (m_glPaintingSurface) {
-            m_glPaintingSurface->detachNativeBuffer();
-            m_glPaintingSurface = nullptr;
+            if (m_glPaintingSurface) {
+                m_glPaintingSurface->detachNativeBuffer();
+                m_glPaintingSurface = nullptr;
+            }
+
+            m_compostiorContext->onIdle();
         }
-
-        m_compostiorContext->onIdle();
     }
 
     uint32_t m_width;
