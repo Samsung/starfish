@@ -24,6 +24,6 @@ interface WindowOrWorkerGlobalScope {
   void clearInterval(optional long handle = 0);
 
   // ImageBitmap
-  [STARFISH_ENABLE_CANVAS, Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
-  [STARFISH_ENABLE_CANVAS, Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
+  [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
+  [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
 };

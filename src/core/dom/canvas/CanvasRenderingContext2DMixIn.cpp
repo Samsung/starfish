@@ -22,7 +22,6 @@
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
-#include "binding/HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementUnion.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
@@ -31,6 +30,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/canvas/CanvasFillRule.h"
 #include "core/dom/canvas/CanvasGradient.h"
+#include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/dom/canvas/CanvasDirection.h"
@@ -52,7 +52,6 @@
 #include "core/dom/canvas/CanvasPath.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
-#include "core/dom/WebOrigin.h"
 #include "core/layout/FrameDocument.h"
 #include "core/dom/Text.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -835,7 +834,8 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
 {
     STARFISH_ASSERT(repetition != nullptr);
 
-    auto usability = checkUsabilityOfCanvasImageSource(image);
+    auto usability =
+        CanvasImageSourceUtils::checkUsability(m_executionContext, image);
     if (usability.isDOMException() == true) {
         throw usability.asDOMException();
     } else {
@@ -864,7 +864,8 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
                                "'no-repeat', 'repeat-x', or 'repeat-y'.");
     }
 
-    auto pair = CanvasImageSourceToNativeImageData(image);
+    auto pair =
+        CanvasImageSourceUtils::toNativeImageData(m_executionContext, image);
 
     NativeImageData* nativeImageData = pair.first;
     if (nativeImageData == nullptr &&
@@ -1511,7 +1512,8 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         return;
     }
 
-    auto usability = checkUsabilityOfCanvasImageSource(image);
+    auto usability =
+        CanvasImageSourceUtils::checkUsability(m_executionContext, image);
     if (usability.isDOMException() == true) {
         throw usability.asDOMException();
     } else {
@@ -1520,7 +1522,8 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         }
     }
 
-    auto pair = CanvasImageSourceToNativeImageData(image);
+    auto pair =
+        CanvasImageSourceUtils::toNativeImageData(m_executionContext, image);
 
     NativeImageData* nativeImageData = pair.first;
     if (nativeImageData == nullptr) {
@@ -2002,114 +2005,6 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
     path->applyPathDrawingStyles(m_canvas);
     return (path->isPointInStroke(xx, yy) == true);
-}
-
-DOMExceptionOr<bool>
-CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
-    CanvasImageSource image)
-{
-    // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
-    if (image.isHTMLImageElementOrSVGImageElementValue() == true) {
-        auto imgOrSvg = image.getHTMLImageElementOrSVGImageElementValue();
-
-        NativeImageData* imageData = nullptr;
-        if (imgOrSvg.isHTMLImageElementValue() == true) {
-            if (imgOrSvg.getHTMLImageElementValue()->hasRequestError() ==
-                true) {
-                return false;
-            }
-            imageData = imgOrSvg.getHTMLImageElementValue()->imageData();
-        } else if (imgOrSvg.isSVGImageElementValue() == true) {
-            if (imgOrSvg.getSVGImageElementValue()->hasRequestError() == true) {
-                return false;
-            }
-            imageData = imgOrSvg.getSVGImageElementValue()->imageData();
-        } else {
-            STARFISH_ASSERT(imgOrSvg.isNoneValue() == true);
-            return false;
-        }
-
-        if (imageData == executionContext()->document()->brokenImage()) {
-            return new DOMException(executionContext(),
-                                    DOMException::Code::INVALID_STATE_ERR);
-        }
-
-        if (imageData == nullptr || imageData->width() == 0 ||
-            imageData->height() == 0) {
-            return false;
-        }
-
-        return true;
-    } else if (image.isHTMLCanvasElementValue() == true) {
-        auto canvas = image.getHTMLCanvasElementValue();
-        if (canvas->width() == 0 || canvas->height() == 0) {
-            return new DOMException(executionContext(),
-                                    DOMException::Code::INVALID_STATE_ERR,
-                                    "The image argument is a canvas element "
-                                    "with a width or height of 0.");
-        }
-        return true;
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-    } else if (image.isHTMLVideoElementValue() == true) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-#endif
-    } else {
-        STARFISH_ASSERT(image.isNoneValue() == true);
-        return new DOMException(
-            executionContext(), DOMException::Code::SCRIPT_TYPE_ERR,
-            "The image is not of type '(CSSImageValue or HTMLImageElement or "
-            "SVGImageElement or HTMLVideoElement or HTMLCanvasElement or "
-            "ImageBitmap or OffscreenCanvas)");
-    }
-    return false;
-}
-
-std::pair<NULLABLE NativeImageData*, bool>
-CanvasRenderingContext2DMixIn::CanvasImageSourceToNativeImageData(
-    CanvasImageSource& image)
-{
-    NativeImageData* nativeImageData = nullptr;
-    bool clean = true;
-
-    if (image.isHTMLImageElementOrSVGImageElementValue() == true) {
-        if (image.getHTMLImageElementOrSVGImageElementValue()
-                .isHTMLImageElementValue() == true) {
-            auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                 .getHTMLImageElementValue();
-
-            if (executionContext()->document()->webOrigin()->isSameOrigin(
-                    htmlImage->webOrigin()) == false) {
-                clean = false;
-            }
-
-            nativeImageData = htmlImage->imageData();
-        } else if (image.getHTMLImageElementOrSVGImageElementValue()
-                       .isSVGImageElementValue() == true) {
-            auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                .getSVGImageElementValue();
-
-            if (executionContext()->document()->webOrigin()->isSameOrigin(
-                    svgImage->webOrigin()) == false) {
-                clean = false;
-            }
-            nativeImageData = svgImage->imageData();
-        } else {
-            STARFISH_ASSERT(image.isNoneValue() == true);
-        }
-    } else if (image.isHTMLCanvasElementValue() == true) {
-        auto htmlCanvas = image.getHTMLCanvasElementValue();
-        auto context = htmlCanvas->canvasRenderingContext();
-        if (context != nullptr) {
-            auto context2d = (CanvasRenderingContext2DMixIn*)context;
-            context2d->flush();
-            nativeImageData = NativeImageData::attach(context2d->m_canvas);
-            clean = context->originCleanFlag();
-        }
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-
-    return std::make_pair(nativeImageData, clean);
 }
 
 String* CanvasRenderingContext2DMixIn::font()

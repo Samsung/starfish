@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/ImageBitmapOptions.h"
 
 namespace Starfish {
@@ -118,7 +120,7 @@ bool ImageBitmapOptions::stringToResizeQuality(String* resizeQuality,
         out = ResizeQuality::Medium;
         return true;
     } else if (resizeQuality->equals("high", 4)) {
-        out = ResizeQuality::high;
+        out = ResizeQuality::High;
         return true;
     }
     return false;
@@ -132,11 +134,25 @@ String* ImageBitmapOptions::resizeQualityToString(ResizeQuality resizeQuality)
         return String::createASCIIString("low");
     } else if (resizeQuality == ResizeQuality::Medium) {
         return String::createASCIIString("medium");
-    } else if (resizeQuality == ResizeQuality::high) {
+    } else if (resizeQuality == ResizeQuality::High) {
         return String::createASCIIString("high");
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::createASCIIString("low");
+}
+
+ImageSmoothingQuality ImageBitmapOptions::toImageRenderingValue()
+{
+    ImageSmoothingQuality ret;
+    if (m_resizeQuality == ResizeQuality::Low) {
+        ret = ImageSmoothingQuality::Low;
+    } else if (m_resizeQuality == ResizeQuality::Medium) {
+        ret = ImageSmoothingQuality::Medium;
+    } else if (m_resizeQuality == ResizeQuality::High ||
+               m_resizeQuality == ResizeQuality::Pixelated) {
+        ret = ImageSmoothingQuality::High;
+    }
+    return ret;
 }
 
 String* ImageBitmapOptions::imageOrientation()

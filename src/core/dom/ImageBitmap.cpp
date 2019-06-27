@@ -23,10 +23,14 @@
 #include "core/dom/ImageBitmap.h"
 
 namespace Starfish {
-ImageBitmap::ImageBitmap(ExecutionContext* executionContext)
+
+ImageBitmap::ImageBitmap(ExecutionContext* executionContext,
+                         NativeImageData* nativeImageData)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_nativeImageData(nativeImageData)
 {
+    STARFISH_ASSERT(executionContext != nullptr);
 }
 
 ScriptBindingInstance* ImageBitmap::scriptBindingInstance()
@@ -94,14 +98,14 @@ ScriptWrappable* SerializedImageBitmap::createDeserializingInstance(
     ExecutionContext* executionContext) const
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return new ImageBitmap(executionContext);
+    return new ImageBitmap(executionContext, nullptr);
 }
 
 ScriptWrappable* TransferedImageBitmap::createTransferReceivingInstance(
     ExecutionContext* executionContext) const
 {
     STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
-    return new ImageBitmap(executionContext);
+    return new ImageBitmap(executionContext, nullptr);
 }
 
 } // namespace Starfish

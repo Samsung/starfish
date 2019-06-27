@@ -24,6 +24,7 @@
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasPathInterfaceMixIn.h"
+#include "core/dom/canvas/CanvasImageSource.h"
 #include "core/dom/DOMExceptionOr.h"
 #include "core/dom/DOMMatrix2DInit.h"
 #include "core/dom/DOMMatrix.h"
@@ -39,7 +40,6 @@ class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
 class NativeImageData;
-class HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement;
 
 enum class CanvasLineCap;
 enum class CanvasLineJoin;
@@ -48,8 +48,6 @@ enum class CanvasTextBaseline;
 enum class CanvasDirection;
 enum class ImageSmoothingQuality;
 
-typedef HTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElement
-    CanvasImageSource;
 typedef DOMStringOrCanvasGradientOrCanvasPattern CanvasStyle;
 
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
@@ -67,6 +65,11 @@ public:
     virtual CanvasSurface* surface() override
     {
         return m_canvasSurface;
+    }
+
+    Canvas* canvas()
+    {
+        return m_canvas;
     }
 
     void finalize();
@@ -273,8 +276,6 @@ private:
                         bool shouldApplyMaxWidth, bool isStroke);
     void updateFontIfNeeds();
 
-    DOMExceptionOr<bool> checkUsabilityOfCanvasImageSource(
-        CanvasImageSource image);
     std::pair<NULLABLE NativeImageData*, bool>
     CanvasImageSourceToNativeImageData(CanvasImageSource& image);
 

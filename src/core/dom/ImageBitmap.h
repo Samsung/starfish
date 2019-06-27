@@ -33,7 +33,8 @@ class ImageBitmap : public ScriptWrappable,
 public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ImageBitmap)
 
-    ImageBitmap(ExecutionContext* executionContext);
+    ImageBitmap(ExecutionContext* executionContext,
+                NativeImageData* nativeImageData);
     ~ImageBitmap()
     {
     }
@@ -43,14 +44,14 @@ public:
     uint32_t height();
     void close();
 
-    // Serializable
+    // Interface Serializable
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
     virtual SerializedData* serialize(SerializingMap& memory) override;
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const override;
 
-    // Transferable
+    // Interface Transferable
     virtual bool isTransferable() const override;
     virtual Transferable* toTransferable() const override;
     virtual TransferedData* transfer() override;
@@ -64,6 +65,11 @@ public:
     void setOriginCleanFlag(bool value)
     {
         m_originCleanFlag = value;
+    }
+
+    NativeImageData* nativeImageData()
+    {
+        return m_nativeImageData;
     }
 
 private:
@@ -91,5 +97,5 @@ public:
     ScriptWrappable* createTransferReceivingInstance(
         ExecutionContext* executionContext) const override;
 };
-}
+} // namespace Starfish
 #endif

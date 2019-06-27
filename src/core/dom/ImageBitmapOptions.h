@@ -22,10 +22,12 @@
 
 namespace Starfish {
 
+enum class ImageSmoothingQuality;
+
 enum class ImageOrientation { None, FlipY };
 enum class PremultiplyAlpha { None, Premultiply, Default };
 enum class ColorSpaceConversion { None, Default };
-enum class ResizeQuality { Pixelated, Low, Medium, high };
+enum class ResizeQuality { Pixelated, Low, Medium, High };
 
 struct ImageBitmapOptions {
 public:
@@ -47,6 +49,9 @@ public:
                                       ResizeQuality& out);
     static String* resizeQualityToString(ResizeQuality resizeQuality);
 
+    ImageSmoothingQuality toImageRenderingValue();
+
+    // Interface ImageBitmapOptions
     String* imageOrientation();
     void setImageOrientation(String* imageOrientation);
 
@@ -61,6 +66,17 @@ public:
 
     String* resizeQuality();
     void setResizeQuality(String* resizeQuality);
+
+    // Others
+    ResizeQuality getResizeQuality()
+    {
+        return m_resizeQuality;
+    }
+
+    ImageOrientation getImageOrientation()
+    {
+        return m_imageOrientation;
+    }
 
 private:
     ImageOrientation m_imageOrientation{ ImageOrientation::None };
