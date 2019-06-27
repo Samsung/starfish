@@ -29,6 +29,63 @@ namespace Starfish {
 
 #define CAST_APP_INFOR_BUFFER_SIZE 1024
 
+static std::string dumpHTTPHeaders(const httplib::Headers& headers)
+{
+    std::string str;
+    char buffer[BUFSIZ];
+
+    for (const auto& pair : headers) {
+        snprintf(buffer, sizeof(buffer), "%s: %s\n", pair.first.c_str(),
+                 pair.second.c_str());
+        str += buffer;
+    }
+
+    return str;
+}
+
+static std::string logRequestAndResponse(const httplib::Request& req,
+                                         const httplib::Response& res)
+{
+    std::string str;
+    char buffer[BUFSIZ];
+
+    // Request
+    str += COLOR_YELLOW "================================\n";
+
+    snprintf(buffer, sizeof(buffer), "%s %s %s", req.method.c_str(),
+             req.version.c_str(), req.path.c_str());
+    str += buffer;
+
+    std::string query;
+
+    for (auto it = req.params.begin(); it != req.params.end(); ++it) {
+        snprintf(buffer, sizeof(buffer), "%c%s=%s",
+                 (it == req.params.begin()) ? '?' : '&', it->first.c_str(),
+                 it->second.c_str());
+        query += buffer;
+    }
+
+    snprintf(buffer, sizeof(buffer), "%s\n", query.c_str());
+    str += buffer;
+    str += dumpHTTPHeaders(req.headers);
+
+    // Response
+    str += COLOR_GREEN "--------------------------------\n";
+
+    snprintf(buffer, sizeof(buffer), "%d %s\n", res.status,
+             res.version.c_str());
+    str += buffer;
+    str += dumpHTTPHeaders(res.headers);
+    str += "\n";
+
+    if (!res.body.empty()) {
+        str += res.body;
+    }
+    str += "\n";
+
+    return str;
+}
+
 CastApplication::CastApplication(httplib::Server* server,
                                  const std::string& appName)
 {
@@ -45,8 +102,17 @@ CastApplication::CastApplication(httplib::Server* server,
         snprintf(contentBuffer, CAST_APP_INFOR_BUFFER_SIZE,
                  CastConfig::templateCastAppInfo, appName.data(), "stopped");
 
+        CAST_SEND_LOG_IF_ALLOWED(4, "%s\n", contentBuffer);
+
         res.set_content(contentBuffer, strlen(contentBuffer), "test/xml");
     });
+
+#if !defined(NDEBUG)
+    server->set_logger([](const httplib::Request& req,
+                          const httplib::Response& res) {
+        CAST_LOG_IF_ALLOWED(3, "%s\n", logRequestAndResponse(req, res).c_str());
+    });
+#endif
 }
 
 } // namespace Starfish
