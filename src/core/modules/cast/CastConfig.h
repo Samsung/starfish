@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_CAST_SERVICE) && !defined(__StarfishCastConfig__)
 #define __StarfishCastConfig__
 
+#include "core/util/GlobalOptions.h"
+
 namespace Starfish {
 
 #define SSDP_GROUP "239.255.255.250"
@@ -43,6 +45,51 @@ public:
 private:
     String* m_localAddress{ String::emptyString };
 };
+
+#define LOG_ID "DEBUG_CAST"
+
+#define GETTIME()                                            \
+    std::chrono::duration<double>(                           \
+        std::chrono::system_clock::now().time_since_epoch()) \
+        .count()
+
+#define COLOR_RESET "\033[0m"
+#define COLOR_YELLOW "\033[0;33m"
+#define COLOR_RED "\033[31m"
+#define COLOR_GREEN "\033[32m"
+#define COLOR_MAGENTA "\033[35m"
+#define COLOR_CYAN "\033[36m"
+
+#if !defined(NDEBUG)
+
+#define FMTTIME(now, down) (now - (((int)(now / down)) * down))
+
+#define LOG_IF_ALLOWED(condition, fmt, ...)                    \
+    do {                                                       \
+        if (condition) {                                       \
+            auto now = GETTIME();                              \
+            STARFISH_LOG_INFO(fmt COLOR_RESET, ##__VA_ARGS__); \
+        }                                                      \
+    } while (0)
+
+#define CAST_LOG_IF_ALLOWED(lvl, fmt, ...)                                   \
+    LOG_IF_ALLOWED((GlobalOptions::instance().get<int>(LOG_ID) >= lvl), fmt, \
+                   ##__VA_ARGS__)
+
+#define CAST_SEND_LOG_IF_ALLOWED(lvl, fmt, ...) \
+    CAST_LOG_IF_ALLOWED(lvl, COLOR_GREEN fmt, ##__VA_ARGS__)
+
+#define CAST_RECV_LOG_IF_ALLOWED(lvl, fmt, ...) \
+    CAST_LOG_IF_ALLOWED(lvl, COLOR_YELLOW fmt, ##__VA_ARGS__)
+
+#else // else defined(NDEBUG)
+
+#define LOG_IF_ALLOWED(condition, fmt, ...)
+#define CAST_LOG_IF_ALLOWED(fmt, ...)
+#define CAST_SEND_LOG_IF_ALLOWED(lvl, fmt, ...)
+#define CAST_RECV_LOG_IF_ALLOWED(lvl, fmt, ...)
+
+#endif
 
 } // namespace Starfish
 

@@ -47,6 +47,13 @@ GlobalOptions::GlobalOptions()
     } else {
         set("DEBUG_CAST", 0);
     }
+
+    verbose = getenv("DEBUG_CAST_TARGET_IP");
+    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
+        set("DEBUG_CAST_TARGET_IP", verbose);
+    } else {
+        set("DEBUG_CAST_TARGET_IP", 0);
+    }
 #endif
 }
 
