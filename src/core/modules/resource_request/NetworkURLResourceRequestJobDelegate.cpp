@@ -954,8 +954,15 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                     nwd->needsToHandleError = true;
                 }
             }
-            request->m_lastEffectiveURL =
-                nwd->httpTransaction->httpResponse().lastEffectiveURL();
+            request->m_lastLocation =
+                nwd->httpTransaction->httpResponse().lastLocation();
+            if (request->m_lastLocation.size() > 0) {
+                char* effectiveURL = nwd->httpTransaction->effectiveURL();
+                if (effectiveURL != nullptr) {
+                    request->setLastEffectiveURL(effectiveURL);
+                }
+            }
+
             auto& headers =
                 request->m_responseHeaders->httpHeaderMap()->headerMap();
             // TODO : Refactor HTTPTransction using RequestData, ResponseData,
@@ -969,6 +976,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     } else if (nwd->httpTransaction->httpResponse()
                    .isRedirectionResponseStatus()) {
         request->m_responseData->m_redirected = true;
+        nwd->httpTransaction->updateLastLocationIfNeeds(rawHeader);
     }
 
     return realSize;

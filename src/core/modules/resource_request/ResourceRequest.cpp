@@ -81,6 +81,7 @@ ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
     , m_timeout(0)
     , m_activeNetworkURLWorkerData(nullptr)
     , m_mutex(new Mutex())
+    , m_lastLocation("")
     , m_lastEffectiveURL("")
     , m_jobDelegate(nullptr)
     , m_pendingOnHeaderReceivedEventIdlerHandle(MessageLoopInvalidID)
@@ -93,8 +94,10 @@ ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
+            // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest
+            // %p\n", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
+            std::string().swap(nr->m_lastLocation);
             std::string().swap(nr->m_lastEffectiveURL);
         },
         NULL, NULL, NULL);
@@ -107,6 +110,7 @@ void ResourceRequest::initVariables()
 {
     m_requestError = RequestErrorType::NoError;
     m_contentLanguage = String::emptyString;
+    std::string().swap(m_lastLocation);
     std::string().swap(m_lastEffectiveURL);
     m_containsBase64Content = false;
     m_didSend = false;
@@ -224,8 +228,16 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         }
 
         // TODO : https://fetch.spec.whatwg.org/#ref-for-concept-response-type
-        auto resURL = new ResourceURL(String::createASCIIString(
-            m_lastEffectiveURL.data(), m_lastEffectiveURL.size()));
+        ResourceURL* resURL = nullptr;
+        if (m_lastLocation == "") {
+            resURL = m_requestData->m_url;
+        } else {
+            resURL = new ResourceURL(
+                String::createASCIIString(m_lastLocation.data(),
+                                          m_lastLocation.size()),
+                String::createASCIIString(m_lastEffectiveURL.data(),
+                                          m_lastEffectiveURL.size()));
+        }
 
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
         if (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&

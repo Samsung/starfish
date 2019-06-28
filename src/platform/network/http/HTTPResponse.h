@@ -66,20 +66,20 @@ public:
         return m_responseTime;
     }
 
-    std::string lastEffectiveURL()
+    std::string lastLocation()
     {
-        return m_lastEffectiveURL;
+        return m_lastLocation;
     }
 
-    void setLastEffectiveURL(const std::string& url)
+    void setLastLocation(const std::string& url)
     {
-        m_lastEffectiveURL = url;
+        m_lastLocation = url;
     }
 
 private:
     long m_responseCode;
     std::string m_reasonPhrase;
-    std::string m_lastEffectiveURL;
+    std::string m_lastLocation;
     HTTPHeaderMap m_headers;
     EntityBody m_entityBody;
     int64_t m_responseTime;

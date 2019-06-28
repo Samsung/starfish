@@ -691,6 +691,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_urlString = String::fromStringView(m_urlString);
     }
 
+    m_baseURL = baseURL;
+
     // protocol
     if (m_urlString->startsWith("file", false)) {
         m_protocol = FILE_PROTOCOL;

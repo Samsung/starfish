@@ -252,9 +252,8 @@ public:
             auto csp = request->executionContext()
                            ->document()
                            ->contentSecurityPolicy();
-            auto resourceURL =
-                new ResourceURL(request->lastEffectiveURL().data(),
-                                request->lastEffectiveURL().size());
+            auto resourceURL = new ResourceURL(request->lastLocation().data(),
+                                               request->lastLocation().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
                 executionContext->document()->dispatchEventByUA(event);

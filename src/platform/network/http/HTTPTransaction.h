@@ -66,7 +66,9 @@ public:
         return *m_httpResponse;
     }
     void updateTransactionStatus();
+    void updateLastLocationIfNeeds(const std::string& header);
     void didReceiveHeader(const std::string& header);
+    char* effectiveURL();
 
     void setTimeout(const long timeout)
     {
