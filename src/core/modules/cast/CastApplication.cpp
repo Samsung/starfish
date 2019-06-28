@@ -86,26 +86,61 @@ static std::string logRequestAndResponse(const httplib::Request& req,
     return str;
 }
 
-CastApplication::CastApplication(httplib::Server* server,
-                                 const std::string& appName)
+CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
+                                 const std::string& appName,
+                                 const std::string& launch)
+    : m_config(config)
+    , m_appName(appName)
+    , m_launch(launch)
+    , m_isRunning(false)
 {
-    STARFISH_ASSERT(server != nullptr);
-
     char appPathBuffer[CAST_APP_INFOR_BUFFER_SIZE];
     snprintf(appPathBuffer, CAST_APP_INFOR_BUFFER_SIZE, "/apps/%s",
              appName.data());
-    server->Get(appPathBuffer, [appName](const httplib::Request& req,
-                                         httplib::Response& res) {
-        STARFISH_LOG_INFO("CAST - GET:/apps/%s\n", appName.data());
 
+    server->Get(appPathBuffer, [this](const httplib::Request& req,
+                                      httplib::Response& res) {
+        CAST_LOG_IF_ALLOWED(3, "CAST - GET:/apps/%s\n", m_appName.data());
+
+        const char* status = m_isRunning ? "running" : "stopped";
         char contentBuffer[CAST_APP_INFOR_BUFFER_SIZE];
         snprintf(contentBuffer, CAST_APP_INFOR_BUFFER_SIZE,
-                 CastConfig::templateCastAppInfo, appName.data(), "stopped");
+                 CastConfig::templateCastAppInfo, m_appName.data(), status);
 
         CAST_SEND_LOG_IF_ALLOWED(4, "%s\n", contentBuffer);
 
         res.set_content(contentBuffer, strlen(contentBuffer), "test/xml");
     });
+
+    server->Post(appPathBuffer, [this](const httplib::Request& req,
+                                       httplib::Response& res) {
+        CAST_LOG_IF_ALLOWED(3, "CAST - POST:/apps/%s\n", m_appName.data());
+
+        m_isRunning = true;
+        char buffer[CAST_APP_INFOR_BUFFER_SIZE];
+        snprintf(buffer, CAST_APP_INFOR_BUFFER_SIZE, "http://%s:%d/apps/%s/run",
+                 m_config->localAddress()->toUTF8NonGCString().data(),
+                 LOCATION_PORT, m_appName.data());
+        res.status = 201;
+        res.set_header("LOCATION", buffer);
+        res.set_content(buffer, "text/html");
+
+        if (req.has_param("v") && req.has_param("pairingCode")) {
+            // TODO: Launch app
+            CAST_LOG_IF_ALLOWED(3, "v: %s\n", req.get_param_value("v").data());
+        }
+    });
+
+    char appRunPathBuffer[CAST_APP_INFOR_BUFFER_SIZE];
+    snprintf(appRunPathBuffer, CAST_APP_INFOR_BUFFER_SIZE, "/apps/%s/run",
+             appName.data());
+
+    server->Delete(appRunPathBuffer,
+                   [this](const httplib::Request& req, httplib::Response& res) {
+                       CAST_LOG_IF_ALLOWED(3, "CAST - Delete\n");
+                       m_isRunning = false;
+                       res.status = 200;
+                   });
 
 #if !defined(NDEBUG)
     server->set_logger([](const httplib::Request& req,

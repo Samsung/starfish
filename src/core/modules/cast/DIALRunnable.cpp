@@ -58,7 +58,8 @@ bool DIALRunnable::doRun()
                         "text/xml");
     });
 
-    CastApplication youtubeApp(m_server, std::string("YouTube"));
+    CastApplication youtubeApp(m_server, m_config, std::string("YouTube"),
+                               std::string("http://www.youtube.com/tv?%s"));
 
 #if !defined(NDEBUG)
     m_server->Get(R"(/(.*))",
