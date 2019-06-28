@@ -216,9 +216,19 @@ public:
         return m_contentLanguage;
     }
 
+    std::string lastLocation()
+    {
+        return m_lastLocation;
+    }
+
     std::string lastEffectiveURL()
     {
         return m_lastEffectiveURL;
+    }
+
+    void setLastEffectiveURL(char* effectiveURL)
+    {
+        m_lastEffectiveURL = effectiveURL;
     }
 
     void addResourceRequestClient(ResourceRequestClient* client)
@@ -419,6 +429,7 @@ protected:
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;
     String* m_contentLanguage;
+    std::string m_lastLocation;
     std::string m_lastEffectiveURL;
 
     GCVector<size_t> m_requstedIdlers;

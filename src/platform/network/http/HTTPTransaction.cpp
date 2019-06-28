@@ -239,14 +239,33 @@ void HTTPTransaction::updateTransactionStatus()
         long responseCode;
         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
         m_httpResponse->setResponseCode(responseCode);
+    }
+}
 
-        char* LastEffectiveURL = nullptr;
-        curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
-        if (LastEffectiveURL) {
-            // Do not free
-            m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
+void HTTPTransaction::updateLastLocationIfNeeds(const std::string& header)
+{
+    size_t pos = header.find(":");
+    if (pos != std::string::npos) {
+        std::string key = header.substr(0, pos);
+        std::string value = header.substr(pos + 1);
+
+        StringUtils::trim(key);
+        StringUtils::trim(value);
+
+        std::string converted = HTTPUtil::tryToConvertToHeaderMapString(key);
+        if (converted == HTTPHeaderMap::kLocation) {
+            m_httpResponse->setLastLocation(value);
         }
     }
+}
+
+char* HTTPTransaction::effectiveURL()
+{
+    char* effectiveURL = nullptr;
+    if (m_curl) {
+        curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &effectiveURL);
+    }
+    return effectiveURL;
 }
 
 void HTTPTransaction::registerCurlHandlers()

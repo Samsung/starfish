@@ -203,8 +203,8 @@ public:
         if (request->isRedirected()) {
             auto csp = browsingContext->document()->contentSecurityPolicy();
             auto resourceURL =
-                new ResourceURL(request->lastEffectiveURL().data(),
-                                request->lastEffectiveURL().size());
+                new ResourceURL(request->lastLocation().data(),
+                                request->lastLocation().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
                 STARFISH_ASSERT(event != nullptr);
@@ -400,11 +400,22 @@ public:
             m_builder.document()->setContentLanguage(contentLanguage);
         }
 
-        if (!(m_resource->resourceRequest()->lastEffectiveURL() == "")) {
+        if (!(m_resource->resourceRequest()->lastLocation() == "")) {
             // Change documentURI and last history when request was redirected.
-            ResourceURL* newURL = new ResourceURL(String::createASCIIString(
+            ResourceURL* newURL = nullptr;
+            auto newURLString = String::createASCIIString(
+                m_resource->resourceRequest()->lastLocation().data(),
+                m_resource->resourceRequest()->lastLocation().size());
+
+            if (ResourceURL::isValidURL(newURLString) == false) {
+                auto baseURLString = String::createASCIIString(
                 m_resource->resourceRequest()->lastEffectiveURL().data(),
-                m_resource->resourceRequest()->lastEffectiveURL().size()));
+                m_resource->resourceRequest()->lastEffectiveURL().size());
+                newURL = new ResourceURL(newURLString, baseURLString);
+            } else {
+                newURL = new ResourceURL(newURLString);
+            }
+
             m_builder.document()->setDocumentURI(newURL);
             m_builder.document()->setBaseURL(newURL);
             m_builder.document()->setWebOrigin(
