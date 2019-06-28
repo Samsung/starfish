@@ -31,7 +31,14 @@ class CastConfig;
 
 class CastApplication {
 public:
-    CastApplication(httplib::Server* server, const std::string& appName);
+    CastApplication(httplib::Server* server, CastConfig* config,
+                    const std::string& appName, const std::string& launch);
+
+private:
+    CastConfig* m_config;
+    std::string m_appName;
+    std::string m_launch;
+    std::atomic_bool m_isRunning;
 };
 
 } // namespace Starfish
