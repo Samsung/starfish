@@ -34,6 +34,7 @@ class NativeImageData;
 class PlatformWindow;
 class NativeGradient;
 class Path;
+class ShadowData;
 
 struct GradientDrawingInfo;
 
@@ -129,9 +130,9 @@ public:
     bool m_imageSmoothingEnabled;
     ImageSmoothingQuality m_imageSmoothingQuality;
     size_t m_canvasFontState;
-
     bool m_visible;
     bool m_hasNonInvertableCTM;
+    ShadowData* m_shadowData;
 
 protected:
     CanvasState();
@@ -309,6 +310,15 @@ public:
     virtual void setLineJoin(CanvasLineJoin lineJoin) = 0;
     virtual double miterLimit() = 0;
     virtual void setMiterLimit(double limit) = 0;
+
+    virtual double shadowOffsetX() = 0;
+    virtual void setShadowOffsetX(double offset) = 0;
+    virtual double shadowOffsetY() = 0;
+    virtual void setShadowOffsetY(double offset) = 0;
+    virtual double shadowBlur() = 0;
+    virtual void setShadowBlur(double blur) = 0;
+    virtual Unit::Color shadowColor() = 0;
+    virtual void setShadowColor(const Unit::Color& color) = 0;
 
     virtual bool imageSmoothingEnabled() = 0;
     virtual void setImageSmoothingEnabled(bool value) = 0;

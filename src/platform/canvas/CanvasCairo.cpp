@@ -594,6 +594,7 @@ public:
             state->m_imageSmoothingEnabled = lastState->m_imageSmoothingEnabled;
             state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
             state->m_canvasFontState = lastState->m_canvasFontState;
+            state->m_shadowData = lastState->m_shadowData;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -1648,6 +1649,46 @@ public:
     virtual void setMiterLimit(double limit) override
     {
         cairo_set_miter_limit(m_canvas, limit);
+    }
+
+    virtual double shadowOffsetX() override
+    {
+        return lastState()->m_shadowData->offsetX().fixed();
+    }
+
+    virtual void setShadowOffsetX(double offset) override
+    {
+        lastState()->m_shadowData->setOffsetX(Length(Length::Fixed, offset));
+    }
+
+    virtual double shadowOffsetY() override
+    {
+        return lastState()->m_shadowData->offsetY().fixed();
+    }
+
+    virtual void setShadowOffsetY(double offset) override
+    {
+        lastState()->m_shadowData->setOffsetY(Length(Length::Fixed, offset));
+    }
+
+    virtual double shadowBlur() override
+    {
+        return lastState()->m_shadowData->radius().fixed();
+    }
+
+    virtual void setShadowBlur(double blur) override
+    {
+        lastState()->m_shadowData->setRadius(Length(Length::Fixed, blur));
+    }
+
+    virtual Unit::Color shadowColor() override
+    {
+        return lastState()->m_shadowData->color();
+    }
+
+    virtual void setShadowColor(const Unit::Color& color) override
+    {
+        lastState()->m_shadowData->setColor(color);
     }
 
     virtual bool imageSmoothingEnabled() override

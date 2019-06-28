@@ -370,6 +370,42 @@ public:
     {
     }
 
+    virtual double shadowOffsetX()
+    {
+        return 0;
+    }
+
+    virtual void setShadowOffsetX(double offset)
+    {
+    }
+
+    virtual double shadowOffsetY()
+    {
+        return 0;
+    }
+
+    virtual void setShadowOffsetY(double offset)
+    {
+    }
+
+    virtual double shadowBlur()
+    {
+        return 0;
+    }
+
+    virtual void setShadowBlur(double blur)
+    {
+    }
+
+    virtual Unit::Color shadowColor() override
+    {
+        return Unit::Color();
+    }
+
+    virtual void setShadowColor(const Unit::Color& color) override
+    {
+    }
+
     virtual bool imageSmoothingEnabled()
     {
         return false;

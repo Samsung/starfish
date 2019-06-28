@@ -402,6 +402,10 @@ void CanvasRenderingContext2DMixIn::initialize()
     setImageSmoothingEnabled(true);                       // defauilt true
     setImageSmoothingQuality(ImageSmoothingQuality::Low); // default low
     setFont(String::fromUTF8("10px sans-serif"));         // default font
+    setShadowOffsetX(0);
+    setShadowOffsetY(0);
+    setShadowBlur(0);
+    setShadowColor(String::fromUTF8("transparent black"));
 
     m_canvas->setFillColor(black);
     m_canvas->setStrokeColor(black);
@@ -878,6 +882,59 @@ CanvasPattern* CanvasRenderingContext2DMixIn::createPattern(
     }
 
     return ret;
+}
+
+double CanvasRenderingContext2DMixIn::shadowOffsetX()
+{
+    return m_canvas->shadowOffsetX();
+}
+
+void CanvasRenderingContext2DMixIn::setShadowOffsetX(double offset)
+{
+    if (isInfOrNan(offset)) {
+        return;
+    }
+    m_canvas->setShadowOffsetX(offset);
+}
+
+double CanvasRenderingContext2DMixIn::shadowOffsetY()
+{
+    return m_canvas->shadowOffsetY();
+}
+
+void CanvasRenderingContext2DMixIn::setShadowOffsetY(double offset)
+{
+    if (isInfOrNan(offset)) {
+        return;
+    }
+    m_canvas->setShadowOffsetY(offset);
+}
+
+double CanvasRenderingContext2DMixIn::shadowBlur()
+{
+    return m_canvas->shadowBlur();
+}
+
+void CanvasRenderingContext2DMixIn::setShadowBlur(double blur)
+{
+    if (isInfOrNan(blur) || blur < 0) {
+        return;
+    }
+    m_canvas->setShadowBlur(blur);
+}
+
+String* CanvasRenderingContext2DMixIn::shadowColor()
+{
+    return m_canvas->shadowColor().toHTMLColorCodeString();
+}
+
+void CanvasRenderingContext2DMixIn::setShadowColor(String* colorStr)
+{
+    Unit::Color color;
+    if (stringToColor(colorStr, color) == true) {
+        m_canvas->setFillColor(color);
+    }
+    m_canvas->setShadowColor(color);
 }
 
 String* CanvasRenderingContext2DMixIn::filter()
@@ -1988,8 +2045,10 @@ CanvasRenderingContext2DMixIn::checkUsabilityOfCanvasImageSource(
                                     "with a width or height of 0.");
         }
         return true;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     } else if (image.isHTMLVideoElementValue() == true) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
     } else {
         STARFISH_ASSERT(image.isNoneValue() == true);
         return new DOMException(

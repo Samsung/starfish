@@ -1110,6 +1110,50 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
+    virtual double shadowOffsetX()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 0;
+    }
+
+    virtual void setShadowOffsetX(double offset)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual double shadowOffsetY()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 0;
+    }
+
+    virtual void setShadowOffsetY(double offset)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual double shadowBlur()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 0;
+    }
+
+    virtual void setShadowBlur(double blur)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual Unit::Color shadowColor() override
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return Unit::Color();
+    }
+
+    virtual void setShadowColor(const Unit::Color& color) override
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual bool imageSmoothingEnabled()
     {
         return lastState().m_imageSmoothingEnabled;
