@@ -117,6 +117,14 @@ public:
     CanvasPattern* createPattern(CanvasImageSource image, String* repetition);
 
     // CanvasShadowStyles
+    double shadowOffsetX();
+    void setShadowOffsetX(double offset);
+    double shadowOffsetY();
+    void setShadowOffsetY(double offset);
+    double shadowBlur();
+    void setShadowBlur(double blur);
+    String* shadowColor();
+    void setShadowColor(String* color);
 
     // CanvasFilters
     String* filter();

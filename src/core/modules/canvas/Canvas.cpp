@@ -284,6 +284,7 @@ CanvasState::CanvasState()
     , m_canvasFontState(0)
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
+    , m_shadowData(new ShadowData())
 {
 }
 }
