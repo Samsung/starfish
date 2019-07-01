@@ -392,6 +392,11 @@ namespace Unit {
             return m_a == 0;
         }
 
+        bool hasAlpha()
+        {
+            return m_a != 255;
+        }
+
         String* toString() const;
         String* toHTMLColorCodeString() const;
 
