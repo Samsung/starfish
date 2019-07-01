@@ -973,11 +973,73 @@ public:
     static bool parseNonNamedColor(const CSSTokenValue& str,
                                    CSSStyleValuePair* pair)
     {
-        bool maybeRGBA = str.startsWith("rgba(");
-        bool maybeRGB = str.startsWith("rgb(");
-        bool maybeCode = str.startsWith("#");
-        bool maybeHSL = str.startsWith("hsl(");
-        bool maybeHSLA = str.startsWith("hsla(");
+        bool maybeRGBA = true;
+        bool maybeRGB = true;
+        bool maybeCode = true;
+        bool maybeHSL = true;
+        bool maybeHSLA = true;
+        size_t idx = 0;
+        for (std::string::const_iterator it = str.begin(); it != str.end();
+             ++it) {
+            if (idx == 0 && *it != '#') {
+                maybeCode = false;
+            }
+            if (idx == 0) {
+                if (*it != 'r' && *it != 'R') {
+                    maybeRGBA = false;
+                    maybeRGB = false;
+                } else if (*it != 'h' && *it != 'H') {
+                    maybeHSL = false;
+                    maybeHSLA = false;
+                }
+            } else if (idx == 1) {
+                if (maybeRGB && maybeRGBA && *it != 'g' && *it != 'G') {
+                    maybeRGBA = false;
+                    maybeRGB = false;
+                } else if (maybeHSL && maybeHSLA && *it != 's' && *it != 'S') {
+                    maybeHSL = false;
+                    maybeHSLA = false;
+                }
+            } else if (idx == 2) {
+                if (maybeRGB && maybeRGBA && *it != 'b' && *it != 'B') {
+                    maybeRGBA = false;
+                    maybeRGB = false;
+                } else if (maybeHSL && maybeHSLA && *it != 'l' && *it != 'L') {
+                    maybeHSL = false;
+                    maybeHSLA = false;
+                }
+            } else if (idx == 3) {
+                if (maybeRGB && *it != '(') {
+                    maybeRGB = false;
+                } else {
+                    maybeRGBA = false;
+                }
+                if (maybeRGBA && *it != 'a' && *it != 'A') {
+                    maybeRGBA = false;
+                }
+                if (maybeHSL && *it != '(') {
+                    maybeHSL = false;
+                } else {
+                    maybeHSLA = false;
+                }
+                if (maybeHSLA && *it != 'a' && *it != 'A') {
+                    maybeHSLA = false;
+                }
+            } else if (idx == 4) {
+                if (maybeRGBA && *it != '(') {
+                    maybeRGBA = false;
+                }
+                if (maybeHSLA && *it != '(') {
+                    maybeHSLA = false;
+                }
+            } else {
+                break;
+            }
+            idx++;
+        }
+        if (idx == 0) {
+            maybeRGBA = maybeRGB = maybeCode = maybeHSL = maybeHSLA = false;
+        }
 
         if (maybeRGBA || maybeRGB || maybeHSL || maybeHSLA) {
             size_t s1 = str.indexOf('(');
@@ -1046,6 +1108,7 @@ public:
 
                 pair->setColorValue(Unit::Color(parsed[0], parsed[1], parsed[2],
                                                 hasAlpha ? parsed[3] : 255));
+
             } else { // HSL or HSLA
                 // parse hue in angle. <number> | <angle>
                 double hue = 0;

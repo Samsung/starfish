@@ -925,16 +925,20 @@ void CanvasRenderingContext2DMixIn::setShadowBlur(double blur)
 
 String* CanvasRenderingContext2DMixIn::shadowColor()
 {
-    return m_canvas->shadowColor().toHTMLColorCodeString();
+    // https://html.spec.whatwg.org/multipage/canvas.html#serialisation-of-a-color
+    Unit::Color sColor = m_canvas->shadowColor();
+    if (sColor.hasAlpha()) {
+        return sColor.toString();
+    }
+    return sColor.toHTMLColorCodeString();
 }
 
 void CanvasRenderingContext2DMixIn::setShadowColor(String* colorStr)
 {
     Unit::Color color;
     if (stringToColor(colorStr, color) == true) {
-        m_canvas->setFillColor(color);
+        m_canvas->setShadowColor(color);
     }
-    m_canvas->setShadowColor(color);
 }
 
 String* CanvasRenderingContext2DMixIn::filter()
