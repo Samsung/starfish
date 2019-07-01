@@ -141,6 +141,11 @@ public:
     }
 };
 
+size_t Compositor::maximumTextureSize()
+{
+    return 65535;
+}
+
 Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {

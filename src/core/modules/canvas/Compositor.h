@@ -50,6 +50,7 @@ public:
     static CompositorContext* initCompositorContext(PlatformWindow* wnd);
     static void destroyCompositorContext(PlatformWindow* wnd,
                                          CompositorContext* ctx);
+    static size_t maximumTextureSize();
 
     virtual ~Compositor()
     {
