@@ -538,6 +538,20 @@ inline static GLenum textureFormat()
     return kind;
 }
 
+struct CanvasSurfaceTextureInfo {
+    struct CanvasSurfaceTextureInfoFragment {
+        size_t textureID;
+        size_t textureWidth;
+        size_t textureHeight;
+        float srcX;      // [0~1]
+        float srcY;      // [0~1]
+        float srcWidth;  // [0~1]
+        float srcHeight; // [0~1]
+    };
+
+    std::vector<CanvasSurfaceTextureInfoFragment> fragments;
+};
+
 class CompositorContextGL : public CompositorContext {
 public:
     GLuint m_rectVertexShader;
@@ -731,15 +745,15 @@ public:
             m_cachedTextures);
     }
 
-    void removeGenericTexture(GLuint textureID, size_t textureDataWidth,
-                              size_t textureDataHeight)
+    void putGenericTextureToCache(GLuint textureID, size_t textureDataWidth,
+                                  size_t textureDataHeight)
     {
         m_cachedTextures.push_back(
             std::make_tuple(textureDataWidth, textureDataHeight, textureID));
     }
 
-    GLuint generateGenericTexture(size_t textureDataWidth,
-                                  size_t textureDataHeight)
+    GLuint takeGenericTextureFromCache(size_t textureDataWidth,
+                                       size_t textureDataHeight)
     {
         for (size_t i = 0; i < m_cachedTextures.size(); i++) {
             if (std::get<0>(m_cachedTextures[i]) == textureDataWidth &&
@@ -749,34 +763,7 @@ public:
                 return textureID;
             }
         }
-        GLuint textureID;
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        checkError();
-
-        glTexImage2D(GL_TEXTURE_2D, 0, textureFormat(), textureDataWidth,
-                     textureDataHeight, 0, textureFormat(), GL_UNSIGNED_BYTE,
-                     nullptr);
-        checkError();
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-#if defined(PORT_PIXEL_ORDER_BGRA)
-        if (g_isSupportTextureSwizzle) {
-            GLint swizzleMask[] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
-            glTexParameteriv(GL_TEXTURE_2D, TEXTURE_SWIZZLE_RGBA, swizzleMask);
-        }
-#endif
-
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        checkError();
-
-        return textureID;
+        return 0;
     }
 
     virtual void willRendering() override
@@ -1411,6 +1398,12 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
     return compositorContext;
 }
 
+size_t Compositor::maximumTextureSize()
+{
+    STARFISH_RELEASE_ASSERT(!g_needsCheckCompatibility);
+    return g_maxTextureSize;
+}
+
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h,
@@ -1510,7 +1503,7 @@ public:
                     CompositorContextGL* ctx =
                         (CompositorContextGL*)m_window->compostiorContext();
                     if (ctx) {
-                        ctx->removeGenericTexture(
+                        ctx->putGenericTextureToCache(
                             id, m_textureFragments[i].textureWidth,
                             m_textureFragments[i].textureHeight);
                     } else {
@@ -1734,8 +1727,6 @@ public:
         for (size_t y = 0; y < m_hTextureCount; y++) {
             size_t coveredColsCount = 0;
             for (size_t x = 0; x < m_wTextureCount; x++) {
-                GLuint textureID;
-
                 size_t texureDataX = coveredColsCount;
                 size_t texureDataY = coveredRowsCount;
                 size_t texureDataWidth =
@@ -1750,13 +1741,9 @@ public:
                     texureDataHeight = m_bufferHeight;
                 }
 
-                textureID =
-                    ((CompositorContextGL*)m_window->compostiorContext())
-                        ->generateGenericTexture(texureDataWidth,
-                                                 texureDataHeight);
                 CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
                     fragment;
-                fragment.textureID = textureID;
+                fragment.textureID = 0;
                 fragment.textureWidth = texureDataWidth;
                 fragment.textureHeight = texureDataHeight;
                 fragment.srcX = texureDataX / (float)m_bufferWidth;
@@ -1920,18 +1907,62 @@ public:
                         size_t yyEnd = bottom;
 
                         if (((xxEnd - xx) > 0) && ((yyEnd - yy) > 0)) {
-                            GLuint tid =
-                                (GLuint)m_textureFragments[fragmentIndex]
-                                    .textureID;
                             LongTaskFinder t("update texture tile..", 1);
+
+                            if (fragment.textureID == 0) {
+                                CompositorContextGL* ctx =
+                                    (CompositorContextGL*)
+                                        m_window->compostiorContext();
+                                if (ctx) {
+                                    fragment.textureID =
+                                        ctx->takeGenericTextureFromCache(
+                                            fragment.textureWidth,
+                                            fragment.textureHeight);
+                                }
+                            }
+
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+                            bool textureJustCreated = false;
+                            if (fragment.textureID == 0) {
+                                textureJustCreated = true;
+                                glGenTextures(1, (GLuint*)&fragment.textureID);
+                                glBindTexture(GL_TEXTURE_2D,
+                                              fragment.textureID);
+                                checkError();
+
+                                glTexParameteri(GL_TEXTURE_2D,
+                                                GL_TEXTURE_MIN_FILTER,
+                                                GL_LINEAR);
+                                glTexParameteri(GL_TEXTURE_2D,
+                                                GL_TEXTURE_MAG_FILTER,
+                                                GL_LINEAR);
+
+                                glTexParameteri(GL_TEXTURE_2D,
+                                                GL_TEXTURE_WRAP_S,
+                                                GL_CLAMP_TO_EDGE);
+                                glTexParameteri(GL_TEXTURE_2D,
+                                                GL_TEXTURE_WRAP_T,
+                                                GL_CLAMP_TO_EDGE);
+
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                                if (g_isSupportTextureSwizzle) {
+                                    GLint swizzleMask[] = { GL_BLUE, GL_GREEN,
+                                                            GL_RED, GL_ALPHA };
+                                    glTexParameteriv(GL_TEXTURE_2D,
+                                                     TEXTURE_SWIZZLE_RGBA,
+                                                     swizzleMask);
+                                }
+#endif
+                            }
+
                             auto bData = m_buffer;
                             auto bStride = bufferStride();
+                            auto kind = textureFormat();
 
-                            glBindTexture(GL_TEXTURE_2D, tid);
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                            glBindTexture(GL_TEXTURE_2D, fragment.textureID);
                             checkError();
 
-                            auto kind = textureFormat();
                             if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
                                 glPixelStorei(GL_UNPACK_ROW_LENGTH,
                                               bufferWidth());
@@ -1941,14 +1972,29 @@ public:
                                 auto data = bData;
                                 data += textureDataY * bStride;
                                 data += textureDataX * 4;
-                                glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                xxEnd - xx, yyEnd - yy, kind,
-                                                GL_UNSIGNED_BYTE, data);
+                                if (textureJustCreated) {
+                                    glTexImage2D(GL_TEXTURE_2D, 0, kind,
+                                                 fragment.textureWidth,
+                                                 fragment.textureHeight, 0,
+                                                 kind, GL_UNSIGNED_BYTE, data);
+                                } else {
+                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
+                                                    xxEnd - xx, yyEnd - yy,
+                                                    kind, GL_UNSIGNED_BYTE,
+                                                    data);
+                                }
 
                                 glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
                                 glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
                                 glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
                             } else {
+                                if (textureJustCreated) {
+                                    glTexImage2D(GL_TEXTURE_2D, 0, kind,
+                                                 fragment.textureWidth,
+                                                 fragment.textureHeight, 0,
+                                                 kind, GL_UNSIGNED_BYTE,
+                                                 nullptr);
+                                }
                                 for (; yy < yyEnd; yy++) {
                                     auto data = bData;
                                     data += ((yy + textureDataY) * bStride);
@@ -1977,16 +2023,6 @@ public:
             free(m_buffer);
             m_buffer = nullptr;
         }
-    }
-
-    virtual CanvasSurfaceTextureInfo textureInfo() override
-    {
-        CanvasSurfaceTextureInfo info;
-        info.fragments = std::vector<
-            CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>(
-            m_textureFragments.data(),
-            m_textureFragments.data() + m_textureFragments.size());
-        return info;
     }
 
     virtual void attachPlatformExternalBuffer(void* buffer) override
@@ -2672,7 +2708,8 @@ public:
             checkError();
         }
 
-        glDeleteTextures(1, &fboTex);
+        m_compositorContext->putGenericTextureToCache(fboTex, textureWidth,
+                                                      textureHeight);
         checkError();
     }
 
@@ -2790,15 +2827,13 @@ public:
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst) override
     {
-        STARFISH_ASSERT(cs != nullptr);
-
         INSTALL_PROFILE_TIMER("CompositorGL::drawSurface");
-        auto textureInfo = cs->textureInfo();
-        if (textureInfo.fragments.size() == 0) {
-            return;
-        }
 
         CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
+        auto& textureInfo = csGL->m_textureFragments;
+        if (textureInfo.size() == 0) {
+            return;
+        }
 
         auto& lastState = m_state.back();
 
@@ -3039,67 +3074,69 @@ public:
                 for (size_t y = 0; y < csGL->hTextureCount(); y++) {
                     size_t coveredColsCount = 0;
                     for (size_t x = 0; x < csGL->wTextureCount(); x++) {
-                        auto& fragment = textureInfo.fragments[i];
+                        auto& fragment = textureInfo[i];
 
-                        size_t texureDataX = coveredColsCount;
-                        size_t texureDataY = coveredRowsCount;
-                        size_t texureDataWidth = fragment.textureWidth;
-                        size_t texureDataHeight = fragment.textureHeight;
+                        if (fragment.textureID) {
+                            size_t texureDataX = coveredColsCount;
+                            size_t texureDataY = coveredRowsCount;
+                            size_t texureDataWidth = fragment.textureWidth;
+                            size_t texureDataHeight = fragment.textureHeight;
 
-                        float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
+                            float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-                        float oldW = dst.width();
-                        float oldH = dst.height();
-                        Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
-                                          oldH * fragment.srcY + dst.y(),
-                                          oldW * fragment.srcWidth,
-                                          oldH * fragment.srcHeight);
+                            float oldW = dst.width();
+                            float oldH = dst.height();
+                            Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
+                                              oldH * fragment.srcY + dst.y(),
+                                              oldW * fragment.srcWidth,
+                                              oldH * fragment.srcHeight);
 
-                        SkPoint pt;
-                        pt = SkPoint::Make(newDst.x(), newDst.y());
+                            SkPoint pt;
+                            pt = SkPoint::Make(newDst.x(), newDst.y());
 
-                        lastState.matrix.mapPoints(&pt, 1);
-                        newDest[0][0] = pt.x();
-                        newDest[0][1] = pt.y();
+                            lastState.matrix.mapPoints(&pt, 1);
+                            newDest[0][0] = pt.x();
+                            newDest[0][1] = pt.y();
 
-                        pt = SkPoint::Make(newDst.x(), newDst.maxY());
-                        lastState.matrix.mapPoints(&pt, 1);
-                        newDest[1][0] = pt.x();
-                        newDest[1][1] = pt.y();
+                            pt = SkPoint::Make(newDst.x(), newDst.maxY());
+                            lastState.matrix.mapPoints(&pt, 1);
+                            newDest[1][0] = pt.x();
+                            newDest[1][1] = pt.y();
 
-                        pt = SkPoint::Make(newDst.maxX(), newDst.y());
-                        lastState.matrix.mapPoints(&pt, 1);
-                        newDest[2][0] = pt.x();
-                        newDest[2][1] = pt.y();
+                            pt = SkPoint::Make(newDst.maxX(), newDst.y());
+                            lastState.matrix.mapPoints(&pt, 1);
+                            newDest[2][0] = pt.x();
+                            newDest[2][1] = pt.y();
 
-                        pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
-                        lastState.matrix.mapPoints(&pt, 1);
-                        newDest[3][0] = pt.x();
-                        newDest[3][1] = pt.y();
+                            pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
+                            lastState.matrix.mapPoints(&pt, 1);
+                            newDest[3][0] = pt.x();
+                            newDest[3][1] = pt.y();
 
-                        float minX = newDest[0][0], minY = newDest[0][1],
-                              maxX = newDest[0][0], maxY = newDest[0][1];
+                            float minX = newDest[0][0], minY = newDest[0][1],
+                                  maxX = newDest[0][0], maxY = newDest[0][1];
 
-                        for (size_t i = 1; i < 4; i++) {
-                            minX = std::min(newDest[i][0], minX);
-                            minY = std::min(newDest[i][1], minY);
-                            maxX = std::max(newDest[i][0], maxX);
-                            maxY = std::max(newDest[i][1], maxY);
-                        }
+                            for (size_t i = 1; i < 4; i++) {
+                                minX = std::min(newDest[i][0], minX);
+                                minY = std::min(newDest[i][1], minY);
+                                maxX = std::max(newDest[i][0], maxX);
+                                maxY = std::max(newDest[i][1], maxY);
+                            }
 
-                        Unit::Rect screenBoundingRect(minX, minY,
-                                                      std::abs(maxX - minX),
-                                                      std::abs(maxY - minY));
+                            Unit::Rect screenBoundingRect(
+                                minX, minY, std::abs(maxX - minX),
+                                std::abs(maxY - minY));
 
-                        if (screenBoundingRect.intersects(visibleArea)) {
-                            GLuint tid = (GLuint)fragment.textureID;
-                            float texPosition[8];
-                            computeTexturePosition(newDst, ctm, screenMatrix,
-                                                   screenWidth, screenHeight,
-                                                   texPosition);
-                            drawTexture(csGL, texPosition, tid, GL_TEXTURE_2D,
-                                        GL_TEXTURE0, texureDataWidth,
-                                        texureDataHeight);
+                            if (screenBoundingRect.intersects(visibleArea)) {
+                                GLuint tid = (GLuint)fragment.textureID;
+                                float texPosition[8];
+                                computeTexturePosition(
+                                    newDst, ctm, screenMatrix, screenWidth,
+                                    screenHeight, texPosition);
+                                drawTexture(csGL, texPosition, tid,
+                                            GL_TEXTURE_2D, GL_TEXTURE0,
+                                            texureDataWidth, texureDataHeight);
+                            }
                         }
                         i++;
                         coveredColsCount += csGL->textureTileSize();
@@ -3171,7 +3208,9 @@ public:
                 if (errChk == 1286) {
                     STARFISH_LOG_ERROR("fbo stencil clipping got error 1286\n");
                 }
-                glDeleteTextures(1, &fboTex);
+
+                m_compositorContext->putGenericTextureToCache(
+                    fboTex, visibleArea.width(), visibleArea.height());
             }
         }
         if (scissorClippingEnabled) {
@@ -3333,8 +3372,12 @@ public:
         checkError();
 
         // generate texture
-        glGenTextures(1, &newFBOState.fboTex);
-        checkError();
+        newFBOState.fboTex =
+            m_compositorContext->takeGenericTextureFromCache(width, height);
+        if (newFBOState.fboTex == 0) {
+            glGenTextures(1, &newFBOState.fboTex);
+            checkError();
+        }
 
         // generate render buffer
         glGenRenderbuffers(1, &newFBOState.renderBufferId);

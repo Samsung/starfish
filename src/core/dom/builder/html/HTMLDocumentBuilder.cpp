@@ -202,9 +202,8 @@ public:
         auto request = m_resource->resourceRequest();
         if (request->isRedirected()) {
             auto csp = browsingContext->document()->contentSecurityPolicy();
-            auto resourceURL =
-                new ResourceURL(request->lastLocation().data(),
-                                request->lastLocation().size());
+            auto resourceURL = new ResourceURL(request->lastLocation().data(),
+                                               request->lastLocation().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
                 STARFISH_ASSERT(event != nullptr);
@@ -409,8 +408,8 @@ public:
 
             if (ResourceURL::isValidURL(newURLString) == false) {
                 auto baseURLString = String::createASCIIString(
-                m_resource->resourceRequest()->lastEffectiveURL().data(),
-                m_resource->resourceRequest()->lastEffectiveURL().size());
+                    m_resource->resourceRequest()->lastEffectiveURL().data(),
+                    m_resource->resourceRequest()->lastEffectiveURL().size());
                 newURL = new ResourceURL(newURLString, baseURLString);
             } else {
                 newURL = new ResourceURL(newURLString);

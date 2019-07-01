@@ -584,6 +584,8 @@ WebContainer* WebContainer::CreateGL(
             onGLSwapBuffers(newWebContainer, mayNeedsSync);
         });
 
+    webView->platformWindow()->checkGLCompatibility();
+
     return newWebContainer;
 #endif
 }

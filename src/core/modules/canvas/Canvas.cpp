@@ -160,6 +160,7 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
 }
 #endif
 
+#if defined(PORT_WINDOW_BACKEND_GB)
 class CanvasSurfaceCanvasTarget : public CanvasSurface {
 public:
     CanvasSurfaceCanvasTarget(uint8_t* buffer, size_t w, size_t h,
@@ -262,6 +263,8 @@ CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
 {
     return new CanvasSurfaceCanvasTarget(buffer, w, h, stride);
 }
+
+#endif
 
 CanvasState::CanvasState()
     : m_fillSource(new CanvasFillStrokeSource(Unit::Color()))

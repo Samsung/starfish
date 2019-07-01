@@ -37,6 +37,7 @@
 #include "core/dom/canvas/CanvasTextAlign.h"
 #include "core/dom/canvas/CanvasTextBaseline.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/modules/canvas/Path.h"
@@ -65,11 +66,6 @@
 #if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
 #define NEEDS_UNPREMULTIPLIED
 #endif
-
-#define MAX_NATIVE_SURFACE_WIDTH 32767U
-#define MAX_NATIVE_SURFACE_HEIGHT 32767U
-#define MAX_NATIVE_SURFACE_AREA 268435456U
-#define SQAURE_MAX_NATIVE_SURFACE_AREA 16384
 
 namespace Starfish {
 
@@ -370,13 +366,16 @@ void CanvasRenderingContext2DMixIn::initialize()
         h = 1;
     }
 
-    if (ow * oh >= MAX_NATIVE_SURFACE_AREA) {
-        w = SQAURE_MAX_NATIVE_SURFACE_AREA * ((double)ow / (ow + oh));
-        h = SQAURE_MAX_NATIVE_SURFACE_AREA * ((double)oh / (ow + oh));
+    uint32_t maxTextureSize = (uint32_t)Compositor::maximumTextureSize();
+    size_t maxTextureArea = maxTextureSize * maxTextureSize;
+
+    if (ow * oh >= maxTextureArea) {
+        w = maxTextureArea * ((double)ow / (ow + oh));
+        h = maxTextureArea * ((double)oh / (ow + oh));
     }
 
-    w = std::min(w, MAX_NATIVE_SURFACE_WIDTH);
-    h = std::min(h, MAX_NATIVE_SURFACE_HEIGHT);
+    w = std::min(w, maxTextureSize);
+    h = std::min(h, maxTextureSize);
 
     STARFISH_ASSERT(w != 0);
     STARFISH_ASSERT(h != 0);

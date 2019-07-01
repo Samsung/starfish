@@ -149,20 +149,6 @@ protected:
     }
 };
 
-struct CanvasSurfaceTextureInfo {
-    struct CanvasSurfaceTextureInfoFragment {
-        size_t textureID;
-        size_t textureWidth;
-        size_t textureHeight;
-        float srcX;      // [0~1]
-        float srcY;      // [0~1]
-        float srcWidth;  // [0~1]
-        float srcHeight; // [0~1]
-    };
-
-    std::vector<CanvasSurfaceTextureInfoFragment> fragments;
-};
-
 class CanvasSurface : public gc {
 protected:
     CanvasSurface()
@@ -217,11 +203,6 @@ public:
     virtual void unmapBufferAndNotifyUpdatedRegion(size_t x, size_t y, size_t w,
                                                    size_t h)
     {
-    }
-
-    virtual CanvasSurfaceTextureInfo textureInfo()
-    {
-        return CanvasSurfaceTextureInfo();
     }
 
     virtual size_t width() = 0;
