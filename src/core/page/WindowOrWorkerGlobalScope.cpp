@@ -29,6 +29,10 @@
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/canvas/image/ImageDecoder.h"
+#include "core/fetch/ResponseData.h"
+#include "core/dom/canvas/ImageData.h"
+#include "EscargotPublic.h"
 
 namespace Starfish {
 namespace WindowOrWorkerGlobalScope {
@@ -46,6 +50,14 @@ namespace WindowOrWorkerGlobalScope {
             , m_sh(sh)
             , m_hasSrcRect(true)
         {
+            if (sw < 0) {
+                m_sx = sx + sw;
+                m_sw = std::abs(sw);
+            }
+            if (sh < 0) {
+                m_sy = sy + sh;
+                m_sh = std::abs(sh);
+            }
         }
         ImageBitmapCreateContext(ImageBitmapSource& image,
                                  ImageBitmapOptions& options)
@@ -167,6 +179,27 @@ namespace WindowOrWorkerGlobalScope {
         return destImage;
     }
 
+    static NativeImageData* createNativeImageDataWithDecoding(
+        const char* buffer, size_t buffer_size)
+    {
+        NativeImageData* result = nullptr;
+        ImageDecoder::DecodeResult decodeResult;
+        ResponseBody internalBuffer;
+        internalBuffer.insert(internalBuffer.begin(), buffer,
+                              buffer + buffer_size);
+        ImageDecoder id(internalBuffer);
+        decodeResult = id.decode();
+
+        if (!decodeResult.m_isSuccessful) {
+            return nullptr;
+        }
+
+        result = NativeImageData::create(
+            internalBuffer, UTF8StringDataNonGCStd(), decodeResult.m_buffer,
+            decodeResult.m_width, decodeResult.m_height, decodeResult.m_stride);
+        return result;
+    }
+
     Promise* createImageBitmapInternal(ExecutionContext* executionContext,
                                        ImageBitmapCreateContext context)
     {
@@ -198,6 +231,10 @@ namespace WindowOrWorkerGlobalScope {
             return promise;
         }
 
+        NativeImageData* srcImage = nullptr;
+        NativeImageData* destImage = nullptr;
+        bool needsToSetOriginCleanFlag = false;
+        bool setOriginCleanFlagValue = false;
         if (context.m_image
                 .isHTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
             auto canvasImageSource =
@@ -217,35 +254,92 @@ namespace WindowOrWorkerGlobalScope {
 
             auto pair = CanvasImageSourceUtils::toNativeImageData(
                 executionContext, canvasImageSource);
-            NativeImageData* srcImage = pair.first;
-            NativeImageData* destImage = nullptr;
-            if (context.m_hasSrcRect) {
-                destImage = cropBitmapDataToSourceRectangleWithFormatting(
-                    executionContext, srcImage, context.m_sx, context.m_sy,
-                    context.m_sw, context.m_sh, context.m_options);
-            } else {
-                destImage = cropBitmapDataToSourceRectangleWithFormatting(
-                    executionContext, srcImage, 0, 0, srcImage->width(),
-                    srcImage->height(), context.m_options);
-            }
+            srcImage = pair.first;
+            needsToSetOriginCleanFlag = true;
+            setOriginCleanFlagValue = pair.second;
 
-            if (destImage == nullptr) {
+        } else if (context.m_image.isBlobValue()) {
+            auto blob = context.m_image.getBlobValue();
+            // 1. Let imageData be the result of reading image's data. If an
+            // error occurs during reading of the object, then reject p with an
+            // "InvalidStateError" DOMException and abort these steps.
+            if (blob == nullptr || blob->data() == nullptr ||
+                blob->size() == 0) {
+                return rejectPromiseWithDOMException(
+                    executionContext, promise,
+                    DOMException::Code::INVALID_STATE_ERR);
+            }
+            NativeImageData* srcImage = createNativeImageDataWithDecoding(
+                (const char*)blob->data(), (size_t)blob->size());
+            NativeImageData* destImage = nullptr;
+
+            // 3.If imageData is not in a supported image file format (e.g.,
+            // it's not an image at all), or if imageData is corrupted in some
+            // fatal way such that the image dimensions cannot be obtained
+            // (e.g., a vector graphic with no intrinsic size), then reject p
+            // with an "InvalidStateError" DOMException and abort these steps.
+            if (srcImage == nullptr) {
+                return rejectPromiseWithDOMException(
+                    executionContext, promise,
+                    DOMException::Code::INVALID_STATE_ERR);
+            }
+        } else if (context.m_image.isImageDataValue()) {
+            auto imageData = context.m_image.getImageDataValue();
+
+            // 2.If IsDetachedBuffer(buffer) is true, then return p rejected
+            // with an "InvalidStateError" DOMException.
+            if (imageData->data()
+                    ->asArrayBufferView()
+                    ->buffer()
+                    ->isDetachedBuffer()) {
+                return rejectPromiseWithDOMException(
+                    executionContext, promise,
+                    DOMException::Code::INVALID_STATE_ERR);
+            }
+            srcImage =
+                createNativeImageDataWithDecoding((const char*)imageData->data()
+                                                      ->asArrayBufferView()
+                                                      ->buffer()
+                                                      ->rawBuffer(),
+                                                  (size_t)imageData->data()
+                                                      ->asArrayBufferView()
+                                                      ->buffer()
+                                                      ->bytelength());
+            if (srcImage == nullptr) {
                 return rejectPromiseWithDOMException(
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
 
-            ImageBitmap* imageBitmap =
-                new ImageBitmap(executionContext, destImage);
-            imageBitmap->setOriginCleanFlag(pair.second);
-
-            resolvePromise(executionContext, promise, imageBitmap);
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);
         }
+
+        if (context.m_hasSrcRect) {
+            destImage = cropBitmapDataToSourceRectangleWithFormatting(
+                executionContext, srcImage, context.m_sx, context.m_sy,
+                context.m_sw, context.m_sh, context.m_options);
+        } else {
+            destImage = cropBitmapDataToSourceRectangleWithFormatting(
+                executionContext, srcImage, 0, 0, srcImage->width(),
+                srcImage->height(), context.m_options);
+        }
+
+        if (destImage == nullptr) {
+            return rejectPromiseWithDOMException(
+                executionContext, promise,
+                DOMException::Code::INVALID_STATE_ERR);
+        }
+
+        ImageBitmap* imageBitmap = new ImageBitmap(executionContext, destImage);
+
+        if (needsToSetOriginCleanFlag) {
+            imageBitmap->setOriginCleanFlag(setOriginCleanFlagValue);
+        }
+        resolvePromise(executionContext, promise, imageBitmap);
         return promise;
     }
 
