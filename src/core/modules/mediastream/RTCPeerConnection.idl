@@ -1,0 +1,82 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+// https://w3c.github.io/webrtc-pc/#rtcpeerconnection-interface
+
+[ Constructor (optional RTCConfiguration configuration),
+  ConstructorCallWith=ExecutionContext,
+  RaisesException=Constructor,
+  Exposed=Window ]
+interface RTCPeerConnection : EventTarget {
+  [Unimplemented] Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
+  [Unimplemented] Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options);
+  [Unimplemented] Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
+  [Unimplemented] readonly attribute RTCSessionDescription? localDescription;
+  [Unimplemented] readonly attribute RTCSessionDescription? currentLocalDescription;
+  [Unimplemented] readonly attribute RTCSessionDescription? pendingLocalDescription;
+  [Unimplemented] Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
+  [Unimplemented] readonly attribute RTCSessionDescription? remoteDescription;
+  [Unimplemented] readonly attribute RTCSessionDescription? currentRemoteDescription;
+  [Unimplemented] readonly attribute RTCSessionDescription? pendingRemoteDescription;
+  [Unimplemented] Promise<void> addIceCandidate (optional RTCIceCandidateInit candidate);
+  [Unimplemented] readonly attribute RTCSignalingState signalingState;
+  [Unimplemented] readonly attribute RTCIceGatheringState iceGatheringState;
+  [Unimplemented] readonly attribute RTCIceConnectionState iceConnectionState;
+  [Unimplemented] readonly attribute RTCPeerConnectionState connectionState;
+  [Unimplemented] readonly attribute boolean? canTrickleIceCandidates;
+  [Unimplemented] static sequence<RTCIceServer> getDefaultIceServers ();
+  RTCConfiguration getConfiguration ();
+  [RaisesException] void setConfiguration (RTCConfiguration configuration);
+  [Unimplemented] void close ();
+  [Unimplemented] attribute EventHandler onnegotiationneeded;
+  [Unimplemented] attribute EventHandler onicecandidate;
+  [Unimplemented] attribute EventHandler onicecandidateerror;
+  [Unimplemented] attribute EventHandler onsignalingstatechange;
+  [Unimplemented] attribute EventHandler oniceconnectionstatechange;
+  [Unimplemented] attribute EventHandler onicegatheringstatechange;
+  [Unimplemented] attribute EventHandler onconnectionstatechange;
+};
+
+partial interface RTCPeerConnection {
+  [Unimplemented] Promise<void> createOffer (RTCSessionDescriptionCallback successCallback, RTCPeerConnectionErrorCallback failureCallback, optional RTCOfferOptions options);
+  [Unimplemented] Promise<void> setLocalDescription (RTCSessionDescriptionInit description, VoidFunction successCallback, RTCPeerConnectionErrorCallback failureCallback);
+  [Unimplemented] Promise<void> createAnswer (RTCSessionDescriptionCallback successCallback, RTCPeerConnectionErrorCallback failureCallback);
+  [Unimplemented] Promise<void> setRemoteDescription (RTCSessionDescriptionInit description, VoidFunction successCallback, RTCPeerConnectionErrorCallback failureCallback);
+  [Unimplemented] Promise<void> addIceCandidate (RTCIceCandidateInit candidate, VoidFunction successCallback, RTCPeerConnectionErrorCallback failureCallback);
+};
+
+partial interface RTCPeerConnection {
+  [Unimplemented] readonly attribute RTCSctpTransport? sctp;
+  [Unimplemented] RTCDataChannel createDataChannel (USVString label, optional RTCDataChannelInit dataChannelDict);
+  [Unimplemented] attribute EventHandler ondatachannel;
+};
+
+partial interface RTCPeerConnection {
+  [Unimplemented] static Promise<RTCCertificate> generateCertificate (AlgorithmIdentifier keygenAlgorithm);
+};
+
+//partial interface RTCPeerConnection {
+//  [Unimplemented] sequence<RTCRtpSender> getSenders ();
+//  [Unimplemented] sequence<RTCRtpReceiver> getReceivers ();
+//  [Unimplemented] sequence<RTCRtpTransceiver> getTransceivers ();
+//  [Unimplemented] RTCRtpSender addTrack (MediaStreamTrack track, MediaStream... streams);
+//  [Unimplemented] void removeTrack (RTCRtpSender sender);
+//  [Unimplemented] RTCRtpTransceiver addTransceiver ((MediaStreamTrack or DOMString) trackOrKind, optional RTCRtpTransceiverInit init);
+//  [Unimplemented] attribute EventHandler ontrack;
+//};
