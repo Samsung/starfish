@@ -196,10 +196,13 @@ def wpt_canvas():
 def wpt_pwa():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fetch_basic.res", "cairo"])
 
+def wpt_webrtc():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo"])
 
 def wpt_all():
     wpt_css_all()
     wpt_pwa()
+    wpt_webrtc()
     wpt_canvas()
     wpt_others()
 
