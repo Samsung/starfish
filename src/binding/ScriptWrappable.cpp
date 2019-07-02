@@ -749,8 +749,14 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
     ContextRef* ctx = instance->scriptContext();
+
+    StringRef* source = toJSString(string);
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t parseStart = longTickCount();
+#endif
+
     ScriptParserRef::ScriptParserResult scriptRef =
-        ctx->scriptParser()->parse(toJSString(string), toJSString(fileName));
+        ctx->scriptParser()->parse(source, toJSString(fileName));
 
     if (scriptRef.m_error->length()) {
         STARFISH_LOG_ERROR(
@@ -763,10 +769,22 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         return scriptUndefined();
     }
 
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t parseEnd = longTickCount();
+    float time = (float)((parseEnd - parseStart) / 1000.f);
+    STARFISH_LOG_INFO("js parse %f ms\n", time);
+#endif
+
     SandBoxRef* sb = SandBoxRef::create(ctx);
     auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
         return scriptRef.m_script->execute(state);
     });
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    size_t executeEnd = longTickCount();
+    time = (float)((executeEnd - parseEnd) / 1000.f);
+    STARFISH_LOG_INFO("js execute %f ms\n", time);
+#endif
 
     clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 

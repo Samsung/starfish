@@ -80,9 +80,9 @@ static bool isJavaScriptType(const char* type, size_t len)
     return false;
 }
 
-class JSProifileRAIILogger {
+class ScriptProfileLogger {
 public:
-    JSProifileRAIILogger()
+    ScriptProfileLogger()
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
         : m_timer("HTMLScriptElement script execution")
 #endif
@@ -93,7 +93,7 @@ public:
 #endif
     }
 
-    ~JSProifileRAIILogger()
+    ~ScriptProfileLogger()
     {
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
         STARFISH_LOG_INFO("[SCRIPT_PROFILING] End JS Execution at %dms\n",
@@ -148,7 +148,7 @@ public:
                 client->m_element->document()->appendCurrentScript(
                     client->m_element);
                 {
-                    JSProifileRAIILogger logger;
+                    ScriptProfileLogger logger;
                     evaluateString(
                         client->m_element->window()->scriptBindingInstance(),
                         text, ResourceClient::resource()->url()->urlString());
@@ -215,14 +215,11 @@ public:
                      ->toUTF8NonGCString();
         if (isJavaScriptType(s.data(), s.length())) {
             String* text = m_resource->asTextResource()->text();
-            m_element->document()->appendCurrentScript(m_element);
-            {
-                JSProifileRAIILogger logger;
-                evaluateString(m_element->window()->scriptBindingInstance(),
-                               text,
-                               ResourceClient::resource()->url()->urlString());
-            }
-            m_element->document()->popCurrentScript();
+            Document::CurrentScriptManager currentScriptManager(
+                m_element->document(), m_element);
+            ScriptProfileLogger logger;
+            evaluateString(m_element->window()->scriptBindingInstance(), text,
+                           ResourceClient::resource()->url()->urlString());
         }
         didScriptLoaded();
     }
@@ -285,14 +282,14 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             }
 
             m_isAlreadyStarted = true;
-            document()->appendCurrentScript(this);
             {
-                JSProifileRAIILogger logger;
+                Document::CurrentScriptManager currentScriptManager(document(),
+                                                                    this);
+                ScriptProfileLogger logger;
                 evaluateString(
                     window()->scriptBindingInstance(), script,
                     String::createASCIIString("HTMLScriptElement innerText"));
             }
-            document()->popCurrentScript();
             m_didScriptExecuted = true;
             return false;
         } else {

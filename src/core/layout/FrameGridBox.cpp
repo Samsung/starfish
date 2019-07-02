@@ -27,6 +27,51 @@
 
 namespace Starfish {
 
+struct GridLayoutScope {
+    GridLayoutScope(FrameBox* box)
+        : m_box(box)
+    {
+        ComputedStyle* style = box->style();
+        m_width = style->width();
+        m_height = style->height();
+        m_minWidth = style->minWidth();
+        m_maxWidth = style->maxWidth();
+        m_minHeight = style->minHeight();
+        m_maxHeight = style->maxHeight();
+
+        m_margin = style->margin();
+        m_border = style->border();
+        m_padding = style->padding();
+    }
+
+    ~GridLayoutScope()
+    {
+        ComputedStyle* style = m_box->style();
+        style->setWidth(m_width);
+        style->setHeight(m_height);
+        style->setMinWidth(m_minWidth);
+        style->setMaxWidth(m_maxWidth);
+        style->setMinHeight(m_minHeight);
+        style->setMaxHeight(m_maxHeight);
+
+        *style->rareComputedStyleData()->ensureMargin() = m_margin;
+        *style->rareComputedStyleData()->ensureBorder() = m_border;
+        *style->rareComputedStyleData()->ensurePadding() = m_padding;
+    }
+
+    FrameBox* m_box;
+    Length m_width;
+    Length m_height;
+    Length m_minWidth;
+    Length m_maxWidth;
+    Length m_minHeight;
+    Length m_maxHeight;
+
+    LengthData m_margin;
+    BorderData m_border;
+    LengthData m_padding;
+};
+
 GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
                                              FrameGridBox* container,
                                              LayoutUnit availableWidth)
@@ -1878,6 +1923,73 @@ void GridFormattingContext::alignGridLinesForRows(GridArea& area)
     }
 }
 
+LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
+                                         ComputedStyle* style)
+{
+    LayoutSize result;
+    // margin
+    LengthData margin = style->margin();
+    if (margin.left().isDefinite(false)) {
+        result.setWidth(result.width() + margin.left().specifiedValue(0, grid));
+    }
+    if (margin.right().isDefinite(false)) {
+        result.setWidth(result.width() +
+                        margin.right().specifiedValue(0, grid));
+    }
+    if (margin.top().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         margin.top().specifiedValue(0, grid));
+    }
+    if (margin.bottom().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         margin.bottom().specifiedValue(0, grid));
+    }
+
+    // border
+    BorderData border = style->border();
+    if (border.left().width().isDefinite(false)) {
+        result.setWidth(result.width() +
+                        border.left().width().specifiedValue(0, grid));
+    }
+    if (border.right().width().isDefinite(false)) {
+        result.setWidth(result.width() +
+                        border.right().width().specifiedValue(0, grid));
+    }
+    if (border.top().width().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         border.top().width().specifiedValue(0, grid));
+    }
+    if (border.bottom().width().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         border.bottom().width().specifiedValue(0, grid));
+    }
+
+    // padding
+    LengthData padding = style->padding();
+    if (padding.left().isDefinite(false)) {
+        result.setWidth(result.width() +
+                        padding.left().specifiedValue(0, grid));
+    }
+    if (padding.right().isDefinite(false)) {
+        result.setWidth(result.width() +
+                        padding.right().specifiedValue(0, grid));
+    }
+    if (padding.top().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         padding.top().specifiedValue(0, grid));
+    }
+    if (padding.bottom().isDefinite(false)) {
+        result.setHeight(result.height() +
+                         padding.bottom().specifiedValue(0, grid));
+    }
+
+    return result;
+}
+
+void convertPercenMarginBorderPaddingToFixedValue(LayoutUnit cellWidth)
+{
+}
+
 void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
                                                           bool nonFixedHeight)
 {
@@ -1891,17 +2003,17 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
         LayoutUnit contentWidth;
         bool isFixed = true;
 
+        LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
+
         if (style->width().isFixed()) {
-            gridItem->layout(m_layoutContext,
-                             Frame::LayoutWantToResolve::ResolveWidth);
-            width = style->width().fixed() + gridItem->mbpWidth();
+            width = style->width().fixed() + mbp.width();
             contentWidth = width;
             isFixed = true;
         } else {
             PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
                                     gridItem, 0);
             p.computePreferredWidth();
-            contentWidth = p.preferredWidth() + gridItem->mbpWidth();
+            contentWidth = p.preferredWidth() + mbp.width();
             isFixed = false;
         }
 
@@ -1923,27 +2035,113 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
                 ((area.m_columnEnd - area.m_columnStart - 1) * m_columnGap);
         }
 
-        if (width > gridItem->mbpWidth()) {
-            style->setWidth(
-                Length(Length::Fixed, width - gridItem->mbpWidth()));
+        LayoutUnit widthWillBe = width;
+        style->setMarginLeft(
+            Length(Length::Fixed,
+                   style->margin().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().left().fixed();
+        style->setMarginRight(
+            Length(Length::Fixed,
+                   style->margin().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().right().fixed();
+
+        style->setPaddingLeft(
+            Length(Length::Fixed,
+                   style->padding().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().left().fixed();
+        style->setPaddingRight(Length(
+            Length::Fixed,
+            style->padding().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().right().fixed();
+
+        style->setBorderLeftWidth(Length(
+            Length::Fixed,
+            style->border().left().width().specifiedValue(width, m_container)));
+        widthWillBe -= style->border().left().width().fixed();
+        style->setBorderRightWidth(Length(
+            Length::Fixed, style->border().right().width().specifiedValue(
+                               width, m_container)));
+        widthWillBe -= style->border().right().width().fixed();
+
+        if (!isFixed) {
+            width = widthWillBe;
+            if (width < 0) {
+                width = 0;
+            }
+        }
+
+        if (width > mbp.width()) {
+            style->setWidth(Length(Length::Fixed, width));
         } else {
             style->setWidth(Length(Length::Fixed, width));
         }
 
-        if (nonFixedHeight) {
-            if (!style->height().isFixed()) {
-                LayoutUnit height;
-                for (size_t i = area.m_rowStart; i <= area.m_rowEnd - 1; i++) {
-                    height += m_gridLineRows[i].offset();
-                }
-
-                height += ((area.m_rowEnd - area.m_rowStart - 1) * m_rowGap);
-
-                style->setHeight(
-                    Length(Length::Fixed, height - gridItem->mbpHeight()));
+        if (nonFixedHeight && !style->height().isFixed()) {
+            LayoutUnit height;
+            for (size_t i = area.m_rowStart; i <= area.m_rowEnd - 1; i++) {
+                height += m_gridLineRows[i].offset();
             }
+
+            height += ((area.m_rowEnd - area.m_rowStart - 1) * m_rowGap);
+
+            LayoutUnit heightWillBe = height;
+            style->setMarginTop(Length(
+                Length::Fixed,
+                style->margin().top().specifiedValue(width, m_container)));
+            heightWillBe -= style->margin().top().fixed();
+            style->setMarginBottom(Length(
+                Length::Fixed,
+                style->margin().bottom().specifiedValue(width, m_container)));
+            heightWillBe -= style->margin().bottom().fixed();
+
+            style->setPaddingTop(Length(
+                Length::Fixed,
+                style->padding().top().specifiedValue(width, m_container)));
+            heightWillBe -= style->padding().top().fixed();
+            style->setPaddingBottom(Length(
+                Length::Fixed,
+                style->padding().bottom().specifiedValue(width, m_container)));
+            heightWillBe -= style->padding().bottom().fixed();
+
+            style->setBorderTopWidth(Length(
+                Length::Fixed, style->border().top().width().specifiedValue(
+                                   width, m_container)));
+            heightWillBe -= style->border().top().width().fixed();
+            style->setBorderBottomWidth(Length(
+                Length::Fixed, style->border().bottom().width().specifiedValue(
+                                   width, m_container)));
+            heightWillBe -= style->border().bottom().width().fixed();
+
+            height = heightWillBe;
+            if (height < 0) {
+                height = 0;
+            }
+
+            style->setHeight(Length(Length::Fixed, height));
+        } else {
+            style->setMarginTop(Length(
+                Length::Fixed,
+                style->margin().top().specifiedValue(width, m_container)));
+            style->setMarginBottom(Length(
+                Length::Fixed,
+                style->margin().bottom().specifiedValue(width, m_container)));
+
+            style->setPaddingTop(Length(
+                Length::Fixed,
+                style->padding().top().specifiedValue(width, m_container)));
+            style->setPaddingBottom(Length(
+                Length::Fixed,
+                style->padding().bottom().specifiedValue(width, m_container)));
+
+            style->setBorderTopWidth(Length(
+                Length::Fixed, style->border().top().width().specifiedValue(
+                                   width, m_container)));
+            style->setBorderBottomWidth(Length(
+                Length::Fixed, style->border().bottom().width().specifiedValue(
+                                   width, m_container)));
         }
 
+        gridItem->markNeedsLayout();
         gridItem->layout(m_layoutContext,
                          Frame::LayoutWantToResolve::ResolveAll);
 

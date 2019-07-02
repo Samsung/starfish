@@ -486,20 +486,25 @@ public:
                                                   String* qualifiedName);
 
     Nullable<HTMLOrSVGScriptElement> currentScript();
-    void appendCurrentScript(HTMLScriptElement* element)
-    {
-        m_currentScripts.push_back(element);
-    }
-    void appendCurrentScript(SVGScriptElement* element)
-    {
-        m_currentScripts.push_back(element);
-    }
-    void popCurrentScript()
-    {
-        if (m_currentScripts.size() > 0) {
-            m_currentScripts.pop_back();
+
+    // if you want to modify current script, use this.
+    class CurrentScriptManager {
+    public:
+        CurrentScriptManager(Document* doc, Element* e)
+        {
+            STARFISH_ASSERT(e->isHTMLScriptElement() ||
+                            e->isSVGScriptElement());
+            m_document = doc;
+            m_document->appendCurrentScript(e);
         }
-    }
+        ~CurrentScriptManager()
+        {
+            m_document->popCurrentScript();
+        }
+
+    protected:
+        Document* m_document;
+    };
 
     void appendRange(Range* range)
     {
@@ -655,6 +660,16 @@ public:
     }
 
 protected:
+    void appendCurrentScript(Element* element)
+    {
+        m_currentScripts.push_back(element);
+    }
+    void popCurrentScript()
+    {
+        if (m_currentScripts.size() > 0) {
+            m_currentScripts.pop_back();
+        }
+    }
     Element* nextBaseElement(Node* node, Node* root);
 
     static inline void fillGCDescriptor(GC_word* desc)
