@@ -278,6 +278,8 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-19.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-20.html
 #test/cairo/internal-test/css/grid/gridbox_simple-box-21.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-22.html
+test/cairo/internal-test/css/grid/grid-incremantal-layout.html
+test/cairo/internal-test/css/grid/grid-percentage-padding-top.html
 test/cairo/internal-test/css/style/lookup-computed-style.html
 test/cairo/internal-test/css/text/text-decoration-color-001a.html
 test/cairo/internal-test/css/text/text-decoration-line-001.html
@@ -377,3 +379,4 @@ test/cairo/internal-test/canvas/compositing.html
 test/cairo/internal-test/css/presentational-hints/body-margin-presentational-hints.html
 test/cairo/internal-test/css/repaint/outline-repaint.html
 test/cairo/internal-test/css/pseudo/before-element-damage.html
+test/cairo/internal-test/css/pseudo/pseudo-before-display-changing.html

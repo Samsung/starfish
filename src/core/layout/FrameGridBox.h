@@ -218,39 +218,6 @@ private:
     bool m_containing;
 };
 
-struct GridLayoutScope {
-    GridLayoutScope(FrameBox* box)
-        : m_box(box)
-    {
-        ComputedStyle* style = box->style();
-        m_width = style->width();
-        m_height = style->height();
-        m_minWidth = style->minWidth();
-        m_maxWidth = style->maxWidth();
-        m_minHeight = style->minHeight();
-        m_maxHeight = style->maxHeight();
-    }
-
-    ~GridLayoutScope()
-    {
-        ComputedStyle* style = m_box->style();
-        style->setWidth(m_width);
-        style->setHeight(m_height);
-        style->setMinWidth(m_minWidth);
-        style->setMaxWidth(m_maxWidth);
-        style->setMinHeight(m_minHeight);
-        style->setMaxHeight(m_maxHeight);
-    }
-
-    FrameBox* m_box;
-    Length m_width;
-    Length m_height;
-    Length m_minWidth;
-    Length m_maxWidth;
-    Length m_minHeight;
-    Length m_maxHeight;
-};
-
 #define GRID_MAX_TRACK 50
 class GridFormattingContext {
 public:

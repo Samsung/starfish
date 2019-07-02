@@ -673,10 +673,6 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
             bool o = oldStyle ? oldStyle->seenPseudoElement(type) : false;
             bool n = newStyle->seenPseudoElement(type);
 
-            if (o != n) {
-                setNeedsFrameTreeBuild();
-            }
-
             if (type == PseudoElementBefore || type == PseudoElementAfter) {
                 PseudoElementMap* pseudoElementMap =
                     ensureRareElementMembers()->ensurePseudoElementMap();
@@ -686,6 +682,11 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                 ComputedStyle* ncs =
                     n ? newStyle->pseudoStyle(this, type) : nullptr;
                 n = ncs && pseudoElementFrameIsNeeded(ncs) && ncs->content();
+                // we should test actual visiblity on FrameTree. not style
+                // existence
+                if (o != n) {
+                    setNeedsFrameTreeBuild();
+                }
 
                 if (n) {
                     if (pseudoElementMap->pseudoElement(type) == nullptr) {
@@ -762,6 +763,11 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                     }
                 }
             } else {
+                // test just style existence is ok
+                if (o != n) {
+                    setNeedsFrameTreeBuild();
+                }
+
                 if (!needsFrameTreeBuild() && frame) {
                     if (o && n) {
                         ComputedStyle* ocs = oldStyle->pseudoStyle(this, type);
