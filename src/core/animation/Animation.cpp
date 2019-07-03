@@ -42,12 +42,14 @@
 namespace Starfish {
 
 template <typename T>
-static float interpolate(const T from, const T to, float progress)
+static float interpolate(const T from, const T to, float progress,
+                         bool isForward = true)
 {
-    if (from < to) {
+    if (isForward == true) {
         return from + (to - from) * progress;
+    } else {
+        return from + (to - from) * (1 - progress);
     }
-    return from - (from - to) * progress;
 }
 
 void AnimationExecutor::checkActiveExecutorInWebView()
@@ -147,6 +149,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_isInDelayedTime(true)
+    , m_isForward(true)
     , m_frameIdx(0)
     , m_frameSize(2)
 {
@@ -173,6 +176,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_isInDelayedTime(true)
+    , m_isForward(true)
     , m_frameIdx(0)
     , m_frameSize(values.size())
 {
@@ -211,19 +215,30 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     }
 
     if (m_type == ANIMATION_TYPE) {
-        if (f == 0 && m_isInDelayedTime == true) {
+        if (m_isInDelayedTime == true && f == 0) {
             return;
         }
+
         execute(computeProgress(f), style);
-        if (f >= 1.0) {
-            m_frameIdx++;
-            if (m_frameIdx == m_frameSize - 1) {
-                m_frameIdx = 0;
-                m_startTimeMs = 0;
-                m_delayMs = 0;
-                m_isInDelayedTime = false;
+
+        if (f >= 1.0 || f <= 0.0) {
+            if (m_isForward == true) {
+                m_frameIdx++;
+                if (m_frameIdx == m_frameSize - 1) {
+                    m_frameIdx = 0;
+                    m_startTimeMs = 0;
+                    m_delayMs = 0;
+                    m_isInDelayedTime = false;
+                }
+            } else {
+                m_frameIdx--;
+                if (m_frameIdx == 0) {
+                    m_frameIdx = m_frameSize - 1;
+                    m_startTimeMs = 0;
+                    m_delayMs = 0;
+                    m_isInDelayedTime = false;
+                }
             }
-            didAnimationFrameChanged();
         }
     } else {
         execute(computeProgress(f), style);
@@ -290,7 +305,11 @@ AnimatedValue* ActiveAnimationTask::currentAnimatedFromValue()
 
 AnimatedValue* ActiveAnimationTask::currentAnimatedToValue()
 {
-    return m_values[m_frameIdx + 1];
+    if (m_isForward == true) {
+        return m_values[m_frameIdx + 1];
+    } else {
+        return m_values[m_frameIdx - 1];
+    }
 }
 
 TimingFunction* ActiveAnimationTask::currentTimingFunction()
@@ -304,8 +323,13 @@ float ActiveAnimationTask::computeProgress(float& fraction)
     STARFISH_ASSERT(fraction <= 1.0f);
 
     if (m_type == ANIMATION_TYPE) {
-        fraction = (fraction - m_offsets[m_frameIdx]) /
-                   (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
+        if (m_isForward == true) {
+            fraction = (fraction - m_offsets[m_frameIdx]) /
+                       (m_offsets[m_frameIdx + 1] - m_offsets[m_frameIdx]);
+        } else {
+            fraction = (1 - fraction - m_offsets[m_frameIdx - 1]) /
+                       (m_offsets[m_frameIdx] - m_offsets[m_frameIdx - 1]);
+        }
     }
     return currentTimingFunction()->getValue(fraction);
 }
@@ -327,8 +351,11 @@ void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
     STARFISH_ASSERT(style != nullptr);
     float from = currentAnimatedFromValue()->getFloat();
     float to = currentAnimatedToValue()->getFloat();
-    float newOpacity = from * (1 - progress) + to * progress;
-    style->setOpacity(newOpacity);
+    if (m_isForward == true) {
+        style->setOpacity(from * (1 - progress) + to * progress);
+    } else {
+        style->setOpacity(from * progress + to * (1 - progress));
+    }
 }
 
 bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
@@ -579,8 +606,15 @@ void ActiveTransformAnimationTask::resolveUnresolvedAnimatedValues()
             }
         }
 
-        m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
-        m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
+        if (m_isForward == true) {
+            m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
+            m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
+        } else {
+            m_decomposedFrom =
+                decomposing2DMatrix(m_values[m_values.size() - 1]->getMatrix());
+            m_decomposedTo =
+                decomposing2DMatrix(m_values[m_values.size() - 2]->getMatrix());
+        }
 
         matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
     }
@@ -611,26 +645,48 @@ void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
 
-    MatrixDecomposed2D now;
-    now.angle = m_decomposedFrom.angle * (1 - progress) +
-                m_decomposedTo.angle * progress;
-    now.matrixM11 = m_decomposedFrom.matrixM11 * (1 - progress) +
-                    m_decomposedTo.matrixM11 * progress;
-    now.matrixM12 = m_decomposedFrom.matrixM12 * (1 - progress) +
-                    m_decomposedTo.matrixM12 * progress;
-    now.matrixM21 = m_decomposedFrom.matrixM21 * (1 - progress) +
-                    m_decomposedTo.matrixM21 * progress;
-    now.matrixM22 = m_decomposedFrom.matrixM22 * (1 - progress) +
-                    m_decomposedTo.matrixM22 * progress;
-    now.scaleX = m_decomposedFrom.scaleX * (1 - progress) +
-                 m_decomposedTo.scaleX * progress;
-    now.scaleY = m_decomposedFrom.scaleY * (1 - progress) +
-                 m_decomposedTo.scaleY * progress;
-    now.translateX = m_decomposedFrom.translateX * (1 - progress) +
-                     m_decomposedTo.translateX * progress;
-    now.translateY = m_decomposedFrom.translateY * (1 - progress) +
-                     m_decomposedTo.translateY * progress;
+    didAnimationFrameChanged();
 
+    MatrixDecomposed2D now;
+    if (m_isForward == true) {
+        now.angle = m_decomposedFrom.angle * (1 - progress) +
+                    m_decomposedTo.angle * progress;
+        now.matrixM11 = m_decomposedFrom.matrixM11 * (1 - progress) +
+                        m_decomposedTo.matrixM11 * progress;
+        now.matrixM12 = m_decomposedFrom.matrixM12 * (1 - progress) +
+                        m_decomposedTo.matrixM12 * progress;
+        now.matrixM21 = m_decomposedFrom.matrixM21 * (1 - progress) +
+                        m_decomposedTo.matrixM21 * progress;
+        now.matrixM22 = m_decomposedFrom.matrixM22 * (1 - progress) +
+                        m_decomposedTo.matrixM22 * progress;
+        now.scaleX = m_decomposedFrom.scaleX * (1 - progress) +
+                     m_decomposedTo.scaleX * progress;
+        now.scaleY = m_decomposedFrom.scaleY * (1 - progress) +
+                     m_decomposedTo.scaleY * progress;
+        now.translateX = m_decomposedFrom.translateX * (1 - progress) +
+                         m_decomposedTo.translateX * progress;
+        now.translateY = m_decomposedFrom.translateY * (1 - progress) +
+                         m_decomposedTo.translateY * progress;
+    } else {
+        now.angle = m_decomposedFrom.angle * progress +
+                    m_decomposedTo.angle * (1 - progress);
+        now.matrixM11 = m_decomposedFrom.matrixM11 * progress +
+                        m_decomposedTo.matrixM11 * (1 - progress);
+        now.matrixM12 = m_decomposedFrom.matrixM12 * progress +
+                        m_decomposedTo.matrixM12 * (1 - progress);
+        now.matrixM21 = m_decomposedFrom.matrixM21 * progress +
+                        m_decomposedTo.matrixM21 * (1 - progress);
+        now.matrixM22 = m_decomposedFrom.matrixM22 * progress +
+                        m_decomposedTo.matrixM22 * (1 - progress);
+        now.scaleX = m_decomposedFrom.scaleX * progress +
+                     m_decomposedTo.scaleX * (1 - progress);
+        now.scaleY = m_decomposedFrom.scaleY * progress +
+                     m_decomposedTo.scaleY * (1 - progress);
+        now.translateX = m_decomposedFrom.translateX * progress +
+                         m_decomposedTo.translateX * (1 - progress);
+        now.translateY = m_decomposedFrom.translateY * progress +
+                         m_decomposedTo.translateY * (1 - progress);
+    }
     auto transform = new StyleTransformDataGroup();
     SkMatrix newMatrix = recomposing2DMatrix(now);
 
@@ -680,10 +736,18 @@ void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
     Unit::Color from = currentAnimatedFromValue()->getColor();
     Unit::Color to = currentAnimatedToValue()->getColor();
 
-    unsigned char r = from.r() * (1 - progress) + to.r() * progress;
-    unsigned char g = from.g() * (1 - progress) + to.g() * progress;
-    unsigned char b = from.b() * (1 - progress) + to.b() * progress;
-    unsigned char a = from.a() * (1 - progress) + to.a() * progress;
+    unsigned char r, g, b, a;
+    if (m_isForward == true) {
+        r = from.r() * (1 - progress) + to.r() * progress;
+        g = from.g() * (1 - progress) + to.g() * progress;
+        b = from.b() * (1 - progress) + to.b() * progress;
+        a = from.a() * (1 - progress) + to.a() * progress;
+    } else {
+        r = from.r() * progress + to.r() * (1 - progress);
+        g = from.g() * progress + to.g() * (1 - progress);
+        b = from.b() * progress + to.b() * (1 - progress);
+        a = from.a() * progress + to.a() * (1 - progress);
+    }
 
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
         style->setBackgroundColor(Unit::Color(r, g, b, a));
@@ -943,13 +1007,14 @@ void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
                 float fromPercent = fromValue->getLength().percent();
                 float toPercent = toValue->getLength().percent();
                 newLength =
-                    Length(Length::Percent,
-                           interpolate(fromPercent, toPercent, progress));
+                    Length(Length::Percent, interpolate(fromPercent, toPercent,
+                                                        progress, m_isForward));
             } else {
                 float fromFixed = fromValue->getLength().fixed();
                 float toFixed = toValue->getLength().fixed();
-                newLength = Length(Length::Fixed,
-                                   interpolate(fromFixed, toFixed, progress));
+                newLength =
+                    Length(Length::Fixed, interpolate(fromFixed, toFixed,
+                                                      progress, m_isForward));
             }
         }
     }
@@ -1271,6 +1336,7 @@ void ActiveLengthSizeAnimationTask::execute(float progress,
 {
     STARFISH_ASSERT(style != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        // TODO: Consider m_isForward value.
         style->setBackgroundSize(
             interpolateLengthSize(progress, *currentAnimatedFromValue(),
                                   *currentAnimatedToValue()),
@@ -2342,6 +2408,7 @@ bool applyAnimationIfNeeds(
 
         double delay = animation->delay(s).toTimeValue();
         float iterationCount = animation->iterationCount(s);
+        AnimationDirectionValue direction = animation->direction(s);
 
         size_t keyframeSize = keyframes.keyframeListSize();
         for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
@@ -2393,7 +2460,8 @@ bool applyAnimationIfNeeds(
                     offsets, timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
-                executor->registerAnimation(task, style, name, iterationCount);
+                executor->registerAnimation(task, style, name, iterationCount,
+                                            direction);
                 gotAnimation = true;
             }
 
@@ -2403,21 +2471,23 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
-                executor->registerAnimation(task, style, name, iterationCount);
+                executor->registerAnimation(task, style, name, iterationCount,
+                                            direction);
                 gotAnimation = true;
             }
 
 // length series
 
-#define APPLY_LENGTH_ANIMATION(propertyName)                            \
-    if (fromKeyKind == CSSStyleValuePair::propertyName) {               \
-        auto task = new ActiveLengthAnimationTask(                      \
-            element, CSSStyleValuePair::propertyName, values, offsets,  \
-            timingFunctions, duration, delay);                          \
-        executor->removeActiveAnimationTaskIfNeeds(                     \
-            element, CSSStyleValuePair::propertyName);                  \
-        executor->registerAnimation(task, style, name, iterationCount); \
-        gotAnimation = true;                                            \
+#define APPLY_LENGTH_ANIMATION(propertyName)                           \
+    if (fromKeyKind == CSSStyleValuePair::propertyName) {              \
+        auto task = new ActiveLengthAnimationTask(                     \
+            element, CSSStyleValuePair::propertyName, values, offsets, \
+            timingFunctions, duration, delay);                         \
+        executor->removeActiveAnimationTaskIfNeeds(                    \
+            element, CSSStyleValuePair::propertyName);                 \
+        executor->registerAnimation(task, style, name, iterationCount, \
+                                    direction);                        \
+        gotAnimation = true;                                           \
     }
 
             APPLY_LENGTH_ANIMATION(Width)
@@ -2435,7 +2505,8 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
-                executor->registerAnimation(task, style, name, iterationCount);
+                executor->registerAnimation(task, style, name, iterationCount,
+                                            direction);
                 gotAnimation = true;
             }
 
@@ -2445,7 +2516,8 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
-                executor->registerAnimation(task, style, name, iterationCount);
+                executor->registerAnimation(task, style, name, iterationCount,
+                                            direction);
                 gotAnimation = true;
             }
 

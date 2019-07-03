@@ -3615,6 +3615,37 @@ void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
     addCSSValuePair(CSSStyleValuePair::AnimationIterationCount, result);
 }
 
+void CSSStyleDeclaration::setAnimationDirection(const char* value,
+                                                size_t length, bool isImportant)
+{
+    STARFISH_ASSERT(value != nullptr);
+    if (length == 0) {
+        removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
+        return;
+    }
+    // TODO handle var() case
+    CSSTokenVector layers;
+    if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
+        return;
+    }
+    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    size_t layerSize = layers.size();
+    for (size_t i = 0; i < layerSize; i++) {
+        CSSStyleValuePair sub;
+        CSSTokenVector tokens;
+        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
+            sub.updateValueLayerAnimationDirection(tokens) == false) {
+            return;
+        }
+        list->push_back(sub);
+    }
+    CSSStyleValuePair result;
+    result.setFlagImportant(isImportant);
+    result.setValueList(list);
+    addCSSValuePair(CSSStyleValuePair::AnimationDirection, result);
+}
+
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
     CSSStyleDeclaration* src, CSSRule* parentRule)
     : CSSStyleDeclaration(parentRule->parentStyleSheet()

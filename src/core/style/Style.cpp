@@ -1554,6 +1554,20 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::ValueKind::AnimationDirectionValueKind:
+        switch (animationDirectionValue()) {
+        case AnimationDirectionNormalValue:
+            return String::fromUTF8("normal");
+        case AnimationDirectionReverseValue:
+            return String::fromUTF8("reverse");
+        case AnimationDirectionAlternateValue:
+            return String::fromUTF8("alternate");
+        case AnimationDirectionAlternateReverseValue:
+            return String::fromUTF8("alternate-reverse");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
         switch (boxSizingValue()) {
         case ContentBoxBoxSizingValue:
@@ -2410,6 +2424,34 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::Number:
         style->setAnimationIterationCount(item.numberValue(), index);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyAnimationDirection(Element* element, ComputedStyle* style,
+                                    ComputedStyle* parentStyle,
+                                    CSSStyleValuePair& item, size_t index)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setAnimationDirection(
+            AnimationDirectionValue::AnimationDirectionNormalValue, index);
+        break;
+    case CSSStyleValuePair::Inherit:
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setAnimationDirection(parentStyle->animationDirect(), index);
+        break;
+    case CSSStyleValuePair::AnimationDirectionValueKind:
+        style->setAnimationDirection(item.animationDirectionValue(), index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -4028,6 +4070,20 @@ void StyleResolver::apply(Element* element,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationIterationCount(element, style, parentStyle,
                                                  (*list)[i], i);
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AnimationDirection:
+            style->resetAnimationDirection();
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyAnimationDirection(element, style, parentStyle,
+                                        cssValues[k], 0);
+            } else {
+                ValueList* list = cssValues[k].multiValue();
+                STARFISH_ASSERT(list != nullptr);
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    applyAnimationDirection(element, style, parentStyle,
+                                            (*list)[i], i);
                 }
             }
             break;
@@ -7295,7 +7351,7 @@ static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
     switch (property) {
     //      case CSSStyleValuePair::KeyKind::Animation:
     case CSSStyleValuePair::KeyKind::AnimationDelay:
-    //      case CSSStyleValuePair::KeyKind::AnimationDirection:
+    case CSSStyleValuePair::KeyKind::AnimationDirection:
     case CSSStyleValuePair::KeyKind::AnimationDuration:
     //      case CSSStyleValuePair::KeyKind::AnimationFillMode:
     case CSSStyleValuePair::KeyKind::AnimationIterationCount:
@@ -7536,19 +7592,43 @@ void computeAnimation(StyleResolver& resolver, Element* element,
             bool needsToFireAnimationCancelEvent = false;
             auto& activeAnimations = iter->second;
             auto iterationCount = iter->first->m_iterationCount;
+            auto direction = iter->first->m_direction;
             for (size_t i = 0; i < activeAnimations.size(); i++) {
                 if (activeAnimations[i]->targetElement() == element &&
                     activeAnimations[i]->type() ==
                         ActiveAnimationTask::ANIMATION_TYPE) {
                     bool shouldRemove = false;
                     bool isCancel = true;
-                    // time is up
-                    if (activeAnimations[i]->fraction(tick) >= 1 &&
-                        std::isinf(iterationCount) == false &&
-                        --iter->first->m_iterationStart < 1) {
-                        shouldRemove = true;
-                        isCancel = false;
-                        iter->first->m_iterationStart = iterationCount;
+
+                    bool isOddIteration;
+                    if (std::isinf(iterationCount) == false) {
+                        isOddIteration =
+                            std::fmod(iterationCount -
+                                          iter->first->m_iterationStart + 1,
+                                      2) >= 1;
+                    } else {
+                        isOddIteration =
+                            std::fmod(iter->first->m_iterationStart, 2) >= 1;
+                    }
+                    bool isForwardDirection =
+                        (direction == AnimationDirectionNormalValue) ||
+                        (direction == AnimationDirectionAlternateValue &&
+                         isOddIteration) ||
+                        (direction == AnimationDirectionAlternateReverseValue &&
+                         !isOddIteration);
+                    activeAnimations[i]->setIsForward(isForwardDirection);
+                    if (activeAnimations[i]->fraction(tick) >= 1) {
+                        if (std::isinf(iterationCount) == false) {
+                            if (--iter->first->m_iterationStart < 1) {
+                                // time is up
+                                shouldRemove = true;
+                                isCancel = false;
+                                iter->first->m_iterationStart = iterationCount;
+                            }
+                        } else {
+                            iter->first->m_iterationStart =
+                                iter->first->m_iterationStart == 1 ? 0 : 1;
+                        }
                     }
 
                     // element invisible
@@ -13753,6 +13833,23 @@ bool CSSStyleValuePair::updateValueUnitAnimationTimingFunction(
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitAnimationDirection(
+    const CSSTokenValue& value)
+{
+    if (value.equals("normal") == true) {
+        setAnimationDirectionValue(AnimationDirectionNormalValue);
+    } else if (value.equals("reverse") == true) {
+        setAnimationDirectionValue(AnimationDirectionReverseValue);
+    } else if (value.equals("alternate") == true) {
+        setAnimationDirectionValue(AnimationDirectionAlternateValue);
+    } else if (value.equals("alternate-reverse") == true) {
+        setAnimationDirectionValue(AnimationDirectionAlternateReverseValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueLayerAnimationName(
     const CSSTokenVector& tokens)
 {
@@ -13804,6 +13901,15 @@ bool CSSStyleValuePair::updateValueLayerAnimationIterationCount(
         }
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueLayerAnimationDirection(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitAnimationDirection(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFilterFunction(

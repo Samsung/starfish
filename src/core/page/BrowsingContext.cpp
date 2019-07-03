@@ -603,8 +603,28 @@ bool BrowsingContext::layoutIfNeeded()
             document()->animationExecutor()->activeAnimations();
         auto iter = activeAnimations.begin();
         while (iter != activeAnimations.end()) {
+            auto direction = iter->first->m_direction;
+            auto iterationCount = iter->first->m_iterationCount;
+            bool isOddIteration;
+            if (std::isinf(iterationCount) == false) {
+                isOddIteration =
+                    std::fmod(iterationCount - iter->first->m_iterationStart +
+                                  1,
+                              2) >= 1;
+            } else {
+                isOddIteration =
+                    std::fmod(iter->first->m_iterationStart, 2) >= 1;
+            }
+            bool isForwardDirection =
+                (direction == AnimationDirectionNormalValue) ||
+                (direction == AnimationDirectionAlternateValue &&
+                 isOddIteration) ||
+                (direction == AnimationDirectionAlternateReverseValue &&
+                 !isOddIteration);
+
             auto& l = iter->second;
             for (size_t i = 0; i < l.size(); i++) {
+                l[i]->setIsForward(isForwardDirection);
                 l[i]->resolveUnresolvedAnimatedValues();
             }
             iter++;

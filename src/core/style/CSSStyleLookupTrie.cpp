@@ -974,6 +974,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 19:
+        // Animation-Direction
         // Background-Repeat-X
         // Background-Repeat-Y
         // Border-Image-Outset
@@ -986,6 +987,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // List-Style-Position
         // Grid-Template-Areas
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animation-direction", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationDirection;
+            }
+            break;
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundRepeatX;
@@ -2007,6 +2013,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 18:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animationDirection", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationDirection;
+            }
+            break;
         case 'b':
             if (memcmp(data, "backgroundPosition", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundPosition;
