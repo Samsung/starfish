@@ -227,6 +227,10 @@ public:
     {
     }
 
+    virtual void drawRectInner(float x, float y, float w, float h)
+    {
+    }
+
     virtual void drawRect(const Unit::Rect& rt)
     {
     }
@@ -547,9 +551,6 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return CanvasDirection::Inherit;
     }
-
-protected:
-    WebView* m_webView;
 };
 
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data, CanvasFlag flag)

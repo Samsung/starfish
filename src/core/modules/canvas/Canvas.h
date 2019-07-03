@@ -34,7 +34,7 @@ class NativeImageData;
 class PlatformWindow;
 class NativeGradient;
 class Path;
-class ShadowData;
+class CanvasShadowData;
 
 struct GradientDrawingInfo;
 
@@ -132,7 +132,7 @@ public:
     size_t m_canvasFontState;
     bool m_visible;
     bool m_hasNonInvertableCTM;
-    ShadowData* m_shadowData;
+    CanvasShadowData* m_shadowData;
 
 protected:
     CanvasState();
@@ -532,7 +532,11 @@ public:
     }
 
 protected:
+    void drawRectShadow(float x, float y, float w, float h,
+                        CanvasShadowData* shadow);
+    virtual void drawRectInner(float x, float y, float w, float h) = 0;
     CanvasRenderTargetInfo m_renderTargetInfo;
+    WebView* m_webView;
 };
 }
 
