@@ -236,7 +236,7 @@ TimingFunction* ComputedStyle::knownTimingFunction(TimingFunctionValue v)
     case TimingFunctionValue::TimingFunctionEaseValue:
         return new CubicBezier(0.25, 0.1, 0.25, 1);
     case TimingFunctionValue::TimingFunctionLinearValue:
-        return new CubicBezier(0, 0, 1, 1);
+        return new CubicBezier(0.25, 0.25, 0.75, 0.75);
     case TimingFunctionValue::TimingFunctionEaseInValue:
         return new CubicBezier(0.42, 0, 1, 1);
     case TimingFunctionValue::TimingFunctionEaseOutValue:
