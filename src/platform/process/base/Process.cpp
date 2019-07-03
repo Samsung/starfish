@@ -30,6 +30,8 @@
 #include "platform/process/base/ProcessType.h"
 #include "platform/process/base/Process.h"
 
+extern char** environ;
+
 namespace Starfish {
 
 PID ProcessUtil::getCurrentProcId()
@@ -52,7 +54,7 @@ bool ProcessUtil::launchProcess(const std::vector<std::string>& argv,
     posix_spawnattr_t* attrp = nullptr;
     posix_spawn_file_actions_t file_actions;
     posix_spawn_file_actions_t* file_actionsp = nullptr;
-    char** envp = nullptr;
+    char** envp = environ;
 
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);

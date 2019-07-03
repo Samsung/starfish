@@ -354,8 +354,6 @@ int main(int argc, char* argv[])
             crashTest = true;
         } else if (strstr(argv[i], "--debug-worker=") == argv[i]) {
             setenv("DEBUG_WORKER", argv[i] + strlen("--debug-worker="), 1);
-        } else if (strstr(argv[i], "--debug-cast=") == argv[i]) {
-            setenv("DEBUG_CAST", argv[i] + strlen("--debug-cast="), 1);
         }
     }
 

@@ -1,8 +1,10 @@
 // https://drafts.fxtf.org/geometry/#DOMMatrix
+
+// Exposed=(Window,Worker) -> Exposed=(Window)
 [Constructor(optional (DOMString or sequence<unrestricted double>) init),
  ConstructorCallWith=ExecutionContext,
  RaisesException=Constructor,
- Exposed=(Window,Worker),
+ Exposed=(Window),
  Serializable
  ]
 interface DOMMatrixReadOnly {

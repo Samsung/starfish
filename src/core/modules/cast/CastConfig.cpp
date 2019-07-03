@@ -83,7 +83,7 @@ const char* CastConfig::templateCastAppInfo =
     "<service xmlns=\"" CAST_APP_SERVICE_TYPE "\" dialVer=\"" DIAL_VERSION
     "\">\r\n"
     "  <name>%s</name>\r\n"
-    "  <options allowStop=\"false\"/>\r\n"
+    "  <options allowStop=\"true\"/>\r\n"
     "  <state>%s</state>\r\n"
     "</service>\r\n";
 

@@ -29,6 +29,7 @@ class ThreadPool;
 class ServiceWorkerData;
 class NotificationService;
 class ServiceWorkerServer;
+class CastServer;
 
 enum class ServiceWorkerAgentState {
     Terminated,
@@ -56,6 +57,13 @@ public:
         return m_notificationService;
     }
 
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
+    CastServer* castServer()
+    {
+        return m_castServer;
+    }
+#endif
+
 private:
     ServiceWorkerAgent(Starfish* starfish);
     virtual ~ServiceWorkerAgent();
@@ -68,6 +76,9 @@ private:
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
     NotificationService* m_notificationService;
     GCVector<WebWorker*> m_webWorkerList;
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
+    CastServer* m_castServer;
+#endif
 };
 }
 #endif

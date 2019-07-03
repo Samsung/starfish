@@ -1,7 +1,9 @@
 // https://drafts.fxtf.org/geometry/#DOMMatrix
+
+// Exposed=(Window,Worker) -> Exposed=(Window)
 [Constructor(optional (DOMString or sequence<unrestricted double>) init),
  ConstructorCallWith=ExecutionContext,
- Exposed=(Window,Worker),
+ Exposed=(Window),
  RaisesException=Constructor,
  Serializable,
  LegacyWindowAlias=(SVGMatrix,WebKitCSSMatrix)]

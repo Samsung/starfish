@@ -29,7 +29,6 @@ class NativeImageData;
 class LineBreakIteratorPool;
 class Mutex;
 class ServiceWorkerProcessManager;
-class CastServer;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
 #endif
@@ -100,10 +99,6 @@ protected:
     ServiceWorkerProcessManager* m_serviceWorkerProcessManager;
 #endif
     size_t m_webViewInstanceCount;
-
-#if defined(STARFISH_ENABLE_CAST_SERVICE)
-    CastServer* m_castServer;
-#endif
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);

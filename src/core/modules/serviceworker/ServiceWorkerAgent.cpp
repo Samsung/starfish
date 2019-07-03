@@ -36,6 +36,10 @@
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
+#include "core/modules/cast/CastServer.h"
+#endif
+
 namespace Starfish {
 
 #if !defined(SERVICE_WORKER_THREAD_POOL_SIZE)
@@ -73,6 +77,11 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
 
     m_SWServer->init(m_threadPool);
     m_SWServer->start();
+
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
+    m_castServer = CastServer::instance();
+    m_castServer->start();
+#endif
 }
 
 ServiceWorkerAgent::~ServiceWorkerAgent()
@@ -92,6 +101,13 @@ void ServiceWorkerAgent::destroy()
         m_SWServer->destroy();
         m_SWServer = nullptr;
     }
+
+#if defined(STARFISH_ENABLE_CAST_SERVICE)
+    if (m_castServer != nullptr) {
+        m_castServer->destroy();
+        m_castServer = nullptr;
+    }
+#endif
 
 #if defined(STARFISH_WEBWORKER_HOST)
     for (const auto& webWorker : m_webWorkerList) {

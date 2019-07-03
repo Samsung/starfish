@@ -89,7 +89,7 @@ void ServiceWorkerServer::init(ThreadPool* threadPool)
     STARFISH_ASSERT(threadPool != nullptr);
 
 #ifdef STARFISH_WEBWORKER_HOST
-    WorkerConfig::instance().set("app", "HOST");
+    GlobalOptions::instance().set("app", "HOST");
 #endif
 
     Message::init();

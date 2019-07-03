@@ -173,7 +173,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         // TODO: use a constant executable name
         args.push_back("./StarfishWebWorker");
         args.push_back("--debug-worker=" +
-                       WorkerConfig::instance().get("DEBUG_WORKER"));
+                       GlobalOptions::instance().get("DEBUG_WORKER"));
 
         if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
             SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: success\n");

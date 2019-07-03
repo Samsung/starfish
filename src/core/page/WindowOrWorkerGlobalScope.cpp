@@ -19,6 +19,8 @@
 
 #include "StarfishConfig.h"
 #include "WindowOrWorkerGlobalScope.h"
+
+#ifdef STARFISH_ENABLE_CANVAS
 #include "core/dom/ExecutionContext.h"
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
@@ -33,6 +35,7 @@
 #include "core/fetch/ResponseData.h"
 #include "core/dom/canvas/ImageData.h"
 #include "EscargotPublic.h"
+#endif
 
 namespace Starfish {
 namespace WindowOrWorkerGlobalScope {
