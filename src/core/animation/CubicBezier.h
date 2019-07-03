@@ -58,6 +58,9 @@ public:
         builder.appendString(")");
         return builder.finalize();
     }
+    float getCurveX(float x, float epsilon);
+    float getValueX(float x);
+    float curveDerivativeX(float t);
 
 private:
     float m_coffX1;
@@ -66,6 +69,9 @@ private:
     float m_coffY1;
     float m_coffY2;
     float m_coffY3;
+
+    float m_startGradient;
+    float m_endGradient;
 };
 }
 #endif
