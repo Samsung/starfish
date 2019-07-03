@@ -295,11 +295,6 @@ namespace WindowOrWorkerGlobalScope {
             // fatal way such that the image dimensions cannot be obtained
             // (e.g., a vector graphic with no intrinsic size), then reject p
             // with an "InvalidStateError" DOMException and abort these steps.
-            if (srcImage == nullptr) {
-                return rejectPromiseWithDOMException(
-                    executionContext, promise,
-                    DOMException::Code::INVALID_STATE_ERR);
-            }
         } else if (context.m_image.isImageDataValue()) {
             auto imageData = context.m_image.getImageDataValue();
             size_t imagaDataWidth = imageData->width();
@@ -349,13 +344,15 @@ namespace WindowOrWorkerGlobalScope {
             srcImage = createNativeImageDataWithoutDecoding(
                 (char*)dstPtr, bufferLength, imagaDataWidth, imagaDataHeight,
                 stride);
-            if (srcImage == nullptr) {
-                return rejectPromiseWithDOMException(
-                    executionContext, promise,
-                    DOMException::Code::INVALID_STATE_ERR);
-            }
+
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            return rejectPromiseWithDOMException(
+                executionContext, promise,
+                DOMException::Code::INVALID_STATE_ERR);
+        }
+
+        if (srcImage == nullptr) {
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);

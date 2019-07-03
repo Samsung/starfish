@@ -38,9 +38,25 @@ public:
     {
     }
 
+    CanvasShadowData()
+        : m_offsetX(0)
+        , m_offsetY(0)
+        , m_radius(0)
+        , m_spreadDistance(0)
+        , m_color(Unit::Color())
+        , m_hasColor(false)
+        , m_inset(false)
+    {
+    }
+
     float offsetX() const
     {
         return m_offsetX;
+    }
+
+    void setOffsetX(float offsetX)
+    {
+        m_offsetX = offsetX;
     }
 
     float offsetY() const
@@ -48,14 +64,30 @@ public:
         return m_offsetY;
     }
 
+    void setOffsetY(float offsetY)
+    {
+        m_offsetY = offsetY;
+    }
+
     float radius() const
     {
         return m_radius;
     }
 
+    void setRadius(float radius)
+    {
+        m_radius = radius;
+    }
+
     Unit::Color color() const
     {
         return m_color;
+    }
+
+    void setColor(Unit::Color color)
+    {
+        m_hasColor = true;
+        m_color = color;
     }
 
     bool hasColor() const
@@ -68,9 +100,19 @@ public:
         return m_spreadDistance;
     }
 
+    void setSpreadDistance(float spreadDistance)
+    {
+        m_spreadDistance = spreadDistance;
+    }
+
     bool inset() const
     {
         return m_inset;
+    }
+
+    bool hasValidValue()
+    {
+        return offsetX() != 0 || offsetY() != 0 || radius() != 0;
     }
 
 private:

@@ -603,6 +603,11 @@ public:
                  { xx, yy + hh });
     }
 
+    virtual void drawRectInner(float x, float y, float w, float h)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void strokeRect(const Unit::Rect& rt)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1490,7 +1495,6 @@ public:
     }
 
 protected:
-    WebView* m_webView;
     std::vector<CanvasStateSkia> m_state;
     SkCanvas* m_canvas;
     sk_sp<SkSurface> m_surface;

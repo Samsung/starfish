@@ -53,6 +53,7 @@
 #include "core/modules/canvas/Path.h"
 #include "platform/canvas/PathCairo.h"
 #include "platform/canvas/CanvasCairoUtils.h"
+#include "core/modules/canvas/CanvasShadowData.h"
 
 #if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
     defined(STARFISH_TIZEN)
@@ -1089,6 +1090,9 @@ public:
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawRectShadow(xx, yy, ww, hh, lastState()->m_shadowData);
+        }
         drawCairoRect(xx, yy, ww, hh);
     }
 
@@ -1098,7 +1102,18 @@ public:
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawRectShadow(xx, yy, ww, hh, lastState()->m_shadowData);
+        }
         drawCairoRect(xx, yy, ww, hh);
+    }
+
+    virtual void drawRectInner(float x, float y, float w, float h) override
+    {
+        if (lastState()->m_visible == false) {
+            return;
+        }
+        drawCairoRect(x, y, w, h);
     }
 
     virtual void strokeRect(const Unit::Rect& rt) override
@@ -1653,32 +1668,32 @@ public:
 
     virtual double shadowOffsetX() override
     {
-        return lastState()->m_shadowData->offsetX().fixed();
+        return lastState()->m_shadowData->offsetX();
     }
 
     virtual void setShadowOffsetX(double offset) override
     {
-        lastState()->m_shadowData->setOffsetX(Length(Length::Fixed, offset));
+        lastState()->m_shadowData->setOffsetX(offset);
     }
 
     virtual double shadowOffsetY() override
     {
-        return lastState()->m_shadowData->offsetY().fixed();
+        return lastState()->m_shadowData->offsetY();
     }
 
     virtual void setShadowOffsetY(double offset) override
     {
-        lastState()->m_shadowData->setOffsetY(Length(Length::Fixed, offset));
+        lastState()->m_shadowData->setOffsetY(offset);
     }
 
     virtual double shadowBlur() override
     {
-        return lastState()->m_shadowData->radius().fixed();
+        return lastState()->m_shadowData->radius();
     }
 
     virtual void setShadowBlur(double blur) override
     {
-        lastState()->m_shadowData->setRadius(Length(Length::Fixed, blur));
+        lastState()->m_shadowData->setRadius(blur);
     }
 
     virtual Unit::Color shadowColor() override
@@ -2315,7 +2330,6 @@ private:
     }
 
 protected:
-    WebView* m_webView;
     GCVector<CanvasStateCairo*> m_state{};
     GCVector<CanvasStateCairo*> m_stateMemoryPool{};
     cairo_surface_t* m_surface;
