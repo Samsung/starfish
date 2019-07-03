@@ -21,6 +21,8 @@
     !defined(__StarfishCastApplication__)
 #define __StarfishCastApplication__
 
+#include "platform/process/base/ProcessType.h"
+
 namespace httplib {
 class Server;
 }
@@ -29,16 +31,30 @@ namespace Starfish {
 
 class CastConfig;
 
+struct CastAppInfo {
+    CastAppInfo(const char* appName, const char* launchURL,
+                const std::string& localAddress)
+        : m_pid(-1)
+        , m_appName(appName)
+        , m_launchURL(launchURL)
+        , m_localAddress(localAddress)
+        , m_isRunning(false)
+    {
+    }
+    PID m_pid;
+    std::string m_appName;
+    std::string m_launchURL;
+    std::string m_localAddress;
+    bool m_isRunning;
+};
+
 class CastApplication {
 public:
     CastApplication(httplib::Server* server, CastConfig* config,
-                    const std::string& appName, const std::string& launch);
+                    const char* appName, const char* launchURL);
 
 private:
-    CastConfig* m_config;
-    std::string m_appName;
-    std::string m_launch;
-    std::atomic_bool m_isRunning;
+    CastAppInfo m_castAppInfo;
 };
 
 } // namespace Starfish

@@ -52,12 +52,12 @@ void ServiceWorkerExecutor::runServiceWorker(const std::string& scriptURL)
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([scriptURL]() -> size_t {
         ServiceWorkerAgent::instance()->runServiceWorker(
-            String::fromUTF8(scriptURL.data()));
+            String::fromUTF8(scriptURL.data(), scriptURL.size()));
         return 0;
     });
 #else
     ServiceWorkerAgent::instance()->runServiceWorker(
-        String::fromUTF8(scriptURL.data()));
+        String::fromUTF8(scriptURL.data(), scriptURL.size()));
 #endif
 }
 

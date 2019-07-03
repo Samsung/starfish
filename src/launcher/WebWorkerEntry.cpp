@@ -60,9 +60,10 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
 
-        std::string option("--run-script=");
-        if (startsWith(arg, option) == true) {
-            scriptURL = arg.substr(option.size());
+        if (startsWith(arg, std::string("--run-script="))) {
+            scriptURL = arg.substr(strlen("--run-script="));
+        } else if (startsWith(arg, std::string("--debug-cast="))) {
+            setenv("DEBUG_CAST", argv[i] + strlen("--debug-cast="), 1);
         }
     }
 

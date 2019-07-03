@@ -37,10 +37,6 @@
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #endif
 
-#if defined(STARFISH_ENABLE_CAST_SERVICE)
-#include "core/modules/cast/CastServer.h"
-#endif
-
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {
@@ -131,11 +127,6 @@ Starfish::Starfish(const char* localStorageFilePath,
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init();
 #endif
-
-#if defined(STARFISH_ENABLE_CAST_SERVICE)
-    m_castServer = CastServer::instance();
-    m_castServer->start();
-#endif
 }
 
 void Starfish::destroy()
@@ -154,13 +145,6 @@ void Starfish::destroy()
     if (m_serviceWorkerProcessManager) {
         m_serviceWorkerProcessManager->destroy();
         m_serviceWorkerProcessManager = nullptr;
-    }
-#endif
-
-#if defined(STARFISH_ENABLE_CAST_SERVICE)
-    if (m_castServer != nullptr) {
-        m_castServer->destroy();
-        m_castServer = nullptr;
     }
 #endif
 

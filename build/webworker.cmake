@@ -9,6 +9,9 @@ ENDIF()
 # CONFIG
 #######################################################
 
+# DEFINITION Description
+# STARFISH_ENABLE_CAST_SERVICE : enable app cast service
+
 SET (STARFISH_WEBWORKER_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
     -DGC_DEBUG # bdwgc
@@ -17,6 +20,7 @@ SET (STARFISH_WEBWORKER_DEFINITIONS
     -DSTARFISH_ENABLE_SERVICE_WORKER
     -DPORT_EVENTLOOP_BACKEND_LIBUV
     -DPORT_NEEDS_THREADED_PUBLIC_API
+    -DSTARFISH_ENABLE_CAST_SERVICE
 )
 
 SET (STARFISH_WEBWORKER_LIBRARIES_DEFAULT pthread curl ssl crypto)
@@ -28,7 +32,8 @@ SET (STARFISH_WEBWORKER_INCLUDE_ADDITIONAL_DIRS
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/rapidjson/include
     ${THIRD_PARTY_ROOT}/nanomsg/dist/include
-    ${THIRD_PARTY_ROOT}/nanomsgcpp)
+    ${THIRD_PARTY_ROOT}/nanomsgcpp
+    ${THIRD_PARTY_ROOT}/httplib)
 SET (STARFISH_WEBWORKER_ENTRY ${STARFISH_ROOT}/src/launcher/WebWorkerEntry.cpp)
 
 IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
@@ -83,6 +88,8 @@ FILE (GLOB STARFISH_WEBWORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/platform/network/curl/*.cpp
     ${STARFISH_ROOT}/src/platform/network/http/*.cpp
     ${STARFISH_ROOT}/src/platform/file/File.cpp
+    ${STARFISH_ROOT}/src/platform/process/base/*.cpp
+    ${STARFISH_ROOT}/src/platform/public/*.cpp
 )
 
 FILE (GLOB STARFISH_WEBWORKER_CORE_SRC 
@@ -102,6 +109,7 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/serviceworker/push/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/notification/*.cpp
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
+    ${STARFISH_ROOT}/src/core/modules/cast/*.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp
     ${STARFISH_ROOT}/src/core/dom/WebOrigin.cpp
     ${STARFISH_ROOT}/src/core/csp/*.cpp
