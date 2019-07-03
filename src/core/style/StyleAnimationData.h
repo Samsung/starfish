@@ -25,6 +25,9 @@ namespace Starfish {
 class TimingFunction;
 class AnimationKeyframe : public gc {
 public:
+    enum FillMode { NONE, FORWARDS, BACKWARDS, BOTH, AUTO };
+    enum PlayState { PAUSED, RUNNING };
+
     static TimingFunction* defaultTimingFunction();
 
     AnimationKeyframe()
@@ -143,6 +146,7 @@ public:
         , m_delay(0)
         , m_timingFunction(AnimationKeyframe::defaultTimingFunction())
         , m_iterationCount(1.0f)
+        , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
     {
     }
 
@@ -198,6 +202,16 @@ public:
         return m_iterationCount;
     }
 
+    void setDirection(AnimationDirectionValue d)
+    {
+        m_direction = d;
+    }
+
+    AnimationDirectionValue direction() const
+    {
+        return m_direction;
+    }
+
     size_t keyframeListSize()
     {
         return m_keyframeList.size();
@@ -220,6 +234,7 @@ private:
     CSSTime m_delay;
     TimingFunction* m_timingFunction;
     float m_iterationCount;
+    AnimationDirectionValue m_direction;
     GCVector<AnimationKeyframe*> m_keyframeList;
 };
 
@@ -231,6 +246,7 @@ public:
         , m_timingFunctionSize(0)
         , m_delaySize(0)
         , m_iterationCountSize(0)
+        , m_directionSize(0)
     {
     }
 
@@ -410,9 +426,32 @@ public:
         return m_iterationCountSize;
     }
 
-    enum Direction { NORMAL, REVERSE, ALTERNATE_NORMAL, ALTERNATE_REVERSE };
-    enum FillMode { NONE, FORWARDS, BACKWARDS, BOTH, AUTO };
-    enum PlayState { PAUSED, RUNNING };
+    // animation-direction //////////////////////////
+    void clearDirections()
+    {
+        m_directionSize = 0;
+    }
+
+    void setDirection(AnimationDirectionValue value, size_t index)
+    {
+        resizeIfNeeds(index, m_directionSize);
+        m_keyframes[index].setDirection(value);
+    }
+
+    AnimationDirectionValue direction(size_t index) const
+    {
+        STARFISH_ASSERT(m_directionSize <= m_keyframes.size());
+        if (m_directionSize == 0) {
+            return AnimationDirectionValue::AnimationDirectionNormalValue;
+        }
+        uint16_t p = index % m_directionSize;
+        return m_keyframes[p].direction();
+    }
+
+    size_t directionSize() const
+    {
+        return m_directionSize;
+    }
 
 private:
     GCVector<AnimationKeyframes> m_keyframes;
@@ -421,6 +460,7 @@ private:
     size_t m_timingFunctionSize;
     size_t m_delaySize;
     size_t m_iterationCountSize;
+    size_t m_directionSize;
 };
 }
 

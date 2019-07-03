@@ -441,6 +441,13 @@ enum TimingFunctionValue ENSURE_ENUM_UNSIGNED {
     TimingFunctionStepEndValue,
 };
 
+enum AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
+    AnimationDirectionNormalValue,
+    AnimationDirectionReverseValue,
+    AnimationDirectionAlternateValue,
+    AnimationDirectionAlternateReverseValue,
+};
+
 enum BoxSizingValue ENSURE_ENUM_UNSIGNED {
     ContentBoxBoxSizingValue,
     BorderBoxBoxSizingValue
@@ -734,7 +741,8 @@ class CSSFilterFunction;
       "animation-timing-function")                                   \
     F(AnimationDelay, animationDelay, "animation-delay")             \
     F(AnimationIterationCount, animationIterationCount,              \
-      "animation-iteration-count")
+      "animation-iteration-count")                                   \
+    F(AnimationDirection, animationDirection, "animation-direction")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -977,6 +985,9 @@ public:
         // transition
         TimingFunctionValueKind,
         TimingFunctionPointerKind,
+
+        // animation
+        AnimationDirectionValueKind,
 
         // content
         Attr,
@@ -1455,6 +1466,12 @@ public:
         return m_value.m_timingFunctionValue;
     }
 
+    AnimationDirectionValue animationDirectionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AnimationDirectionValueKind);
+        return m_value.m_animationDirectionValue;
+    }
+
     BoxValue boxValue() const
     {
         STARFISH_ASSERT(m_valueKind == BoxValueKind);
@@ -1702,6 +1719,7 @@ public:
         EmptyCellsValue m_emptyCells;
         KeyKind m_cssPropertyNameValue;
         TimingFunctionValue m_timingFunctionValue;
+        AnimationDirectionValue m_animationDirectionValue;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
         FlexDirectionValue m_flexDirection;
@@ -1926,6 +1944,10 @@ public:
         }
         ValueData(TimingFunctionValue v)
             : m_timingFunctionValue(v)
+        {
+        }
+        ValueData(AnimationDirectionValue v)
+            : m_animationDirectionValue(v)
         {
         }
         ValueData(BoxSizingValue v)
@@ -2307,6 +2329,12 @@ public:
         m_value.m_timingFunction = v;
     }
 
+    void setAnimationDirectionValue(AnimationDirectionValue v)
+    {
+        m_valueKind = AnimationDirectionValueKind;
+        m_value.m_animationDirectionValue = v;
+    }
+
     void setFilterFunctionValue(CSSFilterFunction* v)
     {
         m_valueKind = FilterFunctionValueKind;
@@ -2407,6 +2435,8 @@ public:
     bool updateValueLayerAnimationTimingFunction(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationDelay(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationIterationCount(const CSSTokenVector& tokens);
+    bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
+    bool updateValueLayerAnimationDirection(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;

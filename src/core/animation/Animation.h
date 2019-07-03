@@ -315,6 +315,21 @@ public:
         return std::min(result, 1.0f);
     }
 
+    bool isForward()
+    {
+        return m_isForward;
+    }
+
+    void setIsForward(bool isForward)
+    {
+        if (m_isForward == true && isForward == false) {
+            m_frameIdx = m_frameSize - 1;
+        } else if (m_isForward == false && isForward == true) {
+            m_frameIdx = 0;
+        }
+        m_isForward = isForward;
+    }
+
     void fireTransitionStartEvent();
     void fireTransitionEndEvent();
     void fireTransitionCancelEvent();
@@ -373,6 +388,7 @@ protected:
     uint64_t m_startDelayMs;
     uint64_t m_delayMs;
     bool m_isInDelayedTime;
+    bool m_isForward;
 
     unsigned int m_frameIdx;
     unsigned int m_frameSize;
@@ -588,15 +604,20 @@ struct ActiveElementAnimation : public gc {
     double m_delay;
     float m_iterationStart;
     float m_iterationCount;
+    AnimationDirectionValue m_direction;
 
-    ActiveElementAnimation(String* name, Element* element,
-                           float iterationCount = 1.0f)
+    ActiveElementAnimation(
+        String* name, Element* element, float iterationCount = 1.0f,
+        AnimationDirectionValue direction =
+            AnimationDirectionValue::AnimationDirectionNormalValue)
         : m_name(name)
         , m_element(element)
         , m_duration(0)
         , m_delay(0)
-        , m_iterationStart(iterationCount)
+        , m_iterationStart(std::isinf(iterationCount) == true ? 1
+                                                              : iterationCount)
         , m_iterationCount(iterationCount)
+        , m_direction(direction)
         , m_hash(0)
     {
         STARFISH_ASSERT(name != nullptr);
@@ -719,7 +740,8 @@ public:
     }
 
     void registerAnimation(ActiveAnimationTask* task, ComputedStyle* style,
-                           String* name, float iterationCount)
+                           String* name, float iterationCount,
+                           AnimationDirectionValue direction)
     {
         STARFISH_ASSERT(task != nullptr);
         STARFISH_ASSERT(style != nullptr);
@@ -727,7 +749,7 @@ public:
 
         task->attachToElement(style);
         ActiveElementAnimation* key = new ActiveElementAnimation(
-            name, task->targetElement(), iterationCount);
+            name, task->targetElement(), iterationCount, direction);
         auto iter = m_activeAnimations->find(key);
         if (iter == m_activeAnimations->end()) {
             GCVector<ActiveAnimationTask*> v;

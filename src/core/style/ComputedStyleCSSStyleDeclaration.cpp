@@ -1340,6 +1340,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::AnimationDirection: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDirection);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size =
+            style->animation() ? style->animation()->directionSize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(
+                CSSStyleValuePair::AnimationDirectionValueKind,
+                AnimationDirectionValue::AnimationDirectionNormalValue);
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::AnimationDirectionValueKind,
+                    style->animationDirect(i));
+            }
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
