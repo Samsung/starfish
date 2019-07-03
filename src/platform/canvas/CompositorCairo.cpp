@@ -410,11 +410,9 @@ size_t Compositor::maximumTextureSize()
 {
     return 65535;
 }
-t
 
-    Compositor*
-    Compositor::create2D(WebView* wv, CompositorContext* ctx,
-                         CanvasSurface* surface)
+Compositor* Compositor::create2D(WebView* wv, CompositorContext* ctx,
+                                 CanvasSurface* surface)
 {
     return new CompositorImplCairo(wv, surface);
 }
