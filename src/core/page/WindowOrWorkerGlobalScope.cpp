@@ -203,6 +203,20 @@ namespace WindowOrWorkerGlobalScope {
         return result;
     }
 
+    static NativeImageData* createNativeImageDataWithoutDecoding(
+        const char* buffer, size_t buffer_size, size_t width, size_t height,
+        size_t stride)
+    {
+        NativeImageData* result = nullptr;
+        ResponseBody internalBuffer;
+        internalBuffer.insert(internalBuffer.begin(), buffer,
+                              buffer + buffer_size);
+        result =
+            NativeImageData::create(internalBuffer, UTF8StringDataNonGCStd(),
+                                    (uint8_t*)buffer, width, height, stride);
+        return result;
+    }
+
     Promise* createImageBitmapInternal(ExecutionContext* executionContext,
                                        ImageBitmapCreateContext context)
     {
@@ -288,7 +302,9 @@ namespace WindowOrWorkerGlobalScope {
             }
         } else if (context.m_image.isImageDataValue()) {
             auto imageData = context.m_image.getImageDataValue();
-
+            size_t imagaDataWidth = imageData->width();
+            size_t imagaDataHeight = imageData->height();
+            size_t stride = imagaDataWidth * 4;
             // 2.If IsDetachedBuffer(buffer) is true, then return p rejected
             // with an "InvalidStateError" DOMException.
             if (imageData->data()
@@ -299,21 +315,45 @@ namespace WindowOrWorkerGlobalScope {
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
-            srcImage =
-                createNativeImageDataWithDecoding((const char*)imageData->data()
-                                                      ->asArrayBufferView()
-                                                      ->buffer()
-                                                      ->rawBuffer(),
-                                                  (size_t)imageData->data()
-                                                      ->asArrayBufferView()
-                                                      ->buffer()
-                                                      ->bytelength());
+            uint8_t* srcPtr =
+                imageData->data()->asArrayBufferView()->buffer()->rawBuffer();
+            uint8_t* dstPtr =
+                (uint8_t*)malloc(imagaDataWidth * imagaDataHeight * stride);
+            size_t bufferLength = (size_t)imageData->data()
+                                      ->asArrayBufferView()
+                                      ->buffer()
+                                      ->bytelength();
+#if defined(PORT_PIXEL_ORDER_RGBA)
+            memcpy(dstPtr, srcPtr, bufferLength);
+#else
+            {
+                for (size_t y = 0; y < imagaDataHeight; y++) {
+                    for (size_t x = 0; x < imagaDataHeight; x++) {
+                        uint8_t* srcPixel =
+                            srcPtr + (y * imagaDataWidth * 4) + (x * 4);
+                        uint8_t* dstPixel =
+                            dstPtr + (y * imagaDataWidth * 4) + (x * 4);
+                        uint8_t r, g, b, a;
+                        r = srcPixel[0];
+                        g = srcPixel[1];
+                        b = srcPixel[2];
+                        a = srcPixel[3];
+                        dstPixel[2] = r;
+                        dstPixel[1] = g;
+                        dstPixel[0] = b;
+                        dstPixel[3] = a;
+                    }
+                }
+            }
+#endif
+            srcImage = createNativeImageDataWithoutDecoding(
+                (char*)dstPtr, bufferLength, imagaDataWidth, imagaDataHeight,
+                stride);
             if (srcImage == nullptr) {
                 return rejectPromiseWithDOMException(
                     executionContext, promise,
                     DOMException::Code::INVALID_STATE_ERR);
             }
-
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             return rejectPromiseWithDOMException(
