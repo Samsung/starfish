@@ -608,7 +608,7 @@ http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.get.sour
 http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.get.type.html
 http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.get.unaffected.html
 http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.get.zero.html
-#http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.object.clamp.html
+http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.object.clamp.html
 #http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.object.ctor.array.bounds.html
 http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.object.ctor.array.html
 http://web-platform.test:8000/2dcontext/pixel-manipulation/2d.imageData.object.ctor.size.bounds.html
