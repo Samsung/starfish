@@ -1053,9 +1053,15 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         break;
 
     case 20:
+        // animation-play-state
         // box-decoration-break
         // text-decoration-line
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animation-play-state", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationPlayState;
+            }
+            break;
         case 'b':
             if (memcmp(data, "box-decoration-break", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::BoxDecorationBreak;
@@ -2016,6 +2022,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'a':
             if (memcmp(data, "animationDirection", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDirection;
+            }
+            if (memcmp(data, "animationPlayState", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationPlayState;
             }
             break;
         case 'b':

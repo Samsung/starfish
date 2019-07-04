@@ -1568,6 +1568,16 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::ValueKind::AnimationPlayStateValueKind:
+        switch (animationPlayStateValue()) {
+        case AnimationPlayStateRunningValue:
+            return String::fromUTF8("running");
+        case AnimationPlayStatePausedValue:
+            return String::fromUTF8("paused");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
         switch (boxSizingValue()) {
         case ContentBoxBoxSizingValue:
@@ -2452,6 +2462,34 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::AnimationDirectionValueKind:
         style->setAnimationDirection(item.animationDirectionValue(), index);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyAnimationPlayState(Element* element, ComputedStyle* style,
+                                    ComputedStyle* parentStyle,
+                                    CSSStyleValuePair& item, size_t index)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setAnimationPlayState(
+            AnimationPlayStateValue::AnimationPlayStateRunningValue, index);
+        break;
+    case CSSStyleValuePair::Inherit:
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setAnimationPlayState(parentStyle->animationPlayState(), index);
+        break;
+    case CSSStyleValuePair::AnimationPlayStateValueKind:
+        style->setAnimationPlayState(item.animationPlayStateValue(), index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -4083,6 +4121,20 @@ void StyleResolver::apply(Element* element,
                 STARFISH_ASSERT(list != nullptr);
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationDirection(element, style, parentStyle,
+                                            (*list)[i], i);
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AnimationPlayState:
+            style->resetAnimationPlayState();
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyAnimationPlayState(element, style, parentStyle,
+                                        cssValues[k], 0);
+            } else {
+                ValueList* list = cssValues[k].multiValue();
+                STARFISH_ASSERT(list != nullptr);
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    applyAnimationPlayState(element, style, parentStyle,
                                             (*list)[i], i);
                 }
             }
@@ -7356,7 +7408,7 @@ static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
     //      case CSSStyleValuePair::KeyKind::AnimationFillMode:
     case CSSStyleValuePair::KeyKind::AnimationIterationCount:
     case CSSStyleValuePair::KeyKind::AnimationName:
-    //      case CSSStyleValuePair::KeyKind::AnimationPlayState:
+    case CSSStyleValuePair::KeyKind::AnimationPlayState:
     case CSSStyleValuePair::KeyKind::AnimationTimingFunction:
     case CSSStyleValuePair::KeyKind::Display:
     case CSSStyleValuePair::KeyKind::Transition:
@@ -13867,6 +13919,19 @@ bool CSSStyleValuePair::updateValueUnitAnimationDirection(
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
+    const CSSTokenValue& value)
+{
+    if (value.equals("running") == true) {
+        setAnimationPlayStateValue(AnimationPlayStateRunningValue);
+    } else if (value.equals("paused") == true) {
+        setAnimationPlayStateValue(AnimationPlayStatePausedValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueLayerAnimationName(
     const CSSTokenVector& tokens)
 {
@@ -13927,6 +13992,15 @@ bool CSSStyleValuePair::updateValueLayerAnimationDirection(
         return false;
     }
     return updateValueUnitAnimationDirection(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueLayerAnimationPlayState(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitAnimationPlayState(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFilterFunction(

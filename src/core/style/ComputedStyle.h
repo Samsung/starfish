@@ -2221,6 +2221,15 @@ public:
         return AnimationDirectionValue::AnimationDirectionNormalValue;
     }
 
+    AnimationPlayStateValue animationPlayState(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->playState(layer);
+        }
+        return AnimationPlayStateValue::AnimationPlayStateRunningValue;
+    }
+
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
                                size_t layer = 0)
     {
@@ -2314,6 +2323,11 @@ public:
         m_rareComputedStyleData.ensureAnimation()->setDirection(value, index);
     }
 
+    void setAnimationPlayState(AnimationPlayStateValue value, size_t index)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setPlayState(value, index);
+    }
+
     void resetTransitionProperties()
     {
         StyleTransitionData* t = transition();
@@ -2391,6 +2405,14 @@ public:
         StyleAnimationData* a = animation();
         if (a != nullptr) {
             a->clearDirections();
+        }
+    }
+
+    void resetAnimationPlayState()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearPlayStates();
         }
     }
 

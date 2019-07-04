@@ -448,6 +448,11 @@ enum AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
     AnimationDirectionAlternateReverseValue,
 };
 
+enum AnimationPlayStateValue ENSURE_ENUM_UNSIGNED {
+    AnimationPlayStateRunningValue,
+    AnimationPlayStatePausedValue,
+};
+
 enum BoxSizingValue ENSURE_ENUM_UNSIGNED {
     ContentBoxBoxSizingValue,
     BorderBoxBoxSizingValue
@@ -742,7 +747,8 @@ class CSSFilterFunction;
     F(AnimationDelay, animationDelay, "animation-delay")             \
     F(AnimationIterationCount, animationIterationCount,              \
       "animation-iteration-count")                                   \
-    F(AnimationDirection, animationDirection, "animation-direction")
+    F(AnimationDirection, animationDirection, "animation-direction") \
+    F(AnimationPlayState, animationPlayState, "animation-play-state")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -988,6 +994,7 @@ public:
 
         // animation
         AnimationDirectionValueKind,
+        AnimationPlayStateValueKind,
 
         // content
         Attr,
@@ -1472,6 +1479,12 @@ public:
         return m_value.m_animationDirectionValue;
     }
 
+    AnimationPlayStateValue animationPlayStateValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AnimationPlayStateValueKind);
+        return m_value.m_animationPlayStateValue;
+    }
+
     BoxValue boxValue() const
     {
         STARFISH_ASSERT(m_valueKind == BoxValueKind);
@@ -1720,6 +1733,7 @@ public:
         KeyKind m_cssPropertyNameValue;
         TimingFunctionValue m_timingFunctionValue;
         AnimationDirectionValue m_animationDirectionValue;
+        AnimationPlayStateValue m_animationPlayStateValue;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
         FlexDirectionValue m_flexDirection;
@@ -1948,6 +1962,10 @@ public:
         }
         ValueData(AnimationDirectionValue v)
             : m_animationDirectionValue(v)
+        {
+        }
+        ValueData(AnimationPlayStateValue v)
+            : m_animationPlayStateValue(v)
         {
         }
         ValueData(BoxSizingValue v)
@@ -2335,6 +2353,12 @@ public:
         m_value.m_animationDirectionValue = v;
     }
 
+    void setAnimationPlayStateValue(AnimationPlayStateValue v)
+    {
+        m_valueKind = AnimationPlayStateValueKind;
+        m_value.m_animationPlayStateValue = v;
+    }
+
     void setFilterFunctionValue(CSSFilterFunction* v)
     {
         m_valueKind = FilterFunctionValueKind;
@@ -2437,6 +2461,8 @@ public:
     bool updateValueLayerAnimationIterationCount(const CSSTokenVector& tokens);
     bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
     bool updateValueLayerAnimationDirection(const CSSTokenVector& tokens);
+    bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
+    bool updateValueLayerAnimationPlayState(const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;
