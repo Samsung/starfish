@@ -8,7 +8,7 @@
 	ignore = untracked
 [submodule "third_party/escargot"]
 	path = third_party/escargot
-	url = https://github.com/lws-project/escargot.git
+	url = https://github.com/Samsung/escargot.git
 	ignore = untracked
 [submodule "third_party/MP4Parse"]
 	path = third_party/MP4Parse
