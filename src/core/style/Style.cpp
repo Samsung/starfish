@@ -7924,6 +7924,9 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
     ComputedStyle* childTextNodeStyle = nullptr;
     STARFISH_ASSERT(parentElementStyle->display() != NoneDisplayValue);
+    ComputedStyleDamage childTextNodeComputedStyleDamage =
+        ComputedStyleDamage::ComputedStyleDamageNone;
+
     if (parentElement->isElement()) {
         ctx.m_ancestorSelectorFilter->pushElement(parentElement->asElement());
     }
@@ -7979,10 +7982,24 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                     childTextNodeStyle->loadResources(parentElement);
                     childTextNodeStyle->arrangeStyleValues(parentElementStyle,
                                                            child);
+
+                    ComputedStyle* oldStyle = child->style();
+                    if (oldStyle) {
+                        bool damagedKeys
+                            [CSSStyleValuePair::KeyKindSize]; // don't care
+                        childTextNodeComputedStyleDamage = compareStyle(
+                            childTextNodeStyle, oldStyle, damagedKeys);
+                    }
                 }
+
                 child->setStyle(childTextNodeStyle);
                 child->clearNeedsStyleRecalc();
                 child->clearChildNeedsStyleRecalc();
+
+                if (childTextNodeComputedStyleDamage &
+                    ComputedStyleDamagePainting) {
+                    child->setNeedsPainting();
+                }
 
                 if (!child->frame()) {
                     if (parentElement->frame() && parentElement->isElement()) {
