@@ -306,6 +306,11 @@ public:
 
     float fraction(uint64_t tickCount) const
     {
+        if (m_isRunning == false) {
+            float result = m_gapTimeMs / ((float)m_durationMs);
+            return std::min(result, 1.0f);
+        }
+
         if (tickCount < (m_startTimeMs + m_delayMs)) {
             return 0;
         }
@@ -351,6 +356,33 @@ public:
         }
     }
 
+    void setStartTime(uint64_t t)
+    {
+        if (m_startTimeMs != 0) {
+            m_startTimeMs = t;
+        }
+    }
+
+    uint64_t startTime()
+    {
+        return m_startTimeMs;
+    }
+
+    void setGapTime(uint64_t t)
+    {
+        m_gapTimeMs = t;
+    }
+
+    uint64_t gapTime()
+    {
+        return m_gapTimeMs;
+    }
+
+    void setIsRunning(bool isRunning)
+    {
+        m_isRunning = isRunning;
+    }
+
     enum TYPE { TRANSITION_TYPE, ANIMATION_TYPE };
     TYPE type()
     {
@@ -387,8 +419,10 @@ protected:
     uint64_t m_durationMs;
     uint64_t m_startDelayMs;
     uint64_t m_delayMs;
+    uint64_t m_gapTimeMs;
     bool m_isInDelayedTime;
     bool m_isForward;
+    bool m_isRunning;
 
     unsigned int m_frameIdx;
     unsigned int m_frameSize;
@@ -600,24 +634,31 @@ protected:
 struct ActiveElementAnimation : public gc {
     String* m_name;
     Element* m_element;
+    size_t m_index;
     double m_duration;
     double m_delay;
     float m_iterationStart;
     float m_iterationCount;
     AnimationDirectionValue m_direction;
+    AnimationPlayStateValue m_playState;
 
     ActiveElementAnimation(
-        String* name, Element* element, float iterationCount = 1.0f,
+        String* name, Element* element, size_t index = 0,
+        float iterationCount = 1.0f,
         AnimationDirectionValue direction =
-            AnimationDirectionValue::AnimationDirectionNormalValue)
+            AnimationDirectionValue::AnimationDirectionNormalValue,
+        AnimationPlayStateValue playState =
+            AnimationPlayStateValue::AnimationPlayStateRunningValue)
         : m_name(name)
         , m_element(element)
+        , m_index(index)
         , m_duration(0)
         , m_delay(0)
         , m_iterationStart(std::isinf(iterationCount) == true ? 1
                                                               : iterationCount)
         , m_iterationCount(iterationCount)
         , m_direction(direction)
+        , m_playState(playState)
         , m_hash(0)
     {
         STARFISH_ASSERT(name != nullptr);
@@ -740,16 +781,21 @@ public:
     }
 
     void registerAnimation(ActiveAnimationTask* task, ComputedStyle* style,
-                           String* name, float iterationCount,
-                           AnimationDirectionValue direction)
+                           String* name, size_t index, float iterationCount,
+                           AnimationDirectionValue direction,
+                           AnimationPlayStateValue playState)
     {
         STARFISH_ASSERT(task != nullptr);
         STARFISH_ASSERT(style != nullptr);
         STARFISH_ASSERT(name != nullptr);
 
         task->attachToElement(style);
-        ActiveElementAnimation* key = new ActiveElementAnimation(
-            name, task->targetElement(), iterationCount, direction);
+        task->setIsRunning(
+            playState ==
+            AnimationPlayStateValue::AnimationPlayStateRunningValue);
+        ActiveElementAnimation* key =
+            new ActiveElementAnimation(name, task->targetElement(), index,
+                                       iterationCount, direction, playState);
         auto iter = m_activeAnimations->find(key);
         if (iter == m_activeAnimations->end()) {
             GCVector<ActiveAnimationTask*> v;

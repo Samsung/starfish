@@ -1359,6 +1359,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::AnimationPlayState: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationPlayState);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size =
+            style->animation() ? style->animation()->playStateSize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(
+                CSSStyleValuePair::AnimationPlayStateValueKind,
+                AnimationPlayStateValue::AnimationPlayStateRunningValue);
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::AnimationPlayStateValueKind,
+                    style->animationPlayState(i));
+            }
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);

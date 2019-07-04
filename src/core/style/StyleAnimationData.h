@@ -25,9 +25,6 @@ namespace Starfish {
 class TimingFunction;
 class AnimationKeyframe : public gc {
 public:
-    enum FillMode { NONE, FORWARDS, BACKWARDS, BOTH, AUTO };
-    enum PlayState { PAUSED, RUNNING };
-
     static TimingFunction* defaultTimingFunction();
 
     AnimationKeyframe()
@@ -147,6 +144,7 @@ public:
         , m_timingFunction(AnimationKeyframe::defaultTimingFunction())
         , m_iterationCount(1.0f)
         , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
+        , m_playState(AnimationPlayStateValue::AnimationPlayStateRunningValue)
     {
     }
 
@@ -212,6 +210,16 @@ public:
         return m_direction;
     }
 
+    void setPlayState(AnimationPlayStateValue d)
+    {
+        m_playState = d;
+    }
+
+    AnimationPlayStateValue playState() const
+    {
+        return m_playState;
+    }
+
     size_t keyframeListSize()
     {
         return m_keyframeList.size();
@@ -235,6 +243,7 @@ private:
     TimingFunction* m_timingFunction;
     float m_iterationCount;
     AnimationDirectionValue m_direction;
+    AnimationPlayStateValue m_playState;
     GCVector<AnimationKeyframe*> m_keyframeList;
 };
 
@@ -247,6 +256,7 @@ public:
         , m_delaySize(0)
         , m_iterationCountSize(0)
         , m_directionSize(0)
+        , m_playStateSize(0)
     {
     }
 
@@ -453,6 +463,33 @@ public:
         return m_directionSize;
     }
 
+    // animation-play-state //////////////////////////
+    void clearPlayStates()
+    {
+        m_playStateSize = 0;
+    }
+
+    void setPlayState(AnimationPlayStateValue value, size_t index)
+    {
+        resizeIfNeeds(index, m_playStateSize);
+        m_keyframes[index].setPlayState(value);
+    }
+
+    AnimationPlayStateValue playState(size_t index) const
+    {
+        STARFISH_ASSERT(m_playStateSize <= m_keyframes.size());
+        if (m_playStateSize == 0) {
+            return AnimationPlayStateValue::AnimationPlayStateRunningValue;
+        }
+        uint16_t p = index % m_playStateSize;
+        return m_keyframes[p].playState();
+    }
+
+    size_t playStateSize() const
+    {
+        return m_playStateSize;
+    }
+
 private:
     GCVector<AnimationKeyframes> m_keyframes;
     size_t m_nameSize;
@@ -461,6 +498,7 @@ private:
     size_t m_delaySize;
     size_t m_iterationCountSize;
     size_t m_directionSize;
+    size_t m_playStateSize;
 };
 }
 

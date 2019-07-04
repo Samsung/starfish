@@ -1536,6 +1536,7 @@ RenderResult WebView::rendering(bool force)
                 m_activeAnimationExecutor[i]->activeTransitions();
             for (auto task : transitions) {
                 task->initializeStartTimeIfNeeded(tick);
+                needsContinuousRendering = true;
                 if (task->targetElement()->isPseudoElement() == true) {
                     // we should give damage on parent element
                     // because style of pseudo element is computed by
@@ -1551,24 +1552,82 @@ RenderResult WebView::rendering(bool force)
 
             auto& animations = m_activeAnimationExecutor[i]->activeAnimations();
             for (auto& animation : animations) {
+                size_t idx = animation.first->m_index;
                 for (auto task : animation.second) {
                     task->initializeStartTimeIfNeeded(tick);
                     if (task->targetElement()->isPseudoElement() == true) {
                         // we should give damage on parent element
                         // because style of pseudo element is computed by
                         // its parent element
-                        task->targetElement()
-                            ->asPseudoElement()
-                            ->originElement()
-                            ->setNeedsStyleRecalcForAnimation();
+                        if (task->targetElement()
+                                ->style()
+                                ->animation()
+                                ->playState(idx) ==
+                            AnimationPlayStateValue::
+                                AnimationPlayStateRunningValue) {
+                            task->targetElement()
+                                ->asPseudoElement()
+                                ->originElement()
+                                ->setNeedsStyleRecalcForAnimation();
+                            needsContinuousRendering = true;
+
+                            if (animation.first->m_playState ==
+                                AnimationPlayStateValue::
+                                    AnimationPlayStatePausedValue) {
+                                task->setStartTime(tick - task->gapTime());
+                                task->setGapTime(0);
+                                task->setIsRunning(true);
+                                animation.first->m_playState =
+                                    AnimationPlayStateValue::
+                                        AnimationPlayStateRunningValue;
+                            }
+                        } else {
+                            if (animation.first->m_playState ==
+                                AnimationPlayStateValue::
+                                    AnimationPlayStateRunningValue) {
+                                task->setGapTime(tick - task->startTime());
+                                task->setIsRunning(false);
+                                animation.first->m_playState =
+                                    AnimationPlayStateValue::
+                                        AnimationPlayStatePausedValue;
+                            }
+                        }
                     } else {
-                        task->targetElement()
-                            ->setNeedsStyleRecalcForAnimation();
+                        if (task->targetElement()
+                                ->style()
+                                ->animation()
+                                ->playState(idx) ==
+                            AnimationPlayStateValue::
+                                AnimationPlayStateRunningValue) {
+                            task->targetElement()
+                                ->setNeedsStyleRecalcForAnimation();
+                            needsContinuousRendering = true;
+
+                            if (animation.first->m_playState ==
+                                AnimationPlayStateValue::
+                                    AnimationPlayStatePausedValue) {
+                                task->setStartTime(tick - task->gapTime());
+                                task->setGapTime(0);
+                                task->setIsRunning(true);
+                                animation.first->m_playState =
+                                    AnimationPlayStateValue::
+                                        AnimationPlayStateRunningValue;
+                            }
+                        } else {
+                            if (animation.first->m_playState ==
+                                AnimationPlayStateValue::
+                                    AnimationPlayStateRunningValue) {
+                                task->setGapTime(tick - task->startTime());
+                                task->setIsRunning(false);
+                                animation.first->m_playState =
+                                    AnimationPlayStateValue::
+                                        AnimationPlayStatePausedValue;
+                            }
+                        }
                     }
                 }
             }
         }
-        needsContinuousRendering = true;
     }
 
     if (timer()->m_requestAnimationFrameHandler.size()) {

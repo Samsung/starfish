@@ -148,8 +148,10 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_durationMs(durationInms)
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
-    , m_isInDelayedTime(true)
+    , m_gapTimeMs(0)
+    , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
+    , m_isRunning(true)
     , m_frameIdx(0)
     , m_frameSize(2)
 {
@@ -175,8 +177,10 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_durationMs(durationInms)
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
-    , m_isInDelayedTime(true)
+    , m_gapTimeMs(0)
+    , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
+    , m_isRunning(true)
     , m_frameIdx(0)
     , m_frameSize(values.size())
 {
@@ -2409,6 +2413,7 @@ bool applyAnimationIfNeeds(
         double delay = animation->delay(s).toTimeValue();
         float iterationCount = animation->iterationCount(s);
         AnimationDirectionValue direction = animation->direction(s);
+        AnimationPlayStateValue playState = animation->playState(s);
 
         size_t keyframeSize = keyframes.keyframeListSize();
         for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
@@ -2460,8 +2465,8 @@ bool applyAnimationIfNeeds(
                     offsets, timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
-                executor->registerAnimation(task, style, name, iterationCount,
-                                            direction);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
 
@@ -2471,23 +2476,23 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
-                executor->registerAnimation(task, style, name, iterationCount,
-                                            direction);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
 
 // length series
 
-#define APPLY_LENGTH_ANIMATION(propertyName)                           \
-    if (fromKeyKind == CSSStyleValuePair::propertyName) {              \
-        auto task = new ActiveLengthAnimationTask(                     \
-            element, CSSStyleValuePair::propertyName, values, offsets, \
-            timingFunctions, duration, delay);                         \
-        executor->removeActiveAnimationTaskIfNeeds(                    \
-            element, CSSStyleValuePair::propertyName);                 \
-        executor->registerAnimation(task, style, name, iterationCount, \
-                                    direction);                        \
-        gotAnimation = true;                                           \
+#define APPLY_LENGTH_ANIMATION(propertyName)                              \
+    if (fromKeyKind == CSSStyleValuePair::propertyName) {                 \
+        auto task = new ActiveLengthAnimationTask(                        \
+            element, CSSStyleValuePair::propertyName, values, offsets,    \
+            timingFunctions, duration, delay);                            \
+        executor->removeActiveAnimationTaskIfNeeds(                       \
+            element, CSSStyleValuePair::propertyName);                    \
+        executor->registerAnimation(task, style, name, s, iterationCount, \
+                                    direction, playState);                \
+        gotAnimation = true;                                              \
     }
 
             APPLY_LENGTH_ANIMATION(Width)
@@ -2505,8 +2510,8 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
-                executor->registerAnimation(task, style, name, iterationCount,
-                                            direction);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
 
@@ -2516,8 +2521,8 @@ bool applyAnimationIfNeeds(
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
-                executor->registerAnimation(task, style, name, iterationCount,
-                                            direction);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
 
