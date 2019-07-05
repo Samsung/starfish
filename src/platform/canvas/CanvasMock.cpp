@@ -231,6 +231,21 @@ public:
     {
     }
 
+    virtual void strokeRectInner(float x, float y, float w, float h)
+    {
+    }
+
+    virtual void drawTextInner(float x, float y, float stringWidth,
+                               const StringView& sv,
+                               bool shouldSkipUnresolvedWebFont)
+    {
+    }
+    virtual void drawStrokeTextInner(float x, float y, float stringWidth,
+                                     const StringView& sv,
+                                     bool shouldSkipUnresolvedWebFont)
+    {
+    }
+
     virtual void drawRect(const Unit::Rect& rt)
     {
     }

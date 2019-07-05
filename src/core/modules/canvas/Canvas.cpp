@@ -345,7 +345,8 @@ void Canvas::restore()
     }
 }
 
-void Canvas::drawRectShadow(float x, float y, float width, float height)
+void Canvas::drawRectShadowInner(float x, float y, float width, float height,
+                                 bool isFill)
 {
     int xx = x, yy = y, ww = width, hh = height;
     Unit::Rect shadowRect(0, 0, ww, hh);
@@ -357,17 +358,24 @@ void Canvas::drawRectShadow(float x, float y, float width, float height)
 
     if (radius == 0) {
         save();
-        setFillColor(shadow->color());
-        drawRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
-                      shadowRect.width(), shadowRect.height());
+        if (isFill) {
+            setFillColor(shadow->color());
+            drawRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
+                          shadowRect.width(), shadowRect.height());
+        } else {
+            setStrokeColor(shadow->color());
+            strokeRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
+                            shadowRect.width(), shadowRect.height());
+        }
         restore();
+        return;
     } else {
         radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
         radiusOffset *= 2;
     }
 
     float shortSide = std::min(shadowRect.width(), shadowRect.height());
-    bool canUseFastPath = (radius < shortSide / 2) && radius > 0;
+    bool canUseFastPath = (radius < shortSide / 2) && radius > 0 && isFill;
 
     if (canUseFastPath) {
         save();
@@ -378,11 +386,11 @@ void Canvas::drawRectShadow(float x, float y, float width, float height)
         Canvas* cv = Canvas::create(m_webView, nativeImage);
         cv->unsetDevicePixelRatio();
         auto shadowColor = shadow->color();
-        cv->setFillColor(shadowColor);
         cv->clearColor(Unit::Color(0, 0, 0, 0));
-
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+        cv->setFillColor(shadowColor);
         cv->drawRect(shadowRect);
+
         ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                       nativeImage->height(), nativeImage->stride());
         sb.process(radius / 2);
@@ -418,10 +426,9 @@ void Canvas::drawRectShadow(float x, float y, float width, float height)
 #endif
 
         setFillColor(Unit::Color(r, g, b, a));
-        drawRect(Unit::Rect(imageRect.x() + pieceSize,
-                            imageRect.y() + pieceSize,
-                            imageRect.width() - pieceSize * 2,
-                            imageRect.height() - pieceSize * 2));
+        drawRectInner(imageRect.x() + pieceSize, imageRect.y() + pieceSize,
+                      imageRect.width() - pieceSize * 2,
+                      imageRect.height() - pieceSize * 2);
 
         // top-left
         Unit::Rect src;
@@ -527,10 +534,14 @@ void Canvas::drawRectShadow(float x, float y, float width, float height)
         Canvas* cv = Canvas::create(m_webView, nativeImage);
         cv->unsetDevicePixelRatio();
         cv->clearColor(Unit::Color(0, 0, 0, 0));
-        cv->setFillColor(shadow->color());
-
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
-        cv->drawRect(shadowRect);
+        if (isFill) {
+            cv->setFillColor(shadow->color());
+            cv->drawRect(shadowRect);
+        } else {
+            cv->setShadowColor(shadow->color());
+            cv->strokeRect(shadowRect);
+        }
 
         ShadowBlur sb(nativeImage->data(), nativeImage->width(),
                       nativeImage->height(), nativeImage->stride());
@@ -547,5 +558,95 @@ void Canvas::drawRectShadow(float x, float y, float width, float height)
 
         delete nativeImage;
     }
+}
+
+void Canvas::drawFillRectShadow(float x, float y, float width, float height)
+{
+    drawRectShadowInner(x, y, width, height, true);
+}
+
+void Canvas::drawStrokeRectShadow(float x, float y, float width, float height)
+{
+    drawRectShadowInner(x, y, width, height, false);
+}
+
+void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
+                                 const StringView& sv, bool isFill)
+{
+    CanvasShadowData* shadow = lastState()->m_shadowData;
+    Font* font = lastState()->m_font;
+    Unit::Color shadowColor = shadow->color();
+    size_t width = (size_t)(ceil(stringWidth));
+    size_t height = (size_t)(ceil((float)font->metrics().m_fontHeight));
+    float radius = shadow->radius();
+    float shadowOffsetX = shadow->offsetX();
+    float shadowOffsetY = shadow->offsetY();
+    float radiusOffset = 0.0f;
+
+    if (radius == 0) {
+        save();
+        if (isFill) {
+            setFillColor(shadow->color());
+            drawTextInner(shadowOffsetX + x, shadowOffsetY + y, stringWidth, sv,
+                          true);
+        } else {
+            setStrokeColor(shadow->color());
+            drawStrokeTextInner(shadowOffsetX + x, shadowOffsetY + y,
+                                stringWidth, sv, true);
+        }
+        restore();
+        return;
+    } else {
+        radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
+        radiusOffset *= 2;
+    }
+
+    auto imageWidth = width + ceil(radiusOffset);
+    auto imageHeight = height + ceil(radiusOffset);
+    NativeImageData* nativeImage =
+        NativeImageData::create(imageWidth, imageHeight);
+    Canvas* cv = Canvas::create(m_webView, nativeImage);
+    cv->unsetDevicePixelRatio();
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->setFont(font);
+    auto tdc = textDecorationData();
+    tdc.setUnderLineColor(shadowColor);
+    tdc.setLineThroughColor(shadowColor);
+    cv->setTextDecorationData(tdc);
+    cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+    if (isFill) {
+        cv->setFillColor(shadowColor);
+        cv->drawText(0, 0, stringWidth, sv);
+    } else {
+        cv->setStrokeColor(shadowColor);
+        cv->drawStrokeText(0, 0, stringWidth, sv);
+    }
+    delete cv;
+
+    if (radius > 0) {
+        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                      nativeImage->height(), nativeImage->stride());
+        sb.process(radius / 2);
+    }
+
+    save();
+    Unit::Rect rect(0, 0, imageWidth, imageHeight);
+    float offset = ceil(radiusOffset / 2);
+    translate(-offset + shadowOffsetX + x, -offset + shadowOffsetY + y);
+    drawImage(nativeImage, rect);
+    delete nativeImage;
+    restore();
+}
+
+void Canvas::drawFillTextShadow(float x, float y, float stringWidth,
+                                const StringView& sv)
+{
+    drawTextShadowInner(x, y, stringWidth, sv, true);
+}
+
+void Canvas::drawStrokeTextShadow(float x, float y, float stringWidth,
+                                  const StringView& sv)
+{
+    drawTextShadowInner(x, y, stringWidth, sv, false);
 }
 }

@@ -1165,21 +1165,23 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
 }
 
 void CanvasRenderingContext2DMixIn::fillTextFastPath(LayoutUnit x, LayoutUnit y,
+                                                     LayoutUnit textLength,
                                                      StringView text)
 {
     m_canvas->save();
     m_canvas->translate(0, -(float)m_canvas->font()->metrics().m_ascender);
-    m_canvas->drawText(x, y, LayoutUnit(0), text, false);
+    m_canvas->drawText(x, y, textLength, text, false);
     m_canvas->restore();
 }
 
 void CanvasRenderingContext2DMixIn::strokeTextFastPath(LayoutUnit x,
                                                        LayoutUnit y,
+                                                       LayoutUnit textLength,
                                                        StringView text)
 {
     m_canvas->save();
     m_canvas->translate(0, -(float)m_canvas->font()->metrics().m_ascender);
-    m_canvas->drawStrokeText(x, y, LayoutUnit(0), text, false);
+    m_canvas->drawStrokeText(x, y, textLength, text, false);
     m_canvas->restore();
 }
 
@@ -1407,13 +1409,14 @@ void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
 
     updateFontIfNeeds();
     bool useMaxWidth = false;
-    if (isMaxWidthProvided == true &&
-        m_canvas->font()->measureText(StringView(text)) > maxWidth) {
+    LayoutUnit textLength = m_canvas->font()->measureText(StringView(text));
+    if (isMaxWidthProvided == true && textLength > maxWidth) {
         useMaxWidth = true;
     }
 
     if (canUseFastPathText(text, useMaxWidth) == true) {
-        fillTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
+        fillTextFastPath(LayoutUnit(x), LayoutUnit(y), textLength,
+                         StringView(text));
         return;
     }
 
@@ -1431,13 +1434,14 @@ void CanvasRenderingContext2DMixIn::strokeText(String* text, float x, float y,
 
     updateFontIfNeeds();
     bool useMaxWidth = false;
-    if (isMaxWidthProvided == true &&
-        m_canvas->font()->measureText(StringView(text)) > maxWidth) {
+    LayoutUnit textLength = m_canvas->font()->measureText(StringView(text));
+    if (isMaxWidthProvided == true && textLength > maxWidth) {
         useMaxWidth = true;
     }
 
     if (canUseFastPathText(text, useMaxWidth) == true) {
-        strokeTextFastPath(LayoutUnit(x), LayoutUnit(y), StringView(text));
+        strokeTextFastPath(LayoutUnit(x), LayoutUnit(y), textLength,
+                           StringView(text));
         return;
     }
 
