@@ -72,37 +72,6 @@ namespace Starfish {
 
 extern bool g_enablePixelTest;
 
-class CanvasStateCairo : public CanvasState {
-public:
-    CanvasStateCairo()
-        : CanvasState()
-    {
-    }
-
-    void* operator new(size_t size)
-    {
-        STARFISH_ASSERT(size == sizeof(CanvasStateCairo));
-        static bool typeInited = false;
-        static GC_descr descr;
-        if (typeInited == false) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(CanvasStateCairo)] = { 0 };
-            CanvasStateCairo::fillGCDescriptor(obj_bitmap);
-            descr =
-                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CanvasStateCairo));
-            typeInited = true;
-        }
-        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-    }
-    void* operator new[](size_t size) = delete;
-
-protected:
-    static inline void fillGCDescriptor(GC_word* obj_bitmap)
-    {
-        STARFISH_ASSERT(obj_bitmap != nullptr);
-        CanvasState::fillGCDescriptor(obj_bitmap);
-    }
-};
-
 class NativeGradientCairo : public NativeGradient {
 public:
     NativeGradientCairo(GradientDrawingInfo* info)
@@ -563,41 +532,7 @@ public:
     virtual void save() override
     {
         checkError();
-
-        CanvasStateCairo* state = nullptr;
-
-        if (m_stateMemoryPool.size() != 0) {
-            state = m_stateMemoryPool.back();
-            m_stateMemoryPool.pop_back();
-        } else {
-            state = new CanvasStateCairo();
-        }
-
-        if (m_state.size() != 0) {
-            auto lastState = m_state.back();
-            state->m_fillSource = lastState->m_fillSource;
-            state->m_strokeSource = lastState->m_strokeSource;
-            state->m_layerOpacity = lastState->m_layerOpacity;
-            state->m_font = lastState->m_font;
-            state->m_visible = lastState->m_visible;
-            state->m_textDecorationData = lastState->m_textDecorationData;
-            state->m_hasNonInvertableCTM = lastState->m_hasNonInvertableCTM;
-            state->m_pathTM = lastState->m_pathTM;
-            state->m_globalAlpha = lastState->m_globalAlpha;
-            state->m_compositeOperator = lastState->m_compositeOperator;
-            state->m_blendMode = lastState->m_blendMode;
-            state->m_dashOffset = lastState->m_dashOffset;
-            state->m_dashes = lastState->m_dashes;
-            state->m_canvasTextAlign = lastState->m_canvasTextAlign;
-            state->m_canvasTextBaseline = lastState->m_canvasTextBaseline;
-            state->m_canvasDirection = lastState->m_canvasDirection;
-            state->m_canvasFontOrginalStr = lastState->m_canvasFontOrginalStr;
-            state->m_imageSmoothingEnabled = lastState->m_imageSmoothingEnabled;
-            state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
-            state->m_canvasFontState = lastState->m_canvasFontState;
-            state->m_shadowData = lastState->m_shadowData;
-        }
-        m_state.push_back(state);
+        Canvas::save();
         cairo_save(m_canvas);
     }
 
@@ -605,18 +540,8 @@ public:
     virtual void restore() override
     {
         checkError();
-
-        auto toStore = m_state.back();
-        memset(toStore, 0, sizeof(CanvasStateCairo));
-        m_stateMemoryPool.push_back(toStore);
-
-        m_state.erase(m_state.end() - 1);
+        Canvas::restore();
         cairo_restore(m_canvas);
-        m_shouldApplyCanvasFillStrokeSource = true;
-
-        while (m_state.size() * 2 < m_stateMemoryPool.size()) {
-            m_stateMemoryPool.pop_back();
-        }
     }
 
     // transformations (default transform is the identity matrix)
@@ -1091,7 +1016,7 @@ public:
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         if (lastState()->m_shadowData->hasValidValue()) {
-            drawRectShadow(xx, yy, ww, hh, lastState()->m_shadowData);
+            drawRectShadow(xx, yy, ww, hh);
         }
         drawCairoRect(xx, yy, ww, hh);
     }
@@ -1103,7 +1028,7 @@ public:
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         if (lastState()->m_shadowData->hasValidValue()) {
-            drawRectShadow(xx, yy, ww, hh, lastState()->m_shadowData);
+            drawRectShadow(xx, yy, ww, hh);
         }
         drawCairoRect(xx, yy, ww, hh);
     }
@@ -1903,12 +1828,6 @@ public:
         checkError();
     }
 
-    CanvasStateCairo* lastState()
-    {
-        STARFISH_ASSERT(m_state.size() != 0);
-        return m_state[m_state.size() - 1];
-    }
-
     virtual void resetMatrixAndClip(bool needsApplyDPR) override
     {
         cairo_reset_clip(m_canvas);
@@ -2330,14 +2249,11 @@ private:
     }
 
 protected:
-    GCVector<CanvasStateCairo*> m_state{};
-    GCVector<CanvasStateCairo*> m_stateMemoryPool{};
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
-    bool m_shouldApplyCanvasFillStrokeSource;
     CanvasFlag m_flag{ PlainElement };
 };
 
