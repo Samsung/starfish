@@ -1016,9 +1016,9 @@ public:
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         if (lastState()->m_shadowData->hasValidValue()) {
-            drawRectShadow(xx, yy, ww, hh);
+            drawFillRectShadow(xx, yy, ww, hh);
         }
-        drawCairoRect(xx, yy, ww, hh);
+        drawRectInner(xx, yy, ww, hh);
     }
 
     virtual void drawRect(const LayoutRect& rt) override
@@ -1028,16 +1028,13 @@ public:
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         if (lastState()->m_shadowData->hasValidValue()) {
-            drawRectShadow(xx, yy, ww, hh);
+            drawFillRectShadow(xx, yy, ww, hh);
         }
-        drawCairoRect(xx, yy, ww, hh);
+        drawRectInner(xx, yy, ww, hh);
     }
 
     virtual void drawRectInner(float x, float y, float w, float h) override
     {
-        if (lastState()->m_visible == false) {
-            return;
-        }
         drawCairoRect(x, y, w, h);
     }
 
@@ -1047,7 +1044,10 @@ public:
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        strokeCairoRect(xx, yy, ww, hh);
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawStrokeRectShadow(xx, yy, ww, hh);
+        }
+        strokeRectInner(xx, yy, ww, hh);
     }
 
     virtual void strokeRect(const LayoutRect& rt) override
@@ -1056,7 +1056,15 @@ public:
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        strokeCairoRect(xx, yy, ww, hh);
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawStrokeRectShadow(xx, yy, ww, hh);
+        }
+        strokeRectInner(xx, yy, ww, hh);
+    }
+
+    virtual void strokeRectInner(float x, float y, float w, float h) override
+    {
+        strokeCairoRect(x, y, w, h);
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
@@ -1065,6 +1073,12 @@ public:
         if (lastState()->m_visible == false) {
             return;
         }
+
+        if (lastState()->m_shadowData->hasValidValue()) {
+            // TODO: should apply shadow
+            // drawRectStrokeShadow(xx, yy, ww, hh);
+        }
+
         cairo_save(m_canvas);
 
         cairo_move_to(m_canvas, p1.x(), p1.y());
@@ -1088,8 +1102,17 @@ public:
             return;
         }
 
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawFillTextShadow(x, y, stringWidth, sv);
+        }
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawText");
+        drawTextInner(x, y, stringWidth, sv, shouldSkipUnresolvedWebFont);
+    }
 
+    virtual void drawTextInner(float x, float y, float stringWidth,
+                               const StringView& sv,
+                               bool shouldSkipUnresolvedWebFont)
+    {
         LayoutSize sz(stringWidth, lastState()->m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
@@ -1118,8 +1141,17 @@ public:
             return;
         }
 
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawStrokeTextShadow(x, y, stringWidth, sv);
+        }
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawStrokeText");
+        drawStrokeTextInner(x, y, stringWidth, sv, shouldSkipUnresolvedWebFont);
+    }
 
+    virtual void drawStrokeTextInner(float x, float y, float stringWidth,
+                                     const StringView& sv,
+                                     bool shouldSkipUnresolvedWebFont)
+    {
         LayoutSize sz(stringWidth, lastState()->m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 

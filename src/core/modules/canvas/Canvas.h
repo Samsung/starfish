@@ -546,8 +546,23 @@ public:
     }
 
 protected:
-    void drawRectShadow(float x, float y, float w, float h);
+    void drawFillRectShadow(float x, float y, float w, float h);
+    void drawStrokeRectShadow(float x, float y, float w, float h);
+    void drawRectShadowInner(float x, float y, float w, float h, bool isFill);
+    void drawFillTextShadow(float x, float y, float stringWidth,
+                            const StringView& sv);
+    void drawStrokeTextShadow(float x, float y, float stringWidth,
+                              const StringView& sv);
+    void drawTextShadowInner(float x, float y, float stringWidth,
+                             const StringView& sv, bool isFill);
     virtual void drawRectInner(float x, float y, float w, float h) = 0;
+    virtual void strokeRectInner(float x, float y, float w, float h) = 0;
+    virtual void drawTextInner(float x, float y, float stringWidth,
+                               const StringView& sv,
+                               bool shouldSkipUnresolvedWebFont) = 0;
+    virtual void drawStrokeTextInner(float x, float y, float stringWidth,
+                                     const StringView& sv,
+                                     bool shouldSkipUnresolvedWebFont) = 0;
     CanvasState* lastState()
     {
         STARFISH_ASSERT(m_state.size() != 0);

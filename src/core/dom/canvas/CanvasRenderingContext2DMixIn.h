@@ -270,8 +270,10 @@ private:
                     bool isMaxWidthProvided);
     bool canUseFastPathText(String* text, bool shouldApplyMaxWidth);
     bool isLtrDirection();
-    void fillTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
-    void strokeTextFastPath(LayoutUnit x, LayoutUnit y, StringView text);
+    void fillTextFastPath(LayoutUnit x, LayoutUnit y, LayoutUnit textLength,
+                          StringView text);
+    void strokeTextFastPath(LayoutUnit x, LayoutUnit y, LayoutUnit textLength,
+                            StringView text);
     void drawTextNormal(String* text, float x, float y, float maxWidth,
                         bool shouldApplyMaxWidth, bool isStroke);
     void updateFontIfNeeds();

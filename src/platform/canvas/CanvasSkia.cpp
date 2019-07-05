@@ -629,6 +629,24 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
+    virtual void strokeRectInner(float x, float y, float w, float h)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual void drawTextInner(float x, float y, float stringWidth,
+                               const StringView& sv,
+                               bool shouldSkipUnresolvedWebFont)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void drawStrokeTextInner(float x, float y, float stringWidth,
+                                     const StringView& sv,
+                                     bool shouldSkipUnresolvedWebFont)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void strokeRect(const Unit::Rect& rt)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
