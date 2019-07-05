@@ -112,6 +112,22 @@ namespace CanvasCompositing {
 
 class CanvasState : public gc {
 public:
+    CanvasState();
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(CanvasState));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (typeInited == false) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(CanvasState)] = { 0 };
+            CanvasState::fillGCDescriptor(obj_bitmap);
+            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CanvasState));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
     CanvasFillStrokeSource* m_fillSource;
     CanvasFillStrokeSource* m_strokeSource;
     float m_layerOpacity;
@@ -135,8 +151,6 @@ public:
     CanvasShadowData* m_shadowData;
 
 protected:
-    CanvasState();
-
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
         STARFISH_ASSERT(obj_bitmap != nullptr);
@@ -274,8 +288,8 @@ public:
     virtual void clearColor(const Unit::Color& clr) = 0;
     virtual void flush() = 0;
     // state
-    virtual void save() = 0;    // push state on state stack
-    virtual void restore() = 0; // pop state stack and restore state
+    virtual void save();    // push state on state stack
+    virtual void restore(); // pop state stack and restore state
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
     virtual void rotate(double angle) = 0;
@@ -532,11 +546,18 @@ public:
     }
 
 protected:
-    void drawRectShadow(float x, float y, float w, float h,
-                        CanvasShadowData* shadow);
+    void drawRectShadow(float x, float y, float w, float h);
     virtual void drawRectInner(float x, float y, float w, float h) = 0;
+    CanvasState* lastState()
+    {
+        STARFISH_ASSERT(m_state.size() != 0);
+        return m_state[m_state.size() - 1];
+    }
     CanvasRenderTargetInfo m_renderTargetInfo;
     WebView* m_webView;
+    GCVector<CanvasState*> m_state{};
+    GCVector<CanvasState*> m_stateMemoryPool{};
+    bool m_shouldApplyCanvasFillStrokeSource;
 };
 }
 

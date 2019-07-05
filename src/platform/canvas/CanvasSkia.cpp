@@ -71,9 +71,31 @@ public:
     // FiXME : Remove it after applies a CanvasFillStrokeSource
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
-
     SkPath::FillType m_fillType;
     float m_strokeWidth;
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(CanvasStateSkia));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (typeInited == false) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(CanvasStateSkia)] = { 0 };
+            CanvasStateSkia::fillGCDescriptor(obj_bitmap);
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CanvasStateSkia));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        STARFISH_ASSERT(obj_bitmap != nullptr);
+        CanvasState::fillGCDescriptor(obj_bitmap);
+    }
 };
 
 class NativeGradientSkia : public NativeGradient {
@@ -304,32 +326,30 @@ public:
     // state
     virtual void save() // push state on state stack
     {
-        CanvasStateSkia state;
-        if (m_state.size()) {
-            auto& lastState = m_state.back();
-            state.m_fillColor = lastState.m_fillColor;
-            state.m_strokeColor = lastState.m_strokeColor;
-            state.m_layerOpacity = lastState.m_layerOpacity;
-            state.m_font = lastState.m_font;
-            state.m_visible = lastState.m_visible;
-            state.m_textDecorationData = lastState.m_textDecorationData;
-            state.m_fillType = lastState.m_fillType;
-            state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
-            state.m_pathTM = lastState.m_pathTM;
-            state.m_globalAlpha = lastState.m_globalAlpha;
-            state.m_compositeOperator = lastState.m_compositeOperator;
-            state.m_blendMode = lastState.m_blendMode;
+        if (m_stateMemoryPool.size() == 0) {
+            CanvasStateSkia* state = new CanvasStateSkia();
+            memset(state, 0, sizeof(CanvasStateSkia));
+            m_stateMemoryPool.push_back(state);
         }
-        m_state.push_back(state);
+
+        Canvas::save();
+
+        if (m_state.size() >= 2) {
+            CanvasStateSkia* state = (CanvasStateSkia*)m_state.back();
+            CanvasStateSkia* lastState =
+                (CanvasStateSkia*)(*(m_state.end() - 2));
+            state->m_fillColor = lastState->m_fillColor;
+            state->m_strokeColor = lastState->m_strokeColor;
+            state->m_fillType = lastState->m_fillType;
+            state->m_strokeWidth = lastState->m_strokeWidth;
+        }
+
         m_canvas->save();
     }
 
     virtual void restore() // pop state stack and restore state
     {
-        m_state.erase(m_state.end() - 1);
-        if (m_state.size()) {
-            m_path.setFillType(lastState().m_fillType);
-        }
+        Canvas::restore();
         m_canvas->restore();
     }
 
@@ -472,7 +492,7 @@ public:
     virtual void setFillColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_fillColor = clr;
+        ((CanvasStateSkia*)lastState())->m_fillColor = clr;
     }
 
     virtual void setFillSource(CanvasFillStrokeSource* source)
@@ -489,7 +509,7 @@ public:
     virtual void setStrokeColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_strokeColor = clr;
+        ((CanvasStateSkia*)lastState())->m_strokeColor = clr;
     }
 
     virtual void setStrokeSource(CanvasFillStrokeSource* source)
@@ -505,38 +525,38 @@ public:
 
     virtual void setGlobalAlpha(float c)
     {
-        lastState().m_globalAlpha = c;
+        lastState()->m_globalAlpha = c;
     }
 
     virtual void setCompositeOperator(CanvasCompositeOperator oper,
                                       CanvasBlendMode mode)
     {
-        lastState().m_compositeOperator = oper;
-        lastState().m_blendMode = mode;
+        lastState()->m_compositeOperator = oper;
+        lastState()->m_blendMode = mode;
 
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual CanvasCompositeOperator compositeOperator()
     {
-        return lastState().m_compositeOperator;
+        return lastState()->m_compositeOperator;
     }
 
     virtual CanvasBlendMode blendMode()
     {
-        return lastState().m_blendMode;
+        return lastState()->m_blendMode;
     }
 
     virtual float globalAlpha()
     {
-        return lastState().m_globalAlpha;
+        return lastState()->m_globalAlpha;
     }
 
     virtual void beginOpacityLayer(float c)
     {
         INSTALL_PROFILE_TIMER("CanvasSkia::beginOpacityLayer");
         save();
-        lastState().m_layerOpacity = c;
+        lastState()->m_layerOpacity = c;
         m_canvas->saveLayerAlpha(nullptr,
                                  ((uint8_t)(255.0f * CLAMP(c, 0.0, 1.0))));
     }
@@ -550,33 +570,34 @@ public:
 
     virtual void setFont(Font* font)
     {
-        lastState().m_font = font;
+        STARFISH_ASSERT(font != nullptr);
+        lastState()->m_font = font;
     }
 
     virtual void resetTextDecorationData()
     {
-        lastState().m_textDecorationData.reset();
+        lastState()->m_textDecorationData.reset();
     }
 
     virtual void mergeTextDecorationData(ComputedStyle* style)
     {
-        lastState().m_textDecorationData.merge(style);
+        lastState()->m_textDecorationData.merge(style);
     }
 
     virtual TextDecorationData textDecorationData()
     {
-        return lastState().m_textDecorationData;
+        return lastState()->m_textDecorationData;
     }
 
     virtual void setTextDecorationData(TextDecorationData d)
     {
-        lastState().m_textDecorationData = d;
+        lastState()->m_textDecorationData = d;
     }
 
     virtual void drawRect(const Unit::Rect& rt)
     {
         STARFISH_ASSERT(m_canvas);
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
 
@@ -588,7 +609,7 @@ public:
     virtual void drawRect(const LayoutRect& rt)
     {
         STARFISH_ASSERT(m_canvas);
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         int xx = 0, yy = 0, ww = 0, hh = 0;
@@ -621,7 +642,7 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3, LayoutLocation p4)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         m_canvas->save();
@@ -638,7 +659,7 @@ public:
     virtual void punchHole(const Unit::Rect& rt)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
     }
@@ -650,7 +671,7 @@ public:
         sk_sp<SkTypeface> lastFontFace = nullptr;
         sk_sp<SkTypeface> fontFace = nullptr;
         SkPaint paint;
-        FontImplSkia* f = (FontImplSkia*)lastState().m_font;
+        FontImplSkia* f = (FontImplSkia*)lastState()->m_font;
         int size = f->size();
 
         FontMetrics fontMetrics = f->metrics();
@@ -694,11 +715,11 @@ public:
                         fontFace = lastFontFace;
                         paint = g.first.first->skPaint();
                         paint.setTextSize(size);
-                        paint.setColor(
-                            SkColorSetARGB(lastState().m_fillColor.a(),
-                                           lastState().m_fillColor.r(),
-                                           lastState().m_fillColor.g(),
-                                           lastState().m_fillColor.b()));
+                        paint.setColor(SkColorSetARGB(
+                            ((CanvasStateSkia*)lastState())->m_fillColor.a(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.r(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.g(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.b()));
                     }
 
                     (glyphs)[glyphCount] = SkToU16(g.second.first);
@@ -720,11 +741,11 @@ public:
                     SkPaint tempPaint;
                     tempPaint.setStrokeWidth(1);
                     tempPaint.setStyle(SkPaint::kStroke_Style);
-                    tempPaint.setColor(
-                        SkColorSetARGB(lastState().m_fillColor.a(),
-                                       lastState().m_fillColor.r(),
-                                       lastState().m_fillColor.g(),
-                                       lastState().m_fillColor.b()));
+                    tempPaint.setColor(SkColorSetARGB(
+                        ((CanvasStateSkia*)lastState())->m_fillColor.a(),
+                        ((CanvasStateSkia*)lastState())->m_fillColor.r(),
+                        ((CanvasStateSkia*)lastState())->m_fillColor.g(),
+                        ((CanvasStateSkia*)lastState())->m_fillColor.b()));
                     path.addRect(SkRect::MakeXYWH(
                         xBias, -fontMetrics.m_ascender, f->spaceWidth(),
                         fontMetrics.m_fontHeight));
@@ -754,11 +775,11 @@ public:
                         SkPaint tempPaint;
                         tempPaint.setStrokeWidth(1);
                         tempPaint.setStyle(SkPaint::kStroke_Style);
-                        tempPaint.setColor(
-                            SkColorSetARGB(lastState().m_fillColor.a(),
-                                           lastState().m_fillColor.r(),
-                                           lastState().m_fillColor.g(),
-                                           lastState().m_fillColor.b()));
+                        tempPaint.setColor(SkColorSetARGB(
+                            ((CanvasStateSkia*)lastState())->m_fillColor.a(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.r(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.g(),
+                            ((CanvasStateSkia*)lastState())->m_fillColor.b()));
 
                         for (size_t j = 0; j < run.m_text.length(); j++) {
                             path.reset();
@@ -788,10 +809,14 @@ public:
                             paint = FontFaceImplSkia::skPaint(fontFace);
                             paint.setTextSize(size);
                             paint.setColor(
-                                SkColorSetARGB(lastState().m_fillColor.a(),
-                                               lastState().m_fillColor.r(),
-                                               lastState().m_fillColor.g(),
-                                               lastState().m_fillColor.b()));
+                                SkColorSetARGB(((CanvasStateSkia*)lastState())
+                                                   ->m_fillColor.a(),
+                                               ((CanvasStateSkia*)lastState())
+                                                   ->m_fillColor.r(),
+                                               ((CanvasStateSkia*)lastState())
+                                                   ->m_fillColor.g(),
+                                               ((CanvasStateSkia*)lastState())
+                                                   ->m_fillColor.b()));
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -823,13 +848,13 @@ public:
                           const StringView& sv,
                           bool shouldSkipUnresolvedWebFont)
     {
-        int size = lastState().m_font->size();
-        if (!lastState().m_visible || size == 0 || sv.length() == 0) {
+        int size = lastState()->m_font->size();
+        if (!lastState()->m_visible || size == 0 || sv.length() == 0) {
             return;
         }
         INSTALL_PROFILE_TIMER("CanvasSkia::drawText");
 
-        LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+        LayoutSize sz(stringWidth, lastState()->m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
 
 #ifdef STARFISH_ENABLE_TEST
@@ -866,7 +891,7 @@ public:
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         auto pixels = data->data();
@@ -891,7 +916,7 @@ public:
                            const DrawImageInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
 
@@ -961,7 +986,7 @@ public:
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         INSTALL_PROFILE_TIMER("CanvasSkia::drawRepeatImage");
@@ -1001,7 +1026,7 @@ public:
                                     GradientDrawingInfo* info,
                                     NativeGradient* gradient)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
 
@@ -1027,7 +1052,7 @@ public:
                                     GradientDrawingInfo* info,
                                     NativeGradient* gradient)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
 
@@ -1161,47 +1186,47 @@ public:
 
     virtual bool imageSmoothingEnabled()
     {
-        return lastState().m_imageSmoothingEnabled;
+        return lastState()->m_imageSmoothingEnabled;
     }
 
     virtual void setImageSmoothingEnabled(bool value)
     {
-        lastState().m_imageSmoothingEnabled = value;
+        lastState()->m_imageSmoothingEnabled = value;
     }
 
     virtual ImageSmoothingQuality imageSmoothingQuality()
     {
-        return lastState().m_imageSmoothingQuality;
+        return lastState()->m_imageSmoothingQuality;
     }
 
     virtual void setImageSmoothingQuality(ImageSmoothingQuality quality)
     {
-        lastState().m_imageSmoothingQuality = quality;
+        lastState()->m_imageSmoothingQuality = quality;
     }
 
     virtual void setVisible(bool visible)
     {
-        lastState().m_visible = visible;
+        lastState()->m_visible = visible;
     }
 
     virtual void setNonInvertableCTM(bool validation)
     {
-        lastState().m_hasNonInvertableCTM = validation;
+        lastState()->m_hasNonInvertableCTM = validation;
     }
 
     virtual bool hasNonInvertableCTM()
     {
-        return lastState().m_hasNonInvertableCTM;
+        return lastState()->m_hasNonInvertableCTM;
     }
 
     virtual void setPathTransformMatrix(const SkMatrix& matrix)
     {
-        lastState().m_pathTM = matrix;
+        lastState()->m_pathTM = matrix;
     }
 
     virtual SkMatrix pathTransformMatrix()
     {
-        return lastState().m_pathTM;
+        return lastState()->m_pathTM;
     }
 
     virtual void setOriginalFontStr(String* fontStr)
@@ -1223,7 +1248,7 @@ public:
     virtual Font* font()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return lastState().m_font;
+        return lastState()->m_font;
     }
 
     virtual String* originalFontStr()
@@ -1328,7 +1353,7 @@ public:
 
     virtual void stroke()
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             closePath();
             return;
         }
@@ -1338,16 +1363,18 @@ public:
 
     virtual void strokePreserve()
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kStroke_Style);
-        paint.setStrokeWidth(lastState().m_strokeWidth);
-        paint.setColor(SkColorSetARGB(
-            lastState().m_fillColor.a(), lastState().m_fillColor.r(),
-            lastState().m_fillColor.g(), lastState().m_fillColor.b()));
+        paint.setStrokeWidth(((CanvasStateSkia*)lastState())->m_strokeWidth);
+        paint.setColor(
+            SkColorSetARGB(((CanvasStateSkia*)lastState())->m_fillColor.a(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.r(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.g(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.b()));
 
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
@@ -1357,7 +1384,7 @@ public:
 
     virtual void fill()
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             closePath();
             return;
         }
@@ -1367,7 +1394,7 @@ public:
 
     virtual void strokePath(Path* path)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         (((PathSkia*)path)->skiaPath())->dump();
@@ -1377,7 +1404,7 @@ public:
 
     virtual void fillPath(Path* path)
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
         m_path.addPath(*(((PathSkia*)path)->skiaPath()));
@@ -1386,16 +1413,18 @@ public:
 
     virtual void fillPreserve()
     {
-        if (!lastState().m_visible) {
+        if (!lastState()->m_visible) {
             return;
         }
 
         SkPaint paint;
         paint.setAntiAlias(true);
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(SkColorSetARGB(
-            lastState().m_fillColor.a(), lastState().m_fillColor.r(),
-            lastState().m_fillColor.g(), lastState().m_fillColor.b()));
+        paint.setColor(
+            SkColorSetARGB(((CanvasStateSkia*)lastState())->m_fillColor.a(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.r(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.g(),
+                           ((CanvasStateSkia*)lastState())->m_fillColor.b()));
 
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
@@ -1421,17 +1450,15 @@ public:
     {
         if (shouldUseNonZeroFillRule) {
             m_path.setFillType(SkPath::kWinding_FillType);
-            lastState().m_fillType = SkPath::kWinding_FillType;
         } else {
             m_path.setFillType(SkPath::kEvenOdd_FillType);
-            lastState().m_fillType = SkPath::kEvenOdd_FillType;
         }
     }
 
     virtual void setLineWidth(float width)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_strokeWidth = width;
+        ((CanvasStateSkia*)lastState())->m_strokeWidth = width;
     }
 
     virtual void setDash(const std::vector<double>& dashes)
@@ -1442,13 +1469,13 @@ public:
     virtual std::vector<double> dash()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return lastState().m_dashes;
+        return lastState()->m_dashes;
     }
 
     virtual double dashOffset()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return lastState().m_dashOffset;
+        return lastState()->m_dashOffset;
     }
 
     virtual void setDashOffset(double offset)
@@ -1456,11 +1483,6 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    CanvasStateSkia& lastState()
-    {
-        STARFISH_ASSERT(m_state.size());
-        return m_state[m_state.size() - 1];
-    }
     // reset transform matrix & clip
     virtual void resetMatrixAndClip(bool needsApplyDPR)
     {
@@ -1495,7 +1517,6 @@ public:
     }
 
 protected:
-    std::vector<CanvasStateSkia> m_state;
     SkCanvas* m_canvas;
     sk_sp<SkSurface> m_surface;
     SkPath m_path;

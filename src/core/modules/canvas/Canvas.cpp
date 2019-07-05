@@ -295,12 +295,61 @@ CanvasState::CanvasState()
 {
 }
 
-void Canvas::drawRectShadow(float x, float y, float width, float height,
-                            CanvasShadowData* shadow)
+void Canvas::save()
+{
+    CanvasState* state = nullptr;
+    if (m_stateMemoryPool.size() != 0) {
+        state = m_stateMemoryPool.back();
+        m_stateMemoryPool.pop_back();
+    } else {
+        state = new CanvasState();
+    }
+
+    if (m_state.size() != 0) {
+        auto lastState = m_state.back();
+        state->m_fillSource = lastState->m_fillSource;
+        state->m_strokeSource = lastState->m_strokeSource;
+        state->m_layerOpacity = lastState->m_layerOpacity;
+        state->m_font = lastState->m_font;
+        state->m_visible = lastState->m_visible;
+        state->m_textDecorationData = lastState->m_textDecorationData;
+        state->m_hasNonInvertableCTM = lastState->m_hasNonInvertableCTM;
+        state->m_pathTM = lastState->m_pathTM;
+        state->m_globalAlpha = lastState->m_globalAlpha;
+        state->m_compositeOperator = lastState->m_compositeOperator;
+        state->m_blendMode = lastState->m_blendMode;
+        state->m_dashOffset = lastState->m_dashOffset;
+        state->m_dashes = lastState->m_dashes;
+        state->m_canvasTextAlign = lastState->m_canvasTextAlign;
+        state->m_canvasTextBaseline = lastState->m_canvasTextBaseline;
+        state->m_canvasDirection = lastState->m_canvasDirection;
+        state->m_canvasFontOrginalStr = lastState->m_canvasFontOrginalStr;
+        state->m_imageSmoothingEnabled = lastState->m_imageSmoothingEnabled;
+        state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
+        state->m_canvasFontState = lastState->m_canvasFontState;
+        state->m_shadowData = lastState->m_shadowData;
+    }
+    m_state.push_back(state);
+}
+
+void Canvas::restore()
+{
+    auto toStore = m_state.back();
+    memset(toStore, 0, sizeof(CanvasState));
+    m_stateMemoryPool.push_back(toStore);
+    m_state.erase(m_state.end() - 1);
+    m_shouldApplyCanvasFillStrokeSource = true;
+
+    while (m_state.size() * 2 < m_stateMemoryPool.size()) {
+        m_stateMemoryPool.pop_back();
+    }
+}
+
+void Canvas::drawRectShadow(float x, float y, float width, float height)
 {
     int xx = x, yy = y, ww = width, hh = height;
     Unit::Rect shadowRect(0, 0, ww, hh);
-
+    CanvasShadowData* shadow = lastState()->m_shadowData;
     float radius = shadow->radius();
     float shadowOffsetX = shadow->offsetX();
     float shadowOffsetY = shadow->offsetY();
