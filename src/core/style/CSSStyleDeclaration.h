@@ -116,6 +116,7 @@ public:
     String* Font();
     String* TextDecoration();
     String* Transition();
+    String* Animation();
     String* Overflow();
     String* FlexFlow();
     String* Flex();
@@ -155,6 +156,7 @@ public:
     void setFont(const char* value, size_t len, bool isImportant);
     void setTextDecoration(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
+    void setAnimation(const char* value, size_t len, bool isImportant);
     void setOverflow(const char* value, size_t len, bool isImportant);
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);

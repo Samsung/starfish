@@ -13902,23 +13902,6 @@ bool CSSStyleValuePair::updateValueUnitAnimationTimingFunction(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitAnimationDirection(
-    const CSSTokenValue& value)
-{
-    if (value.equals("normal") == true) {
-        setAnimationDirectionValue(AnimationDirectionNormalValue);
-    } else if (value.equals("reverse") == true) {
-        setAnimationDirectionValue(AnimationDirectionReverseValue);
-    } else if (value.equals("alternate") == true) {
-        setAnimationDirectionValue(AnimationDirectionAlternateValue);
-    } else if (value.equals("alternate-reverse") == true) {
-        setAnimationDirectionValue(AnimationDirectionAlternateReverseValue);
-    } else {
-        return false;
-    }
-    return true;
-}
-
 bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
     const CSSTokenValue& value)
 {
@@ -13935,19 +13918,29 @@ bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
 bool CSSStyleValuePair::updateValueLayerAnimationName(
     const CSSTokenVector& tokens)
 {
-    if (tokens.size() != 1 ||
-        CSSPropertyParser::stringIsIdent(
-            String::fromUTF8(tokens[0].data(), tokens[0].length())) == false) {
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitAnimationName(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitAnimationName(const CSSTokenValue& value)
+{
+    if (CSSPropertyParser::stringIsIdent(
+            String::fromUTF8(value.data(), value.length())) == false) {
         return false;
     }
     setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-    setStringValue(String::fromUTF8(tokens[0].data(), tokens[0].size()));
+    setStringValue(String::fromUTF8(value.data(), value.size()));
     return true;
 }
 
 bool CSSStyleValuePair::updateValueLayerAnimationDuration(
     const CSSTokenVector& tokens)
 {
+    if (tokens.size() != 1) {
+        return false;
+    }
     return updateValueTime(tokens, 0);
 }
 
@@ -13963,13 +13956,24 @@ bool CSSStyleValuePair::updateValueLayerAnimationTimingFunction(
 bool CSSStyleValuePair::updateValueLayerAnimationDelay(
     const CSSTokenVector& tokens)
 {
+    if (tokens.size() != 1) {
+        return false;
+    }
     return updateValueTime(tokens, CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueLayerAnimationIterationCount(
     const CSSTokenVector& tokens)
 {
-    const CSSTokenValue& value = tokens[0];
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitAnimationIterationCount(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitAnimationIterationCount(
+    const CSSTokenValue& value)
+{
     if (STRING_VALUE_IS_STRING("infinite")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
         m_value.m_floatValue = std::numeric_limits<float>::infinity();
@@ -13992,6 +13996,23 @@ bool CSSStyleValuePair::updateValueLayerAnimationDirection(
         return false;
     }
     return updateValueUnitAnimationDirection(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueUnitAnimationDirection(
+    const CSSTokenValue& value)
+{
+    if (value.equals("normal") == true) {
+        setAnimationDirectionValue(AnimationDirectionNormalValue);
+    } else if (value.equals("reverse") == true) {
+        setAnimationDirectionValue(AnimationDirectionReverseValue);
+    } else if (value.equals("alternate") == true) {
+        setAnimationDirectionValue(AnimationDirectionAlternateValue);
+    } else if (value.equals("alternate-reverse") == true) {
+        setAnimationDirectionValue(AnimationDirectionAlternateReverseValue);
+    } else {
+        return false;
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueLayerAnimationPlayState(

@@ -58,7 +58,7 @@ test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-box-jus
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-column-reverse-wrap-reverse.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-column-reverse-wrap.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-column-wrap.htm
-test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-height-animation-stretch.htm
+#test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-height-animation-stretch.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-column-wrap-reverse.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-img-expand-evenly.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-flexbox-1_dev/html/css-flexbox-row.htm

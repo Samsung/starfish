@@ -262,6 +262,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 9:
+        // Animation
         // Font-Size
         // Flex-Wrap
         // Flex-Flow
@@ -275,6 +276,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Mask-Size
         // Grid-Area
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "animation", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::Animation;
+            }
+            break;
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::FontSize;
@@ -1432,6 +1438,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
     case 9:
         switch (data[0]) {
         case 'a':
+            if (memcmp(data, "animation", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::Animation;
+            }
             if (memcmp(data, "alignSelf", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignSelf;
             }
