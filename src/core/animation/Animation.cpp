@@ -225,23 +225,21 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
         execute(computeProgress(f), style);
 
-        if (f >= 1.0 || f <= 0.0) {
-            if (m_isForward == true) {
-                m_frameIdx++;
-                if (m_frameIdx == m_frameSize - 1) {
-                    m_frameIdx = 0;
-                    m_startTimeMs = 0;
-                    m_delayMs = 0;
-                    m_isInDelayedTime = false;
-                }
-            } else {
-                m_frameIdx--;
-                if (m_frameIdx == 0) {
-                    m_frameIdx = m_frameSize - 1;
-                    m_startTimeMs = 0;
-                    m_delayMs = 0;
-                    m_isInDelayedTime = false;
-                }
+        if (f >= 1.0 && m_isForward == true) {
+            m_frameIdx++;
+            if (m_frameIdx == m_frameSize - 1) {
+                m_frameIdx = 0;
+                m_startTimeMs = 0;
+                m_delayMs = 0;
+                m_isInDelayedTime = false;
+            }
+        } else if (f <= 0.0 && m_isForward == false) {
+            m_frameIdx--;
+            if (m_frameIdx == 0) {
+                m_frameIdx = m_frameSize - 1;
+                m_startTimeMs = 0;
+                m_delayMs = 0;
+                m_isInDelayedTime = false;
             }
         }
     } else {

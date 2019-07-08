@@ -1193,6 +1193,101 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
     return true;
 }
 
+static bool parseAnimationShorthand(
+    const CSSTokenVector& tokens, CSSStyleValuePair* name,
+    CSSStyleValuePair* duration, CSSStyleValuePair* timingFunction,
+    CSSStyleValuePair* delay, CSSStyleValuePair* iteration,
+    CSSStyleValuePair* direction, CSSStyleValuePair* playState)
+{
+    size_t len = tokens.size();
+    if (len < 1) {
+        return false;
+    }
+
+    name->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    duration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    iteration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    direction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    playState->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    bool foundName = false;
+    bool foundDuration = false;
+    bool foundTimingFunction = false;
+    bool foundDelay = false;
+    bool foundIteration = false;
+    bool foundDirection = false;
+    bool foundPlayState = false;
+
+    for (size_t i = 0; i < len; i++) {
+        CSSStyleValuePair temp;
+        const CSSTokenValue& tok = tokens[i];
+        if (!foundName && temp.updateValueUnitAnimationName(tok)) {
+            foundName = true;
+            *name = temp;
+            continue;
+        }
+        // TODO: Handle animation-name using 'var'.
+
+        if ((!foundDuration || !foundDelay) &&
+            temp.updateValueUnitTimeOrCalc(tok, 0)) {
+            if (!foundDuration) {
+                foundDuration = true;
+                *duration = temp;
+                continue;
+            }
+            if (!foundDelay) {
+                foundDelay = true;
+                *delay = temp;
+                continue;
+            }
+        }
+        // TODO: Handle animation-duration and animation-delay using 'var'.
+
+        CSSTokenVector toks;
+        toks.push_back(tok);
+        if (!foundTimingFunction &&
+            temp.updateValueUnitAnimationTimingFunction(tok)) {
+            foundTimingFunction = true;
+            *timingFunction = temp;
+            continue;
+        } else if (!foundTimingFunction &&
+                   temp.updateVarValue(tok.c_str(), toks)) {
+            temp.setTemporaryKeyKind(
+                CSSStyleValuePair::KeyKind::AnimationTimingFunction);
+            foundTimingFunction = true;
+            *timingFunction = temp;
+            continue;
+        }
+
+        if (!foundIteration &&
+            temp.updateValueUnitAnimationIterationCount(tok)) {
+            foundIteration = true;
+            *iteration = temp;
+            continue;
+        }
+        // TODO: Handle animation-iteration-count using 'var'.
+
+        if (!foundDirection && temp.updateValueUnitAnimationDirection(tok)) {
+            foundDirection = true;
+            *direction = temp;
+            continue;
+        }
+        // TODO: Handle animation-direction of 'var'.
+
+        if (!foundPlayState && temp.updateValueUnitAnimationPlayState(tok)) {
+            foundPlayState = true;
+            *playState = temp;
+            continue;
+        }
+        // TODO: Handle animation-play-state using 'var'.
+
+        return false;
+    }
+    return true;
+}
+
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
 {
@@ -3457,6 +3552,64 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
     addCSSValuePair(CSSStyleValuePair::TransitionDelay, r3);
 }
 
+String* CSSStyleDeclaration::Animation()
+{
+    const size_t kKeySize = 7;
+    const CSSStyleValuePair::KeyKind kKeys[kKeySize] = {
+        CSSStyleValuePair::AnimationName,
+        CSSStyleValuePair::AnimationDuration,
+        CSSStyleValuePair::AnimationTimingFunction,
+        CSSStyleValuePair::AnimationDelay,
+        CSSStyleValuePair::AnimationIterationCount,
+        CSSStyleValuePair::AnimationDirection,
+        CSSStyleValuePair::AnimationPlayState,
+    };
+
+    if (isComputedStyle()) {
+        for (size_t i = 0; i < kKeySize; i++) {
+            updateValue(kKeys[i]);
+        }
+    }
+
+    CSSStyleValuePair v[7];
+    size_t size[7] = { 0, 0, 0, 0, 0, 0, 0 };
+    size_t maxLayer = 0;
+    for (size_t k = 0; k < kKeySize; k++) {
+        if (hasCSSValuePair(kKeys[k])) {
+            v[k] = getCSSValuePair(kKeys[k]);
+            // ASSERT inside
+            if (v[k].valueKind() == CSSStyleValuePair::ValueListKind) {
+                size[k] = v[k].multiValue()->size();
+            } else {
+                size[k] = 1;
+            }
+            maxLayer = std::max(maxLayer, size[k]);
+        }
+    }
+
+    StringBuilder builder;
+    for (size_t i = 0; i < maxLayer; i++) {
+        if (i != 0) {
+            builder.appendString(", ");
+        }
+        for (size_t k = 0; k < kKeySize; k++) {
+            if (k != 0) {
+                builder.appendString(String::spaceString);
+            }
+            if (i < size[k]) {
+                if (v[k].valueKind() == CSSStyleValuePair::ValueListKind) {
+                    builder.appendString(v[k].multiValue()->at(i).toString());
+                } else {
+                    builder.appendString(v[k].toString());
+                }
+            } else {
+                builder.appendString(String::initialString);
+            }
+        }
+    }
+    return builder.finalize();
+}
+
 void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
                                            bool isImportant)
 {
@@ -3675,6 +3828,84 @@ void CSSStyleDeclaration::setAnimationPlayState(const char* value,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::AnimationPlayState, result);
+}
+
+void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
+                                       bool isImportant)
+{
+    if (length == 0) {
+        // There are not arguments.
+        removeCSSValuePair(CSSStyleValuePair::AnimationName);
+        removeCSSValuePair(CSSStyleValuePair::AnimationDuration);
+        removeCSSValuePair(CSSStyleValuePair::AnimationTimingFunction);
+        removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
+        removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
+        removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
+        removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
+        return;
+    }
+    // TODO handle var() case
+    CSSTokenVector layers;
+    if (!CSSPropertyParser::parseLayers(value, length, layers)) {
+        return;
+    }
+
+    ValueList* names = new ValueList(ValueList::CommaSeparator);
+    ValueList* durations = new ValueList(ValueList::CommaSeparator);
+    ValueList* timingFns = new ValueList(ValueList::CommaSeparator);
+    ValueList* delays = new ValueList(ValueList::CommaSeparator);
+    ValueList* iterations = new ValueList(ValueList::CommaSeparator);
+    ValueList* directions = new ValueList(ValueList::CommaSeparator);
+    ValueList* playStates = new ValueList(ValueList::CommaSeparator);
+
+    size_t layerSize = layers.size();
+    for (size_t i = 0; i < layerSize; i++) {
+        CSSStyleValuePair v0, v1, v2, v3, v4, v5, v6;
+        CSSTokenVector tokens;
+        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        if (layerSize == 1 && v0.updateValueCommon(tokens)) {
+            v1 = v2 = v3 = v4 = v5 = v6 = v0;
+        } else if (!parseAnimationShorthand(tokens, &v0, &v1, &v2, &v3, &v4,
+                                            &v5, &v6)) {
+            return;
+        }
+        names->push_back(v0);
+        durations->push_back(v1);
+        timingFns->push_back(v2);
+        delays->push_back(v3);
+        iterations->push_back(v4);
+        directions->push_back(v5);
+        playStates->push_back(v6);
+    }
+
+    CSSStyleValuePair r0, r1, r2, r3, r4, r5, r6;
+    r0.setValueList(names);
+    r0.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationName, r0);
+
+    r1.setValueList(durations);
+    r1.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationDuration, r1);
+
+    r2.setValueList(timingFns);
+    r2.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationTimingFunction, r2);
+
+    r3.setValueList(delays);
+    r3.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationDelay, r3);
+
+    r4.setValueList(iterations);
+    r4.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationIterationCount, r4);
+
+    r5.setValueList(directions);
+    r5.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationDirection, r5);
+
+    r6.setValueList(playStates);
+    r6.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationPlayState, r6);
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(

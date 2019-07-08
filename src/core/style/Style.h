@@ -771,6 +771,7 @@ class CSSFilterFunction;
     F(Outline, outline, "outline")                                   \
     F(Overflow, overflow, "overflow")                                \
     F(Transition, transition, "transition")                          \
+    F(Animation, animation, "animation")                             \
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")                                            \
     F(ListStyle, listStyle, "list-style")
@@ -2453,16 +2454,19 @@ public:
     bool updateValueLayerTransitionTimingFunction(const CSSTokenVector& tokens);
     bool updateValueLayerTransitionDelay(const CSSTokenVector& tokens);
 
-    bool updateValueUnitAnimationTimingFunction(const CSSTokenValue& value);
     bool updateValueLayerAnimationName(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationDuration(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationTimingFunction(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationDelay(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationIterationCount(const CSSTokenVector& tokens);
-    bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
     bool updateValueLayerAnimationDirection(const CSSTokenVector& tokens);
-    bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
     bool updateValueLayerAnimationPlayState(const CSSTokenVector& tokens);
+
+    bool updateValueUnitAnimationName(const CSSTokenValue& value);
+    bool updateValueUnitAnimationTimingFunction(const CSSTokenValue& value);
+    bool updateValueUnitAnimationIterationCount(const CSSTokenValue& value);
+    bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
+    bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
 
 protected:
     KeyKind m_keyKind : 8;
