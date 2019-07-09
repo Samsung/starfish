@@ -227,5 +227,10 @@ void PathSkia::postMatrix(const SkMatrix& matrix)
 void PathSkia::setCTM(const SkMatrix& matrix)
 {
 }
+
+Unit::Rect PathSkia::boundingRect(bool isFill)
+{
+    return Unit::Rect();
+}
 }
 #endif

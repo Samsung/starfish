@@ -378,5 +378,19 @@ void PathCairo::setCTM(const SkMatrix& matrix)
     cairo_matrix_multiply(&result_matrix, &a_matrix, &b_matrix);
     cairo_set_matrix(m_cairoContext, &result_matrix);
 }
+
+Unit::Rect PathCairo::boundingRect(bool isFill)
+{
+    double x0 = 0;
+    double x1 = 0;
+    double y0 = 0;
+    double y1 = 0;
+    if (isFill) {
+        cairo_fill_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+    } else {
+        cairo_stroke_extents(m_cairoContext, &x0, &y0, &x1, &y1);
+    }
+    return Unit::Rect(x0, y0, x1 - x0, y1 - y0);
+}
 }
 #endif

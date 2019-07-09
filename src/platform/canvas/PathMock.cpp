@@ -108,6 +108,11 @@ void PathMock::setCTM(const SkMatrix& matrix)
 {
 }
 
+Unit::Rect PathMock::boundingRect(bool isFill)
+{
+    return Unit::Rect();
+}
+
 Path* Path::create()
 {
     return new PathMock();

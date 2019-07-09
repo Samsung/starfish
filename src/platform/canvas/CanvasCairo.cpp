@@ -1047,7 +1047,7 @@ public:
         if (lastState()->m_shadowData->hasValidValue()) {
             drawStrokeRectShadow(xx, yy, ww, hh);
         }
-        strokeRectInner(xx, yy, ww, hh);
+        drawStrokeRectInner(xx, yy, ww, hh);
     }
 
     virtual void strokeRect(const LayoutRect& rt) override
@@ -1059,10 +1059,11 @@ public:
         if (lastState()->m_shadowData->hasValidValue()) {
             drawStrokeRectShadow(xx, yy, ww, hh);
         }
-        strokeRectInner(xx, yy, ww, hh);
+        drawStrokeRectInner(xx, yy, ww, hh);
     }
 
-    virtual void strokeRectInner(float x, float y, float w, float h) override
+    virtual void drawStrokeRectInner(float x, float y, float w,
+                                     float h) override
     {
         strokeCairoRect(x, y, w, h);
     }
@@ -1075,8 +1076,14 @@ public:
         }
 
         if (lastState()->m_shadowData->hasValidValue()) {
-            // TODO: should apply shadow
-            // drawRectStrokeShadow(xx, yy, ww, hh);
+            Path* path = Path::create();
+            path->moveTo(p1.x(), p1.y());
+            path->lineTo(p2.x(), p2.y());
+            path->lineTo(p3.x(), p3.y());
+            path->lineTo(p4.x(), p4.y());
+            path->lineTo(p1.x(), p1.y());
+            path->closePath();
+            drawFillPathShadow(path);
         }
 
         cairo_save(m_canvas);
@@ -1759,8 +1766,10 @@ public:
         if (lastState()->m_visible == false) {
             return;
         }
-        setPathAsNewPathOnCurrentContext(path);
-        stroke();
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawStrokePathShadow(path);
+        }
+        drawStrokePathInner(path);
     }
 
     virtual void fill() override
@@ -1789,8 +1798,23 @@ public:
         if (lastState()->m_visible == false) {
             return;
         }
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawFillPathShadow(path);
+        }
+
+        drawPathInner(path);
+    }
+
+    virtual void drawPathInner(Path* path) override
+    {
         setPathAsNewPathOnCurrentContext(path);
         fill();
+    }
+
+    virtual void drawStrokePathInner(Path* path) override
+    {
+        setPathAsNewPathOnCurrentContext(path);
+        stroke();
     }
 
     virtual void clipPath() override

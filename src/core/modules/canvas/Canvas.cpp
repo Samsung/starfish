@@ -34,6 +34,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/UnitHelper.h"
+#include "core/modules/canvas/Path.h"
 
 namespace Starfish {
 
@@ -364,8 +365,8 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
                           shadowRect.width(), shadowRect.height());
         } else {
             setStrokeColor(shadow->color());
-            strokeRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
-                            shadowRect.width(), shadowRect.height());
+            drawStrokeRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
+                                shadowRect.width(), shadowRect.height());
         }
         restore();
         return;
@@ -648,5 +649,77 @@ void Canvas::drawStrokeTextShadow(float x, float y, float stringWidth,
                                   const StringView& sv)
 {
     drawTextShadowInner(x, y, stringWidth, sv, false);
+}
+
+void Canvas::drawFillPathShadow(Path* path)
+{
+    drawPathShadowInner(path, true);
+}
+
+void Canvas::drawStrokePathShadow(Path* path)
+{
+    drawPathShadowInner(path, false);
+}
+
+void Canvas::drawPathShadowInner(Path* path, bool isFill)
+{
+    CanvasShadowData* shadow = lastState()->m_shadowData;
+    Unit::Color shadowColor = shadow->color();
+    Unit::Rect boundRect = path->boundingRect(isFill);
+    size_t width = (size_t)(ceil(boundRect.width()));
+    size_t height = (size_t)(ceil(boundRect.height()));
+    float radius = shadow->radius();
+    float shadowOffsetX = shadow->offsetX();
+    float shadowOffsetY = shadow->offsetY();
+    float radiusOffset = 0.0f;
+
+    if (radius == 0) {
+        save();
+        translate(shadowOffsetX, shadowOffsetY);
+        if (isFill) {
+            setFillColor(shadow->color());
+            drawPathInner(path);
+        } else {
+            setStrokeColor(shadow->color());
+            drawStrokePathInner(path);
+        }
+        restore();
+        return;
+    } else {
+        radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
+        radiusOffset *= 2;
+    }
+
+    auto imageWidth = width + ceil(radiusOffset);
+    auto imageHeight = height + ceil(radiusOffset);
+    NativeImageData* nativeImage =
+        NativeImageData::create(imageWidth, imageHeight);
+    Canvas* cv = Canvas::create(m_webView, nativeImage);
+    cv->unsetDevicePixelRatio();
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+    if (isFill) {
+        cv->setFillColor(shadowColor);
+        cv->drawPathInner(path);
+    } else {
+        cv->setStrokeColor(shadowColor);
+        cv->drawStrokePathInner(path);
+    }
+    delete cv;
+
+    if (radius > 0) {
+        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                      nativeImage->height(), nativeImage->stride());
+        sb.process(radius / 2);
+    }
+
+    save();
+    Unit::Rect rect(0, 0, imageWidth, imageHeight);
+    float offset = ceil(radiusOffset / 2);
+    translate(-offset + shadowOffsetX + boundRect.x(),
+              -offset + shadowOffsetY + boundRect.y());
+    drawImage(nativeImage, rect);
+    delete nativeImage;
+    restore();
 }
 }
