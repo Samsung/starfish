@@ -19,31 +19,90 @@
 
 // https://w3c.github.io/webrtc-pc/#rtcpeerconnection-interface
 
-[ Constructor (optional RTCConfiguration configuration),
+[STARFISH_ENABLE_WEBRTC]
+enum RTCSignalingState {
+  "stable",
+  "have-local-offer",
+  "have-remote-offer",
+  "have-local-pranswer",
+  "have-remote-pranswer",
+  "closed"
+};
+
+[STARFISH_ENABLE_WEBRTC]
+enum RTCIceGatheringState {
+  "new",
+  "gathering",
+  "complete"
+};
+
+[STARFISH_ENABLE_WEBRTC]
+enum RTCPeerConnectionState {
+  "closed",
+  "failed",
+  "disconnected",
+  "new",
+  "connecting",
+  "connected"
+};
+
+[STARFISH_ENABLE_WEBRTC]
+enum RTCIceConnectionState {
+  "closed",
+  "failed",
+  "disconnected",
+  "new",
+  "checking",
+  "completed",
+  "connected"
+};
+
+[STARFISH_ENABLE_WEBRTC]
+dictionary RTCOfferAnswerOptions {
+  boolean voiceActivityDetection = true;
+};
+
+[STARFISH_ENABLE_WEBRTC]
+dictionary RTCOfferOptions : RTCOfferAnswerOptions {
+  boolean iceRestart = false;
+};
+
+[STARFISH_ENABLE_WEBRTC]
+dictionary RTCAnswerOptions : RTCOfferAnswerOptions {
+};
+
+[STARFISH_ENABLE_WEBRTC]
+partial dictionary RTCOfferOptions {
+  boolean offerToReceiveAudio;
+  boolean offerToReceiveVideo;
+};
+
+[ STARFISH_ENABLE_WEBRTC,
+  Constructor (optional RTCConfiguration configuration),
   ConstructorCallWith=ExecutionContext,
   RaisesException=Constructor,
   Exposed=Window ]
 interface RTCPeerConnection : EventTarget {
-  [Unimplemented] Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
+  Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
   [Unimplemented] Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options);
-  [Unimplemented] Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
-  [Unimplemented] readonly attribute RTCSessionDescription? localDescription;
-  [Unimplemented] readonly attribute RTCSessionDescription? currentLocalDescription;
-  [Unimplemented] readonly attribute RTCSessionDescription? pendingLocalDescription;
+  Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
+  readonly attribute RTCSessionDescription? localDescription;
+  readonly attribute RTCSessionDescription? currentLocalDescription;
+  readonly attribute RTCSessionDescription? pendingLocalDescription;
   [Unimplemented] Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
-  [Unimplemented] readonly attribute RTCSessionDescription? remoteDescription;
-  [Unimplemented] readonly attribute RTCSessionDescription? currentRemoteDescription;
-  [Unimplemented] readonly attribute RTCSessionDescription? pendingRemoteDescription;
+  readonly attribute RTCSessionDescription? remoteDescription;
+  readonly attribute RTCSessionDescription? currentRemoteDescription;
+  readonly attribute RTCSessionDescription? pendingRemoteDescription;
   [Unimplemented] Promise<void> addIceCandidate (optional RTCIceCandidateInit candidate);
-  [Unimplemented] readonly attribute RTCSignalingState signalingState;
-  [Unimplemented] readonly attribute RTCIceGatheringState iceGatheringState;
-  [Unimplemented] readonly attribute RTCIceConnectionState iceConnectionState;
-  [Unimplemented] readonly attribute RTCPeerConnectionState connectionState;
+  readonly attribute RTCSignalingState signalingState;
+  readonly attribute RTCIceGatheringState iceGatheringState;
+  readonly attribute RTCIceConnectionState iceConnectionState;
+  readonly attribute RTCPeerConnectionState connectionState;
   [Unimplemented] readonly attribute boolean? canTrickleIceCandidates;
   [Unimplemented] static sequence<RTCIceServer> getDefaultIceServers ();
   RTCConfiguration getConfiguration ();
   [RaisesException] void setConfiguration (RTCConfiguration configuration);
-  [Unimplemented] void close ();
+  void close ();
   [Unimplemented] attribute EventHandler onnegotiationneeded;
   [Unimplemented] attribute EventHandler onicecandidate;
   [Unimplemented] attribute EventHandler onicecandidateerror;
@@ -53,6 +112,7 @@ interface RTCPeerConnection : EventTarget {
   [Unimplemented] attribute EventHandler onconnectionstatechange;
 };
 
+[STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
   [Unimplemented] Promise<void> createOffer (RTCSessionDescriptionCallback successCallback, RTCPeerConnectionErrorCallback failureCallback, optional RTCOfferOptions options);
   [Unimplemented] Promise<void> setLocalDescription (RTCSessionDescriptionInit description, VoidFunction successCallback, RTCPeerConnectionErrorCallback failureCallback);
@@ -61,12 +121,14 @@ partial interface RTCPeerConnection {
   [Unimplemented] Promise<void> addIceCandidate (RTCIceCandidateInit candidate, VoidFunction successCallback, RTCPeerConnectionErrorCallback failureCallback);
 };
 
+[STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
   [Unimplemented] readonly attribute RTCSctpTransport? sctp;
   [Unimplemented] RTCDataChannel createDataChannel (USVString label, optional RTCDataChannelInit dataChannelDict);
   [Unimplemented] attribute EventHandler ondatachannel;
 };
 
+[STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
   [Unimplemented] static Promise<RTCCertificate> generateCertificate (AlgorithmIdentifier keygenAlgorithm);
 };

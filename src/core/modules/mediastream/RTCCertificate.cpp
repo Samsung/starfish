@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
@@ -36,3 +38,5 @@ bool RTCCertificate::equals(RTCCertificate* certificate)
     return true;
 }
 }
+
+#endif

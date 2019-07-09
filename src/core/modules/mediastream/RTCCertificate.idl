@@ -17,7 +17,7 @@
  *  USA
  */
 
-[Exposed=Window, Serializable]
+[STARFISH_ENABLE_WEBRTC, Exposed=Window, Serializable]
 interface RTCCertificate {
   [Unimplemented] readonly attribute DOMTimeStamp expires;
   [Unimplemented] static sequence<AlgorithmIdentifier> getSupportedAlgorithms();
