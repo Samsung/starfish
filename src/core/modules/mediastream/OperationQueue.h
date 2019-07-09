@@ -19,34 +19,37 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#ifndef __StarfishRTCCertificate__
-#define __StarfishRTCCertificate__
+#ifndef __StarfishOperationQueue__
+#define __StarfishOperationQueue__
 
+#include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
 
 namespace Starfish {
-
 class ExecutionContext;
+class Promise;
 
-class RTCCertificate : public ScriptWrappable, public Serializable {
+class OperationQueue : public gc {
+    typedef void (*OperationFunction)(Promise*, void*);
+
+    class Operation : public gc {
+    public:
+        OperationFunction m_f;
+        void* m_data;
+        void* m_data1;
+    };
+
 public:
-    RTCCertificate(ExecutionContext* executionContext)
-        : ScriptWrappable(this)
-        , m_executionContext(executionContext)
+    OperationQueue(ExecutionContext* executionContext)
+        : m_executionContext(executionContext)
     {
     }
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCCertificate)
-    virtual bool isSerializable() const override;
-    virtual Serializable* toSerializable() const override;
-
-    bool equals(RTCCertificate* certificate);
+    void enqueue(OperationFunction fn, Promise* data, void* data1);
 
 private:
     ExecutionContext* m_executionContext;
+    GCDeque<Operation> m_queue;
 };
 }
-
 #endif
 #endif

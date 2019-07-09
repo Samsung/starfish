@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
@@ -47,16 +49,16 @@ String* RTCConfiguration::iceTransportPolicy()
     case RTCIceTransportPolicy::All:
         return String::createASCIIString("all");
     default:
-        return String::emptyString;
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
 void RTCConfiguration::setIceTransportPolicy(String* iceTransportPolicy)
 {
-    if (iceTransportPolicy->equalsIgnoreCase("relay")) {
+    if (iceTransportPolicy->equals("relay")) {
         m_iceTransportPolicy = RTCIceTransportPolicy::Relay;
         m_hasValidIceTransportPolicy = true;
-    } else if (iceTransportPolicy->equalsIgnoreCase("all")) {
+    } else if (iceTransportPolicy->equals("all")) {
         m_iceTransportPolicy = RTCIceTransportPolicy::All;
         m_hasValidIceTransportPolicy = true;
     } else {
@@ -74,19 +76,19 @@ String* RTCConfiguration::bundlePolicy()
     case RTCBundlePolicy::MaxBundle:
         return String::createASCIIString("max-bundle");
     default:
-        return String::emptyString;
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
 void RTCConfiguration::setBundlePolicy(String* bundlePolicy)
 {
-    if (bundlePolicy->equalsIgnoreCase("balanced")) {
+    if (bundlePolicy->equals("balanced")) {
         m_bundlePolicy = RTCBundlePolicy::Balanced;
         m_hasValidBundlePolicy = true;
-    } else if (bundlePolicy->equalsIgnoreCase("max-compat")) {
+    } else if (bundlePolicy->equals("max-compat")) {
         m_bundlePolicy = RTCBundlePolicy::MaxCompat;
         m_hasValidBundlePolicy = true;
-    } else if (bundlePolicy->equalsIgnoreCase("max-bundle")) {
+    } else if (bundlePolicy->equals("max-bundle")) {
         m_bundlePolicy = RTCBundlePolicy::MaxBundle;
         m_hasValidBundlePolicy = true;
     } else {
@@ -102,16 +104,16 @@ String* RTCConfiguration::rtcpMuxPolicy()
     case RTCRtcpMuxPolicy::Require:
         return String::createASCIIString("require");
     default:
-        return String::emptyString;
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
 void RTCConfiguration::setRtcpMuxPolicy(String* rtcpMuxPolicy)
 {
-    if (rtcpMuxPolicy->equalsIgnoreCase("negotiate")) {
+    if (rtcpMuxPolicy->equals("negotiate")) {
         m_rtcpMuxPolicy = RTCRtcpMuxPolicy::Negotiate;
         m_hasValidRtcpMuxPolicy = true;
-    } else if (rtcpMuxPolicy->equalsIgnoreCase("require")) {
+    } else if (rtcpMuxPolicy->equals("require")) {
         m_rtcpMuxPolicy = RTCRtcpMuxPolicy::Require;
         m_hasValidRtcpMuxPolicy = true;
     } else {
@@ -128,3 +130,5 @@ bool RTCConfiguration::isValid()
     return false;
 }
 }
+
+#endif

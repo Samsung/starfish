@@ -22,20 +22,38 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "EscargotPublic.h"
+#include "core/modules/mediastream/OperationQueue.h"
+
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/mediastream/RTCCertificate.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebBase.h"
+#include "core/page/GlobalScope.h"
 
 namespace Starfish {
 
-ScriptBindingInstance* RTCCertificate::scriptBindingInstance()
+// https://w3c.github.io/webrtc-pc/#enqueue-an-operation
+void OperationQueue::enqueue(OperationFunction fn, Promise* fnPromise,
+                             void* data)
 {
-    return m_executionContext->scriptBindingInstance();
-}
+    // TODO: Impl operation queue
+    struct Params : public gc {
+        OperationFunction fn;
+        Promise* fnPromise;
+        void* data;
+    };
+    Params* p = new Params();
+    p->fn = fn;
+    p->fnPromise = fnPromise;
+    p->data = data;
 
-bool RTCCertificate::equals(RTCCertificate* certificate)
-{
-    // TODO
-    return true;
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t, void* data) {
+            Params* p = castTo<Params*>(data);
+            p->fn(p->fnPromise, p->data);
+        },
+        p);
 }
 }
 

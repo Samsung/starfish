@@ -17,36 +17,27 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBRTC)
-
-#ifndef __StarfishRTCCertificate__
-#define __StarfishRTCCertificate__
-
-#include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
-
-namespace Starfish {
-
-class ExecutionContext;
-
-class RTCCertificate : public ScriptWrappable, public Serializable {
-public:
-    RTCCertificate(ExecutionContext* executionContext)
-        : ScriptWrappable(this)
-        , m_executionContext(executionContext)
-    {
-    }
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCCertificate)
-    virtual bool isSerializable() const override;
-    virtual Serializable* toSerializable() const override;
-
-    bool equals(RTCCertificate* certificate);
-
-private:
-    ExecutionContext* m_executionContext;
+[STARFISH_ENABLE_WEBRTC]
+enum RTCSdpType {
+  "offer",
+  "pranswer",
+  "answer",
+  "rollback"
 };
-}
 
-#endif
-#endif
+[STARFISH_ENABLE_WEBRTC]
+dictionary RTCSessionDescriptionInit {
+  required RTCSdpType type;
+  DOMString sdp = "";
+};
+
+
+[ STARFISH_ENABLE_WEBRTC,
+  Constructor (RTCSessionDescriptionInit descriptionInitDict),
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface RTCSessionDescription {
+  readonly attribute RTCSdpType type;
+  readonly attribute DOMString sdp;
+  //[Default] object toJSON();
+};

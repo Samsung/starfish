@@ -17,22 +17,26 @@
  *  USA
  */
 
+[STARFISH_ENABLE_WEBRTC]
 enum RTCIceTransportPolicy {
   "relay",
   "all"
 };
 
+[STARFISH_ENABLE_WEBRTC]
 enum RTCBundlePolicy {
   "balanced",
   "max-compat",
   "max-bundle"
 };
 
+[STARFISH_ENABLE_WEBRTC]
 enum RTCRtcpMuxPolicy {
   "negotiate",
   "require"
 };
 
+[STARFISH_ENABLE_WEBRTC]
 dictionary RTCConfiguration {
   [Unimplemented] sequence<RTCIceServer> iceServers;
   RTCIceTransportPolicy iceTransportPolicy;

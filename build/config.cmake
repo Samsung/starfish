@@ -61,6 +61,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX: enable CSS -webkit-transition-* support
 # STARFISH_ENABLE_OBSOLETE_SPEC : enable obsolete spec
 # STARFISH_ENABLE_BATTERY_STATUS : enable battery status api
+# STARFISH_ENABLE_WEBRTC: enable WebRTC
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -166,6 +167,7 @@ IF (${MODE} STREQUAL "debug")
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
         -DSTARFISH_ENABLE_SERVICE_WORKER
+        -DSTARFISH_ENABLE_WEBRTC
     )
 ELSEIF (${MODE} STREQUAL "release")
     SET (LWE_DEFINES_MODE -DNDEBUG)

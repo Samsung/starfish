@@ -17,15 +17,24 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
 #include "core/modules/mediastream/RTCPeerConnection.h"
 
+#include "EscargotPublic.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/mediastream/RTCCertificate.h"
 #include "core/modules/mediastream/RTCConfiguration.h"
+#include "core/modules/mediastream/RTCSessionDescription.h"
+#include "core/modules/mediastream/OperationQueue.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebBase.h"
+#include "core/page/GlobalScope.h"
 
 namespace Starfish {
 
@@ -33,6 +42,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_operationQueue(new OperationQueue(executionContext))
 {
     if (!configuration.certificates().empty()) {
         // TODO
@@ -60,6 +70,254 @@ ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
 ExecutionContext* RTCPeerConnection::executionContext() const
 {
     return m_executionContext;
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer
+Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
+{
+    Promise* promise = new Promise(scriptBindingInstance());
+    // 1-2
+    if (m_isClosed) {
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    m_operationQueue->enqueue(
+        [](Promise* promise, void* data) {
+            RTCPeerConnection* connection = castTo<RTCPeerConnection*>(data);
+
+            if (connection->m_isClosed) {
+                ObjectRef* sd = connection->createSessionDescriptionInitObject(
+                    RTCSdpType::Offer, String::createASCIIString(""));
+                promise->reject(createScriptValue(sd));
+                return;
+            }
+
+            if ((connection->m_signalingState ==
+                 RTCSignalingState::HaveRemoteOffer) ||
+                (connection->m_signalingState ==
+                 RTCSignalingState::HaveLocalPranswer) ||
+                (connection->m_signalingState ==
+                 RTCSignalingState::HaveRemotePranswer) ||
+                (connection->m_signalingState == RTCSignalingState::Closed)) {
+                auto exception = new DOMException(
+                    connection->executionContext(),
+                    DOMException::INVALID_STATE_ERR, "InvalidStateError");
+                promise->reject(exception->scriptValue());
+                return;
+            }
+
+            // TODO: identity provider
+            ObjectRef* sd = connection->createSessionDescriptionInitObject(
+                RTCSdpType::Offer, String::createASCIIString("sdpString"));
+            promise->fulfill(createScriptValue(sd));
+            return;
+        },
+        promise, this);
+
+    return promise;
+}
+
+ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
+    RTCSdpType type, String* sdp)
+{
+    RTCSessionDescriptionInit sd(type, sdp);
+    ContextRef* ctx = scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
+    ScriptObject obj = ObjectRef::create(state);
+    String* sdValue = sd.type();
+    obj->set(state, ValueRef::create(StringRef::fromASCII("type")),
+             ValueRef::create(toJSString(sdValue)));
+    String* sdpValue = sd.sdp();
+    obj->set(state, ValueRef::create(StringRef::fromASCII("sdp")),
+             ValueRef::create(toJSString(sdpValue)));
+
+    return obj;
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-peerconnection-setlocaldescription
+Promise* RTCPeerConnection::setLocalDescription(
+    RTCSessionDescriptionInit& description)
+{
+    RTCSessionDescriptionInit d = description;
+    if ((d.m_sdp->equals(String::emptyString)) &&
+        ((d.m_type == RTCSdpType::Answer) ||
+         (d.m_type == RTCSdpType::Pranswer))) {
+        d.m_sdp = m_lastCreatedAnswer;
+    }
+    if ((d.m_sdp->equals(String::emptyString)) &&
+        (d.m_type == RTCSdpType::Offer)) {
+        d.m_sdp = m_lastCreatedOffer;
+    }
+
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    struct Params : public gc {
+        RTCPeerConnection* self;
+        RTCSessionDescriptionInit d;
+    };
+    Params* p = new Params();
+    p->self = this;
+    p->d = d;
+
+    m_operationQueue->enqueue(
+        [](Promise* promise, void* data) {
+            Params* p = castTo<Params*>(data);
+            RTCPeerConnection* con = castTo<RTCPeerConnection*>(p->self);
+            RTCSessionDescriptionInit d = p->d;
+
+            if ((d.m_type == RTCSdpType::Offer) &&
+                !(d.m_sdp->equals(con->m_lastCreatedOffer))) {
+                auto exception =
+                    new DOMException(con->executionContext(),
+                                     DOMException::INVALID_MODIFICATION_ERR,
+                                     "InvalidModificationError");
+                promise->reject(exception->scriptValue());
+                return;
+            }
+            if (((d.m_type == RTCSdpType::Answer) ||
+                 (d.m_type == RTCSdpType::Pranswer)) &&
+                !(d.m_sdp->equals(con->m_lastCreatedAnswer))) {
+                auto exception =
+                    new DOMException(con->executionContext(),
+                                     DOMException::INVALID_MODIFICATION_ERR,
+                                     "InvalidModificationError");
+                promise->reject(exception->scriptValue());
+                return;
+            }
+
+            // 4.2
+            if (con->m_isClosed) {
+                promise->fulfill(scriptUndefined());
+                return;
+            }
+            // 4.2.1
+            if (d.m_type == RTCSdpType::Offer) {
+                con->m_pendingLocalDescription =
+                    new RTCSessionDescription(con->executionContext(), d);
+                con->m_signalingState = RTCSignalingState::HaveLocalOffer;
+            } else if (d.m_type == RTCSdpType::Answer) {
+                con->m_currentLocalDescription =
+                    new RTCSessionDescription(con->executionContext(), d);
+                con->m_currentRemoteDescription =
+                    con->m_pendingRemoteDescription;
+                con->m_pendingRemoteDescription = nullptr;
+                con->m_pendingLocalDescription = nullptr;
+                con->m_lastCreatedOffer = String::emptyString;
+                con->m_lastCreatedAnswer = String::emptyString;
+                con->m_signalingState = RTCSignalingState::Stable;
+            } else if (d.m_type == RTCSdpType::Rollback) {
+                con->m_pendingLocalDescription = nullptr;
+                con->m_signalingState = RTCSignalingState::Stable;
+            } else if (d.m_type == RTCSdpType::Pranswer) {
+                con->m_pendingLocalDescription =
+                    new RTCSessionDescription(con->executionContext(), d);
+                con->m_signalingState = RTCSignalingState::HaveLocalPranswer;
+            }
+
+            // TODO: remote descripition and so on
+            promise->fulfill(scriptUndefined());
+            return;
+        },
+        promise, p);
+
+    return promise;
+}
+
+RTCSessionDescription* RTCPeerConnection::localDescription()
+{
+    if (m_pendingLocalDescription != nullptr) {
+        return m_pendingLocalDescription;
+    }
+    return m_currentLocalDescription;
+}
+
+RTCSessionDescription* RTCPeerConnection::remoteDescription()
+{
+    if (m_pendingRemoteDescription != nullptr) {
+        return m_pendingRemoteDescription;
+    }
+    return m_currentRemoteDescription;
+}
+
+String* RTCPeerConnection::signalingState()
+{
+    switch (m_signalingState) {
+    case RTCSignalingState::Stable:
+        return String::createASCIIString("stable");
+    case RTCSignalingState::HaveLocalOffer:
+        return String::createASCIIString("have-local-offer");
+    case RTCSignalingState::HaveRemoteOffer:
+        return String::createASCIIString("have-remote-offer");
+    case RTCSignalingState::HaveLocalPranswer:
+        return String::createASCIIString("have-local-pranswer");
+    case RTCSignalingState::HaveRemotePranswer:
+        return String::createASCIIString("have-remote-pranswer");
+    case RTCSignalingState::Closed:
+        return String::createASCIIString("closed");
+    default:
+        return String::emptyString;
+    }
+}
+
+String* RTCPeerConnection::iceGatheringState()
+{
+    switch (m_iceGatheringState) {
+    case RTCIceGatheringState::New:
+        return String::createASCIIString("new");
+    case RTCIceGatheringState::Gathering:
+        return String::createASCIIString("gathering");
+    case RTCIceGatheringState::Complete:
+        return String::createASCIIString("complete");
+    default:
+        return String::emptyString;
+    }
+}
+
+String* RTCPeerConnection::iceConnectionState()
+{
+    switch (m_iceConnectionState) {
+    case RTCIceConnectionState::Closed:
+        return String::createASCIIString("closed");
+    case RTCIceConnectionState::Failed:
+        return String::createASCIIString("failed");
+    case RTCIceConnectionState::Disconnected:
+        return String::createASCIIString("disconnected");
+    case RTCIceConnectionState::New:
+        return String::createASCIIString("new");
+    case RTCIceConnectionState::Checking:
+        return String::createASCIIString("checking");
+    case RTCIceConnectionState::Completed:
+        return String::createASCIIString("completed");
+    case RTCIceConnectionState::Connected:
+        return String::createASCIIString("connected");
+    default:
+        return String::emptyString;
+    }
+}
+
+String* RTCPeerConnection::connectionState()
+{
+    switch (m_connectionState) {
+    case RTCPeerConnectionState::Closed:
+        return String::createASCIIString("closed");
+    case RTCPeerConnectionState::Failed:
+        return String::createASCIIString("failed");
+    case RTCPeerConnectionState::Disconnected:
+        return String::createASCIIString("disconnected");
+    case RTCPeerConnectionState::New:
+        return String::createASCIIString("new");
+    case RTCPeerConnectionState::Connecting:
+        return String::createASCIIString("connecting");
+    case RTCPeerConnectionState::Connected:
+        return String::createASCIIString("connected");
+    default:
+        return String::emptyString;
+    }
 }
 
 RTCConfiguration& RTCPeerConnection::getConfiguration()
@@ -133,4 +391,18 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration)
     // 12
     m_configuration = configuration;
 }
+
+void RTCPeerConnection::close()
+{
+    if (m_isClosed) {
+        return;
+    }
+
+    m_isClosed = true;
+    m_signalingState = RTCSignalingState::Closed;
+    m_iceConnectionState = RTCIceConnectionState::Closed;
+    m_connectionState = RTCPeerConnectionState::Closed;
 }
+}
+
+#endif

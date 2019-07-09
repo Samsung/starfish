@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+
 #ifndef __StarfishRTCConfiguration__
 #define __StarfishRTCConfiguration__
 
@@ -72,4 +74,5 @@ private:
 };
 }
 
+#endif
 #endif
