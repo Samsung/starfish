@@ -1250,15 +1250,9 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode) override
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& dst,
+                                ImageRenderingValue imageRenderingMode) override
     {
-        STARFISH_ASSERT(data != nullptr);
-
-        if (lastState()->m_visible == false) {
-            return;
-        }
-
         size_t surfaceWidth = data->width(), surfaceHeight = data->height();
 
         bool surfaceWasCreated = false;
@@ -1278,18 +1272,27 @@ public:
         }
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst,
-                           const DrawImageInfo& borderinfo,
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode) override
     {
         STARFISH_ASSERT(data != nullptr);
 
-        cairo_save(m_canvas);
         if (lastState()->m_visible == false) {
             return;
         }
 
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawImageShadow(data, dst);
+        }
+        drawImageInner(data, dst, imageRenderingMode);
+    }
+
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& src,
+                                const Unit::Rect& dst,
+                                const DrawImageInfo& borderinfo,
+                                ImageRenderingValue imageRenderingMode) override
+    {
+        cairo_save(m_canvas);
         bool surfaceWasCreated = false;
         cairo_surface_t* srcImage = (cairo_surface_t*)data->unwrap();
         if (srcImage == nullptr) {
@@ -1337,6 +1340,24 @@ public:
             cairo_surface_destroy(image);
         }
         cairo_restore(m_canvas);
+    }
+
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst,
+                           const DrawImageInfo& borderinfo,
+                           ImageRenderingValue imageRenderingMode) override
+    {
+        STARFISH_ASSERT(data != nullptr);
+
+        if (lastState()->m_visible == false) {
+            return;
+        }
+
+        if (lastState()->m_shadowData->hasValidValue()) {
+            drawImageShadow(data, dst);
+        }
+
+        drawImageInner(data, src, dst, borderinfo, imageRenderingMode);
     }
 
     void drawRepeatImageCairo(cairo_surface_t* localSurface,

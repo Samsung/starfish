@@ -352,6 +352,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
     int xx = x, yy = y, ww = width, hh = height;
     Unit::Rect shadowRect(0, 0, ww, hh);
     CanvasShadowData* shadow = lastState()->m_shadowData;
+    auto shadowColor = shadow->color();
     float radius = shadow->radius();
     float shadowOffsetX = shadow->offsetX();
     float shadowOffsetY = shadow->offsetY();
@@ -360,11 +361,23 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
     if (radius == 0) {
         save();
         if (isFill) {
-            setFillColor(shadow->color());
+            if (lastState()->m_fillSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_fillSource->getColorValue().a());
+            }
+            setFillColor(shadowColor);
             drawRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
                           shadowRect.width(), shadowRect.height());
         } else {
-            setStrokeColor(shadow->color());
+            if (lastState()->m_strokeSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_strokeSource->getColorValue().a());
+            }
+            setStrokeColor(shadowColor);
             drawStrokeRectInner(shadowOffsetX + xx, shadowOffsetY + yy,
                                 shadowRect.width(), shadowRect.height());
         }
@@ -386,7 +399,6 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
             NativeImageData::create(bufImageSize, bufImageSize);
         Canvas* cv = Canvas::create(m_webView, nativeImage);
         cv->unsetDevicePixelRatio();
-        auto shadowColor = shadow->color();
         cv->clearColor(Unit::Color(0, 0, 0, 0));
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
         cv->setFillColor(shadowColor);
@@ -439,13 +451,13 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         DrawImageInfo drawImageInfo = { 1.0, 1.0,
                                         BorderImageRepeatValue::StretchValue,
                                         BorderImageRepeatValue::StretchValue };
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
 
         // top-left -> top-right
         src = Unit::Rect(pieceSize - 1, 0, 1, pieceSize);
         dst = Unit::Rect(imageRect.x() + pieceSize, imageRect.y(),
                          imageRect.width() - pieceSize * 2, pieceSize);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
 
         // top-right
         src = Unit::Rect(0, 0, pieceSize, pieceSize);
@@ -458,7 +470,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         translate(dst.width() / 2.f, dst.height() / 2.f);
         rotate(UnitHelper::convertFromDegToRad(90));
         translate(-dst.width() / 2.f, -dst.height() / 2.f);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         // top-right -> bottom-right
@@ -473,7 +485,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         translate(dst.width() / 2.f, dst.height() / 2.f);
         rotate(UnitHelper::convertFromDegToRad(180));
         translate(-dst.width() / 2.f, -dst.height() / 2.f);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         // bottom-right
@@ -487,7 +499,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         translate(dst.width() / 2.f, dst.height() / 2.f);
         rotate(UnitHelper::convertFromDegToRad(180));
         translate(-dst.width() / 2.f, -dst.height() / 2.f);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         // bottom-right -> bottom-left
@@ -502,7 +514,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         translate(dst.width() / 2.f, dst.height() / 2.f);
         rotate(UnitHelper::convertFromDegToRad(180));
         translate(-dst.width() / 2.f, -dst.height() / 2.f);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         // bottom-left
@@ -516,14 +528,14 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         translate(dst.width() / 2.f, dst.height() / 2.f);
         rotate(UnitHelper::convertFromDegToRad(270));
         translate(-dst.width() / 2.f, -dst.height() / 2.f);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         // bottom-left -> top-left
         src = Unit::Rect(0, pieceSize - 1, pieceSize, 1);
         dst = Unit::Rect(imageRect.x(), imageRect.y() + pieceSize, pieceSize,
                          imageRect.height() - pieceSize * 2);
-        drawImage(nativeImage, src, dst, drawImageInfo);
+        drawImageInner(nativeImage, src, dst, drawImageInfo);
         restore();
 
         delete nativeImage;
@@ -537,10 +549,10 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         cv->clearColor(Unit::Color(0, 0, 0, 0));
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
         if (isFill) {
-            cv->setFillColor(shadow->color());
+            cv->setFillColor(shadowColor);
             cv->drawRect(shadowRect);
         } else {
-            cv->setShadowColor(shadow->color());
+            cv->setShadowColor(shadowColor);
             cv->strokeRect(shadowRect);
         }
 
@@ -554,7 +566,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
                              -offset + shadowOffsetY + yy,
                              ceil(shadowRect.width() + radiusOffset),
                              ceil(shadowRect.height() + radiusOffset));
-        drawImage(nativeImage, imageRect);
+        drawImageInner(nativeImage, imageRect);
         restore();
 
         delete nativeImage;
@@ -587,11 +599,23 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     if (radius == 0) {
         save();
         if (isFill) {
-            setFillColor(shadow->color());
+            if (lastState()->m_fillSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_fillSource->getColorValue().a());
+            }
+            setFillColor(shadowColor);
             drawTextInner(shadowOffsetX + x, shadowOffsetY + y, stringWidth, sv,
                           true);
         } else {
-            setStrokeColor(shadow->color());
+            if (lastState()->m_strokeSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_strokeSource->getColorValue().a());
+            }
+            setStrokeColor(shadowColor);
             drawStrokeTextInner(shadowOffsetX + x, shadowOffsetY + y,
                                 stringWidth, sv, true);
         }
@@ -634,7 +658,7 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     Unit::Rect rect(0, 0, imageWidth, imageHeight);
     float offset = ceil(radiusOffset / 2);
     translate(-offset + shadowOffsetX + x, -offset + shadowOffsetY + y);
-    drawImage(nativeImage, rect);
+    drawImageInner(nativeImage, rect);
     delete nativeImage;
     restore();
 }
@@ -677,10 +701,22 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
         save();
         translate(shadowOffsetX, shadowOffsetY);
         if (isFill) {
-            setFillColor(shadow->color());
+            if (lastState()->m_fillSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_fillSource->getColorValue().a());
+            }
+            setFillColor(shadowColor);
             drawPathInner(path);
         } else {
-            setStrokeColor(shadow->color());
+            if (lastState()->m_strokeSource->getColorValue().hasAlpha()) {
+                shadowColor = Unit::Color(
+                    shadowColor.r(), shadowColor.g(), shadowColor.b(),
+                    shadowColor.a() *
+                        lastState()->m_strokeSource->getColorValue().a());
+            }
+            setStrokeColor(shadowColor);
             drawStrokePathInner(path);
         }
         restore();
@@ -718,8 +754,85 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     float offset = ceil(radiusOffset / 2);
     translate(-offset + shadowOffsetX + boundRect.x(),
               -offset + shadowOffsetY + boundRect.y());
-    drawImage(nativeImage, rect);
+    drawImageInner(nativeImage, rect);
     delete nativeImage;
     restore();
 }
+
+#if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
+#define NEEDS_UNPREMULTIPLIED
+#endif
+void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
+{
+    int xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
+    Unit::Rect shadowRect(0, 0, ww, hh);
+    CanvasShadowData* shadow = lastState()->m_shadowData;
+    auto shadowColor = shadow->color();
+    float radius = shadow->radius();
+    float shadowOffsetX = shadow->offsetX();
+    float shadowOffsetY = shadow->offsetY();
+    float radiusOffset = 0.0f;
+
+    if (radius != 0) {
+        radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
+        radiusOffset *= 2;
+    }
+    save();
+    NativeImageData* nativeImage =
+        NativeImageData::create(ceil(shadowRect.width() + radiusOffset),
+                                ceil(shadowRect.height() + radiusOffset));
+    Canvas* cv = Canvas::create(m_webView, nativeImage);
+    cv->unsetDevicePixelRatio();
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+    cv->setFillColor(shadowColor);
+    cv->drawRect(shadowRect);
+
+    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                  nativeImage->height(), nativeImage->stride());
+    sb.process(radius / 2);
+    delete cv;
+
+    {
+        size_t imagaDataHeight = data->height();
+        size_t imagaDataWidth = data->width();
+        uint8_t* srcPtr = data->data();
+        uint8_t* dstPtr = nativeImage->data();
+        for (size_t y = 0; y < imagaDataHeight; y++) {
+            for (size_t x = 0; x < imagaDataWidth; x++) {
+                uint8_t* srcPixel = srcPtr + (y * imagaDataWidth * 4) + (x * 4);
+                uint8_t* dstPixel = dstPtr + (y * imagaDataWidth * 4) + (x * 4);
+                uint8_t r, g, b, a, src_a;
+
+                src_a = srcPixel[3];
+                r = dstPixel[0];
+                g = dstPixel[1];
+                b = dstPixel[2];
+                a = dstPixel[3];
+#if defined(NEEDS_UNPREMULTIPLIED)
+                if (a != 0 && a != 255) {
+                    r = r * 255 / a;
+                    g = g * 255 / a;
+                    b = b * 255 / a;
+                }
+                dstPixel[0] = ((float)r * ((float)src_a / 255));
+                dstPixel[1] = ((float)g * ((float)src_a / 255));
+                dstPixel[2] = ((float)b * ((float)src_a / 255));
+#endif
+                dstPixel[3] = ((float)a * ((float)src_a / 255));
+            }
+        }
+    }
+
+    float offset = ceil(radiusOffset / 2);
+    Unit::Rect imageRect(-offset + shadowOffsetX + xx,
+                         -offset + shadowOffsetY + yy,
+                         ceil(shadowRect.width() + radiusOffset),
+                         ceil(shadowRect.height() + radiusOffset));
+    drawImageInner(nativeImage, imageRect);
+    restore();
+
+    delete nativeImage;
+}
+#undef NEEDS_UNPREMULTIPLIED
 }

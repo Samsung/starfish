@@ -323,7 +323,7 @@ namespace WindowOrWorkerGlobalScope {
 #else
             {
                 for (size_t y = 0; y < imagaDataHeight; y++) {
-                    for (size_t x = 0; x < imagaDataHeight; x++) {
+                    for (size_t x = 0; x < imagaDataWidth; x++) {
                         uint8_t* srcPixel =
                             srcPtr + (y * imagaDataWidth * 4) + (x * 4);
                         uint8_t* dstPixel =

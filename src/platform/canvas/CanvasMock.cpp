@@ -296,6 +296,17 @@ public:
     {
     }
 
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& dst,
+                                ImageRenderingValue imageRenderingMode)
+    {
+    }
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& src,
+                                const Unit::Rect& dst,
+                                const DrawImageInfo& borderinfo,
+                                ImageRenderingValue imageRenderingMode)
+    {
+    }
+
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {

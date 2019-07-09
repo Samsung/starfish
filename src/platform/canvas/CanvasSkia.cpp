@@ -906,12 +906,9 @@ public:
         }
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& dst,
+                                ImageRenderingValue imageRenderingMode)
     {
-        if (!lastState()->m_visible) {
-            return;
-        }
         auto pixels = data->data();
         auto w = data->width();
         auto h = data->height();
@@ -928,16 +925,11 @@ public:
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
             &paint);
     }
-
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst,
-                           const DrawImageInfo& borderinfo,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawImageInner(NativeImageData* data, const Unit::Rect& src,
+                                const Unit::Rect& dst,
+                                const DrawImageInfo& borderinfo,
+                                ImageRenderingValue imageRenderingMode)
     {
-        if (!lastState()->m_visible) {
-            return;
-        }
-
         auto pixels = data->data();
         auto w = data->width();
         auto h = data->height();
@@ -996,6 +988,26 @@ public:
             m_canvas->drawRect(rect, paint);
             m_canvas->restore();
         }
+    }
+
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
+    {
+        if (!lastState()->m_visible) {
+            return;
+        }
+        drawImageInner(data, dst, imageRenderingMode);
+    }
+
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst,
+                           const DrawImageInfo& borderinfo,
+                           ImageRenderingValue imageRenderingMode)
+    {
+        if (!lastState()->m_visible) {
+            return;
+        }
+        drawImageInner(data, src, dst, borderinfo, imageRenderingMode);
     }
 
     virtual void drawRepeatImage(
