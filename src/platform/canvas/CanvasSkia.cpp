@@ -629,7 +629,7 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    virtual void strokeRectInner(float x, float y, float w, float h)
+    virtual void drawStrokeRectInner(float x, float y, float w, float h)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
@@ -1415,9 +1415,7 @@ public:
         if (!lastState()->m_visible) {
             return;
         }
-        (((PathSkia*)path)->skiaPath())->dump();
-        m_path.addPath(*(((PathSkia*)path)->skiaPath()));
-        stroke();
+        drawStrokePathInner(path);
     }
 
     virtual void fillPath(Path* path)
@@ -1425,8 +1423,19 @@ public:
         if (!lastState()->m_visible) {
             return;
         }
+        drawPathInner(path);
+    }
+
+    virtual void drawPathInner(Path* path) override
+    {
         m_path.addPath(*(((PathSkia*)path)->skiaPath()));
         fill();
+    }
+
+    virtual void drawStrokePathInner(Path* path) override
+    {
+        m_path.addPath(*(((PathSkia*)path)->skiaPath()));
+        stroke();
     }
 
     virtual void fillPreserve()

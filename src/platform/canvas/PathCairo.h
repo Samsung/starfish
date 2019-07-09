@@ -64,6 +64,7 @@ public:
                          bool anticlockwise = false) override;
     virtual void postMatrix(const SkMatrix& matrix) override;
     virtual void setCTM(const SkMatrix& matrix) override;
+    virtual Unit::Rect boundingRect(bool isFill) override;
 
 private:
     cairo_t* m_cairoContext;

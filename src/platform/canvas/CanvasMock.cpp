@@ -218,6 +218,14 @@ public:
     {
     }
 
+    virtual void drawPathInner(Path* path)
+    {
+    }
+
+    virtual void drawStrokePathInner(Path* path)
+    {
+    }
+
     virtual void drawRect(const LayoutRect& rt)
     {
     }
@@ -231,7 +239,7 @@ public:
     {
     }
 
-    virtual void strokeRectInner(float x, float y, float w, float h)
+    virtual void drawStrokeRectInner(float x, float y, float w, float h)
     {
     }
 

@@ -555,14 +555,23 @@ protected:
                               const StringView& sv);
     void drawTextShadowInner(float x, float y, float stringWidth,
                              const StringView& sv, bool isFill);
+
+    void drawFillPathShadow(Path* path);
+    void drawStrokePathShadow(Path* path);
+    void drawPathShadowInner(Path* path, bool isFill);
+
     virtual void drawRectInner(float x, float y, float w, float h) = 0;
-    virtual void strokeRectInner(float x, float y, float w, float h) = 0;
+    virtual void drawStrokeRectInner(float x, float y, float w, float h) = 0;
     virtual void drawTextInner(float x, float y, float stringWidth,
                                const StringView& sv,
                                bool shouldSkipUnresolvedWebFont) = 0;
     virtual void drawStrokeTextInner(float x, float y, float stringWidth,
                                      const StringView& sv,
                                      bool shouldSkipUnresolvedWebFont) = 0;
+
+    virtual void drawPathInner(Path* path) = 0;
+    virtual void drawStrokePathInner(Path* path) = 0;
+
     CanvasState* lastState()
     {
         STARFISH_ASSERT(m_state.size() != 0);
