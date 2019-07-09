@@ -560,6 +560,8 @@ protected:
     void drawStrokePathShadow(Path* path);
     void drawPathShadowInner(Path* path, bool isFill);
 
+    void drawImageShadow(NativeImageData* data, const Unit::Rect& dst);
+
     virtual void drawRectInner(float x, float y, float w, float h) = 0;
     virtual void drawStrokeRectInner(float x, float y, float w, float h) = 0;
     virtual void drawTextInner(float x, float y, float stringWidth,
@@ -571,6 +573,15 @@ protected:
 
     virtual void drawPathInner(Path* path) = 0;
     virtual void drawStrokePathInner(Path* path) = 0;
+    virtual void drawImageInner(
+        NativeImageData* data, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    virtual void drawImageInner(
+        NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
+        const DrawImageInfo& borderinfo,
+        ImageRenderingValue imageRenderingMode =
+            ImageRenderingValue::ImageRenderingAutoValue) = 0;
 
     CanvasState* lastState()
     {

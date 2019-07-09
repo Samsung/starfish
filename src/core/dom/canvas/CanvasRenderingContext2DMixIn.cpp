@@ -1571,9 +1571,6 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
     } else {
         adjustSrcRect.intersect(src);
     }
-    if (adjustSrcRect.isEmpty() == true) {
-        return;
-    }
 
     Unit::Rect adjustDstRect(0, 0, m_canvasSurface->bufferWidth(),
                              m_canvasSurface->bufferHeight());
@@ -1582,9 +1579,6 @@ void CanvasRenderingContext2DMixIn::drawImage(CanvasImageSource image, float sx,
         adjustDstRect = dst;
     } else {
         adjustDstRect.intersect(dst);
-    }
-    if (adjustDstRect.isEmpty() == true) {
-        return;
     }
 
     // FIXME : The result of the test below is 150 pass, 1 fail
