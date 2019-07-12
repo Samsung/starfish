@@ -35,6 +35,10 @@ public:
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         FrameBox* oldPaintingBox, Element* element, AnimatedValue& from,
         AnimatedValue& to, uint32_t layer);
+    static void calculateBackgroundBaseData(FrameBox* box, ComputedStyle* style,
+                                            uint32_t layer,
+                                            Unit::Size& positioningSize,
+                                            Unit::Size& imageSize);
     static bool backgroundPosYToAnimatedValue(
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         FrameBox* oldPaintingBox, Element* element, AnimatedValue& from,

@@ -7655,12 +7655,14 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     bool isOddIteration;
                     if (std::isinf(iterationCount) == false) {
                         isOddIteration =
-                            std::fmod(iterationCount -
-                                          iter->first->m_iterationStart + 1,
-                                      2) >= 1;
+                            std::fmod(
+                                iterationCount -
+                                    activeAnimations[i]->iterationStart() + 1,
+                                2) >= 1;
                     } else {
                         isOddIteration =
-                            std::fmod(iter->first->m_iterationStart, 2) >= 1;
+                            std::fmod(activeAnimations[i]->iterationStart(),
+                                      2) >= 1;
                     }
                     bool isForwardDirection =
                         (direction == AnimationDirectionNormalValue) ||
@@ -7671,15 +7673,20 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     activeAnimations[i]->setIsForward(isForwardDirection);
                     if (activeAnimations[i]->fraction(tick) >= 1) {
                         if (std::isinf(iterationCount) == false) {
-                            if (--iter->first->m_iterationStart < 1) {
+                            float f = activeAnimations[i]->iterationStart() - 1;
+                            activeAnimations[i]->setIterationStart(f);
+                            if (activeAnimations[i]->iterationStart() < 1) {
                                 // time is up
                                 shouldRemove = true;
                                 isCancel = false;
-                                iter->first->m_iterationStart = iterationCount;
+                                activeAnimations[i]->setIterationStart(
+                                    iterationCount);
                             }
                         } else {
-                            iter->first->m_iterationStart =
-                                iter->first->m_iterationStart == 1 ? 0 : 1;
+                            float f = activeAnimations[i]->iterationStart() == 1
+                                          ? 0
+                                          : 1;
+                            activeAnimations[i]->setIterationStart(f);
                         }
                     }
 

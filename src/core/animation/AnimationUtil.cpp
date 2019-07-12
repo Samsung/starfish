@@ -50,10 +50,11 @@ static void baseSizeForBackground(FrameBox* box, ComputedStyle* style,
     }
 }
 
-static void calculateBackgroundBaseData(FrameBox* box, ComputedStyle* style,
-                                        uint32_t layer,
-                                        Unit::Size& positioningSize,
-                                        Unit::Size& imageSize)
+void AnimationUtil::calculateBackgroundBaseData(FrameBox* box,
+                                                ComputedStyle* style,
+                                                uint32_t layer,
+                                                Unit::Size& positioningSize,
+                                                Unit::Size& imageSize)
 {
     Unit::Rect positioningRect;
     BackgroundAttachmentValue attachment = style->backgroundAttachment(layer);
@@ -75,10 +76,9 @@ static void calculateBackgroundBaseData(FrameBox* box, ComputedStyle* style,
     float positionH = positioningRect.height();
     float boxR = positionW / positionH;
     float baseW = 0, baseH = 0;
-    float sizeW = 0, sizeH = 0;
-
     baseSizeForBackground(box, style, layer, baseW, baseH);
 
+    float sizeW = baseW, sizeH = baseH;
     if (baseW && baseH) {
         float imgR = baseW / baseH;
         if (style->backgroundSizeIsLength(layer)) {

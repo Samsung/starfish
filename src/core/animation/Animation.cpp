@@ -149,6 +149,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_gapTimeMs(0)
+    , m_iterationStart(0)
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
     , m_isRunning(true)
@@ -178,6 +179,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_gapTimeMs(0)
+    , m_iterationStart(0)
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
     , m_isRunning(true)
@@ -242,6 +244,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
                 m_isInDelayedTime = false;
             }
         }
+
     } else {
         execute(computeProgress(f), style);
     }
@@ -912,6 +915,35 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                     LayoutContext::parentHasFixedHeight(frm);
                 parentLength = cb->contentHeight();
                 break;
+            case CSSStyleValuePair::BackgroundPositionX: {
+                Unit::Size posSize, imgSize;
+                AnimationUtil::calculateBackgroundBaseData(
+                    m_targetElement->frame()->asFrameBox(),
+                    m_targetElement->style(), m_indexForBgLayer, posSize,
+                    imgSize);
+                if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
+                    return;
+                }
+                parentLength = posSize.width() - imgSize.width();
+                break;
+            }
+            case CSSStyleValuePair::BackgroundPositionY: {
+                Unit::Size posSize, imgSize;
+                AnimationUtil::calculateBackgroundBaseData(
+                    m_targetElement->frame()->asFrameBox(),
+                    m_targetElement->style(), m_indexForBgLayer, posSize,
+                    imgSize);
+                if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
+                    return;
+                }
+                parentLength = posSize.height() - imgSize.height();
+                break;
+            }
+            case CSSStyleValuePair::BackgroundSize: {
+                break;
+            }
+            case CSSStyleValuePair::FontSize:
+                break;
             default:
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
@@ -1286,6 +1318,19 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     STARFISH_ASSERT(timingFunction != nullptr);
 }
 
+ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const GCVector<AnimatedValue*>& values,
+    const GCAtomicVector<double>& offsets,
+    const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+    uint64_t delayInms, size_t indexForBgLayer)
+    : ActiveAnimationTask(target, targetProperty, values, offsets,
+                          timingFunctions, durationInms, delayInms)
+    , m_indexForBgLayer(indexForBgLayer)
+{
+    STARFISH_ASSERT(target != nullptr);
+}
+
 void* ActiveLengthSizeAnimationTask::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ActiveLengthSizeAnimationTask));
@@ -1397,6 +1442,22 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
     return kind == a || kind == b || kind == c;
 }
 
+static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
+{
+    switch (property) {
+    // Shorthand
+    case CSSStyleValuePair::Background:
+    case CSSStyleValuePair::BackgroundPosition:
+    case CSSStyleValuePair::BackgroundPositionX:
+    case CSSStyleValuePair::BackgroundPositionY:
+    case CSSStyleValuePair::BackgroundSize:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 #define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                             \
     STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&            \
                     currentAnimatedToValue()->isLength());               \
@@ -1415,6 +1476,7 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
 #define NEED_TRANSITION(...)       \
     (_DAMAGED_KEYS(__VA_ARGS__) && \
      (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
+#define CHECK_ANIMATION(...) (_checkCSSProperty(fromKeyKind, __VA_ARGS__))
 
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
@@ -2283,14 +2345,70 @@ bool applyTransitionIfNeeds(
     return ret;
 }
 
-static AnimatedValue* animatedValue(ComputedStyle* elementStyle,
-                                    const CSSStyleValuePair& property)
+static Length backgroundPositionToLength(const CSSStyleValuePair& property)
 {
-    STARFISH_ASSERT(elementStyle != nullptr);
+    Length value;
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        SideValue side = property.sideValue();
+        if (side == SideValue::LeftSideValue) {
+            value = Length(Length::Percent, 0.0f);
+        } else if (side == SideValue::RightSideValue) {
+            value = Length(Length::Percent, 1.0f);
+        } else if (side == SideValue::TopSideValue) {
+            value = Length(Length::Percent, 0.0f);
+        } else if (side == SideValue::BottomSideValue) {
+            value = Length(Length::Percent, 1.0f);
+        } else if (side == SideValue::CenterSideValue) {
+            value = Length(Length::Percent, 0.5f);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+        value = property.lengthValue();
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::CalcValueKind) {
+        value = property.lengthValue();
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::Percentage) {
+        value = Length(Length::Percent, property.percentageValue());
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return value;
+}
+
+static AnimatedValue* propertyToAnimatedValue(ComputedStyle* style,
+                                              Element* element,
+                                              const CSSStyleValuePair& property,
+                                              size_t layer)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = property.multiValue();
+        return new AnimatedValue(backgroundPositionToLength((*list)[layer]));
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return nullptr;
+}
+
+static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
+                                    const CSSStyleValuePair& property,
+                                    size_t layer = 0)
+{
+    STARFISH_ASSERT(style != nullptr);
 
     switch (property.keyKind()) {
     case CSSStyleValuePair::Color:
     case CSSStyleValuePair::BackgroundColor:
+    case CSSStyleValuePair::BorderBottomColor:
+    case CSSStyleValuePair::BorderLeftColor:
+    case CSSStyleValuePair::BorderRightColor:
+    case CSSStyleValuePair::BorderTopColor:
+    case CSSStyleValuePair::CaretColor:
+    case CSSStyleValuePair::OutlineColor:
+    case CSSStyleValuePair::TextDecorationColor:
         if (property.valueKind() ==
             CSSStyleValuePair::ValueKind::ColorValueKind) {
             return new AnimatedValue(property.colorValue());
@@ -2326,6 +2444,7 @@ static AnimatedValue* animatedValue(ComputedStyle* elementStyle,
     case CSSStyleValuePair::Right:
     case CSSStyleValuePair::Top:
     case CSSStyleValuePair::Bottom:
+    case CSSStyleValuePair::FontSize:
         if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
             return new AnimatedValue(property.lengthValue());
         } else if (property.valueKind() ==
@@ -2341,6 +2460,15 @@ static AnimatedValue* animatedValue(ComputedStyle* elementStyle,
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             return new AnimatedValue(Length(Length::Fixed, 0));
         }
+        break;
+    case CSSStyleValuePair::BackgroundPositionX:
+    case CSSStyleValuePair::BackgroundPositionY:
+        if (style->backgroundLayerSize() > 0) {
+            return propertyToAnimatedValue(style, element, property, layer);
+        }
+        break;
+    case CSSStyleValuePair::BackgroundSize:
+        break;
     case CSSStyleValuePair::Opacity:
         if (property.valueKind() == CSSStyleValuePair::ValueKind::Number) {
             return new AnimatedValue(property.numberValue());
@@ -2353,7 +2481,7 @@ static AnimatedValue* animatedValue(ComputedStyle* elementStyle,
         if (property.valueKind() ==
             CSSStyleValuePair::ValueKind::TransformFunctions) {
             auto transformValue = property.transformValue();
-            ComputedStyle receiver(elementStyle);
+            ComputedStyle receiver(style);
             transformValue->toTransformDataGroup(&receiver);
             STARFISH_ASSERT(receiver.transforms() != nullptr);
             return new AnimatedValue(receiver.transforms());
@@ -2418,16 +2546,31 @@ bool applyAnimationIfNeeds(
             CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
             CSSStyleValuePair::KeyKind fromKeyKind = fromProperty.keyKind();
 
-            AnimatedValue* value = animatedValue(style, fromProperty);
-            if (value == nullptr) {
+            size_t layerSize = 1;
+            if (isAnimatableBackgroundProperty(fromProperty.keyKind()) ==
+                true) {
+                layerSize = style->backgroundLayerSize();
+            }
+
+            GCVector<GCVector<AnimatedValue*>> values;
+            values.resize(layerSize);
+            AnimatedValue* value = nullptr;
+            bool isAvailable = true;
+            for (size_t l = 0; l < layerSize; l++) {
+                value = animatedValue(style, element, fromProperty, l);
+                if (value == nullptr) {
+                    isAvailable = false;
+                    break;
+                }
+                values[l].push_back(value);
+            }
+            if (isAvailable == false) {
                 continue;
             }
 
-            GCVector<AnimatedValue*> values;
             GCAtomicVector<double> offsets;
             GCVector<TimingFunction*> timingFunctions;
 
-            values.push_back(value);
             offsets.push_back(fromKeyframe->keyframeName());
             timingFunctions.push_back(fromKeyframe->timingFunction());
 
@@ -2444,11 +2587,19 @@ bool applyAnimationIfNeeds(
                         property = fromProperty;
                     }
 
-                    value = animatedValue(style, property);
-                    if (value == nullptr) {
+                    isAvailable = true;
+                    for (size_t l = 0; l < layerSize; l++) {
+                        value = animatedValue(style, element, property, l);
+                        if (value == nullptr) {
+                            isAvailable = false;
+                            break;
+                        }
+                        values[l].push_back(value);
+                    }
+                    if (isAvailable == false) {
                         continue;
                     }
-                    values.push_back(value);
+
                     offsets.push_back(keyframe->keyframeName());
                     timingFunctions.push_back(keyframe->timingFunction());
                 }
@@ -2457,9 +2608,10 @@ bool applyAnimationIfNeeds(
             bool gotAnimation = false;
 
             // color series
-            if (fromKeyKind == CSSStyleValuePair::BackgroundColor) {
+            if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundColor,
+                                CSSStyleValuePair::Background) == true) {
                 auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::BackgroundColor, values,
+                    element, CSSStyleValuePair::BackgroundColor, values[0],
                     offsets, timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
@@ -2467,10 +2619,57 @@ bool applyAnimationIfNeeds(
                     task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
-
-            if (fromKeyKind == CSSStyleValuePair::Color) {
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderBottomColor,
+                                CSSStyleValuePair::BorderColor,
+                                CSSStyleValuePair::BorderBottom) == true) {
                 auto task = new ActiveColorAnimationTask(
-                    element, CSSStyleValuePair::Color, values, offsets,
+                    element, CSSStyleValuePair::BorderBottomColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderBottomColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderLeftColor,
+                                CSSStyleValuePair::BorderColor,
+                                CSSStyleValuePair::BorderLeft) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderLeftColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderLeftColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderRightColor,
+                                CSSStyleValuePair::BorderColor,
+                                CSSStyleValuePair::BorderRight) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderRightColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderRightColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderTopColor,
+                                CSSStyleValuePair::BorderColor,
+                                CSSStyleValuePair::BorderTop) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderTopColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderTopColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::Color) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::Color, values[0], offsets,
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
@@ -2478,13 +2677,45 @@ bool applyAnimationIfNeeds(
                     task, style, name, s, iterationCount, direction, playState);
                 gotAnimation = true;
             }
+            if (CHECK_ANIMATION(CSSStyleValuePair::CaretColor) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::CaretColor, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::CaretColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::OutlineColor) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::OutlineColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::OutlineColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::TextDecorationColor,
+                                CSSStyleValuePair::TextDecoration) == true) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::TextDecorationColor, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::TextDecorationColor);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+// <- color series
 
 // length series
 
 #define APPLY_LENGTH_ANIMATION(propertyName)                              \
     if (fromKeyKind == CSSStyleValuePair::propertyName) {                 \
         auto task = new ActiveLengthAnimationTask(                        \
-            element, CSSStyleValuePair::propertyName, values, offsets,    \
+            element, CSSStyleValuePair::propertyName, values[0], offsets, \
             timingFunctions, duration, delay);                            \
         executor->removeActiveAnimationTaskIfNeeds(                       \
             element, CSSStyleValuePair::propertyName);                    \
@@ -2502,9 +2733,235 @@ bool applyAnimationIfNeeds(
 
 #undef APPLY_LENGTH_ANIMATION
 
+            if (CHECK_ANIMATION(CSSStyleValuePair::MarginTop,
+                                CSSStyleValuePair::Margin) == true) {
+                if (style->display() == DisplayValue::InlineDisplayValue) {
+                    continue;
+                }
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginTop, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::MarginTop);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::MarginRight,
+                                CSSStyleValuePair::Margin) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginRight, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::MarginRight);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::MarginBottom,
+                                CSSStyleValuePair::Margin) == true) {
+                if (style->display() == DisplayValue::InlineDisplayValue) {
+                    continue;
+                }
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginBottom, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::MarginBottom);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::MarginLeft,
+                                CSSStyleValuePair::Margin) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginLeft, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::MarginLeft);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderTop,
+                                CSSStyleValuePair::Border) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderTop, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderTop);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderRight,
+                                CSSStyleValuePair::Border) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderRight, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderRight);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderBottom,
+                                CSSStyleValuePair::Border) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderBottom, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderBottom);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BorderLeft,
+                                CSSStyleValuePair::Border) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderLeft, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::BorderLeft);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::PaddingTop,
+                                CSSStyleValuePair::Padding) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingTop, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::PaddingTop);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::PaddingRight,
+                                CSSStyleValuePair::Padding) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingRight, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::PaddingRight);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::PaddingBottom,
+                                CSSStyleValuePair::Padding) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingBottom, values[0],
+                    offsets, timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::PaddingBottom);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::PaddingLeft,
+                                CSSStyleValuePair::Padding) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingLeft, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::PaddingLeft);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
+#define APPLY_SIDE_ANIMATION(propertyName)                                \
+    if (CHECK_ANIMATION(CSSStyleValuePair::propertyName) == true) {       \
+        auto task = new ActiveLengthAnimationTask(                        \
+            element, CSSStyleValuePair::propertyName, values[0], offsets, \
+            timingFunctions, duration, delay);                            \
+        executor->removeActiveAnimationTaskIfNeeds(                       \
+            element, CSSStyleValuePair::propertyName);                    \
+        executor->registerAnimation(task, style, name, s, iterationCount, \
+                                    direction, playState);                \
+        gotAnimation = true;                                              \
+    }
+            APPLY_SIDE_ANIMATION(Left)
+            APPLY_SIDE_ANIMATION(Right)
+            APPLY_SIDE_ANIMATION(Top)
+            APPLY_SIDE_ANIMATION(Bottom)
+
+#undef APPLY_SIDE_ANIMATION
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundPositionX,
+                                CSSStyleValuePair::BackgroundPosition,
+                                CSSStyleValuePair::Background) == true) {
+                if (style->hasBlockLikeDisplay() == false) {
+                    // TODO Inline Element
+                    continue;
+                }
+                for (size_t l = 0; l < layerSize; l++) {
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionX,
+                        values[l], offsets, timingFunctions, duration, delay,
+                        l);
+                    executor->removeActiveAnimationTaskIfNeeds(
+                        element, CSSStyleValuePair::BackgroundPositionX, l);
+                    executor->registerAnimation(task, style, name, s,
+                                                iterationCount, direction,
+                                                playState);
+                }
+
+                gotAnimation = true;
+            }
+            if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundPositionY,
+                                CSSStyleValuePair::BackgroundPosition,
+                                CSSStyleValuePair::Background) == true) {
+                if (style->hasBlockLikeDisplay() == false) {
+                    // TODO Inline Element
+                    continue;
+                }
+                for (size_t l = 0; l < layerSize; l++) {
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionY,
+                        values[l], offsets, timingFunctions, duration, delay,
+                        l);
+                    executor->removeActiveAnimationTaskIfNeeds(
+                        element, CSSStyleValuePair::BackgroundPositionY, l);
+                    executor->registerAnimation(task, style, name, s,
+                                                iterationCount, direction,
+                                                playState);
+                }
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundSize,
+                                CSSStyleValuePair::Background) == true) {
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::FontSize,
+                                CSSStyleValuePair::Font) == true) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::FontSize, values[0], offsets,
+                    timingFunctions, duration, delay);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::FontSize);
+                executor->registerAnimation(
+                    task, style, name, s, iterationCount, direction, playState);
+                gotAnimation = true;
+            }
+
             if (fromKeyKind == CSSStyleValuePair::Opacity) {
                 auto task = new ActiveOpacityAnimationTask(
-                    element, CSSStyleValuePair::Opacity, values, offsets,
+                    element, CSSStyleValuePair::Opacity, values[0], offsets,
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
@@ -2515,7 +2972,7 @@ bool applyAnimationIfNeeds(
 
             if (fromKeyKind == CSSStyleValuePair::Transform) {
                 auto task = new ActiveTransformAnimationTask(
-                    element, CSSStyleValuePair::Transform, values, offsets,
+                    element, CSSStyleValuePair::Transform, values[0], offsets,
                     timingFunctions, duration, delay);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
