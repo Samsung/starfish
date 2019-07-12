@@ -304,6 +304,11 @@ public:
         STARFISH_ASSERT(m_type == ANIMATION_TYPE);
     }
 
+    virtual size_t backgroundLayer()
+    {
+        return 0;
+    }
+
     float fraction(uint64_t tickCount) const
     {
         if (m_isRunning == false) {
@@ -389,6 +394,20 @@ public:
         return m_type;
     }
 
+    float iterationStart()
+    {
+        return m_iterationStart;
+    }
+
+    void setIterationStart(float f)
+    {
+        if (std::isinf(f) == true) {
+            m_iterationStart = 1;
+        } else {
+            m_iterationStart = f;
+        }
+    }
+
     AnimatedValue* currentAnimatedFromValue();
     AnimatedValue* currentAnimatedToValue();
     TimingFunction* currentTimingFunction();
@@ -420,6 +439,7 @@ protected:
     uint64_t m_startDelayMs;
     uint64_t m_delayMs;
     uint64_t m_gapTimeMs;
+    float m_iterationStart;
     bool m_isInDelayedTime;
     bool m_isForward;
     bool m_isRunning;
@@ -592,6 +612,11 @@ public:
 
     virtual void resolveUnresolvedAnimatedValues() override;
 
+    virtual size_t backgroundLayer()
+    {
+        return m_indexForBgLayer;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -610,6 +635,13 @@ public:
                                   TimingFunction* timingFunction,
                                   LengthSize originalToValue,
                                   size_t indexForBgLayer = 0);
+    ActiveLengthSizeAnimationTask(
+        Element* target, CSSStyleValuePair::KeyKind targetProperty,
+        const GCVector<AnimatedValue*>& values,
+        const GCAtomicVector<double>& offsets,
+        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+        uint64_t delayInms, size_t indexForBgLayer = 0);
+
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
     virtual bool isKindOfTransitionProperty(
@@ -637,7 +669,6 @@ struct ActiveElementAnimation : public gc {
     size_t m_index;
     double m_duration;
     double m_delay;
-    float m_iterationStart;
     float m_iterationCount;
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
@@ -654,8 +685,6 @@ struct ActiveElementAnimation : public gc {
         , m_index(index)
         , m_duration(0)
         , m_delay(0)
-        , m_iterationStart(std::isinf(iterationCount) == true ? 1
-                                                              : iterationCount)
         , m_iterationCount(iterationCount)
         , m_direction(direction)
         , m_playState(playState)
@@ -762,7 +791,8 @@ public:
     }
 
     void removeActiveAnimationTaskIfNeeds(Element* element,
-                                          CSSStyleValuePair::KeyKind p)
+                                          CSSStyleValuePair::KeyKind p,
+                                          size_t layer = 0)
     {
         STARFISH_ASSERT(element != nullptr);
 
@@ -771,7 +801,8 @@ public:
             for (auto task = (*animations).second.begin();
                  task != (*animations).second.end();) {
                 if ((*task)->targetElement() == element &&
-                    (*task)->property() == p) {
+                    (*task)->property() == p &&
+                    (*task)->backgroundLayer() == layer) {
                     task = (*animations).second.erase(task);
                 } else {
                     task++;
@@ -790,6 +821,7 @@ public:
         STARFISH_ASSERT(name != nullptr);
 
         task->attachToElement(style);
+        task->setIterationStart(iterationCount);
         task->setIsRunning(
             playState ==
             AnimationPlayStateValue::AnimationPlayStateRunningValue);

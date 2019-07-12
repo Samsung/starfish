@@ -2261,6 +2261,8 @@ bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
 
         CSSStyleValuePair ret;
         CSSStyleValuePair x, y;
+        x.setKeyKind(CSSStyleValuePair::BackgroundPositionX);
+        y.setKeyKind(CSSStyleValuePair::BackgroundPositionY);
         if (len == 1) {
             const CSSTokenValue& tok = tokens[i - 1];
             if (x.updateValueUnitBackgroundPositionX(tok)) {

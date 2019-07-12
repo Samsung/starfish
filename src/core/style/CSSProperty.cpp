@@ -120,6 +120,23 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
+static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
+{
+    switch (property) {
+    // Shorthand
+    case CSSStyleValuePair::Background:
+    case CSSStyleValuePair::BackgroundPosition:
+    case CSSStyleValuePair::BackgroundColor:
+    case CSSStyleValuePair::BackgroundPositionX:
+    case CSSStyleValuePair::BackgroundPositionY:
+    case CSSStyleValuePair::BackgroundSize:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 String* CSSPropertyHelper::toGCString(CSSStyleValuePair::KeyKind property)
 {
     const char* str = toString(property);
