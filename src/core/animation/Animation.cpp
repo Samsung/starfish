@@ -17,10 +17,11 @@
  *  USA
  */
 
-#include <SkMatrix.h>
-
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
+#include <SkMatrix.h>
+
 #include "core/animation/Animation.h"
 #include "core/animation/AnimationUtil.h"
 #include "core/animation/TimingFunction.h"
@@ -33,6 +34,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/style/CalcData.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSProperty.h"
 #include "core/page/Window.h"
@@ -939,9 +941,6 @@ void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
                 parentLength = posSize.height() - imgSize.height();
                 break;
             }
-            case CSSStyleValuePair::BackgroundSize: {
-                break;
-            }
             case CSSStyleValuePair::FontSize:
                 break;
             default:
@@ -1349,11 +1348,12 @@ void* ActiveLengthSizeAnimationTask::operator new(size_t size)
 }
 
 static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
-                                        AnimatedValue toValue)
+                                        AnimatedValue toValue, bool isForward)
 {
-#define INTERPOLATE_LENGTHSIZE(WH)                                 \
-    Length(from->WH().type(), interpolate(from->WH().numberData(), \
-                                          to->WH().numberData(), progress))
+#define INTERPOLATE_LENGTHSIZE(WH)                                     \
+    Length(from->WH().type(),                                          \
+           interpolate(from->WH().numberData(), to->WH().numberData(), \
+                       progress, isForward))
 
     LengthSize* from = fromValue.getLengthSize();
     LengthSize* to = toValue.getLengthSize();
@@ -1383,10 +1383,9 @@ void ActiveLengthSizeAnimationTask::execute(float progress,
 {
     STARFISH_ASSERT(style != nullptr);
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        // TODO: Consider m_isForward value.
         style->setBackgroundSize(
             interpolateLengthSize(progress, *currentAnimatedFromValue(),
-                                  *currentAnimatedToValue()),
+                                  *currentAnimatedToValue(), m_isForward),
             m_indexForBgLayer);
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -2378,14 +2377,88 @@ static Length backgroundPositionToLength(const CSSStyleValuePair& property)
     return value;
 }
 
-static AnimatedValue* propertyToAnimatedValue(ComputedStyle* style,
-                                              Element* element,
-                                              const CSSStyleValuePair& property,
-                                              size_t layer)
+static AnimatedValue* backgroundPositionToAnimatedValue(
+    ComputedStyle* style, Element* element, const CSSStyleValuePair& property,
+    size_t layer)
 {
     if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = property.multiValue();
-        return new AnimatedValue(backgroundPositionToLength((*list)[layer]));
+        if (list->size() > layer) {
+            return new AnimatedValue(
+                backgroundPositionToLength((*list)[layer]));
+        } else {
+            return new AnimatedValue(
+                backgroundPositionToLength((*list)[list->size() - 1]));
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return nullptr;
+}
+
+static Nullable<Length> convertValueToLength(const CSSStyleValuePair& property)
+{
+    CSSStyleValuePair::ValueKind kind = property.valueKind();
+    CSSStyleValuePair::ValueData data = property.value();
+    if (kind == CSSStyleValuePair::ValueKind::Auto) {
+        return Length();
+    } else if (kind == CSSStyleValuePair::ValueKind::Length) {
+        return data.m_length.toLength();
+    } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
+        return Length(Length::Percent, data.m_floatValue);
+    } else if (kind == CSSStyleValuePair::ValueKind::Number) {
+        return Length(Length::Fixed, data.m_floatValue);
+    } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
+        CalcValueType type = data.m_calc->type();
+        if (type.isLength() || type.isPercentage() || type.isNumber()) {
+            return Length(data.m_calc);
+        } else {
+            return Nullable<Length>();
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    return Nullable<Length>();
+}
+
+static LengthSize backgroundSizeToLengthSize(const CSSStyleValuePair& property)
+{
+    LengthSize result;
+    if (property.valueKind() == CSSStyleValuePair::ValueListKind) {
+        ValueList* list = property.multiValue();
+        if (list->size() >= 1) {
+            Nullable<Length> width = convertValueToLength((*list)[0]);
+            if (width.hasValue()) {
+                result.m_width = width.getValue();
+            }
+        }
+        if (list->size() >= 2) {
+            Nullable<Length> height = convertValueToLength((*list)[1]);
+            if (height.hasValue()) {
+                result.m_height = height.getValue();
+            }
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return result;
+}
+
+static AnimatedValue* backgroundSizeToAnimatedValue(
+    ComputedStyle* style, Element* element, const CSSStyleValuePair& property,
+    size_t layer)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = property.multiValue();
+        if (list->size() > layer) {
+            return new AnimatedValue(
+                backgroundSizeToLengthSize((*list)[layer]));
+        } else {
+            return new AnimatedValue(
+                backgroundSizeToLengthSize((*list)[list->size() - 1]));
+        }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -2457,6 +2530,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
             return new AnimatedValue(
                 Length(Length::Percent, property.percentageValue()));
         } else {
+            // TODO: Consider how to handle in this case.
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             return new AnimatedValue(Length(Length::Fixed, 0));
         }
@@ -2464,10 +2538,21 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
     case CSSStyleValuePair::BackgroundPositionX:
     case CSSStyleValuePair::BackgroundPositionY:
         if (style->backgroundLayerSize() > 0) {
-            return propertyToAnimatedValue(style, element, property, layer);
+            return backgroundPositionToAnimatedValue(style, element, property,
+                                                     layer);
+        } else {
+            // TODO: Consider how to handle in this case.
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
         break;
     case CSSStyleValuePair::BackgroundSize:
+        if (style->backgroundLayerSize() > 0) {
+            return backgroundSizeToAnimatedValue(style, element, property,
+                                                 layer);
+        } else {
+            // TODO: Consider how to handle in this case.
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
         break;
     case CSSStyleValuePair::Opacity:
         if (property.valueKind() == CSSStyleValuePair::ValueKind::Number) {
@@ -2945,6 +3030,21 @@ bool applyAnimationIfNeeds(
 
             if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundSize,
                                 CSSStyleValuePair::Background) == true) {
+                if (style->hasBlockLikeDisplay() == false) {
+                    // TODO Inline Element
+                    continue;
+                }
+                for (size_t l = 0; l < layerSize; l++) {
+                    auto task = new ActiveLengthSizeAnimationTask(
+                        element, CSSStyleValuePair::BackgroundSize, values[l],
+                        offsets, timingFunctions, duration, delay, l);
+                    executor->removeActiveAnimationTaskIfNeeds(
+                        element, CSSStyleValuePair::BackgroundSize, l);
+                    executor->registerAnimation(task, style, name, s,
+                                                iterationCount, direction,
+                                                playState);
+                }
+                gotAnimation = true;
             }
 
             if (CHECK_ANIMATION(CSSStyleValuePair::FontSize,
