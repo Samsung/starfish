@@ -43,7 +43,7 @@ SET (STARFISH_INCLUDE_DIRS
 )
 
 IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
-    SET (STARFISH_INCLUDE_DIRS 
+    SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_INCLUDE_DIRS}
     ${THIRD_PARTY_ROOT}/skia_matrix
     ${THIRD_PARTY_ROOT}/skia_matrix/include/core)

@@ -118,3 +118,6 @@
 	path = third_party/httplib
 	url = https://github.com/yhirose/cpp-httplib.git
 	ignore = untracked
+[submodule "third_party/webrtc"]
+	path = third_party/webrtc
+	url = git@github.sec.samsung.net:lws-submodules/webrtc.git

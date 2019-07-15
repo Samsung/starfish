@@ -175,7 +175,7 @@ IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND
     SET (SKIA_BUILD_ARGS "is_component_build=true" "target_cpu=\\\"x64\\\"")
     SET (SKIA_BUILD_TYPE "Release")
     IF (${MODE} STREQUAL "debug")
-        SET (SKIA_BUILD_TYPE "Debug") 
+        SET (SKIA_BUILD_TYPE "Debug")
         SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_debug=true")
     ELSE()
         SET (SKIA_BUILD_TYPE "Release")
@@ -306,6 +306,48 @@ ELSE()
 ENDIF()
 ADD_SUBDIRECTORY (third_party/escargot)
 
+#######################################################
+# WEBRTC
+#######################################################
+
+IF (${WEBRTC} STREQUAL "1")
+    SET (WEBRTC_DIR ${THIRD_PARTY_ROOT}/webrtc/src/)
+    SET (WEBRTC_BUILD_ARGS "target_cpu=\\\"x64\\\""
+                           "is_clang=false"
+                           "treat_warnings_as_errors=false"
+                           "use_custom_libcxx=false"
+                           "use_ozone=true"
+    )
+
+    IF (${MODE} STREQUAL "debug")
+        SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "is_debug=true")
+    ELSE()
+        SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "is_debug=false")
+    ENDIF()
+
+    SET(WEBRTC_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
+    SET(WEBRTC_LOCAL_TARGET ${WEBRTC_DIR}/${WEBRTC_BUILD_PATH}/obj/libwebrtc.a)
+    SET(WEBRTC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc.a)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${WEBRTC_DIR}
+                        COMMENT "BUILD WEBRTC"
+                        COMMAND echo "BUILD WEBRTC"
+                        COMMAND third_party/depot_tools/gn gen ${WEBRTC_BUILD_PATH} --args="${WEBRTC_BUILD_ARGS}"
+                        COMMAND third_party/depot_tools/ninja -d explain -C ${WEBRTC_BUILD_PATH} webrtc
+    )
+    ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_TARGET}
+                        WORKING_DIRECTORY ${WEBRTC_DIR}
+                        DEPENDS ${WEBRTC_LOCAL_TARGET}
+                        COMMENT "COPY WEBRTC"
+                        COMMAND cp ${WEBRTC_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_TARGET (webrtc
+                       DEPENDS ${WEBRTC_TARGET}
+                       COMMAND echo "WEBRTC TARGET"
+    )
+ENDIF()
 
 #######################################################
 # LINK THIRD PARTY LIBRARIES
@@ -333,4 +375,8 @@ ENDIF()
 
 IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY})
+ENDIF()
+
+IF (${WEBRTC} STREQUAL "1")
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${WEBRTC_TARGET})
 ENDIF()
