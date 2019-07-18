@@ -3631,7 +3631,8 @@ void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
         CSSTokenVector tokens;
-        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length(), "", 0,
+                         true);
         if (!(layerSize == 1 && sub.updateValueCommon(tokens) == true) &&
             sub.updateValueLayerAnimationName(tokens) == false) {
             return;
@@ -3864,7 +3865,8 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair v0, v1, v2, v3, v4, v5, v6;
         CSSTokenVector tokens;
-        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
+        tokenizeCSSValue(tokens, layers[i].data(), layers[i].length(), "", 0,
+                         true);
         if (layerSize == 1 && v0.updateValueCommon(tokens)) {
             v1 = v2 = v3 = v4 = v5 = v6 = v0;
         } else if (!parseAnimationShorthand(tokens, &v0, &v1, &v2, &v3, &v4,
