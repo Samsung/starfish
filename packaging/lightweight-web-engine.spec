@@ -326,8 +326,8 @@ ninja starfish.executable
 
 # For Cairo
 rm -f CMakeCache.txt
-CFLAGS+=' -marm '
-CXXFLAGS+=' -marm '
+#CFLAGS+=' -marm '
+#CXXFLAGS+=' -marm '
 
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=headless -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.headless -G Ninja
 ninja starfish.shared_library
