@@ -651,7 +651,7 @@ public class LweWebViewImpl implements LweWebView {
             }
 
             reader = new BufferedReader(new InputStreamReader(
-                    res.openRawResource(rid)));
+                    res.openRawResource(rid), "UTF-8"));
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {

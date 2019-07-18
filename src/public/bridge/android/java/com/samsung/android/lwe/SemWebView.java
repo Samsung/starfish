@@ -180,8 +180,11 @@ public class SemWebView extends SurfaceView {
                     String nativeLibDir = packageManager.getPackageInfo(PACKAGE_NAME, 0).applicationInfo.nativeLibraryDir;
                     Log.d(sTag, "nativeLibraryDir: " + nativeLibDir);
 
+                    String appNativeLibDir = getContext().getApplicationInfo().nativeLibraryDir;
+                    Log.d(sTag, "app's nativeLibraryDir: " + appNativeLibDir);
+
                     boolean is64BitDevice = nativeLibDir.endsWith("arm64");
-                    boolean is64BitApp = getContext().getApplicationInfo().nativeLibraryDir.endsWith("arm64");
+                    boolean is64BitApp = appNativeLibDir.endsWith("arm64");
 
                     String libLoadingPath = "";
                     if (is64BitDevice) {
@@ -197,6 +200,7 @@ public class SemWebView extends SurfaceView {
                         libLoadingPath += ":" + dexPath + "!/lib/armeabi-v7a";
                     }
 
+                    Log.d(sTag, "libLoadingPath: " + libLoadingPath);
                     pcl = new PathClassLoader(dexPath, libLoadingPath, getContext().getClassLoader());
                 }
 
@@ -249,6 +253,36 @@ public class SemWebView extends SurfaceView {
             return mLWEWebView.getInputConnectionInstance(this);
         }
         return null;
+    }
+
+    /**
+     * Called when the visibility of the view or an ancestor of the view has changed.
+     *
+     * @param changedView The view whose visibility changed. May be this or an ancestor view.
+     * @param visibility The new visibility, one of View.VISIBLE, View.INVISIBLE or View.GONE.
+     * @since Lightweight Web Engine 1.0
+     */
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (mLWEWebView != null) {
+            mLWEWebView.onVisibilityChanged(changedView, visibility);
+        }
+    }
+
+    /**
+     * Called when the window containing has change its visibility (between GONE,
+     * INVISIBLE, and VISIBLE). Note that this tells you whether or not your window is
+     * being made visible to the window manager; this does not tell you whether or
+     * not your window is obscured by other windows on the screen, even if it is
+     * itself visible.
+     *
+     * @param visibility The new visibility of the window.
+     * @since Lightweight Web Engine 1.0
+     */
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
     }
 
     /**
