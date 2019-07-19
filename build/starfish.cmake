@@ -49,6 +49,13 @@ IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
     ${THIRD_PARTY_ROOT}/skia_matrix/include/core)
 ENDIF()
 
+IF (${ARCH} STREQUAL "x64")
+    SET (STARFISH_INCLUDE_DIRS
+    ${STARFISH_INCLUDE_DIRS}
+    ${STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS}
+    )
+ENDIF()
+
 #######################################################
 # LINK LIBRARIES
 #######################################################

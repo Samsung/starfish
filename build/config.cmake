@@ -62,6 +62,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_OBSOLETE_SPEC : enable obsolete spec
 # STARFISH_ENABLE_BATTERY_STATUS : enable battery status api
 # STARFISH_ENABLE_WEBRTC: enable WebRTC
+# STARFISH_ENABLE_WEBSOCKETS: enable WebSockets
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -431,6 +432,10 @@ ENDIF()
 SET (STARFISH_INCLUDE_DIRS_CUSTOM
     ${THIRD_PARTY_ROOT}/MP4Parse/source/include
     ${THIRD_PARTY_ROOT}/webm
+)
+
+SET (STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS
+    ${THIRD_PARTY_ROOT}/libwebsockets/build/include
 )
 
 IF (${WEBRTC} STREQUAL "1")

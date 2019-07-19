@@ -120,6 +120,37 @@ IF (NOT ${HOST} STREQUAL "tizen")
     )
 ENDIF()
 
+#######################################################
+# LIBWEBSOCKETS
+#######################################################
+IF (${ARCH} STREQUAL "x64")
+    SET (LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
+
+    SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build)
+    SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.so)
+    SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.so)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${LIBWEBSOCKETS_DIR}
+                        COMMENT "BUILD LIBWEBSOCKETS"
+                        COMMAND echo "BUILD LIBWEBSOCKETS"
+                        COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
+                        COMMAND cd ${LIBWEBSOCKETS_BUILD_PATH}
+                        COMMAND ${CMAKE_COMMAND} -G Ninja ..
+                        COMMAND ninja
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_TARGET}
+                        DEPENDS ${LIBWEBSOCKETS_LOCAL_TARGET}
+                        COMMENT "COPY LIBWEBSOCKETS"
+                        COMMAND cp -P ${LIBWEBSOCKETS_BUILD_PATH}/lib/* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_TARGET (libwebsockets
+                        DEPENDS ${LIBWEBSOCKETS_TARGET}
+                        COMMAND echo "LIBWEBSOCKETS TARGET"
+    )
+ENDIF()
 
 #######################################################
 # LIBTUV
@@ -379,4 +410,8 @@ ENDIF()
 
 IF (${WEBRTC} STREQUAL "1")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${WEBRTC_TARGET})
+ENDIF()
+
+IF (${ARCH} STREQUAL "x64")
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${LIBWEBSOCKETS_TARGET})
 ENDIF()
