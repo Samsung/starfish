@@ -21,6 +21,8 @@ import android.webkit.WebView;
 
 /**
  * This class manages settings state for a SemWebView.
+ *
+ * @deprecated This class was deprecated in API level 29. This class will be removed in a future Android release, and will not be supported anymore. Do not use this class.
  */
 public class SemWebSettings {
     /**

@@ -64,9 +64,10 @@ import dalvik.system.PathClassLoader;
  *    the stock WebView, and works as if Android WebView were used.</li>
  *
  * <li> Supported Web pages are controlled by a whitelist. To add URLs to the whitelist,
- *    please contact <code>duddlf.choi@samsung.com</code>.</li>
+ *    please contact <code>haesik.jun@samsung.com</code>.</li>
  * </ol>
  *
+ * @deprecated This class was deprecated in API level 29. This class will be removed in a future Android release, and will not be supported anymore. Do not use this class.
  * @since SEP 10.2
  */
 public class SemWebView extends SurfaceView {

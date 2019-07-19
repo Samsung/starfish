@@ -20,6 +20,8 @@ package com.samsung.android.lwe;
 /**
  * This class encapsulates information about errors occured during loading of Web resources.
  * See SemWebViewClient.onReceivedError(WebView, WebResourceRequest, WebResourceError).
+ *
+ * @deprecated This class was deprecated in API level 29. This class will be removed in a future Android release, and will not be supported anymore. Do not use this class.
  */
 public class SemWebResourceError {
 
