@@ -18,6 +18,8 @@ package com.samsung.android.lwe;
 
 /**
  * This interface is used to implement a download listener for a SemWebView
+ *
+ * @deprecated This interface was deprecated in API level 29. This interface will be removed in a future Android release, and will not be supported anymore. Do not use this interface.
  */
 public interface SemDownloadListener {
     /**
