@@ -627,7 +627,7 @@ public class LweWebViewImpl implements LweWebView {
         }
 
         if (!loaded) {
-            Log.e(sTag, "URL is not permitted. Please contact duddlf.choi@samsung.com to whitelist an URL.");
+            Log.e(sTag, "URL is not permitted. Please contact haesik.jun@samsung.com to whitelist an URL.");
             onReceivedError(SemWebViewClient.ERROR_BAD_URL, url);
         }
     }
