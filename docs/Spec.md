@@ -147,6 +147,10 @@ section are supported.
 |  | method | boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero") | Reports whether or not the specified point is contained in the current path. |
 |  | method | boolean isPointInStroke(unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
 |  | method | boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
+| [CanvasText](https://html.spec.whatwg.org/multipage/canvas.html#canvastext) | interface mixin | CanvasText |  |
+|  | method | void fillText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth) | Render the given text at the given (x, y) coordinates ensuring that the text isn't wider than maxWidth if specified. |
+|  | method | void strokeText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth) | Render the given text at the given (x, y) coordinates ensuring that the text isn't wider than maxWidth if specified. |
+|  | method | TextMetrics measureText(DOMString text) | Return a new TextMetrics object. |
 | [CanvasDrawImage](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawimage) | interface mixin | CanvasDrawImage |  |
 |  | method | void drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy) | Provides different ways to draw an image onto the canvas. |
 |  | method | void drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh) | Provides different ways to draw an image onto the canvas. |
@@ -159,6 +163,9 @@ section are supported.
 |  | method | void putImageData(ImageData imagedata, long dx, long dy, long dirtyX, long dirtyY, long dirtyWidth, long dirtyHeight) | Paints the data from the given ImageData object onto the bitmap. If a dirty rectangle is provided, only the pixels from that rectangle are painted. |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
+| [CanvasTextAlign](https://html.spec.whatwg.org/multipage/canvas.html#canvastextalign) | enum | CanvasTextAlign | "start", "end", "left", "right", "center" |
+| [CanvasTextBaseline](https://html.spec.whatwg.org/multipage/canvas.html#canvastextbaseline) | enum | CanvasTextBaseline | "top", "hanging", "middle", "alphabetic", "bottom" |
+| [CanvasDirection](https://html.spec.whatwg.org/multipage/canvas.html#canvasdirection) | enum | CanvasDirection | "ltr", "rtl", "inherit" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |
 |  | method | void closePath() | Attempts to add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing. |
 |  | method | void moveTo(unrestricted double x, unrestricted double y) | Begins a new sub-path at the point specified by the given (x, y) coordinates. |
@@ -173,6 +180,8 @@ section are supported.
 |  | method | void addColorStop(double offset, DOMString color) | Adds a new color stop, defined by an offset and a color, to a given canvas gradient. |
 | [CanvasPattern](https://html.spec.whatwg.org/multipage/canvas.html#canvaspattern) | interface mixin | CanvasPattern | |
 |  | method | void setTransform(optional DOMMatrix2DInit transform) | Sets the transformation matrix that will be used when rendering the pattern during a fill or stroke painting operation. |
+| [TextMetrics](https://html.spec.whatwg.org/multipage/canvas.html#textmetrics) | interface mixin | TextMetrics | |
+|  | attribute | width | The text's advance width. |
 | [CanvasPathDrawingStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles) | interface mixin | CanvasPathDrawingStyles |  |
 |  | attribute | lineWidth | Sets/Gets the thickness of lines. |
 |  | attribute | lineCap | Determines the shape used to draw the end points of lines. |
@@ -181,6 +190,11 @@ section are supported.
 |  | method | void setLineDash(sequence\<unrestricted double\> segments) | Sets the line dash pattern used when stroking lines. |
 |  | method | sequence\<unrestricted double\> getLineDash() | Returns the current line dash pattern. |
 |  | attribute | lineDashOffset | Sets/Gets the line dash offset, or "phase." |
+| [CanvasTextDrawingStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvastextdrawingstyles) | interface mixin | CanvasTextDrawingStyles |  |
+|  | attribute | font | Sets/Gets the font value of text. |
+|  | attribute | textAlign | Determines the Align value of text. |
+|  | attribute | textBaseline | Allowed keywords correspond to alignment points in the font. |
+|  | attribute | direction | Sets/Gets the directionality of the canvas element. |
 | [CanvasTransform](https://html.spec.whatwg.org/multipage/canvas.html#canvastransform) | interface mixin | CanvasTransform |  |
 |  | method | void scale(unrestricted double x, unrestricted double y) | Add the scaling transformation to the current transformation matrix. |
 |  | method | void rotate(unrestricted double angle) | Add the rotation transformation to the current transformation matrix. |
@@ -197,6 +211,11 @@ section are supported.
 |  | method | CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1) | Creates a gradient along the line connecting two given coordinates. |
 |  | method | CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) | Creates a radial gradient using the size and coordinates of two circles. |
 |  | method | CanvasPattern? createPattern(CanvasImageSource image, [TreatNullAs=EmptyString] DOMString repetition) | creates a pattern using the specified image and repetition. This method returns a CanvasPattern. |
+| [CanvasShadowStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvasshadowstyles) | interface mixin | CanvasShadowStyles | |
+|  | attribute | shadowOffsetX | Specify the distance that the shadow will be offset in the positive horizontal distance respectively. |
+|  | attribute | shadowOffsetY | Specify the distance that the shadow will be offset in the positive vertical distance respectively. |
+|  | attribute | shadowBlur | Specifies the level of the blurring effect. |
+|  | attribute | shadowColor | sets the color of the shadow. |
 | [CanvasRect](https://html.spec.whatwg.org/multipage/canvas.html#canvasrect) | interface mixin | CanvasRect |  |
 |  | method | void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Erases the pixels in a rectangular area by setting them to transparent black. |
 |  | method | void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is filled according to the current fillStyle. |
