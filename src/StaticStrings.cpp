@@ -648,5 +648,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
                       AtomicString::createAtomicString(starfish, "from"));
     m_xlinkTo = QualifiedName(m_xlink, m_xlinkNamespaceURI,
                               AtomicString::createAtomicString(starfish, "to"));
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    m_close =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "close"));
+#endif
 }
 }
