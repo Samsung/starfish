@@ -259,6 +259,15 @@ section are supported.
 |  | attribute | media | Returns a MediaList object for the list of media queries specified with the @media at-rule.|
 | [CSSSupportsRule](https://drafts.csswg.org/css-conditional-3/#csssupportsrule) | interface | CSSSupportsRule | Represents a @supports at-rule. |
 |  | attribute | conditionText | Returns the value of conditionText on the rule. (CSSSupportsRule-specific definition for attribute on CSSConditionRule) On setting, if the given conditionText evaluates to true, the original conditionText is replaced by the given conditionText. |
+| [CSSKeyframesRule](https://drafts.csswg.org/css-animations/#interface-csskeyframesrule) | interface | CSSKeyframesRule | Represents a complete set of keyframes for a single animation. |
+|  | attribute | name | Returns the name of the keyframes, used by the animation-name property. |
+|  | attribute | cssRules | Gives access to the keyframes in the list. |
+|  | method | void appendRule(CSSOMString rule) | Appends the passed CSSKeyframeRule at the end of the keyframes rule. |
+|  | method | void deleteRule(CSSOMString select) | Deletes the last declared CSSKeyframeRule matching the specified keyframe selector. If no matching rule exists, the method does nothing. |
+|  | method | CSSKeyframeRule? findRule(CSSOMString select) | Returns the last declared CSSKeyframeRule matching the specified keyframe selector. If no matching rule exists, the method does nothing. |
+| [CSSKeyframeRule](https://drafts.csswg.org/css-animations/#interface-csskeyframerule) | interface | CSSKeyframeRule | Represents the style rule for a single key. |
+|  | attribute | keyText | Represents the keyframe selector as a comma-separated list of percentage values. |
+|  | attribute | style | Return a CSSStyleDeclaration object for the keyframe rule |
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
@@ -1244,6 +1253,14 @@ supported.
 | [SecurityPolicyViolationEventInit](https://www.w3.org/TR/CSP2/#securitypolicyviolationeventinit-interface) | dictionary | SecurityPolicyViolationEventInit | Dictionary that is used to create SecurityPolicyViolationEvent. |
 | | attribute | blockedURI | Returns the requested URL of the resource that was prevented from loading. |
 | | attribute | violatedDirective | Returns the policy directive that was violated. |
+| [AnimationEvent](https://drafts.csswg.org/css-animations/#events) | interface | AnimationEvent | Provides specific contextual information associated with Animation events. |
+| | attribute | animationName | Returns the value of the animation-name property of the animation that fired the event. |
+| | attribute | elapsedTime | Returns the amount of time the animation has been running, in seconds, when this event fired, excluding any time the animation was paused. |
+| | attribute | onanimationstart | Occurs at the start of the animation. If there is an animation-delay then this event will fire once the delay period has expired. |
+| | attribute | onanimationend | occurs when the animation finishes. In this case the value of the elapsedTime member of the event is equal to the active duration. |
+| [AnimationEventInit](https://drafts.csswg.org/css-animations/#events) | dictionary  | AnimationEventInit | Dictionary that is used to create AnimationEvent. |
+| | attribute | animationName | Returns the value it was initialized to. |
+| | attribute | elapsedTime | Returns the value it was initialized to. |
 
 ## Obsolete
 
@@ -1429,7 +1446,15 @@ section are supported.
 | | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 | [Box-shadow](https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow) | box-shadow | none &#124; &lt;shadow&gt;# | Attaches one or more drop-shadows to the box. The property accepts either the none value, which indicates no shadows, or a comma-separated list of shadows, ordered front to back. | &lt;shadow&gt; = inset? && &lt;length&gt;{2,4} && &lt;color&gt;? |
 | [Will Change](https://drafts.csswg.org/css-will-change/#will-change) | will-change | scroll-position &#124; contents &#124; &lt;custom-ident&gt; | Provide a way for authors to hint browsers about the kind of changes to be expected on an element, so that the browser can set up appropriate optimizations ahead of time before the element is actually changed. | |
-
+| | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
+| [Animation](https://drafts.csswg.org/css-animations/) | animation-name | none &#124; &lt;keyframes-name&gt;# | Defines a list of animations that apply. Each name is used to select the keyframe at-rule that provides the property values for the animation. | |
+| | animation-duration | &lt;time&gt;# | Specifies the length of time that an animation takes to complete one cycle. | |
+| | animation-timing-function | &lt;easing-function&gt;# | Describes how the animation will progress between each pair of keyframes. | |
+| | animation-iteration-count | &lt;single-animation-iteration-count&gt;# | Specifies the number of times an animation cycle is played. | |
+| | animation-direction | &lt;single-animation-direction&gt;# | Defines whether or not the animation should play in reverse on some or all cycles. | |
+| | animation-play-state | &lt;single-animation-play-state&gt;# | Defines whether the animation is running or paused. | |
+| | animation-delay | &lt;time&gt;# | Defines when the animation will start. | |
+| | animation | &lt;single-animation&gt;# | This shorthand property defines a comma-separated list of animation definitions. | |
 
 ## Obsolete CSS
 
@@ -1553,7 +1578,7 @@ This section describes the HTTP request headers that the user-agent request to m
 [Preflighted requests](https://fetch.spec.whatwg.org/#cors-preflight-fetch) is a CORS request that checks to see if the CORS protocol is understood. It uses `OPTIONS` as method and includes above request headers
 
 #### X-Frame-Options
-The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header can be used to indicate whether or not a browser should be allowed to render a page in a \<frame\>, \<iframe\>, \<embed\> or \<object\> . 
+The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header can be used to indicate whether or not a browser should be allowed to render a page in a \<frame\>, \<iframe\>, \<embed\> or \<object\> .
 
 | Directive      | Description | Note |
 |----------------|-------------|------|
@@ -1780,4 +1805,3 @@ The following describes Web Speech APIs supported by lightweight web engine. Ple
 | | attribute | lang  | This attribute is a BCP 47 language tag indicating the language of the voice.| |
 | | attribute | localService | This attribute is true for voices supplied by a local speech synthesizer, and is false for voices supplied by a remote speech synthesizer service.| |
 | | attribute | default  | This attribute is true for at most one voice per language.| |
-
