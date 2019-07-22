@@ -147,6 +147,10 @@ section are supported.
 |  | method | boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero") | Reports whether or not the specified point is contained in the current path. |
 |  | method | boolean isPointInStroke(unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
 |  | method | boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
+| [CanvasDrawImage](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawimage) | interface mixin | CanvasDrawImage |  |
+|  | method | void drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy) | Provides different ways to draw an image onto the canvas. |
+|  | method | void drawImage(CanvasImageSource image, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh) | Provides different ways to draw an image onto the canvas. |
+|  | method | void drawImage(CanvasImageSource image, unrestricted double sx, unrestricted double sy, unrestricted double sw, unrestricted double sh, unrestricted double dx, unrestricted double dy, unrestricted double dw, unrestricted double dh) | Provides different ways to draw an image onto the canvas. |
 | [CanvasImageData](https://html.spec.whatwg.org/multipage/canvas.html#canvasimagedata) | interface mixin | CanvasImageData |  |
 |  | method | ImageData createImageData(long sw, long sh) | Creates a new, blank ImageData object with the specified dimensions |
 |  | method | ImageData createImageData(ImageData imagedata) | Creates a new, blank ImageData object with the specified dimensions |
@@ -820,6 +824,13 @@ section are supported.
 |  | attribute | height | Returns the dimensions of the visual content of the video. |
 |  | attribute | videoWidth | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
 |  | attribute | videoHeight | Returns the intrinsic dimensions of the video, or zero if the dimensions are not known. |
+| [ImageData](https://html.spec.whatwg.org/multipage/canvas.html#imagedata) | interface | ImageData | The ImageData interface represents the underlying pixel data of an area of a <canvas> element. It is created using the ImageData() constructor or creator methods on the CanvasRenderingContext2D object associated with a canvas: createImageData() and getImageData(). It can also be used to set a part of the canvas by using putImageData(). |
+|  | attribute | width | Returns the number of pixels per row in the ImageData object. |
+|  | attribute | height | Returns the number of rows in the ImageData object. |
+|  | attribute | data | Returns a Uint8ClampedArray that contains the ImageData object's pixel data. Data is stored as a one-dimensional array in the RGBA order, with integer values between 0 and 255 (inclusive). |
+| [ImageBitmap](https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmap) | interface | ImageBitmap | Represents a bitmap image which can be drawn to a <canvas> without undue latency. It can be created from a variety of source objects using the createImageBitmap() factory method |
+|  | attribute | width | Returns the ImageBitmap object's width in CSS pixels. |
+|  | attribute | height | Returns the ImageBitmap object's height in CSS pixels. |
 | [LinkStyle](https://drafts.csswg.org/cssom/#the-linkstyle-interface) | interface | LinkStyle | The associated CSS style sheet of a node is the CSS style sheet in the list of document CSS style sheets of which the owner node implements the LinkStyle interface. |
 |  | attribute | sheet | Returns the associated CSS style sheet for the node or null if there is no associated CSS style sheet. |
 | [MediaList](https://drafts.csswg.org/cssom/#the-medialist-interface) | interface | MediaList | MediaList interface has an associated collection of media queries. |
@@ -1062,6 +1073,9 @@ section are supported.
 | [Window](https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface) | method | MediaQueryList matchMedia(CSSOMString query) | Returns a new MediaQueryList object representing the parsed results of the specified media query string. |
 | | attribute | screen | Returns a reference to the screen object associated with the window. |
 | | attribute | devicePixelRatio | Returns the ratio between physical pixels and device independent pixels in the current display. |
+| [WindowOrWorkerGlobalScope](https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope) | interface mixin | WindowOrWorkerGlobalScope |  |
+|  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |
+|  | method | Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options) | Creates a bitmap from a given source, optionally cropped to contain only a portion of that source |
 | [Named Access on the Window Object](https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object) | misc | window[id] | Named access on the Window object returns the indicated element, where id is a non-empty ID of an HTML element in the current document. |
 |  [ScrollOptions](https://www.w3.org/TR/cssom-view-1/#dictdef-scrolloptions) | dictionary | ScrollOptions |  |
 |    | attribute | behavior | Initializes the behavior attribute of the ScrollOptions object |
