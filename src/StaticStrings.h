@@ -585,6 +585,9 @@ public:
     QualifiedName m_xlinkLabel;
     QualifiedName m_xlinkFrom;
     QualifiedName m_xlinkTo;
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    QualifiedName m_close;
+#endif
 
 protected:
 };

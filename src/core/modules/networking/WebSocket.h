@@ -1,0 +1,82 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#ifndef __StarfishWebSocket__
+#define __StarfishWebSocket__
+
+#ifdef STARFISH_ENABLE_WEBSOCKET
+
+#include "core/dom/EventTarget.h"
+
+namespace Starfish {
+class Blob;
+
+class WebSocket : public EventTarget {
+public:
+    WebSocket(ExecutionContext* executionContext, String* url);
+    WebSocket(ExecutionContext* executionContext, String* url,
+              String* protocols);
+
+    String* url();
+    void setUrl(String* url);
+
+    // ready state
+    uint16_t readyState();
+    uint64_t bufferedAmount();
+
+    // networking
+    String* extensions();
+    String* protocol();
+
+    void close();
+    void close(uint16_t code);
+    void close(String* reason);
+    void close(uint16_t code, String* reason);
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(open);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(close);
+    // messaging
+    DECLARE_EVENT_LISTENER(message);
+#undef VIRTUAL
+#undef OVERRIDE
+
+    String* binaryType();
+    void setBinaryType(String* value);
+    void send(String* data);
+    void send(Blob* data);
+    void send(ScriptArrayBuffer data);
+    void send(ScriptArrayBufferView data);
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isWebSocket() const;
+    virtual ExecutionContext* executionContext() const
+    {
+        return m_executionContext;
+    }
+
+private:
+    ExecutionContext* m_executionContext;
+};
+}
+#endif
+#endif
