@@ -338,6 +338,37 @@ ENDIF()
 ADD_SUBDIRECTORY (third_party/escargot)
 
 #######################################################
+# OpenSSL 1.1
+#######################################################
+# Used only by webrtc on Linux, as Ubuntu 16.04 and below do not come with openssl 1.1
+# Tizen has openssl 1.1
+IF (${WEBRTC} STREQUAL "1")
+    SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
+    SET (OPENSSL_LOCAL_TARGET ${OPENSSL_DIR}/libssl.so)
+    SET (OPENSSL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${OPENSSL_DIR}
+                        COMMENT "BUILDING OPENSSL"
+                        COMMAND echo "BUILDING OPENSSL"
+                        COMMAND ./config
+                        COMMAND make -j
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
+                        WORKING_DIRECTORY ${OPENSSL_DIR}
+                        DEPENDS ${OPENSSL_LOCAL_TARGET}
+                        COMMENT "COPYING OPENSSL"
+                        COMMAND cp -P ${OPENSSL_DIR}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_TARGET (openssl
+                    DEPENDS ${OPENSSL_TARGET}
+                    COMMAND echo "OPENSSL TARGET"
+    )
+ENDIF()
+
+#######################################################
 # WEBRTC
 #######################################################
 
@@ -347,7 +378,19 @@ IF (${WEBRTC} STREQUAL "1")
                            "is_clang=false"
                            "treat_warnings_as_errors=false"
                            "use_custom_libcxx=false"
+                           "use_udev=false"
                            "use_ozone=true"
+                           "use_cxx11=true"
+                           "enable_iterator_debugging=true"
+                           "enable_nacl=false"
+                           "use_glib=true"
+                           "use_rtti=false"
+                           "use_sysroot=false"
+                           "build_with_chromium=false"
+                           "rtc_build_ssl=false"
+                           # NOTE: Update the path for Tizen
+                           "rtc_ssl_root=\\\"${THIRD_PARTY_ROOT}/openssl/include\\\""
+                           "rtc_enable_protobuf=false"
     )
 
     IF (${MODE} STREQUAL "debug")
@@ -357,15 +400,18 @@ IF (${WEBRTC} STREQUAL "1")
     ENDIF()
 
     SET(WEBRTC_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
-    SET(WEBRTC_LOCAL_TARGET ${WEBRTC_DIR}/${WEBRTC_BUILD_PATH}/obj/libwebrtc.a)
-    SET(WEBRTC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc.a)
+    SET(WEBRTC_LOCAL_TARGET ${WEBRTC_DIR}/${WEBRTC_BUILD_PATH}/libwebrtc.so)
+    SET(WEBRTC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
                         WORKING_DIRECTORY ${WEBRTC_DIR}
+                        DEPENDS ${OPENSSL_TARGET}
                         COMMENT "BUILD WEBRTC"
                         COMMAND echo "BUILD WEBRTC"
                         COMMAND third_party/depot_tools/gn gen ${WEBRTC_BUILD_PATH} --args="${WEBRTC_BUILD_ARGS}"
                         COMMAND third_party/depot_tools/ninja -d explain -C ${WEBRTC_BUILD_PATH} webrtc
+                        # NOTE: for Tizen use: -lssl -lcrypto
+                        COMMAND ${COMPILER} -shared -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so
     )
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_TARGET}
                         WORKING_DIRECTORY ${WEBRTC_DIR}

@@ -444,6 +444,7 @@ IF (${WEBRTC} STREQUAL "1")
         ${THIRD_PARTY_ROOT}/webrtc/src
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/abseil-cpp
         ${THIRD_PARTY_ROOT}/webrtc/src/base/files
+        ${THIRD_PARTY_ROOT}/openssl/include
     )
 ENDIF()
 
