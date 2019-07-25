@@ -124,3 +124,6 @@
 [submodule "third_party/libwebsockets"]
 	path = third_party/libwebsockets
 	url = git@github.sec.samsung.net:lws-submodules/libwebsockets.git
+[submodule "third_party/openssl"]
+	path = third_party/openssl
+	url = git@github.sec.samsung.net:lws-submodules/openssl.git
