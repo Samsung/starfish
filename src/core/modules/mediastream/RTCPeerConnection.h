@@ -28,6 +28,9 @@
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
 
+#include "api/media_stream_interface.h"
+#include "api/peer_connection_interface.h"
+
 namespace Starfish {
 class ExecutionContext;
 class OperationQueue;
@@ -85,6 +88,38 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 };
 
+class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
+                               public webrtc::CreateSessionDescriptionObserver {
+public:
+    // PeerConnectionObserver implementation.
+    void OnSignalingChange(
+        webrtc::PeerConnectionInterface::SignalingState new_state) override{};
+    void OnAddTrack(
+        rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
+        const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>&
+            streams) override{};
+    void OnRemoveTrack(
+        rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override{};
+    void OnDataChannel(
+        rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override{};
+    void OnRenegotiationNeeded() override{};
+    void OnIceConnectionChange(
+        webrtc::PeerConnectionInterface::IceConnectionState new_state)
+        override{};
+    void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState
+                                  new_state) override{};
+    void OnIceCandidate(
+        const webrtc::IceCandidateInterface* candidate) override{};
+    void OnIceConnectionReceivingChange(bool receiving) override{};
+
+    // CreateSessionDescriptionObserver implementation.
+    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
+    void OnFailure(webrtc::RTCError error) override{};
+
+protected:
+    virtual ~PeerConnectionObserver(){};
+};
+
 class RTCPeerConnection : public EventTarget {
 public:
     RTCPeerConnection(ExecutionContext* executionContext,
@@ -118,6 +153,11 @@ public:
 private:
     ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
                                                     String* sdp);
+    void connectToPeer();
+
+    bool initializePeerConnection();
+    void deletePeerConnection();
+    bool createPeerConnection(bool dtls);
 
     ExecutionContext* m_executionContext;
 
@@ -142,6 +182,12 @@ private:
 
     String* m_lastCreatedOffer{ String::emptyString };
     String* m_lastCreatedAnswer{ String::emptyString };
+
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+        m_peerConnectionFactory;
+    rtc::scoped_refptr<PeerConnectionObserver> m_callback;
+    std::string m_server;
 };
 }
 
