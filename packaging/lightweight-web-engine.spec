@@ -112,7 +112,7 @@ BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
-BuildRequires: pkgconfig(openssl)
+#BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
