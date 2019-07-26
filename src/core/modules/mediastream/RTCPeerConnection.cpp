@@ -36,6 +36,12 @@
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 
+#include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/create_peerconnection_factory.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
+
 namespace Starfish {
 
 RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
@@ -70,6 +76,75 @@ ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
 ExecutionContext* RTCPeerConnection::executionContext() const
 {
     return m_executionContext;
+}
+
+bool RTCPeerConnection::initializePeerConnection()
+{
+    STARFISH_ASSERT(!m_peerConnectionFactory);
+    STARFISH_ASSERT(!m_peerConnection);
+
+    m_peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
+        nullptr /* network_thread */, nullptr /* worker_thread */,
+        nullptr /* signaling_thread */, nullptr /* default_adm */,
+        webrtc::CreateBuiltinAudioEncoderFactory(),
+        webrtc::CreateBuiltinAudioDecoderFactory(),
+        webrtc::CreateBuiltinVideoEncoderFactory(),
+        webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
+        nullptr /* audio_processing */);
+
+    STARFISH_ASSERT(m_peerConnectionFactory);
+
+    if (!m_peerConnectionFactory) {
+        STARFISH_LOG_ERROR("Failed to initialize PeerConnectionFactory\n");
+        deletePeerConnection();
+        return false;
+    }
+
+    if (!createPeerConnection(/*dtls=*/true)) {
+        STARFISH_LOG_ERROR("CreatePeerConnection failed\n");
+        deletePeerConnection();
+    }
+
+    return m_peerConnection != nullptr;
+}
+
+void RTCPeerConnection::deletePeerConnection()
+{
+    // TODO: stop local and remote rendering
+    m_peerConnection = nullptr;
+    m_peerConnectionFactory = nullptr;
+}
+
+void RTCPeerConnection::connectToPeer()
+{
+    if (m_peerConnection.get()) {
+        STARFISH_LOG_ERROR("We only support connecting to one peer at a time");
+        return;
+    }
+
+    if (initializePeerConnection()) {
+        m_peerConnection->CreateOffer(
+            m_callback,
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+    } else {
+        STARFISH_LOG_ERROR("Failed to initialize PeerConnection");
+    }
+}
+
+bool RTCPeerConnection::createPeerConnection(bool dtls)
+{
+    STARFISH_ASSERT(m_peerConnectionFactory);
+    STARFISH_ASSERT(!m_peerConnection);
+
+    webrtc::PeerConnectionInterface::RTCConfiguration config;
+    config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+    config.enable_dtls_srtp = dtls;
+    webrtc::PeerConnectionInterface::IceServer server;
+    config.servers.push_back(server);
+
+    m_peerConnection = m_peerConnectionFactory->CreatePeerConnection(
+        config, nullptr, nullptr, m_callback);
+    return m_peerConnection != nullptr;
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer
@@ -109,6 +184,8 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
                 promise->reject(exception->scriptValue());
                 return;
             }
+
+            connection->connectToPeer();
 
             // TODO: identity provider
             ObjectRef* sd = connection->createSessionDescriptionInitObject(
