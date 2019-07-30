@@ -48,6 +48,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     SocketLWS* socket = (SocketLWS*)user;
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
+        socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
         socket->publishEvent(SocketLWS::LwsEvent::OPEN, NULL, 0);
         lws_callback_on_writable(wsi);
         break;
@@ -65,8 +66,13 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         if (!buffer->empty()) {
             auto iter = buffer->begin();
             SocketLWSData* data = (SocketLWSData*)*iter;
-            lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
-                      data->size(), LWS_WRITE_TEXT);
+            if (data->type() == SocketLWSData::SocketLWSDataType::TEXT) {
+                lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
+                          data->size(), LWS_WRITE_TEXT);
+            } else {
+                lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
+                          data->size(), LWS_WRITE_BINARY);
+            }
             iter = buffer->erase(iter);
             delete data;
         }
@@ -94,11 +100,14 @@ static struct lws_protocols protocols[] = {
 
 const char* SocketLWS::Exception::what() const throw()
 {
+    STARFISH_ASSERT_NOT_REACHED();
     return nullptr;
 }
 
-SocketLWSData::SocketLWSData(const char* buf, size_t size)
+SocketLWSData::SocketLWSData(const char* buf, size_t size,
+                             SocketLWSDataType type)
 {
+    m_dataType = type;
     m_size = size;
     m_buffer = malloc(LWS_PRE + size);
     memcpy(((char*)m_buffer) + LWS_PRE, buf, size);
@@ -140,6 +149,7 @@ void SocketLWS::run()
             lws_service(m_lwsContext, 1000);
         }
         lws_context_destroy(m_lwsContext);
+        parent()->setReadyState(WebSocket::ReadyState::CLOSED);
     }
 }
 
@@ -208,7 +218,12 @@ int SocketLWS::shutdown(int howto)
 
 int SocketLWS::send(const void* buf, size_t len, int flags)
 {
-    SocketLWSData* newData = new SocketLWSData((char*)buf, len);
+    SocketLWSData::SocketLWSDataType type =
+        SocketLWSData::SocketLWSDataType::TEXT;
+    if (flags != 0) {
+        type = SocketLWSData::SocketLWSDataType::BINARY;
+    }
+    SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
     m_buffer.push_back(newData);
     lws_callback_on_writable(m_lwsClient);
     return 0;
@@ -283,20 +298,36 @@ void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size)
             this);
     } break;
     case LwsEvent::ONMESSAGE: {
+        struct Param {
+            std::string msg;
+            SocketLWS* data;
+        };
+        Param* p = new Param();
+        p->data = this;
+        p->msg = std::string(param, size);
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
             [](size_t handle, void* data) {
-                SocketLWS* lws = (SocketLWS*)data;
+                struct Param {
+                    std::string msg;
+                    SocketLWS* data;
+                };
+                Param* p = (Param*)data;
+                SocketLWS* lws = p->data;
+
                 WebSocket* socket = lws->parent();
                 String* eventName = socket->executionContext()
                                         ->starfish()
                                         ->staticStrings()
                                         ->m_message.localName();
-                Event* e =
+                MessageEvent* e =
                     new MessageEvent(socket->executionContext(), eventName);
+                e->setData(createScriptValue(createScriptString(
+                    String::fromUTF8(p->msg.c_str(), p->msg.length()))));
                 socket->EventTarget::dispatchEventByUA(socket, e);
+                delete p;
             },
-            this);
+            p);
     } break;
     }
 }
