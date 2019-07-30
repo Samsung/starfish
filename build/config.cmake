@@ -170,9 +170,6 @@ IF (${MODE} STREQUAL "debug")
         -DSTARFISH_ENABLE_TEST
         -DSTARFISH_ENABLE_SERVICE_WORKER
     )
-    IF (${HOST} STREQUAL "linux")
-        SET (WEBRTC "1")
-    ENDIF()
 ELSEIF (${MODE} STREQUAL "release")
     SET (LWE_DEFINES_MODE -DNDEBUG)
 ELSE()
@@ -203,7 +200,8 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     ENDIF()
 ENDIF()
 
-IF (${WEBRTC} STREQUAL "1")
+IF (${HOST} STREQUAL "linux")
+    SET (WEBRTC "1")
     SET (LWE_DEFINES_WEBRTC
         -DSTARFISH_ENABLE_WEBRTC
         -DWEBRTC_POSIX
