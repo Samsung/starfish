@@ -25,8 +25,10 @@
 
 namespace Starfish {
 
-class Thread;
+class IThread;
+class IRunnable;
 class WebBase;
+class LWSRunnable;
 class SocketLWSData {
 public:
     enum SocketLWSDataType { TEXT, BINARY };
@@ -67,10 +69,10 @@ public:
 
     int bind(const char* addr) override;
     int connect(const char* addr) override;
-    int connect(String* url);
     int send(const void* buf, size_t len, int flags) override;
     int recv(void* buf, size_t len, int flags) override;
     int close() override;
+    void close(const char* ptr, size_t len, size_t code);
     int getFd() override;
     int shutdown(int howto) override;
     void setsockopt(int level, int option, const void* optval,
@@ -91,9 +93,26 @@ public:
         return m_parent;
     }
 
+    bool isActive()
+    {
+        return m_active;
+    }
+
+    std::string closeReason()
+    {
+        return m_closeReasonStr;
+    }
+
+    size_t closeCode()
+    {
+        return m_closeReasonCode;
+    }
+
 private:
     bool m_active;
-    Thread* m_thread;
+    bool m_alive;
+    IThread* m_thread;
+    LWSRunnable* m_runnable;
     WebSocket* m_parent;
     UTF8StringDataNonGCStd m_url;
 
@@ -103,6 +122,8 @@ private:
     lws* m_lwsClient;
 
     std::vector<SocketLWSData*> m_buffer;
+    std::string m_closeReasonStr;
+    size_t m_closeReasonCode;
 };
 
 } // namespace Starfish

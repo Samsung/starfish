@@ -42,6 +42,8 @@ public:
         HTTP_PROTOCOL,
         HTTPS_PROTOCOL,
         JAVASCRIPT_PROTOCOL,
+        WS_PROTOCOL,
+        WSS_PROTOCOL,
         UNKNOWN,
     };
 
@@ -132,6 +134,16 @@ public:
     bool isHTTPFamilyURL() const
     {
         return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
+    }
+
+    bool isWSURL() const
+    {
+        return m_protocol == WS_PROTOCOL;
+    }
+
+    bool isWSSURL() const
+    {
+        return m_protocol == WSS_PROTOCOL;
     }
 
     String* string() const

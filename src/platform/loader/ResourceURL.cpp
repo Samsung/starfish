@@ -362,7 +362,8 @@ bool ResourceURL::isValidURL(String* url)
     if (!(url->startsWith("http://") || url->startsWith("https://") ||
           url->startsWith("file://") || url->startsWith("blob://") ||
           url->startsWith("data:") || url->startsWith("about:") ||
-          url->startsWith("javascript:"))) {
+          url->startsWith("javascript:") || url->startsWith("ws://") ||
+          url->startsWith("wss://"))) {
         return false;
     }
 
@@ -708,6 +709,10 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         m_protocol = ABOUT_PROTOCOL;
     } else if (m_urlString->startsWith("javascript", false)) {
         m_protocol = JAVASCRIPT_PROTOCOL;
+    } else if (m_urlString->startsWith("ws", false)) {
+        m_protocol = WS_PROTOCOL;
+    } else if (m_urlString->startsWith("wss", false)) {
+        m_protocol = WSS_PROTOCOL;
     } else {
         m_protocol = UNKNOWN;
     }

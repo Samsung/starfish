@@ -34,6 +34,8 @@
 #include "core/dom/Event.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/EventTarget.h"
+#include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/networking/LWSRunnable.h"
 
 namespace Starfish {
 
@@ -42,10 +44,16 @@ SocketLWS::Exception::Exception()
 {
 }
 
+#define CHECK_ALIVE() \
+    if (!m_alive) {   \
+        return;       \
+    }
+
 static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
                        void* user, void* in, size_t len)
 {
     SocketLWS* socket = (SocketLWS*)user;
+
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
         socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
@@ -56,12 +64,21 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     case LWS_CALLBACK_CLIENT_RECEIVE:
         socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in, len);
         break;
+
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
         // TODO
         socket->publishEvent(SocketLWS::LwsEvent::ERROR, NULL, 0);
         break;
 
     case LWS_CALLBACK_CLIENT_WRITEABLE: {
+        if (!socket->isActive()) {
+            std::string reason = socket->closeReason();
+            lws_close_status code = (lws_close_status)socket->closeCode();
+            lws_close_reason(wsi, code, (unsigned char*)reason.c_str(),
+                             reason.length());
+            return -1;
+        }
+
         std::vector<SocketLWSData*>* buffer = socket->data();
         if (!buffer->empty()) {
             auto iter = buffer->begin();
@@ -84,7 +101,8 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
 
     case LWS_CALLBACK_CLOSED:
         socket->publishEvent(SocketLWS::LwsEvent::CLOSE, NULL, 0);
-        break;
+        socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
+        socket->shutdown(0);
 
     default:
         break;
@@ -114,7 +132,8 @@ SocketLWSData::SocketLWSData(const char* buf, size_t size,
 }
 
 SocketLWS::SocketLWS(WebSocket* socket)
-    : m_active(false)
+    : m_active(true)
+    , m_alive(true)
     , m_parent(socket)
     , m_lwsContext(nullptr)
     , m_lwsClient(nullptr)
@@ -125,31 +144,48 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsContextCreationInfo.uid = -1;
     m_lwsContext = lws_create_context(&m_lwsContextCreationInfo);
 
-    m_active = true;
     WebBase* webBase = parent()->executionContext()->webBase();
-    m_thread = new Thread(webBase->threadPool());
-    m_thread->run(webBase->messageLoop(),
-                  [](void* data) -> void* {
-                      SocketLWS* socket = (SocketLWS*)data;
-                      socket->run();
-                      return nullptr;
-                  },
-                  this);
+    m_thread = new AdaptedThread(webBase->threadPool());
+    m_runnable = new LWSRunnable(webBase->messageLoop(), this);
+    m_thread->start(m_runnable);
+
+    m_url = parent()->url()->toUTF8NonGCString();
+
+    int use_ssl = 0;
+    const char* prot;
+    char* param;
+    param = (char*)m_url.c_str();
+    if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
+                      &m_lwsClientConnectInfo.port,
+                      &m_lwsClientConnectInfo.path)) {
+        // TODO
+        return;
+    }
+
+    if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
+        use_ssl = LCCSCF_USE_SSL;
+    }
+    m_lwsClientConnectInfo.context = m_lwsContext;
+    m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
+    m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
+    m_lwsClientConnectInfo.protocol = protocols[0].name;
+    m_lwsClientConnectInfo.ssl_connection = use_ssl;
+    m_lwsClientConnectInfo.userdata = this;
+    m_lwsClient = lws_client_connect_via_info(&m_lwsClientConnectInfo);
 }
 
 SocketLWS::~SocketLWS()
 {
-    close();
+    if (m_lwsContext != nullptr) {
+        lws_context_destroy(m_lwsContext);
+        m_lwsContext = nullptr;
+    }
 }
 
 void SocketLWS::run()
 {
     if (m_lwsContext != nullptr) {
-        while (m_active || !m_buffer.empty()) {
-            lws_service(m_lwsContext, 1000);
-        }
-        lws_context_destroy(m_lwsContext);
-        parent()->setReadyState(WebSocket::ReadyState::CLOSED);
+        lws_service(m_lwsContext, 250);
     }
 }
 
@@ -171,36 +207,17 @@ int SocketLWS::bind(const char* addr)
     return 0;
 }
 
-int SocketLWS::close()
+void SocketLWS::close(const char* ptr, size_t len, size_t code)
 {
+    m_closeReasonStr = std::string(ptr, len);
+    m_closeReasonCode = code;
     m_active = false;
-    return 0;
+    lws_callback_on_writable(m_lwsClient);
 }
 
-int SocketLWS::connect(String* url)
+int SocketLWS::close()
 {
-    m_url = url->toUTF8NonGCString();
-
-    int use_ssl = 0;
-    const char* prot;
-    char* param;
-    param = (char*)m_url.c_str();
-    if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
-                      &m_lwsClientConnectInfo.port,
-                      &m_lwsClientConnectInfo.path)) {
-        return 0;
-    }
-    if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
-        use_ssl = LCCSCF_USE_SSL;
-    }
-    m_lwsClientConnectInfo.context = m_lwsContext;
-    m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
-    m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
-    m_lwsClientConnectInfo.protocol = protocols[0].name;
-    m_lwsClientConnectInfo.ssl_connection = use_ssl;
-    m_lwsClientConnectInfo.userdata = this;
-    m_lwsClient = lws_client_connect_via_info(&m_lwsClientConnectInfo);
-
+    STARFISH_ASSERT_NOT_REACHED();
     return 0;
 }
 
@@ -212,7 +229,8 @@ int SocketLWS::connect(const char* addr)
 
 int SocketLWS::shutdown(int howto)
 {
-    STARFISH_ASSERT_NOT_REACHED();
+    m_alive = false;
+    m_thread->stop();
     return 0;
 }
 
@@ -249,6 +267,8 @@ short SocketLWS::getEvents()
 
 void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size)
 {
+    CHECK_ALIVE()
+
     WebBase* webBase = parent()->executionContext()->webBase();
 
     switch (eventType) {

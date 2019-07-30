@@ -33,6 +33,7 @@ class WebOrigin;
 class ResourceRequest;
 class ContentSecurityPolicy;
 class Event;
+class WebSocket;
 
 class ExecutionContext : public gc {
 public:
@@ -94,7 +95,11 @@ public:
     void addActiveResourceRequests(ResourceRequest* request);
     void removeActiveResourceRequests(ResourceRequest* request);
     void disposeActiveResourceRequests();
-
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    void addActiveWebSockets(WebSocket* webSocket);
+    void removeActiveWebSockets(WebSocket* webSocket);
+    void disposeActiveWebSockets();
+#endif
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
     void clearPointerRootMap();
@@ -119,6 +124,9 @@ private:
     ResourceURL* m_referrer;
     ResourceURL* m_baseURL;
     GCVector<ResourceRequest*> m_activeResourceRequests;
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    GCVector<WebSocket*> m_activeWebSockets;
+#endif
     GCUnorderedMap<void*, size_t> m_rootMap;
     String* m_characterSet;
     WebOrigin* m_webOrigin;
