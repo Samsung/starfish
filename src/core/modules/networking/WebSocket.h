@@ -23,6 +23,7 @@
 #ifdef STARFISH_ENABLE_WEBSOCKET
 
 #include "core/dom/EventTarget.h"
+#include "core/modules/networking/BinaryType.h"
 
 namespace Starfish {
 class Blob;
@@ -30,20 +31,41 @@ class SocketLWS;
 
 class WebSocket : public EventTarget {
 public:
+    enum ReadyState { CONNECTING, OPEN, CLOSING, CLOSED };
     WebSocket(ExecutionContext* executionContext, String* url);
     WebSocket(ExecutionContext* executionContext, String* url,
               String* protocols);
 
     String* url();
-    void setUrl(String* url);
 
     // ready state
-    uint16_t readyState();
+    uint16_t readyState()
+    {
+        return m_readyState;
+    }
+    void setReadyState(ReadyState state)
+    {
+        m_readyState = state;
+    }
     uint64_t bufferedAmount();
 
     // networking
-    String* extensions();
-    String* protocol();
+    String* extensions()
+    {
+        return m_extensions;
+    }
+    void setExtensions(String* extensions)
+    {
+        m_extensions = extensions;
+    }
+    String* protocol()
+    {
+        return m_protocol;
+    }
+    void setProtocol(String* protocol)
+    {
+        m_protocol = protocol;
+    }
 
     void close();
     void close(uint16_t code);
@@ -77,6 +99,12 @@ public:
 
 private:
     void init(String* url, String* protocol);
+    void send(const void* buf, size_t len, int flags);
+    ReadyState m_readyState;
+    BinaryType m_binaryType;
+    String* m_url;
+    String* m_extensions;
+    String* m_protocol;
 
     ExecutionContext* m_executionContext;
     SocketLWS* m_socketLWS;

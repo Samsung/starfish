@@ -29,11 +29,12 @@ class Thread;
 class WebBase;
 class SocketLWSData {
 public:
+    enum SocketLWSDataType { TEXT, BINARY };
     ~SocketLWSData()
     {
         free(m_buffer);
     }
-    SocketLWSData(const char* buf, size_t size);
+    SocketLWSData(const char* buf, size_t size, SocketLWSDataType type);
     void* data()
     {
         return m_buffer;
@@ -42,8 +43,13 @@ public:
     {
         return m_size;
     }
+    SocketLWSDataType type()
+    {
+        return m_dataType;
+    }
 
 private:
+    SocketLWSDataType m_dataType;
     size_t m_size;
     void* m_buffer;
 };
@@ -75,6 +81,7 @@ public:
 
     void run();
     void publishEvent(LwsEvent eventType, char* param, size_t size);
+
     std::vector<SocketLWSData*>* data()
     {
         return &m_buffer;

@@ -23,7 +23,6 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/networking/WebSocket.h"
-#include "core/modules/networking/BinaryType.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/networking/SocketLWS.h"
 #include "core/dom/ExecutionContext.h"
@@ -31,8 +30,36 @@
 using namespace Escargot;
 
 namespace Starfish {
+
+static inline String* binaryTypeToString(BinaryType binaryType)
+{
+    if (binaryType == BinaryType::Blob) {
+        return String::createASCIIString("blob");
+    } else if (binaryType == BinaryType::Arraybuffer) {
+        return String::createASCIIString("arraybuffer");
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    return String::createASCIIString("blob");
+}
+
+static inline BinaryType stringToBinaryType(String* binaryType)
+{
+    if (binaryType->equals("blob", 4)) {
+        return BinaryType::Blob;
+    } else if (binaryType->equals("arraybuffer", 11)) {
+        return BinaryType::Arraybuffer;
+    }
+    return BinaryType::Blob;
+}
+
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     : EventTarget()
+    , m_readyState(ReadyState::CONNECTING)
+    , m_binaryType(BinaryType::Blob)
+    , m_url(String::emptyString)
+    , m_extensions(String::emptyString)
+    , m_protocol(String::emptyString)
     , m_executionContext(executionContext)
 {
     init(url, nullptr);
@@ -41,6 +68,11 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
                      String* protocols)
     : EventTarget()
+    , m_readyState(ReadyState::CONNECTING)
+    , m_binaryType(BinaryType::Blob)
+    , m_url(String::emptyString)
+    , m_extensions(String::emptyString)
+    , m_protocol(String::emptyString)
     , m_executionContext(executionContext)
 {
     init(url, protocols);
@@ -57,8 +89,9 @@ void WebSocket::init(String* url, String* protocol)
     // If urlRecord's scheme is not "ws" or "wss", then throw a "SyntaxError"
     // DOMException.
     if (!url->startsWith("ws") && !url->startsWith("wss")) {
+        close();
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
-                               "urlRecord's scheme is not \"ws\" or \"wss\"");
+                               "url's scheme is not \"ws\" or \"wss\"");
     }
 
     // If urlRecord's fragment is non-null, then throw a "SyntaxError"
@@ -72,44 +105,20 @@ void WebSocket::init(String* url, String* protocol)
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
     // TODO
-
+    m_url = url;
     m_socketLWS = new SocketLWS(this);
     m_socketLWS->connect(url);
 }
 
 String* WebSocket::url()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
-}
-
-void WebSocket::setUrl(String* url)
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-}
-
-uint16_t WebSocket::readyState()
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return 0;
+    return m_url;
 }
 
 uint64_t WebSocket::bufferedAmount()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return 0;
-}
-
-String* WebSocket::extensions()
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
-}
-
-String* WebSocket::protocol()
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
 }
 
 void WebSocket::close()
@@ -129,7 +138,18 @@ void WebSocket::close(String* reason)
 
 void WebSocket::close(uint16_t code, String* reason)
 {
-    m_socketLWS->close();
+    if (m_socketLWS) {
+        setReadyState(WebSocket::ReadyState::CLOSING);
+        m_socketLWS->close();
+    } else {
+        setReadyState(WebSocket::ReadyState::CLOSED);
+        String* eventName = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_close.localName();
+        Event* e = new Event(executionContext(), eventName);
+        this->EventTarget::dispatchEventByUA(this, e);
+    }
 }
 
 DEFINE_EVENT_LISTENER(WebSocket, open);
@@ -139,19 +159,33 @@ DEFINE_EVENT_LISTENER(WebSocket, message);
 
 String* WebSocket::binaryType()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    return binaryTypeToString(m_binaryType);
 }
 
 void WebSocket::setBinaryType(String* value)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    m_binaryType = stringToBinaryType(value);
+}
+
+void WebSocket::send(const void* buf, size_t len, int type)
+{
+    // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket-send
+    // The send(data) method transmits data using the connection. If the
+    // readyState attribute is CONNECTING, it must throw an "InvalidStateError"
+    // DOMException.
+    if (m_readyState == ReadyState::CONNECTING) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "readyState attribute should not be CONNECTING");
+    }
+
+    m_socketLWS->send(buf, len, type);
 }
 
 void WebSocket::send(String* data)
 {
     UTF8StringDataNonGCStd dataString = data->toUTF8NonGCString();
-    m_socketLWS->send(dataString.c_str(), dataString.length(), 0);
+    send(dataString.c_str(), dataString.length(), 0);
 }
 
 void WebSocket::send(Blob* data)

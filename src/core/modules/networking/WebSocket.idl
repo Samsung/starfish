@@ -1,6 +1,6 @@
 enum BinaryType { "blob", "arraybuffer" };
 // [STARFISH_ENABLE_WEBSOCKET,Constructor(USVString url, optional (DOMString or sequence<DOMString>) protocols = []), Exposed=(Window,Worker)]
-[STARFISH_ENABLE_WEBSOCKET,RaisesException,ConstructorCallWith=ExecutionContext,Constructor(USVString url, optional DOMString protocols), Exposed=(Window,Worker)]
+[STARFISH_ENABLE_WEBSOCKET,ConstructorCallWith=ExecutionContext,Constructor(USVString url, optional DOMString protocols), Exposed=(Window,Worker),RaisesException=Constructor]
 interface WebSocket : EventTarget {
   readonly attribute USVString url;
 
@@ -24,8 +24,8 @@ interface WebSocket : EventTarget {
   // messaging
   attribute EventHandler onmessage;
   attribute BinaryType binaryType;
-  void send(USVString data);
-  void send(Blob data);
-  void send(ArrayBuffer data);
-  void send(ArrayBufferView data);
+  [RaisesException] void send(USVString data);
+  [RaisesException] void send(Blob data);
+  [RaisesException] void send(ArrayBuffer data);
+  [RaisesException] void send(ArrayBufferView data);
 };
