@@ -26,6 +26,7 @@
 
 namespace Starfish {
 class Blob;
+class SocketLWS;
 
 class WebSocket : public EventTarget {
 public:
@@ -69,13 +70,16 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWebSocket() const;
-    virtual ExecutionContext* executionContext() const
+    virtual ExecutionContext* executionContext() const override
     {
         return m_executionContext;
     }
 
 private:
+    void init(String* url, String* protocol);
+
     ExecutionContext* m_executionContext;
+    SocketLWS* m_socketLWS;
 };
 }
 #endif

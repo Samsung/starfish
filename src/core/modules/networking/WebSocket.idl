@@ -1,6 +1,6 @@
 enum BinaryType { "blob", "arraybuffer" };
 // [STARFISH_ENABLE_WEBSOCKET,Constructor(USVString url, optional (DOMString or sequence<DOMString>) protocols = []), Exposed=(Window,Worker)]
-[STARFISH_ENABLE_WEBSOCKET,ConstructorCallWith=ExecutionContext,Constructor(USVString url, optional DOMString protocols), Exposed=(Window,Worker)]
+[STARFISH_ENABLE_WEBSOCKET,RaisesException,ConstructorCallWith=ExecutionContext,Constructor(USVString url, optional DOMString protocols), Exposed=(Window,Worker)]
 interface WebSocket : EventTarget {
   readonly attribute USVString url;
 

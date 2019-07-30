@@ -27,18 +27,18 @@
 #include <nanomsg/pubsub.h>
 #include <nanomsg/reqrep.h>
 
-#include "core/modules/networking/Socket.h"
+#include "core/modules/networking/SocketNN.h"
 
 namespace Starfish {
 
-Socket::Exception::Exception()
-    : m_err(nn_errno())
+SocketNN::Exception::Exception()
+    : Socket::Exception::Exception(nn_errno())
 {
 }
 
-const char *Socket::Exception::what() const throw()
+const char *SocketNN::Exception::what() const throw()
 {
-    return nn_strerror(m_err);
+    return nn_strerror(num());
 }
 
 SocketNN::SocketNN(int domain, int protocol)
@@ -48,7 +48,7 @@ SocketNN::SocketNN(int domain, int protocol)
     m_fd = nn_socket(domain, protocol);
 
     if (UNLIKELY(m_fd < 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
 
     if (protocol == NN_PAIR || protocol == NN_REQ || protocol == NN_REP) {
@@ -60,7 +60,7 @@ SocketNN::SocketNN(int domain, int protocol)
     } else {
         STARFISH_ASSERT_NOT_REACHED();
         errno = 0;
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
 }
 
@@ -74,7 +74,7 @@ void SocketNN::setsockopt(int level, int option, const void *optval,
 {
     int res = nn_setsockopt(m_fd, level, option, optval, optvallen);
     if (UNLIKELY(res != 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
 }
 
@@ -83,7 +83,7 @@ void SocketNN::getsockopt(int level, int option, void *optval,
 {
     int res = nn_getsockopt(m_fd, level, option, optval, optvallen);
     if (UNLIKELY(res != 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
 }
 
@@ -91,7 +91,7 @@ int SocketNN::bind(const char *addr)
 {
     int res = nn_bind(m_fd, addr);
     if (UNLIKELY(res < 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
     return res;
 }
@@ -100,7 +100,7 @@ int SocketNN::close()
 {
     int res = nn_close(m_fd);
     if (UNLIKELY(res < 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
     return res;
 }
@@ -109,7 +109,7 @@ int SocketNN::connect(const char *addr)
 {
     int res = nn_connect(m_fd, addr);
     if (UNLIKELY(res < 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
     return res;
 }
@@ -118,7 +118,7 @@ int SocketNN::shutdown(int howto)
 {
     int res = nn_shutdown(m_fd, howto);
     if (UNLIKELY(res != 0)) {
-        throw Socket::Exception();
+        throw SocketNN::Exception();
     }
     return res;
 }
@@ -128,7 +128,7 @@ int SocketNN::send(const void *buf, size_t len, int flags)
     int res = nn_send(m_fd, buf, len, flags);
     if (UNLIKELY(res < 0)) {
         if (UNLIKELY(nn_errno() != EAGAIN)) {
-            throw Socket::Exception();
+            throw SocketNN::Exception();
         }
         return -1;
     }
@@ -140,7 +140,7 @@ int SocketNN::recv(void *buf, size_t len, int flags)
     int res = nn_recv(m_fd, buf, len, flags);
     if (UNLIKELY(res < 0)) {
         if (UNLIKELY(nn_errno() != EAGAIN)) {
-            throw Socket::Exception();
+            throw SocketNN::Exception();
         }
         return -1;
     }
