@@ -32,6 +32,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/networking/WebSocket.h"
 
 namespace Starfish {
 
@@ -170,7 +171,28 @@ void ExecutionContext::disposeActiveResourceRequests()
         m_activeResourceRequests.back()->abort();
     }
 }
+#ifdef STARFISH_ENABLE_WEBSOCKET
+void ExecutionContext::addActiveWebSockets(WebSocket* webSocket)
+{
+    m_activeWebSockets.push_back(webSocket);
+}
 
+void ExecutionContext::removeActiveWebSockets(WebSocket* webSocket)
+{
+    auto iter = std::find(m_activeWebSockets.begin(), m_activeWebSockets.end(),
+                          webSocket);
+    if (iter != m_activeWebSockets.end()) {
+        m_activeWebSockets.erase(iter);
+    }
+}
+
+void ExecutionContext::disposeActiveWebSockets()
+{
+    while (m_activeWebSockets.size()) {
+        m_activeWebSockets.back()->dispose();
+    }
+}
+#endif
 void ExecutionContext::initContentSecurityPolicy(
     ContentSecurityPolicy* inheritedPolicy)
 {

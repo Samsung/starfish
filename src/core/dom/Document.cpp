@@ -740,6 +740,9 @@ void Document::dispose()
     resourceLoader().clear();
 
     executionContext()->disposeActiveResourceRequests();
+#ifdef STARFISH_ENABLE_WEBSOCKET
+    executionContext()->disposeActiveWebSockets();
+#endif
     executionContext()->clearPointerRootMap();
 
     m_fontSelector->clearWholeCache();

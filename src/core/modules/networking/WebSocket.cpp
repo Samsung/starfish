@@ -26,10 +26,13 @@
 #include "core/fileapi/Blob.h"
 #include "core/modules/networking/SocketLWS.h"
 #include "core/dom/ExecutionContext.h"
+#include "platform/loader/ResourceURL.h"
 
 using namespace Escargot;
 
 namespace Starfish {
+
+#define NormalCloseCode 1000
 
 static inline String* binaryTypeToString(BinaryType binaryType)
 {
@@ -57,7 +60,6 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     : EventTarget()
     , m_readyState(ReadyState::CONNECTING)
     , m_binaryType(BinaryType::Blob)
-    , m_url(String::emptyString)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
     , m_executionContext(executionContext)
@@ -70,7 +72,6 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
     : EventTarget()
     , m_readyState(ReadyState::CONNECTING)
     , m_binaryType(BinaryType::Blob)
-    , m_url(String::emptyString)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
     , m_executionContext(executionContext)
@@ -82,13 +83,18 @@ void WebSocket::init(String* url, String* protocol)
 {
     // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket
 
+    m_url = new ResourceURL(url);
     // Let urlRecord be the result of applying the URL parser to url.
     // If urlRecord is failure, then throw a "SyntaxError" DOMException.
-    // TODO
+    if (!m_url->isValid()) {
+        close();
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "url's is not valid");
+    }
 
     // If urlRecord's scheme is not "ws" or "wss", then throw a "SyntaxError"
     // DOMException.
-    if (!url->startsWith("ws") && !url->startsWith("wss")) {
+    if (!m_url->isWSURL() && !m_url->isWSSURL()) {
         close();
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's scheme is not \"ws\" or \"wss\"");
@@ -96,7 +102,11 @@ void WebSocket::init(String* url, String* protocol)
 
     // If urlRecord's fragment is non-null, then throw a "SyntaxError"
     // DOMException.
-    // TODO
+    if (!m_url->hash()->equals(String::emptyString)) {
+        close();
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "url's fragment is non-null");
+    }
 
     // If protocols is a string, set protocols to a sequence consisting of just
     // that string.
@@ -105,14 +115,14 @@ void WebSocket::init(String* url, String* protocol)
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
     // TODO
-    m_url = url;
     m_socketLWS = new SocketLWS(this);
-    m_socketLWS->connect(url);
+
+    executionContext()->addActiveWebSockets(this);
 }
 
 String* WebSocket::url()
 {
-    return m_url;
+    return m_url->urlString();
 }
 
 uint64_t WebSocket::bufferedAmount()
@@ -123,24 +133,28 @@ uint64_t WebSocket::bufferedAmount()
 
 void WebSocket::close()
 {
-    close(0, String::emptyString);
+    close(NormalCloseCode, String::emptyString);
 }
 
 void WebSocket::close(uint16_t code)
 {
+    // TODO
     close(code, String::emptyString);
 }
 
 void WebSocket::close(String* reason)
 {
+    // TODO
     close(0, reason);
 }
 
 void WebSocket::close(uint16_t code, String* reason)
 {
+    // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket-close
     if (m_socketLWS) {
         setReadyState(WebSocket::ReadyState::CLOSING);
-        m_socketLWS->close();
+        UTF8StringDataNonGCStd reasonString = reason->toUTF8NonGCString();
+        m_socketLWS->close(reasonString.c_str(), reasonString.length(), code);
     } else {
         setReadyState(WebSocket::ReadyState::CLOSED);
         String* eventName = executionContext()
@@ -148,14 +162,24 @@ void WebSocket::close(uint16_t code, String* reason)
                                 ->staticStrings()
                                 ->m_close.localName();
         Event* e = new Event(executionContext(), eventName);
-        this->EventTarget::dispatchEventByUA(this, e);
+        EventTarget::dispatchEventByUA(this, e);
     }
+    executionContext()->removeActiveWebSockets(this);
 }
 
 DEFINE_EVENT_LISTENER(WebSocket, open);
 DEFINE_EVENT_LISTENER(WebSocket, error);
 DEFINE_EVENT_LISTENER(WebSocket, close);
 DEFINE_EVENT_LISTENER(WebSocket, message);
+
+void WebSocket::dispose()
+{
+    setReadyState(WebSocket::ReadyState::CLOSED);
+    executionContext()->removeActiveWebSockets(this);
+    if (m_socketLWS) {
+        m_socketLWS->shutdown(0);
+    }
+}
 
 String* WebSocket::binaryType()
 {

@@ -28,6 +28,7 @@
 namespace Starfish {
 class Blob;
 class SocketLWS;
+class ResourceURL;
 
 class WebSocket : public EventTarget {
 public:
@@ -71,6 +72,7 @@ public:
     void close(uint16_t code);
     void close(String* reason);
     void close(uint16_t code, String* reason);
+    void dispose();
 
 #define VIRTUAL
 #define OVERRIDE
@@ -102,7 +104,7 @@ private:
     void send(const void* buf, size_t len, int flags);
     ReadyState m_readyState;
     BinaryType m_binaryType;
-    String* m_url;
+    ResourceURL* m_url;
     String* m_extensions;
     String* m_protocol;
 
