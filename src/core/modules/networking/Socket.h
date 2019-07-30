@@ -21,15 +21,14 @@
 #define __StarfishSocket__
 
 namespace Starfish {
-
-#define SCK_DONTWAIT 1
-
 class Socket : public gc {
 public:
     class Exception : public std::exception {
     public:
-        Exception();
-        const char *what() const throw() override;
+        Exception(int erroCode)
+        {
+            m_err = erroCode;
+        }
         int num() const
         {
             return m_err;
@@ -38,7 +37,6 @@ public:
     private:
         int m_err;
     };
-
     virtual ~Socket(){};
 
     virtual int bind(const char *addr) = 0;
@@ -55,29 +53,5 @@ public:
     virtual short getEvents() = 0;
 };
 
-class SocketNN : public Socket {
-public:
-    SocketNN(int domain, int protocol);
-    virtual ~SocketNN();
-
-    int bind(const char *addr) override;
-    int connect(const char *addr) override;
-    int send(const void *buf, size_t len, int flags) override;
-    int recv(void *buf, size_t len, int flags) override;
-    int close() override;
-    int getFd() override;
-    int shutdown(int howto) override;
-    void setsockopt(int level, int option, const void *optval,
-                    size_t optvallen) override;
-    void getsockopt(int level, int option, void *optval,
-                    size_t *optvallen) override;
-    short getEvents() override;
-
-private:
-    int m_fd;
-    short m_events;
-};
-
 } // namespace Starfish
-
 #endif

@@ -26,7 +26,7 @@
 
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/networking/Socket.h"
+#include "core/modules/networking/SocketNN.h"
 #include "core/modules/serviceworker/IORunnable.h"
 
 namespace Starfish {
@@ -107,7 +107,7 @@ void IORunnable::run()
             int rc = nn_poll(pfd, nSockets, m_rcvtimeout);
 
             if (rc < 0) {
-                throw Socket::Exception();
+                throw SocketNN::Exception();
             } else if (rc == 0) {
                 // timeout
             } else {

@@ -15,6 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_WEBSOCKET
+#include <EscargotPublic.h>
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Event.h"
@@ -24,20 +25,56 @@
 #include "core/modules/networking/WebSocket.h"
 #include "core/modules/networking/BinaryType.h"
 #include "core/fileapi/Blob.h"
+#include "core/modules/networking/SocketLWS.h"
+#include "core/dom/ExecutionContext.h"
 
-#include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace Starfish {
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
-    : m_executionContext(executionContext)
+    : EventTarget()
+    , m_executionContext(executionContext)
 {
+    init(url, nullptr);
 }
 
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
                      String* protocols)
-    : m_executionContext(executionContext)
+    : EventTarget()
+    , m_executionContext(executionContext)
 {
+    init(url, protocols);
+}
+
+void WebSocket::init(String* url, String* protocol)
+{
+    // https://html.spec.whatwg.org/multipage/web-sockets.html#dom-websocket
+
+    // Let urlRecord be the result of applying the URL parser to url.
+    // If urlRecord is failure, then throw a "SyntaxError" DOMException.
+    // TODO
+
+    // If urlRecord's scheme is not "ws" or "wss", then throw a "SyntaxError"
+    // DOMException.
+    if (!url->startsWith("ws") && !url->startsWith("wss")) {
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "urlRecord's scheme is not \"ws\" or \"wss\"");
+    }
+
+    // If urlRecord's fragment is non-null, then throw a "SyntaxError"
+    // DOMException.
+    // TODO
+
+    // If protocols is a string, set protocols to a sequence consisting of just
+    // that string.
+    // If any of the values in protocols occur more than once or otherwise fail
+    // to match the requirements for elements that comprise the value of
+    // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
+    // throw a "SyntaxError" DOMException. [WSP]
+    // TODO
+
+    m_socketLWS = new SocketLWS(this);
+    m_socketLWS->connect(url);
 }
 
 String* WebSocket::url()
@@ -92,7 +129,7 @@ void WebSocket::close(String* reason)
 
 void WebSocket::close(uint16_t code, String* reason)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    m_socketLWS->close();
 }
 
 DEFINE_EVENT_LISTENER(WebSocket, open);
@@ -113,7 +150,8 @@ void WebSocket::setBinaryType(String* value)
 
 void WebSocket::send(String* data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    UTF8StringDataNonGCStd dataString = data->toUTF8NonGCString();
+    m_socketLWS->send(dataString.c_str(), dataString.length(), 0);
 }
 
 void WebSocket::send(Blob* data)
