@@ -391,6 +391,10 @@ IF (${WEBRTC} STREQUAL "1")
                            # NOTE: Update the path for Tizen
                            "rtc_ssl_root=\\\"${THIRD_PARTY_ROOT}/openssl/include\\\""
                            "rtc_enable_protobuf=false"
+                           "use_system_libjpeg=true"
+                           "use_system_freetype=true"
+                           "use_system_harfbuzz=true"
+                           "rtc_include_tests=false"
     )
 
     IF (${MODE} STREQUAL "debug")
@@ -411,7 +415,7 @@ IF (${WEBRTC} STREQUAL "1")
                         COMMAND third_party/depot_tools/gn gen ${WEBRTC_BUILD_PATH} --args="${WEBRTC_BUILD_ARGS}"
                         COMMAND third_party/depot_tools/ninja -d explain -C ${WEBRTC_BUILD_PATH} webrtc
                         # NOTE: for Tizen use: -lssl -lcrypto
-                        COMMAND ${COMPILER} -shared -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so
+                        COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm -ljpeg
     )
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_TARGET}
                         WORKING_DIRECTORY ${WEBRTC_DIR}
