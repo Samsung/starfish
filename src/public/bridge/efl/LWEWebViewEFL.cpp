@@ -273,7 +273,7 @@ public:
         , m_lastRenderingTime(0)
         , m_lastInputTime(0)
     {
-        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL\n");
         Evas_Object* win = (Evas_Object*)winArg;
 
         m_windowObject = win;
@@ -350,7 +350,33 @@ public:
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
+
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL::clearEvasGL\n");
+        evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+        m_glGlapi->glClearColor(0, 0, 0, 0);
+        m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+        m_glGlapi->glFlush();
+
+        m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                  void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL\n");
+
+            evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
+            wv->m_glGlapi->glClearColor(0, 0, 0, 0);
+            wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+            wv->m_glGlapi->glFinish();
+        };
+        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
+                                       m_windowShownHandler, this);
 #else
+        m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                  void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+        };
+        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
+                                       m_windowShownHandler, this);
+
         evas_object_image_content_hint_set(m_graphicsAdapter,
                                            EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
         evas_object_show(m_graphicsAdapter);
@@ -582,6 +608,13 @@ public:
                 evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
             evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
+
+            STARFISH_LOG_INFO("WebViewEFL::resizeCallback::clearEvasGL %d %d\n",
+                              w, h);
+            evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
+            wv->m_glGlapi->glClearColor(0, 0, 0, 0);
+            wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+            wv->m_glGlapi->glFlush();
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 #endif
@@ -823,8 +856,6 @@ public:
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
-                STARFISH_ASSERT(wc != nullptr);
-
                 if (g_evasGL != m_glEvasgl) {
                     evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                     g_evasGL = m_glEvasgl;
@@ -841,7 +872,6 @@ public:
                 }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
-                STARFISH_ASSERT(wc != nullptr);
 
                 if (mayNeedsSync && g_evasGLAPI->evasglCreateSync &&
                     !m_glSync) {
@@ -976,6 +1006,8 @@ public:
         evas_object_event_callback_del(m_graphicsAdapter,
                                        EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler);
+        evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_SHOW,
+                                       m_windowShownHandler);
         evas_object_event_callback_del(
             m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
         evas_object_event_callback_del(
@@ -1088,6 +1120,8 @@ protected:
                                 void* event_info);
     void (*m_windowDelEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                     void* event_info);
+    void (*m_windowShownHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                 void* event_info);
 
     Evas_Object* m_windowObject;
     Evas_Object* m_mainBox;
