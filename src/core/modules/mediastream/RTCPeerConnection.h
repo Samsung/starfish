@@ -27,6 +27,7 @@
 
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
+#include "core/modules/mediastream/PeerConnectionClient.h"
 
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
@@ -91,6 +92,8 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
                                public webrtc::CreateSessionDescriptionObserver {
 public:
+    PeerConnectionObserver();
+
     // PeerConnectionObserver implementation.
     void OnSignalingChange(
         webrtc::PeerConnectionInterface::SignalingState new_state) override{};
@@ -116,9 +119,61 @@ public:
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
     void OnFailure(webrtc::RTCError error) override{};
 
+    virtual void connectToPeer();
+
 protected:
     virtual ~PeerConnectionObserver(){};
+    virtual bool createPeerConnection(bool dtls);
+    virtual bool initializePeerConnection();
+    virtual bool reinitializePeerConnectionForLoopback();
+    virtual void deletePeerConnection();
+
+    virtual void addTracks(){};
+
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+        m_peerConnectionFactory;
+    rtc::SocketAddress m_serverAddress;
+    bool m_loopback{ false };
 };
+
+#if defined(STARFISH_ENABLE_TEST)
+class TestPeerConnectionObserver : public PeerConnectionObserver,
+                                   public PeerConnectionClientObserver {
+public:
+    TestPeerConnectionObserver();
+
+    void OnSignedIn() override;
+    void OnDisconnected() override;
+    void OnPeerConnected(int id, const std::string& name) override;
+    void OnPeerDisconnected(int id) override;
+    void OnMessageFromPeer(int peer_id, const std::string& message) override;
+    void OnMessageSent(int err) override;
+    void OnServerConnectionFailure() override;
+
+    void startLogin(const std::string& server, int port);
+    void deletePeerConnection() override;
+
+    // CreateSessionDescriptionObserver implementation.
+    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
+    void OnFailure(webrtc::RTCError error) override{};
+
+    void addTracks() override;
+
+    static void* runSocketServer(void* arg);
+    static rtc::Thread* socketThread()
+    {
+        return m_socketThread;
+    }
+
+private:
+    static rtc::Thread* m_socketThread;
+    std::unique_ptr<PeerConnectionClient> m_client =
+        std::unique_ptr<PeerConnectionClient>(new PeerConnectionClient());
+    int m_peerId{ -1 };
+    std::string m_server;
+};
+#endif
 
 class RTCPeerConnection : public EventTarget {
 public:
@@ -153,12 +208,6 @@ public:
 private:
     ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
                                                     String* sdp);
-    void connectToPeer();
-
-    bool initializePeerConnection();
-    void deletePeerConnection();
-    bool createPeerConnection(bool dtls);
-
     ExecutionContext* m_executionContext;
 
     OperationQueue* m_operationQueue;
@@ -183,11 +232,15 @@ private:
     String* m_lastCreatedOffer{ String::emptyString };
     String* m_lastCreatedAnswer{ String::emptyString };
 
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        m_peerConnectionFactory;
-    rtc::scoped_refptr<PeerConnectionObserver> m_callback;
-    std::string m_server;
+#if defined(STARFISH_ENABLE_TEST)
+    rtc::scoped_refptr<TestPeerConnectionObserver> m_peerConnectionObserver =
+        rtc::scoped_refptr<TestPeerConnectionObserver>(
+            new rtc::RefCountedObject<TestPeerConnectionObserver>());
+#else
+    rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver =
+        rtc::scoped_refptr<PeerConnectionObserver>(
+            new rtc::RefCountedObject<PeerConnectionObserver>());
+#endif
 };
 }
 
