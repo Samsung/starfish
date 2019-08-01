@@ -36,6 +36,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/networking/LWSRunnable.h"
+#include "core/fileapi/Blob.h"
 
 namespace Starfish {
 
@@ -62,7 +63,13 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         break;
 
     case LWS_CALLBACK_CLIENT_RECEIVE:
-        socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in, len);
+        if (lws_frame_is_binary(wsi)) {
+            socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in, len,
+                                 true);
+        } else {
+            socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in,
+                                 len);
+        }
         break;
 
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
@@ -265,7 +272,8 @@ short SocketLWS::getEvents()
     return 0;
 }
 
-void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size)
+void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size,
+                             bool isBinary)
 {
     CHECK_ALIVE()
 
@@ -318,36 +326,88 @@ void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size)
             this);
     } break;
     case LwsEvent::ONMESSAGE: {
-        struct Param {
-            std::string msg;
-            SocketLWS* data;
-        };
-        Param* p = new Param();
-        p->data = this;
-        p->msg = std::string(param, size);
-        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t handle, void* data) {
-                struct Param {
-                    std::string msg;
-                    SocketLWS* data;
-                };
-                Param* p = (Param*)data;
-                SocketLWS* lws = p->data;
+        if (isBinary) {
+            struct Param {
+                std::vector<char> data;
+                SocketLWS* lws;
+            };
+            Param* p = new Param();
+            p->lws = this;
+            p->data.insert(p->data.begin(), param, param + size);
 
-                WebSocket* socket = lws->parent();
-                String* eventName = socket->executionContext()
-                                        ->starfish()
-                                        ->staticStrings()
-                                        ->m_message.localName();
-                MessageEvent* e =
-                    new MessageEvent(socket->executionContext(), eventName);
-                e->setData(createScriptValue(createScriptString(
-                    String::fromUTF8(p->msg.c_str(), p->msg.length()))));
-                socket->EventTarget::dispatchEventByUA(socket, e);
-                delete p;
-            },
-            p);
+            webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t handle, void* data) {
+                    struct Param {
+                        std::vector<char> data;
+                        SocketLWS* lws;
+                    };
+                    Param* p = (Param*)data;
+                    SocketLWS* lws = p->lws;
+
+                    WebSocket* socket = lws->parent();
+                    String* eventName = socket->executionContext()
+                                            ->starfish()
+                                            ->staticStrings()
+                                            ->m_message.localName();
+                    MessageEvent* e =
+                        new MessageEvent(socket->executionContext(), eventName);
+
+                    size_t dataSize = p->data.size();
+                    if (socket->isBlobBinaryType()) {
+                        void* buffer = malloc(dataSize);
+                        memcpy(buffer, p->data.data(), dataSize);
+                        // TODO : SHOULD support mime type
+                        Blob* blob =
+                            new Blob(socket->executionContext(), dataSize,
+                                     String::createASCIIString("mime/type"),
+                                     buffer, false, false, true);
+                        e->setData(createScriptValue(blob->scriptObject()));
+                    } else {
+                        auto scriptArrayBuffer = createScriptArrayBuffer(
+                            socket->executionContext()->scriptBindingInstance(),
+                            dataSize);
+                        memcpy(scriptArrayBuffer->rawBuffer(), p->data.data(),
+                               dataSize);
+                        e->setData(createScriptValue(scriptArrayBuffer));
+                    }
+                    socket->EventTarget::dispatchEventByUA(socket, e);
+                    delete p;
+                },
+                p);
+        } else {
+            // Text
+            struct Param {
+                std::string msg;
+                SocketLWS* lws;
+            };
+            Param* p = new Param();
+            p->lws = this;
+            p->msg = std::string(param, size);
+            webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t handle, void* data) {
+                    struct Param {
+                        std::string msg;
+                        SocketLWS* lws;
+                    };
+                    Param* p = (Param*)data;
+                    SocketLWS* lws = p->lws;
+
+                    WebSocket* socket = lws->parent();
+                    String* eventName = socket->executionContext()
+                                            ->starfish()
+                                            ->staticStrings()
+                                            ->m_message.localName();
+                    MessageEvent* e =
+                        new MessageEvent(socket->executionContext(), eventName);
+                    e->setData(createScriptValue(createScriptString(
+                        String::fromUTF8(p->msg.c_str(), p->msg.length()))));
+                    socket->EventTarget::dispatchEventByUA(socket, e);
+                    delete p;
+                },
+                p);
+        }
     } break;
     }
 }

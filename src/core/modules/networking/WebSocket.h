@@ -85,6 +85,10 @@ public:
 #undef OVERRIDE
 
     String* binaryType();
+    bool isBlobBinaryType()
+    {
+        return m_binaryType == BinaryType::Blob;
+    }
     void setBinaryType(String* value);
     void send(String* data);
     void send(Blob* data);

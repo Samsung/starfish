@@ -214,17 +214,19 @@ void WebSocket::send(String* data)
 
 void WebSocket::send(Blob* data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    send(data->data(), data->size(), 1);
 }
 
 void WebSocket::send(ScriptArrayBuffer data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (!data->isDetachedBuffer()) {
+        send(data->rawBuffer(), data->bytelength(), 1);
+    }
 }
 
 void WebSocket::send(ScriptArrayBufferView data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    send(data->rawBuffer(), data->bytelength(), 1);
 }
 }
 #endif

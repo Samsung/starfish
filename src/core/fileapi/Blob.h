@@ -35,27 +35,34 @@ public:
         void* m_data;
         bool m_isClosed;
         bool m_isEntryOfBlobURLStore;
+        bool m_isAllocatedByMalloc;
 
         BlobData(uint64_t size, String* type, void* data, bool isClosed,
-                 bool isEntryOfBlobURLStore)
+                 bool isEntryOfBlobURLStore, bool isAllocatedByMalloc = false)
             : m_size(size)
             , m_type(type)
             , m_data(data)
             , m_isClosed(isClosed)
             , m_isEntryOfBlobURLStore(isEntryOfBlobURLStore)
+            , m_isAllocatedByMalloc(isAllocatedByMalloc)
         {
         }
     };
 
     Blob(ExecutionContext* executionContext, uint64_t size, String* type,
-         void* data, bool isClosed, bool isEntryOfBlobURLStore)
+         void* data, bool isClosed, bool isEntryOfBlobURLStore,
+         bool isAllocatedByMalloc = false)
         : ScriptWrappable(this)
         , m_executionContext(executionContext)
-        , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore)
+        , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore,
+                     isAllocatedByMalloc)
     {
         if (m_blobData.m_isEntryOfBlobURLStore) {
             addBlobToBlobURLStore();
         }
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this, [](void* obj, void* cd) { ((Blob*)obj)->finalize(); }, NULL,
+            NULL, NULL);
     }
 
     Blob(ExecutionContext* executionContext, BlobData blobData);
@@ -69,6 +76,13 @@ public:
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const override
     {
+    }
+
+    void finalize()
+    {
+        if (m_blobData.m_isAllocatedByMalloc) {
+            free(m_blobData.m_data);
+        }
     }
 
     void* data()
