@@ -75,8 +75,8 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
         void* buffer = malloc(size);
         STARFISH_RELEASE_ASSERT(buffer);
         memcpy(buffer, m_buffer.data(), size);
-        auto blob =
-            new Blob(executionContext, size, m_mimeType, buffer, false, false);
+        auto blob = new Blob(executionContext, size, m_mimeType, buffer, false,
+                             false, true);
         promise->fulfill(blob->scriptValue());
     } else if (type == BodyType::Json) {
         TextConverter textConverter(m_mimeType, String::fromUTF8("UTF-8"),

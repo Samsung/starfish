@@ -82,7 +82,8 @@ public:
     short getEvents() override;
 
     void run();
-    void publishEvent(LwsEvent eventType, char* param, size_t size);
+    void publishEvent(LwsEvent eventType, char* param, size_t size,
+                      bool isBinary = false);
 
     std::vector<SocketLWSData*>* data()
     {

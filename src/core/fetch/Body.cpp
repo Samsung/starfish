@@ -132,7 +132,7 @@ Promise* Body::blob()
                 memcpy(buffer, str.data(), str.length());
 
                 auto blob = new Blob(executionContext(), value->length(),
-                                     contentType(), buffer, false, false);
+                                     contentType(), buffer, false, false, true);
 
                 promise->fulfill(blob->scriptValue());
             } else {
