@@ -58,23 +58,21 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
         socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
-        socket->publishEvent(SocketLWS::LwsEvent::OPEN, NULL, 0);
+        socket->publishEvent(SocketLWS::LwsEvent::OPEN);
         lws_callback_on_writable(wsi);
         break;
 
     case LWS_CALLBACK_CLIENT_RECEIVE:
-        if (lws_frame_is_binary(wsi)) {
-            socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in, len,
-                                 true);
-        } else {
-            socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE, (char*)in,
-                                 len);
+        socket->addToRxBuffer((char*)in, len);
+        if (lws_is_final_fragment(wsi)) {
+            socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE,
+                                 lws_frame_is_binary(wsi));
         }
         break;
 
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
         // TODO
-        socket->publishEvent(SocketLWS::LwsEvent::ERROR, NULL, 0);
+        socket->publishEvent(SocketLWS::LwsEvent::ERROR);
         break;
 
     case LWS_CALLBACK_CLIENT_WRITEABLE: {
@@ -86,7 +84,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
             return -1;
         }
 
-        std::vector<SocketLWSData*>* buffer = socket->data();
+        std::vector<SocketLWSData*>* buffer = socket->txData();
         if (!buffer->empty()) {
             auto iter = buffer->begin();
             SocketLWSData* data = (SocketLWSData*)*iter;
@@ -107,7 +105,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     }
 
     case LWS_CALLBACK_CLOSED:
-        socket->publishEvent(SocketLWS::LwsEvent::CLOSE, NULL, 0);
+        socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
         socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
         socket->shutdown(0);
 
@@ -119,7 +117,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
 }
 
 static struct lws_protocols protocols[] = {
-    { "SocketLWS-defalut-protocol", LWSSimpleCB, 0, 0, 0, NULL, 0 },
+    { NULL, LWSSimpleCB, 0, 0, 0, NULL, 0 },
     { NULL, NULL, 0, 0, 0, NULL, 0 } /* terminator */
 };
 
@@ -157,6 +155,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_thread->start(m_runnable);
 
     m_url = parent()->url()->toUTF8NonGCString();
+    m_protocol = parent()->protocol()->toUTF8NonGCString();
+    // TODO
+    protocols[0].name = m_protocol.data();
 
     int use_ssl = 0;
     const char* prot;
@@ -249,7 +250,7 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
         type = SocketLWSData::SocketLWSDataType::BINARY;
     }
     SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
-    m_buffer.push_back(newData);
+    m_txBuffer.push_back(newData);
     lws_callback_on_writable(m_lwsClient);
     return 0;
 }
@@ -272,8 +273,12 @@ short SocketLWS::getEvents()
     return 0;
 }
 
-void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size,
-                             bool isBinary)
+void SocketLWS::addToRxBuffer(char* param, size_t size)
+{
+    m_rxBuffer.insert(m_rxBuffer.end(), param, param + size);
+}
+
+void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
 {
     CHECK_ALIVE()
 
@@ -333,7 +338,11 @@ void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size,
             };
             Param* p = new Param();
             p->lws = this;
-            p->data.insert(p->data.begin(), param, param + size);
+            p->data = m_rxBuffer;
+
+            // TODO
+            m_rxBuffer.clear();
+            m_rxBuffer.shrink_to_fit();
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
@@ -383,7 +392,11 @@ void SocketLWS::publishEvent(LwsEvent eventType, char* param, size_t size,
             };
             Param* p = new Param();
             p->lws = this;
-            p->msg = std::string(param, size);
+            p->msg = std::string(m_rxBuffer.data(), m_rxBuffer.size());
+
+            m_rxBuffer.clear();
+            m_rxBuffer.shrink_to_fit();
+
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t handle, void* data) {

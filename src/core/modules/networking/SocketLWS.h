@@ -82,13 +82,19 @@ public:
     short getEvents() override;
 
     void run();
-    void publishEvent(LwsEvent eventType, char* param, size_t size,
-                      bool isBinary = false);
+    void publishEvent(LwsEvent eventType, bool isBinary = false);
+    void addToRxBuffer(char* param, size_t size);
 
-    std::vector<SocketLWSData*>* data()
+    std::vector<SocketLWSData*>* txData()
     {
-        return &m_buffer;
+        return &m_txBuffer;
     }
+
+    std::vector<char>* rxData()
+    {
+        return &m_rxBuffer;
+    }
+
     WebSocket* parent()
     {
         return m_parent;
@@ -116,13 +122,15 @@ private:
     LWSRunnable* m_runnable;
     WebSocket* m_parent;
     UTF8StringDataNonGCStd m_url;
+    UTF8StringDataNonGCStd m_protocol;
 
     lws_context_creation_info m_lwsContextCreationInfo;
     lws_client_connect_info m_lwsClientConnectInfo;
     lws_context* m_lwsContext;
     lws* m_lwsClient;
 
-    std::vector<SocketLWSData*> m_buffer;
+    std::vector<SocketLWSData*> m_txBuffer;
+    std::vector<char> m_rxBuffer;
     std::string m_closeReasonStr;
     size_t m_closeReasonCode;
 };

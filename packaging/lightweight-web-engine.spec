@@ -129,6 +129,7 @@ BuildRequires: pkgconfig(vconf-internal-keys-tv)
 %endif
 
 BuildRequires: pkgconfig(bundle)
+BuildRequires: pkgconfig(libwebsockets)
 
 # Supporting multiprofiles
 # Use profile_mobile as default, as it is both minimal and
