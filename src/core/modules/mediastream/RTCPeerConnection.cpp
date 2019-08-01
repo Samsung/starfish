@@ -42,7 +42,100 @@
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 
+#include "rtc_base/physical_socket_server.h"
+
 namespace Starfish {
+
+#if defined(STARFISH_ENABLE_TEST)
+rtc::Thread* TestPeerConnectionObserver::m_socketThread = nullptr;
+
+TestPeerConnectionObserver::TestPeerConnectionObserver()
+{
+    m_client->registerObserver(this);
+    pthread_t thread;
+    if (TestPeerConnectionObserver::socketThread() == nullptr) {
+        pthread_create(&thread, NULL,
+                       TestPeerConnectionObserver::runSocketServer,
+                       (void*)(&TestPeerConnectionObserver::m_socketThread));
+    }
+}
+
+void* TestPeerConnectionObserver::runSocketServer(void* arg)
+{
+    rtc::PhysicalSocketServer socket_server;
+    rtc::AutoSocketServerThread thread(&socket_server);
+    rtc::Thread** t = (rtc::Thread**)arg;
+    *t = rtc::Thread::Current();
+    STARFISH_LOG_INFO("%s\n", __func__);
+    thread.Run();
+    return nullptr;
+}
+
+// PeerConnectionClientObserver implementation.
+void TestPeerConnectionObserver::OnSignedIn()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+}
+
+void TestPeerConnectionObserver::OnDisconnected()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    deletePeerConnection();
+}
+
+void TestPeerConnectionObserver::OnPeerConnected(int id,
+                                                 const std::string& name)
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+}
+
+void TestPeerConnectionObserver::OnPeerDisconnected(int id)
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    if (id == m_peerId) {
+        STARFISH_LOG_INFO("Our peer disconnected\n");
+        deletePeerConnection();
+    }
+}
+
+void TestPeerConnectionObserver::OnMessageFromPeer(int peer_id,
+                                                   const std::string& message)
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+}
+
+void TestPeerConnectionObserver::OnMessageSent(int err)
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    m_client->sendToPeer(m_peerId, "");
+}
+
+void TestPeerConnectionObserver::OnServerConnectionFailure()
+{
+    STARFISH_LOG_ERROR("Failed to connect to %s\n", m_server.data());
+}
+
+void TestPeerConnectionObserver::startLogin(const std::string& server, int port)
+{
+    if (m_client->isConnected()) {
+        return;
+    }
+    STARFISH_LOG_INFO("%s\n", __func__);
+    m_server = server;
+    m_client->connect(server, port, m_client->peerName());
+}
+
+void TestPeerConnectionObserver::deletePeerConnection()
+{
+    PeerConnectionObserver::deletePeerConnection();
+    m_peerId = -1;
+    m_loopback = false;
+}
+
+void TestPeerConnectionObserver::addTracks()
+{
+}
+#endif
 
 RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
@@ -78,7 +171,11 @@ ExecutionContext* RTCPeerConnection::executionContext() const
     return m_executionContext;
 }
 
-bool RTCPeerConnection::initializePeerConnection()
+PeerConnectionObserver::PeerConnectionObserver()
+{
+}
+
+bool PeerConnectionObserver::initializePeerConnection()
 {
     STARFISH_ASSERT(!m_peerConnectionFactory);
     STARFISH_ASSERT(!m_peerConnection);
@@ -105,17 +202,35 @@ bool RTCPeerConnection::initializePeerConnection()
         deletePeerConnection();
     }
 
+    addTracks();
+
     return m_peerConnection != nullptr;
 }
 
-void RTCPeerConnection::deletePeerConnection()
+bool PeerConnectionObserver::reinitializePeerConnectionForLoopback()
+{
+    m_loopback = true;
+    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
+        m_peerConnection->GetSenders();
+    m_peerConnection = nullptr;
+    if (createPeerConnection(/*dtls=*/false)) {
+        for (const auto& sender : senders) {
+            m_peerConnection->AddTrack(sender->track(), sender->stream_ids());
+        }
+        m_peerConnection->CreateOffer(
+            this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+    }
+    return m_peerConnection != nullptr;
+}
+
+void PeerConnectionObserver::deletePeerConnection()
 {
     // TODO: stop local and remote rendering
     m_peerConnection = nullptr;
     m_peerConnectionFactory = nullptr;
 }
 
-void RTCPeerConnection::connectToPeer()
+void PeerConnectionObserver::connectToPeer()
 {
     if (m_peerConnection.get()) {
         STARFISH_LOG_ERROR("We only support connecting to one peer at a time");
@@ -124,14 +239,13 @@ void RTCPeerConnection::connectToPeer()
 
     if (initializePeerConnection()) {
         m_peerConnection->CreateOffer(
-            m_callback,
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+            this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
     } else {
         STARFISH_LOG_ERROR("Failed to initialize PeerConnection");
     }
 }
 
-bool RTCPeerConnection::createPeerConnection(bool dtls)
+bool PeerConnectionObserver::createPeerConnection(bool dtls)
 {
     STARFISH_ASSERT(m_peerConnectionFactory);
     STARFISH_ASSERT(!m_peerConnection);
@@ -140,10 +254,11 @@ bool RTCPeerConnection::createPeerConnection(bool dtls)
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
     config.enable_dtls_srtp = dtls;
     webrtc::PeerConnectionInterface::IceServer server;
+
     config.servers.push_back(server);
 
     m_peerConnection = m_peerConnectionFactory->CreatePeerConnection(
-        config, nullptr, nullptr, m_callback);
+        config, nullptr, nullptr, this);
     return m_peerConnection != nullptr;
 }
 
@@ -185,7 +300,7 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
                 return;
             }
 
-            connection->connectToPeer();
+            connection->m_peerConnectionObserver->connectToPeer();
 
             // TODO: identity provider
             ObjectRef* sd = connection->createSessionDescriptionInitObject(
