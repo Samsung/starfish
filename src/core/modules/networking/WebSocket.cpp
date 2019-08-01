@@ -64,7 +64,7 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     , m_protocol(String::emptyString)
     , m_executionContext(executionContext)
 {
-    init(url, nullptr);
+    init(url, String::emptyString);
 }
 
 WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
@@ -115,6 +115,8 @@ void WebSocket::init(String* url, String* protocol)
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
     // TODO
+
+    setProtocol(protocol);
     m_socketLWS = new SocketLWS(this);
 
     executionContext()->addActiveWebSockets(this);
