@@ -37,6 +37,9 @@
 #include <Elementary.h>
 #include <vconf/vconf.h>
 
+// NOTE: Original TTS_MODE_INTERRUPT is defined in tts_internal.h.
+#define TTS_MODE_INTERRUPT 3
+
 namespace Starfish {
 
 int gUtteranceId = 1;
@@ -420,7 +423,7 @@ int TTS::createHandle()
     }
 
     // Initialize engine
-    ret = tts_set_mode(m_handle, TTS_MODE_DEFAULT);
+    ret = tts_set_mode(m_handle, (tts_mode_e)TTS_MODE_INTERRUPT);
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_set_mode failed : %d", ret);
         return ret;
