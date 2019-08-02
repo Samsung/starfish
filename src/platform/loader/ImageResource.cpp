@@ -147,7 +147,7 @@ void ImageResource::didLoadFinished()
         if (testText->contains("<svg") || testText->startsWith("<?xml")) {
             auto resposeTextUTF8 = resposeText->toUTF8NonGCString();
             auto dataURI =
-                StringUtils::toBase64HTMLDataURI(resposeTextUTF8, "svg");
+                Base64Utils::encodeBase64HTMLDataURI(resposeTextUTF8, "svg");
             m_mockFrameForSVGDocument =
                 new MockHTMLIFrameElement(loader()->document(), this);
             m_mockFrameForSVGDocument->navigate(

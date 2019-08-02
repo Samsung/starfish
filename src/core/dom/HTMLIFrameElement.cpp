@@ -63,6 +63,16 @@ String* HTMLIFrameElement::src()
     return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
+void HTMLIFrameElement::setSrcdoc(String* srcDoc)
+{
+    setAttribute(starfish()->staticStrings()->m_srcdoc, srcDoc);
+}
+
+String* HTMLIFrameElement::srcdoc()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_srcdoc);
+}
+
 uint32_t HTMLIFrameElement::frameWidth()
 {
     String* v = width();
@@ -152,6 +162,13 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
             m_browsingContext->document()->body()->setNeedsStyleRecalc(
                 StyleChangeReason::JustNeedsRecalcSelf);
         }
+    } else if (name == starfish()->staticStrings()->m_srcdoc) {
+        if (!inHTMLConstructionSite()) {
+            unloadSrc();
+            if (value->length() && document()->doesParticipateInRendering()) {
+                loadSrcDoc();
+            }
+        }
     }
 }
 
@@ -159,7 +176,11 @@ void HTMLIFrameElement::didNodeInsertedToDocumentTree()
 {
     HTMLElement::didNodeInsertedToDocumentTree();
     if (document()->doesParticipateInRendering()) {
-        loadSrc();
+        if (srcdoc()->length() == 0) {
+            loadSrc();
+        } else {
+            loadSrcDoc();
+        }
     } else {
         unloadSrc();
     }
@@ -191,6 +212,24 @@ void HTMLIFrameElement::unloadSrc()
     if (m_browsingContext) {
         m_browsingContext->dispose();
         m_browsingContext = nullptr;
+    }
+}
+
+void HTMLIFrameElement::loadSrcDoc()
+{
+    std::string srcDoc = srcdoc()->toUTF8NonGCString();
+    GET_EFFECTIVE_REFERRERPOLICY();
+    if (srcDoc.length()) {
+        auto dataURI = Base64Utils::encodeBase64HTMLDataURI(srcDoc);
+        navigate(new ResourceURL(String::createASCIIString(dataURI.c_str(),
+                                                           dataURI.length()),
+                                 document()->baseURL()->baseURI()),
+                 HistoryManagerAction::Intact,
+                 new ReferrerURL(document()->documentURI(), policy));
+    } else {
+        navigate(new ResourceURL(String::createASCIIString("about:blank")),
+                 HistoryManagerAction::Intact,
+                 new ReferrerURL(document()->documentURI(), policy));
     }
 }
 

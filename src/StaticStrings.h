@@ -291,6 +291,7 @@ public:
     QualifiedName m_localName;
     QualifiedName m_style;
     QualifiedName m_src;
+    QualifiedName m_srcdoc;
     QualifiedName m_width;
     QualifiedName m_height;
     QualifiedName m_rel;

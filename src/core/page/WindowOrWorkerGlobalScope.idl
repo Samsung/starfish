@@ -14,8 +14,8 @@ interface WindowOrWorkerGlobalScope {
   [Unimplemented, Replaceable] readonly attribute USVString origin;
 
   // base64 utility methods
-  [Unimplemented] DOMString btoa(DOMString data);
-  [Unimplemented] DOMString atob(DOMString data);
+  [CallWith=ExecutionContext,RaisesException] DOMString btoa(DOMString data);
+  [CallWith=ExecutionContext,RaisesException] DOMString atob(DOMString data);
 
   // timers
   [Custom] long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);

@@ -66,6 +66,7 @@ public:
     };
     SocketLWS(WebSocket* parent);
     virtual ~SocketLWS();
+    void finalize();
 
     int bind(const char* addr) override;
     int connect(const char* addr) override;

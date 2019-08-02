@@ -29,7 +29,10 @@ typedef CanvasImageSourceOrBlobOrImageData ImageBitmapSource;
 #endif
 
 namespace Starfish {
+class String;
 namespace WindowOrWorkerGlobalScope {
+    String* btoa(ExecutionContext* executionContext, String* data);
+    String* atob(ExecutionContext* executionContext, String* data);
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(ExecutionContext* executionContext,
                                ImageBitmapSource& image,

@@ -88,6 +88,328 @@ bool isdigit(char32_t ch);
 bool isalpha(char32_t ch);
 size_t utf32ToUtf16(char32_t i, char16_t* u);
 
+namespace Base64Utils {
+    static std::string base64Chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    static size_t base64Table[128] = {
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos, // 0~9
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos, // 10~19
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos, // 20~29
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos, // 30~39
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        62,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        63,
+        52,
+        53, // 40~49
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        std::string::npos,
+        std::string::npos, // 50~59
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        0,
+        1,
+        2,
+        3,
+        4, // 60~69
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14, // 70~79
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24, // 80~89
+        25,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        26,
+        27,
+        28, // 90~99
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38, // 100~109
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48, // 110~119
+        49,
+        50,
+        51,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+        std::string::npos,
+    };
+
+#ifndef NDEBUG
+    static const std::string base64CharsDebug =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
+#endif
+
+    static inline bool isBase64(unsigned char c)
+    {
+        return (isalpha(c) || isdigit(c) || (c == '+') || (c == '/'));
+    }
+
+    static std::string encodeBase64(const std::string& src)
+    {
+        size_t dataLength = src.length();
+        const char* originData = src.c_str();
+        std::string output;
+        int i = 0, j = 0;
+        unsigned char charArray3[3];
+        unsigned char charArray4[4];
+
+        while (dataLength--) {
+            charArray3[i++] = *(originData++);
+            if (i == 3) {
+                charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+                charArray4[1] = ((charArray3[0] & 0x03) << 4) +
+                                ((charArray3[1] & 0xf0) >> 4);
+                charArray4[2] = ((charArray3[1] & 0x0f) << 2) +
+                                ((charArray3[2] & 0xc0) >> 6);
+                charArray4[3] = charArray3[2] & 0x3f;
+
+                for (i = 0; (i < 4); i++) {
+                    output += Base64Utils::base64Chars[charArray4[i]];
+                }
+                i = 0;
+            }
+        }
+
+        if (i) {
+            for (j = i; j < 3; j++) {
+                charArray3[j] = '\0';
+            }
+
+            charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+            charArray4[1] =
+                ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+            charArray4[2] =
+                ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+            charArray4[3] = charArray3[2] & 0x3f;
+
+            for (j = 0; (j < i + 1); j++) {
+                output += Base64Utils::base64Chars[charArray4[j]];
+            }
+
+            while ((i++ < 3)) {
+                output += '=';
+            }
+        }
+        return output;
+    }
+
+    static std::string encodeBase64(const std::vector<uint8_t>& src)
+    {
+        auto iter = src.begin();
+
+        std::string output;
+        int i = 0, j = 0;
+        unsigned char charArray3[3];
+        unsigned char charArray4[4];
+
+        while (iter != src.end()) {
+            charArray3[i++] = *(iter++);
+            if (i == 3) {
+                charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+                charArray4[1] = ((charArray3[0] & 0x03) << 4) +
+                                ((charArray3[1] & 0xf0) >> 4);
+                charArray4[2] = ((charArray3[1] & 0x0f) << 2) +
+                                ((charArray3[2] & 0xc0) >> 6);
+                charArray4[3] = charArray3[2] & 0x3f;
+
+                for (i = 0; (i < 4); i++) {
+                    output += Base64Utils::base64Chars[charArray4[i]];
+                }
+                i = 0;
+            }
+        }
+
+        if (i) {
+            for (j = i; j < 3; j++) {
+                charArray3[j] = '\0';
+            }
+
+            charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+            charArray4[1] =
+                ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+            charArray4[2] =
+                ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+            charArray4[3] = charArray3[2] & 0x3f;
+
+            for (j = 0; (j < i + 1); j++) {
+                output += Base64Utils::base64Chars[charArray4[j]];
+            }
+
+            while ((i++ < 3)) {
+                output += '=';
+            }
+        }
+        return output;
+    }
+
+    static std::string encodeBase64HTMLDataURI(const std::string& src,
+                                               const std::string& type = "html")
+    {
+        std::string dataURI = "data:text/" + type + ";charset=utf-8;base64,";
+        dataURI += Base64Utils::encodeBase64(src);
+        return dataURI;
+    }
+
+    template <typename StrType>
+    static std::string decodeBase64(const StrType& src)
+    {
+        std::string result;
+
+        size_t inLen = src.size();
+        size_t i = 0;
+        size_t j = 0;
+        size_t in_ = 0;
+        unsigned char charArray4[4] = {}, charArray3[3] = {};
+
+        while (inLen--) {
+            if (((unsigned char)src[in_] != '=') &&
+                Base64Utils::isBase64((unsigned char)src[in_])) {
+                charArray4[i++] = src[in_];
+                in_++;
+                if (i == 4) {
+                    for (i = 0; i < 4; i++) {
+#ifndef NDEBUG
+                        STARFISH_ASSERT(
+                            (char)base64CharsDebug.find(charArray4[i]) ==
+                            (char)Base64Utils::base64Table[charArray4[i]]);
+#endif
+                        charArray4[i] = Base64Utils::base64Table[charArray4[i]];
+                    }
+
+                    charArray3[0] =
+                        (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+                    charArray3[1] = ((charArray4[1] & 0xf) << 4) +
+                                    ((charArray4[2] & 0x3c) >> 2);
+                    charArray3[2] =
+                        ((charArray4[2] & 0x3) << 6) + charArray4[3];
+
+                    for (i = 0; (i < 3); i++) {
+                        result.push_back((char)charArray3[i]);
+                    }
+                    i = 0;
+                }
+            }
+        }
+
+        if (i) {
+            for (j = i; j < 4; j++) {
+                charArray4[j] = 0;
+            }
+            for (j = 0; j < 4; j++) {
+#ifndef NDEBUG
+                auto ret = base64CharsDebug.find(charArray4[j]);
+                STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) ==
+                                (char)Base64Utils::base64Table[charArray4[j]]);
+                ret = !ret;
+#endif
+                charArray4[j] = Base64Utils::base64Table[charArray4[j]];
+            }
+
+            charArray3[0] =
+                (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+            charArray3[1] =
+                ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+            charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
+
+            for (j = 0; (j < i - 1); j++) {
+                result.push_back((char)charArray3[j]);
+            }
+        }
+        return result;
+    }
+}
+
 } // namespace Starfish
 
 namespace std {
@@ -1177,10 +1499,6 @@ public:
     static void skipSpaces(const std::string& input,
                            unsigned long int& startIndex);
     static std::vector<std::string> split(const std::string& s, char seperator);
-    static std::string toBase64(const std::string& src);
-    static std::string toBase64(const std::vector<uint8_t>& src);
-    static std::string toBase64HTMLDataURI(const std::string& src,
-                                           const std::string& type = "html");
     static std::string toLowerCase(const std::string& str);
 };
 

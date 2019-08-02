@@ -140,7 +140,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
             }
             std::string result =
                 "data:image/png;base64," +
-                StringUtils::toBase64(ImageUtils::encodePNG(
+                Base64Utils::encodeBase64(ImageUtils::encodePNG(
                     canvasSurface->mapBuffer(), width, height, stride));
             return String::fromUTF8(result.data(), result.size());
         }
