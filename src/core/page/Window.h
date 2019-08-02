@@ -246,6 +246,8 @@ public:
     uint32_t setInterval(TimerHandler handler, int32_t delay, void* data);
     void clearInterval(int32_t id);
 
+    String* btoa(ExecutionContext* executionContext, String* data);
+    String* atob(ExecutionContext* executionContext, String* data);
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(
         ExecutionContext* executionContext, ImageBitmapSource image,

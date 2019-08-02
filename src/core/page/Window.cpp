@@ -609,6 +609,16 @@ void Window::clearInterval(int32_t id)
     webView()->timer()->removeTimer(id);
 }
 
+String* Window::btoa(ExecutionContext* executionContext, String* data)
+{
+    return WindowOrWorkerGlobalScope::btoa(executionContext, data);
+}
+
+String* Window::atob(ExecutionContext* executionContext, String* data)
+{
+    return WindowOrWorkerGlobalScope::atob(executionContext, data);
+}
+
 #ifdef STARFISH_ENABLE_CANVAS
 Promise* Window::createImageBitmap(ExecutionContext* executionContext,
                                    ImageBitmapSource image,

@@ -2385,6 +2385,7 @@ bool StackingContext::fillGraphicsBufferContents(
 void StackingContext::paintStackingContext(Canvas* canvas,
                                            PaintingStackingContextContext& ctx)
 {
+
     if (needsGraphicsBuffer()) {
         ensureRareData()->m_textDecorationData = canvas->textDecorationData();
         return;

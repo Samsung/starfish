@@ -143,6 +143,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_lwsContext(nullptr)
     , m_lwsClient(nullptr)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj, void* cd) { ((SocketLWS*)obj)->~SocketLWS(); },
+        NULL, NULL, NULL);
     m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
     m_lwsContextCreationInfo.protocols = protocols;
     m_lwsContextCreationInfo.gid = -1;
@@ -181,8 +184,11 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsClientConnectInfo.userdata = this;
     m_lwsClient = lws_client_connect_via_info(&m_lwsClientConnectInfo);
 }
-
 SocketLWS::~SocketLWS()
+{
+}
+
+void SocketLWS::finalize()
 {
     if (m_lwsContext != nullptr) {
         lws_context_destroy(m_lwsContext);

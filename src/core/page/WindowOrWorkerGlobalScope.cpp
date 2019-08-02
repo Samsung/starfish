@@ -39,6 +39,24 @@
 
 namespace Starfish {
 namespace WindowOrWorkerGlobalScope {
+
+    String* btoa(ExecutionContext* executionContext, String* data)
+    {
+        // TODO : Throws an "InvalidCharacterError" DOMException exception if
+        // the input string contains any out-of-range characters.
+        UTF8StringDataNonGCStd orginalStr = data->toUTF8NonGCString();
+        std::string result = Base64Utils::encodeBase64(orginalStr);
+        return String::createASCIIString(result.c_str(), result.length());
+    }
+
+    String* atob(ExecutionContext* executionContext, String* data)
+    {
+        // TODO : Throws an "InvalidCharacterError" DOMException if the input
+        // string is not valid base64 data.
+        UTF8StringDataNonGCStd orginalStr = data->toUTF8NonGCString();
+        std::string result = Base64Utils::decodeBase64(orginalStr);
+        return String::createASCIIString(result.c_str(), result.length());
+    }
 #ifdef STARFISH_ENABLE_CANVAS
 
     struct ImageBitmapCreateContext {

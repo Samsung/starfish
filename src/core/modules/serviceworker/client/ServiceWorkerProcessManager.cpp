@@ -152,7 +152,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     std::shared_ptr<ProcessData> processData = nullptr;
 
-    std::string encodedOrigin = StringUtils::toBase64(origin);
+    std::string encodedOrigin = Base64Utils::encodeBase64(origin);
     std::string address = createAddress(encodedOrigin);
 
     // check if a process for this origin exists

@@ -141,7 +141,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
     STARFISH_ASSERT(programOptions != nullptr);
 
     std::string origin = programOptions->get("origin");
-    std::string encodedOrigin = StringUtils::toBase64(origin);
+    std::string encodedOrigin = Base64Utils::encodeBase64(origin);
 
     // create a connection
     m_connection = new ServiceWorkerHostConnection(this);

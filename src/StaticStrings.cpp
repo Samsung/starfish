@@ -86,6 +86,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_style =
         QualifiedName(AtomicString::createAtomicString(starfish, "style"));
     m_src = QualifiedName(AtomicString::createAtomicString(starfish, "src"));
+    m_srcdoc =
+        QualifiedName(AtomicString::createAtomicString(starfish, "srcdoc"));
     m_width =
         QualifiedName(AtomicString::createAtomicString(starfish, "width"));
     m_height =

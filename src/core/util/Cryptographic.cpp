@@ -344,7 +344,7 @@ std::string Crypto::digest(
 
     switch (encoding) {
     case DigestEncodingType::Base64:
-        output = StringUtils::toBase64(hash);
+        output = Base64Utils::encodeBase64(hash);
         break;
     case DigestEncodingType::Hex:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

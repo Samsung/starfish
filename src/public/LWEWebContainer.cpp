@@ -717,7 +717,7 @@ void WebContainer::LoadData(const std::string& data)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (data.size() > 0) {
-        auto dataURI = Starfish::StringUtils::toBase64HTMLDataURI(data);
+        auto dataURI = Starfish::Base64Utils::encodeBase64HTMLDataURI(data);
         TO_WEBVIEW(m_impl)
             ->loadHTMLDocument(
                 Starfish::String::fromUTF8(dataURI.data(), dataURI.size()));

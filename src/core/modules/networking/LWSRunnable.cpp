@@ -44,8 +44,7 @@ bool LWSRunnable::doRun()
     while (isStopRequested() == false) {
         m_socket->run();
     }
-    delete m_socket;
-
+    m_socket->finalize();
     return false;
 }
 } // namespace Starfish

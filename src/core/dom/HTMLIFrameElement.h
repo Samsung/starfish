@@ -54,6 +54,9 @@ public:
     void setSrc(String* src);
     String* src();
 
+    void setSrcdoc(String* srcDoc);
+    String* srcdoc();
+
     String* width();
     void setWidth(String* width);
 
@@ -118,6 +121,7 @@ protected:
 
     void loadSrc();
     void unloadSrc();
+    void loadSrcDoc();
 };
 }
 
