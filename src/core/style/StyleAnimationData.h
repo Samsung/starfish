@@ -35,14 +35,18 @@ public:
     {
     }
 
-    AnimationKeyframe(const AnimationKeyframe& keyframe)
+    AnimationKeyframe(const AnimationKeyframe& keyframe, bool isClone = false)
         : m_keyframeName(keyframe.keyframeName())
         , m_duration(keyframe.duration())
         , m_delay(keyframe.delay())
         , m_timingFunction(keyframe.timingFunction())
     {
-        m_properties.assign(keyframe.properties().begin(),
-                            keyframe.properties().end());
+        if (isClone) {
+            m_properties.assign(keyframe.properties().begin(),
+                                keyframe.properties().end());
+        } else {
+            m_properties.resize(keyframe.keyKinds().size());
+        }
         m_keyKinds.assign(keyframe.keyKinds().begin(),
                           keyframe.keyKinds().end());
     }

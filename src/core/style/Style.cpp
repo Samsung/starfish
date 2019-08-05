@@ -7390,7 +7390,7 @@ static AnimationKeyframe* findAnimationKeyframe(
     if (size == 0) {
         keyframe = new AnimationKeyframe();
     } else {
-        keyframe = new AnimationKeyframe(*keyframeList[size - 1]);
+        keyframe = new AnimationKeyframe(*keyframeList[size - 1], false);
     }
     keyframe->setKeyframeName(key);
     keyframeList.push_back(keyframe);
@@ -7514,7 +7514,7 @@ void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
 
             for (size_t k = 1; k < keyList.size(); k++) {
                 AnimationKeyframe* clone =
-                    new AnimationKeyframe(*animationKeyframe);
+                    new AnimationKeyframe(*animationKeyframe, true);
                 clone->setKeyframeName(keyList[k]);
                 keyframeList.push_back(clone);
             }
@@ -7553,7 +7553,7 @@ void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
         }
         if (keyframeList.back()->keyframeName() != 1.0) {
             AnimationKeyframe* end =
-                new AnimationKeyframe(*keyframeList.back());
+                new AnimationKeyframe(*keyframeList.back(), true);
             end->setKeyframeName(1.0);
             end->setTimingFunction(timing);
             keyframeList.push_back(end);
@@ -7706,10 +7706,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                             auto keyframes = animation->keyframes(n);
                             if (keyframes.keyframeListSize() > 0) {
                                 auto keyframe = keyframes.keyframe(0);
-                                for (auto& prop : keyframe->properties()) {
+                                for (auto& keyKind : keyframe->keyKinds()) {
                                     if (activeAnimations[i]
                                             ->isKindOfTransitionProperty(
-                                                prop.keyKind()) == true) {
+                                                keyKind) == true) {
                                         found = true;
                                         break;
                                     }
