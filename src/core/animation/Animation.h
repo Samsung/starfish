@@ -301,7 +301,6 @@ public:
 
     virtual void didAnimationFrameChanged()
     {
-        STARFISH_ASSERT(m_type == ANIMATION_TYPE);
     }
 
     virtual size_t backgroundLayer()

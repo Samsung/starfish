@@ -337,6 +337,7 @@ float ActiveAnimationTask::computeProgress(float& fraction)
             fraction = (1 - fraction - m_offsets[m_frameIdx - 1]) /
                        (m_offsets[m_frameIdx] - m_offsets[m_frameIdx - 1]);
         }
+        fraction = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction;
     }
     return currentTimingFunction()->getValue(fraction);
 }
@@ -1475,7 +1476,7 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
 #define NEED_TRANSITION(...)       \
     (_DAMAGED_KEYS(__VA_ARGS__) && \
      (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
-#define CHECK_ANIMATION(...) (_checkCSSProperty(fromKeyKind, __VA_ARGS__))
+#define CHECK_ANIMATION(...) (_checkCSSProperty(keyKind, __VA_ARGS__))
 
 bool applyTransitionIfNeeds(
     Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
@@ -2466,77 +2467,229 @@ static AnimatedValue* backgroundSizeToAnimatedValue(
     return nullptr;
 }
 
+static AnimatedValue* animatedColorValue(const CSSStyleValuePair& property)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+        return new AnimatedValue(property.colorValue());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+        return new AnimatedValue(
+            NamedColor::namedColorToColor(property.namedColorValue()));
+    } else {
+        // TODO: Consider how to handle in this case.
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return new AnimatedValue(Unit::Color(0, 0, 0, 0));
+    }
+}
+
+static AnimatedValue* animatedLengthValue(const CSSStyleValuePair& property)
+{
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+        return new AnimatedValue(property.lengthValue());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::CalcValueKind) {
+        return new AnimatedValue(property.lengthValue());
+    } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+        return new AnimatedValue(Length());
+    } else if (property.valueKind() ==
+               CSSStyleValuePair::ValueKind::Percentage) {
+        return new AnimatedValue(
+            Length(Length::Percent, property.percentageValue()));
+    } else {
+        // TODO: Consider how to handle in this case.
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return new AnimatedValue(Length(Length::Fixed, 0));
+    }
+}
+
 static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
                                     const CSSStyleValuePair& property,
-                                    size_t layer = 0)
+                                    const CSSStyleValuePair::KeyKind& keyKind,
+                                    size_t layer = 0,
+                                    bool neededOriginProperty = false)
 {
     STARFISH_ASSERT(style != nullptr);
 
-    switch (property.keyKind()) {
+    switch (keyKind) {
     case CSSStyleValuePair::Color:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->color());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::BackgroundColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->backgroundColor());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::BorderBottomColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().bottom().color());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::BorderLeftColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().left().color());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::BorderRightColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().right().color());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::BorderTopColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().top().color());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::CaretColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->caretColor());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::OutlineColor:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->outlineColor());
+        }
+        return animatedColorValue(property);
     case CSSStyleValuePair::TextDecorationColor:
-        if (property.valueKind() ==
-            CSSStyleValuePair::ValueKind::ColorValueKind) {
-            return new AnimatedValue(property.colorValue());
-        } else if (property.valueKind() ==
-                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-            return new AnimatedValue(
-                NamedColor::namedColorToColor(property.namedColorValue()));
-        } else {
-            // TODO: Consider how to handle in this case.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new AnimatedValue(Unit::Color(0, 0, 0, 0));
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->textDecorationColor());
         }
-        break;
+        return animatedColorValue(property);
     case CSSStyleValuePair::Width:
-    case CSSStyleValuePair::MaxWidth:
-    case CSSStyleValuePair::MinWidth:
-    case CSSStyleValuePair::MarginTop:
-    case CSSStyleValuePair::MarginRight:
-    case CSSStyleValuePair::MarginBottom:
-    case CSSStyleValuePair::MarginLeft:
-    case CSSStyleValuePair::BorderTopWidth:
-    case CSSStyleValuePair::BorderRightWidth:
-    case CSSStyleValuePair::BorderBottomWidth:
-    case CSSStyleValuePair::BorderLeftWidth:
-    case CSSStyleValuePair::PaddingTop:
-    case CSSStyleValuePair::PaddingRight:
-    case CSSStyleValuePair::PaddingBottom:
-    case CSSStyleValuePair::PaddingLeft:
-    case CSSStyleValuePair::Height:
-    case CSSStyleValuePair::MaxHeight:
-    case CSSStyleValuePair::MinHeight:
-    case CSSStyleValuePair::Left:
-    case CSSStyleValuePair::Right:
-    case CSSStyleValuePair::Top:
-    case CSSStyleValuePair::Bottom:
-    case CSSStyleValuePair::FontSize:
-        if (property.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-            return new AnimatedValue(property.lengthValue());
-        } else if (property.valueKind() ==
-                   CSSStyleValuePair::ValueKind::CalcValueKind) {
-            return new AnimatedValue(property.lengthValue());
-        } else if (property.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-            return new AnimatedValue(Length());
-        } else if (property.valueKind() ==
-                   CSSStyleValuePair::ValueKind::Percentage) {
-            return new AnimatedValue(
-                Length(Length::Percent, property.percentageValue()));
-        } else {
-            // TODO: Consider how to handle in this case.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            return new AnimatedValue(Length(Length::Fixed, 0));
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->width());
         }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MaxWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->maxWidth());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MinWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->minWidth());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MarginTop:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->margin().top());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MarginRight:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->margin().right());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MarginBottom:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->margin().bottom());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MarginLeft:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->margin().left());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::BorderTopWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().top().width());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::BorderRightWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().right().width());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::BorderBottomWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().bottom().width());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::BorderLeftWidth:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->border().left().width());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::PaddingTop:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->padding().top());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::PaddingRight:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->padding().right());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::PaddingBottom:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->padding().bottom());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::PaddingLeft:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->padding().left());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::Height:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->height());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MaxHeight:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->maxHeight());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::MinHeight:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->minHeight());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::Left:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->left());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::Right:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->right());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::Top:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->top());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::Bottom:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->bottom());
+        }
+        return animatedLengthValue(property);
+    case CSSStyleValuePair::FontSize:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->fontSize());
+        }
+        return animatedLengthValue(property);
         break;
     case CSSStyleValuePair::BackgroundPositionX:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->backgroundPositionX(layer));
+        }
+
+        if (style->backgroundLayerSize() > 0) {
+            return backgroundPositionToAnimatedValue(style, element, property,
+                                                     layer);
+        } else {
+            // TODO: Consider how to handle in this case.
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+        break;
     case CSSStyleValuePair::BackgroundPositionY:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->backgroundPositionY(layer));
+        }
+
         if (style->backgroundLayerSize() > 0) {
             return backgroundPositionToAnimatedValue(style, element, property,
                                                      layer);
@@ -2547,6 +2700,10 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
         break;
     case CSSStyleValuePair::BackgroundSize:
         if (style->backgroundLayerSize() > 0) {
+            if (neededOriginProperty == true) {
+                return new AnimatedValue(
+                    style->backgroundSizeLengthValue(layer));
+            }
             return backgroundSizeToAnimatedValue(style, element, property,
                                                  layer);
         } else {
@@ -2555,6 +2712,10 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
         }
         break;
     case CSSStyleValuePair::Opacity:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->opacity());
+        }
+
         if (property.valueKind() == CSSStyleValuePair::ValueKind::Number) {
             return new AnimatedValue(property.numberValue());
         } else {
@@ -2563,6 +2724,10 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
         }
         break;
     case CSSStyleValuePair::Transform:
+        if (neededOriginProperty == true) {
+            return new AnimatedValue(style->transforms());
+        }
+
         if (property.valueKind() ==
             CSSStyleValuePair::ValueKind::TransformFunctions) {
             auto transformValue = property.transformValue();
@@ -2627,22 +2792,28 @@ bool applyAnimationIfNeeds(
         AnimationPlayStateValue playState = animation->playState(s);
 
         size_t keyframeSize = keyframes.keyframeListSize();
+        bool neededOriginProperty = false;
         for (size_t i = 0; i < fromKeyframe->propertySize(); i++) {
-            CSSStyleValuePair fromProperty = fromKeyframe->properties()[i];
-            CSSStyleValuePair::KeyKind fromKeyKind = fromProperty.keyKind();
+            auto property = fromKeyframe->properties()[i];
+            auto keyKind = fromKeyframe->keyKinds()[i];
+            neededOriginProperty = false;
+
+            if (property.keyKind() == CSSStyleValuePair::KeyKind::Unknown &&
+                keyKind != CSSStyleValuePair::KeyKind::Unknown) {
+                neededOriginProperty = true;
+            }
 
             size_t layerSize = 1;
-            if (isAnimatableBackgroundProperty(fromProperty.keyKind()) ==
-                true) {
+            if (isAnimatableBackgroundProperty(keyKind)) {
                 layerSize = style->backgroundLayerSize();
             }
 
             GCVector<GCVector<AnimatedValue*>> values;
             values.resize(layerSize);
-            AnimatedValue* value = nullptr;
             bool isAvailable = true;
             for (size_t l = 0; l < layerSize; l++) {
-                value = animatedValue(style, element, fromProperty, l);
+                AnimatedValue* value = animatedValue(
+                    style, element, property, keyKind, l, neededOriginProperty);
                 if (value == nullptr) {
                     isAvailable = false;
                     break;
@@ -2655,39 +2826,46 @@ bool applyAnimationIfNeeds(
 
             GCAtomicVector<double> offsets;
             GCVector<TimingFunction*> timingFunctions;
-
             offsets.push_back(fromKeyframe->keyframeName());
             timingFunctions.push_back(fromKeyframe->timingFunction());
 
             for (size_t k = 1; k < keyframeSize; k++) {
                 auto keyframe = keyframes.keyframe(k);
 
-                if (keyframe != nullptr) {
-                    auto property = keyframe->properties()[i];
-                    if (fromKeyKind != property.keyKind()) {
-                        STARFISH_ASSERT_NOT_REACHED();
-                    }
-                    if (property.keyKind() ==
-                        CSSStyleValuePair::KeyKind::Unknown) {
-                        property = fromProperty;
-                    }
-
-                    isAvailable = true;
-                    for (size_t l = 0; l < layerSize; l++) {
-                        value = animatedValue(style, element, property, l);
-                        if (value == nullptr) {
-                            isAvailable = false;
-                            break;
-                        }
-                        values[l].push_back(value);
-                    }
-                    if (isAvailable == false) {
-                        continue;
-                    }
-
-                    offsets.push_back(keyframe->keyframeName());
-                    timingFunctions.push_back(keyframe->timingFunction());
+                property = keyframe->properties()[i];
+                if (keyKind != keyframe->keyKinds()[i]) {
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
+                if ((keyframeSize - 1 != k) &&
+                    property.valueKind() ==
+                        CSSStyleValuePair::ValueKind::None) {
+                    continue;
+                }
+
+                isAvailable = true;
+                for (size_t l = 0; l < layerSize; l++) {
+                    neededOriginProperty = false;
+                    if ((keyframeSize - 1 == k) &&
+                        (property.keyKind() ==
+                             CSSStyleValuePair::KeyKind::Unknown &&
+                         keyKind != CSSStyleValuePair::KeyKind::Unknown)) {
+                        neededOriginProperty = true;
+                    }
+                    AnimatedValue* value =
+                        animatedValue(style, element, property, keyKind, l,
+                                      neededOriginProperty);
+                    if (value == nullptr) {
+                        isAvailable = false;
+                        break;
+                    }
+                    values[l].push_back(value);
+                }
+                if (isAvailable == false) {
+                    continue;
+                }
+
+                offsets.push_back(keyframe->keyframeName());
+                timingFunctions.push_back(keyframe->timingFunction());
             }
 
             bool gotAnimation = false;
@@ -2789,7 +2967,7 @@ bool applyAnimationIfNeeds(
 // length series
 
 #define APPLY_LENGTH_ANIMATION(propertyName)                              \
-    if (fromKeyKind == CSSStyleValuePair::propertyName) {                 \
+    if (keyKind == CSSStyleValuePair::propertyName) {                     \
         auto task = new ActiveLengthAnimationTask(                        \
             element, CSSStyleValuePair::propertyName, values[0], offsets, \
             timingFunctions, duration, delay);                            \
@@ -3035,7 +3213,7 @@ bool applyAnimationIfNeeds(
                 gotAnimation = true;
             }
 
-            if (fromKeyKind == CSSStyleValuePair::Opacity) {
+            if (CHECK_ANIMATION(CSSStyleValuePair::Opacity) == true) {
                 auto task = new ActiveOpacityAnimationTask(
                     element, CSSStyleValuePair::Opacity, values[0], offsets,
                     timingFunctions, duration, delay);
@@ -3046,7 +3224,7 @@ bool applyAnimationIfNeeds(
                 gotAnimation = true;
             }
 
-            if (fromKeyKind == CSSStyleValuePair::Transform) {
+            if (CHECK_ANIMATION(CSSStyleValuePair::Transform) == true) {
                 auto task = new ActiveTransformAnimationTask(
                     element, CSSStyleValuePair::Transform, values[0], offsets,
                     timingFunctions, duration, delay);
