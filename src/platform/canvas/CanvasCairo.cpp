@@ -1015,7 +1015,7 @@ public:
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawFillRectShadow(xx, yy, ww, hh);
         }
         drawRectInner(xx, yy, ww, hh);
@@ -1027,7 +1027,7 @@ public:
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawFillRectShadow(xx, yy, ww, hh);
         }
         drawRectInner(xx, yy, ww, hh);
@@ -1044,7 +1044,7 @@ public:
             return;
         }
         float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawStrokeRectShadow(xx, yy, ww, hh);
         }
         drawStrokeRectInner(xx, yy, ww, hh);
@@ -1056,7 +1056,7 @@ public:
             return;
         }
         int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawStrokeRectShadow(xx, yy, ww, hh);
         }
         drawStrokeRectInner(xx, yy, ww, hh);
@@ -1075,7 +1075,7 @@ public:
             return;
         }
 
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             Path* path = Path::create();
             path->moveTo(p1.x(), p1.y());
             path->lineTo(p2.x(), p2.y());
@@ -1109,7 +1109,7 @@ public:
             return;
         }
 
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawFillTextShadow(x, y, stringWidth, sv);
         }
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawText");
@@ -1148,7 +1148,7 @@ public:
             return;
         }
 
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawStrokeTextShadow(x, y, stringWidth, sv);
         }
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawStrokeText");
@@ -1281,7 +1281,7 @@ public:
             return;
         }
 
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawImageShadow(data, dst);
         }
         drawImageInner(data, dst, imageRenderingMode);
@@ -1353,7 +1353,7 @@ public:
             return;
         }
 
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawImageShadow(data, dst);
         }
 
@@ -1653,42 +1653,42 @@ public:
 
     virtual double shadowOffsetX() override
     {
-        return lastState()->m_shadowData->offsetX();
+        return lastState()->m_shadowData.offsetX();
     }
 
     virtual void setShadowOffsetX(double offset) override
     {
-        lastState()->m_shadowData->setOffsetX(offset);
+        lastState()->m_shadowData.setOffsetX(offset);
     }
 
     virtual double shadowOffsetY() override
     {
-        return lastState()->m_shadowData->offsetY();
+        return lastState()->m_shadowData.offsetY();
     }
 
     virtual void setShadowOffsetY(double offset) override
     {
-        lastState()->m_shadowData->setOffsetY(offset);
+        lastState()->m_shadowData.setOffsetY(offset);
     }
 
     virtual double shadowBlur() override
     {
-        return lastState()->m_shadowData->radius();
+        return lastState()->m_shadowData.radius();
     }
 
     virtual void setShadowBlur(double blur) override
     {
-        lastState()->m_shadowData->setRadius(blur);
+        lastState()->m_shadowData.setRadius(blur);
     }
 
     virtual Unit::Color shadowColor() override
     {
-        return lastState()->m_shadowData->color();
+        return lastState()->m_shadowData.color();
     }
 
     virtual void setShadowColor(const Unit::Color& color) override
     {
-        lastState()->m_shadowData->setColor(color);
+        lastState()->m_shadowData.setColor(color);
     }
 
     virtual bool imageSmoothingEnabled() override
@@ -1787,7 +1787,7 @@ public:
         if (lastState()->m_visible == false) {
             return;
         }
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawStrokePathShadow(path);
         }
         drawStrokePathInner(path);
@@ -1819,7 +1819,7 @@ public:
         if (lastState()->m_visible == false) {
             return;
         }
-        if (lastState()->m_shadowData->hasValidValue()) {
+        if (lastState()->m_shadowData.hasValidValue()) {
             drawFillPathShadow(path);
         }
 

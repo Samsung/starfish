@@ -26,6 +26,7 @@
 
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/modules/canvas/CanvasFillStrokeSource.h"
+#include "core/modules/canvas/CanvasShadowData.h"
 
 namespace Starfish {
 
@@ -34,7 +35,6 @@ class NativeImageData;
 class PlatformWindow;
 class NativeGradient;
 class Path;
-class CanvasShadowData;
 
 struct GradientDrawingInfo;
 
@@ -148,7 +148,7 @@ public:
     size_t m_canvasFontState;
     bool m_visible;
     bool m_hasNonInvertableCTM;
-    CanvasShadowData* m_shadowData;
+    CanvasShadowData m_shadowData;
 
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)

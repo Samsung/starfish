@@ -292,7 +292,7 @@ CanvasState::CanvasState()
     , m_canvasFontState(0)
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
-    , m_shadowData(new CanvasShadowData())
+    , m_shadowData()
 {
 }
 
@@ -351,11 +351,11 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
 {
     int xx = x, yy = y, ww = width, hh = height;
     Unit::Rect shadowRect(0, 0, ww, hh);
-    CanvasShadowData* shadow = lastState()->m_shadowData;
-    auto shadowColor = shadow->color();
-    float radius = shadow->radius();
-    float shadowOffsetX = shadow->offsetX();
-    float shadowOffsetY = shadow->offsetY();
+    CanvasShadowData& shadow = lastState()->m_shadowData;
+    auto shadowColor = shadow.color();
+    float radius = shadow.radius();
+    float shadowOffsetX = shadow.offsetX();
+    float shadowOffsetY = shadow.offsetY();
     float radiusOffset = 0.0f;
 
     if (radius == 0) {
@@ -586,14 +586,14 @@ void Canvas::drawStrokeRectShadow(float x, float y, float width, float height)
 void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
                                  const StringView& sv, bool isFill)
 {
-    CanvasShadowData* shadow = lastState()->m_shadowData;
+    CanvasShadowData& shadow = lastState()->m_shadowData;
     Font* font = lastState()->m_font;
-    Unit::Color shadowColor = shadow->color();
+    Unit::Color shadowColor = shadow.color();
     size_t width = (size_t)(ceil(stringWidth));
     size_t height = (size_t)(ceil((float)font->metrics().m_fontHeight));
-    float radius = shadow->radius();
-    float shadowOffsetX = shadow->offsetX();
-    float shadowOffsetY = shadow->offsetY();
+    float radius = shadow.radius();
+    float shadowOffsetX = shadow.offsetX();
+    float shadowOffsetY = shadow.offsetY();
     float radiusOffset = 0.0f;
 
     if (radius == 0) {
@@ -687,14 +687,14 @@ void Canvas::drawStrokePathShadow(Path* path)
 
 void Canvas::drawPathShadowInner(Path* path, bool isFill)
 {
-    CanvasShadowData* shadow = lastState()->m_shadowData;
-    Unit::Color shadowColor = shadow->color();
+    CanvasShadowData& shadow = lastState()->m_shadowData;
+    Unit::Color shadowColor = shadow.color();
     Unit::Rect boundRect = path->boundingRect(isFill);
     size_t width = (size_t)(ceil(boundRect.width()));
     size_t height = (size_t)(ceil(boundRect.height()));
-    float radius = shadow->radius();
-    float shadowOffsetX = shadow->offsetX();
-    float shadowOffsetY = shadow->offsetY();
+    float radius = shadow.radius();
+    float shadowOffsetX = shadow.offsetX();
+    float shadowOffsetY = shadow.offsetY();
     float radiusOffset = 0.0f;
 
     if (radius == 0) {
@@ -766,11 +766,11 @@ void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
 {
     int xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
     Unit::Rect shadowRect(0, 0, ww, hh);
-    CanvasShadowData* shadow = lastState()->m_shadowData;
-    auto shadowColor = shadow->color();
-    float radius = shadow->radius();
-    float shadowOffsetX = shadow->offsetX();
-    float shadowOffsetY = shadow->offsetY();
+    CanvasShadowData& shadow = lastState()->m_shadowData;
+    auto shadowColor = shadow.color();
+    float radius = shadow.radius();
+    float shadowOffsetX = shadow.offsetX();
+    float shadowOffsetY = shadow.offsetY();
     float radiusOffset = 0.0f;
 
     if (radius != 0) {
