@@ -92,7 +92,29 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
                                public webrtc::CreateSessionDescriptionObserver {
 public:
+    const std::string kAudioLabel = "audio_label";
+    const std::string kVideoLabel = "video_label";
+    const std::string kStreamId = "stream_id";
+    const std::string m_stun = "stun:stun.l.google.com:19302";
+
+    class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+    public:
+        VideoRenderer(webrtc::VideoTrackInterface* trackToRender);
+        virtual ~VideoRenderer();
+
+        // VideoSinkInterface implementation
+        void OnFrame(const webrtc::VideoFrame& frame) override;
+
+    private:
+        void setSize(int width, int height);
+        std::unique_ptr<uint8_t[]> m_image;
+        int m_width{ 0 };
+        int m_height{ 0 };
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_renderedTrack;
+    };
+
     PeerConnectionObserver();
+    virtual ~PeerConnectionObserver(){};
 
     // PeerConnectionObserver implementation.
     void OnSignalingChange(
@@ -120,28 +142,41 @@ public:
     void OnFailure(webrtc::RTCError error) override{};
 
     virtual void connectToPeer();
+    virtual void deletePeerConnection();
 
 protected:
-    virtual ~PeerConnectionObserver(){};
     virtual bool createPeerConnection(bool dtls);
     virtual bool initializePeerConnection();
     virtual bool reinitializePeerConnectionForLoopback();
-    virtual void deletePeerConnection();
 
-    virtual void addTracks(){};
+    virtual void addTracks();
+
+    virtual void startLocalRenderer(webrtc::VideoTrackInterface* localVideo);
+    virtual void stopLocalRenderer();
 
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
         m_peerConnectionFactory;
     rtc::SocketAddress m_serverAddress;
     bool m_loopback{ false };
+    std::unique_ptr<VideoRenderer> m_localRenderer;
 };
 
 #if defined(STARFISH_ENABLE_TEST)
 class TestPeerConnectionObserver : public PeerConnectionObserver,
                                    public PeerConnectionClientObserver {
 public:
+    // Names used for a IceCandidate JSON object.
+    const std::string kCandidateSdpMidName = "sdpMid";
+    const std::string kCandidateSdpMlineIndexName = "sdpMLineIndex";
+    const std::string kCandidateSdpName = "candidate";
+
+    // Names used for a SessionDescription JSON object.
+    const std::string kSessionDescriptionTypeName = "type";
+    const std::string kSessionDescriptionSdpName = "sdp";
+
     TestPeerConnectionObserver();
+    virtual ~TestPeerConnectionObserver(){};
 
     void OnSignedIn() override;
     void OnDisconnected() override;
@@ -157,8 +192,6 @@ public:
     // CreateSessionDescriptionObserver implementation.
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
     void OnFailure(webrtc::RTCError error) override{};
-
-    void addTracks() override;
 
     static void* runSocketServer(void* arg);
     static rtc::Thread* socketThread()

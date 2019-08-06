@@ -41,12 +41,86 @@
 #include "api/create_peerconnection_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame_buffer.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_source_interface.h"
 
 #include "rtc_base/physical_socket_server.h"
+#include "rtc_base/strings/json.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
+#include "modules/video_capture/video_capture.h"
+#include "modules/video_capture/video_capture_factory.h"
+#include "pc/video_track_source.h"
+#include "platform/webrtc/VideoCapturer.h"
+
+#include "third_party/libyuv/include/libyuv/convert_from.h"
 
 namespace Starfish {
 
+class CapturerTrackSource : public webrtc::VideoTrackSource {
+public:
+    // TODO: get values from user JS script
+    static const size_t kWidth = 640;
+    static const size_t kHeight = 480;
+    static const size_t kFps = 30;
+
+    static rtc::scoped_refptr<CapturerTrackSource> create()
+    {
+        std::unique_ptr<VideoCapturer> capturer;
+        std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+            webrtc::VideoCaptureFactory::CreateDeviceInfo());
+        if (!info) {
+            return nullptr;
+        }
+        int numDevices = info->NumberOfDevices();
+        for (int i = 0; i < numDevices; ++i) {
+            capturer = absl::WrapUnique(
+                VideoCapturer::create(kWidth, kHeight, kFps, i));
+            if (capturer) {
+                return new rtc::RefCountedObject<CapturerTrackSource>(
+                    std::move(capturer));
+            }
+        }
+
+        return nullptr;
+    }
+
+protected:
+    explicit CapturerTrackSource(std::unique_ptr<VideoCapturer> capturer)
+        : VideoTrackSource(/*remote=*/false)
+        , m_capturer(std::move(capturer))
+    {
+    }
+
+private:
+    rtc::VideoSourceInterface<webrtc::VideoFrame>* source() override
+    {
+        return m_capturer.get();
+    }
+    std::unique_ptr<VideoCapturer> m_capturer;
+};
+
 #if defined(STARFISH_ENABLE_TEST)
+class DummySetSessionDescriptionObserver
+    : public webrtc::SetSessionDescriptionObserver {
+public:
+    static DummySetSessionDescriptionObserver* Create()
+    {
+        return new rtc::RefCountedObject<DummySetSessionDescriptionObserver>();
+    }
+    virtual void OnSuccess()
+    {
+        STARFISH_LOG_INFO("%s\n", __func__);
+    }
+    virtual void OnFailure(webrtc::RTCError error)
+    {
+        STARFISH_LOG_INFO("%s: %s: %s", __func__, ToString(error.type()).data(),
+                          error.message());
+    }
+};
+
 rtc::Thread* TestPeerConnectionObserver::m_socketThread = nullptr;
 
 TestPeerConnectionObserver::TestPeerConnectionObserver()
@@ -62,8 +136,8 @@ TestPeerConnectionObserver::TestPeerConnectionObserver()
 
 void* TestPeerConnectionObserver::runSocketServer(void* arg)
 {
-    rtc::PhysicalSocketServer socket_server;
-    rtc::AutoSocketServerThread thread(&socket_server);
+    rtc::PhysicalSocketServer socketServer;
+    rtc::AutoSocketServerThread thread(&socketServer);
     rtc::Thread** t = (rtc::Thread**)arg;
     *t = rtc::Thread::Current();
     STARFISH_LOG_INFO("%s\n", __func__);
@@ -86,27 +160,127 @@ void TestPeerConnectionObserver::OnDisconnected()
 void TestPeerConnectionObserver::OnPeerConnected(int id,
                                                  const std::string& name)
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("%s: peerId: %d\n", __func__, id);
 }
 
 void TestPeerConnectionObserver::OnPeerDisconnected(int id)
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("%s: peerId: %d\n", __func__, id);
     if (id == m_peerId) {
         STARFISH_LOG_INFO("Our peer disconnected\n");
         deletePeerConnection();
     }
 }
 
-void TestPeerConnectionObserver::OnMessageFromPeer(int peer_id,
+void TestPeerConnectionObserver::OnMessageFromPeer(int peerId,
                                                    const std::string& message)
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("%s: peerId: %d\n", __func__, peerId);
+    STARFISH_ASSERT(!message.empty());
+
+    if (!m_peerConnection.get()) {
+        STARFISH_ASSERT(m_peerId == -1);
+        m_peerId = peerId;
+
+        if (!initializePeerConnection()) {
+            STARFISH_LOG_ERROR(
+                "Failed to initialize our PeerConnection instance\n");
+            m_client->signOut();
+            return;
+        }
+    }
+    m_peerId = peerId;
+
+    Json::Reader reader;
+    Json::Value jmessage;
+    if (!reader.parse(message, jmessage)) {
+        STARFISH_LOG_WARN("Received unknown message. %s\n", message.data());
+        return;
+    }
+    std::string typeStr;
+    std::string jsonObject;
+
+    rtc::GetStringFromJsonObject(jmessage, kSessionDescriptionTypeName,
+                                 &typeStr);
+    if (!typeStr.empty()) {
+        if (typeStr == "offer-loopback") {
+            // This is a loopback call.
+            // Recreate the peerconnection with DTLS disabled.
+            if (!reinitializePeerConnectionForLoopback()) {
+                STARFISH_LOG_ERROR(
+                    "Failed to initialize our PeerConnection instance\n");
+                deletePeerConnection();
+                m_client->signOut();
+            }
+            return;
+        }
+        absl::optional<webrtc::SdpType> typeMaybe =
+            webrtc::SdpTypeFromString(typeStr);
+        if (!typeMaybe) {
+            STARFISH_LOG_ERROR("Unknown SDP type: %s\n", typeStr.data());
+            return;
+        }
+        webrtc::SdpType type = *typeMaybe;
+        std::string sdp;
+        if (!rtc::GetStringFromJsonObject(jmessage, kSessionDescriptionSdpName,
+                                          &sdp)) {
+            STARFISH_LOG_WARN(
+                "Can't parse received session description message.\n");
+            return;
+        }
+        webrtc::SdpParseError error;
+        std::unique_ptr<webrtc::SessionDescriptionInterface>
+            sessionDescription =
+                webrtc::CreateSessionDescription(type, sdp, &error);
+        if (!sessionDescription) {
+            STARFISH_LOG_WARN(
+                "Can't parse received session description message. "
+                "SdpParseError was: %s\n",
+                error.description.data());
+            return;
+        }
+        STARFISH_LOG_INFO("Received session description : %s\n",
+                          message.data());
+        m_peerConnection->SetRemoteDescription(
+            DummySetSessionDescriptionObserver::Create(),
+            sessionDescription.release());
+        if (type == webrtc::SdpType::kOffer) {
+            m_peerConnection->CreateAnswer(
+                this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+        }
+    } else {
+        std::string sdpMid;
+        int sdpMlineindex = 0;
+        std::string sdp;
+        if (!rtc::GetStringFromJsonObject(jmessage, kCandidateSdpMidName,
+                                          &sdpMid) ||
+            !rtc::GetIntFromJsonObject(jmessage, kCandidateSdpMlineIndexName,
+                                       &sdpMlineindex) ||
+            !rtc::GetStringFromJsonObject(jmessage, kCandidateSdpName, &sdp)) {
+            STARFISH_LOG_WARN("Can't parse received message.\n");
+            return;
+        }
+        webrtc::SdpParseError error;
+        std::unique_ptr<webrtc::IceCandidateInterface> candidate(
+            webrtc::CreateIceCandidate(sdpMid, sdpMlineindex, sdp, &error));
+        if (!candidate.get()) {
+            STARFISH_LOG_WARN(
+                "Can't parse received candidate message. "
+                "SdpParseError was: %s",
+                error.description.data());
+            return;
+        }
+        if (!m_peerConnection->AddIceCandidate(candidate.get())) {
+            STARFISH_LOG_WARN("Failed to apply the received candidate\n");
+            return;
+        }
+        STARFISH_LOG_INFO("Received candidate : %s\n", message.data());
+    }
 }
 
 void TestPeerConnectionObserver::OnMessageSent(int err)
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("%s: peerId: %d\n", __func__, m_peerId);
     m_client->sendToPeer(m_peerId, "");
 }
 
@@ -129,12 +303,8 @@ void TestPeerConnectionObserver::deletePeerConnection()
 {
     PeerConnectionObserver::deletePeerConnection();
     m_peerId = -1;
-    m_loopback = false;
 }
 
-void TestPeerConnectionObserver::addTracks()
-{
-}
 #endif
 
 RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
@@ -155,10 +325,16 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
 
     // 9--11
     m_configuration = configuration;
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((RTCPeerConnection*)obj)->~RTCPeerConnection(); },
+        NULL, NULL, NULL);
 }
 
 RTCPeerConnection::~RTCPeerConnection()
 {
+    m_peerConnectionObserver->deletePeerConnection();
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -177,6 +353,7 @@ PeerConnectionObserver::PeerConnectionObserver()
 
 bool PeerConnectionObserver::initializePeerConnection()
 {
+    STARFISH_LOG_INFO("%s\n", __func__);
     STARFISH_ASSERT(!m_peerConnectionFactory);
     STARFISH_ASSERT(!m_peerConnection);
 
@@ -207,6 +384,44 @@ bool PeerConnectionObserver::initializePeerConnection()
     return m_peerConnection != nullptr;
 }
 
+void PeerConnectionObserver::addTracks()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    if (!m_peerConnection->GetSenders().empty()) {
+        return; // Already added tracks.
+    }
+
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(
+        m_peerConnectionFactory->CreateAudioTrack(
+            kAudioLabel, m_peerConnectionFactory->CreateAudioSource(
+                             cricket::AudioOptions())));
+    auto resultOrError = m_peerConnection->AddTrack(audioTrack, { kStreamId });
+    if (!resultOrError.ok()) {
+        STARFISH_LOG_ERROR("Failed to add audio track to PeerConnection: %s\n",
+                           resultOrError.error().message());
+    }
+
+    rtc::scoped_refptr<CapturerTrackSource> videoDevice =
+        CapturerTrackSource::create();
+    if (videoDevice) {
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
+            m_peerConnectionFactory->CreateVideoTrack(kVideoLabel,
+                                                      videoDevice));
+        startLocalRenderer(videoTrack);
+
+        resultOrError = m_peerConnection->AddTrack(videoTrack, { kStreamId });
+        if (!resultOrError.ok()) {
+            STARFISH_LOG_ERROR(
+                "Failed to add video track to PeerConnection: %s\n",
+                resultOrError.error().message());
+        }
+    } else {
+        STARFISH_LOG_ERROR("OpenVideoCaptureDevice failed\n");
+    }
+
+    // TODO: Display video streaming
+}
+
 bool PeerConnectionObserver::reinitializePeerConnectionForLoopback()
 {
     m_loopback = true;
@@ -226,8 +441,10 @@ bool PeerConnectionObserver::reinitializePeerConnectionForLoopback()
 void PeerConnectionObserver::deletePeerConnection()
 {
     // TODO: stop local and remote rendering
+    stopLocalRenderer();
     m_peerConnection = nullptr;
     m_peerConnectionFactory = nullptr;
+    m_loopback = false;
 }
 
 void PeerConnectionObserver::connectToPeer()
@@ -255,11 +472,68 @@ bool PeerConnectionObserver::createPeerConnection(bool dtls)
     config.enable_dtls_srtp = dtls;
     webrtc::PeerConnectionInterface::IceServer server;
 
+    server.uri = m_stun;
     config.servers.push_back(server);
 
     m_peerConnection = m_peerConnectionFactory->CreatePeerConnection(
         config, nullptr, nullptr, this);
     return m_peerConnection != nullptr;
+}
+
+void PeerConnectionObserver::startLocalRenderer(
+    webrtc::VideoTrackInterface* localVideo)
+{
+    m_localRenderer.reset(new VideoRenderer(localVideo));
+}
+
+void PeerConnectionObserver::stopLocalRenderer()
+{
+    m_localRenderer.reset(nullptr);
+}
+
+PeerConnectionObserver::VideoRenderer::VideoRenderer(
+    webrtc::VideoTrackInterface* trackToRender)
+    : m_renderedTrack(trackToRender)
+{
+    m_renderedTrack->AddOrUpdateSink(this, rtc::VideoSinkWants());
+}
+
+PeerConnectionObserver::VideoRenderer::~VideoRenderer()
+{
+    m_renderedTrack->RemoveSink(this);
+}
+
+void PeerConnectionObserver::VideoRenderer::setSize(int width, int height)
+{
+    if (m_width == width && m_height == height) {
+        return;
+    }
+
+    m_width = width;
+    m_height = height;
+    m_image.reset(new uint8_t[width * height * 4]);
+}
+
+void PeerConnectionObserver::VideoRenderer::OnFrame(
+    const webrtc::VideoFrame& videoFrame)
+{
+    // TODO: Consider having a thread after measuring the performance
+    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
+        videoFrame.video_frame_buffer()->ToI420());
+    if (videoFrame.rotation() != webrtc::kVideoRotation_0) {
+        buffer = webrtc::I420Buffer::Rotate(*buffer, videoFrame.rotation());
+    }
+    setSize(buffer->width(), buffer->height());
+
+    // Due to a bug (https://bugs.webrtc.org/6857), libyuv::I420ToRGBA()
+    // generates a red video output. In fact, I420ToABGR() generates
+    // [(r,g,b,a)].
+    libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+                       buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
+                       m_image.get(), m_width * 4, buffer->width(),
+                       buffer->height());
+
+    // TODO: Display the buffer on screen
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer

@@ -391,6 +391,7 @@ IF (${WEBRTC} STREQUAL "1")
                            # NOTE: Update the path for Tizen
                            "rtc_ssl_root=\\\"${THIRD_PARTY_ROOT}/openssl/include\\\""
                            "rtc_enable_protobuf=false"
+                           "rtc_build_json=true"
                            "use_system_libjpeg=true"
                            "use_system_freetype=true"
                            "use_system_harfbuzz=true"

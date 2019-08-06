@@ -492,7 +492,9 @@ bool PeerConnectionClient::parseServerResponse(const std::string& response,
                                                size_t contentLength,
                                                size_t* peerId, size_t* eoh)
 {
+    STARFISH_LOG_INFO("%s\n", __func__);
     int status = getResponseStatus(response.c_str());
+    STARFISH_LOG_INFO("status: %d\n", status);
     if (status != 200) {
         STARFISH_LOG_ERROR("Received error from server\n");
         close();
