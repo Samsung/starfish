@@ -62,11 +62,7 @@ protected:
 class PeerConnectionClient : public sigslot::has_slots<>,
                              public rtc::MessageHandler {
 public:
-    const std::string kAudioLabel = "audio_label";
-    const std::string kVideoLabel = "video_label";
-    const std::string kStreamId = "stream_id";
     const uint16_t m_defaultServerPort = 8888;
-    const std::string m_stun = "stun:stun.l.google.com:19302";
     const std::string m_server = "localhost";
     const std::string m_username = "user";
 
@@ -93,21 +89,16 @@ public:
     void registerObserver(PeerConnectionClientObserver* callback);
 
     void connect(const std::string& server, int port,
-                 const std::string& client_name);
+                 const std::string& clientName);
 
-    bool sendToPeer(int peer_id, const std::string& message);
-    bool sendHangUp(int peer_id);
+    bool sendToPeer(int peerId, const std::string& message);
+    bool sendHangUp(int peerId);
     bool isSendingMessage();
 
     bool signOut();
 
     // implements the MessageHandler interface
     void OnMessage(rtc::Message* msg) override;
-
-    std::string peerConnectionString()
-    {
-        return m_stun;
-    }
 
     std::string defaultServerName()
     {
@@ -131,14 +122,14 @@ private:
 
     // Quick and dirty support for parsing HTTP header values.
     bool getHeaderValue(const std::string& data, size_t eoh,
-                        const char* header_pattern, size_t* value);
+                        const char* headerPattern, size_t* value);
 
     bool getHeaderValue(const std::string& data, size_t eoh,
-                        const char* header_pattern, std::string* value);
+                        const char* headerPattern, std::string* value);
 
     // Returns true if the whole response has been read.
     bool readIntoBuffer(rtc::AsyncSocket* socket, std::string* data,
-                        size_t* content_length);
+                        size_t* contentLength);
 
     void onRead(rtc::AsyncSocket* socket);
 
@@ -150,8 +141,8 @@ private:
 
     int getResponseStatus(const std::string& response);
 
-    bool parseServerResponse(const std::string& response, size_t content_length,
-                             size_t* peer_id, size_t* eoh);
+    bool parseServerResponse(const std::string& response, size_t contentLength,
+                             size_t* peerId, size_t* eoh);
 
     void onClose(rtc::AsyncSocket* socket, int err);
 
