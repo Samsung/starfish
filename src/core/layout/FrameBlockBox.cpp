@@ -292,6 +292,22 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
 
     Length height = style()->height();
 
+    if (ctx.frameDocument()->node()->asDocument()->inQuirksMode()) {
+        if (node() && node()->isHTMLBodyElement() && height.isAuto()) {
+            parentHeight = ctx.frameDocument()
+                               ->node()
+                               ->asDocument()
+                               ->window()
+                               ->innerHeight();
+            contentHeight = parentHeight - paddingHeight() - borderHeight() -
+                            marginHeight();
+        }
+        if (!parentHasFixedHeight && height.isPercent()) {
+            parentHasFixedHeight = true;
+            parentHeight = ctx.parentFixedHeight(this, true);
+        }
+    }
+
     // This code ignores the percent for the grid itme.
     // Because the grid item don't need parent's height
     // to compute the height of the grid item.

@@ -301,6 +301,14 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         parentHeightLength = Length(Length::Auto);
     }
 
+    if (!isFrameSVGBox() && !isFrameSVGSVGBox() &&
+        ctx.frameDocument()->node()->asDocument()->inQuirksMode() &&
+        !parentHasFixedHeight && height.isPercent()) {
+        parentHasFixedHeight = true;
+        parentContentHeight = ctx.parentFixedHeight(this, true);
+        parentHeightLength = Length(Length::Fixed, parentContentHeight);
+    }
+
     computeIntrinsicSize(ctx, intrinsicWidth, intrinsicHeight, hasAspectRatio,
                          parentContentWidth, parentHeightLength);
 
