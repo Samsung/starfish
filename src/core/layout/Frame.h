@@ -376,7 +376,8 @@ public:
     void reCacheFloatingBoxesByXDiff(size_t from, LayoutUnit xDiff);
     static LayoutUnit parentContentWidth(Frame* currentFrame);
     static bool parentHasFixedHeight(Frame* currentFrame);
-    static LayoutUnit parentFixedHeight(Frame* currentFrame);
+    static LayoutUnit parentFixedHeight(Frame* currentFrame,
+                                        bool isQuirksMode = false);
     LayoutUnit specifiedVerticalValue(Frame* f, Length l);
 
     void pushInlineBlockBox(FrameBlockBox* blockBox)

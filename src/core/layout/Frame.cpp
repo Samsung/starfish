@@ -510,7 +510,8 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
     return false;
 }
 
-LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
+LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame,
+                                            bool isQuirksMode)
 {
     if (currentFrame->isAbsolutePositioned()) {
         FrameBox* cb = containingBlock(currentFrame);
@@ -558,8 +559,14 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
             }
         }
 
-        STARFISH_ASSERT(height.isPercent() || height.isCalc());
-        reverse.emplace_back(container, height);
+        if (isQuirksMode) {
+            if (!height.isAuto()) {
+                reverse.emplace_back(container, height);
+            }
+        } else {
+            STARFISH_ASSERT(height.isPercent() || height.isCalc());
+            reverse.emplace_back(container, height);
+        }
         container = blockContainer(container);
     }
     Length height = reverse.back().second;
