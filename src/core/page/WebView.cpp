@@ -1285,8 +1285,7 @@ RenderResult WebView::rendering(bool force)
                 auto iter = prevDrawnStackingContextInfo.begin();
                 while (iter != prevDrawnStackingContextInfo.end()) {
                     if (iter->second.graphicsBufferHolder) {
-                        iter->second.graphicsBufferHolder
-                            ->detachNativeBuffers();
+                        iter->second.graphicsBufferHolder->flushSurfaces();
                         iter->second.graphicsBufferHolder = nullptr;
                     }
                     iter++;
@@ -1307,7 +1306,7 @@ RenderResult WebView::rendering(bool force)
                                  ->needsGraphicsBuffer()) {
                             if (iter->second.graphicsBufferHolder) {
                                 iter->second.graphicsBufferHolder
-                                    ->detachNativeBuffers();
+                                    ->flushSurfaces();
                                 iter->second.graphicsBufferHolder = nullptr;
                             }
                         }
@@ -1368,7 +1367,7 @@ RenderResult WebView::rendering(bool force)
             auto iter = prevDrawnStackingContextInfo.begin();
             while (iter != prevDrawnStackingContextInfo.end()) {
                 if (iter->second.graphicsBufferHolder) {
-                    iter->second.graphicsBufferHolder->detachNativeBuffers();
+                    iter->second.graphicsBufferHolder->flushSurfaces();
                     iter->second.graphicsBufferHolder = nullptr;
                 }
                 iter++;

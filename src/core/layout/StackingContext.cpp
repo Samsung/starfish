@@ -228,6 +228,11 @@ void GraphicsBufferHolder::detachNativeBuffers()
         m_surfaces[i] = nullptr;
     }
     m_surfaces.clear();
+
+    m_tileDataWidth = 0;
+    m_tileDataHeight = 0;
+    m_horizontalTileCount = 0;
+    m_verticalTileCount = 0;
     m_bufferWidth = 0;
     m_bufferHeight = 0;
 }
@@ -2186,7 +2191,7 @@ bool StackingContext::fillGraphicsBufferContents(
                 } else {
                     if (iter->second.graphicsBufferHolder) {
                         iter->second.graphicsBufferHolder
-                            ->detachNativeBuffers();
+                            ->flushSurfaces();
                         iter->second.graphicsBufferHolder = nullptr;
                     }
                 }
