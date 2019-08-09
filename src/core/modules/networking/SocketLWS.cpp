@@ -63,6 +63,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         break;
 
     case LWS_CALLBACK_CLIENT_RECEIVE:
+
         socket->addToRxBuffer((char*)in, len);
         if (lws_is_final_fragment(wsi)) {
             socket->publishEvent(SocketLWS::LwsEvent::ONMESSAGE,
@@ -96,6 +97,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
                           data->size(), LWS_WRITE_BINARY);
             }
             iter = buffer->erase(iter);
+
             delete data;
         }
         if (!buffer->empty()) {
@@ -108,6 +110,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
         socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
         socket->shutdown(0);
+        break;
 
     default:
         break;
@@ -120,6 +123,9 @@ static struct lws_protocols protocols[] = {
     { NULL, LWSSimpleCB, 0, 0, 0, NULL, 0 },
     { NULL, NULL, 0, 0, 0, NULL, 0 } /* terminator */
 };
+
+static const char* SocketLWSDefaultCertPath =
+    "/etc/ssl/certs/ca-certificates.crt";
 
 const char* SocketLWS::Exception::what() const throw()
 {
@@ -146,26 +152,11 @@ SocketLWS::SocketLWS(WebSocket* socket)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((SocketLWS*)obj)->~SocketLWS(); },
         NULL, NULL, NULL);
-    m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
-    m_lwsContextCreationInfo.protocols = protocols;
-    m_lwsContextCreationInfo.gid = -1;
-    m_lwsContextCreationInfo.uid = -1;
-    m_lwsContext = lws_create_context(&m_lwsContextCreationInfo);
-
-    WebBase* webBase = parent()->executionContext()->webBase();
-    m_thread = new AdaptedThread(webBase->threadPool());
-    m_runnable = new LWSRunnable(webBase->messageLoop(), this);
-    m_thread->start(m_runnable);
-
+    int useSSL = 0;
+    const char* prot;
     m_url = parent()->url()->toUTF8NonGCString();
     m_protocol = parent()->protocol()->toUTF8NonGCString();
-    // TODO
-    protocols[0].name = m_protocol.data();
-
-    int use_ssl = 0;
-    const char* prot;
-    char* param;
-    param = (char*)m_url.c_str();
+    char* param = (char*)m_url.c_str();
     if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
                       &m_lwsClientConnectInfo.port,
                       &m_lwsClientConnectInfo.path)) {
@@ -173,14 +164,45 @@ SocketLWS::SocketLWS(WebSocket* socket)
         return;
     }
 
-    if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
-        use_ssl = LCCSCF_USE_SSL;
+    // add back the leading / on path
+    if (m_lwsClientConnectInfo.path[0] != '/') {
+        m_urlPath = UTF8StringDataNonGCStd(m_lwsClientConnectInfo.path);
+        m_urlPath.insert(0, "/");
+        m_lwsClientConnectInfo.path = m_urlPath.c_str();
     }
+
+    if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
+        useSSL = LCCSCF_USE_SSL;
+    }
+
+    m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
+    m_lwsContextCreationInfo.protocols = protocols;
+    m_lwsContextCreationInfo.gid = -1;
+    m_lwsContextCreationInfo.uid = -1;
+    m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+
+    if (useSSL) {
+        m_lwsContextCreationInfo.client_ssl_ca_filepath =
+            SocketLWSDefaultCertPath;
+    }
+
+    m_lwsContext = lws_create_context(&m_lwsContextCreationInfo);
+
+    WebBase* webBase = parent()->executionContext()->webBase();
+    m_thread = new AdaptedThread(webBase->threadPool());
+    m_runnable = new LWSRunnable(webBase->messageLoop(), this);
+    m_thread->start(m_runnable);
+
+    // TODO
+    protocols[0].name = m_protocol.data();
+
     m_lwsClientConnectInfo.context = m_lwsContext;
     m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
-    m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
+
+    // TODO Should handle origin property
+    // m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
     m_lwsClientConnectInfo.protocol = protocols[0].name;
-    m_lwsClientConnectInfo.ssl_connection = use_ssl;
+    m_lwsClientConnectInfo.ssl_connection = useSSL;
     m_lwsClientConnectInfo.userdata = this;
     m_lwsClient = lws_client_connect_via_info(&m_lwsClientConnectInfo);
 }
