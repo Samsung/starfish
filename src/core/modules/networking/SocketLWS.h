@@ -123,6 +123,7 @@ private:
     LWSRunnable* m_runnable;
     WebSocket* m_parent;
     UTF8StringDataNonGCStd m_url;
+    UTF8StringDataNonGCStd m_urlPath;
     UTF8StringDataNonGCStd m_protocol;
 
     lws_context_creation_info m_lwsContextCreationInfo;
