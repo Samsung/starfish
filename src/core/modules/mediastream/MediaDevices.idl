@@ -20,6 +20,11 @@
 // https://w3c.github.io/mediacapture-main/#dom-mediadevices
 
 [ STARFISH_ENABLE_WEBRTC ]
+partial interface Navigator {
+  [STARFISH_ENABLE_WEBRTC, SameObject, SecureContext] readonly attribute MediaDevices mediaDevices;
+};
+
+[ STARFISH_ENABLE_WEBRTC ]
 dictionary MediaStreamConstraints {
   // FIXME: unsupported syntax yet
   // (boolean or MediaTrackConstraints) video = false;

@@ -29,12 +29,12 @@
 #include "core/modules/mediastream/RTCSessionDescription.h"
 #include "core/modules/mediastream/PeerConnectionClient.h"
 
-#include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
 class ExecutionContext;
 class OperationQueue;
+class RTCRtpSender;
 
 enum class RTCSignalingState {
     Stable,
@@ -113,7 +113,8 @@ public:
         rtc::scoped_refptr<webrtc::VideoTrackInterface> m_renderedTrack;
     };
 
-    PeerConnectionObserver();
+    PeerConnectionObserver(
+        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory);
     virtual ~PeerConnectionObserver(){};
 
     // PeerConnectionObserver implementation.
@@ -141,6 +142,7 @@ public:
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
     void OnFailure(webrtc::RTCError error) override{};
 
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection();
     virtual void connectToPeer();
     virtual void deletePeerConnection();
 
@@ -175,7 +177,8 @@ public:
     const std::string kSessionDescriptionTypeName = "type";
     const std::string kSessionDescriptionSdpName = "sdp";
 
-    TestPeerConnectionObserver();
+    TestPeerConnectionObserver(
+        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory);
     virtual ~TestPeerConnectionObserver(){};
 
     void OnSignedIn() override;
@@ -238,6 +241,10 @@ public:
 
     void close();
 
+    GCVector<RTCRtpSender*> getSenders();
+    RTCRtpSender* addTrack(MediaStreamTrack* track,
+                           GCVector<MediaStream*>& streams);
+
 private:
     ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
                                                     String* sdp);
@@ -266,14 +273,13 @@ private:
     String* m_lastCreatedAnswer{ String::emptyString };
 
 #if defined(STARFISH_ENABLE_TEST)
-    rtc::scoped_refptr<TestPeerConnectionObserver> m_peerConnectionObserver =
-        rtc::scoped_refptr<TestPeerConnectionObserver>(
-            new rtc::RefCountedObject<TestPeerConnectionObserver>());
+    rtc::scoped_refptr<TestPeerConnectionObserver> m_peerConnectionObserver;
 #else
-    rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver =
-        rtc::scoped_refptr<PeerConnectionObserver>(
-            new rtc::RefCountedObject<PeerConnectionObserver>());
+    rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
 #endif
+
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
+    bool isClosed();
 };
 }
 

@@ -116,16 +116,21 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             if (constraints.video()) {
                 VideoStreamTrack* videoTrack =
                     new VideoStreamTrack(md->executionContext());
-                if (!videoTrack->videoDevices()) {
+                if (!videoTrack->backend()) {
                     auto exception = new DOMException(
                         md->executionContext(), DOMException::NOT_FOUND_ERR,
                         "NotFoundErr: video is not supported");
                     promise->reject(exception->scriptValue());
                     return;
                 }
+
                 // 6.3.2-6.10: TODO: Support constraints and permissions
                 // 7
-                promise->fulfill(videoTrack->scriptValue());
+                STARFISH_LOG_INFO("%s: video successful\n", __func__);
+                MediaStream* mediaStream =
+                    new MediaStream(md->executionContext());
+                mediaStream->addTrack(videoTrack);
+                promise->fulfill(mediaStream->scriptValue());
                 return;
             }
 
@@ -138,6 +143,6 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 
     return promise;
 }
-}
+} // namespace Starfish
 
 #endif

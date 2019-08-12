@@ -30,7 +30,8 @@
 #include "core/modules/battery/Battery.h"
 #endif
 
-#ifdef STARFISH_ENABLE_WEBRTC
+#if defined(STARFISH_ENABLE_WEBRTC)
+#include "core/modules/mediastream/WebRtcManager.h"
 #include "core/modules/mediastream/MediaStream.h"
 #endif
 
@@ -69,6 +70,13 @@ ServiceWorkerContainer* Navigator::serviceWorker()
 }
 #endif
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+WebRtcManager* Navigator::webRtcManager()
+{
+    return WebRtcManager::instance();
+}
+#endif
+
 #ifdef STARFISH_ENABLE_BATTERY_STATUS
 Promise* Navigator::getBattery()
 {
@@ -104,6 +112,10 @@ void Navigator::dispose()
     if (m_serviceWorker) {
         m_serviceWorker->dispose();
     }
+#endif
+
+#if defined(STARFISH_ENABLE_WEBRTC)
+    WebRtcManager::destory();
 #endif
 }
 

@@ -24,6 +24,10 @@
 #include "core/page/NavigatorMixin.h"
 #include "core/modules/battery/Battery.h"
 
+#ifdef STARFISH_ENABLE_WEBRTC
+#include "core/modules/mediastream/MediaDevices.h"
+#endif
+
 namespace Starfish {
 
 class Starfish;
@@ -33,7 +37,7 @@ class ServiceWorkerContainer;
 #endif
 
 #ifdef STARFISH_ENABLE_WEBRTC
-class MediaDevices;
+class WebRtcManager;
 #endif
 
 class Navigator : public ScriptWrappable,
@@ -74,6 +78,7 @@ protected:
 
 #ifdef STARFISH_ENABLE_WEBRTC
 public:
+    WebRtcManager* webRtcManager();
     MediaDevices* mediaDevices();
 
 protected:
