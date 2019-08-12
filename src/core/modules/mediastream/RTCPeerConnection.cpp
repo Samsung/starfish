@@ -28,30 +28,29 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/Document.h"
+#include "core/page/Window.h"
+#include "core/page/Navigator.h"
+#include "core/modules/mediastream/WebRtcManager.h"
 #include "core/modules/mediastream/RTCCertificate.h"
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
 #include "core/modules/mediastream/OperationQueue.h"
+#include "core/modules/mediastream/MediaStream.h"
+#include "core/modules/mediastream/RTCRtpSender.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
-#include "core/modules/mediastream/MediaStream.h"
 
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "api/create_peerconnection_factory.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/rtp_transceiver_interface.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_source_interface.h"
-
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-
 #include "third_party/libyuv/include/libyuv/convert_from.h"
 
 namespace Starfish {
@@ -77,15 +76,11 @@ public:
 
 rtc::Thread* TestPeerConnectionObserver::m_socketThread = nullptr;
 
-TestPeerConnectionObserver::TestPeerConnectionObserver()
+TestPeerConnectionObserver::TestPeerConnectionObserver(
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory)
+    : PeerConnectionObserver(pcFactory)
 {
     m_client->registerObserver(this);
-    pthread_t thread;
-    if (TestPeerConnectionObserver::socketThread() == nullptr) {
-        pthread_create(&thread, NULL,
-                       TestPeerConnectionObserver::runSocketServer,
-                       (void*)(&TestPeerConnectionObserver::m_socketThread));
-    }
 }
 
 void* TestPeerConnectionObserver::runSocketServer(void* arg)
@@ -280,6 +275,34 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
     // 9--11
     m_configuration = configuration;
 
+#if defined(STARFISH_ENABLE_TEST)
+    m_peerConnectionObserver = rtc::scoped_refptr<TestPeerConnectionObserver>(
+        new rtc::RefCountedObject<TestPeerConnectionObserver>(
+            this->executionContext()
+                ->document()
+                ->window()
+                ->navigator()
+                ->webRtcManager()
+                ->peerConnectionFactory()));
+#else
+    m_peerConnectionObserver = rtc::scoped_refptr<PeerConnectionObserver>(
+        new rtc::RefCountedObject<PeerConnectionObserver>(
+            this->executionContext()
+                ->document()
+                ->window()
+                ->navigator()
+                ->webRtcManager()
+                ->peerConnectionFactory()));
+#endif
+
+    STARFISH_ASSERT(m_peerConnectionObserver->peerConnection());
+    this->executionContext()
+        ->document()
+        ->window()
+        ->navigator()
+        ->webRtcManager()
+        ->setPeerConnection(m_peerConnectionObserver->peerConnection());
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
                  void* cd) { ((RTCPeerConnection*)obj)->~RTCPeerConnection(); },
@@ -301,26 +324,16 @@ ExecutionContext* RTCPeerConnection::executionContext() const
     return m_executionContext;
 }
 
-PeerConnectionObserver::PeerConnectionObserver()
+PeerConnectionObserver::PeerConnectionObserver(
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory)
+    : m_peerConnectionFactory(pcFactory)
 {
+    initializePeerConnection();
 }
 
 bool PeerConnectionObserver::initializePeerConnection()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-    STARFISH_ASSERT(!m_peerConnectionFactory);
-    STARFISH_ASSERT(!m_peerConnection);
-
-    m_peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
-        nullptr /* network_thread */, nullptr /* worker_thread */,
-        nullptr /* signaling_thread */, nullptr /* default_adm */,
-        webrtc::CreateBuiltinAudioEncoderFactory(),
-        webrtc::CreateBuiltinAudioDecoderFactory(),
-        webrtc::CreateBuiltinVideoEncoderFactory(),
-        webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
-        nullptr /* audio_processing */);
-
-    STARFISH_ASSERT(m_peerConnectionFactory);
 
     if (!m_peerConnectionFactory) {
         STARFISH_LOG_ERROR("Failed to initialize PeerConnectionFactory\n");
@@ -328,12 +341,12 @@ bool PeerConnectionObserver::initializePeerConnection()
         return false;
     }
 
+    STARFISH_ASSERT(!m_peerConnection);
+
     if (!createPeerConnection(/*dtls=*/true)) {
         STARFISH_LOG_ERROR("CreatePeerConnection failed\n");
         deletePeerConnection();
     }
-
-    addTracks();
 
     return m_peerConnection != nullptr;
 }
@@ -399,6 +412,12 @@ void PeerConnectionObserver::deletePeerConnection()
     m_peerConnection = nullptr;
     m_peerConnectionFactory = nullptr;
     m_loopback = false;
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionInterface>
+PeerConnectionObserver::peerConnection()
+{
+    return m_peerConnection;
 }
 
 void PeerConnectionObserver::connectToPeer()
@@ -822,6 +841,76 @@ void RTCPeerConnection::close()
     m_signalingState = RTCSignalingState::Closed;
     m_iceConnectionState = RTCIceConnectionState::Closed;
     m_connectionState = RTCPeerConnectionState::Closed;
+}
+
+GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
+{
+    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
+        backend()->GetSenders();
+    GCVector<RTCRtpSender*> results;
+    for (auto& sender : senders) {
+        results.push_back(new RTCRtpSender(executionContext(), sender));
+    }
+    return results;
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtrack
+RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
+                                          GCVector<MediaStream*>& streams)
+{
+    if (isClosed()) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    for (auto& transceiver : backend()->GetTransceivers()) {
+        std::string id = "";
+        if (track->isVideoStreamTrack()) {
+            id = track->asVideoStreamTrack()->backend()->id();
+        }
+
+        if (!transceiver->stopped() &&
+            transceiver->sender()->track()->id() == id) {
+            throw new DOMException(executionContext(),
+                                   DOMException::INVALID_ACCESS_ERR,
+                                   "InvalidAccessErr");
+        }
+    }
+
+    std::vector<std::string> streamIds;
+    for (auto stream : streams) {
+        streamIds.push_back(stream->backend()->id());
+    }
+
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>> r;
+    if (track->isVideoStreamTrack()) {
+        r = backend()->AddTrack(track->asVideoStreamTrack()->backend(),
+                                std::move(streamIds));
+    }
+    if (r.ok()) {
+        RTCRtpSender* rtpSender =
+            new RTCRtpSender(executionContext(), r.value());
+        return rtpSender;
+    } else {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_ACCESS_ERR,
+                               "InvalidAccessErr");
+    }
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()
+{
+    return m_peerConnectionObserver->peerConnection();
+}
+
+bool RTCPeerConnection::isClosed()
+{
+    if (backend()->peer_connection_state() ==
+        webrtc::PeerConnectionInterface::PeerConnectionState::kClosed) {
+        return true;
+    }
+    return false;
 }
 }
 

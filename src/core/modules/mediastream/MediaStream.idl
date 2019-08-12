@@ -23,7 +23,7 @@
   Exposed=Window,
   ConstructorCallWith=ExecutionContext ]
 interface MediaStreamTrack : EventTarget {
-  //readonly attribute DOMString kind;
+  [Rename=kindString] readonly attribute DOMString kind;
   //readonly attribute DOMString id;
   //readonly attribute DOMString label;
   //attribute boolean enabled;
@@ -49,10 +49,10 @@ interface MediaStreamTrack : EventTarget {
 interface MediaStream : EventTarget {
   //readonly attribute DOMString id;
   //sequence<MediaStreamTrack> getAudioTracks();
-  //sequence<MediaStreamTrack> getVideoTracks();
-  //sequence<MediaStreamTrack> getTracks();
+  sequence<MediaStreamTrack> getVideoTracks();
+  sequence<MediaStreamTrack> getTracks();
   //MediaStreamTrack? getTrackById(DOMString trackId);
-  //void addTrack(MediaStreamTrack track);
+  void addTrack(MediaStreamTrack track);
   //void removeTrack(MediaStreamTrack track);
   //MediaStream clone();
   //readonly attribute boolean active;

@@ -25,22 +25,44 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+#include "api/peer_connection_interface.h"
 #include "pc/video_track_source.h"
 #include "platform/webrtc/VideoCapturer.h"
 
 namespace Starfish {
 class ExecutionContext;
+class VideoStreamTrack;
 
 class MediaStreamTrack : public EventTarget {
 public:
+    const std::string m_audioLabel = "audioLabel";
+    const std::string m_videoLabel = "videoLabel";
+
+    enum class Kind { Audio, Video, None };
+
     MediaStreamTrack(ExecutionContext* executionContext);
     virtual ~MediaStreamTrack();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStreamTrack)
     virtual ExecutionContext* executionContext() const override;
 
+    virtual Kind kind()
+    {
+        return m_kind;
+    }
+
+    virtual String* kindString();
+
+    virtual bool isVideoStreamTrack()
+    {
+        return false;
+    }
+
+    VideoStreamTrack* asVideoStreamTrack();
+
 protected:
     ExecutionContext* m_executionContext{ nullptr };
+    Kind m_kind{ Kind::None };
 };
 
 class VideoStreamTrack : public MediaStreamTrack {
@@ -63,20 +85,28 @@ public:
     };
 
     VideoStreamTrack(ExecutionContext* executionContext);
+    VideoStreamTrack(ExecutionContext* executionContext,
+                     rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
     virtual ~VideoStreamTrack();
-    virtual ExecutionContext* executionContext() const override;
 
-    CapturerTrackSource* videoDevices()
+    virtual bool isVideoStreamTrack()
     {
-        return m_videoDevices.get();
+        return true;
+    }
+
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> backend()
+    {
+        return m_backend;
     }
 
 private:
-    rtc::scoped_refptr<CapturerTrackSource> m_videoDevices;
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> m_backend;
 };
 
 class MediaStream : public EventTarget {
 public:
+    const std::string m_streamId = "streamId";
+
     MediaStream(ExecutionContext* executionContext);
     MediaStream(ExecutionContext* executionContext, MediaStream& mediaStream);
     MediaStream(ExecutionContext* executionContext,
@@ -86,8 +116,18 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStream)
     virtual ExecutionContext* executionContext() const override;
 
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend()
+    {
+        return m_backend;
+    }
+
+    GCVector<MediaStreamTrack*> getVideoTracks();
+    GCVector<MediaStreamTrack*> getTracks();
+    void addTrack(MediaStreamTrack* track);
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
 };
 } // namespace Starfish
 

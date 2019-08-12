@@ -133,12 +133,13 @@ partial interface RTCPeerConnection {
   [Unimplemented] static Promise<RTCCertificate> generateCertificate (AlgorithmIdentifier keygenAlgorithm);
 };
 
-//partial interface RTCPeerConnection {
-//  [Unimplemented] sequence<RTCRtpSender> getSenders ();
+[STARFISH_ENABLE_WEBRTC]
+partial interface RTCPeerConnection {
+  sequence<RTCRtpSender> getSenders ();
 //  [Unimplemented] sequence<RTCRtpReceiver> getReceivers ();
 //  [Unimplemented] sequence<RTCRtpTransceiver> getTransceivers ();
-//  [Unimplemented] RTCRtpSender addTrack (MediaStreamTrack track, MediaStream... streams);
+  RTCRtpSender addTrack (MediaStreamTrack track, MediaStream... streams);
 //  [Unimplemented] void removeTrack (RTCRtpSender sender);
 //  [Unimplemented] RTCRtpTransceiver addTransceiver ((MediaStreamTrack or DOMString) trackOrKind, optional RTCRtpTransceiverInit init);
 //  [Unimplemented] attribute EventHandler ontrack;
-//};
+};
