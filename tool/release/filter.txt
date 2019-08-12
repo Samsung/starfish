@@ -16,6 +16,9 @@ P /.circleci
 - /third_party/escargot/third_party/GCutil/windows
 - /third_party/escargot/test
 - /third_party/webrtc/src/resources
++ /third_party/webrtc/src/test
++ /third_party/webrtc/src/api/test
++ /third_party/webrtc/src/modules/remote_bitrate_estimator/test
 
 - .git
 - .gitignore
@@ -26,6 +29,7 @@ P /.circleci
 - *.list
 - .clang-format
 - .circleci
+- test
 
 - *debug*.manifest
 - *.tar.gz
