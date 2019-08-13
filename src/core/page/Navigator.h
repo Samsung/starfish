@@ -32,7 +32,13 @@ class Geolocation;
 class ServiceWorkerContainer;
 #endif
 
-class Navigator : public ScriptWrappable, public NavigatorMixin {
+#ifdef STARFISH_ENABLE_WEBRTC
+class MediaDevices;
+#endif
+
+class Navigator : public ScriptWrappable,
+                  public DocumentHoldable,
+                  public NavigatorMixin {
 public:
     Navigator(Document* document);
 
@@ -64,6 +70,14 @@ public:
 
 protected:
     ServiceWorkerContainer* m_serviceWorker;
+#endif
+
+#ifdef STARFISH_ENABLE_WEBRTC
+public:
+    MediaDevices* mediaDevices();
+
+protected:
+    MediaDevices* m_mediaDevices{ nullptr };
 #endif
 
 #ifdef STARFISH_ENABLE_BATTERY_STATUS

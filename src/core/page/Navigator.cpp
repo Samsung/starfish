@@ -30,10 +30,15 @@
 #include "core/modules/battery/Battery.h"
 #endif
 
+#ifdef STARFISH_ENABLE_WEBRTC
+#include "core/modules/mediastream/MediaStream.h"
+#endif
+
 namespace Starfish {
 
 Navigator::Navigator(Document* document)
     : ScriptWrappable(this)
+    , DocumentHoldable(document)
     , NavigatorMixin(document->executionContext())
     , m_geolocation(nullptr)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
