@@ -807,6 +807,11 @@ public:
         return m_flags.m_heightComputed;
     }
 
+    virtual void willLayout() override
+    {
+        m_lineBoxes.clear();
+    }
+
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void quickLayout(LayoutContext& ctx) override;

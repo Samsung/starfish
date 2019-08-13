@@ -1729,6 +1729,9 @@ public:
         }
     }
 
+    virtual void willLayout()
+    {
+    }
     void markNeedsLayout();
     void clearNeedsLayout()
     {

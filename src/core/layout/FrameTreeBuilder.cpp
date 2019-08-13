@@ -984,6 +984,9 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
         currentFrame = createFrame(current, ctx, force);
         if (!currentFrame) {
+            if (current->parentElement() && current->parentElement()->frame()) {
+                current->parentElement()->frame()->markNeedsLayout();
+            }
             return nullptr;
         }
 
