@@ -2190,8 +2190,7 @@ bool StackingContext::fillGraphicsBufferContents(
                     iter->second.graphicsBufferHolder = nullptr;
                 } else {
                     if (iter->second.graphicsBufferHolder) {
-                        iter->second.graphicsBufferHolder
-                            ->flushSurfaces();
+                        iter->second.graphicsBufferHolder->flushSurfaces();
                         iter->second.graphicsBufferHolder = nullptr;
                     }
                 }

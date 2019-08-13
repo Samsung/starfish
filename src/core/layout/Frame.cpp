@@ -1586,6 +1586,7 @@ void Frame::markFlexItem()
             style()->isSpecifiedZIndex();
         m_flags.m_needToEstablishBlockFormattingContext = true;
         m_flags.m_needsLayout = true;
+        willLayout();
     }
 }
 
@@ -1598,6 +1599,7 @@ void Frame::markGridItem()
     if (GridFormattingContext::doesParticipateInGridFormattingContext(this)) {
         m_flags.m_isGridItem = true;
         m_flags.m_needsLayout = true;
+        willLayout();
     }
 }
 
@@ -1995,6 +1997,7 @@ BorderRadiusData Frame::frameBorderRadius()
 void Frame::markNeedsLayout()
 {
     m_flags.m_needsLayout = true;
+    willLayout();
     if (isFlexItem()) {
         Frame* p = layoutParent();
         while (p) {
