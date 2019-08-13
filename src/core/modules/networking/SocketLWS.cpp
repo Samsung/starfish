@@ -180,6 +180,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsContextCreationInfo.gid = -1;
     m_lwsContextCreationInfo.uid = -1;
     m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    // DO not use Proxy
+    m_lwsContextCreationInfo.http_proxy_address = "";
+    m_lwsContextCreationInfo.socks_proxy_address = "";
 
     if (useSSL) {
         m_lwsContextCreationInfo.client_ssl_ca_filepath =

@@ -192,6 +192,8 @@ def wpt_others():
 def wpt_canvas():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/2dcontext.res", "cairo"])
 
+def wpt_websocket():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/websocket.res", "cairo"])
 
 def wpt_pwa():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fetch_basic.res", "cairo"])
@@ -205,7 +207,7 @@ def wpt_all():
     wpt_webrtc()
     wpt_canvas()
     wpt_others()
-
+    wpt_websocket()
 
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])
