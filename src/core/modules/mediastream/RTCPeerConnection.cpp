@@ -35,6 +35,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
+#include "core/modules/mediastream/MediaStream.h"
 
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
@@ -50,57 +51,10 @@
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_factory.h"
-#include "pc/video_track_source.h"
-#include "platform/webrtc/VideoCapturer.h"
 
 #include "third_party/libyuv/include/libyuv/convert_from.h"
 
 namespace Starfish {
-
-class CapturerTrackSource : public webrtc::VideoTrackSource {
-public:
-    // TODO: get values from user JS script
-    static const size_t kWidth = 640;
-    static const size_t kHeight = 480;
-    static const size_t kFps = 30;
-
-    static rtc::scoped_refptr<CapturerTrackSource> create()
-    {
-        std::unique_ptr<VideoCapturer> capturer;
-        std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-            webrtc::VideoCaptureFactory::CreateDeviceInfo());
-        if (!info) {
-            return nullptr;
-        }
-        int numDevices = info->NumberOfDevices();
-        for (int i = 0; i < numDevices; ++i) {
-            capturer = absl::WrapUnique(
-                VideoCapturer::create(kWidth, kHeight, kFps, i));
-            if (capturer) {
-                return new rtc::RefCountedObject<CapturerTrackSource>(
-                    std::move(capturer));
-            }
-        }
-
-        return nullptr;
-    }
-
-protected:
-    explicit CapturerTrackSource(std::unique_ptr<VideoCapturer> capturer)
-        : VideoTrackSource(/*remote=*/false)
-        , m_capturer(std::move(capturer))
-    {
-    }
-
-private:
-    rtc::VideoSourceInterface<webrtc::VideoFrame>* source() override
-    {
-        return m_capturer.get();
-    }
-    std::unique_ptr<VideoCapturer> m_capturer;
-};
 
 #if defined(STARFISH_ENABLE_TEST)
 class DummySetSessionDescriptionObserver
@@ -401,8 +355,8 @@ void PeerConnectionObserver::addTracks()
                            resultOrError.error().message());
     }
 
-    rtc::scoped_refptr<CapturerTrackSource> videoDevice =
-        CapturerTrackSource::create();
+    rtc::scoped_refptr<VideoStreamTrack::CapturerTrackSource> videoDevice =
+        VideoStreamTrack::CapturerTrackSource::create();
     if (videoDevice) {
         rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
             m_peerConnectionFactory->CreateVideoTrack(kVideoLabel,

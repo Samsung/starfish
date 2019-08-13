@@ -576,6 +576,8 @@ public:
     {
         return m_webFontResolveVersionForCanvas;
     }
+
+    bool isFullyActive();
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers

@@ -2193,6 +2193,26 @@ ContentSecurityPolicy* Document::contentSecurityPolicy()
     return executionContext()->contentSecurityPolicy();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#fully-active
+bool Document::isFullyActive()
+{
+    BrowsingContext* bContext = browsingContext();
+    if (bContext->isTopLevelBrowsingContext()) {
+        if (bContext && (bContext->document() == this)) {
+            return true;
+        }
+    } else {
+        BrowsingContext* pBContext = bContext->parentBrowsingContext();
+        if (pBContext) {
+            if (pBContext->document()) {
+                return pBContext->document()->isFullyActive();
+            }
+        }
+    }
+
+    return false;
+}
+
 DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, click);
