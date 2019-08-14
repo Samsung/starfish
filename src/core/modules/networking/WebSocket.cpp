@@ -124,7 +124,7 @@ void WebSocket::init(String* url, String* protocol)
 
 String* WebSocket::url()
 {
-    return m_url->urlStringWithoutSearchPart();
+    return m_url->serialize();
 }
 
 uint64_t WebSocket::bufferedAmount()
