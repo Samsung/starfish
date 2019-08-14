@@ -5,13 +5,13 @@ http://web-platform.test:8000/websockets/binary/002.html
 http://web-platform.test:8000/websockets/binary/004.html
 http://web-platform.test:8000/websockets/binary/005.html
 #
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/url/001.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/url/001.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/url/002.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/url/003.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/url/004.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/url/005.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/url/006.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/url/resolve.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/url/resolve.html
 #
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/001.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/002.html

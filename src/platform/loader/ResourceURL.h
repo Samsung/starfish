@@ -169,6 +169,8 @@ public:
     // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
     String* urlStringWithoutSearchPart() const;
     String* getUrlPathString() const;
+    // https://url.spec.whatwg.org/#concept-url-serializer
+    String* serialize(bool excludeFragment = false);
 
     bool operator==(const ResourceURL& other) const
     {

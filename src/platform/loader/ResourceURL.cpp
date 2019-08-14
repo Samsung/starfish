@@ -800,6 +800,50 @@ String* ResourceURL::baseURI() const
     }
 }
 
+String* ResourceURL::serialize(bool excludeFragment)
+{
+    StringBuilder builder;
+    // Let output be url’s scheme and U+003A (:) concatenated.
+    String* protocolStr = protocol();
+    builder.appendString(protocolStr);
+    String* hostStr = host();
+    if (!hostStr->isEmpty()) {
+        // If url’s host is non-null:
+        builder.appendString("//");
+        // TODO: If url includes credentials, then:
+        // Append url’s host, serialized, to output. If url’s port is non-null,
+        // append U+003A (:) followed by url’s port, serialized, to output.
+        builder.appendString(host());
+    } else {
+        // Otherwise, if url’s host is null and url’s scheme is "file", append
+        // "//" to output.
+        if (protocolStr->equals("file:")) {
+            builder.appendString("//");
+        }
+    }
+    // TODO : If url’s cannot-be-a-base-URL flag is set, append url’s path[0] to
+    // output.
+    // Otherwise, then for each string in url’s path, append U+002F (/) followed
+    // by the string to output.
+    String* pathStr = pathname();
+    builder.appendString(pathStr);
+    // If url’s query is non-null, append U+003F (?), followed by url’s query,
+    // to output.
+    String* searchStr = search();
+    if (!searchStr->isEmpty()) {
+        builder.appendString(searchStr);
+    }
+    // If the exclude fragment flag is unset and url’s fragment is non-null,
+    // append U+0023 (#), followed by url’s fragment, to output.
+    if (!excludeFragment) {
+        String* fragmentStr = hash();
+        if (!fragmentStr->isEmpty()) {
+            builder.appendString(fragmentStr);
+        }
+    }
+    return builder.finalize();
+}
+
 String* ResourceURL::urlStringWithoutSearchPart() const
 {
     size_t idx = m_urlString->lastIndexOf('?');
