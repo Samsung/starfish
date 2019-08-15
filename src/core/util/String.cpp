@@ -174,7 +174,9 @@ size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 size_t utf32ToUtf8(char32_t uc, char* UTF8)
 {
     size_t tRequiredSize = 0;
-
+    if (uc >= 0xd800u && uc <= 0xdfffu) {
+        return utf32ToUtf8(0xFFFD, UTF8);
+    }
     if (uc <= 0x7f) {
         if (NULL != UTF8) {
             UTF8[0] = (char)uc;
