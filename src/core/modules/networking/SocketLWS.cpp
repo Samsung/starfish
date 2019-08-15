@@ -161,6 +161,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
                       &m_lwsClientConnectInfo.port,
                       &m_lwsClientConnectInfo.path)) {
         // TODO
+        m_alive = false;
         return;
     }
 
@@ -215,6 +216,7 @@ SocketLWS::~SocketLWS()
 
 void SocketLWS::finalize()
 {
+    m_alive = false;
     if (m_lwsContext != nullptr) {
         lws_context_destroy(m_lwsContext);
         m_lwsContext = nullptr;

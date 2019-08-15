@@ -18,11 +18,11 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/send/002.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/003.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/004.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/005.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/send/006.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/send/006.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/007.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/008.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/009.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/send/010.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/send/010.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/011.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/send/012.html
 #
