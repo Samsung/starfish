@@ -56,7 +56,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/util/URL.h"
 
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -1558,10 +1558,7 @@ RenderResult WebView::rendering(bool force)
                         // we should give damage on parent element
                         // because style of pseudo element is computed by
                         // its parent element
-                        if (task->targetElement()
-                                ->style()
-                                ->animation()
-                                ->playState(idx) ==
+                        if (animation.first->m_playState ==
                             AnimationPlayStateValue::
                                 AnimationPlayStateRunningValue) {
                             task->targetElement()
@@ -1570,57 +1567,54 @@ RenderResult WebView::rendering(bool force)
                                 ->setNeedsStyleRecalcForAnimation();
                             needsContinuousRendering = true;
 
-                            if (animation.first->m_playState ==
+                            if (task->playState() ==
                                 AnimationPlayStateValue::
                                     AnimationPlayStatePausedValue) {
                                 task->setStartTime(tick - task->gapTime());
                                 task->setGapTime(0);
                                 task->setIsRunning(true);
-                                animation.first->m_playState =
+                                task->setPlayState(
                                     AnimationPlayStateValue::
-                                        AnimationPlayStateRunningValue;
+                                        AnimationPlayStateRunningValue);
                             }
                         } else {
-                            if (animation.first->m_playState ==
+                            if (task->playState() ==
                                 AnimationPlayStateValue::
                                     AnimationPlayStateRunningValue) {
                                 task->setGapTime(tick - task->startTime());
                                 task->setIsRunning(false);
-                                animation.first->m_playState =
+                                task->setPlayState(
                                     AnimationPlayStateValue::
-                                        AnimationPlayStatePausedValue;
+                                        AnimationPlayStatePausedValue);
                             }
                         }
                     } else {
-                        if (task->targetElement()
-                                ->style()
-                                ->animation()
-                                ->playState(idx) ==
+                        if (animation.first->m_playState ==
                             AnimationPlayStateValue::
                                 AnimationPlayStateRunningValue) {
                             task->targetElement()
                                 ->setNeedsStyleRecalcForAnimation();
                             needsContinuousRendering = true;
 
-                            if (animation.first->m_playState ==
+                            if (task->playState() ==
                                 AnimationPlayStateValue::
                                     AnimationPlayStatePausedValue) {
                                 task->setStartTime(tick - task->gapTime());
                                 task->setGapTime(0);
                                 task->setIsRunning(true);
-                                animation.first->m_playState =
+                                task->setPlayState(
                                     AnimationPlayStateValue::
-                                        AnimationPlayStateRunningValue;
+                                        AnimationPlayStateRunningValue);
                             }
                         } else {
-                            if (animation.first->m_playState ==
+                            if (task->playState() ==
                                 AnimationPlayStateValue::
                                     AnimationPlayStateRunningValue) {
                                 task->setGapTime(tick - task->startTime());
                                 task->setIsRunning(false);
-                                animation.first->m_playState =
+                                task->setPlayState(
                                     AnimationPlayStateValue::
-                                        AnimationPlayStatePausedValue;
+                                        AnimationPlayStatePausedValue);
                             }
                         }
                     }

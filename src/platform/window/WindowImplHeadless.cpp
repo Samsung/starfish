@@ -24,7 +24,7 @@
 
 #include "Starfish.h"
 
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/modules/canvas/Canvas.h"

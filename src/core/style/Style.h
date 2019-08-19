@@ -441,7 +441,7 @@ enum TimingFunctionValue ENSURE_ENUM_UNSIGNED {
     TimingFunctionStepEndValue,
 };
 
-enum AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
+enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED {
     AnimationDirectionNormalValue,
     AnimationDirectionReverseValue,
     AnimationDirectionAlternateValue,

@@ -22,7 +22,7 @@
 #include "PlatformWindow.h"
 
 #include "Starfish.h"
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 #include "core/dom/Node.h"
 #include "core/layout/StackingContext.h"
 #include "core/page/BrowsingContext.h"

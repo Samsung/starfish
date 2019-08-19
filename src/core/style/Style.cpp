@@ -32,6 +32,7 @@
 #include "core/style/Style.h"
 
 #include "Starfish.h"
+#include "core/animation/AnimationTask.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 #include "core/dom/Document.h"
@@ -73,7 +74,6 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/style/ShadowData.h"
 #include "core/style/WillChangeData.h"
-#include "core/animation/Animation.h"
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #endif
@@ -1556,13 +1556,13 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::AnimationDirectionValueKind:
         switch (animationDirectionValue()) {
-        case AnimationDirectionNormalValue:
+        case AnimationDirectionValue::AnimationDirectionNormalValue:
             return String::fromUTF8("normal");
-        case AnimationDirectionReverseValue:
+        case AnimationDirectionValue::AnimationDirectionReverseValue:
             return String::fromUTF8("reverse");
-        case AnimationDirectionAlternateValue:
+        case AnimationDirectionValue::AnimationDirectionAlternateValue:
             return String::fromUTF8("alternate");
-        case AnimationDirectionAlternateReverseValue:
+        case AnimationDirectionValue::AnimationDirectionAlternateReverseValue:
             return String::fromUTF8("alternate-reverse");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -7436,10 +7436,147 @@ static void setPropertyIfNeeds(GCVector<AnimationKeyframe*>& keyframeList,
     }
 }
 
-void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
-                               ComputedStyle* NULLABLE oldStyle,
-                               NULLABLE Frame* oldFrame, ComputedStyle* style,
-                               ComputedStyleDamage& damage)
+void computeWebAnimationKeyframes(const StyleResolver& resolver,
+                                  Element* element, ComputedStyle* style,
+                                  std::vector<StyleRuleBase*>& keyframes)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(style->animation() != nullptr);
+    STARFISH_ASSERT(style->animation()->animationNameSize() > 0);
+
+    StyleAnimationData* animation = style->animation();
+    size_t animationNameSize = animation->animationNameSize();
+
+    size_t index = animationNameSize - 1;
+    String* name = animation->animationName(index);
+    if (name->isEmpty() || name->equalsIgnoreCase("none") == true) {
+        return;
+    }
+
+    TimingFunction* timing = animation->timingFunction(index);
+    size_t styleKeyframeListSize = keyframes.size();
+
+    GCVector<AnimationKeyframe*> keyframeList;
+
+    for (size_t j = 0; j < styleKeyframeListSize; j++) {
+        StyleRuleKeyframe* styleKeyframe = keyframes[j]->asStyleRuleKeyframe();
+        GCAtomicVector<double> keyList = styleKeyframe->keyList();
+        AnimationKeyframe* animationKeyframe =
+            findAnimationKeyframe(keyframeList, keyList[0]);
+        TimingFunction* keyframeTiming = timing;
+
+        const GCAtomicVector<CSSStyleValuePair>& cssValues =
+            styleKeyframe->styleDeclaration()->cssValues();
+        size_t cssValueSize = cssValues.size();
+        for (size_t k = 0; k < cssValueSize; k++) {
+            CSSStyleValuePair::KeyKind p = cssValues[k].keyKind();
+            if (p == CSSStyleValuePair::KeyKind::AnimationTimingFunction) {
+                CSSStyleValuePair::ValueKind valueKind =
+                    cssValues[k].valueKind();
+                if (valueKind == CSSStyleValuePair::ValueKind::Inherit &&
+                    element != nullptr && element->parentElement() != nullptr &&
+                    element->parentElement()->style() != nullptr &&
+                    element->parentElement()->style()->animation() != nullptr) {
+                    keyframeTiming = element->parentElement()
+                                         ->style()
+                                         ->animation()
+                                         ->timingFunction(0);
+                } else if (valueKind ==
+                           CSSStyleValuePair::ValueKind::ValueListKind) {
+                    CSSStyleValuePair& value = cssValues[k].multiValue()->at(0);
+                    STARFISH_ASSERT(value.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::
+                                        TimingFunctionPointerKind);
+                    keyframeTiming = value.timingFunctionPointerValue();
+                } else {
+                    keyframeTiming = AnimationKeyframe::defaultTimingFunction();
+                }
+            } else if (isAnimationAffectingProperty(p) == false) {
+                setPropertyIfNeeds(keyframeList, cssValues[k]);
+            }
+        }
+        animationKeyframe->setTimingFunction(keyframeTiming);
+
+        for (size_t k = 1; k < keyList.size(); k++) {
+            AnimationKeyframe* clone =
+                new AnimationKeyframe(*animationKeyframe, true);
+            clone->setKeyframeName(keyList[k]);
+            keyframeList.push_back(clone);
+        }
+    }
+
+    std::stable_sort(keyframeList.begin(), keyframeList.end(),
+                     [](AnimationKeyframe* a, AnimationKeyframe* b) {
+                         STARFISH_ASSERT(a != nullptr);
+                         STARFISH_ASSERT(b != nullptr);
+                         return a->keyframeName() < b->keyframeName();
+                     });
+
+    // merge duplicate KEYFRAMEs if needs.
+    size_t target_index = 0;
+    for (size_t j = 1; j < keyframeList.size(); j++) {
+        if (keyframeList[j]->keyframeName() !=
+            keyframeList[target_index]->keyframeName()) {
+            target_index++;
+            keyframeList[target_index] = keyframeList[j];
+        }
+    }
+    if (keyframeList.empty() == false) {
+        keyframeList.resize(target_index + 1);
+    }
+
+    // add 0% and 100% KEYFRAMEs if absent.
+    AnimationKeyframe* start = new AnimationKeyframe();
+    start->setTimingFunction(timing);
+    if (keyframeList.empty() == true) {
+        keyframeList.push_back(start);
+    } else if (keyframeList.front()->keyframeName() != 0.0) {
+        for (auto keyKind : keyframeList.front()->keyKinds()) {
+            start->setProperty(keyKind, CSSStyleValuePair());
+        }
+        keyframeList.insert(keyframeList.begin(), start);
+    }
+    if (keyframeList.back()->keyframeName() != 1.0) {
+        AnimationKeyframe* end =
+            new AnimationKeyframe(*keyframeList.back(), true);
+        end->setKeyframeName(1.0);
+        end->setTimingFunction(timing);
+        keyframeList.push_back(end);
+    }
+
+    STARFISH_ASSERT(keyframeList.front()->keyframeName() == 0.0);
+    STARFISH_ASSERT(keyframeList.back()->keyframeName() == 1.0);
+
+    // apply duration into each KEYFRAME
+    CSSTime duration = animation->duration(index);
+    if (duration.toTimeValue() > 0) {
+        double preKeyframeName = 0.0;
+        auto preKeyframe = keyframeList.front();
+        for (auto curKeyframe : keyframeList) {
+            if (curKeyframe->keyframeName() == 0) {
+                continue;
+            }
+            if (curKeyframe->keyframeName() - preKeyframeName == 0) {
+                preKeyframe->setDuration(CSSTime(0));
+            } else {
+                preKeyframe->setDuration(
+                    CSSTime(duration.toTimeValue() *
+                            (curKeyframe->keyframeName() - preKeyframeName)));
+            }
+
+            preKeyframeName = curKeyframe->keyframeName();
+            preKeyframe = curKeyframe;
+        }
+    }
+
+    animation->keyframes(index).keyframeList().clear();
+    animation->keyframes(index).keyframeList().assign(keyframeList.begin(),
+                                                      keyframeList.end());
+}
+
+void computeCSSAnimationKeyframes(const StyleResolver& resolver,
+                                  Element* element, ComputedStyle* style)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -7452,8 +7589,7 @@ void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
     size_t animationNameSize = animation->animationNameSize();
     for (size_t i = 0; i < animationNameSize; i++) {
         String* name = animation->animationName(i);
-        if (name->equals(String::emptyString) == true ||
-            name->equalsIgnoreCase("none") == true) {
+        if (name->isEmpty() || name->equalsIgnoreCase("none") == true) {
             continue;
         }
 
@@ -7612,8 +7748,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     StyleAnimationData* animationData = toStyle->animation();
 
     if (animationData != nullptr) {
-        computeAnimationKeyframes(resolver, element, fromStyle, fromFrame,
-                                  toStyle, damage);
+        computeCSSAnimationKeyframes(resolver, element, toStyle);
     }
 
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
@@ -7623,91 +7758,104 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         canceledAnimationProgress;
     // check animation have to remove
 
-    if (element->style() != nullptr &&
-        element->style()->animation() != nullptr) {
-        auto animation = element->style()->animation();
-        size_t nameSize = animation->animationNameSize();
+    // if (element->style() != nullptr &&
+    //    element->style()->animation() != nullptr) {
+    //    auto animation = element->style()->animation();
+    //    size_t nameSize = animation->animationNameSize();
 
-        for (size_t n = 0; n < nameSize; n++) {
-            String* name = animation->animationName(n);
-            if (name == String::emptyString || name->equals("none") == true) {
-                continue;
-            }
-            ActiveElementAnimation* key =
-                new ActiveElementAnimation(name, element);
-            auto iter = executor->activeAnimations().find(key);
-            if (iter == executor->activeAnimations().end()) {
-                continue;
-            }
+    //    for (size_t n = 0; n < nameSize; n++) {
+    //        String* name = animation->animationName(n);
+    //        if (name == String::emptyString || name->equals("none") == true) {
+    //            continue;
+    //        }
+    //        ActiveElementAnimation* key =
+    //            new ActiveElementAnimation(name, element);
+    //        auto iter = executor->activeAnimations().find(key);
+    //        if (iter == executor->activeAnimations().end()) {
+    //            continue;
+    //        }
 
-            bool needsToFireAnimationEndEvent = false;
-            bool needsToFireAnimationCancelEvent = false;
-            auto& activeAnimations = iter->second;
-            auto iterationCount = iter->first->m_iterationCount;
-            auto direction = iter->first->m_direction;
-            for (size_t i = 0; i < activeAnimations.size(); i++) {
-                if (activeAnimations[i]->targetElement() == element &&
-                    activeAnimations[i]->type() ==
-                        ActiveAnimationTask::ANIMATION_TYPE) {
-                    bool shouldRemove = false;
-                    bool isCancel = true;
+    // Because the style is recalculated for each Animation Frame,
+    // element->style()->animation() registered by animate() may disappear.
+    // However, each animation task in css animation has to be in order.
+    for (auto iter = executor->activeAnimations().begin();
+         iter != executor->activeAnimations().end(); iter++) {
+        if (iter->first->m_element != element) {
+            continue;
+        }
+        String* name = iter->first->m_name;
+        bool needsToFireAnimationEndEvent = false;
+        bool needsToFireAnimationCancelEvent = false;
+        auto& animationTasks = iter->second;
+        auto iterationCount = iter->first->m_iterationCount;
+        auto direction = iter->first->m_direction;
+        for (size_t i = 0; i < animationTasks.size(); i++) {
+            if (animationTasks[i]->targetElement() == element &&
+                animationTasks[i]->type() ==
+                    ActiveAnimationTask::ANIMATION_TYPE) {
+                bool shouldRemove = false;
+                bool isCancel = true;
 
-                    bool isOddIteration;
+                bool isOddIteration;
+                if (std::isinf(iterationCount) == false) {
+                    isOddIteration =
+                        std::fmod(iterationCount -
+                                      animationTasks[i]->iterationStart() + 1,
+                                  2) >= 1;
+                } else {
+                    isOddIteration =
+                        std::fmod(animationTasks[i]->iterationStart(), 2) >= 1;
+                }
+                bool isForwardDirection =
+                    (direction ==
+                     AnimationDirectionValue::AnimationDirectionNormalValue) ||
+                    (direction == AnimationDirectionValue::
+                                      AnimationDirectionAlternateValue &&
+                     isOddIteration) ||
+                    (direction == AnimationDirectionValue::
+                                      AnimationDirectionAlternateReverseValue &&
+                     !isOddIteration);
+                animationTasks[i]->setIsForward(isForwardDirection);
+                if (animationTasks[i]->fraction(tick) >= 1) {
                     if (std::isinf(iterationCount) == false) {
-                        isOddIteration =
-                            std::fmod(
-                                iterationCount -
-                                    activeAnimations[i]->iterationStart() + 1,
-                                2) >= 1;
-                    } else {
-                        isOddIteration =
-                            std::fmod(activeAnimations[i]->iterationStart(),
-                                      2) >= 1;
-                    }
-                    bool isForwardDirection =
-                        (direction == AnimationDirectionNormalValue) ||
-                        (direction == AnimationDirectionAlternateValue &&
-                         isOddIteration) ||
-                        (direction == AnimationDirectionAlternateReverseValue &&
-                         !isOddIteration);
-                    activeAnimations[i]->setIsForward(isForwardDirection);
-                    if (activeAnimations[i]->fraction(tick) >= 1) {
-                        if (std::isinf(iterationCount) == false) {
-                            float f = activeAnimations[i]->iterationStart() - 1;
-                            activeAnimations[i]->setIterationStart(f);
-                            if (activeAnimations[i]->iterationStart() < 1) {
-                                // time is up
-                                shouldRemove = true;
-                                isCancel = false;
-                                activeAnimations[i]->setIterationStart(
-                                    iterationCount);
-                            }
-                        } else {
-                            float f = activeAnimations[i]->iterationStart() == 1
-                                          ? 0
-                                          : 1;
-                            activeAnimations[i]->setIterationStart(f);
-                        }
-                    }
-
-                    // element invisible
-                    if (shouldRemove == false &&
-                        toStyle->display() == DisplayValue::NoneDisplayValue) {
-                        shouldRemove = true;
-                    }
-
-                    // animation property gone || other properties changed
-                    if (shouldRemove == false) {
-                        StyleAnimationData* data = toStyle->animation();
-                        if (data == nullptr) {
+                        float f = animationTasks[i]->iterationStart() - 1;
+                        animationTasks[i]->setIterationStart(f);
+                        if (animationTasks[i]->iterationStart() < 1) {
+                            // time is up
                             shouldRemove = true;
-                        } else {
-                            bool found = false;
+                            isCancel = false;
+                            animationTasks[i]->setIterationStart(
+                                iterationCount);
+                        }
+                    } else {
+                        float f =
+                            animationTasks[i]->iterationStart() == 1 ? 0 : 1;
+                        animationTasks[i]->setIterationStart(f);
+                    }
+                }
+
+                // element invisible
+                if (shouldRemove == false &&
+                    toStyle->display() == DisplayValue::NoneDisplayValue) {
+                    shouldRemove = true;
+                }
+
+                // animation property gone || other properties changed
+                if (shouldRemove == false) {
+                    if (animationTasks[i]->isCSSAnimationTask() &&
+                        element->style()->animation()) {
+                        bool found = false;
+                        auto animation = element->style()->animation();
+                        for (size_t n = 0; n < animation->keyframesSize();
+                             n++) {
+                            if (!name->equals(animation->animationName(n))) {
+                                continue;
+                            }
                             auto keyframes = animation->keyframes(n);
                             if (keyframes.keyframeListSize() > 0) {
                                 auto keyframe = keyframes.keyframe(0);
                                 for (auto& keyKind : keyframe->keyKinds()) {
-                                    if (activeAnimations[i]
+                                    if (animationTasks[i]
                                             ->isKindOfTransitionProperty(
                                                 keyKind) == true) {
                                         found = true;
@@ -7720,39 +7868,38 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                             }
                         }
                     }
+                }
 
-                    if (shouldRemove == true) {
-                        if (isCancel == false) {
-                            endTick = activeAnimations[i]->duration() / 1000;
-                            needsToFireAnimationEndEvent = true;
-                        } else {
-                            auto key = activeAnimations[i]->property();
-                            float progress =
-                                activeAnimations[i]->fraction(tick);
-                            canceledAnimationProgress.push_back(
-                                std::make_pair(key, progress));
-
-                            cancelTick = activeAnimations[i]->duration() *
-                                         progress / 1000;
-                            needsToFireAnimationCancelEvent = true;
-                        }
-                        // FIXME
-                        activeAnimations[i]->detachFromElement(toStyle);
-                        activeAnimations.erase(i);
-                        i--;
-                        needsToRecomputeStylePropertyDamage = true;
-                        needsToCheckActiveExecutorInWebView = true;
+                if (shouldRemove == true) {
+                    if (isCancel == false) {
+                        endTick = animationTasks[i]->duration() / 1000;
+                        needsToFireAnimationEndEvent = true;
                     } else {
-                        elementHasAnimation = true;
+                        auto key = animationTasks[i]->property();
+                        float progress = animationTasks[i]->fraction(tick);
+                        canceledAnimationProgress.push_back(
+                            std::make_pair(key, progress));
+
+                        cancelTick =
+                            animationTasks[i]->duration() * progress / 1000;
+                        needsToFireAnimationCancelEvent = true;
                     }
+                    // FIXME
+                    animationTasks[i]->detachFromElement(toStyle);
+                    animationTasks.erase(i);
+                    i--;
+                    needsToRecomputeStylePropertyDamage = true;
+                    needsToCheckActiveExecutorInWebView = true;
+                } else {
+                    elementHasAnimation = true;
                 }
             }
+        }
 
-            if (needsToFireAnimationCancelEvent == true) {
-                executor->fireAnimationCancelEvent(element, name, cancelTick);
-            } else if (needsToFireAnimationEndEvent == true) {
-                executor->fireAnimationEndEvent(element, name, endTick);
-            }
+        if (needsToFireAnimationCancelEvent == true) {
+            executor->fireAnimationCancelEvent(element, name, cancelTick);
+        } else if (needsToFireAnimationEndEvent == true) {
+            executor->fireAnimationEndEvent(element, name, endTick);
         }
     }
 
@@ -7762,25 +7909,19 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
         element->doesExistInFrameTree() == false) {
         if (animationData->allKeyframeListSize() > 0 &&
-            applyAnimationIfNeeds(element, fromStyle, fromFrame, toStyle,
-                                  canceledAnimationProgress) == true) {
+            applyAnimationIfNeeds(element, toStyle) == true) {
             elementHasAnimation = true;
             needsToCheckActiveExecutorInWebView = true;
         }
     }
 
     // apply animation
-    if (element->style() != nullptr && elementHasAnimation == true) {
-        StyleAnimationData* animation = element->style()->animation();
-        size_t nameSize = animation->animationNameSize();
-        for (size_t n = 0; n < nameSize; n++) {
-            ActiveElementAnimation* key = new ActiveElementAnimation(
-                animation->animationName(n), element);
-            auto iter = executor->activeAnimations().find(key);
-            if (iter == executor->activeAnimations().end()) {
+    if (element->style() && elementHasAnimation == true) {
+        for (auto iter = executor->activeAnimations().begin();
+             iter != executor->activeAnimations().end(); iter++) {
+            if (iter->first->m_element != element) {
                 continue;
             }
-
             auto& activeAnimations = iter->second;
             for (size_t i = 0; i < activeAnimations.size(); i++) {
                 if (activeAnimations[i]->targetElement() == element) {
@@ -7788,7 +7929,6 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                 }
             }
         }
-
         needsToRecomputeStylePropertyDamage = true;
     }
 
@@ -14009,13 +14149,17 @@ bool CSSStyleValuePair::updateValueUnitAnimationDirection(
     const CSSTokenValue& value)
 {
     if (value.equals("normal") == true) {
-        setAnimationDirectionValue(AnimationDirectionNormalValue);
+        setAnimationDirectionValue(
+            AnimationDirectionValue::AnimationDirectionNormalValue);
     } else if (value.equals("reverse") == true) {
-        setAnimationDirectionValue(AnimationDirectionReverseValue);
+        setAnimationDirectionValue(
+            AnimationDirectionValue::AnimationDirectionReverseValue);
     } else if (value.equals("alternate") == true) {
-        setAnimationDirectionValue(AnimationDirectionAlternateValue);
+        setAnimationDirectionValue(
+            AnimationDirectionValue::AnimationDirectionAlternateValue);
     } else if (value.equals("alternate-reverse") == true) {
-        setAnimationDirectionValue(AnimationDirectionAlternateReverseValue);
+        setAnimationDirectionValue(
+            AnimationDirectionValue::AnimationDirectionAlternateReverseValue);
     } else {
         return false;
     }

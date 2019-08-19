@@ -55,6 +55,16 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/animation/TimingOptions.h"
+
+#include "binding/ScriptBindingInstance.h"
+#include "core/style/CSSStyleLookupTrie.h"
+#include "core/style/StyleRule.h"
+#include "core/animation/AnimationTask.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/modules/tts/TTS.h"
@@ -1904,5 +1914,98 @@ void Element::focus()
 void Element::blur()
 {
     window()->browsingContext()->releaseFocusedNode(this);
+}
+
+void Element::makeKeyframesFromObject(
+    ScriptObject object, std::vector<StyleRuleBase*>& keyframeRules)
+{
+    ContextRef* ctx = scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    ValueVectorRef* values = object->getOwnPropertyKeys(state);
+
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+
+    for (size_t i = 0; i < values->size(); i++) {
+        auto key = values->at(i);
+        if (key->isString() && object->hasOwnProperty(state, key)) {
+            ScriptValue scirptValue = object->get(state, key);
+
+            String* name = toBrowserString(state, key->toString(state));
+            CSSStyleValuePair::KeyKind kind = lookupCSSStyleCamelCase(
+                name->toUTF8NonGCString().data(), name->length());
+
+            String* value =
+                toBrowserString(state, scirptValue->toString(state));
+            size_t len = value->length();
+            bool priority = false;
+
+            switch (kind) {
+#define SET_ATTR(name, nameLower, nameCSSCase)                          \
+    case CSSStyleValuePair::KeyKind::name: {                            \
+        declarations->set##name(value->toUTF8NonGCString().data(), len, \
+                                priority);                              \
+    } break;
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+            default:
+                break;
+            }
+        }
+    }
+
+    if (declarations->length() > 0) {
+        GCAtomicVector<double> keyList;
+        keyframeRules.push_back(new StyleRuleKeyframe(keyList, declarations));
+    }
+}
+
+Animation* Element::animate(ExecutionContext* executionContext,
+                            Nullable<GCVector<ScriptValue>>& keyframes,
+                            KeyframeAnimationOptions& options)
+{
+    if (!keyframes.hasValue() || !style()) {
+        return new Animation(executionContext);
+    }
+
+    GCVector<ScriptValue> values = keyframes.getValue();
+    if (!TimingOptions::makeTimingOptions(this, options)) {
+        return new Animation(executionContext);
+    }
+
+    std::vector<StyleRuleBase*> keyframeRules;
+    for (size_t i = 0; i < values.size(); i++) {
+        if (values[i]->isObject()) {
+            auto object = values[i]->asObject();
+            makeKeyframesFromObject(object, keyframeRules);
+        } else {
+            // TODO
+        }
+    }
+
+    if (keyframeRules.size() > 0) {
+        double key = (double)(100 / (keyframeRules.size() - 1));
+        for (size_t i = 0; i < keyframeRules.size(); i++) {
+            keyframeRules[i]->asStyleRuleKeyframe()->setKeyText(
+                document(), String::fromInt(key * i)->concat('%'));
+        }
+        // make style animation data for Web Animation
+        computeWebAnimationKeyframes(document()->styleResolver(), this, style(),
+                                     keyframeRules);
+    }
+
+    if (style()->display() != DisplayValue::NoneDisplayValue &&
+        style()->animation() != nullptr) {
+        if (!applyAnimationIfNeeds(this, Element::style(), false)) {
+            return new Animation(executionContext);
+        }
+        document()->animationExecutor()->checkActiveExecutorInWebView();
+    }
+    return new Animation(executionContext);
+}
+
+Animation* Element::animate(ExecutionContext* executionContext,
+                            Nullable<GCVector<ScriptValue>>& keyframes)
+{
+    // TODO
+    return new Animation(executionContext);
 }
 }

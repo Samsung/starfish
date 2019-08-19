@@ -1,0 +1,61 @@
+
+
+[Exposed=Window,
+  //Constructor (optional AnimationEffect? effect = null,
+  //             optional AnimationTimeline? timeline)
+  ConstructorCallWith=ExecutionContext
+]
+interface Animation : EventTarget {
+    [Unimplemented]         attribute DOMString                id;
+    [Unimplemented]         attribute AnimationEffect?         effect;
+    [Unimplemented]         attribute AnimationTimeline?       timeline;
+    [Unimplemented]         attribute double?                  startTime;
+    [Unimplemented]         attribute double?                  currentTime;
+    [Unimplemented]         attribute double                   playbackRate;
+    [Unimplemented] readonly attribute AnimationPlayState       playState;
+    [Unimplemented] readonly attribute boolean                  pending;
+    [Unimplemented] readonly attribute Promise<Animation>       ready;
+    [Unimplemented] readonly attribute Promise<Animation>       finished;
+    [Unimplemented]         attribute EventHandler             onfinish;
+    [Unimplemented]         attribute EventHandler             oncancel;
+    [Unimplemented] void cancel ();
+    [Unimplemented] void finish ();
+    [Unimplemented] void play ();
+    [Unimplemented] void pause ();
+    [Unimplemented] void updatePlaybackRate (double playbackRate);
+    [Unimplemented] void reverse ();
+};
+
+enum FillMode { "none", "forwards", "backwards", "both", "auto" };
+enum PlaybackDirection { "normal", "reverse", "alternate", "alternate-reverse" };
+
+dictionary EffectTiming {
+    double                             delay = 0;
+    double                             endDelay = 0;
+    FillMode                           fill = "auto";
+    double                             iterationStart = 0.0;
+    unrestricted double                iterations = 1.0;
+//    (unrestricted double or DOMString) duration = "auto";
+    unrestricted double                duration = 0.0;
+    PlaybackDirection                  direction = "normal";
+    DOMString                          easing = "linear";
+};
+
+dictionary KeyframeEffectOptions : EffectTiming {
+    [Unimplemented] IterationCompositeOperation iterationComposite = "replace";
+    [Unimplemented] CompositeOperation          composite = "replace";
+};
+
+dictionary KeyframeAnimationOptions : KeyframeEffectOptions {
+    DOMString id = "";
+};
+
+// mixin
+[PartialInterface,
+ NoInterfaceObject]
+interface ElementAnimation {
+//    [CallWith=ExecutionContext, Measure, RaisesException] Animation animate((sequence<any> or any)? effect, optional (unrestricted double or KeyframeAnimationOptions) options);
+    [CallWith=ExecutionContext, Measure, RaisesException] Animation animate(sequence<any>? effect, optional KeyframeAnimationOptions options);
+    [Unimplemented] sequence<Animation> getAnimations();
+};
+
