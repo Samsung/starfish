@@ -7810,26 +7810,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
     float cancelTick = 0;
     float endTick = 0;
+
+    // check animation have to remove
     std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
         canceledAnimationProgress;
-    // check animation have to remove
-
-    // if (element->style() != nullptr &&
-    //    element->style()->animation() != nullptr) {
-    //    auto animation = element->style()->animation();
-    //    size_t nameSize = animation->animationNameSize();
-
-    //    for (size_t n = 0; n < nameSize; n++) {
-    //        String* name = animation->animationName(n);
-    //        if (name == String::emptyString || name->equals("none") == true) {
-    //            continue;
-    //        }
-    //        ActiveElementAnimation* key =
-    //            new ActiveElementAnimation(name, element);
-    //        auto iter = executor->activeAnimations().find(key);
-    //        if (iter == executor->activeAnimations().end()) {
-    //            continue;
-    //        }
 
     // Because the style is recalculated for each Animation Frame,
     // element->style()->animation() registered by animate() may disappear.
@@ -7942,8 +7926,15 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                     }
                     // FIXME
                     animationTasks[i]->detachFromElement(toStyle);
-                    animationTasks.erase(i);
-                    i--;
+
+                    if (animationTasks[i]->fillMode() !=
+                        AnimationFillModeValue::
+                            AnimationFillModeForwardsValue) {
+                        animationTasks.erase(i);
+                        i--;
+                    } else {
+                        elementHasAnimation = true;
+                    }
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveExecutorInWebView = true;
                 } else {

@@ -184,11 +184,11 @@ void TimingOptions::setFillMode(TimingOutput& output,
 {
     if (options.fill()->equals("none")) {
         output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
-    } else if (options.direction()->equals("forwards")) {
+    } else if (options.fill()->equals("forwards")) {
         output.m_fill = AnimationFillModeValue::AnimationFillModeForwardsValue;
-    } else if (options.direction()->equals("backwards")) {
+    } else if (options.fill()->equals("backwards")) {
         output.m_fill = AnimationFillModeValue::AnimationFillModeBackwardsValue;
-    } else if (options.direction()->equals("both")) {
+    } else if (options.fill()->equals("both")) {
         output.m_fill = AnimationFillModeValue::AnimationFillModeBothValue;
     } else {
         output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
