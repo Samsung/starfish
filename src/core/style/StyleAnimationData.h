@@ -149,6 +149,7 @@ public:
         , m_iterationCount(1.0f)
         , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
         , m_playState(AnimationPlayStateRunningValue)
+        , m_fillMode(AnimationFillModeValue::AnimationFillModeNoneValue)
     {
     }
 
@@ -224,6 +225,16 @@ public:
         return m_playState;
     }
 
+    void setFillMode(AnimationFillModeValue d)
+    {
+        m_fillMode = d;
+    }
+
+    AnimationFillModeValue fillMode() const
+    {
+        return m_fillMode;
+    }
+
     size_t keyframeListSize()
     {
         return m_keyframeList.size();
@@ -248,6 +259,7 @@ private:
     float m_iterationCount;
     AnimationDirectionValue m_direction;
     AnimationPlayStateValue m_playState;
+    AnimationFillModeValue m_fillMode;
     GCVector<AnimationKeyframe*> m_keyframeList;
 };
 
@@ -261,6 +273,7 @@ public:
         , m_iterationCountSize(0)
         , m_directionSize(0)
         , m_playStateSize(0)
+        , m_fillModeSize(0)
     {
     }
 
@@ -494,6 +507,33 @@ public:
         return m_playStateSize;
     }
 
+    // animation-fill-mode //////////////////////////
+    void clearFillMode()
+    {
+        m_fillModeSize = 0;
+    }
+
+    void setFillMode(AnimationFillModeValue value, size_t index)
+    {
+        resizeIfNeeds(index, m_fillModeSize);
+        m_keyframes[index].setFillMode(value);
+    }
+
+    AnimationFillModeValue fillMode(size_t index) const
+    {
+        STARFISH_ASSERT(m_fillModeSize <= m_keyframes.size());
+        if (m_fillModeSize == 0) {
+            return AnimationFillModeValue::AnimationFillModeNoneValue;
+        }
+        uint16_t p = index % m_fillModeSize;
+        return m_keyframes[p].fillMode();
+    }
+
+    size_t fillModeSize() const
+    {
+        return m_fillModeSize;
+    }
+
 private:
     GCVector<AnimationKeyframes> m_keyframes;
     size_t m_nameSize;
@@ -503,6 +543,7 @@ private:
     size_t m_iterationCountSize;
     size_t m_directionSize;
     size_t m_playStateSize;
+    size_t m_fillModeSize;
 };
 }
 

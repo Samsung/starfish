@@ -27,13 +27,14 @@ class TimingFunction;
 struct KeyframeAnimationOptions;
 
 enum class AnimationDirectionValue;
+enum class AnimationFillModeValue;
 
 struct TimingOutput {
     TimingOutput();
 
     double m_startDelay;
     double m_endDelay;
-    String* m_fill;
+    AnimationFillModeValue m_fill;
     double m_iterationStart;
     double m_iterationCount;
     double m_iterationDuration;
@@ -58,6 +59,8 @@ public:
                                      TimingOutput& output);
     static void setDirection(TimingOutput& output,
                              KeyframeAnimationOptions& options);
+    static void setFillMode(TimingOutput& output,
+                            KeyframeAnimationOptions& options);
     static bool setTimingFunction(Element* element,
                                   KeyframeAnimationOptions& options,
                                   TimingOutput& output);
