@@ -220,6 +220,7 @@ void SocketLWS::finalize()
     if (m_lwsContext != nullptr) {
         lws_context_destroy(m_lwsContext);
         m_lwsContext = nullptr;
+        m_lwsClient = nullptr;
     }
 }
 
@@ -253,7 +254,9 @@ void SocketLWS::close(const char* ptr, size_t len, size_t code)
     m_closeReasonStr = std::string(ptr, len);
     m_closeReasonCode = code;
     m_active = false;
-    lws_callback_on_writable(m_lwsClient);
+    if (m_lwsClient) {
+        lws_callback_on_writable(m_lwsClient);
+    }
 }
 
 int SocketLWS::close()
@@ -284,7 +287,9 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
     }
     SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
     m_txBuffer.push_back(newData);
-    lws_callback_on_writable(m_lwsClient);
+    if (m_lwsClient) {
+        lws_callback_on_writable(m_lwsClient);
+    }
     return 0;
 }
 

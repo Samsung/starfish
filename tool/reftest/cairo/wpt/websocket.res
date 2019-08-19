@@ -31,8 +31,8 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/002.htm
 http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/003.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/004.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/005.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/006.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/007.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/006.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/007.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/readyState/008.html
 #
 http://web-platform.test:8000/websockets/interfaces/WebSocket/protocol/protocol-initial.html
@@ -40,13 +40,13 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/protocol/protocol-
 http://web-platform.test:8000/websockets/interfaces/WebSocket/extensions/001.html
 #
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/001.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/002.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/003.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/events/002.html
+#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/003.html   // initUIEvent is deprecated
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/004.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/006.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/007.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/008.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/009.html
+#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/007.html   // initUIEvent is deprecated
+#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/008.html   // initUIEvent is deprecated
+#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/009.html   // initUIEvent is deprecated
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/010.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/011.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/012.html
@@ -124,16 +124,16 @@ http://web-platform.test:8000/websockets/constructor/005.html
 #http://web-platform.test:8000/websockets/constructor/006.html
 #http://web-platform.test:8000/websockets/constructor/007.html
 http://web-platform.test:8000/websockets/constructor/008.html
-#http://web-platform.test:8000/websockets/constructor/009.html
+http://web-platform.test:8000/websockets/constructor/009.html
 #http://web-platform.test:8000/websockets/constructor/010.html
 #http://web-platform.test:8000/websockets/constructor/011.html
 http://web-platform.test:8000/websockets/constructor/012.html
 http://web-platform.test:8000/websockets/constructor/013.html
 #http://web-platform.test:8000/websockets/constructor/014.html
-#http://web-platform.test:8000/websockets/constructor/016.html
+http://web-platform.test:8000/websockets/constructor/016.html
 #http://web-platform.test:8000/websockets/constructor/017.html
 #http://web-platform.test:8000/websockets/constructor/018.html
-#http://web-platform.test:8000/websockets/constructor/019.html
-#http://web-platform.test:8000/websockets/constructor/020.html
+http://web-platform.test:8000/websockets/constructor/019.html
+http://web-platform.test:8000/websockets/constructor/020.html
 #http://web-platform.test:8000/websockets/constructor/021.html
 #http://web-platform.test:8000/websockets/constructor/022.html

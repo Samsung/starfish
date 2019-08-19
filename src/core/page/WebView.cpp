@@ -524,8 +524,6 @@ void WebView::destroy()
         m_rootStackingContext = nullptr;
     }
 
-    removeScriptEngineInstance();
-
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
     m_imageDecodeThreadPool->destroy();
 #endif
@@ -535,6 +533,8 @@ void WebView::destroy()
 
     m_timer->clear(nullptr);
     m_timer->destroy();
+
+    removeScriptEngineInstance();
 
     std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
     delete m_activeImageURLsInRenderingMutex;
@@ -546,7 +546,6 @@ void WebView::destroy()
     delete m_platformFontSelector;
 
     m_platformWindow->destroy();
-    removeScriptEngineInstance();
 
     m_starfish->m_webViewInstanceCount--;
     this->WebView::~WebView();
