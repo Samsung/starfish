@@ -3895,6 +3895,8 @@ protected:
     RareComputedStyleData m_rareComputedStyleData;
 };
 
+struct KeyframeAnimationOptions;
+
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys);
 
@@ -3903,14 +3905,16 @@ void computeTransition(Element* element, NULLABLE ComputedStyle* oldStyle,
                        ComputedStyleDamage& damage,
                        bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
 
-void computeAnimation(Element* element, NULLABLE ComputedStyle* oldStyle,
+void computeAnimation(StyleResolver& resolver, Element* element,
+                      NULLABLE ComputedStyle* oldStyle,
                       NULLABLE Frame* oldFrame, ComputedStyle* style,
-                      ComputedStyleDamage& damage);
-
-void computeAnimationKeyframes(const StyleResolver& resolver, Element* element,
-                               ComputedStyle* NULLABLE oldStyle,
-                               NULLABLE Frame* oldFrame, ComputedStyle* style,
-                               ComputedStyleDamage& damage);
+                      ComputedStyleDamage& damage,
+                      bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
+void computeCSSAnimationKeyframes(const StyleResolver& resolver,
+                                  Element* element, ComputedStyle* style);
+void computeWebAnimationKeyframes(const StyleResolver& resolver,
+                                  Element* element, ComputedStyle* style,
+                                  std::vector<StyleRuleBase*>& keyframes);
 }
 
 #endif

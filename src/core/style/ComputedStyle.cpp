@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 #include "core/animation/AnimationUtil.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
@@ -40,6 +40,7 @@
 #include "core/style/FilterFunctions.h"
 #include "core/style/WillChangeData.h"
 #include "core/style/ComputedStyle.h"
+
 #include "platform/window/PlatformWindow.h"
 #include "platform/loader/ResourceLoader.h"
 

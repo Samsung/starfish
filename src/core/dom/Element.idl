@@ -87,3 +87,4 @@ Element implements ParentNode;
 Element implements NonDocumentTypeChildNode;
 Element implements ChildNode;
 Element implements Slotable;
+Element implements ElementAnimation;

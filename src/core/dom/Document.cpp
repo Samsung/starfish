@@ -78,7 +78,7 @@
 #include "core/style/StyleSheetList.h"
 #include "core/style/StyleRule.h"
 #include "core/style/GradientData.h"
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"

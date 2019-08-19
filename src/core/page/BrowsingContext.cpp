@@ -64,7 +64,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/util/URL.h"
 #include "platform/window/PlatformWindow.h"
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "platform/loader/ResourceLoader.h"
@@ -616,10 +616,13 @@ bool BrowsingContext::layoutIfNeeded()
                     isOddIteration = std::fmod(l[i]->iterationStart(), 2) >= 1;
                 }
                 bool isForwardDirection =
-                    (direction == AnimationDirectionNormalValue) ||
-                    (direction == AnimationDirectionAlternateValue &&
+                    (direction ==
+                     AnimationDirectionValue::AnimationDirectionNormalValue) ||
+                    (direction == AnimationDirectionValue::
+                                      AnimationDirectionAlternateValue &&
                      isOddIteration) ||
-                    (direction == AnimationDirectionAlternateReverseValue &&
+                    (direction == AnimationDirectionValue::
+                                      AnimationDirectionAlternateReverseValue &&
                      !isOddIteration);
 
                 l[i]->setIsForward(isForwardDirection);

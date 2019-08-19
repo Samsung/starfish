@@ -21,14 +21,13 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/animation/Animation.h"
+#include "core/animation/AnimationTask.h"
+#include "core/animation/AnimationUtil.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/style/ComputedStyle.h"
-
-#include "core/animation/AnimationUtil.h"
 
 namespace Starfish {
 

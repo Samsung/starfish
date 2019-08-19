@@ -20,6 +20,7 @@
 #ifndef __StarfishElement__
 #define __StarfishElement__
 
+#include "core/animation/Animation.h"
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
 #include "core/style/Style.h"
@@ -395,6 +396,14 @@ public:
 
     virtual void onGlobalPointingEvent(float x, float y,
                                        GlobalPointingEventKind kind) override;
+
+    void makeKeyframesFromObject(ScriptObject object,
+                                 std::vector<StyleRuleBase*>& keyframeRules);
+    Animation* animate(ExecutionContext* executionContext,
+                       Nullable<GCVector<ScriptValue>>& keyframes,
+                       KeyframeAnimationOptions& options);
+    Animation* animate(ExecutionContext* executionContext,
+                       Nullable<GCVector<ScriptValue>>& keyframes);
 
 protected:
     void setFocused(bool flag)
