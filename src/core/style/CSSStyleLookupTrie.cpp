@@ -277,9 +277,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Grid-Area
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::Animation;
             }
+#endif
             break;
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
@@ -768,9 +770,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Animation-Delay
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation-delay", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDelay;
             }
+#endif
             break;
         case 'j':
             if (memcmp(data, "justify-content", 15) == 0) {
@@ -994,9 +998,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Grid-Template-Areas
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation-direction", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDirection;
             }
+            if (memcmp(data, "animation-fill-mode", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationFillMode;
+            }
+#endif
             break;
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -1064,9 +1073,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // text-decoration-line
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation-play-state", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationPlayState;
             }
+#endif
             break;
         case 'b':
             if (memcmp(data, "box-decoration-break", 20) == 0) {
@@ -1177,16 +1188,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // animation-iteration-count
         // animation-timing-function
         switch (data[0]) {
-#if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation-iteration-count", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationIterationCount;
             }
             if (memcmp(data, "animation-timing-function", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationTimingFunction;
             }
-            break;
 #endif
+            break;
         case 'b':
             if (memcmp(data, "border-bottom-left-radius", 25) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomLeftRadius;
@@ -1438,9 +1449,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
     case 9:
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animation", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::Animation;
             }
+#endif
             if (memcmp(data, "alignSelf", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignSelf;
             }
@@ -1747,13 +1760,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 13:
         switch (data[0]) {
-#if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationName", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationName;
             }
-            break;
 #endif
+            break;
         case 'b':
             if (memcmp(data, "borderSpacing", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderSpacing;
@@ -1808,9 +1821,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
     case 14:
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationDelay", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDelay;
             }
+#endif
             break;
         case 'j':
             if (memcmp(data, "justifyContent", 14) == 0) {
@@ -1981,13 +1996,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 17:
         switch (data[0]) {
-#if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationDuration", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDuration;
             }
-            break;
+            if (memcmp(data, "animationFillMode", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::AnimationFillMode;
+            }
 #endif
+            break;
         case 'b':
             if (memcmp(data, "backgroundRepeatX", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::BackgroundRepeatX;
@@ -2029,12 +2047,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
     case 18:
         switch (data[0]) {
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationDirection", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationDirection;
             }
             if (memcmp(data, "animationPlayState", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationPlayState;
             }
+#endif
             break;
         case 'b':
             if (memcmp(data, "backgroundPosition", 18) == 0) {
@@ -2145,16 +2165,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         break;
     case 23:
         switch (data[0]) {
-#if defined(STARFISH_ENABLE_ANIMATION)
         case 'a':
+#if defined(STARFISH_ENABLE_ANIMATION)
             if (memcmp(data, "animationIterationCount", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationIterationCount;
             }
             if (memcmp(data, "animationTimingFunction", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::AnimationTimingFunction;
             }
-            break;
 #endif
+            break;
         case 'b':
             if (memcmp(data, "borderBottomRightRadius", 23) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomRightRadius;

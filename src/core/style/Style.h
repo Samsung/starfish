@@ -453,6 +453,13 @@ enum AnimationPlayStateValue ENSURE_ENUM_UNSIGNED {
     AnimationPlayStatePausedValue,
 };
 
+enum class AnimationFillModeValue ENSURE_ENUM_UNSIGNED {
+    AnimationFillModeNoneValue,
+    AnimationFillModeForwardsValue,
+    AnimationFillModeBackwardsValue,
+    AnimationFillModeBothValue,
+};
+
 enum BoxSizingValue ENSURE_ENUM_UNSIGNED {
     ContentBoxBoxSizingValue,
     BorderBoxBoxSizingValue
@@ -731,24 +738,25 @@ class CSSFilterFunction;
 // define(FOR_EACH_STYLE_ATTRIBUTE)
 // This order is used by CSSParser::parseFontFaceRule
 
-#define FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)                           \
-    F(D, d, "d")                                                     \
-    F(FontFamily, fontFamily, "font-family")                         \
-    F(Src, src, "src")                                               \
-    F(TransitionDelay, transitionDelay, "transition-delay")          \
-    F(TransitionDuration, transitionDuration, "transition-duration") \
-    F(TransitionProperty, transitionProperty, "transition-property") \
-    F(TransitionTimingFunction, transitionTimingFunction,            \
-      "transition-timing-function")                                  \
-    F(AnimationName, animationName, "animation-name")                \
-    F(AnimationDuration, animationDuration, "animation-duration")    \
-    F(AnimationTimingFunction, animationTimingFunction,              \
-      "animation-timing-function")                                   \
-    F(AnimationDelay, animationDelay, "animation-delay")             \
-    F(AnimationIterationCount, animationIterationCount,              \
-      "animation-iteration-count")                                   \
-    F(AnimationDirection, animationDirection, "animation-direction") \
-    F(AnimationPlayState, animationPlayState, "animation-play-state")
+#define FOR_EACH_STYLE_ATTRIBUTE_STICKY(F)                            \
+    F(D, d, "d")                                                      \
+    F(FontFamily, fontFamily, "font-family")                          \
+    F(Src, src, "src")                                                \
+    F(TransitionDelay, transitionDelay, "transition-delay")           \
+    F(TransitionDuration, transitionDuration, "transition-duration")  \
+    F(TransitionProperty, transitionProperty, "transition-property")  \
+    F(TransitionTimingFunction, transitionTimingFunction,             \
+      "transition-timing-function")                                   \
+    F(AnimationName, animationName, "animation-name")                 \
+    F(AnimationDuration, animationDuration, "animation-duration")     \
+    F(AnimationTimingFunction, animationTimingFunction,               \
+      "animation-timing-function")                                    \
+    F(AnimationDelay, animationDelay, "animation-delay")              \
+    F(AnimationIterationCount, animationIterationCount,               \
+      "animation-iteration-count")                                    \
+    F(AnimationDirection, animationDirection, "animation-direction")  \
+    F(AnimationPlayState, animationPlayState, "animation-play-state") \
+    F(AnimationFillMode, animationFillMode, "animation-fill-mode")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_SHORTHAND(F)                        \
     F(Border, border, "border")                                      \
@@ -996,6 +1004,7 @@ public:
         // animation
         AnimationDirectionValueKind,
         AnimationPlayStateValueKind,
+        AnimationFillModeValueKind,
 
         // content
         Attr,
@@ -1486,6 +1495,12 @@ public:
         return m_value.m_animationPlayStateValue;
     }
 
+    AnimationFillModeValue animationFillModeValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AnimationFillModeValueKind);
+        return m_value.m_animationFillModeValue;
+    }
+
     BoxValue boxValue() const
     {
         STARFISH_ASSERT(m_valueKind == BoxValueKind);
@@ -1735,6 +1750,7 @@ public:
         TimingFunctionValue m_timingFunctionValue;
         AnimationDirectionValue m_animationDirectionValue;
         AnimationPlayStateValue m_animationPlayStateValue;
+        AnimationFillModeValue m_animationFillModeValue;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
         FlexDirectionValue m_flexDirection;
@@ -1967,6 +1983,10 @@ public:
         }
         ValueData(AnimationPlayStateValue v)
             : m_animationPlayStateValue(v)
+        {
+        }
+        ValueData(AnimationFillModeValue v)
+            : m_animationFillModeValue(v)
         {
         }
         ValueData(BoxSizingValue v)
@@ -2360,6 +2380,12 @@ public:
         m_value.m_animationPlayStateValue = v;
     }
 
+    void setAnimationFillModeValue(AnimationFillModeValue v)
+    {
+        m_valueKind = AnimationFillModeValueKind;
+        m_value.m_animationFillModeValue = v;
+    }
+
     void setFilterFunctionValue(CSSFilterFunction* v)
     {
         m_valueKind = FilterFunctionValueKind;
@@ -2461,12 +2487,14 @@ public:
     bool updateValueLayerAnimationIterationCount(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationDirection(const CSSTokenVector& tokens);
     bool updateValueLayerAnimationPlayState(const CSSTokenVector& tokens);
+    bool updateValueLayerAnimationFillMode(const CSSTokenVector& tokens);
 
     bool updateValueUnitAnimationName(const CSSTokenValue& value);
     bool updateValueUnitAnimationTimingFunction(const CSSTokenValue& value);
     bool updateValueUnitAnimationIterationCount(const CSSTokenValue& value);
     bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
     bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
+    bool updateValueUnitAnimationFillMode(const CSSTokenValue& value);
 
 protected:
     KeyKind m_keyKind : 8;

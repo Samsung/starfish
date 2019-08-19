@@ -1378,6 +1378,25 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::AnimationFillMode: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationFillMode);
+        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        size_t size =
+            style->animation() ? style->animation()->fillModeSize() : 0;
+        if (size == 0) {
+            p.multiValue()->emplace_back(
+                CSSStyleValuePair::AnimationFillModeValueKind,
+                AnimationFillModeValue::AnimationFillModeNoneValue);
+        } else {
+            for (size_t i = 0; i < size; i++) {
+                p.multiValue()->emplace_back(
+                    CSSStyleValuePair::AnimationFillModeValueKind,
+                    style->animationFillMode(i));
+            }
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);

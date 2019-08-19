@@ -2230,6 +2230,15 @@ public:
         return AnimationPlayStateValue::AnimationPlayStateRunningValue;
     }
 
+    AnimationFillModeValue animationFillMode(size_t layer = 0)
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            return a->fillMode(layer);
+        }
+        return AnimationFillModeValue::AnimationFillModeNoneValue;
+    }
+
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
                                size_t layer = 0)
     {
@@ -2328,6 +2337,11 @@ public:
         m_rareComputedStyleData.ensureAnimation()->setPlayState(value, index);
     }
 
+    void setAnimationFillMode(AnimationFillModeValue value, size_t index)
+    {
+        m_rareComputedStyleData.ensureAnimation()->setFillMode(value, index);
+    }
+
     void resetTransitionProperties()
     {
         StyleTransitionData* t = transition();
@@ -2413,6 +2427,14 @@ public:
         StyleAnimationData* a = animation();
         if (a != nullptr) {
             a->clearPlayStates();
+        }
+    }
+
+    void resetAnimationFillMode()
+    {
+        StyleAnimationData* a = animation();
+        if (a != nullptr) {
+            a->clearFillMode();
         }
     }
 

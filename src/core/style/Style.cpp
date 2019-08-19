@@ -1578,6 +1578,20 @@ String* CSSStyleValuePair::toString() const
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::ValueKind::AnimationFillModeValueKind:
+        switch (animationFillModeValue()) {
+        case AnimationFillModeValue::AnimationFillModeNoneValue:
+            return String::fromUTF8("none");
+        case AnimationFillModeValue::AnimationFillModeForwardsValue:
+            return String::fromUTF8("forwards");
+        case AnimationFillModeValue::AnimationFillModeBackwardsValue:
+            return String::fromUTF8("backwards");
+        case AnimationFillModeValue::AnimationFillModeBothValue:
+            return String::fromUTF8("both");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
     case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
         switch (boxSizingValue()) {
         case ContentBoxBoxSizingValue:
@@ -2490,6 +2504,34 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::AnimationPlayStateValueKind:
         style->setAnimationPlayState(item.animationPlayStateValue(), index);
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+static void applyAnimationFillMode(Element* element, ComputedStyle* style,
+                                   ComputedStyle* parentStyle,
+                                   CSSStyleValuePair& item, size_t index)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
+    switch (item.valueKind()) {
+    case CSSStyleValuePair::Initial:
+    case CSSStyleValuePair::Unset:
+        style->setAnimationFillMode(
+            AnimationFillModeValue::AnimationFillModeNoneValue, index);
+        break;
+    case CSSStyleValuePair::Inherit:
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
+        style->setAnimationFillMode(parentStyle->animationFillMode(), index);
+        break;
+    case CSSStyleValuePair::AnimationFillModeValueKind:
+        style->setAnimationFillMode(item.animationFillModeValue(), index);
         break;
     default:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -4136,6 +4178,20 @@ void StyleResolver::apply(Element* element,
                 for (unsigned int i = 0; i < list->size(); i++) {
                     applyAnimationPlayState(element, style, parentStyle,
                                             (*list)[i], i);
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::AnimationFillMode:
+            style->resetAnimationFillMode();
+            if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
+                applyAnimationFillMode(element, style, parentStyle,
+                                       cssValues[k], 0);
+            } else {
+                ValueList* list = cssValues[k].multiValue();
+                STARFISH_ASSERT(list != nullptr);
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    applyAnimationFillMode(element, style, parentStyle,
+                                           (*list)[i], i);
                 }
             }
             break;
@@ -7401,11 +7457,11 @@ static AnimationKeyframe* findAnimationKeyframe(
 static bool isAnimationAffectingProperty(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
-    //      case CSSStyleValuePair::KeyKind::Animation:
+    case CSSStyleValuePair::KeyKind::Animation:
     case CSSStyleValuePair::KeyKind::AnimationDelay:
     case CSSStyleValuePair::KeyKind::AnimationDirection:
     case CSSStyleValuePair::KeyKind::AnimationDuration:
-    //      case CSSStyleValuePair::KeyKind::AnimationFillMode:
+    case CSSStyleValuePair::KeyKind::AnimationFillMode:
     case CSSStyleValuePair::KeyKind::AnimationIterationCount:
     case CSSStyleValuePair::KeyKind::AnimationName:
     case CSSStyleValuePair::KeyKind::AnimationPlayState:
@@ -14062,6 +14118,27 @@ bool CSSStyleValuePair::updateValueUnitAnimationPlayState(
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitAnimationFillMode(
+    const CSSTokenValue& value)
+{
+    if (value.equals("none") == true) {
+        setAnimationFillModeValue(
+            AnimationFillModeValue::AnimationFillModeNoneValue);
+    } else if (value.equals("forwards") == true) {
+        setAnimationFillModeValue(
+            AnimationFillModeValue::AnimationFillModeForwardsValue);
+    } else if (value.equals("backwards") == true) {
+        setAnimationFillModeValue(
+            AnimationFillModeValue::AnimationFillModeBackwardsValue);
+    } else if (value.equals("both") == true) {
+        setAnimationFillModeValue(
+            AnimationFillModeValue::AnimationFillModeBothValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueLayerAnimationName(
     const CSSTokenVector& tokens)
 {
@@ -14173,6 +14250,15 @@ bool CSSStyleValuePair::updateValueLayerAnimationPlayState(
         return false;
     }
     return updateValueUnitAnimationPlayState(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueLayerAnimationFillMode(
+    const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitAnimationFillMode(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFilterFunction(

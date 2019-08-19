@@ -36,7 +36,7 @@ static size_t gAnimationCount = 0;
 TimingOutput::TimingOutput()
     : m_startDelay(0)
     , m_endDelay(0)
-    , m_fill(String::fromUTF8("auto"))
+    , m_fill(AnimationFillModeValue::AnimationFillModeNoneValue)
     , m_iterationStart(0.0)
     , m_iterationCount(1.0)
     , m_iterationDuration(0.0)
@@ -60,6 +60,8 @@ bool TimingOptions::makeTimingOptions(Element* element,
     id.appendString(name.string());
     id.appendString(String::fromInt64(gAnimationCount++));
     options.setId(id.finalize());
+
+    setFillMode(output, options);
 
     if (!setIterationStart(element, options, output)) {
         return false;
@@ -90,8 +92,9 @@ bool TimingOptions::makeTimingOptions(Element* element,
     style->setAnimationDirection(output.m_direction, animationNameSize);
     style->setAnimationDuration(CSSTime(output.m_iterationDuration),
                                 animationNameSize);
+    style->setAnimationFillMode(output.m_fill, animationNameSize);
     style->setAnimationTimingFunction(output.m_easing, animationNameSize);
-    // TODO: handle items like m_endDelay, m_fill, and m_iterationStart
+    // TODO: handle items like m_endDelay and m_iterationStart
 
     return true;
 }
@@ -173,6 +176,22 @@ void TimingOptions::setDirection(TimingOutput& output,
     } else {
         output.m_direction =
             AnimationDirectionValue::AnimationDirectionNormalValue;
+    }
+}
+
+void TimingOptions::setFillMode(TimingOutput& output,
+                                KeyframeAnimationOptions& options)
+{
+    if (options.fill()->equals("none")) {
+        output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
+    } else if (options.direction()->equals("forwards")) {
+        output.m_fill = AnimationFillModeValue::AnimationFillModeForwardsValue;
+    } else if (options.direction()->equals("backwards")) {
+        output.m_fill = AnimationFillModeValue::AnimationFillModeBackwardsValue;
+    } else if (options.direction()->equals("both")) {
+        output.m_fill = AnimationFillModeValue::AnimationFillModeBothValue;
+    } else {
+        output.m_fill = AnimationFillModeValue::AnimationFillModeNoneValue;
     }
 }
 
