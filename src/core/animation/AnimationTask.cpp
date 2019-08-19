@@ -151,7 +151,9 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_playState(AnimationPlayStateValue::AnimationPlayStateRunningValue)
+    , m_fillMode(AnimationFillModeValue::AnimationFillModeNoneValue)
     , m_gapTimeMs(0)
+    , m_iterationCount(0)
     , m_iterationStart(0)
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
@@ -173,7 +175,8 @@ ActiveAnimationTask::ActiveAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, AnimationPlayStateValue playState)
+    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode)
     : m_isEveryAnimiatedValueResolved(false)
     , m_type(ANIMATION_TYPE)
     , m_property(targetProperty)
@@ -183,7 +186,9 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_startDelayMs(delayInms)
     , m_delayMs(delayInms)
     , m_playState(playState)
+    , m_fillMode(fillMode)
     , m_gapTimeMs(0)
+    , m_iterationCount(iterationCount)
     , m_iterationStart(0)
     , m_isInDelayedTime(delayInms > 0 ? true : false)
     , m_isForward(true)
@@ -227,11 +232,18 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     }
 
     if (m_type == ANIMATION_TYPE) {
-        if (m_isInDelayedTime == true && f == 0) {
+        if ((m_isInDelayedTime == true && f == 0) ||
+            m_isEveryAnimiatedValueResolved == false) {
             return;
         }
 
         execute(computeProgress(f), style);
+
+        if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
+            m_fillMode ==
+                AnimationFillModeValue::AnimationFillModeForwardsValue) {
+            return;
+        }
 
         if (f >= 1.0 && m_isForward == true) {
             m_frameIdx++;
@@ -351,9 +363,11 @@ ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, AnimationPlayStateValue playState)
+    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms, playState)
+                          timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
 {
     STARFISH_ASSERT(target != nullptr);
 }
@@ -578,9 +592,11 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, AnimationPlayStateValue playState)
+    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms, playState)
+                          timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
     , m_originalTransformValue(nullptr)
 {
     STARFISH_ASSERT(target != nullptr);
@@ -854,10 +870,11 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, AnimationPlayStateValue playState,
-    size_t indexForBgLayer)
+    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms, playState)
+                          timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
     STARFISH_ASSERT(target != nullptr);
@@ -1328,10 +1345,11 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, AnimationPlayStateValue playState,
-    size_t indexForBgLayer)
+    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    AnimationFillModeValue fillMode, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
-                          timingFunctions, durationInms, delayInms, playState)
+                          timingFunctions, durationInms, delayInms,
+                          iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
     STARFISH_ASSERT(target != nullptr);
@@ -2793,6 +2811,7 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
         float iterationCount = animation->iterationCount(s);
         AnimationDirectionValue direction = animation->direction(s);
         AnimationPlayStateValue playState = animation->playState(s);
+        AnimationFillModeValue fillMode = animation->fillMode(s);
 
         size_t keyframeSize = keyframes.keyframeListSize();
         bool neededOriginProperty = false;
@@ -2877,7 +2896,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BackgroundColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::BackgroundColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BackgroundColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2888,7 +2908,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderBottomColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::BorderBottomColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderBottomColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2899,7 +2920,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderLeftColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::BorderLeftColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderLeftColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2910,7 +2932,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderRightColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::BorderRightColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderRightColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2921,7 +2944,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderTopColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::BorderTopColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderTopColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2932,7 +2956,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::Color) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::Color, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Color);
                 executor->registerAnimation(task, style, name, s,
@@ -2943,7 +2968,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::CaretColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::CaretColor, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::CaretColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2954,7 +2980,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::OutlineColor) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::OutlineColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::OutlineColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2966,7 +2993,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                                 CSSStyleValuePair::TextDecoration) == true) {
                 auto task = new ActiveColorAnimationTask(
                     element, CSSStyleValuePair::TextDecorationColor, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::TextDecorationColor);
                 executor->registerAnimation(task, style, name, s,
@@ -2982,7 +3010,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
     if (keyKind == CSSStyleValuePair::propertyName) {                          \
         auto task = new ActiveLengthAnimationTask(                             \
             element, CSSStyleValuePair::propertyName, values[0], offsets,      \
-            timingFunctions, duration, delay, playState);                      \
+            timingFunctions, duration, delay, iterationCount, playState,       \
+            fillMode);                                                         \
         executor->removeActiveAnimationTaskIfNeeds(                            \
             element, CSSStyleValuePair::propertyName);                         \
         executor->registerAnimation(task, style, name, s, iterationCount,      \
@@ -3005,7 +3034,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                 }
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::MarginTop, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::MarginTop);
                 executor->registerAnimation(task, style, name, s,
@@ -3017,7 +3047,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::MarginRight) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::MarginRight, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::MarginRight);
                 executor->registerAnimation(task, style, name, s,
@@ -3032,7 +3063,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                 }
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::MarginBottom, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::MarginBottom);
                 executor->registerAnimation(task, style, name, s,
@@ -3044,7 +3076,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::MarginLeft) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::MarginLeft, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::MarginLeft);
                 executor->registerAnimation(task, style, name, s,
@@ -3056,7 +3089,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderTopWidth) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::BorderTopWidth, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderTopWidth);
                 executor->registerAnimation(task, style, name, s,
@@ -3068,7 +3102,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderRightWidth) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::BorderRightWidth, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderRightWidth);
                 executor->registerAnimation(task, style, name, s,
@@ -3080,7 +3115,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderBottomWidth) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::BorderBottomWidth, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderBottomWidth);
                 executor->registerAnimation(task, style, name, s,
@@ -3092,7 +3128,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::BorderLeftWidth) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::BorderLeftWidth, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::BorderLeftWidth);
                 executor->registerAnimation(task, style, name, s,
@@ -3104,7 +3141,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::PaddingTop) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::PaddingTop, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::PaddingTop);
                 executor->registerAnimation(task, style, name, s,
@@ -3116,7 +3154,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::PaddingRight) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::PaddingRight, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::PaddingRight);
                 executor->registerAnimation(task, style, name, s,
@@ -3128,7 +3167,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::PaddingBottom) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::PaddingBottom, values[0],
-                    offsets, timingFunctions, duration, delay, playState);
+                    offsets, timingFunctions, duration, delay, iterationCount,
+                    playState, fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::PaddingBottom);
                 executor->registerAnimation(task, style, name, s,
@@ -3140,7 +3180,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::PaddingLeft) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::PaddingLeft, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::PaddingLeft);
                 executor->registerAnimation(task, style, name, s,
@@ -3153,7 +3194,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
     if (CHECK_ANIMATION(CSSStyleValuePair::propertyName) == true) {            \
         auto task = new ActiveLengthAnimationTask(                             \
             element, CSSStyleValuePair::propertyName, values[0], offsets,      \
-            timingFunctions, duration, delay, playState);                      \
+            timingFunctions, duration, delay, iterationCount, playState,       \
+            fillMode);                                                         \
         executor->removeActiveAnimationTaskIfNeeds(                            \
             element, CSSStyleValuePair::propertyName);                         \
         executor->registerAnimation(task, style, name, s, iterationCount,      \
@@ -3177,7 +3219,7 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::BackgroundPositionX,
                         values[l], offsets, timingFunctions, duration, delay,
-                        playState, l);
+                        iterationCount, playState, fillMode, l);
                     executor->removeActiveAnimationTaskIfNeeds(
                         element, CSSStyleValuePair::BackgroundPositionX, l);
                     executor->registerAnimation(task, style, name, s,
@@ -3197,7 +3239,7 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::BackgroundPositionY,
                         values[l], offsets, timingFunctions, duration, delay,
-                        playState, l);
+                        iterationCount, playState, fillMode, l);
                     executor->removeActiveAnimationTaskIfNeeds(
                         element, CSSStyleValuePair::BackgroundPositionY, l);
                     executor->registerAnimation(task, style, name, s,
@@ -3215,8 +3257,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                 for (size_t l = 0; l < layerSize; l++) {
                     auto task = new ActiveLengthSizeAnimationTask(
                         element, CSSStyleValuePair::BackgroundSize, values[l],
-                        offsets, timingFunctions, duration, delay, playState,
-                        l);
+                        offsets, timingFunctions, duration, delay,
+                        iterationCount, playState, fillMode, l);
                     executor->removeActiveAnimationTaskIfNeeds(
                         element, CSSStyleValuePair::BackgroundSize, l);
                     executor->registerAnimation(task, style, name, s,
@@ -3230,7 +3272,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                                 CSSStyleValuePair::Font) == true) {
                 auto task = new ActiveLengthAnimationTask(
                     element, CSSStyleValuePair::FontSize, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::FontSize);
                 executor->registerAnimation(task, style, name, s,
@@ -3242,7 +3285,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::Opacity) == true) {
                 auto task = new ActiveOpacityAnimationTask(
                     element, CSSStyleValuePair::Opacity, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Opacity);
                 executor->registerAnimation(task, style, name, s,
@@ -3254,7 +3298,8 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
             if (CHECK_ANIMATION(CSSStyleValuePair::Transform) == true) {
                 auto task = new ActiveTransformAnimationTask(
                     element, CSSStyleValuePair::Transform, values[0], offsets,
-                    timingFunctions, duration, delay, playState);
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
                 executor->registerAnimation(task, style, name, s,

@@ -254,8 +254,9 @@ public:
                         const GCVector<AnimatedValue*>& animatedValues,
                         const GCAtomicVector<double>& keyframeNames,
                         const GCVector<TimingFunction*>& timingFunctions,
-                        uint64_t delayInms, uint64_t durationInms,
-                        AnimationPlayStateValue playState);
+                        uint64_t durationInms, uint64_t delayInms,
+                        float iterationCount, AnimationPlayStateValue playState,
+                        AnimationFillModeValue fillMode);
 
     virtual ~ActiveAnimationTask()
     {
@@ -426,6 +427,16 @@ public:
         m_playState = v;
     }
 
+    AnimationFillModeValue fillMode()
+    {
+        return m_fillMode;
+    }
+
+    void setFillMode(AnimationFillModeValue v)
+    {
+        m_fillMode = v;
+    }
+
     AnimatedValue* currentAnimatedFromValue();
     AnimatedValue* currentAnimatedToValue();
     TimingFunction* currentTimingFunction();
@@ -457,7 +468,9 @@ protected:
     uint64_t m_startDelayMs;
     uint64_t m_delayMs;
     AnimationPlayStateValue m_playState;
+    AnimationFillModeValue m_fillMode;
     uint64_t m_gapTimeMs;
+    float m_iterationCount;
     float m_iterationStart;
     bool m_isInDelayedTime;
     bool m_isForward;
@@ -493,7 +506,9 @@ public:
                                const GCAtomicVector<double>& offsets,
                                const GCVector<TimingFunction*>& timingFunctions,
                                uint64_t durationInms, uint64_t delayInms,
-                               AnimationPlayStateValue playState);
+                               float iterationCount,
+                               AnimationPlayStateValue playState,
+                               AnimationFillModeValue fillMode);
 
     void execute(float progress, ComputedStyle* style) override;
     virtual bool taskCanContinue(ComputedStyle* newStyle) override;
@@ -542,7 +557,8 @@ public:
         const GCVector<AnimatedValue*>& values,
         const GCAtomicVector<double>& offsets,
         const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        uint64_t delayInms, AnimationPlayStateValue playState);
+        uint64_t delayInms, float iterationCount,
+        AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
 
     virtual void resolveUnresolvedAnimatedValues() override;
     virtual void didAnimationFrameChanged() override;
@@ -589,10 +605,12 @@ public:
                              const GCAtomicVector<double>& offsets,
                              const GCVector<TimingFunction*>& timingFunctions,
                              uint64_t durationInms, uint64_t delayInms,
-                             AnimationPlayStateValue playState)
+                             float iterationCount,
+                             AnimationPlayStateValue playState,
+                             AnimationFillModeValue fillMode)
         : ActiveAnimationTask(target, targetProperty, values, offsets,
                               timingFunctions, durationInms, delayInms,
-                              playState)
+                              iterationCount, playState, fillMode)
     {
         STARFISH_ASSERT(target != nullptr);
     }
@@ -618,7 +636,9 @@ public:
                               const GCAtomicVector<double>& offsets,
                               const GCVector<TimingFunction*>& timingFunctions,
                               uint64_t durationInms, uint64_t delayInms,
+                              float iterationCount,
                               AnimationPlayStateValue playState,
+                              AnimationFillModeValue fillMode,
                               size_t indexForBgLayer = 0);
 
     void execute(float progress, ComputedStyle* style) override;
@@ -664,7 +684,8 @@ public:
         const GCVector<AnimatedValue*>& values,
         const GCAtomicVector<double>& offsets,
         const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        uint64_t delayInms, AnimationPlayStateValue playState,
+        uint64_t delayInms, float iterationCount,
+        AnimationPlayStateValue playState, AnimationFillModeValue fillMode,
         size_t indexForBgLayer = 0);
 
     void execute(float progress, ComputedStyle* style) override;

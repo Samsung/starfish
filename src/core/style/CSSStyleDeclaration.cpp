@@ -1197,7 +1197,8 @@ static bool parseAnimationShorthand(
     const CSSTokenVector& tokens, CSSStyleValuePair* name,
     CSSStyleValuePair* duration, CSSStyleValuePair* timingFunction,
     CSSStyleValuePair* delay, CSSStyleValuePair* iteration,
-    CSSStyleValuePair* direction, CSSStyleValuePair* playState)
+    CSSStyleValuePair* direction, CSSStyleValuePair* playState,
+    CSSStyleValuePair* fillMode)
 {
     size_t len = tokens.size();
     if (len < 1) {
@@ -1211,6 +1212,7 @@ static bool parseAnimationShorthand(
     iteration->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     direction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     playState->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    fillMode->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
     bool foundName = false;
     bool foundDuration = false;
@@ -1219,6 +1221,7 @@ static bool parseAnimationShorthand(
     bool foundIteration = false;
     bool foundDirection = false;
     bool foundPlayState = false;
+    bool foundFillMode = false;
 
     for (size_t i = 0; i < len; i++) {
         CSSStyleValuePair temp;
@@ -1282,6 +1285,13 @@ static bool parseAnimationShorthand(
             continue;
         }
         // TODO: Handle animation-play-state using 'var'.
+
+        if (!foundFillMode && temp.updateValueUnitAnimationFillMode(tok)) {
+            foundFillMode = true;
+            *fillMode = temp;
+            continue;
+        }
+        // TODO: Handle animation-fill-mode using 'var'.
 
         return false;
     }
@@ -3876,6 +3886,7 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
         removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
         removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
         removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
+        removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
         return;
     }
     // TODO handle var() case
@@ -3891,17 +3902,18 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
     ValueList* iterations = new ValueList(ValueList::CommaSeparator);
     ValueList* directions = new ValueList(ValueList::CommaSeparator);
     ValueList* playStates = new ValueList(ValueList::CommaSeparator);
+    ValueList* fillModes = new ValueList(ValueList::CommaSeparator);
 
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair v0, v1, v2, v3, v4, v5, v6;
+        CSSStyleValuePair v0, v1, v2, v3, v4, v5, v6, v7;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length(), "", 0,
                          true);
         if (layerSize == 1 && v0.updateValueCommon(tokens)) {
-            v1 = v2 = v3 = v4 = v5 = v6 = v0;
+            v1 = v2 = v3 = v4 = v5 = v6 = v7 = v0;
         } else if (!parseAnimationShorthand(tokens, &v0, &v1, &v2, &v3, &v4,
-                                            &v5, &v6)) {
+                                            &v5, &v6, &v7)) {
             return;
         }
         names->push_back(v0);
@@ -3911,9 +3923,10 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
         iterations->push_back(v4);
         directions->push_back(v5);
         playStates->push_back(v6);
+        fillModes->push_back(v7);
     }
 
-    CSSStyleValuePair r0, r1, r2, r3, r4, r5, r6;
+    CSSStyleValuePair r0, r1, r2, r3, r4, r5, r6, r7;
     r0.setValueList(names);
     r0.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::AnimationName, r0);
@@ -3941,6 +3954,10 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
     r6.setValueList(playStates);
     r6.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::AnimationPlayState, r6);
+
+    r7.setValueList(fillModes);
+    r7.setFlagImportant(isImportant);
+    addCSSValuePair(CSSStyleValuePair::AnimationFillMode, r7);
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
