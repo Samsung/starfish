@@ -25,13 +25,14 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
+#include "api/media_stream_interface.h"
 #include "pc/video_track_source.h"
 #include "platform/webrtc/VideoCapturer.h"
 
 namespace Starfish {
 class ExecutionContext;
 class VideoStreamTrack;
+class AudioStreamTrack;
 
 class MediaStreamTrack : public EventTarget {
 public:
@@ -53,16 +54,54 @@ public:
 
     virtual String* kindString();
 
+    virtual bool isAudioStreamTrack()
+    {
+        return false;
+    }
+
     virtual bool isVideoStreamTrack()
     {
         return false;
     }
 
+    void attachTo(MediaStream* stream)
+    {
+        m_attachedMediaStreams.insert(stream);
+    }
+
+    void removeFrom(MediaStream* stream)
+    {
+        m_attachedMediaStreams.erase(stream);
+    }
+
+    AudioStreamTrack* asAudioStreamTrack();
     VideoStreamTrack* asVideoStreamTrack();
 
 protected:
     ExecutionContext* m_executionContext{ nullptr };
     Kind m_kind{ Kind::None };
+    GCUnorderedSet<MediaStream*> m_attachedMediaStreams;
+};
+
+class AudioStreamTrack : public MediaStreamTrack {
+public:
+    AudioStreamTrack(ExecutionContext* executionContext);
+    AudioStreamTrack(ExecutionContext* executionContext,
+                     rtc::scoped_refptr<webrtc::AudioTrackInterface> backend);
+    virtual ~AudioStreamTrack();
+
+    virtual bool isAudioStreamTrack()
+    {
+        return true;
+    }
+
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> backend()
+    {
+        return m_backend;
+    }
+
+private:
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> m_backend;
 };
 
 class VideoStreamTrack : public MediaStreamTrack {
@@ -103,7 +142,13 @@ private:
     rtc::scoped_refptr<webrtc::VideoTrackInterface> m_backend;
 };
 
-class MediaStream : public EventTarget {
+class MediaStreamTrackObserver {
+public:
+    virtual void removeAudioTrack(AudioStreamTrack* track) = 0;
+    virtual void removeVideoTrack(VideoStreamTrack* track) = 0;
+};
+
+class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
     const std::string m_streamId = "streamId";
 
@@ -121,13 +166,20 @@ public:
         return m_backend;
     }
 
+    GCVector<MediaStreamTrack*> getAudioTracks();
     GCVector<MediaStreamTrack*> getVideoTracks();
     GCVector<MediaStreamTrack*> getTracks();
     void addTrack(MediaStreamTrack* track);
+    void removeTrack(MediaStreamTrack* track);
+
+    void removeAudioTrack(AudioStreamTrack* track) override;
+    void removeVideoTrack(VideoStreamTrack* track) override;
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
+    GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
+    GCUnorderedSet<VideoStreamTrack*> m_videoTracks;
 };
 } // namespace Starfish
 
