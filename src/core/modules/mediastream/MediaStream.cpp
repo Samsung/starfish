@@ -32,6 +32,12 @@
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
 
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame_buffer.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_source_interface.h"
+#include "third_party/libyuv/include/libyuv/convert_from.h"
+
 namespace Starfish {
 
 MediaStreamTrack::MediaStreamTrack(ExecutionContext* executionContext)
@@ -204,6 +210,51 @@ VideoStreamTrack::CapturerTrackSource::source()
     return m_capturer.get();
 }
 
+MediaStream::VideoRenderer::VideoRenderer(
+    webrtc::VideoTrackInterface* trackToRender)
+    : m_trackToRender(trackToRender)
+{
+    m_trackToRender->AddOrUpdateSink(this, rtc::VideoSinkWants());
+}
+
+MediaStream::VideoRenderer::~VideoRenderer()
+{
+    m_trackToRender->RemoveSink(this);
+}
+
+void MediaStream::VideoRenderer::setSize(int width, int height)
+{
+    if (m_width == width && m_height == height) {
+        return;
+    }
+
+    m_width = width;
+    m_height = height;
+    m_image.reset(new uint8_t[width * height * 4]);
+}
+
+void MediaStream::VideoRenderer::OnFrame(const webrtc::VideoFrame& videoFrame)
+{
+    STARFISH_LOG_WARN("%s\n", __func__);
+    // TODO: Consider having a thread after measuring the performance
+    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
+        videoFrame.video_frame_buffer()->ToI420());
+    if (videoFrame.rotation() != webrtc::kVideoRotation_0) {
+        buffer = webrtc::I420Buffer::Rotate(*buffer, videoFrame.rotation());
+    }
+    setSize(buffer->width(), buffer->height());
+
+    // Due to a bug (https://bugs.webrtc.org/6857), libyuv::I420ToRGBA()
+    // generates a red video output. In fact, I420ToABGR() generates
+    // [(r,g,b,a)].
+    libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+                       buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
+                       m_image.get(), m_width * 4, buffer->width(),
+                       buffer->height());
+
+    // TODO: Display the buffer on screen
+}
+
 MediaStream::MediaStream(ExecutionContext* executionContext)
     : EventTarget()
     , m_executionContext(executionContext)
@@ -299,6 +350,10 @@ GCVector<MediaStreamTrack*> MediaStream::getTracks()
 
 void MediaStream::addTrack(MediaStreamTrack* track)
 {
+    if (track == nullptr) {
+        return;
+    }
+
     if (track->kind() == MediaStreamTrack::Kind::Audio) {
         auto audioTrack = static_cast<AudioStreamTrack*>(track);
         if (audioTrack->backend()) {
@@ -318,6 +373,10 @@ void MediaStream::addTrack(MediaStreamTrack* track)
 
 void MediaStream::removeTrack(MediaStreamTrack* track)
 {
+    if (track == nullptr) {
+        return;
+    }
+
     if (track->kind() == MediaStreamTrack::Kind::Audio) {
         auto audioTrack = static_cast<AudioStreamTrack*>(track);
         removeAudioTrack(audioTrack);
@@ -331,18 +390,39 @@ void MediaStream::removeTrack(MediaStreamTrack* track)
 
 void MediaStream::removeAudioTrack(AudioStreamTrack* track)
 {
+    STARFISH_ASSERT(track);
+
     if (track->backend()) {
         m_backend->RemoveTrack(track->backend());
     }
     m_audioTracks.erase(track);
 }
+
 void MediaStream::removeVideoTrack(VideoStreamTrack* track)
 {
+    STARFISH_ASSERT(track);
+
     if (track->backend()) {
         m_backend->RemoveTrack(track->backend());
     }
     m_videoTracks.erase(track);
 }
+
+void MediaStream::startPlayVideoTrack(MediaStreamTrack* track)
+{
+    STARFISH_ASSERT(track);
+
+    VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
+    if (videoTrack->backend()) {
+        m_videoRenderer.reset(new VideoRenderer(videoTrack->backend()));
+    } else {
+        STARFISH_LOG_WARN("%s: backend()==nullptr\n", __func__);
+    }
 }
 
+void MediaStream::stopPlayVideoTrack()
+{
+    m_videoRenderer == nullptr;
+}
+}
 #endif

@@ -43,15 +43,10 @@
 #include "core/page/GlobalScope.h"
 
 #include "api/rtp_transceiver_interface.h"
-#include "api/video/i420_buffer.h"
-#include "api/video/video_frame_buffer.h"
-#include "api/video/video_rotation.h"
-#include "api/video/video_source_interface.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "third_party/libyuv/include/libyuv/convert_from.h"
 
 namespace Starfish {
 
@@ -363,10 +358,7 @@ bool PeerConnectionObserver::reinitializePeerConnectionForLoopback()
 
 void PeerConnectionObserver::deletePeerConnection()
 {
-    // TODO: stop local and remote rendering
-    stopLocalRenderer();
     m_peerConnection = nullptr;
-    m_peerConnectionFactory = nullptr;
     m_loopback = false;
 }
 
@@ -407,62 +399,6 @@ bool PeerConnectionObserver::createPeerConnection(bool dtls)
     m_peerConnection = m_peerConnectionFactory->CreatePeerConnection(
         config, nullptr, nullptr, this);
     return m_peerConnection != nullptr;
-}
-
-void PeerConnectionObserver::startLocalRenderer(
-    webrtc::VideoTrackInterface* localVideo)
-{
-    m_localRenderer.reset(new VideoRenderer(localVideo));
-}
-
-void PeerConnectionObserver::stopLocalRenderer()
-{
-    m_localRenderer.reset(nullptr);
-}
-
-PeerConnectionObserver::VideoRenderer::VideoRenderer(
-    webrtc::VideoTrackInterface* trackToRender)
-    : m_renderedTrack(trackToRender)
-{
-    m_renderedTrack->AddOrUpdateSink(this, rtc::VideoSinkWants());
-}
-
-PeerConnectionObserver::VideoRenderer::~VideoRenderer()
-{
-    m_renderedTrack->RemoveSink(this);
-}
-
-void PeerConnectionObserver::VideoRenderer::setSize(int width, int height)
-{
-    if (m_width == width && m_height == height) {
-        return;
-    }
-
-    m_width = width;
-    m_height = height;
-    m_image.reset(new uint8_t[width * height * 4]);
-}
-
-void PeerConnectionObserver::VideoRenderer::OnFrame(
-    const webrtc::VideoFrame& videoFrame)
-{
-    // TODO: Consider having a thread after measuring the performance
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
-        videoFrame.video_frame_buffer()->ToI420());
-    if (videoFrame.rotation() != webrtc::kVideoRotation_0) {
-        buffer = webrtc::I420Buffer::Rotate(*buffer, videoFrame.rotation());
-    }
-    setSize(buffer->width(), buffer->height());
-
-    // Due to a bug (https://bugs.webrtc.org/6857), libyuv::I420ToRGBA()
-    // generates a red video output. In fact, I420ToABGR() generates
-    // [(r,g,b,a)].
-    libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
-                       buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
-                       m_image.get(), m_width * 4, buffer->width(),
-                       buffer->height());
-
-    // TODO: Display the buffer on screen
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer

@@ -43,6 +43,8 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
 
+#include "core/modules/mediastream/MediaStream.h"
+
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
 #define MEDIA_ELEMENT_LOG(element, STR, ...) \
     STARFISH_LOG_INFO(                       \
@@ -491,6 +493,22 @@ String* HTMLMediaElement::src()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
+
+#if defined(STARFISH_ENABLE_WEBRTC)
+void HTMLMediaElement::setSrcObject(MediaProvider* provider)
+{
+    m_mediaProvider = provider;
+    GCVector<MediaStreamTrack*> tracks = provider->getVideoTracks();
+    if (!tracks.empty()) {
+        // TODO: start displaying the video stream
+    }
+}
+
+MediaProvider* HTMLMediaElement::srcObject()
+{
+    return m_mediaProvider;
+}
+#endif
 
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
                                           String* language)
