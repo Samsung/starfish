@@ -36,6 +36,9 @@ class TextTrack;
 class TextTrackList;
 class TimeRanges;
 class URL;
+#if defined(STARFISH_ENABLE_WEBRTC)
+class MediaStream;
+#endif
 
 class ResourceSelectionContext : public gc {
 public:
@@ -191,6 +194,10 @@ typedef std::list<MediaOperationQueueData*,
                   gc_allocator_ignore_off_page<MediaOperationQueueData*>>
     MediaOperationQueue;
 
+#if defined(STARFISH_ENABLE_WEBRTC)
+typedef MediaStream MediaProvider;
+#endif
+
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
     friend class MediaOperationQueueDataRequestPause;
@@ -251,6 +258,17 @@ public:
 
     void setSrc(String* src);
     String* src();
+
+#if defined(STARFISH_ENABLE_WEBRTC)
+public:
+    virtual void setSrcObject(MediaProvider* provider);
+    NULLABLE virtual MediaProvider* srcObject();
+
+protected:
+    MediaProvider* m_mediaProvider{ nullptr };
+
+public:
+#endif
 
     String* currentSrc();
 

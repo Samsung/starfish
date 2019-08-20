@@ -146,10 +146,28 @@ class MediaStreamTrackObserver {
 public:
     virtual void removeAudioTrack(AudioStreamTrack* track) = 0;
     virtual void removeVideoTrack(VideoStreamTrack* track) = 0;
+    virtual ~MediaStreamTrackObserver(){};
 };
 
 class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
+    class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+    public:
+        VideoRenderer(webrtc::VideoTrackInterface* trackToRender);
+        virtual ~VideoRenderer();
+
+        // VideoSinkInterface implementation
+        void OnFrame(const webrtc::VideoFrame& frame) override;
+
+    private:
+        void setSize(int width, int height);
+
+        std::unique_ptr<uint8_t[]> m_image;
+        int m_width{ 0 };
+        int m_height{ 0 };
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_trackToRender;
+    };
+
     const std::string m_streamId = "streamId";
 
     MediaStream(ExecutionContext* executionContext);
@@ -175,11 +193,16 @@ public:
     void removeAudioTrack(AudioStreamTrack* track) override;
     void removeVideoTrack(VideoStreamTrack* track) override;
 
+    void startPlayVideoTrack(MediaStreamTrack* track);
+    void stopPlayVideoTrack();
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
     GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
     GCUnorderedSet<VideoStreamTrack*> m_videoTracks;
+
+    std::unique_ptr<VideoRenderer> m_videoRenderer;
 };
 } // namespace Starfish
 

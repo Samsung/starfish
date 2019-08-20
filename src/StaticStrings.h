@@ -589,6 +589,9 @@ public:
 #ifdef STARFISH_ENABLE_WEBSOCKET
     QualifiedName m_close;
 #endif
+#ifdef STARFISH_ENABLE_WEBRTC
+    QualifiedName m_srcObject;
+#endif
 
 protected:
 };
