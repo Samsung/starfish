@@ -50,6 +50,8 @@ WebRtcManager::WebRtcManager()
         webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
         nullptr /* audio_processing */);
 
+    STARFISH_ASSERT(m_peerConnectionFactory);
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) { ((WebRtcManager*)obj)->~WebRtcManager(); },

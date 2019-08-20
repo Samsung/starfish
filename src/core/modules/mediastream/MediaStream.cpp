@@ -65,10 +65,63 @@ String* MediaStreamTrack::kindString()
     }
 }
 
+AudioStreamTrack* MediaStreamTrack::asAudioStreamTrack()
+{
+    STARFISH_ASSERT(isAudioStreamTrack());
+    return static_cast<AudioStreamTrack*>(this);
+}
+
 VideoStreamTrack* MediaStreamTrack::asVideoStreamTrack()
 {
     STARFISH_ASSERT(isVideoStreamTrack());
     return static_cast<VideoStreamTrack*>(this);
+}
+
+AudioStreamTrack::AudioStreamTrack(ExecutionContext* executionContext)
+    : AudioStreamTrack(executionContext, nullptr)
+{
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+        peerConnectionFactory = this->executionContext()
+                                    ->document()
+                                    ->window()
+                                    ->navigator()
+                                    ->webRtcManager()
+                                    ->peerConnectionFactory();
+
+    STARFISH_ASSERT(peerConnectionFactory);
+
+    // TODO: find audio devices for each real target device
+    rtc::scoped_refptr<webrtc::AudioSourceInterface> audioDevice =
+        peerConnectionFactory->CreateAudioSource(cricket::AudioOptions());
+    if (audioDevice) {
+        m_backend =
+            peerConnectionFactory->CreateAudioTrack(m_audioLabel, audioDevice);
+    } else {
+        STARFISH_LOG_ERROR("AudioStreamTrack: failed\n");
+    }
+}
+
+AudioStreamTrack::AudioStreamTrack(
+    ExecutionContext* executionContext,
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> backend)
+    : MediaStreamTrack(executionContext)
+{
+    m_kind = Kind::Audio;
+    m_backend = backend;
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((AudioStreamTrack*)obj)->~AudioStreamTrack(); },
+        NULL, NULL, NULL);
+}
+
+AudioStreamTrack::~AudioStreamTrack()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    for (auto mediaStream : m_attachedMediaStreams) {
+        mediaStream->removeAudioTrack(this);
+    }
+    m_backend = nullptr;
 }
 
 VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
@@ -88,6 +141,8 @@ VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
         STARFISH_ASSERT(peerConnectionFactory);
         m_backend =
             peerConnectionFactory->CreateVideoTrack(m_videoLabel, videoDevices);
+    } else {
+        STARFISH_LOG_ERROR("VideoStreamTrack: failed\n");
     }
 }
 
@@ -107,17 +162,9 @@ VideoStreamTrack::VideoStreamTrack(
 
 VideoStreamTrack::~VideoStreamTrack()
 {
-    auto pc = this->executionContext()
-                  ->document()
-                  ->window()
-                  ->navigator()
-                  ->webRtcManager()
-                  ->peerConnection();
-
-    if (pc) {
-        for (auto& transceiver : pc->GetTransceivers()) {
-            pc->RemoveTrack(transceiver->sender());
-        }
+    STARFISH_LOG_INFO("%s\n", __func__);
+    for (auto mediaStream : m_attachedMediaStreams) {
+        mediaStream->removeVideoTrack(this);
     }
     m_backend = nullptr;
 }
@@ -190,6 +237,21 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
+    STARFISH_LOG_INFO("%s\n", __func__);
+
+    for (auto track : m_audioTracks) {
+        if (track->backend()) {
+            m_backend->RemoveTrack(track->backend());
+        }
+        track->removeFrom(this);
+    }
+    for (auto track : m_videoTracks) {
+        if (track->backend()) {
+            m_backend->RemoveTrack(track->backend());
+        }
+        track->removeFrom(this);
+    }
+
     auto pc = this->executionContext()
                   ->document()
                   ->window()
@@ -213,30 +275,73 @@ ExecutionContext* MediaStream::executionContext() const
     return m_executionContext;
 }
 
+GCVector<MediaStreamTrack*> MediaStream::getAudioTracks()
+{
+    GCVector<MediaStreamTrack*> tracks;
+    tracks.insert(tracks.end(), m_audioTracks.begin(), m_audioTracks.end());
+    return tracks;
+}
+
 GCVector<MediaStreamTrack*> MediaStream::getVideoTracks()
 {
     GCVector<MediaStreamTrack*> tracks;
-    for (auto track : m_backend->GetVideoTracks()) {
-        tracks.push_back(new VideoStreamTrack(executionContext(), track));
-    }
-
+    tracks.insert(tracks.end(), m_videoTracks.begin(), m_videoTracks.end());
     return tracks;
 }
 
 GCVector<MediaStreamTrack*> MediaStream::getTracks()
 {
-    // TODO: Support audio tracks
-    return getVideoTracks();
+    GCVector<MediaStreamTrack*> tracks;
+    tracks.insert(tracks.end(), m_audioTracks.begin(), m_audioTracks.end());
+    tracks.insert(tracks.end(), m_videoTracks.begin(), m_videoTracks.end());
+    return tracks;
 }
 
 void MediaStream::addTrack(MediaStreamTrack* track)
 {
-    if (track->kind() == MediaStreamTrack::Kind::Video) {
+    if (track->kind() == MediaStreamTrack::Kind::Audio) {
+        auto audioTrack = static_cast<AudioStreamTrack*>(track);
+        if (audioTrack->backend()) {
+            m_backend->AddTrack(audioTrack->backend());
+        }
+        m_audioTracks.insert(audioTrack);
+        audioTrack->attachTo(this);
+    } else if (track->kind() == MediaStreamTrack::Kind::Video) {
         auto videoTrack = static_cast<VideoStreamTrack*>(track);
         if (videoTrack->backend()) {
             m_backend->AddTrack(videoTrack->backend());
         }
+        m_videoTracks.insert(videoTrack);
+        videoTrack->attachTo(this);
     }
+}
+
+void MediaStream::removeTrack(MediaStreamTrack* track)
+{
+    if (track->kind() == MediaStreamTrack::Kind::Audio) {
+        auto audioTrack = static_cast<AudioStreamTrack*>(track);
+        removeAudioTrack(audioTrack);
+        audioTrack->removeFrom(this);
+    } else if (track->kind() == MediaStreamTrack::Kind::Video) {
+        auto videoTrack = static_cast<VideoStreamTrack*>(track);
+        removeVideoTrack(videoTrack);
+        videoTrack->removeFrom(this);
+    }
+}
+
+void MediaStream::removeAudioTrack(AudioStreamTrack* track)
+{
+    if (track->backend()) {
+        m_backend->RemoveTrack(track->backend());
+    }
+    m_audioTracks.erase(track);
+}
+void MediaStream::removeVideoTrack(VideoStreamTrack* track)
+{
+    if (track->backend()) {
+        m_backend->RemoveTrack(track->backend());
+    }
+    m_videoTracks.erase(track);
 }
 }
 

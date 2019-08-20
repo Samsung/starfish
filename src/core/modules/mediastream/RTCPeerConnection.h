@@ -92,9 +92,6 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
                                public webrtc::CreateSessionDescriptionObserver {
 public:
-    const std::string kAudioLabel = "audio_label";
-    const std::string kVideoLabel = "video_label";
-    const std::string kStreamId = "stream_id";
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
     class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
@@ -150,8 +147,6 @@ protected:
     virtual bool createPeerConnection(bool dtls);
     virtual bool initializePeerConnection();
     virtual bool reinitializePeerConnectionForLoopback();
-
-    virtual void addTracks();
 
     virtual void startLocalRenderer(webrtc::VideoTrackInterface* localVideo);
     virtual void stopLocalRenderer();

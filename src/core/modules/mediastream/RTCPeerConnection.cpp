@@ -334,13 +334,7 @@ PeerConnectionObserver::PeerConnectionObserver(
 bool PeerConnectionObserver::initializePeerConnection()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-
-    if (!m_peerConnectionFactory) {
-        STARFISH_LOG_ERROR("Failed to initialize PeerConnectionFactory\n");
-        deletePeerConnection();
-        return false;
-    }
-
+    STARFISH_ASSERT(m_peerConnectionFactory);
     STARFISH_ASSERT(!m_peerConnection);
 
     if (!createPeerConnection(/*dtls=*/true)) {
@@ -349,44 +343,6 @@ bool PeerConnectionObserver::initializePeerConnection()
     }
 
     return m_peerConnection != nullptr;
-}
-
-void PeerConnectionObserver::addTracks()
-{
-    STARFISH_LOG_INFO("%s\n", __func__);
-    if (!m_peerConnection->GetSenders().empty()) {
-        return; // Already added tracks.
-    }
-
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(
-        m_peerConnectionFactory->CreateAudioTrack(
-            kAudioLabel, m_peerConnectionFactory->CreateAudioSource(
-                             cricket::AudioOptions())));
-    auto resultOrError = m_peerConnection->AddTrack(audioTrack, { kStreamId });
-    if (!resultOrError.ok()) {
-        STARFISH_LOG_ERROR("Failed to add audio track to PeerConnection: %s\n",
-                           resultOrError.error().message());
-    }
-
-    rtc::scoped_refptr<VideoStreamTrack::CapturerTrackSource> videoDevice =
-        VideoStreamTrack::CapturerTrackSource::create();
-    if (videoDevice) {
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
-            m_peerConnectionFactory->CreateVideoTrack(kVideoLabel,
-                                                      videoDevice));
-        startLocalRenderer(videoTrack);
-
-        resultOrError = m_peerConnection->AddTrack(videoTrack, { kStreamId });
-        if (!resultOrError.ok()) {
-            STARFISH_LOG_ERROR(
-                "Failed to add video track to PeerConnection: %s\n",
-                resultOrError.error().message());
-        }
-    } else {
-        STARFISH_LOG_ERROR("OpenVideoCaptureDevice failed\n");
-    }
-
-    // TODO: Display video streaming
 }
 
 bool PeerConnectionObserver::reinitializePeerConnectionForLoopback()
@@ -866,7 +822,9 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
 
     for (auto& transceiver : backend()->GetTransceivers()) {
         std::string id = "";
-        if (track->isVideoStreamTrack()) {
+        if (track->isAudioStreamTrack()) {
+            id = track->asAudioStreamTrack()->backend()->id();
+        } else if (track->isVideoStreamTrack()) {
             id = track->asVideoStreamTrack()->backend()->id();
         }
 
@@ -884,15 +842,21 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
     }
 
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>> r;
-    if (track->isVideoStreamTrack()) {
+    if (track->isAudioStreamTrack()) {
+        r = backend()->AddTrack(track->asAudioStreamTrack()->backend(),
+                                std::move(streamIds));
+    } else if (track->isVideoStreamTrack()) {
         r = backend()->AddTrack(track->asVideoStreamTrack()->backend(),
                                 std::move(streamIds));
     }
+
     if (r.ok()) {
         RTCRtpSender* rtpSender =
             new RTCRtpSender(executionContext(), r.value());
         return rtpSender;
     } else {
+        STARFISH_LOG_ERROR("Failed to add audio/video track: %s\n",
+                           r.error().message());
         throw new DOMException(executionContext(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessErr");
