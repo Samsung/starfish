@@ -55,7 +55,6 @@ public:
     WebSocket(ExecutionContext* executionContext, String* url);
     WebSocket(ExecutionContext* executionContext, String* url,
               String* protocols);
-
     String* url();
 
     // ready state
@@ -130,6 +129,7 @@ private:
     ResourceURL* m_url;
     String* m_extensions;
     String* m_protocol;
+    bool m_hasProtocol;
 
     ExecutionContext* m_executionContext;
     SocketLWS* m_socketLWS;
