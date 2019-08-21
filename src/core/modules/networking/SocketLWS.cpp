@@ -32,6 +32,7 @@
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/Event.h"
+#include "core/dom/CloseEvent.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/EventTarget.h"
 #include "core/modules/threading/AdaptedThread.h"
@@ -57,7 +58,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
 
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED:
-        socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
+        socket->updateState(WebSocket::ReadyState::OPEN);
         socket->publishEvent(SocketLWS::LwsEvent::OPEN);
         lws_callback_on_writable(wsi);
         break;
@@ -107,8 +108,8 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     }
 
     case LWS_CALLBACK_CLOSED:
+        socket->updateState(WebSocket::ReadyState::CLOSED);
         socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
-        socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
         socket->shutdown(0);
         break;
 
@@ -316,6 +317,39 @@ void SocketLWS::addToRxBuffer(char* param, size_t size)
     m_rxBuffer.insert(m_rxBuffer.end(), param, param + size);
 }
 
+void SocketLWS::updateState(WebSocket::ReadyState state)
+{
+    CHECK_ALIVE()
+
+    WebBase* webBase = parent()->executionContext()->webBase();
+
+    switch (state) {
+    case WebSocket::ReadyState::OPEN: {
+        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t handle, void* data) {
+                WebSocket* socket = (WebSocket*)data;
+                socket->setReadyState(WebSocket::ReadyState::OPEN);
+            },
+            parent());
+        break;
+    }
+    case WebSocket::ReadyState::CLOSED: {
+        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t handle, void* data) {
+                WebSocket* socket = (WebSocket*)data;
+                socket->setReadyState(WebSocket::ReadyState::CLOSED);
+            },
+            parent());
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+}
+
 void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
 {
     CHECK_ALIVE()
@@ -363,7 +397,11 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                         ->starfish()
                                         ->staticStrings()
                                         ->m_close.localName();
-                Event* e = new Event(socket->executionContext(), eventName);
+                CloseEvent* e =
+                    new CloseEvent(socket->executionContext(), eventName);
+                e->setCode(lws->closeCode());
+                e->setReason(String::createASCIIString(
+                    lws->closeReason().c_str(), lws->closeReason().length()));
                 socket->EventTarget::dispatchEventByUA(socket, e);
             },
             this);

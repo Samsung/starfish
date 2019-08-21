@@ -92,9 +92,11 @@ ScriptValue EventListener::call(Event* event)
                                        listenerFunc, argv, argc,
                                        event->currentTarget()->scriptValue());
         } else {
-            value = callHandleEventFunction(
-                event->scriptBindingInstance(), listenerFunc, argv, argc,
-                event->currentTarget()->scriptValue());
+            if (!isAttribute()) {
+                value = callHandleEventFunction(
+                    event->scriptBindingInstance(), listenerFunc, argv, argc,
+                    event->currentTarget()->scriptValue());
+            }
         }
 
         // NOTE: non-standard, but many browsers do this.
