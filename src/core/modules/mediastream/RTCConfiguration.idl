@@ -36,9 +36,10 @@ enum RTCRtcpMuxPolicy {
   "require"
 };
 
+// FIXME: Need "ConstructorCallWith=ExecutionContext"
 [STARFISH_ENABLE_WEBRTC]
 dictionary RTCConfiguration {
-  [Unimplemented] sequence<RTCIceServer> iceServers;
+  // sequence<RTCIceServer> iceServers; // FIXME: incorrect code is generated
   RTCIceTransportPolicy iceTransportPolicy;
   RTCBundlePolicy bundlePolicy;
   RTCRtcpMuxPolicy rtcpMuxPolicy;

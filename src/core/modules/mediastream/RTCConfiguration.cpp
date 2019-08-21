@@ -22,44 +22,74 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "core/modules/mediastream/RTCConfiguration.h"
+
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/mediastream/RTCConfiguration.h"
+#include "core/modules/mediastream/RTCCertificate.h"
 
 namespace Starfish {
 RTCConfiguration::RTCConfiguration()
 {
 }
 
-GCVector<RTCCertificate*>& RTCConfiguration::certificates()
+GCVector<RTCCertificate*> RTCConfiguration::certificates()
 {
+    // FIXME: We need the current executionContext to create RTCCertificate.
+    // Update the binding generator
     return m_certificates;
 }
 
 void RTCConfiguration::setCertificates(GCVector<RTCCertificate*>& certificates)
 {
     m_certificates = certificates;
+    m_backend.certificates.clear();
+    for (auto certificate : certificates) {
+        STARFISH_ASSERT(certificate->backend());
+        m_backend.certificates.push_back(certificate->backend());
+    }
+}
+
+std::vector<RTCIceServer> RTCConfiguration::iceServers()
+{
+    std::vector<RTCIceServer> iceServers;
+    for (auto& is : m_backend.servers) {
+        RTCIceServer iceServer(is);
+        iceServers.push_back(iceServer);
+    }
+    return std::move(iceServers);
+}
+void RTCConfiguration::setIceServers(std::vector<RTCIceServer>& iceServers)
+{
+    m_backend.servers.clear();
+    for (auto& iceServer : iceServers) {
+        m_backend.servers.push_back(iceServer.backend());
+    }
 }
 
 String* RTCConfiguration::iceTransportPolicy()
 {
-    switch (m_iceTransportPolicy) {
-    case RTCIceTransportPolicy::Relay:
+    switch (m_backend.type) {
+    case webrtc::PeerConnectionInterface::IceTransportsType::kRelay:
         return String::createASCIIString("relay");
-    case RTCIceTransportPolicy::All:
+    case webrtc::PeerConnectionInterface::IceTransportsType::kAll:
         return String::createASCIIString("all");
     default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        // NOTE: libwebrtc has more options that are not listed on the spec
+        STARFISH_LOG_WARN("%s: Unsupported values\n", __func__);
+        return String::emptyString;
     }
 }
 
 void RTCConfiguration::setIceTransportPolicy(String* iceTransportPolicy)
 {
     if (iceTransportPolicy->equals("relay")) {
-        m_iceTransportPolicy = RTCIceTransportPolicy::Relay;
+        m_backend.type =
+            webrtc::PeerConnectionInterface::IceTransportsType::kRelay;
         m_hasValidIceTransportPolicy = true;
     } else if (iceTransportPolicy->equals("all")) {
-        m_iceTransportPolicy = RTCIceTransportPolicy::All;
+        m_backend.type =
+            webrtc::PeerConnectionInterface::IceTransportsType::kAll;
         m_hasValidIceTransportPolicy = true;
     } else {
         m_hasValidIceTransportPolicy = false;
@@ -68,12 +98,12 @@ void RTCConfiguration::setIceTransportPolicy(String* iceTransportPolicy)
 
 String* RTCConfiguration::bundlePolicy()
 {
-    switch (m_bundlePolicy) {
-    case RTCBundlePolicy::Balanced:
+    switch (m_backend.bundle_policy) {
+    case webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyBalanced:
         return String::createASCIIString("balanced");
-    case RTCBundlePolicy::MaxCompat:
+    case webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxCompat:
         return String::createASCIIString("max-compat");
-    case RTCBundlePolicy::MaxBundle:
+    case webrtc::PeerConnectionInterface::BundlePolicy::kBundlePolicyMaxBundle:
         return String::createASCIIString("max-bundle");
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -83,13 +113,16 @@ String* RTCConfiguration::bundlePolicy()
 void RTCConfiguration::setBundlePolicy(String* bundlePolicy)
 {
     if (bundlePolicy->equals("balanced")) {
-        m_bundlePolicy = RTCBundlePolicy::Balanced;
+        m_backend.bundle_policy = webrtc::PeerConnectionInterface::
+            BundlePolicy::kBundlePolicyBalanced;
         m_hasValidBundlePolicy = true;
     } else if (bundlePolicy->equals("max-compat")) {
-        m_bundlePolicy = RTCBundlePolicy::MaxCompat;
+        m_backend.bundle_policy = webrtc::PeerConnectionInterface::
+            BundlePolicy::kBundlePolicyMaxCompat;
         m_hasValidBundlePolicy = true;
     } else if (bundlePolicy->equals("max-bundle")) {
-        m_bundlePolicy = RTCBundlePolicy::MaxBundle;
+        m_backend.bundle_policy = webrtc::PeerConnectionInterface::
+            BundlePolicy::kBundlePolicyMaxBundle;
         m_hasValidBundlePolicy = true;
     } else {
         m_hasValidBundlePolicy = false;
@@ -98,10 +131,11 @@ void RTCConfiguration::setBundlePolicy(String* bundlePolicy)
 
 String* RTCConfiguration::rtcpMuxPolicy()
 {
-    switch (m_rtcpMuxPolicy) {
-    case RTCRtcpMuxPolicy::Negotiate:
+    switch (m_backend.rtcp_mux_policy) {
+    case webrtc::PeerConnectionInterface::RtcpMuxPolicy::
+        kRtcpMuxPolicyNegotiate:
         return String::createASCIIString("negotiate");
-    case RTCRtcpMuxPolicy::Require:
+    case webrtc::PeerConnectionInterface::RtcpMuxPolicy::kRtcpMuxPolicyRequire:
         return String::createASCIIString("require");
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -111,10 +145,12 @@ String* RTCConfiguration::rtcpMuxPolicy()
 void RTCConfiguration::setRtcpMuxPolicy(String* rtcpMuxPolicy)
 {
     if (rtcpMuxPolicy->equals("negotiate")) {
-        m_rtcpMuxPolicy = RTCRtcpMuxPolicy::Negotiate;
+        m_backend.rtcp_mux_policy = webrtc::PeerConnectionInterface::
+            RtcpMuxPolicy::kRtcpMuxPolicyNegotiate;
         m_hasValidRtcpMuxPolicy = true;
     } else if (rtcpMuxPolicy->equals("require")) {
-        m_rtcpMuxPolicy = RTCRtcpMuxPolicy::Require;
+        m_backend.rtcp_mux_policy = webrtc::PeerConnectionInterface::
+            RtcpMuxPolicy::kRtcpMuxPolicyRequire;
         m_hasValidRtcpMuxPolicy = true;
     } else {
         m_hasValidRtcpMuxPolicy = false;

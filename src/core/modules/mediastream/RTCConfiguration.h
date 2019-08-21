@@ -25,7 +25,11 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+#include "core/modules/mediastream/RTCIceServer.h"
+#include "api/peer_connection_interface.h"
+
 namespace Starfish {
+class RTCCertificate;
 
 enum class RTCIceTransportPolicy {
     Relay,
@@ -48,7 +52,10 @@ struct RTCConfiguration {
 
 public:
     RTCConfiguration();
+    virtual ~RTCConfiguration(){};
 
+    std::vector<RTCIceServer> iceServers();
+    void setIceServers(std::vector<RTCIceServer>& iceServers);
     String* iceTransportPolicy();
     void setIceTransportPolicy(String* iceTransportPolicy);
     String* bundlePolicy();
@@ -56,17 +63,21 @@ public:
     String* rtcpMuxPolicy();
     void setRtcpMuxPolicy(String* rtcpMuxPolicy);
     DEFINE_GETTER_SETTER(String*, peerIdentity, PeerIdentity);
-    GCVector<RTCCertificate*>& certificates();
+    GCVector<RTCCertificate*> certificates();
     void setCertificates(GCVector<RTCCertificate*>& certificates);
 
     bool isValid();
 
+    webrtc::PeerConnectionInterface::RTCConfiguration backend()
+    {
+        return m_backend;
+    }
+
 private:
-    RTCIceTransportPolicy m_iceTransportPolicy{ RTCIceTransportPolicy::All };
-    RTCBundlePolicy m_bundlePolicy{ RTCBundlePolicy::Balanced };
-    RTCRtcpMuxPolicy m_rtcpMuxPolicy{ RTCRtcpMuxPolicy::Require };
-    String* m_peerIdentity{ String::emptyString };
     GCVector<RTCCertificate*> m_certificates;
+    webrtc::PeerConnectionInterface::RTCConfiguration m_backend;
+
+    String* m_peerIdentity{ String::emptyString };
 
     bool m_hasValidIceTransportPolicy{ true };
     bool m_hasValidBundlePolicy{ true };

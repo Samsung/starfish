@@ -25,26 +25,32 @@
 #include "binding/ScriptWrappable.h"
 #include "core/page/Serializer.h"
 
+#include "api/peer_connection_interface.h"
+
 namespace Starfish {
 
 class ExecutionContext;
 
 class RTCCertificate : public ScriptWrappable, public Serializable {
 public:
-    RTCCertificate(ExecutionContext* executionContext)
-        : ScriptWrappable(this)
-        , m_executionContext(executionContext)
-    {
-    }
+    RTCCertificate(ExecutionContext* executionContext);
+    RTCCertificate(ExecutionContext* executionContext,
+                   rtc::scoped_refptr<rtc::RTCCertificate> certificate);
+    virtual ~RTCCertificate(){};
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCCertificate)
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
 
     bool equals(RTCCertificate* certificate);
+    rtc::scoped_refptr<rtc::RTCCertificate> backend()
+    {
+        return m_backend;
+    }
 
 private:
     ExecutionContext* m_executionContext;
+    rtc::scoped_refptr<rtc::RTCCertificate> m_backend;
 };
 }
 

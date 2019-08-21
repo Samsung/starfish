@@ -35,6 +35,7 @@ namespace Starfish {
 class ExecutionContext;
 class OperationQueue;
 class RTCRtpSender;
+class RTCPeerConnection;
 
 enum class RTCSignalingState {
     Stable,
@@ -94,8 +95,8 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
-    PeerConnectionObserver(
-        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory);
+    PeerConnectionObserver();
+    PeerConnectionObserver(RTCPeerConnection* peerConnection);
     virtual ~PeerConnectionObserver(){};
 
     // PeerConnectionObserver implementation.
@@ -123,20 +124,8 @@ public:
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
     void OnFailure(webrtc::RTCError error) override{};
 
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection();
-    virtual void connectToPeer();
-    virtual void deletePeerConnection();
-
 protected:
-    virtual bool createPeerConnection(bool dtls);
-    virtual bool initializePeerConnection();
-    virtual bool reinitializePeerConnectionForLoopback();
-
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        m_peerConnectionFactory;
-    rtc::SocketAddress m_serverAddress;
-    bool m_loopback{ false };
+    RTCPeerConnection* m_peerConnection;
 };
 
 #if defined(STARFISH_ENABLE_TEST)
@@ -152,8 +141,8 @@ public:
     const std::string kSessionDescriptionTypeName = "type";
     const std::string kSessionDescriptionSdpName = "sdp";
 
-    TestPeerConnectionObserver(
-        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pcFactory);
+    TestPeerConnectionObserver();
+    TestPeerConnectionObserver(RTCPeerConnection* peerConnection);
     virtual ~TestPeerConnectionObserver(){};
 
     void OnSignedIn() override;
@@ -163,9 +152,6 @@ public:
     void OnMessageFromPeer(int peer_id, const std::string& message) override;
     void OnMessageSent(int err) override;
     void OnServerConnectionFailure() override;
-
-    void startLogin(const std::string& server, int port);
-    void deletePeerConnection() override;
 
     // CreateSessionDescriptionObserver implementation.
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
@@ -183,11 +169,18 @@ private:
         std::unique_ptr<PeerConnectionClient>(new PeerConnectionClient());
     int m_peerId{ -1 };
     std::string m_server;
+    bool m_loopback{ false };
+
+    bool reinitializePeerConnectionForLoopback();
+    void startLogin(const std::string& server, int port);
+    void deletePeerConnection();
 };
 #endif
 
 class RTCPeerConnection : public EventTarget {
 public:
+    const std::string m_stun = "stun:stun.l.google.com:19302";
+
     RTCPeerConnection(ExecutionContext* executionContext,
                       RTCConfiguration configuration = RTCConfiguration());
     virtual ~RTCPeerConnection();
@@ -220,9 +213,11 @@ public:
     RTCRtpSender* addTrack(MediaStreamTrack* track,
                            GCVector<MediaStream*>& streams);
 
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
+    bool initializePeerConnection();
+    bool initializePeerConnection(RTCConfiguration& configuration);
+
 private:
-    ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
-                                                    String* sdp);
     ExecutionContext* m_executionContext;
 
     OperationQueue* m_operationQueue;
@@ -252,9 +247,13 @@ private:
 #else
     rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
 #endif
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
+    ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
+                                                    String* sdp);
+
     bool isClosed();
+    void deletePeerConnection();
 };
 }
 
