@@ -118,15 +118,15 @@ http://web-platform.test:8000/websockets/keeping-connection-open/001.html
 #http://web-platform.test:8000/websockets/closing-handshake/004.html //chrome fail
 #
 http://web-platform.test:8000/websockets/constructor/001.html
-#http://web-platform.test:8000/websockets/constructor/002.html
-#http://web-platform.test:8000/websockets/constructor/004.html
+#http://web-platform.test:8000/websockets/constructor/002.html //chrome fail
+http://web-platform.test:8000/websockets/constructor/004.html
 http://web-platform.test:8000/websockets/constructor/005.html
 #http://web-platform.test:8000/websockets/constructor/006.html
-#http://web-platform.test:8000/websockets/constructor/007.html
+http://web-platform.test:8000/websockets/constructor/007.html
 http://web-platform.test:8000/websockets/constructor/008.html
 http://web-platform.test:8000/websockets/constructor/009.html
-#http://web-platform.test:8000/websockets/constructor/010.html
-#http://web-platform.test:8000/websockets/constructor/011.html
+http://web-platform.test:8000/websockets/constructor/010.html
+http://web-platform.test:8000/websockets/constructor/011.html
 http://web-platform.test:8000/websockets/constructor/012.html
 http://web-platform.test:8000/websockets/constructor/013.html
 #http://web-platform.test:8000/websockets/constructor/014.html

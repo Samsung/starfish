@@ -78,7 +78,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         // If connection is not establised, LWS doesn't call close
         // LWS_CALLBACK_CLOSED.
         if (!socket->isConnected()) {
-            socket->close(nullptr, 0, WebSocket::CloseCode::InternalError);
+            socket->close(nullptr, 0, WebSocket::CloseCode::AbnormalClosure);
             socket->updateState(WebSocket::ReadyState::CLOSED);
             socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
             socket->shutdown(0);

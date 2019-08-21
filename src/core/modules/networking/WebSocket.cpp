@@ -13,12 +13,43 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+/*
+ * Copyright (C) 2011 Google Inc.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *     * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifdef STARFISH_ENABLE_WEBSOCKET
 #include <EscargotPublic.h>
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Event.h"
+#include "core/page/WebBase.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/DOMException.h"
@@ -27,10 +58,45 @@
 #include "core/modules/networking/SocketLWS.h"
 #include "core/dom/ExecutionContext.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/dom/CloseEvent.h"
 
 using namespace Escargot;
 
 namespace Starfish {
+
+// From blink source code :renderer/modules/websockets/dom_websocket.cc:181
+// -->
+static inline bool IsValidSubprotocolCharacter(char32_t character)
+{
+    const char32_t kMinimumProtocolCharacter = '!'; // U+0021.
+    const char32_t kMaximumProtocolCharacter = '~'; // U+007E.
+    // Set to true if character does not matches "separators" ABNF defined in
+    // RFC2616. SP and HT are excluded since the range check excludes them.
+    bool is_not_separator =
+        character != '"' && character != '(' && character != ')' &&
+        character != ',' && character != '/' &&
+        !(character >= ':' &&
+          character <=
+              '@') // U+003A - U+0040 (':', ';', '<', '=', '>', '?', '@').
+        &&
+        !(character >= '[' &&
+          character <= ']') // U+005B - U+005D ('[', '\\', ']').
+        && character != '{' && character != '}';
+    return character >= kMinimumProtocolCharacter &&
+           character <= kMaximumProtocolCharacter && is_not_separator;
+}
+
+static bool IsValidSubprotocolString(String* protocol)
+{
+    if (protocol->isEmpty())
+        return false;
+    for (size_t i = 0; i < protocol->length(); ++i) {
+        if (!IsValidSubprotocolCharacter(protocol->charAt(i)))
+            return false;
+    }
+    return true;
+}
+// <--
 
 static inline String* binaryTypeToString(BinaryType binaryType)
 {
@@ -60,6 +126,7 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url)
     , m_binaryType(BinaryType::Blob)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
+    , m_hasProtocol(false)
     , m_executionContext(executionContext)
 {
     init(url, String::emptyString);
@@ -72,6 +139,7 @@ WebSocket::WebSocket(ExecutionContext* executionContext, String* url,
     , m_binaryType(BinaryType::Blob)
     , m_extensions(String::emptyString)
     , m_protocol(String::emptyString)
+    , m_hasProtocol(true)
     , m_executionContext(executionContext)
 {
     init(url, protocols);
@@ -85,7 +153,7 @@ void WebSocket::init(String* url, String* protocol)
     // Let urlRecord be the result of applying the URL parser to url.
     // If urlRecord is failure, then throw a "SyntaxError" DOMException.
     if (!m_url->isValid()) {
-        close();
+        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's is not valid");
     }
@@ -93,7 +161,7 @@ void WebSocket::init(String* url, String* protocol)
     // If urlRecord's scheme is not "ws" or "wss", then throw a "SyntaxError"
     // DOMException.
     if (!m_url->isWSURL() && !m_url->isWSSURL()) {
-        close();
+        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's scheme is not \"ws\" or \"wss\"");
     }
@@ -101,7 +169,7 @@ void WebSocket::init(String* url, String* protocol)
     // If urlRecord's fragment is non-null, then throw a "SyntaxError"
     // DOMException.
     if (!m_url->hash()->equals(String::emptyString)) {
-        close();
+        close(CloseCode::InternalError);
         throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "url's fragment is non-null");
     }
@@ -112,11 +180,14 @@ void WebSocket::init(String* url, String* protocol)
     // to match the requirements for elements that comprise the value of
     // Sec-WebSocket-Protocol fields as defined by The WebSocket protocol, then
     // throw a "SyntaxError" DOMException. [WSP]
-    // TODO
+    if (m_hasProtocol && !IsValidSubprotocolString(protocol)) {
+        close(CloseCode::InternalError);
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "protocol has invalid value");
+    }
 
     setProtocol(protocol);
     m_socketLWS = new SocketLWS(this);
-
     executionContext()->addActiveWebSockets(this);
 }
 
@@ -147,7 +218,7 @@ void WebSocket::close(uint16_t code)
 void WebSocket::close(String* reason)
 {
     // TODO
-    close(0, reason);
+    close(CloseCode::NormalClosure, reason);
 }
 
 void WebSocket::close(uint16_t code, String* reason)
@@ -158,15 +229,22 @@ void WebSocket::close(uint16_t code, String* reason)
         UTF8StringDataNonGCStd reasonString = reason->toUTF8NonGCString();
         m_socketLWS->close(reasonString.c_str(), reasonString.length(), code);
     } else {
+        if (code != CloseCode::NormalClosure) {
+            Event* e = new Event(executionContext(), executionContext()
+                                                         ->starfish()
+                                                         ->staticStrings()
+                                                         ->m_error.localName());
+            EventTarget::dispatchEventByUA(this, e);
+        }
         setReadyState(WebSocket::ReadyState::CLOSED);
-        String* eventName = executionContext()
-                                ->starfish()
-                                ->staticStrings()
-                                ->m_close.localName();
-        Event* e = new Event(executionContext(), eventName);
+        CloseEvent* e =
+            new CloseEvent(executionContext(), executionContext()
+                                                   ->starfish()
+                                                   ->staticStrings()
+                                                   ->m_close.localName());
         EventTarget::dispatchEventByUA(this, e);
+        dispose();
     }
-    executionContext()->removeActiveWebSockets(this);
 }
 
 DEFINE_EVENT_LISTENER(WebSocket, open);
