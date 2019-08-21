@@ -50,12 +50,12 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/events/006.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/010.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/011.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/012.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/013.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/events/013.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/014.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/015.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/events/015.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/016.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/017.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/018.html
+#http://web-platform.test:8000/websockets/interfaces/WebSocket/events/018.html  // error is now working with libwebsocket
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/019.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/events/020.html
 #

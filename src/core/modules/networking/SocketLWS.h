@@ -85,6 +85,7 @@ public:
     void run();
     void publishEvent(LwsEvent eventType, bool isBinary = false);
     void addToRxBuffer(char* param, size_t size);
+    void updateState(WebSocket::ReadyState state);
 
     std::vector<SocketLWSData*>* txData()
     {
