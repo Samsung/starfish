@@ -19,40 +19,33 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#ifndef __StarfishRTCCertificate__
-#define __StarfishRTCCertificate__
+#ifndef __StarfishRTCIceServer__
+#define __StarfishRTCIceServer__
 
+#include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
-#include "core/page/Serializer.h"
 
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
 
-class ExecutionContext;
-
-class RTCCertificate : public ScriptWrappable, public Serializable {
+struct RTCIceServer {
 public:
-    RTCCertificate(ExecutionContext* executionContext);
-    RTCCertificate(ExecutionContext* executionContext,
-                   rtc::scoped_refptr<rtc::RTCCertificate> certificate);
-    virtual ~RTCCertificate(){};
+    RTCIceServer();
+    RTCIceServer(webrtc::PeerConnectionInterface::IceServer& server);
+    virtual ~RTCIceServer(){};
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCCertificate)
-    virtual bool isSerializable() const override;
-    virtual Serializable* toSerializable() const override;
+    GCVector<String*> urls();
+    void setUrls(GCVector<String*>& value);
 
-    bool equals(RTCCertificate* certificate);
-    rtc::scoped_refptr<rtc::RTCCertificate> backend()
+    webrtc::PeerConnectionInterface::IceServer backend()
     {
         return m_backend;
     }
 
 private:
-    ExecutionContext* m_executionContext;
-    rtc::scoped_refptr<rtc::RTCCertificate> m_backend;
+    webrtc::PeerConnectionInterface::IceServer m_backend;
 };
 }
-
 #endif
 #endif

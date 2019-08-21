@@ -17,33 +17,12 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#rtciceserver-dictionary
 [STARFISH_ENABLE_WEBRTC]
-enum RTCIceTransportPolicy {
-  "relay",
-  "all"
-};
-
-[STARFISH_ENABLE_WEBRTC]
-enum RTCBundlePolicy {
-  "balanced",
-  "max-compat",
-  "max-bundle"
-};
-
-[STARFISH_ENABLE_WEBRTC]
-enum RTCRtcpMuxPolicy {
-  "negotiate",
-  "require"
-};
-
-// FIXME: Need "ConstructorCallWith=ExecutionContext"
-[STARFISH_ENABLE_WEBRTC]
-dictionary RTCConfiguration {
-  // sequence<RTCIceServer> iceServers; // FIXME: incorrect code is generated
-  RTCIceTransportPolicy iceTransportPolicy;
-  RTCBundlePolicy bundlePolicy;
-  RTCRtcpMuxPolicy rtcpMuxPolicy;
-  DOMString peerIdentity;
-  [Unimplemented] sequence<RTCCertificate> certificates;
-  [Unimplemented, EnforceRange] octet iceCandidatePoolSize = 0;
+dictionary RTCIceServer {
+  // required (DOMString or sequence<DOMString>) urls;
+  required sequence<DOMString> urls;
+  //DOMString username;
+  //(DOMString or RTCOAuthCredential) credential;
+  //RTCIceCredentialType credentialType = "password";
 };

@@ -17,33 +17,43 @@
  *  USA
  */
 
-[STARFISH_ENABLE_WEBRTC]
-enum RTCIceTransportPolicy {
-  "relay",
-  "all"
-};
+#if defined(STARFISH_ENABLE_WEBRTC)
 
-[STARFISH_ENABLE_WEBRTC]
-enum RTCBundlePolicy {
-  "balanced",
-  "max-compat",
-  "max-bundle"
-};
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
-[STARFISH_ENABLE_WEBRTC]
-enum RTCRtcpMuxPolicy {
-  "negotiate",
-  "require"
-};
+#include "core/modules/mediastream/RTCIceServer.h"
 
-// FIXME: Need "ConstructorCallWith=ExecutionContext"
-[STARFISH_ENABLE_WEBRTC]
-dictionary RTCConfiguration {
-  // sequence<RTCIceServer> iceServers; // FIXME: incorrect code is generated
-  RTCIceTransportPolicy iceTransportPolicy;
-  RTCBundlePolicy bundlePolicy;
-  RTCRtcpMuxPolicy rtcpMuxPolicy;
-  DOMString peerIdentity;
-  [Unimplemented] sequence<RTCCertificate> certificates;
-  [Unimplemented, EnforceRange] octet iceCandidatePoolSize = 0;
-};
+#include "core/dom/DOMException.h"
+#include "core/dom/ExecutionContext.h"
+
+namespace Starfish {
+
+RTCIceServer::RTCIceServer()
+{
+}
+
+RTCIceServer::RTCIceServer(webrtc::PeerConnectionInterface::IceServer& server)
+    : m_backend(server)
+{
+}
+
+GCVector<String*> RTCIceServer::urls()
+{
+    GCVector<String*> urls;
+    for (auto& url : m_backend.urls) {
+        urls.push_back(String::fromUTF8(url.data(), url.size()));
+    }
+
+    return std::move(urls);
+}
+
+void RTCIceServer::setUrls(GCVector<String*>& urls)
+{
+    m_backend.urls.clear();
+    for (auto url : urls) {
+        m_backend.urls.push_back(std::string(url->toUTF8NonGCString().data()));
+    }
+}
+}
+#endif
