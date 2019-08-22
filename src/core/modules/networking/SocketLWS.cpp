@@ -46,6 +46,9 @@ SocketLWS::Exception::Exception()
 {
 }
 
+static const char* SocketLWSDefaultCertPath =
+    "/etc/ssl/certs/ca-certificates.crt";
+
 #define CHECK_ALIVE() \
     if (!m_alive) {   \
         return;       \
@@ -133,9 +136,6 @@ static struct lws_protocols protocols[] = {
     { NULL, NULL, 0, 0, 0, NULL, 0 } /* terminator */
 };
 
-static const char* SocketLWSDefaultCertPath =
-    "/etc/ssl/certs/ca-certificates.crt";
-
 const char* SocketLWS::Exception::what() const throw()
 {
     STARFISH_ASSERT_NOT_REACHED();
@@ -186,7 +186,8 @@ SocketLWS::SocketLWS(WebSocket* socket)
     }
 
     if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
-        useSSL = LCCSCF_USE_SSL;
+        useSSL = LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED |
+                 LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK;
     }
 
     m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
