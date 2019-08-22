@@ -33,6 +33,7 @@ namespace Starfish {
 class ExecutionContext;
 class VideoStreamTrack;
 class AudioStreamTrack;
+class MediaPlayerWebRtc;
 
 class MediaStreamTrack : public EventTarget {
 public:
@@ -153,11 +154,14 @@ class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
     class VideoRenderer : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
     public:
-        VideoRenderer(webrtc::VideoTrackInterface* trackToRender);
+        VideoRenderer(webrtc::VideoTrackInterface* trackToRender,
+                      MediaPlayerWebRtc* player);
         virtual ~VideoRenderer();
 
         // VideoSinkInterface implementation
         void OnFrame(const webrtc::VideoFrame& frame) override;
+
+        MediaPlayerWebRtc* m_player;
 
     private:
         void setSize(int width, int height);
@@ -193,7 +197,8 @@ public:
     void removeAudioTrack(AudioStreamTrack* track) override;
     void removeVideoTrack(VideoStreamTrack* track) override;
 
-    void startPlayVideoTrack(MediaStreamTrack* track);
+    void startPlayVideoTrack(MediaPlayerWebRtc* player,
+                             MediaStreamTrack* track);
     void stopPlayVideoTrack();
 
 private:
