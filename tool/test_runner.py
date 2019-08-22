@@ -179,8 +179,6 @@ def wpt_others():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_parsing_basic.res", "cairo"])
 #    run_test(["multi_basic", "tool/reftest/cairo/wpt/dom_xpath_basic.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/page_visibility_basic.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo"])
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_single_thread.res", "cairo", "-p1"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/x-frame-options.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/csp.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/webstorage.res", "cairo"])
@@ -195,6 +193,10 @@ def wpt_canvas():
 def wpt_websocket():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/websocket.res", "cairo"])
 
+def wpt_xhr():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_single_thread.res", "cairo", "-p1"])
+
 def wpt_pwa():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fetch_basic.res", "cairo"])
 
@@ -208,6 +210,7 @@ def wpt_all():
     wpt_canvas()
     wpt_others()
     wpt_websocket()
+    wpt_xhr()
 
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])

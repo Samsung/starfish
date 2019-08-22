@@ -53,6 +53,13 @@ public:
     virtual void didNodeRemovedFromDocumentTree() override;
     void checkPlatformFlags();
 
+    void setDomName(String* name);
+    String* domName();
+    void setHttpEquiv(String* httpEquiv);
+    String* httpEquiv();
+    void setContent(String* content);
+    String* content();
+
 protected:
     String* m_name;
     String* m_content;

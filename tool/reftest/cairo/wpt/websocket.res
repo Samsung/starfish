@@ -104,7 +104,7 @@ http://web-platform.test:8000/websockets/opening-handshake/002.html
 #http://web-platform.test:8000/websockets/opening-handshake/003.html //chrome fail
 #http://web-platform.test:8000/websockets/opening-handshake/005.html //chrome fail
 #
-#http://web-platform.test:8000/websockets/keeping-connection-open/001.html
+http://web-platform.test:8000/websockets/keeping-connection-open/001.html
 #
 #http://web-platform.test:8000/websockets/cookies/001.html
 #http://web-platform.test:8000/websockets/cookies/002.html
