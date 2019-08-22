@@ -227,7 +227,7 @@ http://web-platform.test:8000/xhr/overridemimetype-open-state-force-xml.htm
 http://web-platform.test:8000/xhr/send-response-upload-event-loadend.htm
 #http://web-platform.test:8000/xhr/open-open-sync-send.htm
 #http://web-platform.test:8000/xhr/responsexml-media-type.htm
-http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overrides.html
+#http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overrides.html
 #http://web-platform.test:8000/xhr/open-sync-open-send.htm
 #http://web-platform.test:8000/xhr/response-data-blob.htm
 http://web-platform.test:8000/xhr/send-authentication-basic-cors-not-enabled.htm
@@ -237,7 +237,7 @@ http://web-platform.test:8000/xhr/event-progress.htm
 http://web-platform.test:8000/xhr/abort-event-loadend.htm
 #http://web-platform.test:8000/xhr/security-consideration.sub.html
 #http://web-platform.test:8000/xhr/event-error-order.sub.html
-http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overridesexpires.html
+#http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overridesexpires.html
 #http://web-platform.test:8000/xhr/open-url-multi-window-3.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic-setrequestheader-existing-session.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-not-hang-scriptloader.html

@@ -128,4 +128,49 @@ void HTMLMetaElement::checkPlatformFlags()
     } else {
     }
 }
+
+void HTMLMetaElement::setDomName(String* name)
+{
+    m_name = name;
+    checkPlatformFlags();
+    if (m_name->equalsIgnoreCase("referrer")) {
+        m_document->setReferrerPolicy(ReferrerURL::policyFromString(m_content));
+    }
+}
+
+String* HTMLMetaElement::domName()
+{
+    return m_name;
+}
+
+void HTMLMetaElement::setHttpEquiv(String* httpEquiv)
+{
+    m_httpEquiv = httpEquiv;
+    if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
+        if (m_httpEquiv->equalsIgnoreCase("content-language")) {
+            document()->setContentLanguage(m_content);
+        }
+    }
+}
+
+String* HTMLMetaElement::httpEquiv()
+{
+    return m_httpEquiv;
+}
+
+void HTMLMetaElement::setContent(String* content)
+{
+    m_content = content;
+    checkPlatformFlags();
+    if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
+        if (m_httpEquiv->equalsIgnoreCase("content-language")) {
+            document()->setContentLanguage(m_content);
+        }
+    }
+}
+
+String* HTMLMetaElement::content()
+{
+    return m_content;
+}
 }
