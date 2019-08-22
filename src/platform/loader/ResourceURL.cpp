@@ -111,8 +111,18 @@ String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
         return src;
     }
 
+    // last NULL(U+0000) character should be omitted.
+    size_t length = dat.length;
+    for (size_t i = dat.length - 1; i >= 0; i--) {
+        char32_t ch32 = dat.charAt(i);
+        if (ch32 != 0x0000) {
+            break;
+        }
+        length--;
+    }
+
     StringBuilder encoded;
-    for (size_t i = 0; i < dat.length; i++) {
+    for (size_t i = 0; i < length; i++) {
         char32_t ch32 = dat.charAt(i);
         bool urlEncoded = false;
         if (forForm) {
@@ -153,7 +163,6 @@ String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
             }
         }
     }
-
     return encoded.finalize();
 }
 
@@ -608,7 +617,8 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     bool isBaseUrlValid = true;
 
     if (url->startsWith("data:", false) || url->startsWith("blob:", false) ||
-        url->startsWith("about:", false) ||
+        url->startsWith("about:", false) || url->startsWith("ws:", false) ||
+        url->startsWith("wss:", false) ||
         url->startsWith("javascript:", false) || url->contains("://")) {
         isAbsolute = true;
     }

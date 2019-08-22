@@ -131,9 +131,9 @@ http://web-platform.test:8000/websockets/constructor/012.html
 http://web-platform.test:8000/websockets/constructor/013.html
 #http://web-platform.test:8000/websockets/constructor/014.html
 http://web-platform.test:8000/websockets/constructor/016.html
-#http://web-platform.test:8000/websockets/constructor/017.html
-#http://web-platform.test:8000/websockets/constructor/018.html
+http://web-platform.test:8000/websockets/constructor/017.html
+http://web-platform.test:8000/websockets/constructor/018.html
 http://web-platform.test:8000/websockets/constructor/019.html
 http://web-platform.test:8000/websockets/constructor/020.html
-#http://web-platform.test:8000/websockets/constructor/021.html
+http://web-platform.test:8000/websockets/constructor/021.html
 #http://web-platform.test:8000/websockets/constructor/022.html
