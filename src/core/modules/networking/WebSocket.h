@@ -33,6 +33,25 @@ class ResourceURL;
 class WebSocket : public EventTarget {
 public:
     enum ReadyState { CONNECTING, OPEN, CLOSING, CLOSED };
+    // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+    enum CloseCode {
+        NormalClosure = 1000,
+        GoingAway,
+        ProtocolError,
+        Reserved_1004,
+        UnsupportedData,
+        NoStatusReceived,
+        AbnormalClosure,
+        InvalidFramePayloadData,
+        PolicyViolation,
+        MessageTooBig,
+        MissingExtension,
+        InternalError,
+        ServiceRestart,
+        TryAgainLater,
+        BadGateway,
+        TLSHandshake
+    };
     WebSocket(ExecutionContext* executionContext, String* url);
     WebSocket(ExecutionContext* executionContext, String* url,
               String* protocols);

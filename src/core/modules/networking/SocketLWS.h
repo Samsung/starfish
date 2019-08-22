@@ -102,9 +102,14 @@ public:
         return m_parent;
     }
 
-    bool isActive()
+    bool needsToClose()
     {
-        return m_active;
+        return m_needsToClose;
+    }
+
+    bool isConnected()
+    {
+        return m_isReady;
     }
 
     std::string closeReason()
@@ -117,9 +122,20 @@ public:
         return m_closeReasonCode;
     }
 
+    void setTxBufferSize(uint64_t size)
+    {
+        m_txBufferSize = size;
+    }
+
+    uint64_t txBufferSize()
+    {
+        return m_txBufferSize;
+    }
+
 private:
-    bool m_active;
+    bool m_needsToClose;
     bool m_alive;
+    bool m_isReady;
     IThread* m_thread;
     LWSRunnable* m_runnable;
     WebSocket* m_parent;
@@ -136,6 +152,7 @@ private:
     std::vector<char> m_rxBuffer;
     std::string m_closeReasonStr;
     size_t m_closeReasonCode;
+    uint64_t m_txBufferSize;
 };
 
 } // namespace Starfish
