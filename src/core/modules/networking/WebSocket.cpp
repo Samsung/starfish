@@ -32,8 +32,6 @@ using namespace Escargot;
 
 namespace Starfish {
 
-#define NormalCloseCode 1000
-
 static inline String* binaryTypeToString(BinaryType binaryType)
 {
     if (binaryType == BinaryType::Blob) {
@@ -129,13 +127,15 @@ String* WebSocket::url()
 
 uint64_t WebSocket::bufferedAmount()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (m_socketLWS) {
+        return m_socketLWS->txBufferSize();
+    }
     return 0;
 }
 
 void WebSocket::close()
 {
-    close(NormalCloseCode, String::emptyString);
+    close(CloseCode::NormalClosure, String::emptyString);
 }
 
 void WebSocket::close(uint16_t code)

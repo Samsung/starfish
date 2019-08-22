@@ -66,27 +66,27 @@ http://web-platform.test:8000/websockets/interfaces/WebSocket/constants/004.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/constants/005.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/constants/006.html
 #
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-basic.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-basic.html
 #http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-connecting.html // chrome fail
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-multiple.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-multiple.html
 #http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-nested.html //chrome fail
 http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-replace.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/close/close-return.html
 #
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-arraybuffer.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-blob.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-arraybuffer.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-blob.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-defineProperty-getter.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-defineProperty-setter.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-deleting.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-getting.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-getting.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-initial.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-large.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-large.html
 http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-readonly.html
-#http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-unicode.html
+http://web-platform.test:8000/websockets/interfaces/WebSocket/bufferedAmount/bufferedAmount-unicode.html
 #
 #http://web-platform.test:8000/websockets/interfaces/CloseEvent/clean-close.html //chrome fail
-#http://web-platform.test:8000/websockets/interfaces/CloseEvent/constructor.html
-#http://web-platform.test:8000/websockets/interfaces/CloseEvent/historical.html
+http://web-platform.test:8000/websockets/interfaces/CloseEvent/constructor.html
+http://web-platform.test:8000/websockets/interfaces/CloseEvent/historical.html
 #
 #http://web-platform.test:8000/websockets/unload-a-document/001.html
 #http://web-platform.test:8000/websockets/unload-a-document/002.html
@@ -99,10 +99,10 @@ http://web-platform.test:8000/websockets/multi-globals/message-received.html
 #http://web-platform.test:8000/websockets/security/001.html
 http://web-platform.test:8000/websockets/security/002.html
 #
-#http://web-platform.test:8000/websockets/opening-handshake/001.html
-#http://web-platform.test:8000/websockets/opening-handshake/002.html
-#http://web-platform.test:8000/websockets/opening-handshake/003.html
-#http://web-platform.test:8000/websockets/opening-handshake/005.html
+http://web-platform.test:8000/websockets/opening-handshake/001.html
+http://web-platform.test:8000/websockets/opening-handshake/002.html
+#http://web-platform.test:8000/websockets/opening-handshake/003.html //chrome fail
+#http://web-platform.test:8000/websockets/opening-handshake/005.html //chrome fail
 #
 #http://web-platform.test:8000/websockets/keeping-connection-open/001.html
 #

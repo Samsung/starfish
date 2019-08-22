@@ -32,7 +32,7 @@ public:
         : EventInit()
         , m_wasClean(false)
         , m_code(0)
-        , m_reason(nullptr)
+        , m_reason(String::emptyString)
     {
     }
 
@@ -40,7 +40,7 @@ public:
         : EventInit(bubbles, cancelable)
         , m_wasClean(false)
         , m_code(0)
-        , m_reason(nullptr)
+        , m_reason(String::emptyString)
     {
     }
 
@@ -86,7 +86,7 @@ public:
         : Event(executionContext)
         , m_wasClean(false)
         , m_code(0)
-        , m_reason(nullptr)
+        , m_reason(String::emptyString)
     {
     }
 
@@ -94,7 +94,7 @@ public:
         : Event(executionContext, eventType)
         , m_wasClean(false)
         , m_code(0)
-        , m_reason(nullptr)
+        , m_reason(String::emptyString)
     {
     }
 

@@ -75,10 +75,18 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
         // TODO
         socket->publishEvent(SocketLWS::LwsEvent::ERROR);
+        // If connection is not establised, LWS doesn't call close
+        // LWS_CALLBACK_CLOSED.
+        if (!socket->isConnected()) {
+            socket->close(nullptr, 0, WebSocket::CloseCode::InternalError);
+            socket->updateState(WebSocket::ReadyState::CLOSED);
+            socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
+            socket->shutdown(0);
+        }
         break;
 
     case LWS_CALLBACK_CLIENT_WRITEABLE: {
-        if (!socket->isActive()) {
+        if (socket->needsToClose()) {
             std::string reason = socket->closeReason();
             lws_close_status code = (lws_close_status)socket->closeCode();
             lws_close_reason(wsi, code, (unsigned char*)reason.c_str(),
@@ -97,8 +105,8 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
                 lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
                           data->size(), LWS_WRITE_BINARY);
             }
+            socket->setTxBufferSize(socket->txBufferSize() - data->size());
             iter = buffer->erase(iter);
-
             delete data;
         }
         if (!buffer->empty()) {
@@ -144,11 +152,15 @@ SocketLWSData::SocketLWSData(const char* buf, size_t size,
 }
 
 SocketLWS::SocketLWS(WebSocket* socket)
-    : m_active(true)
+    : m_needsToClose(false)
     , m_alive(true)
+    , m_isReady(false)
     , m_parent(socket)
     , m_lwsContext(nullptr)
     , m_lwsClient(nullptr)
+    , m_closeReasonStr(std::string())
+    , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
+    , m_txBufferSize(0)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((SocketLWS*)obj)->~SocketLWS(); },
@@ -182,7 +194,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsContextCreationInfo.gid = -1;
     m_lwsContextCreationInfo.uid = -1;
     m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-    // DO not use Proxy
+    // Do not use Proxy
     m_lwsContextCreationInfo.http_proxy_address = "";
     m_lwsContextCreationInfo.socks_proxy_address = "";
 
@@ -190,7 +202,6 @@ SocketLWS::SocketLWS(WebSocket* socket)
         m_lwsContextCreationInfo.client_ssl_ca_filepath =
             SocketLWSDefaultCertPath;
     }
-
     m_lwsContext = lws_create_context(&m_lwsContextCreationInfo);
 
     WebBase* webBase = parent()->executionContext()->webBase();
@@ -254,9 +265,11 @@ void SocketLWS::close(const char* ptr, size_t len, size_t code)
 {
     m_closeReasonStr = std::string(ptr, len);
     m_closeReasonCode = code;
-    m_active = false;
-    if (m_lwsClient) {
-        lws_callback_on_writable(m_lwsClient);
+    if (!m_needsToClose) {
+        m_needsToClose = true;
+        if (m_lwsClient && m_isReady) {
+            lws_callback_on_writable(m_lwsClient);
+        }
     }
 }
 
@@ -288,6 +301,7 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
     }
     SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
     m_txBuffer.push_back(newData);
+    m_txBufferSize += len;
     if (m_lwsClient) {
         lws_callback_on_writable(m_lwsClient);
     }
@@ -325,6 +339,7 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
 
     switch (state) {
     case WebSocket::ReadyState::OPEN: {
+        m_isReady = true;
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
             [](size_t handle, void* data) {
@@ -335,6 +350,7 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
         break;
     }
     case WebSocket::ReadyState::CLOSED: {
+        m_isReady = false;
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
             [](size_t handle, void* data) {
@@ -399,6 +415,9 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                         ->m_close.localName();
                 CloseEvent* e =
                     new CloseEvent(socket->executionContext(), eventName);
+                if (lws->closeCode() == WebSocket::CloseCode::NormalClosure) {
+                    e->setWasClean(true);
+                }
                 e->setCode(lws->closeCode());
                 e->setReason(String::createASCIIString(
                     lws->closeReason().c_str(), lws->closeReason().length()));
