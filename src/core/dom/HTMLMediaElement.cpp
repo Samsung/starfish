@@ -42,6 +42,7 @@
 #include "core/util/URL.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayerWebRtc.h"
 
 #include "core/modules/mediastream/MediaStream.h"
 
@@ -202,58 +203,58 @@ void HTMLMediaElement::didNodeRemovedFromDocumentTree()
     pause();
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
 void HTMLMediaElement::load()
 {
     MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::load()\n");
-    // 4.8.12.5 Loading the media resource
     // While the delaying-the-load-event flag is true, the element must delay
     // the load event of its document.
-    // Abort any already-running instance of the resource selection algorithm
-    // for this element.
 
-    // Let pending tasks be a list of all tasks from the media element's media
-    // element event task source in one of the task queues.
-    // For each task in pending tasks that would resolve pending play promises
-    // or reject pending play promises, immediately resolve or reject those
-    // promises in the order the corresponding tasks were queued.
-    // Remove each task in pending tasks from its task queue
+    // 1. Abort any already-running instance of the resource selection algorithm
+    // for this element.
+    // 2. Let pending tasks be a list of all tasks from the media element's
+    // media element event task source in one of the task queues.
+    // 3. For each task in pending tasks that would resolve pending play
+    // promises or reject pending play promises, immediately resolve or reject
+    // those promises in the order the corresponding tasks were queued.
+    // 4. Remove each task in pending tasks from its task queue
     abortEveryPendingOperation(new DOMException(
         executionContext(), DOMException::DOM_EXCEPTION,
         "The play() request was interrupted by a new load request."));
 
-    // If the media element's networkState is set to NETWORK_LOADING or
+    // 5. If the media element's networkState is set to NETWORK_LOADING or
     // NETWORK_IDLE, queue a task to fire a simple event named abort at the
     // media element.
     if (networkState() == NETWORK_LOADING || networkState() == NETWORK_IDLE) {
         dispatchAbortEvent();
     }
 
-    // If the media element's networkState is not set to NETWORK_EMPTY, then run
-    // these substeps:
+    // 6. If the media element's networkState is not set to NETWORK_EMPTY, then
+    // run these substeps:
     if (networkState() != NETWORK_EMPTY) {
-        // Queue a task to fire a simple event named emptied at the media
+        // 6.1. Queue a task to fire a simple event named emptied at the media
         // element.
         dispatchEmptiedEvent();
 
-        // If a fetching process is in progress for the media element, the user
-        // agent should stop it.
-        // If the media element's assigned media provider object is a
-        // MediaSource object, then detach it.
-        // NOTE: MediaSource object be detached in closeMediaPlayer()
+        // 6.2. If a fetching process is in progress for the media element, the
+        // user agent should stop it. 6.3. If the media element's assigned media
+        // provider object is a MediaSource object, then detach it. NOTE:
+        // MediaSource object be detached in closeMediaPlayer()
         closeMediaPlayer();
 
-        // TODO Forget the media element's media-resource-specific tracks.
+        // TODO: 6.4. Forget the media element's media-resource-specific tracks.
 
-        // If readyState is not set to HAVE_NOTHING, then set it to that state.
+        // 6.5. If readyState is not set to HAVE_NOTHING, then set it to that
+        // state.
         m_readyState = HAVE_NOTHING;
 
-        // If the paused attribute is false, then run these substeps:
+        // 6.6. If the paused attribute is false, then run these substeps:
         if (m_isPaused == false) {
-            // Set the paused attribute to true.
+            // 6.6.1. Set the paused attribute to true.
             m_isPaused = true;
 
-            // Take pending play promises and reject pending play promises with
-            // the result and an "AbortError" DOMException.
+            // 6.6.2. Take pending play promises and reject pending play
+            // promises with the result and an "AbortError" DOMException.
             auto iter = m_playOperationQueue.begin();
             while (iter != m_playOperationQueue.end()) {
                 DOMException* exception = new DOMException(
@@ -265,25 +266,25 @@ void HTMLMediaElement::load()
             }
         }
 
-        // If seeking is true, set it to false.
+        // 6.7. If seeking is true, set it to false.
         m_isSeeking = false;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
         m_isEnded = false;
         m_pastPlayed.clear();
 
-        // TODO Set the current playback position to 0.
+        // TODO: 6.8. Set the current playback position to 0.
         // Set the official playback position to 0.
         if (m_officialPlaybackPosition != 0) {
             setOfficialPlaybackPosition(0);
         }
 
-        // TODO Set the timeline offset to Not-a-Number (NaN).
-        // TODO Update the duration attribute to Not-a-Number (NaN).
+        // TODO: 6.9. Set the timeline offset to Not-a-Number (NaN).
+        // TODO: 6.10. Update the duration attribute to Not-a-Number (NaN).
         // NOTE The user agent will not fire a durationchange event for this
         // particular change of the duration.
     }
 
-    // TODO Set the playbackRate attribute to the value of the
+    // TODO: 7. Set the playbackRate attribute to the value of the
     // defaultPlaybackRate attribute.
 
     if (autoplay()) {
@@ -291,10 +292,10 @@ void HTMLMediaElement::load()
             new MediaOperationQueueDataRequestPlay(this));
     }
 
-    // Set the error attribute to null and the autoplaying flag to true.
+    // 8. Set the error attribute to null and the autoplaying flag to true.
     m_autoplayingFlag = true;
 
-    // Invoke the media element's resource selection algorithm.
+    // 9. Invoke the media element's resource selection algorithm.
     resourceSelection();
 }
 
@@ -309,20 +310,36 @@ void HTMLMediaElement::closeMediaPlayer()
 void HTMLMediaElement::initMediaPlayer()
 {
     closeMediaPlayer();
-    m_mediaPlayer = MediaPlayer::create(this);
+
+    // TODO: MockMediaPlayer is enabled by default on x64
+    // Integrate players as we progress media players
+    switch (m_resourceSelectionContext->m_mode) {
+#if defined(STARFISH_ENABLE_WEBRTC)
+    case ResourceSelectionContext::MODE_OBJECT:
+        m_mediaPlayer = MediaPlayerWebRtc::create(this);
+        break;
+#endif
+    default:
+        m_mediaPlayer = MediaPlayer::create(this);
+    }
+
     m_mediaPlayer->setLoop(loop());
     m_isSeeking = false;
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 void HTMLMediaElement::resourceSelection()
 {
     MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::resourceSelection()\n");
+    // 1. Set the element's networkState attribute to the NETWORK_NO_SOURCE
+    // value.
     closeMediaPlayer();
     m_networkState = NETWORK_NO_SOURCE;
-    // Set the element's show poster flag to true.
-    // Set the media element's delaying-the-load-event flag to true (this delays
-    // the load event).
+
+    // 2. Set the element's show poster flag to true.
+    // 3. Set the media element's delaying-the-load-event flag to true (this
+    // delays the load event).
     m_delayingTheLoadEvent = true;
 
     m_resourceSelectionContext = new ResourceSelectionContext(this);
@@ -494,21 +511,20 @@ String* HTMLMediaElement::src()
     return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
-#if defined(STARFISH_ENABLE_WEBRTC)
+// https://w3c.github.io/mediacapture-main/#mediastreams-in-media-elements
 void HTMLMediaElement::setSrcObject(MediaProvider* provider)
 {
     m_mediaProvider = provider;
-    GCVector<MediaStreamTrack*> tracks = provider->getVideoTracks();
-    if (!tracks.empty()) {
-        // TODO: start displaying the video stream
-    }
+#if defined(STARFISH_ENABLE_WEBRTC)
+    m_mediaPlayer = new MediaPlayerWebRtc(this);
+    load();
+#endif
 }
 
 MediaProvider* HTMLMediaElement::srcObject()
 {
     return m_mediaProvider;
 }
-#endif
 
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
                                           String* language)
@@ -1298,6 +1314,7 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
     m_mediaElement->addEventToOperationQueue(candidate, e);
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(m_mediaElement,
@@ -1309,10 +1326,13 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
     STARFISH_ASSERT(self->m_resourceSelectionContext);
     ResourceSelectionContext* context = self->m_resourceSelectionContext;
 
-    // TODO If the media element's blocked-on-parser flag is false, then
+    // TODO: 5. If the media element's blocked-on-parser flag is false, then
     // populate the list of pending text tracks.
-    // TODO If the media element has an assigned media provider object, then let
-    // mode be object.
+    // 6. If the media element has an assigned media provider object, then
+    // let mode be object.
+    if (self->srcObject() != nullptr) {
+        context->m_mode = ResourceSelectionContext::MODE_OBJECT;
+    }
 
     // Otherwise, if the media element has no assigned media provider object but
     // has a src attribute, then let mode be attribute.
@@ -1346,7 +1366,26 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->dispatchLoadstartEvent();
     }
 
-    if (context->m_mode == ResourceSelectionContext::MODE_ATTRIBUTE) {
+    if (context->m_mode == ResourceSelectionContext::MODE_OBJECT) {
+        // 9.1. Set the currentSrc attribute to the empty string.
+        self->m_currentSrc = String::emptyString;
+
+        // 9.2. End the synchronous section, continuing the remaining steps in
+        // parallel.
+        // 9.3. Run the resource fetch algorithm with the assigned
+        // media provider object. If that algorithm returns without aborting
+        // this one, then the load failed.
+        // 9.4. Failed with media provider: Reaching this step indicates that
+        // the media resource failed to load. Take pending play promises and
+        // queue a task to run the dedicated media source failure steps with the
+        // result.
+        // 9.5. Wait for the task queued by the previous step to have executed.
+        // 9.6 Return. The element won't attempt to load another resource until
+        // this algorithm is triggered again.
+        self->initMediaPlayer();
+        self->appendToOperationQueue(
+            new MediaOperationQueueDataRequestPrepare(self, self->srcObject()));
+    } else if (context->m_mode == ResourceSelectionContext::MODE_ATTRIBUTE) {
         ResourceURL* url =
             new ResourceURL(self->src(), self->document()->urlString());
         // If the src attribute's value is the empty string, then end the
@@ -1430,7 +1469,11 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
         "MediaOperationQueueDataRequestPrepare::processOperationQueue()\n");
     MediaPlayer* player = mediaPlayer();
     if (player) {
-        player->prepare(m_url);
+        if (player->isWebRtcPlayer()) {
+            player->asMediaPlayerWebRtc()->prepare(m_mediaProvider);
+        } else {
+            player->prepare(m_url);
+        }
     }
 }
 

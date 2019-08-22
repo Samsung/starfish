@@ -36,8 +36,14 @@ class TextTrack;
 class TextTrackList;
 class TimeRanges;
 class URL;
+
 #if defined(STARFISH_ENABLE_WEBRTC)
+// TODO: Rename the unofficial use of MediaStream in MediaPlayerTizen
 class MediaStream;
+typedef MediaStream MediaProvider;
+class MediaPlayerWebRtc;
+#else
+typedef void MediaProvider;
 #endif
 
 class ResourceSelectionContext : public gc {
@@ -120,10 +126,17 @@ public:
     {
     }
 
+    MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, MediaProvider* m)
+        : MediaOperationQueueData(p)
+        , m_mediaProvider(m)
+    {
+    }
+
     virtual void processOperationQueue() override;
     virtual void cancelOperation() override;
 
-    ResourceURL* m_url;
+    ResourceURL* m_url{ nullptr };
+    MediaProvider* m_mediaProvider{ nullptr };
 };
 
 class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
@@ -194,10 +207,6 @@ typedef std::list<MediaOperationQueueData*,
                   gc_allocator_ignore_off_page<MediaOperationQueueData*>>
     MediaOperationQueue;
 
-#if defined(STARFISH_ENABLE_WEBRTC)
-typedef MediaStream MediaProvider;
-#endif
-
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
     friend class MediaOperationQueueDataRequestPause;
@@ -258,17 +267,8 @@ public:
 
     void setSrc(String* src);
     String* src();
-
-#if defined(STARFISH_ENABLE_WEBRTC)
-public:
     virtual void setSrcObject(MediaProvider* provider);
     NULLABLE virtual MediaProvider* srcObject();
-
-protected:
-    MediaProvider* m_mediaProvider{ nullptr };
-
-public:
-#endif
 
     String* currentSrc();
 
@@ -394,6 +394,7 @@ protected:
     double m_pendingSeek;
     MediaPlayer* m_mediaPlayer;
     String* m_currentSrc;
+    MediaProvider* m_mediaProvider{ nullptr };
     TextTrackList* m_textTracks;
     ReadyState m_readyState;
     NetworkState m_networkState;

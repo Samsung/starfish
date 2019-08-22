@@ -54,6 +54,7 @@ class MediaSource;
 class Mutex;
 class URL;
 class Window;
+class MediaPlayerWebRtc;
 
 class MediaPlayer : public gc {
 public:
@@ -91,7 +92,18 @@ public:
         return m_isLooping;
     }
 
-    virtual void prepare(ResourceURL* url) = 0;
+    virtual bool isWebRtcPlayer()
+    {
+        return false;
+    }
+
+    MediaPlayerWebRtc* asMediaPlayerWebRtc()
+    {
+        STARFISH_ASSERT(isWebRtcPlayer());
+        return (MediaPlayerWebRtc*)this;
+    }
+
+    virtual void prepare(ResourceURL* url){};
     virtual double currentTime() = 0;
     virtual double duration() = 0;
     virtual void setVolume(double volume) = 0;
@@ -146,6 +158,11 @@ public:
     virtual void prepareMediaSource() = 0;
 
     virtual Window* window();
+
+    CanvasSurface* canvasSurface()
+    {
+        return m_canvasSurface;
+    }
 
 protected:
     MediaPlayer(HTMLMediaElement* element);
