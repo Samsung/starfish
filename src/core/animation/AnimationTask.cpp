@@ -159,6 +159,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_isForward(true)
     , m_isRunning(true)
     , m_isCSSAnimationTask(true)
+    , m_isInForwardsFillMode(false)
     , m_frameIdx(0)
     , m_frameSize(2)
 {
@@ -194,6 +195,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     , m_isForward(true)
     , m_isRunning(true)
     , m_isCSSAnimationTask(true)
+    , m_isInForwardsFillMode(false)
     , m_frameIdx(0)
     , m_frameSize(values.size())
 {
@@ -377,11 +379,13 @@ void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
     STARFISH_ASSERT(style != nullptr);
     float from = currentAnimatedFromValue()->getFloat();
     float to = currentAnimatedToValue()->getFloat();
+    float value = 0;
     if (m_isForward == true) {
-        style->setOpacity(from * (1 - progress) + to * progress);
+        value = from * (1 - progress) + to * progress;
     } else {
-        style->setOpacity(from * progress + to * (1 - progress));
+        value = from * progress + to * (1 - progress);
     }
+    style->setOpacity(value);
 }
 
 bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)

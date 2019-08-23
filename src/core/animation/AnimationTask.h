@@ -349,6 +349,21 @@ public:
         m_isCSSAnimationTask = b;
     }
 
+    bool isInForwardsFillMode()
+    {
+        return m_isInForwardsFillMode;
+    }
+
+    void markInForwardsFillMode()
+    {
+        m_isInForwardsFillMode = true;
+    }
+
+    void clearInForwardsFillMode()
+    {
+        m_isInForwardsFillMode = false;
+    }
+
     void fireTransitionStartEvent();
     void fireTransitionEndEvent();
     void fireTransitionCancelEvent();
@@ -476,6 +491,7 @@ protected:
     bool m_isForward;
     bool m_isRunning;
     bool m_isCSSAnimationTask;
+    bool m_isInForwardsFillMode;
 
     unsigned int m_frameIdx;
     unsigned int m_frameSize;

@@ -7934,6 +7934,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                         i--;
                     } else {
                         elementHasAnimation = true;
+                        animationTasks[i]->markInForwardsFillMode();
                     }
                     needsToRecomputeStylePropertyDamage = true;
                     needsToCheckActiveExecutorInWebView = true;
