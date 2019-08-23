@@ -4681,6 +4681,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
             if (w > ctx.remainingWidth()) {
                 f = firstChild();
                 LayoutUnit minWidth;
+                LayoutUnit maxWidth = 0;
                 while (f) {
                     if (!f->isFlexItem()) {
                         f = f->next();
@@ -4689,10 +4690,25 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                     auto widths =
                         ctx.preferredWidthsWithNewContext(f->asFrameBox());
                     minWidth += widths.second;
+                    if (maxWidth < widths.second) {
+                        maxWidth = widths.second;
+                    }
                     f = f->next();
                 }
-                ctx.updatePreferredMinWidth(minWidth);
-                ctx.updatePreferredWidth(ctx.remainingWidth());
+
+                FlexWrapValue flexWrap = style()->flexWrap();
+                if (flexWrap == NoWrapFlexWrapValue) {
+                    ctx.updatePreferredMinWidth(minWidth);
+                    ctx.updatePreferredWidth(ctx.remainingWidth());
+                } else {
+                    if (maxWidth > ctx.remainingWidth()) {
+                        ctx.updatePreferredMinWidth(maxWidth);
+                        ctx.updatePreferredWidth(maxWidth);
+                    } else {
+                        ctx.updatePreferredMinWidth(ctx.remainingWidth());
+                        ctx.updatePreferredWidth(ctx.remainingWidth());
+                    }
+                }
             } else {
                 ctx.updatePreferredWidth(w);
                 ctx.updatePreferredMinWidth(w);
