@@ -1470,7 +1470,9 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
     MediaPlayer* player = mediaPlayer();
     if (player) {
         if (player->isWebRtcPlayer()) {
+#if defined(STARFISH_ENABLE_WEBRTC)
             player->asMediaPlayerWebRtc()->prepare(m_mediaProvider);
+#endif
         } else {
             player->prepare(m_url);
         }

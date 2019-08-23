@@ -191,7 +191,9 @@ void ImageResource::didLoadFinished()
 
                         ImageDecoder id(d->responseData);
                         d->decodeResult = id.decode();
-
+                        if (d->decodeResult.m_isAnimatedGIF) {
+                            free(d->decodeResult.m_buffer);
+                        }
                         d->imageResource->resourceRequest()
                             ->webBase()
                             ->messageLoop()
@@ -204,17 +206,30 @@ void ImageResource::didLoadFinished()
                                         std::move(d->responseData);
 
                                     if (d->decodeResult.m_isSuccessful) {
-                                        d->imageResource->m_imageData =
-                                            NativeImageData::create(
-                                                buffer,
-                                                std::move(
-                                                    d->imageResource->url()
-                                                        ->urlString()
-                                                        ->toUTF8NonGCString()),
-                                                d->decodeResult.m_buffer,
-                                                d->decodeResult.m_width,
-                                                d->decodeResult.m_height,
-                                                d->decodeResult.m_stride);
+                                        if (d->decodeResult.m_isAnimatedGIF) {
+                                            d->imageResource->m_imageData =
+                                                NativeImageData::create(
+                                                    buffer,
+                                                    std::move(
+                                                        d->imageResource->url()
+                                                            ->urlString()
+                                                            ->toUTF8NonGCString()),
+                                                    d->decodeResult.m_width,
+                                                    d->decodeResult.m_height,
+                                                    d->decodeResult.m_stride);
+                                        } else {
+                                            d->imageResource->m_imageData =
+                                                NativeImageData::create(
+                                                    buffer,
+                                                    std::move(
+                                                        d->imageResource->url()
+                                                            ->urlString()
+                                                            ->toUTF8NonGCString()),
+                                                    d->decodeResult.m_buffer,
+                                                    d->decodeResult.m_width,
+                                                    d->decodeResult.m_height,
+                                                    d->decodeResult.m_stride);
+                                        }
                                         d->imageResource
                                             ->Resource::didLoadFinished();
                                     } else {
@@ -233,9 +248,18 @@ void ImageResource::didLoadFinished()
     }
 #endif
     if (m_resourceRequest->response().size() != 0) {
-        m_imageData =
-            NativeImageData::create(m_resourceRequest->response(),
-                                    url()->urlString()->toUTF8NonGCString());
+        if (ImageDecoder::isAnimatedGIF(m_resourceRequest->response())) {
+            ImageDecoder id(m_resourceRequest->response());
+            auto result = id.decodeJustImageSize();
+            m_imageData = NativeImageData::create(
+                m_resourceRequest->response(),
+                url()->urlString()->toUTF8NonGCString(), result.m_width,
+                result.m_height, result.m_stride);
+        } else {
+            m_imageData = NativeImageData::create(
+                m_resourceRequest->response(),
+                url()->urlString()->toUTF8NonGCString());
+        }
     }
 
     if (!m_imageData) {

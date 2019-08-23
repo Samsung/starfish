@@ -28,7 +28,9 @@
 #include "platform/loader/ElementResourceClient.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/dom/WebOrigin.h"
+#include "core/modules/message_loop/Timer.h"
 
 namespace Starfish {
 
@@ -87,11 +89,14 @@ public:
         }
 
         m_element->m_imageData = imageData;
-
-        if (m_element->frame()) {
-            m_element->setNeedsPainting();
-            if (sizeBefore != sizeNow) {
-                m_element->setNeedsLayout();
+        if (imageData->hasAnimatedGIF()) {
+            m_element->updateFrame(0);
+        } else {
+            if (m_element->frame()) {
+                m_element->setNeedsPainting();
+                if (sizeBefore != sizeNow) {
+                    m_element->setNeedsLayout();
+                }
             }
         }
     }
@@ -390,5 +395,26 @@ ResourceURL* HTMLImageElement::origin()
 bool HTMLImageElement::hasRequestError()
 {
     return m_requestErrorType != RequestErrorType::NoError;
+}
+
+void HTMLImageElement::updateFrame(size_t delay)
+{
+    if (m_updateFrameTimer) {
+        document()->webView()->timer()->removeTimer(m_updateFrameTimer);
+    }
+    m_updateFrameTimer = document()->webView()->timer()->addTimer(
+        delay * 10, nullptr,
+        [](void* data) {
+            HTMLImageElement* imageElement = (HTMLImageElement*)data;
+            if (imageElement->m_imageData != nullptr) {
+                if (imageElement->frame()) {
+                    imageElement->setNeedsPainting();
+                }
+                imageElement->m_imageData->prepareNextFrame();
+                size_t delay = imageElement->m_imageData->delay();
+                imageElement->updateFrame(delay);
+            }
+        },
+        this, false);
 }
 }

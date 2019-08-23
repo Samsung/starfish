@@ -51,6 +51,9 @@ public:
                                    std::string&& imageURL,
                                    uint8_t* decodedImageBuffer, size_t width,
                                    size_t height, size_t stride);
+    static NativeImageData* create(const std::vector<char>& compressedImageData,
+                                   std::string&& imageURL, size_t width,
+                                   size_t height, size_t stride);
     static NativeImageData* create(size_t actualDeviceWidth,
                                    size_t actualDeviceHeight);
     static NativeImageData* create(float devicePixelRatio, size_t width,
@@ -66,6 +69,20 @@ public:
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
+
+    virtual void prepareNextFrame()
+    {
+    }
+
+    virtual bool hasAnimatedGIF()
+    {
+        return false;
+    }
+
+    virtual size_t delay()
+    {
+        return 0;
+    }
 
     virtual bool hasCompressedData()
     {

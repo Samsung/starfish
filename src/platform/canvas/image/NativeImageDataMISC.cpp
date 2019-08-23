@@ -46,6 +46,9 @@ public:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
+        , m_isAnimatedGIF(false)
+        , m_delay(0)
+        , m_imageDecoder(nullptr)
     {
         if (compressedImageData.data() && compressedImageData.size() != 0) {
             ImageDecoder id(compressedImageData);
@@ -73,6 +76,9 @@ public:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
+        , m_isAnimatedGIF(false)
+        , m_delay(0)
+        , m_imageDecoder(nullptr)
     {
         STARFISH_ASSERT(decodedImageBuffer != nullptr);
         STARFISH_ASSERT(width != 0);
@@ -81,6 +87,31 @@ public:
 
         m_inputBuffer.insert(m_inputBuffer.end(), compressedImageData.begin(),
                              compressedImageData.end());
+    }
+
+    NativeImageDataMISC(const std::vector<char>& compressedImageData,
+                        std::string&& imageURL, size_t width, size_t height,
+                        size_t stride)
+        : m_image(nullptr)
+        , m_width(width)
+        , m_stride(stride)
+        , m_height(height)
+        , m_imageURL(imageURL)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+        , m_imageSurface(nullptr)
+#endif
+        , m_isAnimatedGIF(true)
+        , m_delay(0)
+        , m_imageDecoder(nullptr)
+    {
+        STARFISH_ASSERT(width != 0);
+        STARFISH_ASSERT(height != 0);
+        STARFISH_ASSERT(compressedImageData.size() != 0);
+
+        m_inputBuffer.insert(m_inputBuffer.end(), compressedImageData.begin(),
+                             compressedImageData.end());
+
+        m_imageDecoder = new ImageDecoder(m_inputBuffer);
     }
 
     NativeImageDataMISC(size_t w, size_t h)
@@ -119,9 +150,19 @@ public:
         }
     }
 
+    virtual void prepareNextFrame() override
+    {
+        if (m_imageDecoder && hasAnimatedGIF()) {
+            STARFISH_ASSERT(m_imageDecoder != nullptr);
+            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF();
+            m_delay = idResult.delay;
+            m_image = idResult.m_buffer;
+        }
+    }
+
     virtual uint8_t* data() override
     {
-        if (!m_image && m_inputBuffer.size()) {
+        if (!hasAnimatedGIF() && !m_image && m_inputBuffer.size()) {
             ImageDecoder id(m_inputBuffer);
             auto idResult = id.decode();
             if (idResult.m_isSuccessful) {
@@ -162,6 +203,10 @@ public:
             cairo_surface_destroy(m_imageSurface);
         }
 #endif
+        if (m_imageDecoder) {
+            delete m_imageDecoder;
+            m_imageDecoder = nullptr;
+        }
         free(m_image);
         std::vector<char>().swap(m_inputBuffer);
         std::string().swap(m_imageURL);
@@ -207,6 +252,16 @@ public:
         return m_height;
     }
 
+    virtual bool hasAnimatedGIF() override
+    {
+        return m_isAnimatedGIF;
+    }
+
+    virtual size_t delay() override
+    {
+        return m_delay;
+    }
+
 private:
     virtual bool hasCompressedData() override
     {
@@ -243,6 +298,9 @@ protected:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
+    bool m_isAnimatedGIF;
+    size_t m_delay;
+    ImageDecoder* m_imageDecoder;
 };
 
 NativeImageData* NativeImageData::create(
@@ -268,6 +326,19 @@ NativeImageData* NativeImageData::create(
     NativeImageData* imageData =
         new NativeImageDataMISC(compressedImageData, std::move(imageURL),
                                 decodedImageBuffer, width, height, stride);
+    return imageData;
+}
+
+NativeImageData* NativeImageData::create(
+    const std::vector<char>& compressedImageData, std::string&& imageURL,
+    size_t width, size_t height, size_t stride)
+{
+    STARFISH_ASSERT(width != 0);
+    STARFISH_ASSERT(height != 0);
+    STARFISH_ASSERT(compressedImageData.size() != 0);
+
+    NativeImageData* imageData = new NativeImageDataMISC(
+        compressedImageData, std::move(imageURL), width, height, stride);
     return imageData;
 }
 

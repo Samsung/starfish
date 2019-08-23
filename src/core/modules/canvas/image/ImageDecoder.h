@@ -22,23 +22,29 @@
 
 namespace Starfish {
 
-class ImageDecoder : public gc {
+class ImageDecoder {
 public:
     ImageDecoder(const std::vector<char>& inputBuffer)
         : m_inputBuffer(inputBuffer)
+        , m_gifFile(nullptr)
+        , m_gifBuffer(nullptr)
+        , m_decodedBuffer(nullptr)
     {
     }
-
+    ~ImageDecoder();
     struct DecodeResult {
         bool m_isSuccessful;
+        bool m_isAnimatedGIF;
         uint8_t* m_buffer; // decoded image buffer(RGBA or BGRA format depends
                            // on port)
         size_t m_width;
         size_t m_height;
         size_t m_stride;
+        size_t delay;
 
         DecodeResult()
             : m_isSuccessful(false)
+            , m_isAnimatedGIF(false)
             , m_buffer(nullptr)
             , m_width(0)
             , m_height(0)
@@ -46,11 +52,28 @@ public:
         {
         }
     };
+
+    struct GifReadData {
+        unsigned long long size;
+        unsigned long long pos;
+        void* mem;
+    };
+
     DecodeResult decodeJustImageSize();
     DecodeResult decode();
+    DecodeResult nextFrameOfAnimatedGIF();
+
+    static bool isAnimatedGIF(const std::vector<char>& inputBuffer);
 
 private:
+    bool prepareAnimatedGIF();
+
     const std::vector<char>& m_inputBuffer;
+    // for animated GIF
+    void* m_gifFile;
+    void* m_gifBuffer;
+    GifReadData m_gifReadData;
+    uint8_t* m_decodedBuffer;
 };
 } // namespace Starfish
 
