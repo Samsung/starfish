@@ -1998,6 +1998,19 @@ Animation* Element::animate(ExecutionContext* executionContext,
             return new Animation(executionContext);
         }
         document()->animationExecutor()->checkActiveExecutorInWebView();
+
+        auto& animations = document()->animationExecutor()->activeAnimations();
+        uint64_t tick = tickCount();
+
+        ActiveElementAnimation* key =
+            new ActiveElementAnimation(options.id(), this);
+        auto iter = animations.find(key);
+        if (iter != animations.end()) {
+            for (auto task : iter->second) {
+                task->initializeStartTimeIfNeeded(tick);
+            }
+        }
+        setNeedsStyleRecalcForAnimation();
     }
     return new Animation(executionContext);
 }
