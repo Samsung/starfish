@@ -76,7 +76,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-copyPixels.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-currentTransform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-direction.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-draw-canvas-on-canvas-shadow.html
-test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-animated.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-animated.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-incomplete.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-live-video.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-drawImage-scaled-copy-to-self.html

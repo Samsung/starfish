@@ -91,6 +91,8 @@ public:
     WebOrigin* webOrigin();
     bool hasRequestError();
 
+    void updateFrame(size_t delay);
+
 private:
     void unloadImage();
     void loadImage(String* src);
@@ -99,6 +101,8 @@ private:
     ImageResource* m_imageResource;
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
+
+    size_t m_updateFrameTimer;
 };
 }
 

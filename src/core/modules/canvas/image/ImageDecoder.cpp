@@ -43,7 +43,12 @@ extern "C" {
 #include <jpeglib.h>
 }
 #endif
+
 #include <gif_lib.h>
+
+#define GIF_DISPOSE_SHIFT 2
+#define GIF_TRANSPARENT_MASK 0x01
+#define GIF_DISPOSE_MASK 0x07
 
 namespace Starfish {
 
@@ -483,17 +488,12 @@ static ImageDecoder::DecodeResult decodeJPG(
 
 #endif
 
-typedef struct {
-    unsigned long long size;
-    unsigned long long pos;
-    void* mem;
-} GIF_READ_DATA;
-
 static int gifRead(GifFileType* gft, NULLABLE GifByteType* data, int size)
 {
     STARFISH_ASSERT(gft != nullptr);
 
-    GIF_READ_DATA* readData = (GIF_READ_DATA*)gft->UserData;
+    ImageDecoder::GifReadData* readData =
+        (ImageDecoder::GifReadData*)gft->UserData;
 
     if (size > 0) {
         STARFISH_ASSERT(data != nullptr);
@@ -553,7 +553,7 @@ static ImageDecoder::DecodeResult decodeGIF(
     GifFileType* gifFile = nullptr;
     ColorMapObject* colorMap = nullptr;
 
-    GIF_READ_DATA readData;
+    ImageDecoder::GifReadData readData;
 
     readData.mem = (void*)inputBuffer.data();
     readData.pos = 0;
@@ -601,7 +601,9 @@ static ImageDecoder::DecodeResult decodeGIF(
                 height = gifFile->Image.Height;
 
                 imageNum++;
-
+                if (imageNum > 1) {
+                    break;
+                }
                 if (gifFile->Image.Interlace) {
                     int interlacedOffset[] = { 0, 4, 2, 1 };
                     int interlacedJumps[] = { 8, 8, 4, 2 };
@@ -635,10 +637,11 @@ static ImageDecoder::DecodeResult decodeGIF(
             default:
                 break;
             }
-            if (imageNum > 0) {
-                break;
-            }
         } while (recordType != TERMINATE_RECORD_TYPE);
+
+        if (imageNum > 1) {
+            result.m_isAnimatedGIF = true;
+        }
 
         colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
                                             : gifFile->SColorMap);
@@ -713,6 +716,280 @@ ImageDecoder::DecodeResult ImageDecoder::decode()
     return decodeBuffer(m_inputBuffer, true);
 }
 
+bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
+{
+    bool result = false;
+    int errorCode = 0;
+    if (isGIFFormat(inputBuffer)) {
+        int errorCode = 0;
+        unsigned int imageNum = 0;
+
+        GifRecordType recordType = UNDEFINED_RECORD_TYPE;
+        GifFileType* gifFile = nullptr;
+
+        ImageDecoder::GifReadData readData;
+
+        readData.mem = (void*)inputBuffer.data();
+        readData.pos = 0;
+        readData.size = inputBuffer.size();
+#ifdef GIF_LIB_VERSION
+        gifFile = DGifOpen(&readData, gifRead);
+#else
+        gifFile = DGifOpen(&readData, gifRead, &errorCode);
+#endif
+        if (!gifFile) {
+            return false;
+        }
+        do {
+            DGifGetRecordType(gifFile, &recordType);
+            switch (recordType) {
+            case IMAGE_DESC_RECORD_TYPE:
+                DGifGetImageDesc(gifFile);
+                imageNum++;
+                break;
+            case EXTENSION_RECORD_TYPE:
+                break;
+            case TERMINATE_RECORD_TYPE:
+                break;
+            default:
+                break;
+            }
+            if (imageNum > 1) {
+                result = true;
+                break;
+            }
+        } while (recordType != TERMINATE_RECORD_TYPE);
+#ifdef GIF_LIB_VERSION
+        DGifCloseFile(gifFile);
+#elif GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1
+        DGifCloseFile(gifFile, &errorCode);
+#else
+        DGifCloseFile(gifFile);
+#endif
+    }
+    return result;
+}
+
+bool ImageDecoder::prepareAnimatedGIF()
+{
+    GifFileType* gifFile = (GifFileType*)m_gifFile;
+    GifRowType* gifBuffer = (GifRowType*)m_gifBuffer;
+
+    if (gifFile == nullptr) {
+        int errorCode = 0;
+        int size = 0;
+
+        m_gifReadData.mem = (void*)m_inputBuffer.data();
+        m_gifReadData.pos = 0;
+        m_gifReadData.size = m_inputBuffer.size();
+#ifdef GIF_LIB_VERSION
+        gifFile = DGifOpen(&m_gifReadData, gifRead);
+#else
+        gifFile = DGifOpen(&m_gifReadData, gifRead, &errorCode);
+#endif
+        if (!gifFile) {
+            return false;
+        }
+        gifBuffer = (GifRowType*)malloc(gifFile->SHeight * sizeof(GifRowType));
+        STARFISH_RELEASE_ASSERT(gifBuffer != nullptr);
+
+        size = gifFile->SWidth * sizeof(GifPixelType);
+        gifBuffer[0] = (GifRowType)calloc(1, size);
+
+        for (int i = 0; i < (int)(gifFile->SWidth); i++) {
+            gifBuffer[0][i] = gifFile->SBackGroundColor;
+        }
+
+        for (int i = 1; i < (int)(gifFile->SHeight); i++) {
+            gifBuffer[i] = (GifRowType)calloc(1, size);
+            memcpy(gifBuffer[i], gifBuffer[0], size);
+        }
+
+        m_decodedBuffer =
+            (uint8_t*)malloc(gifFile->SWidth * gifFile->SHeight * 4);
+        STARFISH_RELEASE_ASSERT(m_decodedBuffer != nullptr);
+
+        m_gifFile = gifFile;
+        m_gifBuffer = gifBuffer;
+    }
+    return true;
+}
+
+ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
+{
+    bool isNewFrame = false;
+    size_t row = 0, col = 0;
+    size_t width = 0, height = 0;
+    int extCode = 0;
+    int errorCode = 0;
+    int transparentIndex = -1;
+    ColorMapObject* colorMap = nullptr;
+    GifRecordType recordType = UNDEFINED_RECORD_TYPE;
+
+    prepareAnimatedGIF();
+
+    GifFileType* gifFile = (GifFileType*)m_gifFile;
+    GifRowType* gifBuffer = (GifRowType*)m_gifBuffer;
+    DecodeResult result;
+    result.m_width = gifFile->SWidth;
+    result.m_height = gifFile->SHeight;
+    result.m_stride = result.m_width * 4;
+    result.m_buffer = m_decodedBuffer;
+
+    colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
+                                        : gifFile->SColorMap);
+
+    do {
+        DGifGetRecordType(gifFile, &recordType);
+        switch (recordType) {
+        case IMAGE_DESC_RECORD_TYPE:
+            DGifGetImageDesc(gifFile);
+
+            row = gifFile->Image.Top;
+            col = gifFile->Image.Left;
+            width = gifFile->Image.Width;
+            height = gifFile->Image.Height;
+
+            if (gifFile->Image.Interlace) {
+                int interlacedOffset[] = { 0, 4, 2, 1 };
+                int interlacedJumps[] = { 8, 8, 4, 2 };
+                for (size_t i = 0; i < 4; i++) {
+                    for (size_t j = row + interlacedOffset[i]; j < row + height;
+                         j += interlacedJumps[i]) {
+                        DGifGetLine(gifFile, &gifBuffer[j][col], width);
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < height; i++) {
+                    DGifGetLine(gifFile, &gifBuffer[row++][col], width);
+                }
+            }
+
+            {
+                // Convert GIF to RGBA
+                GifRowType gifRow = nullptr;
+                GifColorType* colorMapEntry = nullptr;
+                GifByteType* buffer = nullptr;
+
+                STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
+
+                row = gifFile->Image.Top;
+                col = gifFile->Image.Left;
+                width = gifFile->Image.Width;
+                height = gifFile->Image.Height;
+
+                for (unsigned long h = row; h < row + height; h++) {
+                    gifRow = gifBuffer[h];
+                    for (unsigned long w = col; w < col + width; w++) {
+                        buffer = result.m_buffer + h * result.m_stride + w * 4;
+                        colorMapEntry = &colorMap->Colors[gifRow[w]];
+                        if (gifRow[w] == transparentIndex) {
+                            buffer = buffer + 4;
+                        } else {
+#ifdef PORT_PIXEL_ORDER_RGBA
+                            *buffer++ = colorMapEntry->Red;
+                            *buffer++ = colorMapEntry->Green;
+                            *buffer++ = colorMapEntry->Blue;
+                            *buffer++ = 255;
+#else
+                            *buffer++ = colorMapEntry->Blue;
+                            *buffer++ = colorMapEntry->Green;
+                            *buffer++ = colorMapEntry->Red;
+                            *buffer++ = 255;
+#endif
+                        }
+                    }
+                }
+            }
+            isNewFrame = true;
+
+            break;
+        case EXTENSION_RECORD_TYPE: {
+            GifByteType* extension = nullptr;
+            if (DGifGetExtension(gifFile, &extCode, &extension) == GIF_ERROR)
+                return result;
+            do {
+                switch (extCode) {
+                case COMMENT_EXT_FUNC_CODE: {
+                    break;
+                }
+                case GRAPHICS_EXT_FUNC_CODE: {
+                    const int flags = extension[1];
+                    const int dispose =
+                        (flags >> GIF_DISPOSE_SHIFT) & GIF_DISPOSE_MASK;
+                    const int delay = extension[2] | (extension[3] << 8);
+                    result.delay = delay;
+                    if (extension[0] != 4) {
+                        return result;
+                    }
+                    if (dispose == 3) {
+                    } else {
+                    }
+                    transparentIndex =
+                        (flags & GIF_TRANSPARENT_MASK) ? extension[4] : -1;
+                    break;
+                }
+                case PLAINTEXT_EXT_FUNC_CODE: {
+                    break;
+                }
+                case APPLICATION_EXT_FUNC_CODE: {
+                    break;
+                }
+                default:
+                    break;
+                }
+                DGifGetExtensionNext(gifFile, &extension);
+
+            } while (extension != nullptr);
+            break;
+        }
+        case TERMINATE_RECORD_TYPE: {
+#ifdef GIF_LIB_VERSION
+            DGifCloseFile(gifFile);
+#elif GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1
+            DGifCloseFile(gifFile, &errorCode);
+#else
+            DGifCloseFile(gifFile);
+#endif
+            m_gifReadData.mem = (void*)m_inputBuffer.data();
+            m_gifReadData.pos = 0;
+            m_gifReadData.size = m_inputBuffer.size();
+#ifdef GIF_LIB_VERSION
+            gifFile = DGifOpen(&readData, gifRead);
+#else
+            gifFile = DGifOpen(&m_gifReadData, gifRead, &errorCode);
+#endif
+            result.m_isSuccessful = false;
+            result.delay = 0;
+            m_gifFile = gifFile;
+        } break;
+        default:
+            break;
+        }
+        if (isNewFrame) {
+            break;
+        }
+    } while (recordType != TERMINATE_RECORD_TYPE);
+
+    if (colorMap == nullptr) {
+        releaseGIFResource(gifFile, gifBuffer, result.m_height);
+        return result;
+    }
+    result.m_isSuccessful = true;
+    return result;
+}
+
+ImageDecoder::~ImageDecoder()
+{
+    if (m_gifFile) {
+        GifFileType* gifFile = (GifFileType*)m_gifFile;
+        GifRowType* gifBuffer = (GifRowType*)m_gifBuffer;
+        releaseGIFResource(gifFile, gifBuffer, gifFile->SHeight);
+        m_gifFile = nullptr;
+        m_gifBuffer = nullptr;
+    }
+}
+
 } // namespace Starfish
 
 #endif
@@ -721,12 +998,31 @@ ImageDecoder::DecodeResult ImageDecoder::decode()
 
 namespace Starfish {
 
+ImageDecoder::~ImageDecoder()
+{
+}
+
 ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
 {
     return ImageDecoder::DecodeResult();
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decode()
+{
+    return ImageDecoder::DecodeResult();
+}
+
+bool ImageDecoder::prepareAnimatedGIF()
+{
+    return false;
+}
+
+bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
+{
+    return false;
+}
+
+ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
 {
     return ImageDecoder::DecodeResult();
 }
