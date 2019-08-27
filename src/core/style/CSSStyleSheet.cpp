@@ -144,17 +144,18 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
 
     for (unsigned i = 0; i < selectorList.size(); i++) {
         CSSSelector* selector = selectorList[i];
-        temp = total + selector->specificityForOneSelector();
 
         // The negation pseudo-class has another simple selector in own data
         // structure.
         if (selector->type() == CSSSelector::Type::PseudoClass &&
             selector->asCSSPseudoSelector()->pseudoType() ==
                 CSSSelector::PseudoType::PseudoNot) {
-            temp += total +
-                    selector->asCSSPseudoSelector()
-                        ->pseudoSelectorList()[0]
-                        ->specificityForOneSelector();
+            temp = total +
+                   selector->asCSSPseudoSelector()
+                       ->pseudoSelectorList()[0]
+                       ->specificityForOneSelector();
+        } else {
+            temp = total + selector->specificityForOneSelector();
         }
 
         // Clamp each component to its max in the case of overflow.
