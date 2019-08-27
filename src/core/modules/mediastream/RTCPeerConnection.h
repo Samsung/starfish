@@ -90,6 +90,8 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 };
 
+// FIXME: remove webrtc::CreateSessionDescriptionObserver after removing
+// TestPeerConnectionObserver
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
                                public webrtc::CreateSessionDescriptionObserver {
 public:
@@ -99,7 +101,6 @@ public:
     PeerConnectionObserver(RTCPeerConnection* peerConnection);
     virtual ~PeerConnectionObserver(){};
 
-    // PeerConnectionObserver implementation.
     void OnSignalingChange(
         webrtc::PeerConnectionInterface::SignalingState new_state) override{};
     void OnAddTrack(
@@ -126,6 +127,34 @@ public:
 
 protected:
     RTCPeerConnection* m_peerConnection;
+};
+
+class CreateSessionDescriptionObserver
+    : public webrtc::CreateSessionDescriptionObserver {
+public:
+    static CreateSessionDescriptionObserver* create(
+        RTCPeerConnection* peerConnection, Promise* promise);
+
+    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
+    void OnFailure(webrtc::RTCError error) override;
+
+private:
+    RTCPeerConnection* m_peerConnection{ nullptr };
+    Promise* m_promise{ nullptr };
+};
+
+class SetSessionDescriptionObserver
+    : public webrtc::SetSessionDescriptionObserver {
+public:
+    static SetSessionDescriptionObserver* create(
+        RTCPeerConnection* peerConnection, Promise* promise);
+
+    virtual void OnSuccess() override;
+    virtual void OnFailure(webrtc::RTCError error) override;
+
+private:
+    RTCPeerConnection* m_peerConnection{ nullptr };
+    Promise* m_promise{ nullptr };
 };
 
 #if defined(STARFISH_ENABLE_TEST)
@@ -178,6 +207,9 @@ private:
 #endif
 
 class RTCPeerConnection : public EventTarget {
+    friend class PeerConnectionObserver;
+    friend class TestPeerConnectionObserver;
+
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
@@ -189,15 +221,17 @@ public:
     virtual ExecutionContext* executionContext() const override;
 
     Promise* createOffer(RTCOfferOptions options = RTCOfferOptions());
+    Promise* createAnswer(RTCAnswerOptions options = RTCAnswerOptions());
+
     Promise* setLocalDescription(RTCSessionDescriptionInit& description);
 
     NULLABLE RTCSessionDescription* localDescription();
-    NULLABLE DEFINE_GETTER(RTCSessionDescription*, currentLocalDescription);
-    NULLABLE DEFINE_GETTER(RTCSessionDescription*, pendingLocalDescription);
+    NULLABLE RTCSessionDescription* currentLocalDescription();
+    NULLABLE RTCSessionDescription* pendingLocalDescription();
 
     NULLABLE RTCSessionDescription* remoteDescription();
-    NULLABLE DEFINE_GETTER(RTCSessionDescription*, currentRemoteDescription);
-    NULLABLE DEFINE_GETTER(RTCSessionDescription*, pendingRemoteDescription);
+    NULLABLE RTCSessionDescription* currentRemoteDescription();
+    NULLABLE RTCSessionDescription* pendingRemoteDescription();
 
     String* signalingState();
     String* iceGatheringState();
@@ -217,30 +251,17 @@ public:
     bool initializePeerConnection();
     bool initializePeerConnection(RTCConfiguration& configuration);
 
+    ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
+                                                    String* sdp);
+    RTCSdpType toRtcSdpType(webrtc::SdpType type);
+    webrtc::SdpType toSdpType(RTCSdpType type);
+
 private:
     ExecutionContext* m_executionContext;
 
     OperationQueue* m_operationQueue;
 
-    RTCSessionDescription* m_localDescription{ nullptr };
-    RTCSessionDescription* m_currentLocalDescription{ nullptr };
-    RTCSessionDescription* m_pendingLocalDescription{ nullptr };
-
-    RTCSessionDescription* m_remoteDescription{ nullptr };
-    RTCSessionDescription* m_currentRemoteDescription{ nullptr };
-    RTCSessionDescription* m_pendingRemoteDescription{ nullptr };
-
-    RTCSignalingState m_signalingState{ RTCSignalingState::Stable };
-    RTCIceGatheringState m_iceGatheringState{ RTCIceGatheringState::New };
-    RTCIceConnectionState m_iceConnectionState{ RTCIceConnectionState::New };
-    RTCPeerConnectionState m_connectionState{ RTCPeerConnectionState::New };
-
     RTCConfiguration m_configuration;
-    bool m_isClosed{ false };
-    bool m_negotiationNeeded{ false };
-
-    String* m_lastCreatedOffer{ String::emptyString };
-    String* m_lastCreatedAnswer{ String::emptyString };
 
 #if defined(STARFISH_ENABLE_TEST)
     rtc::scoped_refptr<TestPeerConnectionObserver> m_peerConnectionObserver;
@@ -248,9 +269,6 @@ private:
     rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
 #endif
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
-
-    ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
-                                                    String* sdp);
 
     bool isClosed();
     void deletePeerConnection();
