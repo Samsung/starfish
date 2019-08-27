@@ -25,6 +25,7 @@
 #include "core/modules/mediastream/RTCSessionDescription.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "api/peer_connection_interface.h"
 
 namespace Starfish {
 
@@ -37,8 +38,9 @@ String* RTCSessionDescriptionInit::type()
         return String::createASCIIString("pranswer");
     case RTCSdpType::Answer:
         return String::createASCIIString("answer");
-    case RTCSdpType::Rollback:
-        return String::createASCIIString("rollback");
+    // FIXME: libwebrtc does not support rollback
+    // case RTCSdpType::Rollback:
+    //     return String::createASCIIString("rollback");
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -52,9 +54,20 @@ void RTCSessionDescriptionInit::setType(String* type)
         m_type = RTCSdpType::Pranswer;
     } else if (type->equals("answer")) {
         m_type = RTCSdpType::Answer;
-    } else if (type->equals("rollback")) {
-        m_type = RTCSdpType::Rollback;
     }
+    // FIXME: libwebrtc does not support rollback
+    // else if (type->equals("rollback")) {
+    //     m_type = RTCSdpType::Rollback;
+    // }
+}
+
+RTCSessionDescription::RTCSessionDescription(
+    ExecutionContext* executionContext,
+    const webrtc::SessionDescriptionInterface* backend)
+    : EventTarget()
+    , m_executionContext(executionContext)
+{
+    m_backend = backend;
 }
 
 RTCSessionDescription::RTCSessionDescription(
@@ -90,8 +103,9 @@ String* RTCSessionDescription::type()
         return String::createASCIIString("pranswer");
     case RTCSdpType::Answer:
         return String::createASCIIString("answer");
-    case RTCSdpType::Rollback:
-        return String::createASCIIString("rollback");
+    // FIXME: libwebrtc does not support rollback
+    // case RTCSdpType::Rollback:
+    //     return String::createASCIIString("rollback");
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }

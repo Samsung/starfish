@@ -26,10 +26,14 @@
 #include "binding/ScriptWrappable.h"
 #include "core/util/String.h"
 
+namespace webrtc {
+class SessionDescriptionInterface;
+}
+
 namespace Starfish {
 class ExecutionContext;
 
-enum class RTCSdpType { Offer, Pranswer, Answer, Rollback };
+enum class RTCSdpType { Offer, Pranswer, Answer /*, Rollback */ };
 
 struct RTCSessionDescriptionInit {
     friend class RTCSessionDescription;
@@ -58,6 +62,8 @@ private:
 class RTCSessionDescription : public EventTarget {
 public:
     RTCSessionDescription(ExecutionContext* executionContext,
+                          const webrtc::SessionDescriptionInterface* backend);
+    RTCSessionDescription(ExecutionContext* executionContext,
                           RTCSessionDescriptionInit& sessionDescriptionInit);
     virtual ~RTCSessionDescription();
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCSessionDescription)
@@ -68,6 +74,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
+    const webrtc::SessionDescriptionInterface* m_backend{ nullptr };
     RTCSdpType m_type;
     String* m_sdp;
 };

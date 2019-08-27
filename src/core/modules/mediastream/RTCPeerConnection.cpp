@@ -274,6 +274,118 @@ bool TestPeerConnectionObserver::reinitializePeerConnectionForLoopback()
 
 #endif
 
+PeerConnectionObserver::PeerConnectionObserver()
+    : PeerConnectionObserver(nullptr)
+{
+}
+
+PeerConnectionObserver::PeerConnectionObserver(
+    RTCPeerConnection* peerConnection)
+    : m_peerConnection(peerConnection)
+{
+}
+
+CreateSessionDescriptionObserver* CreateSessionDescriptionObserver::create(
+    RTCPeerConnection* peerConnection, Promise* promise)
+{
+    CreateSessionDescriptionObserver* observer =
+        new rtc::RefCountedObject<CreateSessionDescriptionObserver>();
+    observer->m_peerConnection = peerConnection;
+    observer->m_promise = promise;
+    return observer;
+}
+
+void CreateSessionDescriptionObserver::OnSuccess(
+    webrtc::SessionDescriptionInterface* desc)
+{
+    STARFISH_ASSERT(m_promise);
+
+    RTCSdpType type = m_peerConnection->toRtcSdpType(desc->GetType());
+    std::string sdpString =
+        std::string(webrtc::SdpTypeToString(desc->GetType()));
+
+    ObjectRef* sd = m_peerConnection->createSessionDescriptionInitObject(
+        type, String::createASCIIString(sdpString.c_str(), sdpString.size()));
+    m_promise->fulfill(createScriptValue(sd));
+}
+
+void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
+{
+    STARFISH_ASSERT(m_promise);
+
+    DOMException* exception = nullptr;
+    switch (error.type()) {
+    case webrtc::RTCErrorType::UNSUPPORTED_OPERATION:
+    case webrtc::RTCErrorType::UNSUPPORTED_PARAMETER:
+    case webrtc::RTCErrorType::RESOURCE_EXHAUSTED:
+    case webrtc::RTCErrorType::INTERNAL_ERROR:
+        exception =
+            new DOMException(m_peerConnection->executionContext(),
+                             DOMException::DOM_EXCEPTION, "OperationError");
+        break;
+    case webrtc::RTCErrorType::INVALID_PARAMETER:
+        exception = new DOMException(m_peerConnection->executionContext(),
+                                     DOMException::INVALID_ACCESS_ERR,
+                                     "InvalidAccessErr");
+        break;
+    case webrtc::RTCErrorType::INVALID_RANGE:
+        exception =
+            new DOMException(m_peerConnection->executionContext(),
+                             DOMException::SCRIPT_RANGE_ERR, "RangeError");
+        break;
+    case webrtc::RTCErrorType::SYNTAX_ERROR:
+        exception = new DOMException(m_peerConnection->executionContext(),
+                                     DOMException::SYNTAX_ERR, "SyntaxError");
+        break;
+    case webrtc::RTCErrorType::INVALID_STATE:
+        exception = new DOMException(m_peerConnection->executionContext(),
+                                     DOMException::INVALID_STATE_ERR,
+                                     "InvalidStateError");
+        break;
+    case webrtc::RTCErrorType::INVALID_MODIFICATION:
+        exception = new DOMException(m_peerConnection->executionContext(),
+                                     DOMException::INVALID_MODIFICATION_ERR,
+                                     "InvalidModificationError");
+        break;
+    case webrtc::RTCErrorType::NETWORK_ERROR:
+        exception = new DOMException(m_peerConnection->executionContext(),
+                                     DOMException::NETWORK_ERR, "NetworkError");
+        break;
+    default:
+        break;
+    }
+
+    STARFISH_ASSERT(exception);
+    m_promise->reject(exception->scriptValue());
+}
+
+SetSessionDescriptionObserver* SetSessionDescriptionObserver::create(
+    RTCPeerConnection* peerConnection, Promise* promise)
+{
+    SetSessionDescriptionObserver* observer =
+        new rtc::RefCountedObject<SetSessionDescriptionObserver>();
+    observer->m_peerConnection = peerConnection;
+    observer->m_promise = promise;
+    return observer;
+}
+
+void SetSessionDescriptionObserver::OnSuccess()
+{
+    STARFISH_ASSERT(m_promise);
+
+    m_promise->fulfill(scriptUndefined());
+}
+
+void SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
+{
+    STARFISH_ASSERT(m_promise);
+
+    // Use CreateSessionDescriptionObserver::OnFailure to intialize an exception
+    rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
+        CreateSessionDescriptionObserver::create(m_peerConnection, m_promise);
+    observer->OnFailure(std::move(error));
+}
+
 // https://w3c.github.io/webrtc-pc/#constructor
 RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
@@ -384,23 +496,12 @@ ExecutionContext* RTCPeerConnection::executionContext() const
     return m_executionContext;
 }
 
-PeerConnectionObserver::PeerConnectionObserver()
-    : PeerConnectionObserver(nullptr)
-{
-}
-
-PeerConnectionObserver::PeerConnectionObserver(
-    RTCPeerConnection* peerConnection)
-    : m_peerConnection(peerConnection)
-{
-}
-
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer
 Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 {
-    Promise* promise = new Promise(scriptBindingInstance());
     // 1-2
-    if (m_isClosed) {
+    if (isClosed()) {
+        Promise* promise = new Promise(scriptBindingInstance());
         auto exception = new DOMException(executionContext(),
                                           DOMException::INVALID_STATE_ERR,
                                           "InvalidStateError");
@@ -408,51 +509,75 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
         return promise;
     }
 
+    Promise* promise = new Promise(scriptBindingInstance());
+    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
+        new webrtc::PeerConnectionInterface::RTCOfferAnswerOptions(
+            options.m_offerToReceiveVideo, options.m_offerToReceiveAudio,
+            options.m_voiceActivityDetection, options.m_iceRestart, true);
     m_operationQueue->enqueue(
-        [](Promise* promise, void* data) {
-            RTCPeerConnection* connection = castTo<RTCPeerConnection*>(data);
+        [](Promise* promise, void* data1, void* data2) {
+            RTCPeerConnection* self = (RTCPeerConnection*)data1;
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
+                (webrtc::PeerConnectionInterface::RTCOfferAnswerOptions*)data2;
 
-            if (connection->m_isClosed) {
-                ObjectRef* sd = connection->createSessionDescriptionInitObject(
-                    RTCSdpType::Offer, String::createASCIIString(""));
-                promise->reject(createScriptValue(sd));
-                return;
-            }
-
-            if ((connection->m_signalingState ==
-                 RTCSignalingState::HaveRemoteOffer) ||
-                (connection->m_signalingState ==
-                 RTCSignalingState::HaveLocalPranswer) ||
-                (connection->m_signalingState ==
-                 RTCSignalingState::HaveRemotePranswer) ||
-                (connection->m_signalingState == RTCSignalingState::Closed)) {
-                auto exception = new DOMException(
-                    connection->executionContext(),
-                    DOMException::INVALID_STATE_ERR, "InvalidStateError");
-                promise->reject(exception->scriptValue());
-                return;
-            }
-
-            if (connection->backend()) {
-                connection->backend()->CreateOffer(
-                    connection->m_peerConnectionObserver,
-                    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
-
-                // TODO: identity provider
-                ObjectRef* sd = connection->createSessionDescriptionInitObject(
-                    RTCSdpType::Offer, String::createASCIIString("sdpString"));
-                promise->fulfill(createScriptValue(sd));
-                return;
+            if (self->backend()) {
+                // the observer creates an exception if needed
+                rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
+                    CreateSessionDescriptionObserver::create(self, promise);
+                self->backend()->CreateOffer(observer, *opt);
+                delete opt;
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
-                    connection->executionContext(),
-                    DOMException::INVALID_STATE_ERR, "InvalidStateError");
+                    self->executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
                 promise->reject(exception->scriptValue());
-                return;
             }
         },
-        promise, this);
+        promise, this, opt);
+
+    return promise;
+}
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createanswer
+Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
+{
+    if (isClosed()) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    Promise* promise = new Promise(scriptBindingInstance());
+    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
+        new webrtc::PeerConnectionInterface::RTCOfferAnswerOptions(
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::kUndefined,
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::kUndefined,
+            options.m_voiceActivityDetection, false, true);
+    m_operationQueue->enqueue(
+        [](Promise* promise, void* data1, void* data2) {
+            RTCPeerConnection* self = (RTCPeerConnection*)data1;
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
+                (webrtc::PeerConnectionInterface::RTCOfferAnswerOptions*)data2;
+
+            if (self->backend()) {
+                // the observer creates an exception if needed
+                rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
+                    CreateSessionDescriptionObserver::create(self, promise);
+                self->backend()->CreateAnswer(observer, *opt);
+            } else {
+                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
+                auto exception = new DOMException(
+                    self->executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
+                promise->reject(exception->scriptValue());
+            }
+            delete opt;
+        },
+        promise, this, opt);
 
     return promise;
 }
@@ -479,84 +604,52 @@ ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
 Promise* RTCPeerConnection::setLocalDescription(
     RTCSessionDescriptionInit& description)
 {
-    RTCSessionDescriptionInit d = description;
-    if ((d.m_sdp->equals(String::emptyString)) &&
-        ((d.m_type == RTCSdpType::Answer) ||
-         (d.m_type == RTCSdpType::Pranswer))) {
-        d.m_sdp = m_lastCreatedAnswer;
-    }
-    if ((d.m_sdp->equals(String::emptyString)) &&
-        (d.m_type == RTCSdpType::Offer)) {
-        d.m_sdp = m_lastCreatedOffer;
+    if (isClosed()) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->fulfill(scriptUndefined());
+        return promise;
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-
     struct Params : public gc {
         RTCPeerConnection* self;
         RTCSessionDescriptionInit d;
     };
     Params* p = new Params();
     p->self = this;
-    p->d = d;
+    p->d = description;
 
     m_operationQueue->enqueue(
-        [](Promise* promise, void* data) {
-            Params* p = castTo<Params*>(data);
-            RTCPeerConnection* con = castTo<RTCPeerConnection*>(p->self);
-            RTCSessionDescriptionInit d = p->d;
+        [](Promise* promise, void* data1) {
+            Params* p = (Params*)data1;
+            RTCPeerConnection* self = (RTCPeerConnection*)(p->self);
 
-            if ((d.m_type == RTCSdpType::Offer) &&
-                !(d.m_sdp->equals(con->m_lastCreatedOffer))) {
-                auto exception =
-                    new DOMException(con->executionContext(),
-                                     DOMException::INVALID_MODIFICATION_ERR,
-                                     "InvalidModificationError");
-                promise->reject(exception->scriptValue());
-                return;
-            }
-            if (((d.m_type == RTCSdpType::Answer) ||
-                 (d.m_type == RTCSdpType::Pranswer)) &&
-                !(d.m_sdp->equals(con->m_lastCreatedAnswer))) {
-                auto exception =
-                    new DOMException(con->executionContext(),
-                                     DOMException::INVALID_MODIFICATION_ERR,
-                                     "InvalidModificationError");
-                promise->reject(exception->scriptValue());
-                return;
-            }
-
-            // 4.2
-            if (con->m_isClosed) {
+            if (self->isClosed()) {
                 promise->fulfill(scriptUndefined());
+                delete p;
                 return;
             }
-            // 4.2.1
-            if (d.m_type == RTCSdpType::Offer) {
-                con->m_pendingLocalDescription =
-                    new RTCSessionDescription(con->executionContext(), d);
-                con->m_signalingState = RTCSignalingState::HaveLocalOffer;
-            } else if (d.m_type == RTCSdpType::Answer) {
-                con->m_currentLocalDescription =
-                    new RTCSessionDescription(con->executionContext(), d);
-                con->m_currentRemoteDescription =
-                    con->m_pendingRemoteDescription;
-                con->m_pendingRemoteDescription = nullptr;
-                con->m_pendingLocalDescription = nullptr;
-                con->m_lastCreatedOffer = String::emptyString;
-                con->m_lastCreatedAnswer = String::emptyString;
-                con->m_signalingState = RTCSignalingState::Stable;
-            } else if (d.m_type == RTCSdpType::Rollback) {
-                con->m_pendingLocalDescription = nullptr;
-                con->m_signalingState = RTCSignalingState::Stable;
-            } else if (d.m_type == RTCSdpType::Pranswer) {
-                con->m_pendingLocalDescription =
-                    new RTCSessionDescription(con->executionContext(), d);
-                con->m_signalingState = RTCSignalingState::HaveLocalPranswer;
-            }
 
-            // TODO: remote descripition and so on
-            promise->fulfill(scriptUndefined());
+            if (self->backend()) {
+                // the observer creates an exception if needed
+                rtc::scoped_refptr<SetSessionDescriptionObserver> observer =
+                    SetSessionDescriptionObserver::create(p->self, promise);
+
+                webrtc::SdpType type = self->toSdpType(p->d.m_type);
+                std::string sdpString =
+                    std::string(p->d.m_sdp->toUTF8NonGCString());
+                std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
+                    webrtc::CreateSessionDescription(type, sdpString);
+                // SetLocalDescription takes the ownership of desc
+                self->backend()->SetLocalDescription(observer, desc.release());
+            } else {
+                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
+                auto exception = new DOMException(
+                    self->executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
+                promise->reject(exception->scriptValue());
+            }
+            delete p;
             return;
         },
         promise, p);
@@ -566,34 +659,54 @@ Promise* RTCPeerConnection::setLocalDescription(
 
 RTCSessionDescription* RTCPeerConnection::localDescription()
 {
-    if (m_pendingLocalDescription != nullptr) {
-        return m_pendingLocalDescription;
-    }
-    return m_currentLocalDescription;
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->local_description());
+}
+
+RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
+{
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->current_local_description());
+}
+
+RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
+{
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->pending_local_description());
 }
 
 RTCSessionDescription* RTCPeerConnection::remoteDescription()
 {
-    if (m_pendingRemoteDescription != nullptr) {
-        return m_pendingRemoteDescription;
-    }
-    return m_currentRemoteDescription;
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->remote_description());
+}
+
+RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
+{
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->current_remote_description());
+}
+
+RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
+{
+    return new RTCSessionDescription(executionContext(),
+                                     m_backend->pending_remote_description());
 }
 
 String* RTCPeerConnection::signalingState()
 {
-    switch (m_signalingState) {
-    case RTCSignalingState::Stable:
+    switch (m_backend->signaling_state()) {
+    case webrtc::PeerConnectionInterface::SignalingState::kStable:
         return String::createASCIIString("stable");
-    case RTCSignalingState::HaveLocalOffer:
+    case webrtc::PeerConnectionInterface::SignalingState::kHaveLocalOffer:
         return String::createASCIIString("have-local-offer");
-    case RTCSignalingState::HaveRemoteOffer:
+    case webrtc::PeerConnectionInterface::SignalingState::kHaveRemoteOffer:
         return String::createASCIIString("have-remote-offer");
-    case RTCSignalingState::HaveLocalPranswer:
+    case webrtc::PeerConnectionInterface::SignalingState::kHaveLocalPrAnswer:
         return String::createASCIIString("have-local-pranswer");
-    case RTCSignalingState::HaveRemotePranswer:
+    case webrtc::PeerConnectionInterface::SignalingState::kHaveRemotePrAnswer:
         return String::createASCIIString("have-remote-pranswer");
-    case RTCSignalingState::Closed:
+    case webrtc::PeerConnectionInterface::SignalingState::kClosed:
         return String::createASCIIString("closed");
     default:
         return String::emptyString;
@@ -602,12 +715,14 @@ String* RTCPeerConnection::signalingState()
 
 String* RTCPeerConnection::iceGatheringState()
 {
-    switch (m_iceGatheringState) {
-    case RTCIceGatheringState::New:
+    switch (m_backend->ice_gathering_state()) {
+    case webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringNew:
         return String::createASCIIString("new");
-    case RTCIceGatheringState::Gathering:
+    case webrtc::PeerConnectionInterface::IceGatheringState::
+        kIceGatheringGathering:
         return String::createASCIIString("gathering");
-    case RTCIceGatheringState::Complete:
+    case webrtc::PeerConnectionInterface::IceGatheringState::
+        kIceGatheringComplete:
         return String::createASCIIString("complete");
     default:
         return String::emptyString;
@@ -616,20 +731,26 @@ String* RTCPeerConnection::iceGatheringState()
 
 String* RTCPeerConnection::iceConnectionState()
 {
-    switch (m_iceConnectionState) {
-    case RTCIceConnectionState::Closed:
+    switch (m_backend->ice_connection_state()) {
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionClosed:
         return String::createASCIIString("closed");
-    case RTCIceConnectionState::Failed:
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionFailed:
         return String::createASCIIString("failed");
-    case RTCIceConnectionState::Disconnected:
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionDisconnected:
         return String::createASCIIString("disconnected");
-    case RTCIceConnectionState::New:
+    case webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionNew:
         return String::createASCIIString("new");
-    case RTCIceConnectionState::Checking:
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionChecking:
         return String::createASCIIString("checking");
-    case RTCIceConnectionState::Completed:
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionCompleted:
         return String::createASCIIString("completed");
-    case RTCIceConnectionState::Connected:
+    case webrtc::PeerConnectionInterface::IceConnectionState::
+        kIceConnectionConnected:
         return String::createASCIIString("connected");
     default:
         return String::emptyString;
@@ -638,18 +759,18 @@ String* RTCPeerConnection::iceConnectionState()
 
 String* RTCPeerConnection::connectionState()
 {
-    switch (m_connectionState) {
-    case RTCPeerConnectionState::Closed:
+    switch (m_backend->peer_connection_state()) {
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kClosed:
         return String::createASCIIString("closed");
-    case RTCPeerConnectionState::Failed:
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kFailed:
         return String::createASCIIString("failed");
-    case RTCPeerConnectionState::Disconnected:
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kDisconnected:
         return String::createASCIIString("disconnected");
-    case RTCPeerConnectionState::New:
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kNew:
         return String::createASCIIString("new");
-    case RTCPeerConnectionState::Connecting:
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kConnecting:
         return String::createASCIIString("connecting");
-    case RTCPeerConnectionState::Connected:
+    case webrtc::PeerConnectionInterface::PeerConnectionState::kConnected:
         return String::createASCIIString("connected");
     default:
         return String::emptyString;
@@ -663,7 +784,7 @@ RTCConfiguration& RTCPeerConnection::getConfiguration()
 
 void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration)
 {
-    if (m_isClosed) {
+    if (isClosed()) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
@@ -734,15 +855,11 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration)
 
 void RTCPeerConnection::close()
 {
-    if (m_isClosed) {
+    if (isClosed()) {
         return;
     }
 
-    m_isClosed = true;
-    m_signalingState = RTCSignalingState::Closed;
-    m_iceConnectionState = RTCIceConnectionState::Closed;
-    m_connectionState = RTCPeerConnectionState::Closed;
-    m_backend = nullptr; // check this: deletePeerConnection()
+    m_backend->Close();
 }
 
 GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
@@ -826,6 +943,36 @@ bool RTCPeerConnection::isClosed()
 void RTCPeerConnection::deletePeerConnection()
 {
     m_backend = nullptr;
+}
+
+RTCSdpType RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)
+{
+    switch (type) {
+    case webrtc::SdpType::kOffer:
+        return RTCSdpType::Offer;
+    case webrtc::SdpType::kPrAnswer:
+        return RTCSdpType::Pranswer;
+    case webrtc::SdpType::kAnswer:
+        return RTCSdpType::Answer;
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+}
+
+webrtc::SdpType RTCPeerConnection::toSdpType(RTCSdpType type)
+{
+    switch (type) {
+    case RTCSdpType::Offer:
+        return webrtc::SdpType::kOffer;
+    case RTCSdpType::Pranswer:
+        return webrtc::SdpType::kPrAnswer;
+    case RTCSdpType::Answer:
+        return webrtc::SdpType::kAnswer;
+    // case RTCSdpType::Rollback:
+    //     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
 }
 }
 

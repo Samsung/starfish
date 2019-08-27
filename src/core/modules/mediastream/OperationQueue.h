@@ -31,6 +31,7 @@ class Promise;
 
 class OperationQueue : public gc {
     typedef void (*OperationFunction)(Promise*, void*);
+    typedef void (*OperationFunction2)(Promise*, void*, void*);
 
     class Operation : public gc {
     public:
@@ -45,6 +46,8 @@ public:
     {
     }
     void enqueue(OperationFunction fn, Promise* data, void* data1);
+    void enqueue(OperationFunction2 fn, Promise* data, void* data1,
+                 void* data2);
 
 private:
     ExecutionContext* m_executionContext;

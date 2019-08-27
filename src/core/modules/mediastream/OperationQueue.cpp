@@ -55,6 +55,30 @@ void OperationQueue::enqueue(OperationFunction fn, Promise* fnPromise,
         },
         p);
 }
+
+void OperationQueue::enqueue(OperationFunction2 fn, Promise* fnPromise,
+                             void* data1, void* data2)
+{
+    struct Params : public gc {
+        OperationFunction2 fn;
+        Promise* fnPromise;
+        void* data1;
+        void* data2;
+    };
+    Params* p = new Params();
+    p->fn = fn;
+    p->fnPromise = fnPromise;
+    p->data1 = data1;
+    p->data2 = data2;
+
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t, void* data) {
+            Params* p = castTo<Params*>(data);
+            p->fn(p->fnPromise, p->data1, p->data2);
+        },
+        p);
+}
 }
 
 #endif
