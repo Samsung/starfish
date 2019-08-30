@@ -423,7 +423,27 @@ int TTS::createHandle()
     }
 
     // Initialize engine
-    ret = tts_set_mode(m_handle, (tts_mode_e)TTS_MODE_INTERRUPT);
+    return prepare();
+}
+
+void TTS::setMode(LWE::TTSMode mode)
+{
+    if (m_mode != mode) {
+        unprepare();
+        m_mode = mode;
+        prepare();
+    }
+}
+
+int TTS::prepare()
+{
+    tts_mode_e mode = TTS_MODE_SCREEN_READER;
+    if (m_mode == LWE::TTSMode::Forced) {
+        STARFISH_LOG_INFO("[TTS] LWE::TTSMode::Forced");
+        mode = TTS_MODE_DEFAULT;
+    }
+
+    int ret = tts_set_mode(m_handle, mode);
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_set_mode failed : %d", ret);
         return ret;
@@ -437,20 +457,32 @@ int TTS::createHandle()
     return ret;
 }
 
-void TTS::destroy()
+void TTS::unprepare()
 {
-    if (m_handle) {
+    int state = ttsState();
+    if (state == TTS_STATE_PLAYING || state == TTS_STATE_PAUSED) {
         int ret = tts_stop(m_handle);
         if (ret != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
         }
-
         ret = tts_unprepare(m_handle);
         if (ret != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("[TTS] tts_unprepare failed : %d", ret);
         }
+    } else if (state == TTS_STATE_READY) {
+        int ret = tts_unprepare(m_handle);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_unprepare failed : %d", ret);
+        }
+    }
+}
 
-        ret = tts_unset_state_changed_cb(m_handle);
+void TTS::destroy()
+{
+    if (m_handle) {
+        unprepare();
+
+        int ret = tts_unset_state_changed_cb(m_handle);
         if (ret != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("[TTS] tts_unset_state_changed_cb failed : %d",
                                ret);

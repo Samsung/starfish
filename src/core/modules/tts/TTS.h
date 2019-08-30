@@ -63,10 +63,7 @@ public:
 
     bool isPaused();
 
-    void setMode(LWE::TTSMode mode)
-    {
-        m_mode = mode;
-    }
+    void setMode(LWE::TTSMode mode);
 
     LWE::TTSMode mode() const
     {
@@ -122,6 +119,8 @@ public:
     void changeDefaultVoice(String* language, const int voiceType);
 
     int ttsState();
+    int prepare();
+    void unprepare();
 
 #if defined(STARFISH_TIZEN)
     tts_h& handle()

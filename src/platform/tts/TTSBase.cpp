@@ -48,6 +48,19 @@ void TTS::destroy()
 {
 }
 
+void TTS::setMode(LWE::TTSMode mode)
+{
+}
+
+int TTS::prepare()
+{
+    return 0;
+}
+
+void TTS::unprepare()
+{
+}
+
 void TTS::speech(Element* element, String* text)
 {
     if (text && text != String::emptyString) {
