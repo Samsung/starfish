@@ -126,9 +126,6 @@ AudioStreamTrack::AudioStreamTrack(
 AudioStreamTrack::~AudioStreamTrack()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-    for (auto mediaStream : m_attachedMediaStreams) {
-        mediaStream->removeAudioTrack(this);
-    }
     m_backend = nullptr;
 }
 
@@ -171,9 +168,6 @@ VideoStreamTrack::VideoStreamTrack(
 VideoStreamTrack::~VideoStreamTrack()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-    for (auto mediaStream : m_attachedMediaStreams) {
-        mediaStream->removeVideoTrack(this);
-    }
     m_backend = nullptr;
 }
 
@@ -297,31 +291,10 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 MediaStream::~MediaStream()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-
-    for (auto track : m_audioTracks) {
-        if (track->backend()) {
-            m_backend->RemoveTrack(track->backend());
-        }
-        track->removeFrom(this);
-    }
-    for (auto track : m_videoTracks) {
-        if (track->backend()) {
-            m_backend->RemoveTrack(track->backend());
-        }
-        track->removeFrom(this);
-    }
-
-    auto pc = this->executionContext()
-                  ->document()
-                  ->window()
-                  ->navigator()
-                  ->webRtcManager()
-                  ->peerConnection();
-
-    if (pc && m_backend) {
-        pc->RemoveStream(m_backend);
-    }
     m_backend = nullptr;
+    m_videoRenderer = nullptr;
+    m_audioTracks.clear();
+    m_videoTracks.clear();
 }
 
 ScriptBindingInstance* MediaStream::scriptBindingInstance()

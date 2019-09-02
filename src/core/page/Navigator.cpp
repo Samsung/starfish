@@ -73,7 +73,10 @@ ServiceWorkerContainer* Navigator::serviceWorker()
 #if defined(STARFISH_ENABLE_WEBRTC)
 WebRtcManager* Navigator::webRtcManager()
 {
-    return WebRtcManager::instance();
+    if (m_webRtcManager == nullptr) {
+        m_webRtcManager = new WebRtcManager();
+    }
+    return m_webRtcManager;
 }
 #endif
 
@@ -115,7 +118,10 @@ void Navigator::dispose()
 #endif
 
 #if defined(STARFISH_ENABLE_WEBRTC)
-    WebRtcManager::destory();
+    if (m_webRtcManager) {
+        m_webRtcManager->destroy();
+    }
+    m_webRtcManager = nullptr;
 #endif
 }
 
