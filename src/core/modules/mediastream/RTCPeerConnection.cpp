@@ -300,19 +300,85 @@ void CreateSessionDescriptionObserver::OnSuccess(
 {
     STARFISH_ASSERT(m_promise);
 
-    RTCSdpType type = m_peerConnection->toRtcSdpType(desc->GetType());
-    std::string sdpString =
-        std::string(webrtc::SdpTypeToString(desc->GetType()));
+    // This callback is called from another thread
+    // The following lines must be executed in the main thread.
+    struct Params {
+        CreateSessionDescriptionObserver* self;
+        std::unique_ptr<webrtc::SessionDescriptionInterface> desc;
+        Promise* promise;
+    };
 
-    ObjectRef* sd = m_peerConnection->createSessionDescriptionInitObject(
-        type, String::createASCIIString(sdpString.c_str(), sdpString.size()));
-    m_promise->fulfill(createScriptValue(sd));
+    Params* p = new Params();
+    p->self = this;
+    // The ownership is also passed on
+    p->desc = std::unique_ptr<webrtc::SessionDescriptionInterface>(desc);
+    p->promise = m_promise;
+
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Params* p = (Params*)data;
+                CreateSessionDescriptionObserver* self = p->self;
+                webrtc::SessionDescriptionInterface* desc = p->desc.get();
+                Promise* promise = p->promise;
+
+                RTCSdpType type =
+                    self->m_peerConnection->toRtcSdpType(desc->GetType());
+                std::string sdpString =
+                    std::string(webrtc::SdpTypeToString(desc->GetType()));
+
+                ObjectRef* sd =
+                    self->m_peerConnection->createSessionDescriptionInitObject(
+                        type, String::createASCIIString(sdpString.c_str(),
+                                                        sdpString.size()));
+                promise->fulfill(createScriptValue(sd));
+                delete p;
+            },
+            p);
 }
 
 void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
 {
     STARFISH_ASSERT(m_promise);
 
+    // This callback is called from another thread
+    // The following lines must be executed in the main thread.
+    struct Params {
+        CreateSessionDescriptionObserver* self;
+        webrtc::RTCError error;
+        Promise* promise;
+    };
+
+    Params* p = new Params();
+    p->self = this;
+    p->error = std::move(error);
+    p->promise = m_promise;
+
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Params* p = (Params*)data;
+                CreateSessionDescriptionObserver* self = p->self;
+                Promise* promise = p->promise;
+
+                DOMException* exception =
+                    self->toDomException(std::move(p->error));
+                STARFISH_ASSERT(exception);
+                promise->reject(exception->scriptValue());
+                delete p;
+            },
+            p);
+}
+
+DOMException* CreateSessionDescriptionObserver::toDomException(
+    webrtc::RTCError error)
+{
     DOMException* exception = nullptr;
     switch (error.type()) {
     case webrtc::RTCErrorType::UNSUPPORTED_OPERATION:
@@ -355,8 +421,7 @@ void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
         break;
     }
 
-    STARFISH_ASSERT(exception);
-    m_promise->reject(exception->scriptValue());
+    return exception;
 }
 
 SetSessionDescriptionObserver* SetSessionDescriptionObserver::create(
@@ -470,13 +535,6 @@ bool RTCPeerConnection::initializePeerConnection(
 
     m_backend = peerConnectionFactory->CreatePeerConnection(
         config, nullptr, nullptr, m_peerConnectionObserver);
-
-    this->executionContext()
-        ->document()
-        ->window()
-        ->navigator()
-        ->webRtcManager()
-        ->setPeerConnection(m_backend);
 
     return m_backend != nullptr;
 }
@@ -611,7 +669,7 @@ Promise* RTCPeerConnection::setLocalDescription(
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-    struct Params : public gc {
+    struct Params {
         RTCPeerConnection* self;
         RTCSessionDescriptionInit d;
     };

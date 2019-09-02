@@ -139,6 +139,8 @@ public:
     void OnFailure(webrtc::RTCError error) override;
 
 private:
+    DOMException* toDomException(webrtc::RTCError error);
+
     RTCPeerConnection* m_peerConnection{ nullptr };
     Promise* m_promise{ nullptr };
 };

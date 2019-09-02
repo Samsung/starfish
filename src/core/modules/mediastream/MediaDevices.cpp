@@ -70,7 +70,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 {
     Promise* promise = new Promise(scriptBindingInstance());
 
-    struct Params : public gc {
+    struct Params {
         MediaDevices* self;
         MediaStreamConstraints constraints;
     };
@@ -85,6 +85,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             Params* p = castTo<Params*>(data2);
             MediaDevices* md = p->self;
             MediaStreamConstraints constraints = p->constraints;
+            delete p;
 
             // 1-3: TODO: Accept constraint sets
             if (!constraints.m_audio && !constraints.m_video) {

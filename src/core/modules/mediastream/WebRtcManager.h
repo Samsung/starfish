@@ -27,11 +27,12 @@ namespace Starfish {
 
 class WebRtcManager : public gc {
 public:
-    static WebRtcManager* instance();
-    static void destory()
-    {
-        m_instance = nullptr;
-    }
+    WebRtcManager();
+    virtual ~WebRtcManager();
+
+    void initPeerConnection();
+    void deletePeerConnection();
+    void destroy();
 
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
     peerConnectionFactory()
@@ -39,25 +40,12 @@ public:
         return m_peerConnectionFactory;
     }
 
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection()
-    {
-        return m_peerConnection;
-    }
-
-    void setPeerConnection(
-        rtc::scoped_refptr<webrtc::PeerConnectionInterface> peerConnection)
-    {
-        m_peerConnection = peerConnection;
-    }
-
-    virtual ~WebRtcManager();
-
 private:
-    WebRtcManager();
-    static WebRtcManager* m_instance;
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
         m_peerConnectionFactory;
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_peerConnection;
+    std::unique_ptr<rtc::Thread> m_networkThread;
+    std::unique_ptr<rtc::Thread> m_workerThread;
+    std::unique_ptr<rtc::Thread> m_signalingThread;
 };
 } // namespace Starfish
 

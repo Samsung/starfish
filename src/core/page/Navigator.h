@@ -82,6 +82,7 @@ public:
     MediaDevices* mediaDevices();
 
 protected:
+    WebRtcManager* m_webRtcManager{ nullptr };
     MediaDevices* m_mediaDevices{ nullptr };
 #endif
 
