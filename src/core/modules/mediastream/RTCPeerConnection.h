@@ -30,6 +30,8 @@
 #include "core/modules/mediastream/PeerConnectionClient.h"
 
 #include "api/peer_connection_interface.h"
+#include "api/media_stream_interface.h"
+#include "api/rtp_receiver_interface.h"
 
 namespace Starfish {
 class ExecutionContext;
@@ -103,10 +105,16 @@ public:
 
     void OnSignalingChange(
         webrtc::PeerConnectionInterface::SignalingState new_state) override{};
+    void OnAddStream(
+        rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override{};
+    void OnRemoveStream(
+        rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override{};
     void OnAddTrack(
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
         const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>&
             streams) override{};
+    void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                     transceiver) override{};
     void OnRemoveTrack(
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override{};
     void OnDataChannel(
@@ -115,11 +123,19 @@ public:
     void OnIceConnectionChange(
         webrtc::PeerConnectionInterface::IceConnectionState new_state)
         override{};
+    void OnStandardizedIceConnectionChange(
+        webrtc::PeerConnectionInterface::IceConnectionState new_state)
+        override{};
+    void OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState
+                                new_state) override{};
     void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState
                                   new_state) override{};
     void OnIceCandidate(
         const webrtc::IceCandidateInterface* candidate) override{};
+    void OnIceCandidatesRemoved(
+        const std::vector<cricket::Candidate>& candidates) override{};
     void OnIceConnectionReceivingChange(bool receiving) override{};
+    void OnInterestingUsage(int usage_pattern) override{};
 
     // CreateSessionDescriptionObserver implementation.
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
@@ -137,10 +153,12 @@ public:
 
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
     void OnFailure(webrtc::RTCError error) override;
+    void setPromise(Promise* promise)
+    {
+        m_promise = promise;
+    }
 
 private:
-    DOMException* toDomException(webrtc::RTCError error);
-
     RTCPeerConnection* m_peerConnection{ nullptr };
     Promise* m_promise{ nullptr };
 };
@@ -153,6 +171,10 @@ public:
 
     virtual void OnSuccess() override;
     virtual void OnFailure(webrtc::RTCError error) override;
+    void setPromise(Promise* promise)
+    {
+        m_promise = promise;
+    }
 
 private:
     RTCPeerConnection* m_peerConnection{ nullptr };
@@ -226,6 +248,7 @@ public:
     Promise* createAnswer(RTCAnswerOptions options = RTCAnswerOptions());
 
     Promise* setLocalDescription(RTCSessionDescriptionInit& description);
+    Promise* setRemoteDescription(RTCSessionDescriptionInit& description);
 
     NULLABLE RTCSessionDescription* localDescription();
     NULLABLE RTCSessionDescription* currentLocalDescription();
@@ -257,6 +280,7 @@ public:
                                                     String* sdp);
     RTCSdpType toRtcSdpType(webrtc::SdpType type);
     webrtc::SdpType toSdpType(RTCSdpType type);
+    DOMException* toDomException(webrtc::RTCError error);
 
 private:
     ExecutionContext* m_executionContext;
@@ -271,6 +295,9 @@ private:
     rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
 #endif
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
+    rtc::scoped_refptr<CreateSessionDescriptionObserver>
+        m_createSessionObserver;
+    rtc::scoped_refptr<SetSessionDescriptionObserver> m_setSessionObserver;
 
     bool isClosed();
     void deletePeerConnection();

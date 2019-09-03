@@ -53,7 +53,7 @@ WebRtcManager::~WebRtcManager()
 void WebRtcManager::initPeerConnection()
 {
     if (m_peerConnectionFactory == nullptr) {
-        m_networkThread = rtc::Thread::Create();
+        m_networkThread = rtc::Thread::CreateWithSocketServer();
         m_networkThread->Start();
         m_workerThread = rtc::Thread::Create();
         m_workerThread->Start();
