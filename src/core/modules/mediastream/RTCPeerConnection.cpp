@@ -299,6 +299,7 @@ void CreateSessionDescriptionObserver::OnSuccess(
     webrtc::SessionDescriptionInterface* desc)
 {
     STARFISH_ASSERT(m_promise);
+    STARFISH_LOG_INFO("CreateSessionDescriptionObserver::%s\n", __func__);
 
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
@@ -327,14 +328,15 @@ void CreateSessionDescriptionObserver::OnSuccess(
 
                 RTCSdpType type =
                     self->m_peerConnection->toRtcSdpType(desc->GetType());
-                std::string sdpString =
-                    std::string(webrtc::SdpTypeToString(desc->GetType()));
+                std::string sdpString;
+                desc->ToString(&sdpString);
 
                 ObjectRef* sd =
                     self->m_peerConnection->createSessionDescriptionInitObject(
                         type, String::createASCIIString(sdpString.c_str(),
                                                         sdpString.size()));
                 promise->fulfill(createScriptValue(sd));
+                self->setPromise(nullptr);
                 delete p;
             },
             p);
@@ -343,6 +345,7 @@ void CreateSessionDescriptionObserver::OnSuccess(
 void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
 {
     STARFISH_ASSERT(m_promise);
+    STARFISH_LOG_WARN("CreateSessionDescriptionObserver::%s\n", __func__);
 
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
@@ -368,60 +371,13 @@ void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
                 Promise* promise = p->promise;
 
                 DOMException* exception =
-                    self->toDomException(std::move(p->error));
+                    self->m_peerConnection->toDomException(std::move(p->error));
                 STARFISH_ASSERT(exception);
                 promise->reject(exception->scriptValue());
+                self->setPromise(nullptr);
                 delete p;
             },
             p);
-}
-
-DOMException* CreateSessionDescriptionObserver::toDomException(
-    webrtc::RTCError error)
-{
-    DOMException* exception = nullptr;
-    switch (error.type()) {
-    case webrtc::RTCErrorType::UNSUPPORTED_OPERATION:
-    case webrtc::RTCErrorType::UNSUPPORTED_PARAMETER:
-    case webrtc::RTCErrorType::RESOURCE_EXHAUSTED:
-    case webrtc::RTCErrorType::INTERNAL_ERROR:
-        exception =
-            new DOMException(m_peerConnection->executionContext(),
-                             DOMException::DOM_EXCEPTION, "OperationError");
-        break;
-    case webrtc::RTCErrorType::INVALID_PARAMETER:
-        exception = new DOMException(m_peerConnection->executionContext(),
-                                     DOMException::INVALID_ACCESS_ERR,
-                                     "InvalidAccessErr");
-        break;
-    case webrtc::RTCErrorType::INVALID_RANGE:
-        exception =
-            new DOMException(m_peerConnection->executionContext(),
-                             DOMException::SCRIPT_RANGE_ERR, "RangeError");
-        break;
-    case webrtc::RTCErrorType::SYNTAX_ERROR:
-        exception = new DOMException(m_peerConnection->executionContext(),
-                                     DOMException::SYNTAX_ERR, "SyntaxError");
-        break;
-    case webrtc::RTCErrorType::INVALID_STATE:
-        exception = new DOMException(m_peerConnection->executionContext(),
-                                     DOMException::INVALID_STATE_ERR,
-                                     "InvalidStateError");
-        break;
-    case webrtc::RTCErrorType::INVALID_MODIFICATION:
-        exception = new DOMException(m_peerConnection->executionContext(),
-                                     DOMException::INVALID_MODIFICATION_ERR,
-                                     "InvalidModificationError");
-        break;
-    case webrtc::RTCErrorType::NETWORK_ERROR:
-        exception = new DOMException(m_peerConnection->executionContext(),
-                                     DOMException::NETWORK_ERR, "NetworkError");
-        break;
-    default:
-        break;
-    }
-
-    return exception;
 }
 
 SetSessionDescriptionObserver* SetSessionDescriptionObserver::create(
@@ -437,18 +393,56 @@ SetSessionDescriptionObserver* SetSessionDescriptionObserver::create(
 void SetSessionDescriptionObserver::OnSuccess()
 {
     STARFISH_ASSERT(m_promise);
+    STARFISH_LOG_INFO("SetSessionDescriptionObserver::%s\n", __func__);
 
-    m_promise->fulfill(scriptUndefined());
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Promise* promise = (Promise*)data;
+                promise->fulfill(scriptUndefined());
+            },
+            m_promise);
 }
 
 void SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
 {
     STARFISH_ASSERT(m_promise);
+    STARFISH_LOG_WARN("SetSessionDescriptionObserver::%s\n", __func__);
 
-    // Use CreateSessionDescriptionObserver::OnFailure to intialize an exception
-    rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
-        CreateSessionDescriptionObserver::create(m_peerConnection, m_promise);
-    observer->OnFailure(std::move(error));
+    // This callback is called from another thread
+    // The following lines must be executed in the main thread.
+    struct Params {
+        SetSessionDescriptionObserver* self;
+        webrtc::RTCError error;
+        Promise* promise;
+    };
+
+    Params* p = new Params();
+    p->self = this;
+    p->error = std::move(error);
+    p->promise = m_promise;
+
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Params* p = (Params*)data;
+                SetSessionDescriptionObserver* self = p->self;
+                Promise* promise = p->promise;
+
+                DOMException* exception =
+                    self->m_peerConnection->toDomException(std::move(p->error));
+                STARFISH_ASSERT(exception);
+                promise->reject(exception->scriptValue());
+                self->setPromise(nullptr);
+                delete p;
+            },
+            p);
 }
 
 // https://w3c.github.io/webrtc-pc/#constructor
@@ -515,6 +509,7 @@ bool RTCPeerConnection::initializePeerConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration config =
         configuration.backend();
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+    config.enable_rtp_data_channel = true;
     config.enable_dtls_srtp = dtls;
 
     // NOTE: libwebrtc still uses uri internally, and when it is empty
@@ -535,6 +530,9 @@ bool RTCPeerConnection::initializePeerConnection(
 
     m_backend = peerConnectionFactory->CreatePeerConnection(
         config, nullptr, nullptr, m_peerConnectionObserver);
+    m_createSessionObserver =
+        CreateSessionDescriptionObserver::create(this, nullptr);
+    m_setSessionObserver = SetSessionDescriptionObserver::create(this, nullptr);
 
     return m_backend != nullptr;
 }
@@ -580,9 +578,9 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
-                    CreateSessionDescriptionObserver::create(self, promise);
-                self->backend()->CreateOffer(observer, *opt);
+                self->m_createSessionObserver->setPromise(promise);
+                self->backend()->CreateOffer(self->m_createSessionObserver,
+                                             *opt);
                 delete opt;
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
@@ -612,8 +610,10 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
     Promise* promise = new Promise(scriptBindingInstance());
     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
         new webrtc::PeerConnectionInterface::RTCOfferAnswerOptions(
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::kUndefined,
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::kUndefined,
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
+                kOfferToReceiveMediaTrue,
+            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
+                kOfferToReceiveMediaTrue,
             options.m_voiceActivityDetection, false, true);
     m_operationQueue->enqueue(
         [](Promise* promise, void* data1, void* data2) {
@@ -623,9 +623,9 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                rtc::scoped_refptr<CreateSessionDescriptionObserver> observer =
-                    CreateSessionDescriptionObserver::create(self, promise);
-                self->backend()->CreateAnswer(observer, *opt);
+                self->m_createSessionObserver->setPromise(promise);
+                self->backend()->CreateAnswer(self->m_createSessionObserver,
+                                              *opt);
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
@@ -690,16 +690,17 @@ Promise* RTCPeerConnection::setLocalDescription(
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                rtc::scoped_refptr<SetSessionDescriptionObserver> observer =
-                    SetSessionDescriptionObserver::create(p->self, promise);
+                self->m_setSessionObserver->setPromise(promise);
 
                 webrtc::SdpType type = self->toSdpType(p->d.m_type);
                 std::string sdpString =
                     std::string(p->d.m_sdp->toUTF8NonGCString());
                 std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
                     webrtc::CreateSessionDescription(type, sdpString);
+
                 // SetLocalDescription takes the ownership of desc
-                self->backend()->SetLocalDescription(observer, desc.release());
+                self->backend()->SetLocalDescription(self->m_setSessionObserver,
+                                                     desc.release());
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
@@ -731,6 +732,63 @@ RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
 {
     return new RTCSessionDescription(executionContext(),
                                      m_backend->pending_local_description());
+}
+
+Promise* RTCPeerConnection::setRemoteDescription(
+    RTCSessionDescriptionInit& description)
+{
+    if (isClosed()) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        promise->fulfill(scriptUndefined());
+        return promise;
+    }
+
+    Promise* promise = new Promise(scriptBindingInstance());
+    struct Params {
+        RTCPeerConnection* self;
+        RTCSessionDescriptionInit d;
+    };
+    Params* p = new Params();
+    p->self = this;
+    p->d = description;
+
+    m_operationQueue->enqueue(
+        [](Promise* promise, void* data1) {
+            Params* p = (Params*)data1;
+            RTCPeerConnection* self = (RTCPeerConnection*)(p->self);
+
+            if (self->isClosed()) {
+                promise->fulfill(scriptUndefined());
+                delete p;
+                return;
+            }
+
+            if (self->backend()) {
+                // the observer creates an exception if needed
+                self->m_setSessionObserver->setPromise(promise);
+
+                webrtc::SdpType type = self->toSdpType(p->d.m_type);
+                std::string sdpString =
+                    std::string(p->d.m_sdp->toUTF8NonGCString());
+                std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
+                    webrtc::CreateSessionDescription(type, sdpString);
+
+                // SetRemoteDescription takes the ownership of desc
+                self->backend()->SetRemoteDescription(
+                    self->m_setSessionObserver, desc.release());
+            } else {
+                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
+                auto exception = new DOMException(
+                    self->executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
+                promise->reject(exception->scriptValue());
+            }
+            delete p;
+            return;
+        },
+        promise, p);
+
+    return promise;
 }
 
 RTCSessionDescription* RTCPeerConnection::remoteDescription()
@@ -1031,6 +1089,51 @@ webrtc::SdpType RTCPeerConnection::toSdpType(RTCSdpType type)
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
+}
+
+DOMException* RTCPeerConnection::toDomException(webrtc::RTCError error)
+{
+    DOMException* exception = nullptr;
+    switch (error.type()) {
+    case webrtc::RTCErrorType::UNSUPPORTED_OPERATION:
+    case webrtc::RTCErrorType::UNSUPPORTED_PARAMETER:
+    case webrtc::RTCErrorType::RESOURCE_EXHAUSTED:
+    case webrtc::RTCErrorType::INTERNAL_ERROR:
+        exception = new DOMException(
+            m_executionContext, DOMException::DOM_EXCEPTION, "OperationError");
+        break;
+    case webrtc::RTCErrorType::INVALID_PARAMETER:
+        exception = new DOMException(m_executionContext,
+                                     DOMException::INVALID_ACCESS_ERR,
+                                     "InvalidAccessErr");
+        break;
+    case webrtc::RTCErrorType::INVALID_RANGE:
+        exception = new DOMException(
+            m_executionContext, DOMException::SCRIPT_RANGE_ERR, "RangeError");
+        break;
+    case webrtc::RTCErrorType::SYNTAX_ERROR:
+        exception = new DOMException(m_executionContext,
+                                     DOMException::SYNTAX_ERR, "SyntaxError");
+        break;
+    case webrtc::RTCErrorType::INVALID_STATE:
+        exception = new DOMException(m_executionContext,
+                                     DOMException::INVALID_STATE_ERR,
+                                     "InvalidStateError");
+        break;
+    case webrtc::RTCErrorType::INVALID_MODIFICATION:
+        exception = new DOMException(m_executionContext,
+                                     DOMException::INVALID_MODIFICATION_ERR,
+                                     "InvalidModificationError");
+        break;
+    case webrtc::RTCErrorType::NETWORK_ERROR:
+        exception = new DOMException(m_executionContext,
+                                     DOMException::NETWORK_ERR, "NetworkError");
+        break;
+    default:
+        break;
+    }
+
+    return exception;
 }
 }
 
