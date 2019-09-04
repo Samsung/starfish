@@ -658,6 +658,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
 #ifdef STARFISH_ENABLE_WEBRTC
     m_srcObject =
         QualifiedName(AtomicString::createAtomicString(starfish, "srcObject"));
+    m_track =
+        QualifiedName(AtomicString::createAtomicString(starfish, "track"));
 #endif
 }
 }

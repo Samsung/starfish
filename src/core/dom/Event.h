@@ -205,7 +205,7 @@ public:
         m_isTrusted = false;
     }
 
-    ExecutionContext* executionContext()
+    virtual ExecutionContext* executionContext()
     {
         return m_executionContext;
     }

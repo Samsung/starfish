@@ -591,6 +591,7 @@ public:
 #endif
 #ifdef STARFISH_ENABLE_WEBRTC
     QualifiedName m_srcObject;
+    QualifiedName m_track;
 #endif
 
 protected:

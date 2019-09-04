@@ -175,6 +175,8 @@ public:
     const std::string m_streamId = "streamId";
 
     MediaStream(ExecutionContext* executionContext);
+    MediaStream(ExecutionContext* executionContext,
+                rtc::scoped_refptr<webrtc::MediaStreamInterface> backend);
     MediaStream(ExecutionContext* executionContext, MediaStream& mediaStream);
     MediaStream(ExecutionContext* executionContext,
                 GCVector<MediaStreamTrack*>& tracks);
