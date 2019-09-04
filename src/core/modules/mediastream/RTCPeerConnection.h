@@ -35,6 +35,7 @@
 
 namespace Starfish {
 class ExecutionContext;
+class Event;
 class OperationQueue;
 class RTCRtpSender;
 class RTCPeerConnection;
@@ -114,7 +115,7 @@ public:
         const std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>&
             streams) override{};
     void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface>
-                     transceiver) override{};
+                     transceiver) override;
     void OnRemoveTrack(
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override{};
     void OnDataChannel(
@@ -295,9 +296,14 @@ private:
     rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
 #endif
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
+
     rtc::scoped_refptr<CreateSessionDescriptionObserver>
-        m_createSessionObserver;
-    rtc::scoped_refptr<SetSessionDescriptionObserver> m_setSessionObserver;
+        m_createOfferSessionObserver;
+    rtc::scoped_refptr<CreateSessionDescriptionObserver>
+        m_createAnswerSessionObserver;
+    rtc::scoped_refptr<SetSessionDescriptionObserver> m_setLocalSessionObserver;
+    rtc::scoped_refptr<SetSessionDescriptionObserver>
+        m_setRemoteSessionObserver;
 
     bool isClosed();
     void deletePeerConnection();

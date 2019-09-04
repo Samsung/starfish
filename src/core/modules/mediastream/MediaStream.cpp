@@ -258,8 +258,7 @@ void MediaStream::VideoRenderer::OnFrame(const webrtc::VideoFrame& videoFrame)
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext)
-    : EventTarget()
-    , m_executionContext(executionContext)
+    : MediaStream(executionContext, nullptr)
 {
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
         peerConnectionFactory = this->executionContext()
@@ -270,7 +269,15 @@ MediaStream::MediaStream(ExecutionContext* executionContext)
                                     ->peerConnectionFactory();
     STARFISH_ASSERT(peerConnectionFactory);
     m_backend = peerConnectionFactory->CreateLocalMediaStream(m_streamId);
+}
 
+MediaStream::MediaStream(
+    ExecutionContext* executionContext,
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend)
+    : EventTarget()
+    , m_executionContext(executionContext)
+    , m_backend(backend)
+{
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
