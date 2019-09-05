@@ -113,7 +113,7 @@ String* ResourceURL::createPercentEncodingString(String* src, bool forForm)
 
     // last NULL(U+0000) character should be omitted.
     size_t length = dat.length;
-    for (size_t i = dat.length - 1; i >= 0; i--) {
+    for (size_t i = dat.length - 1; i < dat.length; i--) {
         char32_t ch32 = dat.charAt(i);
         if (ch32 != 0x0000) {
             break;

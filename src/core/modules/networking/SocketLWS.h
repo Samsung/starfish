@@ -136,8 +136,8 @@ private:
     bool m_needsToClose;
     bool m_alive;
     bool m_isReady;
-    IThread* m_thread;
-    LWSRunnable* m_runnable;
+    IThread* m_thread{ nullptr };
+    LWSRunnable* m_runnable{ nullptr };
     WebSocket* m_parent;
     UTF8StringDataNonGCStd m_url;
     UTF8StringDataNonGCStd m_urlPath;

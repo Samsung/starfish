@@ -151,6 +151,8 @@ ImageSmoothingQuality ImageBitmapOptions::toImageRenderingValue()
     } else if (m_resizeQuality == ResizeQuality::High ||
                m_resizeQuality == ResizeQuality::Pixelated) {
         ret = ImageSmoothingQuality::High;
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return ret;
 }

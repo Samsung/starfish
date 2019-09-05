@@ -291,7 +291,10 @@ private:
         struct stat statPath, statEntry;
         struct dirent* entry;
 
-        stat(path, &statPath);
+        int r = stat(path, &statPath);
+        if (r < 0) {
+            return;
+        }
         if (S_ISDIR(statPath.st_mode) == 0) {
             STARFISH_LOG_ERROR("Is not directory : %s\n", path);
             return;
@@ -312,7 +315,10 @@ private:
             fullPath += "/";
             fullPath += entry->d_name;
 
-            stat(fullPath.c_str(), &statEntry);
+            int r = stat(fullPath.c_str(), &statEntry);
+            if (r < 0) {
+                continue;
+            }
 
             // recursively remove a nested directorys
             if (S_ISDIR(statEntry.st_mode) != 0) {

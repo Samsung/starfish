@@ -163,8 +163,8 @@ public:
 private:
     ExecutionContext* m_executionContext;
     SkMatrix44 m_matrix;
-    bool m_is2D;
-    bool m_isValid;
+    bool m_is2D{ false };
+    bool m_isValid{ false };
 };
 } // namespace Starfish
 #endif

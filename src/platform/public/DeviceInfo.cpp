@@ -77,6 +77,7 @@ bool DeviceInfo::getLocalIPAddress(std::string queriedInfName,
             (strncmp(ifconf.ifc_req[i].ifr_name, ifname,
                      queriedInfName.length()) == 0)) {
             ipAddressQueried = ip;
+            close(sock);
             return true;
         }
     }

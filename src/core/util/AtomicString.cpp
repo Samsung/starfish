@@ -101,9 +101,9 @@ AtomicString AtomicString::createAtomicString(Starfish* starfish,
 }
 
 AtomicString AtomicString::createAttrAtomicString(Starfish* starfish,
-                                                  String* str)
+                                                  String* strInput)
 {
-    auto data = str->bufferAccessData();
+    auto data = strInput->bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         char* buf = ALLOCA(data.length + 1, char);
         buf[data.length] = 0;
@@ -158,11 +158,11 @@ AtomicString AtomicString::createAttrAtomicString(Starfish* starfish,
 }
 
 AtomicString AtomicString::createAttrAtomicString(Starfish* starfish,
-                                                  char32_t str)
+                                                  char32_t c)
 {
-    if (str < 128) {
+    if (c < 128) {
         char* buf = ALLOCA(2, char);
-        buf[0] = (char)str;
+        buf[0] = (char)c;
         buf[1] = 0;
         StringDataOnStackASCII str(buf, 1);
 
@@ -176,7 +176,7 @@ AtomicString AtomicString::createAttrAtomicString(Starfish* starfish,
         }
     } else {
         char32_t* buf = ALLOCA(sizeof(char32_t) * 2, char32_t);
-        buf[0] = str;
+        buf[0] = c;
         buf[1] = 0;
         StringDataOnStackUTF32 str(buf, 1);
 

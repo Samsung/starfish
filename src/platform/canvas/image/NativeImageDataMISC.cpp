@@ -298,9 +298,9 @@ protected:
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
-    bool m_isAnimatedGIF;
-    size_t m_delay;
-    ImageDecoder* m_imageDecoder;
+    bool m_isAnimatedGIF{ false };
+    size_t m_delay{ 0 };
+    ImageDecoder* m_imageDecoder{ nullptr };
 };
 
 NativeImageData* NativeImageData::create(
