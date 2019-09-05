@@ -49,14 +49,15 @@ public:
             , m_width(0)
             , m_height(0)
             , m_stride(0)
+            , delay(0)
         {
         }
     };
 
     struct GifReadData {
-        unsigned long long size;
-        unsigned long long pos;
-        void* mem;
+        unsigned long long size{ 0 };
+        unsigned long long pos{ 0 };
+        void* mem{ nullptr };
     };
 
     DecodeResult decodeJustImageSize();

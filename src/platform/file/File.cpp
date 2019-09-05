@@ -223,7 +223,11 @@ std::unique_ptr<File> File::open(const std::string& filePath, FileMode mode)
 {
     struct stat s;
     memset(&s, 0, sizeof(struct stat));
-    stat(filePath.data(), &s);
+    int r = stat(filePath.data(), &s);
+    if (r < 0) {
+        return nullptr;
+    }
+
     if ((s.st_mode & S_IFMT) == S_IFDIR) {
         return nullptr;
     }

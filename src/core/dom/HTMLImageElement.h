@@ -102,7 +102,7 @@ private:
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
 
-    size_t m_updateFrameTimer;
+    size_t m_updateFrameTimer{ 0 };
 };
 }
 

@@ -620,7 +620,11 @@ int main(int argc, char* argv[])
     }
 #endif
 
-    webView->Destroy();
+    try {
+        webView->Destroy();
+    } catch (...) {
+        STARFISH_LOG_WARN("Exception: webView->Destroy()\n");
+    }
     webView = nullptr;
     LWE::LWE::Finalize();
 
