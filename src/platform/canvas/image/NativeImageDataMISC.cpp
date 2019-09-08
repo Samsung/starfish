@@ -26,6 +26,8 @@
 #include <cairo.h>
 #endif
 
+#define MinimumDelay 3
+
 namespace Starfish {
 
 class NativeImageDataMISC : public NativeImageData {
@@ -156,6 +158,9 @@ public:
             STARFISH_ASSERT(m_imageDecoder != nullptr);
             auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF();
             m_delay = idResult.delay;
+            if (m_delay <= MinimumDelay) {
+                m_delay = MinimumDelay;
+            }
             m_image = idResult.m_buffer;
         }
     }
