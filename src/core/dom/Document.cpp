@@ -2256,4 +2256,18 @@ DEFINE_EVENT_LISTENER(Document, pause);
 DEFINE_EVENT_LISTENER(Document, ratechange);
 DEFINE_EVENT_LISTENER(Document, volumechange);
 #endif
+
+void Document::registerUseElement(SVGUseElement* element)
+{
+    m_useElementListNeedUpdating.push_back(element);
+}
+
+void Document::unRegisterUseElement(SVGUseElement* element)
+{
+    auto iter = std::find(m_useElementListNeedUpdating.begin(),
+                          m_useElementListNeedUpdating.end(), element);
+    if (iter != m_useElementListNeedUpdating.end()) {
+        m_useElementListNeedUpdating.erase(iter);
+    }
+}
 }

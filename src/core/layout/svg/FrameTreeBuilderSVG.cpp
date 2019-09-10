@@ -112,6 +112,14 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
         auto ft = new FrameText(textNode, textStyle);
         textNode->setFrame(ft);
         box->appendChild(ft);
+    } else if (svgElement->isSVGDefsElement()) {
+        // TODO
+        // shouldContinue = true;
+        // shouldVisitChild = false;
+    } else if (svgElement->isSVGUseElement()) {
+        // TODO
+        // shouldContinue = true;
+        // shouldVisitChild = false;
     }
 
     svgElement->clearNeedsFrameTreeBuild();

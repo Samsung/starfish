@@ -661,6 +661,9 @@ public:
     {
     }
 
+    void registerUseElement(SVGUseElement* element);
+    void unRegisterUseElement(SVGUseElement* element);
+
 protected:
     void appendCurrentScript(Element* element)
     {
@@ -707,6 +710,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nativeGradientCache));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
     }
 
     bool m_inParsing : 1;
@@ -768,6 +773,7 @@ protected:
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
     size_t m_nativeGradientCacheToTalSize;
     size_t m_webFontResolveVersionForCanvas;
+    GCVector<SVGUseElement*> m_useElementListNeedUpdating;
 };
 }
 

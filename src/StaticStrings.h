@@ -171,7 +171,10 @@ namespace Starfish {
     F(image)                           \
     F(text)                            \
     F(style)                           \
-    F(script)
+    F(script)                          \
+    F(defs)                            \
+    F(use)                             \
+    F(clipPath)
 
 #define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
 

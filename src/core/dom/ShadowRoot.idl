@@ -1,0 +1,8 @@
+// https://dom.spec.whatwg.org/#interface-shadowroot
+[UnimplementedConstructor,Exposed=Window]
+interface ShadowRoot : DocumentFragment {
+  [Unimplemented] readonly attribute ShadowRootMode mode;
+  [Unimplemented] readonly attribute Element host;
+};
+
+enum ShadowRootMode { "open", "closed" };
