@@ -32,6 +32,9 @@
 #include "core/dom/svg/SVGTextElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
 #include "core/dom/svg/SVGLineElement.h"
+#include "core/dom/svg/SVGUseElement.h"
+#include "core/dom/svg/SVGDefsElement.h"
+#include "core/dom/svg/SVGClipPathElement.h"
 
 namespace Starfish {
 
@@ -64,6 +67,12 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGLineElement(document, qname);
     } else if (str->m_svgellipseTagName == localName) {
         return new SVGEllipseElement(document, qname);
+    } else if (str->m_svguseTagName == localName) {
+        return new SVGUseElement(document, qname);
+    } else if (str->m_svgdefsTagName == localName) {
+        return new SVGDefsElement(document, qname);
+    } else if (str->m_svgclipPathTagName == localName) {
+        return new SVGClipPathElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

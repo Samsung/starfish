@@ -31,6 +31,7 @@
 #include "core/dom/Element.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/svg/SVGDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/NamedNodeMap.h"
@@ -61,6 +62,7 @@
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/StyleRule.h"
 #include "core/animation/AnimationTask.h"
+#include "core/dom/ShadowRoot.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
@@ -1661,7 +1663,7 @@ Node* Element::clone()
     if (isHTMLElement()) {
         newNode = HTMLDocument::createHTMLElement(document(), name());
     } else if (isSVGElement()) {
-        newNode = HTMLDocument::createHTMLElement(document(), name());
+        newNode = SVGDocument::createSVGElement(document(), name());
     } else {
         newNode = new NamedElement(document(), name());
     }
@@ -2020,5 +2022,15 @@ Animation* Element::animate(ExecutionContext* executionContext,
 {
     // TODO
     return new Animation(executionContext);
+}
+
+ShadowRoot* Element::shadowRoot()
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    STARFISH_ASSERT(rareMembers->isRareElementMembers());
+    if (!rareMembers->m_shadowRoot) {
+        rareMembers->m_shadowRoot = new ShadowRoot(document());
+    }
+    return rareMembers->m_shadowRoot;
 }
 }

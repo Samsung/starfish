@@ -35,6 +35,7 @@ class NamedNodeMap;
 class PseudoElement;
 class DOMStringMap;
 class Scrolling;
+class ShadowRoot;
 
 class PseudoElementMap : public gc {
 public:
@@ -76,6 +77,7 @@ public:
         , m_scrolling(nullptr)
         , m_dataset(nullptr)
         , m_pseudoElementMap(nullptr)
+        , m_shadowRoot(nullptr)
     {
     }
 
@@ -101,6 +103,7 @@ public:
     Scrolling* m_scrolling;
     DOMStringMap* m_dataset;
     PseudoElementMap* m_pseudoElementMap;
+    ShadowRoot* m_shadowRoot;
 };
 
 class Element : public Node {
@@ -173,6 +176,8 @@ public:
     }
 
     GCVector<String*> getAttributeNames() const;
+
+    ShadowRoot* shadowRoot();
 
 protected:
     size_t hasAttribute(const AttributeName& name) const;
