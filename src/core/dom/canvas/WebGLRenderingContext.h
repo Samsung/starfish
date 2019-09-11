@@ -30,12 +30,24 @@ class WebGLRenderingContext : public CanvasRenderingContext {
 public:
     WebGLRenderingContext(HTMLCanvasElement* canvasElement);
     virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isWebGLRenderingContext() const override;
+                      void* domObjectPointer) override
+    {
+    }
+    virtual bool isWebGLRenderingContext() const override
+    {
+        return true;
+    }
     virtual void initialize() override
     {
     }
     virtual void flush() override
+    {
+    }
+    virtual CanvasSurface* surface()
+    {
+        return nullptr;
+    }
+    virtual void onResize()
     {
     }
 };

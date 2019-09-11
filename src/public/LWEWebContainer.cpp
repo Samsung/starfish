@@ -403,17 +403,14 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
                 createWebViewInstance(width, height, scaleFactor,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer =
-                new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView)))
-                    WebContainer(webView);
+            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
             newWebContainer->UpdateBuffer(buffer, width, height, stride);
             return (size_t)newWebContainer;
         });
 #else
     auto webView = createWebViewInstance(width, height, scaleFactor,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer =
-        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
     newWebContainer->UpdateBuffer(buffer, width, height, stride);
     return newWebContainer;
 #endif
@@ -446,17 +443,14 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
                 createWebViewInstance(width, height, scaleFactor,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer =
-                new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView)))
-                    WebContainer(webView);
+            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
 
             return (size_t)newWebContainer;
         });
 #else
     auto webView = createWebViewInstance(width, height, scaleFactor,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer =
-        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
 
     return newWebContainer;
 #endif
@@ -547,9 +541,7 @@ WebContainer* WebContainer::CreateGL(
                 createWebViewInstance(width, height, devicePixelRatio,
                                       defaultFontName, locale, timezoneID);
 
-            WebContainer* newWebContainer =
-                new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView)))
-                    WebContainer(webView);
+            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
 
             webView->platformWindow()->registerGLMakeCurrentCallback(
                 [onGLMakeCurrent,
@@ -570,8 +562,7 @@ WebContainer* WebContainer::CreateGL(
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
 
-    WebContainer* newWebContainer =
-        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
 
     webView->platformWindow()->registerGLMakeCurrentCallback(
         [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
@@ -598,8 +589,7 @@ WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
 {
     auto webView = createWebViewInstance(width, height, devicePixelRatio,
                                          defaultFontName, locale, timezoneID);
-    WebContainer* newWebContainer =
-        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
 
     return newWebContainer;
 }

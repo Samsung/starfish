@@ -442,6 +442,17 @@ void WebView::addJavaScriptNativeInterface(
     STARFISH_ASSERT(scriptObject != nullptr);
     STARFISH_ASSERT(scriptNativeFunctionPointer != nullptr);
 
+    m_jsInterfaceList.erase(
+        std::remove_if(
+            m_jsInterfaceList.begin(), m_jsInterfaceList.end(),
+            [exposedObjectName, jsFunctionName](
+                const std::tuple<String*, String*, void*,
+                                 Escargot::ScriptNativeFunctionPointer>& e) {
+                return exposedObjectName->equals(std::get<0>(e)) &&
+                       jsFunctionName->equals(std::get<1>(e));
+            }),
+        m_jsInterfaceList.end());
+
     m_jsInterfaceList.push_back(std::make_tuple(exposedObjectName,
                                                 jsFunctionName, scriptObject,
                                                 scriptNativeFunctionPointer));
@@ -667,18 +678,53 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     clearBlobURLStore();
     clearMediaSourceBlobURLStore();
     clearActiveImageURLsInRenderingSet();
-    initRenderingFlags();
-
-    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
     m_navigateStartingTime = timestamp();
-    if (m_topLevelBrowsingContext) {
-        m_topLevelBrowsingContext->dispose();
+
+    m_isActive = false;
+    m_browsingContextsNeedsLayout.clear();
+    m_browsingContextsDidLayout.clear();
+    m_repaintRegionInRendering.clear();
+    m_globalPointingEventListener.clear();
+    m_repaintRegionTrackerContext.clear();
+
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispose();
     }
+
+    if (m_rootStackingContext) {
+        StackingContext* ctx = m_rootStackingContext;
+        std::function<void(StackingContext*)> clearSC =
+            [&](StackingContext* ctx) {
+                STARFISH_ASSERT(ctx != nullptr);
+
+                ctx->clearGraphicsBuffer();
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    StackingContextChild* child = *iter;
+                    auto iter2 = child->begin();
+                    while (iter2 != child->end()) {
+                        clearSC(*iter2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+            };
+        clearSC(ctx);
+        m_rootStackingContext = nullptr;
+    }
+
     platformWindow()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(this);
 
+    m_timer->clear(nullptr);
     removeScriptEngineInstance();
+
+    std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
+
+    initRenderingFlags();
+    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+
     createScriptEngineInstance();
 
     m_topLevelBrowsingContext->open(url, type, referrerURL);
