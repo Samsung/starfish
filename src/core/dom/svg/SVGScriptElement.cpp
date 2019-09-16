@@ -1,0 +1,660 @@
+/*
+ * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#include "StarfishConfig.h"
+#include "Starfish.h"
+#include "core/dom/Document.h"
+#include "core/dom/Event.h"
+#include "core/dom/svg/SVGScriptElement.h"
+#include "core/dom/Text.h"
+#include "core/dom/builder/html/HTMLDocumentBuilder.h"
+#include "core/dom/parser/HTMLParser.h"
+#include "core/fetch/RequestData.h"
+#include "core/page/WebView.h"
+#include "core/page/Window.h"
+#include "core/extra/MimeType.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/csp/ContentSecurityPolicy.h"
+#include "core/util/Cryptographic.h"
+#include "core/page/BrowsingContext.h"
+#include "core/dom/parser/PreloadScanner.h"
+#include "platform/loader/ResourceLoader.h"
+#include "platform/loader/ElementResourceClient.h"
+
+namespace Starfish {
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+extern uint64_t g_profilingBaseTime;
+#endif
+
+void* SVGScriptElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SVGScriptElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(SVGScriptElement)] = { 0 };
+        SVGElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGScriptElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+static bool isJavaScriptType(const char* type, size_t len)
+{
+    if (len == 0) {
+        return true;
+    }
+#define ALLOW_TYPE(ctype)                                   \
+    else if (len >= (sizeof(ctype) - 1) &&                  \
+             memcmp(ctype, type, (sizeof(ctype) - 1)) == 0) \
+    {                                                       \
+        return true;                                        \
+    }
+    ALLOW_TYPE("text/javascript")
+    ALLOW_TYPE("application/javascript")
+    ALLOW_TYPE("application/x-javascript")
+    ALLOW_TYPE("application/octet-stream")
+    ALLOW_TYPE("application/ecmascript")
+    ALLOW_TYPE("text/ecmascript")
+    ALLOW_TYPE("text/plain")
+    ALLOW_TYPE("text/html")
+    return false;
+}
+
+class ScriptProfileLogger {
+public:
+    ScriptProfileLogger()
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        : m_timer("SVGScriptElement script execution")
+#endif
+    {
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] Start JS Execution at %dms\n",
+                          (int)(timestamp() - g_profilingBaseTime));
+#endif
+    }
+
+    ~ScriptProfileLogger()
+    {
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] End JS Execution at %dms\n",
+                          (int)(timestamp() - g_profilingBaseTime));
+#endif
+    }
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    ProfilerTimer m_timer;
+#endif
+};
+
+class DeferredSVGScriptDownloadClient : public ResourceClient {
+public:
+    DeferredSVGScriptDownloadClient(SVGScriptElement* script, Resource* res)
+        : ResourceClient(res)
+        , m_isLoaded(false)
+        , m_successToLoad(false)
+        , m_responseMIMEType(String::emptyString)
+        , m_element(script)
+    {
+        m_element->document()->m_deferredSVGScriptElements.push_back(
+            std::make_pair(m_element, this));
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        m_isLoaded = true;
+        didScriptLoaded();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        m_successToLoad = true;
+        m_isLoaded = true;
+
+        auto mimeType = MimeType::parseFromString(
+            m_resource->resourceRequest()->responseMimeType());
+        m_responseMIMEType = mimeType.stringWithoutParameter();
+
+        auto& deferredScriptElements =
+            m_element->document()->m_deferredSVGScriptElements;
+        while (deferredScriptElements.size() &&
+               deferredScriptElements.begin()->second->m_isLoaded) {
+            auto client = deferredScriptElements.begin()->second;
+            auto s =
+                client->m_responseMIMEType->toASCIILower()->toUTF8NonGCString();
+            if (isJavaScriptType(s.data(), s.length())) {
+                String* text = client->m_resource->asTextResource()->text();
+                client->m_element->document()->appendCurrentScript(
+                    client->m_element);
+                {
+                    ScriptProfileLogger logger;
+                    evaluateString(
+                        client->m_element->window()->scriptBindingInstance(),
+                        text, ResourceClient::resource()->url()->urlString());
+                }
+                client->m_element->document()->popCurrentScript();
+            }
+            deferredScriptElements.erase(deferredScriptElements.begin());
+        }
+        didScriptLoaded();
+    }
+
+    void didScriptLoaded()
+    {
+        m_element->m_didScriptExecuted = true;
+        if (!m_successToLoad) {
+            size_t pos = 0;
+            while (true) {
+                if (m_element->document()
+                        ->m_deferredSVGScriptElements[pos]
+                        .second == this) {
+                    break;
+                }
+                pos++;
+            }
+
+            m_element->document()->m_deferredSVGScriptElements.erase(pos);
+        }
+
+        if (m_element->document()->m_deferredSVGScriptElements.size() == 0 &&
+            m_element->document()->documentBuilder() == nullptr) {
+            m_element->document()->notifyDomContentLoaded();
+        }
+    }
+
+    bool m_isLoaded;
+    bool m_successToLoad;
+    String* m_responseMIMEType;
+    SVGScriptElement* m_element;
+};
+
+class SVGScriptDownloadClient : public ResourceClient {
+public:
+    SVGScriptDownloadClient(SVGScriptElement* script, Resource* res,
+                            bool shouldResumeParsing)
+        : ResourceClient(res)
+        , m_element(script)
+        , m_shouldResumeParsing(shouldResumeParsing)
+    {
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        didScriptLoaded();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        auto mimeType =
+            MimeType::parseFromString(m_resource->responseMimeType());
+        auto s = mimeType.stringWithoutParameter()
+                     ->toASCIILower()
+                     ->toUTF8NonGCString();
+        if (isJavaScriptType(s.data(), s.length())) {
+            String* text = m_resource->asTextResource()->text();
+            Document::CurrentScriptManager currentScriptManager(
+                m_element->document(), m_element);
+            ScriptProfileLogger logger;
+            evaluateString(m_element->window()->scriptBindingInstance(), text,
+                           ResourceClient::resource()->url()->urlString());
+        }
+        didScriptLoaded();
+    }
+
+    void didScriptLoaded()
+    {
+        m_element->m_didScriptExecuted = true;
+        if (m_shouldResumeParsing) {
+            m_element->document()->resumeDocumentParsing();
+        }
+    }
+
+protected:
+    SVGScriptElement* m_element;
+    bool m_shouldResumeParsing;
+};
+
+bool SVGScriptElement::executeScript(bool forceSync, bool inParser)
+{
+    bool result = executeScriptImpl(forceSync, inParser);
+    return result;
+}
+
+bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
+{
+    if (m_isParserInserted) {
+        return false;
+    }
+    if (!m_isAlreadyStarted &&
+        isInDocumentScopeAndDocumentParticipateInRendering()) {
+        if (!isValidScriptType()) {
+            return false;
+        }
+
+        if (!isEventForSupported()) {
+            return false;
+        }
+
+        if (blockForNoModule()) {
+            return false;
+        }
+
+        Nullable<String*> srcStr =
+            getAttribute(starfish()->staticStrings()->m_href);
+        if (!srcStr.hasValue()) {
+            srcStr = getAttribute(starfish()->staticStrings()->m_xlinkHref);
+        }
+
+        if (!srcStr.hasValue()) {
+            if (!firstChild()) {
+                return false;
+            }
+            String* script = text();
+
+            if (script->length() > 0 &&
+                !document()->contentSecurityPolicy()->allowInline(
+                    CSPDirectives::ScriptSrc, script, nonce())) {
+                String* eventType =
+                    starfish()->staticStrings()->m_error.localName();
+                Event* e = new Event(executionContext(), eventType,
+                                     EventInit(false, false));
+                dispatchEventIdleTimeByUA(e);
+                return false;
+            }
+
+            m_isAlreadyStarted = true;
+            {
+                Document::CurrentScriptManager currentScriptManager(document(),
+                                                                    this);
+                ScriptProfileLogger logger;
+                evaluateString(
+                    window()->scriptBindingInstance(), script,
+                    String::createASCIIString("SVGScriptElement innerText"));
+            }
+            m_didScriptExecuted = true;
+            return false;
+        } else {
+            String* url = srcStr.getValue();
+            m_isAlreadyStarted = true;
+
+            if (!url->length()) {
+                return false;
+            }
+
+            ResourceURL* rurl =
+                new ResourceURL(url, document()->baseURL()->baseURI());
+            if (!document()->contentSecurityPolicy()->allowNonceOrSource(
+                    CSPDirectives::ScriptSrc, nonce(), rurl)) {
+                String* eventType =
+                    starfish()->staticStrings()->m_error.localName();
+                Event* e = new Event(executionContext(), eventType,
+                                     EventInit(false, false));
+                dispatchEventIdleTimeByUA(e);
+                return false;
+            }
+
+            if (document()->preloadScanner() && !async() && !defer() &&
+                inParser) {
+                auto ps = document()->preloadScanner();
+                for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
+                    Resource* res = ps->preloadedJS()[i];
+                    if (*res->url() == *rurl) {
+                        setShouldResumeParsing(!forceSync);
+                        if (res->isReceiving()) {
+                            res->addResourceClient(new SVGScriptDownloadClient(
+                                this, res, shouldResumeParsing()));
+                            res->addResourceClient(
+                                new ElementResourceClient(this, res, true));
+                            return true;
+                        } else if (res->isFinished()) {
+                            webView()->messageLoop()->addIdler(
+                                window(),
+                                [](size_t id, void* res, void* self) {
+                                    SVGScriptElement* scriptElement =
+                                        (SVGScriptElement*)self;
+                                    SVGScriptDownloadClient download(
+                                        scriptElement, (Resource*)res,
+                                        scriptElement->shouldResumeParsing());
+                                    download.didLoadFinished();
+                                    ElementResourceClient onload(
+                                        (SVGScriptElement*)self, (Resource*)res,
+                                        true);
+                                    onload.didLoadFinished();
+                                },
+                                res, this);
+                            return true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            String* charset =
+                getAttributeOrEmpty(starfish()->staticStrings()->m_charset)
+                    ->trim();
+            TextResource* res =
+                document()->resourceLoader().fetchText(rurl, charset);
+            if (!async() && defer()) {
+                res->addResourceClient(
+                    new DeferredSVGScriptDownloadClient(this, res));
+            } else {
+                setShouldResumeParsing(inParser && !forceSync && !async());
+                res->addResourceClient(new SVGScriptDownloadClient(
+                    this, res, shouldResumeParsing()));
+            }
+            res->addResourceClient(new ElementResourceClient(this, res, true));
+
+            RequestData* reqData = new RequestData();
+            reqData->m_url = rurl;
+            reqData->m_referrer = new ReferrerURL(document()->documentURI());
+            reqData->m_destination = RequestDestination::Script;
+            reqData->m_syncLevel = forceSync ? RequestSyncLevel::AlwaysSync
+                                             : RequestSyncLevel::NeverSync;
+
+            // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attributes
+            auto crossOrigin =
+                getAttribute(starfish()->staticStrings()->m_crossorigin);
+            if (crossOrigin.hasValue()) {
+                reqData->m_mode = RequestMode::CORS;
+                reqData->m_credentials =
+                    crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
+                        ? RequestCredentials::Include
+                        : RequestCredentials::SameOrigin;
+            } else {
+                reqData->m_mode = RequestMode::NoCORS;
+            }
+
+            res->request(reqData, true);
+            if (async() || defer()) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void SVGScriptElement::didAttributeChanged(QualifiedName name, String* old,
+                                           String* value, bool attributeCreated,
+                                           bool attributeRemoved)
+{
+    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
+                                    attributeRemoved);
+    if (starfish()->staticStrings()->m_href == name ||
+        starfish()->staticStrings()->m_xlinkHref == name ||
+        (!name.hasPrefix() &&
+         starfish()->staticStrings()->m_xlinkHref.hasSameNamespaceURI(
+             name.namespaceURI()) &&
+         starfish()->staticStrings()->m_xlinkHref.hasSameLocalName(
+             name.localName()))) {
+        if (!attributeRemoved && value->length() != 0) {
+            executeScript();
+        }
+    } else if (name == starfish()->staticStrings()->m_crossorigin) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+        } else if (attributeCreated || !old->equalsIgnoreCase(value)) {
+            if (value->equalsIgnoreCase("use-credentials")) {
+                setAttribute(starfish()->staticStrings()->m_crossorigin, value);
+            } else {
+                setAttribute(starfish()->staticStrings()->m_crossorigin,
+                             String::fromUTF8("anonymous"));
+            }
+        }
+    } else if (name == starfish()->staticStrings()->m_nonce) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+            m_nonce = nullptr;
+        } else if (attributeCreated || !old->equals(value)) {
+            m_nonce = value;
+        }
+    }
+}
+
+void SVGScriptElement::didNodeInsertedToDocumentTree()
+{
+    SVGElement::didNodeInsertedToDocumentTree();
+    executeScript();
+}
+
+void SVGScriptElement::didCharacterDataModified(String* before, String* after)
+{
+    SVGElement::didCharacterDataModified(before, after);
+    executeScript();
+}
+
+void SVGScriptElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    SVGElement::didNodeInserted(parent, newChild);
+    executeScript();
+}
+
+String* SVGScriptElement::herf()
+{
+    String* url = getAttributeOrEmpty(starfish()->staticStrings()->m_href);
+    if (url->equals(String::emptyString)) {
+        return String::emptyString;
+    }
+
+    return ResourceURL::mergeDocumentURIWithURIString(
+        document()->baseURL()->baseURI(), url);
+}
+
+void SVGScriptElement::setHerf(String* herf)
+{
+    setAttribute(starfish()->staticStrings()->m_href, herf);
+}
+
+String* SVGScriptElement::xlinkHref()
+{
+    String* url = getAttributeOrEmpty(starfish()->staticStrings()->m_xlinkHref);
+    if (url->equals(String::emptyString)) {
+        return String::emptyString;
+    }
+
+    return ResourceURL::mergeDocumentURIWithURIString(
+        document()->baseURL()->baseURI(), url);
+}
+
+void SVGScriptElement::setXlinkHref(String* xlinkHref)
+{
+    setAttribute(starfish()->staticStrings()->m_xlinkHref, xlinkHref);
+}
+
+String* SVGScriptElement::nonce() const
+{
+    if (m_nonce) {
+        return m_nonce;
+    }
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
+}
+
+void SVGScriptElement::setNonce(String* str)
+{
+    // In order to mitigate nonce exfiltration via content attributes,
+    // we hide the nonce from the element’s content attribute and move it into
+    // an internal slot.
+    // https://w3c.github.io/webappsec-csp/#nonce-exfiltration-content-attributes
+    m_nonce = str;
+}
+
+String* SVGScriptElement::type()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
+}
+
+void SVGScriptElement::setType(String* type)
+{
+    setAttribute(starfish()->staticStrings()->m_type, type);
+}
+
+String* SVGScriptElement::charset()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_charset);
+}
+
+void SVGScriptElement::setCharset(String* charset)
+{
+    setAttribute(starfish()->staticStrings()->m_charset, charset);
+}
+
+Nullable<String*> SVGScriptElement::crossOrigin()
+{
+    return getAttribute(starfish()->staticStrings()->m_crossorigin);
+}
+
+void SVGScriptElement::setCrossOrigin(Nullable<String*> crossOrigin)
+{
+    if (crossOrigin.hasValue()) {
+        setAttribute(starfish()->staticStrings()->m_crossorigin,
+                     crossOrigin.getValue());
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_crossorigin);
+    }
+}
+
+String* SVGScriptElement::text()
+{
+    String* str = String::emptyString;
+    for (Node* child = firstChild(); child != nullptr;
+         child = child->nextSibling()) {
+        if (child->nodeType() == TEXT_NODE) {
+            STARFISH_ASSERT(child->textContent().hasValue());
+            str = str->concat(child->textContent().getValue());
+        }
+    }
+    return str;
+}
+
+void SVGScriptElement::setText(String* s)
+{
+    if (firstChild() && firstChild()->isText()) {
+        firstChild()->asText()->setData(s);
+    } else {
+        setTextContent(s);
+    }
+}
+
+bool SVGScriptElement::async()
+{
+    return hasAttribute(starfish()->staticStrings()->m_async) != SIZE_MAX;
+}
+
+void SVGScriptElement::setAsync(bool b)
+{
+    if (b) {
+        setAttribute(starfish()->staticStrings()->m_async, String::emptyString);
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_async);
+    }
+}
+
+bool SVGScriptElement::defer()
+{
+    return hasAttribute(starfish()->staticStrings()->m_defer) != SIZE_MAX;
+}
+
+void SVGScriptElement::setDefer(bool b)
+{
+    if (b) {
+        setAttribute(starfish()->staticStrings()->m_defer, String::emptyString);
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_defer);
+    }
+}
+
+Node* SVGScriptElement::clone()
+{
+    SVGScriptElement* n = SVGElement::clone()->asSVGScriptElement();
+    n->m_isAlreadyStarted = m_isAlreadyStarted;
+    n->m_didScriptExecuted = m_didScriptExecuted;
+    return n;
+}
+
+bool SVGScriptElement::isValidScriptType()
+{
+    if (isValidClassicScriptType()) {
+        return true;
+    }
+
+    /* TODO 'module' is not supported yet.
+    String* typeStr =
+        getAttributeOrEmpty(starfish()->staticStrings()->m_type);
+    if (type->equalsIgnoreCase("module")) {
+        return true;
+    }
+    */
+    return false;
+}
+
+bool SVGScriptElement::isValidClassicScriptType()
+{
+    Nullable<String*> typeStr =
+        getAttribute(starfish()->staticStrings()->m_type);
+    if (typeStr.hasValue()) {
+        auto utf8Data = typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
+
+        auto mime = MimeType::parseFromString(typeStr.getValue());
+        if (!mime.isValid() || mime.hasParameter()) {
+            return false;
+        }
+
+        if (!isJavaScriptType(utf8Data.data(), utf8Data.length())) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool SVGScriptElement::isEventForSupported()
+{
+    String* event = getAttributeOrEmpty(starfish()->staticStrings()->m_event);
+    String* htmlFor = getAttributeOrEmpty(starfish()->staticStrings()->m_for);
+
+    if (!isValidClassicScriptType() || event->isEmpty() || htmlFor->isEmpty()) {
+        return true;
+    }
+
+    event = event->trim();
+    if (!event->equalsIgnoreCase("onload") &&
+        !event->equalsIgnoreCase("onload()")) {
+        return false;
+    }
+
+    htmlFor = htmlFor->trim();
+    if (!htmlFor->equalsIgnoreCase("window")) {
+        return false;
+    }
+    return true;
+}
+
+bool SVGScriptElement::blockForNoModule()
+{
+    return isValidClassicScriptType() &&
+           hasAttribute(starfish()->staticStrings()->m_nomodule) != SIZE_MAX;
+}
+}

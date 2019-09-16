@@ -3105,14 +3105,19 @@ void HTMLTreeBuilder::processTokenInForeignContent(AtomicHTMLToken* token)
             // adjustSVGTagNameCase(token);
         }
 
-        /*
-        if (token->name() == SVGNames::scriptTag &&
-        m_tree.currentStackItem()->hasTagName(SVGNames::scriptTag)) {
+        if (token->name() == s->m_svgscriptTagName &&
+            m_tree.currentStackItem()->hasTagName(s->m_svgscriptTagName)) {
+            /*
             if (scriptingContentIsAllowed(m_tree.parserContentPolicy()))
                 m_scriptToProcess = m_tree.currentElement();
+            */
+            if (true) {
+                m_scriptToProcess = m_tree.currentElement();
+            }
             m_tree.openElements()->pop();
             return;
-        }*/
+        }
+
         if (!m_tree.currentStackItem()->isInHTMLNamespace()) {
             // FIXME: This code just wants an Element* iterator, instead of an
             // ElementRecord*

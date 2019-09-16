@@ -547,6 +547,9 @@ void BrowsingContext::buildFrameTreeIfNeeds()
 {
     resolveStyleIfNeeds();
     if (m_needsFrameTreeBuild) {
+        // Update shadow tree for SVGUseElement
+        document()->updateShadowTreeForUseElement();
+
         if (document()->frame()) {
             // create frame tree
             INSTALL_PROFILE_TIMER("create frame tree");

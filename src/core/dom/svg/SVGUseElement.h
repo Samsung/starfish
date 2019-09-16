@@ -46,8 +46,19 @@ public:
 
     void updateShadowTree();
 
+    virtual bool needsGeometryAttributes() override
+    {
+        return true;
+    }
+
+    SVGElement* targetElement()
+    {
+        return m_targetElement;
+    }
+
 private:
-    ResourceURL* m_targetElement;
+    ResourceURL* m_targetElementURL;
+    SVGElement* m_targetElement;
 };
 }
 

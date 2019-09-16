@@ -165,7 +165,7 @@ public:
         Node* node, PseudoElementType pseudoId, ComputedStyle* parentStyle,
         ComputedStyle* oldPseudoStyleIfHas);
 
-    static Frame* buildSVGFrameTree(SVGElement* svgElement);
+    static Frame* buildSVGFrameTree(SVGElement* svgElement, Frame* parentFrame);
 #ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document, unsigned depth);

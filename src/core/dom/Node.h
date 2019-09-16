@@ -311,6 +311,7 @@ public:
     unsigned index();
 
     Node* cloneNode(bool deep = false);
+    Node* makeShadowClone();
     void validatePreinsert(Node* node, Node* child);
 
     unsigned short compareDocumentPosition(Node* other);
