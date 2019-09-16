@@ -453,6 +453,24 @@ Node* Node::cloneNode(bool deep)
     return newNode;
 }
 
+Node* Node::makeShadowClone()
+{
+    if (isSVGUseElement()) {
+        return nullptr;
+    }
+
+    Node* newNode = clone();
+    if (newNode) {
+        for (Node* child = firstChild(); child; child = child->nextSibling()) {
+            Node* newChild = child->makeShadowClone();
+            if (newChild) {
+                newNode->appendChild(newChild);
+            }
+        }
+    }
+    return newNode;
+}
+
 bool Node::isEqualNode(Node* other)
 {
     if (other == nullptr) {
@@ -1711,6 +1729,11 @@ Node* Node::removeChild(Node* child)
 
     Frame* old = child->frame();
     if (old) {
+        child->setNeedsFrameTreeBuild();
+    }
+
+    // TODO: Should be removed later!
+    if (child->isSVGElement()) {
         child->setNeedsFrameTreeBuild();
     }
 

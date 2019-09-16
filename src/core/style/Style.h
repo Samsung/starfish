@@ -3192,12 +3192,11 @@ public:
                               m_ruleSetAttrFilter.end(), localName);
         return iter != m_ruleSetAttrFilter.end();
     }
-
-protected:
     void resolveChildrenStyle(StyleResolveContext& ctx, StyleResolver* resolver,
                               Node* element, ComputedStyle* elementStyle,
                               bool inheritedStyleChanged = false);
 
+protected:
     void apply(Element* element, GCAtomicVector<CSSStyleValuePair>& cssValues,
                GCVector<MutablePropertyValue>& cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,

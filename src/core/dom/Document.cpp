@@ -53,6 +53,7 @@
 #include "core/dom/HTMLMediaElement.h"
 #endif
 #include "core/dom/svg/SVGDocument.h"
+#include "core/dom/svg/SVGUseElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
@@ -640,7 +641,7 @@ void Document::endDocumentParsing()
 
 void Document::notifyDomContentLoaded()
 {
-    if (m_deferredScriptElements.size()) {
+    if (m_deferredScriptElements.size() && m_deferredSVGScriptElements.size()) {
         return;
     }
 
@@ -739,6 +740,7 @@ void Document::dispose()
 
     resourceLoader().clear();
 
+    m_useElementListNeedUpdating.clear();
     executionContext()->disposeActiveResourceRequests();
 #ifdef STARFISH_ENABLE_WEBSOCKET
     executionContext()->disposeActiveWebSockets();
@@ -2262,12 +2264,19 @@ void Document::registerUseElement(SVGUseElement* element)
     m_useElementListNeedUpdating.push_back(element);
 }
 
-void Document::unRegisterUseElement(SVGUseElement* element)
+void Document::unregisterUseElement(SVGUseElement* element)
 {
     auto iter = std::find(m_useElementListNeedUpdating.begin(),
                           m_useElementListNeedUpdating.end(), element);
     if (iter != m_useElementListNeedUpdating.end()) {
         m_useElementListNeedUpdating.erase(iter);
+    }
+}
+void Document::updateShadowTreeForUseElement()
+{
+    for (auto it = m_useElementListNeedUpdating.begin();
+         it != m_useElementListNeedUpdating.end(); ++it) {
+        ((SVGUseElement*)(*it))->updateShadowTree();
     }
 }
 }

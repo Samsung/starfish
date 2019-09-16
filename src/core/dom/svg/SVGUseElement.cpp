@@ -32,6 +32,7 @@ void* SVGUseElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGUseElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_targetElementURL));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_targetElement));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGUseElement));
@@ -42,6 +43,8 @@ void* SVGUseElement::operator new(size_t size)
 
 SVGUseElement::SVGUseElement(Document* document, const QualifiedName& qname)
     : SVGElement(document, qname)
+    , m_targetElementURL(nullptr)
+    , m_targetElement(nullptr)
 {
 }
 
@@ -57,12 +60,18 @@ void SVGUseElement::didAttributeChanged(QualifiedName name, String* old,
          ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
          ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
         if (attributeRemoved) {
-            document()->unRegisterUseElement(this);
-            m_targetElement = nullptr;
+            document()->unregisterUseElement(this);
+            m_targetElementURL = nullptr;
         } else {
             document()->registerUseElement(this);
-            m_targetElement = new ResourceURL(value, document()->baseURI());
+            m_targetElementURL = new ResourceURL(value, document()->baseURI());
         }
+    } else if (ss->m_rx == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_ry == name) {
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
     }
 }
 
@@ -74,13 +83,23 @@ void SVGUseElement::styleForPresentationAttribute(
 
 void SVGUseElement::updateShadowTree()
 {
+    if (m_targetElement && !m_targetElement->needsFrameTreeBuild()) {
+        return;
+    }
     shadowRoot()->clear();
-    if (m_targetElement) {
-        Element* element = document()->getElementById(m_targetElement->hash());
-        if (element && element->isSVGElement()) {
-            SVGElement* newClonedElement =
-                element->cloneNode(true)->asSVGElement();
-            shadowRoot()->appendChild(newClonedElement);
+    if (m_targetElementURL) {
+        String* fragmentIdentifier = m_targetElementURL->hash();
+        if (fragmentIdentifier && fragmentIdentifier->length() != 0) {
+            Element* element =
+                document()->getElementById(fragmentIdentifier->substring(
+                    1, fragmentIdentifier->length() - 1));
+            if (element && element->isSVGElement()) {
+                Node* newClonedElement = element->makeShadowClone();
+                if (newClonedElement && newClonedElement->isSVGElement()) {
+                    shadowRoot()->appendChild(newClonedElement);
+                    m_targetElement = element->asSVGElement();
+                }
+            }
         }
     }
 }

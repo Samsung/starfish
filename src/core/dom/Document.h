@@ -55,6 +55,7 @@ class BrowsingContext;
 class AnimationExecutor;
 class DOMImplementation;
 class DeferredScriptDownloadClient;
+class DeferredSVGScriptDownloadClient;
 class PreloadScanner;
 class ContentSecurityPolicy;
 class ExecutionContext;
@@ -94,6 +95,7 @@ class Document : public Node {
     friend class BrowsingContext;
     friend class FontSelector;
     friend class DeferredScriptDownloadClient;
+    friend class DeferredSVGScriptDownloadClient;
     friend class HTMLResourceClient;
 
 protected:
@@ -662,7 +664,8 @@ public:
     }
 
     void registerUseElement(SVGUseElement* element);
-    void unRegisterUseElement(SVGUseElement* element);
+    void unregisterUseElement(SVGUseElement* element);
+    void updateShadowTreeForUseElement();
 
 protected:
     void appendCurrentScript(Element* element)
@@ -761,6 +764,8 @@ protected:
     MediaQueryListMatcher* m_mediaQueryListMatcher;
     GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
+    GCVector<std::pair<SVGScriptElement*, DeferredSVGScriptDownloadClient*>>
+        m_deferredSVGScriptElements;
     BloomFilter<12> m_nameIdFilter;
     ReferrerPolicy m_referrerPolicy;
 #ifdef STARFISH_TIZEN

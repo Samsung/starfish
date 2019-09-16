@@ -1,8 +1,6 @@
-// https://svgwg.org/svg2-draft/interact.html#InterfaceSVGScriptElement    
-
+// https://www.w3.org/TR/SVG11/script.html#InterfaceSVGScriptElement
+// TODO implement SVGURIReference,SVGExternalResourcesRequired
 interface SVGScriptElement : SVGElement {
+  // attribute DOMString type setraises(DOMException);
   [Unimplemented] attribute DOMString type;
-  [Unimplemented] attribute DOMString? crossOrigin;
 };
-
-SVGScriptElement implements SVGURIReference;

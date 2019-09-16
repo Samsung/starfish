@@ -19,11 +19,14 @@
 
 #include "StarfishConfig.h"
 #include "core/layout/FrameTreeBuilder.h"
-#include "core/style/Style.h"
-#include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGUseElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/ShadowRoot.h"
+#include "core/style/AncestorSelectorFilter.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/layout/svg/FrameSVGRectBox.h"
 #include "core/layout/svg/FrameSVGPathBox.h"
@@ -36,12 +39,12 @@
 #include "core/layout/svg/FrameSVGLineBox.h"
 #include "core/layout/FrameBlockBox.h"
 
+#include "core/dom/Document.h"
+
 namespace Starfish {
 
-Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
+Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement, Frame* parentFrame)
 {
-    Frame* parentFrame = svgElement->parentElement()->frame();
-
     ComputedStyle* style = svgElement->style();
     if (!style || style->display() == DisplayValue::NoneDisplayValue) {
         FrameTreeBuilder::clearTree(svgElement);
@@ -113,13 +116,50 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
         textNode->setFrame(ft);
         box->appendChild(ft);
     } else if (svgElement->isSVGDefsElement()) {
-        // TODO
-        // shouldContinue = true;
-        // shouldVisitChild = false;
     } else if (svgElement->isSVGUseElement()) {
-        // TODO
-        // shouldContinue = true;
-        // shouldVisitChild = false;
+        // Style resolve for shadow tree of SVGUseElement
+        {
+            currentFrame = new FrameSVGBox(svgElement);
+            parentFrame->appendChild(currentFrame);
+            svgElement->setFrame(currentFrame);
+
+            ShadowRoot* sr = svgElement->asElement()->shadowRoot();
+            Document* document = svgElement->document();
+
+            if(sr->hasChildNodes()){
+                // style resolve
+                ComputedStyle* useStyle = svgElement->style();
+
+                StyleResolveContext ctx(document);
+                std::vector<Element*> m_ancestorSelectorList;
+                Element* pe = (Element*)svgElement->asSVGUseElement()->targetElement();
+                while(pe){
+                    m_ancestorSelectorList.push_back(pe->asElement());
+                    pe = pe->parentElement();
+                }
+                for(auto iter = m_ancestorSelectorList.rbegin();iter!=m_ancestorSelectorList.rend();++iter){
+                    ctx.m_ancestorSelectorFilter->pushElement(*iter);
+                }
+
+                Node* shadowFirstChild = sr->firstChild();
+                shadowFirstChild->setParentNode(svgElement->asSVGUseElement()->targetElement()->parentElement());
+                 document->styleResolver().resolveChildrenStyle(
+                    ctx, &document->styleResolver(), sr, useStyle,
+                    true);
+
+                shadowFirstChild->setParentNode(sr);
+
+                // build
+                if (shadowFirstChild->isSVGElement()){
+                    buildSVGFrameTree(shadowFirstChild->asSVGElement(),currentFrame);
+                }
+            }
+
+            svgElement->clearNeedsFrameTreeBuild();
+            svgElement->clearChildNeedsFrameTreeBuild();
+            return currentFrame;
+        }
+
     }
 
     svgElement->clearNeedsFrameTreeBuild();
@@ -137,7 +177,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
             Element* e = svgElement->firstElementChild();
             while (e) {
                 if (e->isSVGElement())
-                    buildSVGFrameTree(e->asSVGElement());
+                    buildSVGFrameTree(e->asSVGElement(),e->parentElement()->frame());
                 e = e->nextElementSibling();
             }
         }

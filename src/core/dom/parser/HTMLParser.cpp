@@ -74,17 +74,31 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
     while (true) {
         if (m_treeBuilder.hasParserBlockingScript()) {
             TextPosition pos;
-            HTMLScriptElement* script =
-                m_treeBuilder.takeScriptToProcess(pos)->asHTMLScriptElement();
-            script->clearParserInserted();
+
+            Element* scriptElement = m_treeBuilder.takeScriptToProcess(pos);
             bool forceSync = !shouldEndParseWhenThereIsNoToken;
             if (m_document->openFunctionExplicitCalled()) {
                 forceSync = true;
             }
-            bool shouldStop = script->executeScript(forceSync, true);
-            script->markScriptExecuted();
-            if (shouldStop) {
-                break;
+
+            if (scriptElement->isHTMLScriptElement()) {
+                HTMLScriptElement* script =
+                    scriptElement->asHTMLScriptElement();
+                script->clearParserInserted();
+                bool shouldStop = script->executeScript(forceSync, true);
+                script->markScriptExecuted();
+                if (shouldStop) {
+                    break;
+                }
+
+            } else if (scriptElement->isSVGScriptElement()) {
+                SVGScriptElement* script = scriptElement->asSVGScriptElement();
+                script->clearParserInserted();
+                bool shouldStop = script->executeScript(forceSync, true);
+                script->markScriptExecuted();
+                if (shouldStop) {
+                    break;
+                }
             }
         }
 
