@@ -362,10 +362,19 @@ public:
             WebViewEFL* wv = (WebViewEFL*)data;
             STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL\n");
 
-            evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
-            wv->m_glGlapi->glClearColor(0, 0, 0, 0);
-            wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
-            wv->m_glGlapi->glFinish();
+            evas_object_image_pixels_dirty_set(wv->m_graphicsAdapter,
+                                               EINA_TRUE);
+            evas_object_image_pixels_get_callback_set(
+                wv->m_graphicsAdapter,
+                [](void* data, Evas_Object* o) {
+                    WebViewEFL* wv = (WebViewEFL*)data;
+                    evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc,
+                                         wv->m_glCtx);
+                    wv->m_glGlapi->glClearColor(0, 0, 0, 0);
+                    wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+                    wv->m_glGlapi->glFlush();
+                },
+                wv);
         };
         evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
                                        m_windowShownHandler, this);
@@ -611,10 +620,20 @@ public:
 
             STARFISH_LOG_INFO("WebViewEFL::resizeCallback::clearEvasGL %d %d\n",
                               w, h);
-            evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
-            wv->m_glGlapi->glClearColor(0, 0, 0, 0);
-            wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
-            wv->m_glGlapi->glFlush();
+
+            evas_object_image_pixels_dirty_set(wv->m_graphicsAdapter,
+                                               EINA_TRUE);
+            evas_object_image_pixels_get_callback_set(
+                wv->m_graphicsAdapter,
+                [](void* data, Evas_Object* o) {
+                    WebViewEFL* wv = (WebViewEFL*)data;
+                    evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc,
+                                         wv->m_glCtx);
+                    wv->m_glGlapi->glClearColor(0, 0, 0, 0);
+                    wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+                    wv->m_glGlapi->glFlush();
+                },
+                wv);
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 #endif
@@ -898,6 +917,17 @@ public:
             ::LWE::WebContainer* wc,
             const std::function<void()>& doRenderingFunction) {
             evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
+            evas_object_image_pixels_get_callback_set(
+                m_graphicsAdapter,
+                [](void* data, Evas_Object* o) {
+                    // We need to draw every time for preventing screen blinking
+                    WebViewEFL* s = (WebViewEFL*)data;
+                    if (s->m_lastDoRenderingFunction && !s->m_isDestroyed) {
+                        s->m_lastDoRenderingFunction();
+                    }
+                },
+                this);
+
             m_lastDoRenderingFunction = doRenderingFunction;
         });
 
@@ -991,8 +1021,8 @@ public:
 #endif
 
         if (m_resizeHandler) {
-            evas_object_event_callback_del(
-                m_graphicsAdapter, EVAS_CALLBACK_RESIZE, m_resizeHandler);
+            evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_RESIZE,
+                                           m_resizeHandler);
         }
 
         evas_object_event_callback_del(m_graphicsAdapter,
