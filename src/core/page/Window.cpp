@@ -358,6 +358,8 @@ void Window::resize(uint32_t w, uint32_t h)
     if (m_width != w || m_height != h) {
         m_width = w;
         m_height = h;
+        document()->setNeedsLayout();
+
         String* eventType = staticStrings()->m_resize.localName();
         UIEvent* e = new UIEvent(document()->executionContext(), eventType);
         e->setView(this);
@@ -366,7 +368,6 @@ void Window::resize(uint32_t w, uint32_t h)
         } else {
             dispatchEventIdleTimeByUA(e);
         }
-        browsingContext()->setNeedsLayout();
     }
 
     // Change event will be fired at the MediaQueryList when the matches state

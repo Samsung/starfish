@@ -2207,6 +2207,8 @@ public:
         m_compositorContext = (CompositorContextGL*)compositorContext;
         m_screenMatrix = computeScreenMatrix();
 
+        setViewport();
+
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
         auto& lastState = m_state.back();
