@@ -337,10 +337,16 @@ void FlexFormattingContext::applyFlexFactor()
                     } else {
                         float factor = flexItem->style()->flexShrink();
                         if (factor != 0) {
-                            targetMainSize = basisSize(flexItem) +
-                                             (factor * basisSize(flexItem) /
-                                              scaledFlexShrinkFactor) *
-                                                 remainingFreeSpace;
+                            if (scaledFlexShrinkFactor != 0) {
+                                targetMainSize = basisSize(flexItem) +
+                                                 (factor * basisSize(flexItem) /
+                                                  scaledFlexShrinkFactor) *
+                                                     remainingFreeSpace;
+                            } else {
+                                targetMainSize =
+                                    basisSize(flexItem) +
+                                    (factor / sumOfFactor) * remainingFreeSpace;
+                            }
                         }
                     }
 
