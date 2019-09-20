@@ -23,6 +23,7 @@
 #include "core/layout/FrameBox.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/Path.h"
 
 namespace Starfish {
 
@@ -52,6 +53,10 @@ public:
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx)
     {
+    }
+    virtual Path* path()
+    {
+        return nullptr;
     }
 
     static std::vector<std::pair<double, double>> parsePointsFromString(

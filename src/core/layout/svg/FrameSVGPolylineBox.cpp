@@ -45,20 +45,29 @@ void* FrameSVGPolylineBox::operator new(size_t size)
 
 void FrameSVGPolylineBox::paintSVG(PaintingContext& ctx)
 {
-    auto points =
-        parsePointsFromString(node()->asElement()->getAttributeOrEmpty(
-            node()->starfish()->staticStrings()->m_points));
-
-    if (points.size()) {
-        ctx.m_canvas->moveTo(points[0].first, points[0].second);
-        for (size_t i = 1; i < points.size(); i++) {
-            ctx.m_canvas->lineTo(points[i].first, points[i].second);
-        }
+    Path* newPath = path();
+    if (newPath) {
         FrameBox* cb = layoutParent()->asFrameBox();
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
         ctx.m_canvas->setStrokeColor(style()->stroke().color());
-        ctx.m_canvas->stroke();
+        ctx.m_canvas->strokePath(newPath);
     }
+}
+
+Path* FrameSVGPolylineBox::path()
+{
+    auto points =
+        parsePointsFromString(node()->asElement()->getAttributeOrEmpty(
+            node()->starfish()->staticStrings()->m_points));
+    if (points.size()) {
+        Path* path = Path::create();
+        path->moveTo(points[0].first, points[0].second);
+        for (size_t i = 1; i < points.size(); i++) {
+            path->lineTo(points[i].first, points[i].second);
+        }
+        return path;
+    }
+    return nullptr;
 }
 }

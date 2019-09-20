@@ -48,6 +48,27 @@ void FrameSVGEllipseBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
 
+    Path* newPath = path();
+    if (newPath) {
+        ctx.m_canvas->save();
+
+        ctx.m_canvas->setFillRule(style()->fillRule());
+        ctx.m_canvas->setFillColor(style()->fill().color());
+        ctx.m_canvas->fillPath(newPath);
+
+        ctx.m_canvas->setLineWidth(
+            style()->strokeWidth().specifiedValue(cb->width(), this));
+        ctx.m_canvas->setStrokeColor(style()->stroke().color());
+        ctx.m_canvas->strokePath(newPath);
+
+        ctx.m_canvas->restore();
+    }
+}
+
+Path* FrameSVGEllipseBox::path()
+{
+    Path* path = Path::create();
+    FrameBox* cb = layoutParent()->asFrameBox();
     double cx = 0;
     if (style()->cx().isSpecified()) {
         cx = style()->cx().specifiedValue(cb->width(), this);
@@ -64,23 +85,12 @@ void FrameSVGEllipseBox::paintSVG(PaintingContext& ctx)
     if (style()->ry().isSpecified()) {
         ry = style()->ry().specifiedValue(cb->height(), this);
     }
-
     if (rx && ry) {
-        ctx.m_canvas->save();
-        ctx.m_canvas->translate(cx, cy);
-        double r = rx;
-        ctx.m_canvas->scale(1, ry / rx);
-        ctx.m_canvas->arc(0, 0, r, 0.0, 2 * M_PI);
-
-        ctx.m_canvas->setFillRule(style()->fillRule());
-        ctx.m_canvas->setFillColor(style()->fill().color());
-        ctx.m_canvas->fillPreserve();
-
-        ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setStrokeColor(style()->stroke().color());
-        ctx.m_canvas->stroke();
-        ctx.m_canvas->restore();
+        path->ellipse(cx, cy, rx, ry, 0, 0, 2 * M_PI);
+    } else {
+        return nullptr;
     }
+
+    return path;
 }
 }

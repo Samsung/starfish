@@ -79,21 +79,8 @@ public:
         }
     }
 
-    virtual void paintSVG(PaintingContext& ctx) override
-    {
-        FrameBox* cb = layoutParent()->asFrameBox();
-        ctx.m_canvas->beginPath();
-        ctx.m_canvas->moveTo(m_x1, m_y1);
-        ctx.m_canvas->lineTo(m_x2, m_y2);
-
-        ctx.m_canvas->setFillColor(style()->fill().color());
-        ctx.m_canvas->fillPreserve();
-
-        ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setStrokeColor(style()->stroke().color());
-        ctx.m_canvas->stroke();
-    }
+    virtual void paintSVG(PaintingContext& ctx) override;
+    virtual Path* path() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
