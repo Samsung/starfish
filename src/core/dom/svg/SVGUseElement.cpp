@@ -98,6 +98,7 @@ void SVGUseElement::updateShadowTree()
                 if (newClonedElement && newClonedElement->isSVGElement()) {
                     shadowRoot()->appendChild(newClonedElement);
                     m_targetElement = element->asSVGElement();
+                    setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
                 }
             }
         }

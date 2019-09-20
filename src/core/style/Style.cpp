@@ -46,6 +46,8 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/Text.h"
+#include "core/dom/ShadowRoot.h"
+#include "core/dom/svg/SVGUseElement.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/BrowsingContext.h"
@@ -8279,6 +8281,37 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             resolveChildrenStyle(
                 ctx, resolver, child->asElement(), child->style(),
                 inheritedStyleChanged || child->m_gotInheritedStyleDirty);
+        }
+        // Resolve style for shadowtree of SVGUseElement
+        if (child->isSVGUseElement() &&
+            !child->document()->isMiddleOfUseElementUpdating()) {
+            Element* svgUseElement = child->asElement();
+            Element* svgUseTargetElement =
+                svgUseElement->asSVGUseElement()->targetElement();
+            ShadowRoot* sr = svgUseElement->shadowRoot();
+            if (sr->hasChildNodes()) {
+                Node* shadowFirstChild = sr->firstChild();
+
+                // style resolve
+                ComputedStyle* useStyle = svgUseElement->style();
+
+                StyleResolveContext ctx2(child->document());
+                std::vector<Element*> m_ancestorSelectorList;
+                Element* pe = svgUseTargetElement;
+                while (pe) {
+                    m_ancestorSelectorList.push_back(pe->asElement());
+                    pe = pe->parentElement();
+                }
+                for (auto iter = m_ancestorSelectorList.rbegin();
+                     iter != m_ancestorSelectorList.rend(); ++iter) {
+                    ctx2.m_ancestorSelectorFilter->pushElement(*iter);
+                }
+                shadowFirstChild = sr->firstChild();
+                shadowFirstChild->setParentNode(
+                    svgUseTargetElement->parentElement());
+                resolveChildrenStyle(ctx2, resolver, sr, useStyle, true);
+                shadowFirstChild->setParentNode(sr);
+            }
         }
         child = child->nextSibling();
     }
