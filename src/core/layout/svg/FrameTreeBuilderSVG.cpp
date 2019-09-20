@@ -43,7 +43,8 @@
 
 namespace Starfish {
 
-Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement, Frame* parentFrame)
+Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
+                                           Frame* parentFrame)
 {
     ComputedStyle* style = svgElement->style();
     if (!style || style->display() == DisplayValue::NoneDisplayValue) {
@@ -126,32 +127,12 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement, Frame* parent
             ShadowRoot* sr = svgElement->asElement()->shadowRoot();
             Document* document = svgElement->document();
 
-            if(sr->hasChildNodes()){
-                // style resolve
-                ComputedStyle* useStyle = svgElement->style();
-
-                StyleResolveContext ctx(document);
-                std::vector<Element*> m_ancestorSelectorList;
-                Element* pe = (Element*)svgElement->asSVGUseElement()->targetElement();
-                while(pe){
-                    m_ancestorSelectorList.push_back(pe->asElement());
-                    pe = pe->parentElement();
-                }
-                for(auto iter = m_ancestorSelectorList.rbegin();iter!=m_ancestorSelectorList.rend();++iter){
-                    ctx.m_ancestorSelectorFilter->pushElement(*iter);
-                }
-
+            if (sr->hasChildNodes()) {
+                // build frame tree
                 Node* shadowFirstChild = sr->firstChild();
-                shadowFirstChild->setParentNode(svgElement->asSVGUseElement()->targetElement()->parentElement());
-                 document->styleResolver().resolveChildrenStyle(
-                    ctx, &document->styleResolver(), sr, useStyle,
-                    true);
-
-                shadowFirstChild->setParentNode(sr);
-
-                // build
-                if (shadowFirstChild->isSVGElement()){
-                    buildSVGFrameTree(shadowFirstChild->asSVGElement(),currentFrame);
+                if (shadowFirstChild->isSVGElement()) {
+                    buildSVGFrameTree(shadowFirstChild->asSVGElement(),
+                                      currentFrame);
                 }
             }
 
@@ -159,7 +140,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement, Frame* parent
             svgElement->clearChildNeedsFrameTreeBuild();
             return currentFrame;
         }
-
     }
 
     svgElement->clearNeedsFrameTreeBuild();
@@ -177,7 +157,8 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement, Frame* parent
             Element* e = svgElement->firstElementChild();
             while (e) {
                 if (e->isSVGElement())
-                    buildSVGFrameTree(e->asSVGElement(),e->parentElement()->frame());
+                    buildSVGFrameTree(e->asSVGElement(),
+                                      e->parentElement()->frame());
                 e = e->nextElementSibling();
             }
         }

@@ -138,6 +138,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheToTalSize(0)
     , m_webFontResolveVersionForCanvas(0)
+    , m_isMiddleOfUseElementUpdating(false)
 {
     setBaseURL(fallbackBaseURL());
 
@@ -2274,9 +2275,13 @@ void Document::unregisterUseElement(SVGUseElement* element)
 }
 void Document::updateShadowTreeForUseElement()
 {
-    for (auto it = m_useElementListNeedUpdating.begin();
-         it != m_useElementListNeedUpdating.end(); ++it) {
-        ((SVGUseElement*)(*it))->updateShadowTree();
+    if (!m_isMiddleOfUseElementUpdating) {
+        m_isMiddleOfUseElementUpdating = true;
+        for (auto it = m_useElementListNeedUpdating.begin();
+             it != m_useElementListNeedUpdating.end(); ++it) {
+            ((SVGUseElement*)(*it))->updateShadowTree();
+        }
+        m_isMiddleOfUseElementUpdating = false;
     }
 }
 }

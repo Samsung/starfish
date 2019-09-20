@@ -666,6 +666,10 @@ public:
     void registerUseElement(SVGUseElement* element);
     void unregisterUseElement(SVGUseElement* element);
     void updateShadowTreeForUseElement();
+    bool isMiddleOfUseElementUpdating()
+    {
+        return m_isMiddleOfUseElementUpdating;
+    }
 
 protected:
     void appendCurrentScript(Element* element)
@@ -779,6 +783,7 @@ protected:
     size_t m_nativeGradientCacheToTalSize;
     size_t m_webFontResolveVersionForCanvas;
     GCVector<SVGUseElement*> m_useElementListNeedUpdating;
+    bool m_isMiddleOfUseElementUpdating;
 };
 }
 

@@ -37,6 +37,21 @@ public:
         return "FrameSVGImageBox";
     }
 
+    virtual void layoutSVG() override
+    {
+        // https://www.w3.org/TR/SVG11/struct.html#ImageElement
+        // For most raster content (PNG, JPEG) the bounds of the image should be
+        // used (i.e. the ‘image’ element has an implicit ‘viewBox’ of '0 0
+        // raster-image-width raster-image-height').
+        NativeImageData* id = node()->asSVGImageElement()->imageData();
+        if (id &&
+            node()->asSVGImageElement()->preserveAspectRatioValue() ==
+                NativeImageData::None) {
+            setWidth(id->width());
+            setHeight(id->height());
+        }
+    }
+
     virtual void paintSVG(PaintingContext& ctx) override
     {
         SVGImageElement* e = node()->asSVGImageElement();

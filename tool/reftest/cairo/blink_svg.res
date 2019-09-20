@@ -349,7 +349,7 @@ test/cairo/reftest/vendor/blink_original/svg/css/max-width.html
 #test/cairo/reftest/vendor/blink_original/svg/css/multiple-cursors-crash.html
 #test/cairo/reftest/vendor/blink_original/svg/css/opacity-not-supporting-percentage.html
 #test/cairo/reftest/vendor/blink_original/svg/css/parse-length.html
-#test/cairo/reftest/vendor/blink_original/svg/css/path-layout-crash.html
+test/cairo/reftest/vendor/blink_original/svg/css/path-layout-crash.html
 #test/cairo/reftest/vendor/blink_original/svg/css/replaced-intrinsic-ratio-min-width-min-content.html
 #test/cairo/reftest/vendor/blink_original/svg/css/scientific-numbers.html
 #test/cairo/reftest/vendor/blink_original/svg/css/stroke-opacity-change-no-layout.html
@@ -525,7 +525,7 @@ test/cairo/reftest/vendor/blink_original/svg/custom/svg-width-intrinsic-crash.ht
 #test/cairo/reftest/vendor/blink_original/svg/custom/use-child-change-by-parser.html
 test/cairo/reftest/vendor/blink_original/svg/custom/use-cycle-detection.html
 test/cairo/reftest/vendor/blink_original/svg/custom/use-cycle-with-attr-eventhandler.html
-#test/cairo/reftest/vendor/blink_original/svg/custom/use-cycle-with-attr-eventhandler-nested.html
+test/cairo/reftest/vendor/blink_original/svg/custom/use-cycle-with-attr-eventhandler-nested.html
 #test/cairo/reftest/vendor/blink_original/svg/custom/use-dynamic-attribute-setting.html
 #test/cairo/reftest/vendor/blink_original/svg/custom/use-event-retargeting.html
 test/cairo/reftest/vendor/blink_original/svg/custom/use-external-base-change-assert.html
