@@ -47,6 +47,23 @@ void* FrameSVGCircleBox::operator new(size_t size)
 void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
 {
     FrameBox* cb = layoutParent()->asFrameBox();
+    Path* newPath = path();
+
+    ctx.m_canvas->setFillRule(style()->fillRule());
+    ctx.m_canvas->setFillColor(style()->fill().color());
+    ctx.m_canvas->fillPath(newPath);
+
+    ctx.m_canvas->setLineWidth(
+        style()->strokeWidth().specifiedValue(cb->width(), this));
+    ctx.m_canvas->setStrokeColor(style()->stroke().color());
+    ctx.m_canvas->strokePath(newPath);
+}
+
+Path* FrameSVGCircleBox::path()
+{
+    Path* path = Path::create();
+
+    FrameBox* cb = layoutParent()->asFrameBox();
 
     double cx = 0;
     if (style()->cx().isSpecified()) {
@@ -61,15 +78,8 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
         r = style()->r().specifiedValue(cb->width(), this);
     }
 
-    ctx.m_canvas->arc(cx, cy, r, 0.0, 2 * M_PI);
+    path->arc(cx, cy, r, 0.0, 2 * M_PI);
 
-    ctx.m_canvas->setFillRule(style()->fillRule());
-    ctx.m_canvas->setFillColor(style()->fill().color());
-    ctx.m_canvas->fillPreserve();
-
-    ctx.m_canvas->setLineWidth(
-        style()->strokeWidth().specifiedValue(cb->width(), this));
-    ctx.m_canvas->setStrokeColor(style()->stroke().color());
-    ctx.m_canvas->stroke();
+    return path;
 }
 }

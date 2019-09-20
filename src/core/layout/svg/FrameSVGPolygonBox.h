@@ -40,6 +40,7 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+    virtual Path* path() override;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)

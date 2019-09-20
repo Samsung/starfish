@@ -46,25 +46,35 @@ void* FrameSVGPolygonBox::operator new(size_t size)
 
 void FrameSVGPolygonBox::paintSVG(PaintingContext& ctx)
 {
+    Path* newPath = path();
+    if (newPath) {
+        FrameBox* cb = layoutParent()->asFrameBox();
+
+        ctx.m_canvas->setFillRule(style()->fillRule());
+        ctx.m_canvas->setFillColor(style()->fill().color());
+        ctx.m_canvas->fillPath(newPath);
+
+        ctx.m_canvas->setLineWidth(
+            style()->strokeWidth().specifiedValue(cb->width(), this));
+        ctx.m_canvas->setStrokeColor(style()->stroke().color());
+        ctx.m_canvas->strokePath(newPath);
+    }
+}
+
+Path* FrameSVGPolygonBox::path()
+{
     auto points =
         parsePointsFromString(node()->asElement()->getAttributeOrEmpty(
             node()->starfish()->staticStrings()->m_points));
 
     if (points.size()) {
-        ctx.m_canvas->moveTo(points[0].first, points[0].second);
+        Path* path = Path::create();
+        path->moveTo(points[0].first, points[0].second);
         for (size_t i = 1; i < points.size(); i++) {
-            ctx.m_canvas->lineTo(points[i].first, points[i].second);
+            path->lineTo(points[i].first, points[i].second);
         }
-        FrameBox* cb = layoutParent()->asFrameBox();
-
-        ctx.m_canvas->setFillRule(style()->fillRule());
-        ctx.m_canvas->setFillColor(style()->fill().color());
-        ctx.m_canvas->fillPreserve();
-
-        ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setStrokeColor(style()->stroke().color());
-        ctx.m_canvas->stroke();
+        return path;
     }
+    return nullptr;
 }
 }

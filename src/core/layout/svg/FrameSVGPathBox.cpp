@@ -44,7 +44,7 @@ void* FrameSVGPathBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-ALWAYS_INLINE static void paintArgSegment(Canvas* canvas, double xc, double yc,
+ALWAYS_INLINE static void paintArgSegment(Path* path, double xc, double yc,
                                           double th0, double th1, double rx,
                                           double ry, double xAxisRotation)
 {
@@ -62,14 +62,14 @@ ALWAYS_INLINE static void paintArgSegment(Canvas* canvas, double xc, double yc,
     double x2 = x3 + rx * (t * sin(th1));
     double y2 = y3 + ry * (-t * cos(th1));
 
-    canvas->curveTo(xc + cosf * x1 - sinf * y1, yc + sinf * x1 + cosf * y1,
-                    xc + cosf * x2 - sinf * y2, yc + sinf * x2 + cosf * y2,
-                    xc + cosf * x3 - sinf * y3, yc + sinf * x3 + cosf * y3);
+    path->bezierCurveTo(xc + cosf * x1 - sinf * y1, yc + sinf * x1 + cosf * y1,
+                        xc + cosf * x2 - sinf * y2, yc + sinf * x2 + cosf * y2,
+                        xc + cosf * x3 - sinf * y3, yc + sinf * x3 + cosf * y3);
 }
 
 // http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
-void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
-                         double ry, double xAxisRotation, bool isLargeArc,
+void paintPathArcCommand(Path* path, double x1, double y1, double rx, double ry,
+                         double xAxisRotation, bool isLargeArc,
                          bool isPositiveSweep, double x2, double y2)
 {
     if (x1 == x2 && y1 == y2) {
@@ -85,7 +85,7 @@ void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
 
     if ((rx < std::numeric_limits<double>::epsilon()) ||
         (ry < std::numeric_limits<double>::epsilon())) {
-        canvas->lineTo(x2, y2);
+        path->lineTo(x2, y2);
         return;
     }
 
@@ -164,7 +164,7 @@ void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
         std::ceil(std::abs((deltaTheta / (M_PI * 0.5 + 0.001))));
 
     for (size_t i = 0; i < segmentsCount; i++) {
-        paintArgSegment(canvas, cx, cy, theta1 + i * deltaTheta / segmentsCount,
+        paintArgSegment(path, cx, cy, theta1 + i * deltaTheta / segmentsCount,
                         theta1 + (i + 1) * deltaTheta / segmentsCount, rx, ry,
                         xAxisRotation);
     }
@@ -172,6 +172,23 @@ void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
 
 void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
 {
+    FrameBox* cb = layoutParent()->asFrameBox();
+
+    Path* newPath = path();
+
+    ctx.m_canvas->setLineWidth(
+        style()->strokeWidth().specifiedValue(cb->width(), this));
+    ctx.m_canvas->setFillColor(style()->fill().color());
+    ctx.m_canvas->setFillRule(style()->fillRule());
+    ctx.m_canvas->fillPath(newPath);
+    ctx.m_canvas->setStrokeColor(style()->stroke().color());
+    ctx.m_canvas->strokePath(newPath);
+}
+
+Path* FrameSVGPathBox::path()
+{
+    Path* path = Path::create();
+
     FrameBox* cb = layoutParent()->asFrameBox();
     Element* e = node()->asElement();
     String* d = style()->d();
@@ -306,7 +323,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 } else if (token.equals("M")) {
                     TO_WAIT_COORDS_MODE('M');
                 } else if (token.equals("z") || token.equals("Z")) {
-                    ctx.m_canvas->closePath();
+                    path->closePath();
                     continue;
                 } else if (token.equals("l")) {
                     TO_WAIT_COORDS_MODE('l');
@@ -349,19 +366,19 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 READ_NUMBER(x);
 
                 if (paintMode == 'v') {
-                    ctx.m_canvas->lineTo(lastX, lastY + x);
+                    path->lineTo(lastX, lastY + x);
                     lastY += x;
                     REWIND_IF_NEEDED();
                 } else if (paintMode == 'V') {
-                    ctx.m_canvas->lineTo(lastX, x);
+                    path->lineTo(lastX, x);
                     lastY = x;
                     REWIND_IF_NEEDED();
                 } else if (paintMode == 'h') {
-                    ctx.m_canvas->lineTo(lastX + x, lastY);
+                    path->lineTo(lastX + x, lastY);
                     lastX += x;
                     REWIND_IF_NEEDED();
                 } else if (paintMode == 'H') {
-                    ctx.m_canvas->lineTo(x, lastY);
+                    path->lineTo(x, lastY);
                     lastX = x;
                     REWIND_IF_NEEDED();
                 } else {
@@ -370,7 +387,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
             } else if (mode == Mode::WaitCoordsY) {
                 READ_NUMBER(y);
                 if (paintMode == 'm') {
-                    ctx.m_canvas->moveTo(lastX + x, lastY + y);
+                    path->moveTo(lastX + x, lastY + y);
                     lastX += x;
                     lastY += y;
                     REWIND_IF_NEEDED();
@@ -378,7 +395,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                         paintMode = 'l';
                     }
                 } else if (paintMode == 'M') {
-                    ctx.m_canvas->moveTo(x, y);
+                    path->moveTo(x, y);
                     lastX = x;
                     lastY = y;
                     REWIND_IF_NEEDED();
@@ -386,12 +403,12 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                         paintMode = 'L';
                     }
                 } else if (paintMode == 'l') {
-                    ctx.m_canvas->lineTo(lastX + x, lastY + y);
+                    path->lineTo(lastX + x, lastY + y);
                     lastX += x;
                     lastY += y;
                     REWIND_IF_NEEDED();
                 } else if (paintMode == 'L') {
-                    ctx.m_canvas->lineTo(x, y);
+                    path->lineTo(x, y);
                     lastX = x;
                     lastY = y;
                     REWIND_IF_NEEDED();
@@ -405,12 +422,12 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                         firstY = lastY + lastY - lastOfLastY;
                     }
                     if (paintMode == 't') {
-                        ctx.m_canvas->quadraticCurveTo(firstX, firstY,
-                                                       lastX + x, lastY + y);
+                        path->quadraticCurveTo(firstX, firstY, lastX + x,
+                                               lastY + y);
                         lastX += x;
                         lastY += y;
                     } else {
-                        ctx.m_canvas->quadraticCurveTo(firstX, firstY, x, y);
+                        path->quadraticCurveTo(firstX, firstY, x, y);
                         lastX = x;
                         lastY = y;
                     }
@@ -445,15 +462,14 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                     }
 
                     if (paintMode == 's') {
-                        ctx.m_canvas->curveTo(firstX, firstY, lastX + x,
-                                              lastY + y, lastX + x2,
-                                              lastY + y2);
+                        path->bezierCurveTo(firstX, firstY, lastX + x,
+                                            lastY + y, lastX + x2, lastY + y2);
                         lastOfLastX = lastX + x;
                         lastOfLastY = lastY + y;
                         lastX = lastX + x2;
                         lastY = lastY + y2;
                     } else if (paintMode == 'S') {
-                        ctx.m_canvas->curveTo(firstX, firstY, x, y, x2, y2);
+                        path->bezierCurveTo(firstX, firstY, x, y, x2, y2);
                         lastOfLastX = x;
                         lastOfLastY = y;
                         lastX = x2;
@@ -461,8 +477,8 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                     }
                     REWIND_IF_NEEDED()
                 } else if (paintMode == 'q') {
-                    ctx.m_canvas->quadraticCurveTo(lastX + x, lastY + y,
-                                                   lastX + x2, lastY + y2);
+                    path->quadraticCurveTo(lastX + x, lastY + y, lastX + x2,
+                                           lastY + y2);
                     lastOfLastX = lastX + x;
                     lastOfLastY = lastY + y;
                     lastX = lastX + x2;
@@ -473,7 +489,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                     lastOfLastY = y;
                     lastX = x2;
                     lastY = y2;
-                    ctx.m_canvas->quadraticCurveTo(x, y, x2, y2);
+                    path->quadraticCurveTo(x, y, x2, y2);
                     REWIND_IF_NEEDED();
                 } else {
                     mode = Mode::WaitCoordsX3;
@@ -485,15 +501,14 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 READ_NUMBER(y3);
                 if (paintMode == 'c' || paintMode == 'C') {
                     if (paintMode == 'c') {
-                        ctx.m_canvas->curveTo(lastX + x, lastY + y, lastX + x2,
-                                              lastY + y2, lastX + x3,
-                                              lastY + y3);
+                        path->bezierCurveTo(lastX + x, lastY + y, lastX + x2,
+                                            lastY + y2, lastX + x3, lastY + y3);
                         lastOfLastX = lastX + x2;
                         lastOfLastY = lastY + y2;
                         lastX = lastX + x3;
                         lastY = lastY + y3;
                     } else if (paintMode == 'C') {
-                        ctx.m_canvas->curveTo(x, y, x2, y2, x3, y3);
+                        path->bezierCurveTo(x, y, x2, y2, x3, y3);
                         lastOfLastX = x2;
                         lastOfLastY = y2;
                         lastX = x3;
@@ -519,7 +534,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                         targetX += lastX;
                         targetY += lastY;
                     }
-                    paintPathArcCommand(ctx.m_canvas, lastX, lastY, rx, ry,
+                    paintPathArcCommand(path, lastX, lastY, rx, ry,
                                         xAxisRotation, largeArcFlag, sweepFlag,
                                         targetX, targetY);
                     lastX = targetX;
@@ -530,14 +545,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                 }
             }
         }
-
-        ctx.m_canvas->setLineWidth(
-            style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setFillColor(style()->fill().color());
-        ctx.m_canvas->setFillRule(style()->fillRule());
-        ctx.m_canvas->fillPreserve();
-        ctx.m_canvas->setStrokeColor(style()->stroke().color());
-        ctx.m_canvas->stroke();
     }
+    return path;
 }
 }

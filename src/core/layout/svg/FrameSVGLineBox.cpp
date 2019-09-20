@@ -38,4 +38,30 @@ void* FrameSVGLineBox::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
+
+void FrameSVGLineBox::paintSVG(PaintingContext& ctx)
+{
+    FrameBox* cb = layoutParent()->asFrameBox();
+    Path* newPath = path();
+
+    ctx.m_canvas->setFillColor(style()->fill().color());
+    ctx.m_canvas->fillPath(newPath);
+
+    ctx.m_canvas->setLineWidth(
+        style()->strokeWidth().specifiedValue(cb->width(), this));
+    ctx.m_canvas->setStrokeColor(style()->stroke().color());
+    ctx.m_canvas->strokePath(newPath);
+}
+
+Path* FrameSVGLineBox::path()
+{
+    Path* path = Path::create();
+
+    path->clear();
+
+    path->moveTo(m_x1, m_y1);
+    path->lineTo(m_x2, m_y2);
+
+    return path;
+}
 }

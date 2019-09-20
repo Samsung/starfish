@@ -38,4 +38,70 @@ void* FrameSVGRectBox::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
+
+void FrameSVGRectBox::paintSVG(PaintingContext& ctx)
+{
+    Path* newPath = path();
+
+    ctx.m_canvas->setFillColor(style()->fill().color());
+    ctx.m_canvas->fillPath(newPath);
+
+    ctx.m_canvas->setStrokeColor(style()->stroke().color());
+    ctx.m_canvas->strokePath(newPath);
+}
+
+Path* FrameSVGRectBox::path()
+{
+    Path* path = Path::create();
+
+    float rx = m_rx, ry = m_ry;
+    if (rx > width() / 2) {
+        rx = width() / 2;
+    }
+
+    if (ry > height() / 2) {
+        ry = height() / 2;
+    }
+
+    // ctx.m_canvas->beginPath();
+    path->clear();
+
+    if (rx == 0 && ry == 0) {
+        path->moveTo(0, 0);
+        path->lineTo((float)width(), 0);
+        path->lineTo((float)width(), (float)height());
+        path->lineTo(0, (float)height());
+        path->lineTo(0, 0);
+    } else {
+        // perform an absolute moveto operation to location (x+rx,y),
+        path->moveTo(rx, 0);
+        // perform an absolute horizontal lineto operation to location
+        // (x+width-rx,y)
+        path->lineTo(width() - rx, 0);
+        // perform an absolute elliptical arc operation to coordinate
+        // (x+width,y+ry)
+        paintPathArcCommand(path, width() - rx, 0, rx, ry, 0, false, true,
+                            width(), ry);
+        // perform a absolute vertical lineto to location
+        // (x+width,y+height-ry)
+        path->lineTo(width(), height() - ry);
+        // perform an absolute elliptical arc operation to coordinate
+        // (x+width-rx,y+height)
+        paintPathArcCommand(path, width(), height() - ry, rx, ry, 0, false,
+                            true, width() - rx, height());
+        // perform an absolute horizontal lineto to location (x+rx,y+height)
+        path->lineTo(rx, height());
+        // perform an absolute elliptical arc operation to coordinate
+        // (x,y+height-ry)
+        paintPathArcCommand(path, rx, height(), rx, ry, 0, false, true, 0,
+                            height() - ry);
+        // perform an absolute absolute vertical lineto to location (x,y+ry)
+        path->lineTo(0, ry);
+        // perform an absolute elliptical arc operation to coordinate
+        // (x+rx,y)
+        paintPathArcCommand(path, 0, ry, rx, ry, 0, false, true, rx, 0);
+    }
+
+    return path;
+}
 }
