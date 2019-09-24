@@ -844,7 +844,8 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     } else if (current->isHTMLObjectElement()) {
         return new FrameReplacedObject(current);
     } else if (current->isSVGSVGElement()) {
-        return FrameTreeBuilder::buildSVGFrameTree(current->asSVGSVGElement(),current->parentElement()->frame());
+        return FrameTreeBuilder::buildSVGFrameTree(
+            current->asSVGSVGElement(), current->parentElement()->frame());
     } else if (current->isHTMLButtonElement()) {
         return new FrameButtonBox(current, nullptr);
     } else if (current->isHTMLInputElement() ||

@@ -30,6 +30,8 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
     : Element(document, qname)
     , m_preserveAspectRatioValue(
           NativeImageData::PreserveAspectRatioValue::None)
+    , m_clipPathElement(nullptr)
+    , m_hasClipPath(false)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -96,6 +98,19 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
             setNeedsPainting();
         } else if (ss->m_strokeWidth == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    if (needsClipPathAttributes()) {
+        if (ss->m_clipPath == name) {
+            if (attributeRemoved) {
+                // setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+                m_hasClipPath = false;
+            } else {
+                // setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+                m_hasClipPath = true;
+            }
             setNeedsPainting();
         }
     }
@@ -273,5 +288,30 @@ int SVGElement::tabIndex()
         return Element::tabIndex();
     }
     return -1;
+}
+
+SVGElement* SVGElement::clipPathElement()
+{
+    if (!m_hasClipPath || !needsClipPathAttributes()) {
+        return nullptr;
+    }
+
+    if (!m_clipPathElement) {
+        String* clipPathStr =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
+
+        ResourceURL* clipPathURL =
+            new ResourceURL(clipPathStr, document()->baseURI());
+        String* fragmentIdentifier = clipPathURL->hash();
+        if (!fragmentIdentifier->isEmpty()) {
+            Element* clipPathElement =
+                document()->getElementById(fragmentIdentifier->substring(
+                    1, fragmentIdentifier->length() - 2));
+            if (clipPathElement) {
+                m_clipPathElement = (SVGElement*)clipPathElement;
+            }
+        }
+    }
+    return m_clipPathElement;
 }
 }

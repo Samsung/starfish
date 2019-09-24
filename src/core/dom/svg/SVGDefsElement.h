@@ -41,6 +41,11 @@ public:
     {
         return false;
     }
+
+    virtual bool needsClipPathAttributes()
+    {
+        return false;
+    }
 };
 }
 

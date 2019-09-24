@@ -44,6 +44,7 @@ class FrameTableSectionBox;
 class FrameInputBox;
 class FrameSelectBox;
 class FrameSVGBox;
+class FrameSVGClipPathBox;
 class FrameText;
 class FrameCounterText;
 class FrameQuoteText;
@@ -1172,6 +1173,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameSVGClipPathBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameSelectBox()
     {
         return false;
@@ -1341,6 +1347,12 @@ public:
     {
         STARFISH_ASSERT(isFrameSVGBox());
         return (FrameSVGBox*)this;
+    }
+
+    FrameSVGClipPathBox* asFrameSVGClipPathBox()
+    {
+        STARFISH_ASSERT(isFrameSVGClipPathBox());
+        return (FrameSVGClipPathBox*)this;
     }
 
 #ifdef STARFISH_ENABLE_CANVAS
