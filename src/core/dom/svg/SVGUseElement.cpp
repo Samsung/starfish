@@ -83,9 +83,12 @@ void SVGUseElement::styleForPresentationAttribute(
 
 void SVGUseElement::updateShadowTree()
 {
+    // TODO:
+    /*
     if (m_targetElement && !m_targetElement->needsFrameTreeBuild()) {
-        return;
-    }
+    return;
+}
+*/
     shadowRoot()->clear();
     if (m_targetElementURL) {
         String* fragmentIdentifier = m_targetElementURL->hash();

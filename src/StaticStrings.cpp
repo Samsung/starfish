@@ -501,10 +501,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "scroll"));
     m_onscroll =
         QualifiedName(AtomicString::createAtomicString(starfish, "onscroll"));
-
+    m_clipPath =
+        QualifiedName(AtomicString::createAtomicString(starfish, "clip-path"));
     m_reset =
         QualifiedName(AtomicString::createAtomicString(starfish, "reset"));
-
     m_resize =
         QualifiedName(AtomicString::createAtomicString(starfish, "resize"));
     m_onresize =

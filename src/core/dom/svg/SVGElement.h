@@ -119,6 +119,11 @@ public:
         return false;
     }
 
+    virtual bool needsClipPathAttributes()
+    {
+        return true;
+    }
+
     int tabIndex() override;
 
     virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
@@ -126,8 +131,17 @@ public:
         return m_preserveAspectRatioValue;
     }
 
+    bool hasClipPath()
+    {
+        return m_hasClipPath;
+    }
+
+    SVGElement* clipPathElement();
+
 protected:
     NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
+    SVGElement* m_clipPathElement;
+    bool m_hasClipPath;
 };
 }
 

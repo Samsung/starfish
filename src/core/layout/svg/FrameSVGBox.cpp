@@ -22,6 +22,7 @@
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "FrameSVGBox.h"
+#include "FrameSVGClipPathBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -125,6 +126,18 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
+    if (m_hasClipPath && node()->isSVGElement()) {
+        Frame* clipPathFrame =
+            node()->asSVGElement()->clipPathElement()->frame();
+        if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {
+            Path* clipPath = clipPathFrame->asFrameSVGClipPathBox()->path();
+            if (clipPath) {
+                ctx.m_canvas->translate(-x(), -y());
+                ctx.m_canvas->clipPath(clipPath);
+                ctx.m_canvas->translate(x(), y());
+            }
+        }
+    }
     ctx.m_canvas->save();
     paintSVG(ctx);
     ctx.m_canvas->restore();

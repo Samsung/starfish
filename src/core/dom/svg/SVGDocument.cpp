@@ -71,7 +71,7 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGUseElement(document, qname);
     } else if (str->m_svgdefsTagName == localName) {
         return new SVGDefsElement(document, qname);
-    } else if (str->m_svgclipPathTagName == localName) {
+    } else if (str->m_svgclippathTagName == localName) {
         return new SVGClipPathElement(document, qname);
     } else if (str->m_svgscriptTagName == localName) {
         return new SVGScriptElement(document, qname);

@@ -55,6 +55,11 @@ public:
         return true;
     }
 
+    virtual bool needsClipPathAttributes()
+    {
+        return false;
+    }
+
     bool hasViewBox() const
     {
         return m_hasViewBox;

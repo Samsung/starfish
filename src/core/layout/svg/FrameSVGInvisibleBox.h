@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,35 +17,40 @@
  *  USA
  */
 
-#ifndef __StarfishSVGClipPathElement__
-#define __StarfishSVGClipPathElement__
+#ifndef __StarfishFrameSVGInvisibleBox__
+#define __StarfishFrameSVGInvisibleBox__
 
-#include "core/dom/svg/SVGElement.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 namespace Starfish {
 
-class SVGSVGElement;
+void paintPathArcCommand(Path* path, double x1, double y1, double rx, double ry,
+                         double xAxisRotation, bool isLargeArc,
+                         bool isPositiveSweep, double x2, double y2);
 
-class SVGClipPathElement : public SVGElement {
+class FrameSVGInvisibleBox final : public FrameSVGBox {
 public:
+    FrameSVGInvisibleBox(Node* node)
+        : FrameSVGBox(node)
+    {
+    }
+
+    virtual const char* name() override
+    {
+        return "FrameSVGInvisibleBox";
+    }
+
+    virtual void paintContent(PaintingContext& ctx) override;
+    virtual void paintSVG(PaintingContext& ctx) override;
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    SVGClipPathElement(Document* document, const QualifiedName& qname);
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSVGClipPathElement() const override;
-    virtual void didAttributeChanged(QualifiedName name, String* old,
-                                     String* value, bool attributeCreated,
-                                     bool attributeRemoved) override;
-    virtual bool needsGeometryAttributes() override
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
     {
-        return false;
+        FrameSVGBox::fillGCDescriptor(desc);
     }
-
-    virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
 };
 }
 

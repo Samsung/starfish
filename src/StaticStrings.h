@@ -174,7 +174,7 @@ namespace Starfish {
     F(script)                          \
     F(defs)                            \
     F(use)                             \
-    F(clipPath)
+    F(clippath)
 
 #define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
 
@@ -448,6 +448,7 @@ public:
     QualifiedName m_fontDashFamily;
     QualifiedName m_fontDashSize;
     QualifiedName m_start;
+    QualifiedName m_clipPath;
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;
     QualifiedName m_pause;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,34 +17,40 @@
  *  USA
  */
 
-#ifndef __StarfishSVGDefsElement__
-#define __StarfishSVGDefsElement__
+#ifndef __StarfishFrameSVGClipPathBox__
+#define __StarfishFrameSVGClipPathBox__
 
-#include "core/dom/svg/SVGElement.h"
+#include "core/layout/svg/FrameSVGBox.h"
 
 namespace Starfish {
 
-class SVGSVGElement;
-
-class SVGDefsElement : public SVGElement {
+class FrameSVGClipPathBox final : public FrameSVGBox {
 public:
-    SVGDefsElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
+    FrameSVGClipPathBox(Node* node)
+        : FrameSVGBox(node)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSVGDefsElement() const override;
-
-    virtual bool needsGeometryAttributes() override
+    virtual const char* name() override
     {
-        return false;
+        return "FrameSVGClipPathBox";
     }
 
-    virtual bool needsClipPathAttributes()
+    virtual bool isFrameSVGClipPathBox()
     {
-        return false;
+        return true;
+    }
+
+    virtual void paintContent(PaintingContext& ctx) override;
+    virtual Path* path() override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameSVGBox::fillGCDescriptor(desc);
     }
 };
 }

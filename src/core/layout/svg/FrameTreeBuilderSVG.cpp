@@ -37,6 +37,9 @@
 #include "core/layout/svg/FrameSVGImageBox.h"
 #include "core/layout/svg/FrameSVGTextBox.h"
 #include "core/layout/svg/FrameSVGLineBox.h"
+#include "core/layout/svg/FrameSVGClipPathBox.h"
+#include "core/layout/svg/FrameSVGInvisibleBox.h"
+#include "core/layout/svg/FrameSVGUseBox.h"
 #include "core/layout/FrameBlockBox.h"
 
 #include "core/dom/Document.h"
@@ -117,10 +120,13 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         textNode->setFrame(ft);
         box->appendChild(ft);
     } else if (svgElement->isSVGDefsElement()) {
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGInvisibleBox(svgElement);
     } else if (svgElement->isSVGUseElement()) {
         // Style resolve for shadow tree of SVGUseElement
         {
-            currentFrame = new FrameSVGBox(svgElement);
+            currentFrame = new FrameSVGUseBox(svgElement);
             parentFrame->appendChild(currentFrame);
             svgElement->setFrame(currentFrame);
 
@@ -136,16 +142,32 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
                 }
             }
 
+            // update clipPath element
+            if (svgElement->hasClipPath()) {
+                svgElement->clipPathElement();
+                currentFrame->asFrameSVGBox()->markHasClipPath();
+            }
+
             svgElement->clearNeedsFrameTreeBuild();
             svgElement->clearChildNeedsFrameTreeBuild();
             return currentFrame;
         }
+    } else if (svgElement->isSVGClipPathElement()) {
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGClipPathBox(svgElement);
+    }
+    // update clipPath element
+    if (svgElement->hasClipPath()) {
+        svgElement->clipPathElement();
+        currentFrame->asFrameSVGBox()->markHasClipPath();
     }
 
     svgElement->clearNeedsFrameTreeBuild();
 
     if (shouldContinue) {
-        if (!svgElement->isSVGSVGElement() || parentFrame->isFrameSVGSVGBox()) {
+        if (!svgElement->isSVGSVGElement() || parentFrame->isFrameSVGSVGBox() ||
+            currentFrame->isFrameSVGClipPathBox()) {
             if (currentFrame->isFrameSVGSVGBox()) {
                 ((FrameSVGSVGBox*)currentFrame)->setInnerSVG(true);
             }

@@ -51,6 +51,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGScriptElement() const override;
 
+    virtual bool needsClipPathAttributes()
+    {
+        return false;
+    }
+
     /* Other methods (not in DOM API) */
 
     String* herf();
