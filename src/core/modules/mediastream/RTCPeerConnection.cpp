@@ -288,14 +288,6 @@ PeerConnectionObserver::PeerConnectionObserver(
 {
 }
 
-class A : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
-public:
-    void OnFrame(const webrtc::VideoFrame& frame) override
-    {
-        STARFISH_LOG_WARN("remote streaming: %s\n", __func__);
-    }
-};
-
 void PeerConnectionObserver::OnAddStream(
     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
@@ -311,14 +303,30 @@ void PeerConnectionObserver::OnTrack(
 
     struct Params {
         PeerConnectionObserver* self;
-        rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track;
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack;
         std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams;
     };
 
     Params* p = new Params();
     p->self = this;
-    p->track = track;
     p->streams = streams;
+
+    std::string videoKind(track->kVideoKind);
+    std::string audioKind(track->kAudioKind);
+    if (track->kind() == videoKind) {
+        webrtc::VideoTrackInterface* videoTrack =
+            (webrtc::VideoTrackInterface*)track.get();
+        p->videoTrack = m_peerConnection->executionContext()
+                            ->document()
+                            ->window()
+                            ->navigator()
+                            ->webRtcManager()
+                            ->peerConnectionFactory()
+                            ->CreateVideoTrack("asdf", videoTrack->GetSource());
+    } else if (track->kind() == audioKind) {
+        STARFISH_LOG_WARN("%s: AudioTrack not yet supported.\n", __func__);
+        return;
+    }
 
     m_peerConnection->executionContext()
         ->webBase()
@@ -328,8 +336,8 @@ void PeerConnectionObserver::OnTrack(
             [](size_t, void* data) {
                 Params* p = (Params*)data;
                 PeerConnectionObserver* self = p->self;
-                rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
-                    (webrtc::VideoTrackInterface*)p->track.get());
+                rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack =
+                    p->videoTrack;
 
                 VideoStreamTrack* videoStreamTrack = new VideoStreamTrack(
                     self->m_peerConnection->executionContext(), videoTrack);
