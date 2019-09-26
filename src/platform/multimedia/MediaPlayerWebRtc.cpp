@@ -62,7 +62,7 @@ void MediaPlayerWebRtc::prepare(MediaProvider* mediaProvider)
     // TODO: The spec assumes there is one video track
     GCVector<MediaStreamTrack*> tracks = mediaProvider->getVideoTracks();
     if (!tracks.empty()) {
-        mediaProvider->startPlayVideoTrack(this, (WebCamStreamTrack*)tracks[0]);
+        mediaProvider->startPlayVideoTrack(this, tracks[0]);
     }
 }
 
