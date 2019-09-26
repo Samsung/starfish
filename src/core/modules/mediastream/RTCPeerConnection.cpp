@@ -40,6 +40,7 @@
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/mediastream/RTCRtpSender.h"
 #include "core/modules/mediastream/RTCTrackEvent.h"
+#include "core/modules/mediastream/RTCPeerConnectionIceEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
@@ -287,6 +288,19 @@ PeerConnectionObserver::PeerConnectionObserver(
 {
 }
 
+class A : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+public:
+    void OnFrame(const webrtc::VideoFrame& frame) override
+    {
+        STARFISH_LOG_WARN("remote streaming: %s\n", __func__);
+    }
+};
+
+void PeerConnectionObserver::OnAddStream(
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
+{
+}
+
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver)
 {
@@ -335,6 +349,57 @@ void PeerConnectionObserver::OnTrack(
                         ->m_track.localName();
                 RTCTrackEventInit init(videoStreamTrack, streams);
                 RTCTrackEvent* e = new RTCTrackEvent(
+                    self->m_peerConnection->m_executionContext, eventType,
+                    init);
+                self->m_peerConnection->dispatchEventByUA(e);
+                delete p;
+            },
+            p);
+}
+
+void PeerConnectionObserver::OnIceCandidate(
+    const webrtc::IceCandidateInterface* candidate)
+{
+    struct Params {
+        PeerConnectionObserver* self;
+        std::string sdpMid;
+        int sdpMlineIndex;
+        std::string sdp;
+        webrtc::IceCandidateInterface* candidate;
+    };
+
+    std::string sdp;
+    candidate->ToString(&sdp);
+
+    Params* p = new Params();
+    p->self = this;
+    p->sdpMid = candidate->sdp_mid();
+    p->sdpMlineIndex = candidate->sdp_mline_index();
+    p->sdp = std::move(sdp);
+
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Params* p = (Params*)data;
+                PeerConnectionObserver* self = p->self;
+                webrtc::IceCandidateInterface* candidate =
+                    webrtc::CreateIceCandidate(p->sdpMid, p->sdpMlineIndex,
+                                               p->sdp, nullptr);
+
+                RTCIceCandidate* cand = new RTCIceCandidate(
+                    self->m_peerConnection->executionContext(), candidate);
+
+                RTCPeerConnectionIceEventInit init;
+                init.m_candidate = cand;
+
+                String* eventType =
+                    self->m_peerConnection->m_executionContext->starfish()
+                        ->staticStrings()
+                        ->m_icecandidate.localName();
+                RTCPeerConnectionIceEvent* e = new RTCPeerConnectionIceEvent(
                     self->m_peerConnection->m_executionContext, eventType,
                     init);
                 self->m_peerConnection->dispatchEventByUA(e);
@@ -557,14 +622,12 @@ bool RTCPeerConnection::initializePeerConnection(
         new rtc::RefCountedObject<PeerConnectionObserver>(this));
 #endif
 
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        peerConnectionFactory = this->executionContext()
-                                    ->document()
-                                    ->window()
-                                    ->navigator()
-                                    ->webRtcManager()
-                                    ->peerConnectionFactory();
-    STARFISH_ASSERT(peerConnectionFactory);
+    WebRtcManager* webRtcManager = this->executionContext()
+                                       ->document()
+                                       ->window()
+                                       ->navigator()
+                                       ->webRtcManager();
+    STARFISH_ASSERT(webRtcManager->peerConnectionFactory());
 
     bool dtls = true;
     webrtc::PeerConnectionInterface::RTCConfiguration config =
@@ -572,6 +635,7 @@ bool RTCPeerConnection::initializePeerConnection(
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
     config.enable_rtp_data_channel = true;
     config.enable_dtls_srtp = dtls;
+    config.set_dscp(false);
 
     // NOTE: libwebrtc still uses uri internally, and when it is empty
     // random crash occurs.
@@ -589,8 +653,10 @@ bool RTCPeerConnection::initializePeerConnection(
     server.uri = m_stun;
     config.servers.push_back(server);
 
-    m_backend = peerConnectionFactory->CreatePeerConnection(
-        config, nullptr, nullptr, m_peerConnectionObserver);
+    webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
+    m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
+        config, std::move(dependencies));
+
     m_createOfferSessionObserver =
         CreateSessionDescriptionObserver::create(this, nullptr);
     m_createAnswerSessionObserver =
@@ -879,6 +945,37 @@ RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
 {
     return new RTCSessionDescription(executionContext(),
                                      m_backend->pending_remote_description());
+}
+
+Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
+{
+    std::string sdpMid;
+    if (init.m_sdpMid.hasValue()) {
+        sdpMid = init.m_sdpMid.getValue()->toUTF8NonGCString();
+    }
+
+    std::string sdp(init.m_candidate->toUTF8NonGCString());
+
+    uint32_t sdpMLineIndex = 0;
+    if (init.m_sdpMid.hasValue()) {
+        sdpMLineIndex = init.m_sdpMLineIndex.getValue();
+    }
+
+    webrtc::SdpParseError error;
+    std::unique_ptr<webrtc::IceCandidateInterface> candidate =
+        std::unique_ptr<webrtc::IceCandidateInterface>(
+            webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
+
+    bool r = backend()->AddIceCandidate(candidate.get());
+
+    Promise* promise = new Promise(scriptBindingInstance());
+    if (!r) {
+        promise->reject(scriptUndefined());
+        return promise;
+    }
+
+    promise->fulfill(scriptUndefined());
+    return promise;
 }
 
 String* RTCPeerConnection::signalingState()

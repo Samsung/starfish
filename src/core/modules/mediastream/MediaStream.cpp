@@ -79,10 +79,10 @@ AudioStreamTrack* MediaStreamTrack::asAudioStreamTrack()
     return static_cast<AudioStreamTrack*>(this);
 }
 
-VideoStreamTrack* MediaStreamTrack::asVideoStreamTrack()
+WebCamStreamTrack* MediaStreamTrack::asVideoStreamTrack()
 {
     STARFISH_ASSERT(isVideoStreamTrack());
-    return static_cast<VideoStreamTrack*>(this);
+    return static_cast<WebCamStreamTrack*>(this);
 }
 
 AudioStreamTrack::AudioStreamTrack(ExecutionContext* executionContext)
@@ -132,23 +132,6 @@ AudioStreamTrack::~AudioStreamTrack()
 VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
     : VideoStreamTrack(executionContext, nullptr)
 {
-    rtc::scoped_refptr<CapturerTrackSource> videoDevices =
-        CapturerTrackSource::create();
-    if (videoDevices) {
-        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-            peerConnectionFactory = this->executionContext()
-                                        ->document()
-                                        ->window()
-                                        ->navigator()
-                                        ->webRtcManager()
-                                        ->peerConnectionFactory();
-
-        STARFISH_ASSERT(peerConnectionFactory);
-        m_backend =
-            peerConnectionFactory->CreateVideoTrack(m_videoLabel, videoDevices);
-    } else {
-        STARFISH_LOG_ERROR("VideoStreamTrack: failed\n");
-    }
 }
 
 VideoStreamTrack::VideoStreamTrack(
@@ -171,8 +154,67 @@ VideoStreamTrack::~VideoStreamTrack()
     m_backend = nullptr;
 }
 
-rtc::scoped_refptr<VideoStreamTrack::CapturerTrackSource>
-VideoStreamTrack::CapturerTrackSource::create()
+void VideoStreamTrack::play()
+{
+    m_source =
+        std::unique_ptr<VideoTrackSource>(new VideoTrackSource(m_backend));
+}
+
+VideoStreamTrack::VideoTrackSource::VideoTrackSource(
+    webrtc::VideoTrackInterface* trackToRender)
+{
+    trackToRender->AddOrUpdateSink(this, rtc::VideoSinkWants());
+}
+
+void VideoStreamTrack::VideoTrackSource::OnFrame(
+    const webrtc::VideoFrame& frame)
+{
+}
+
+WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext)
+    : WebCamStreamTrack(executionContext, nullptr)
+{
+    rtc::scoped_refptr<CapturerTrackSource> videoDevices =
+        CapturerTrackSource::create();
+    if (videoDevices) {
+        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+            peerConnectionFactory = this->executionContext()
+                                        ->document()
+                                        ->window()
+                                        ->navigator()
+                                        ->webRtcManager()
+                                        ->peerConnectionFactory();
+
+        STARFISH_ASSERT(peerConnectionFactory);
+        m_backend =
+            peerConnectionFactory->CreateVideoTrack(m_videoLabel, videoDevices);
+    } else {
+        STARFISH_LOG_ERROR("VideoStreamTrack: failed\n");
+    }
+}
+
+WebCamStreamTrack::WebCamStreamTrack(
+    ExecutionContext* executionContext,
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> backend)
+    : MediaStreamTrack(executionContext)
+{
+    m_kind = Kind::Video;
+    m_backend = backend;
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((WebCamStreamTrack*)obj)->~WebCamStreamTrack(); },
+        NULL, NULL, NULL);
+}
+
+WebCamStreamTrack::~WebCamStreamTrack()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+    m_backend = nullptr;
+}
+
+rtc::scoped_refptr<WebCamStreamTrack::CapturerTrackSource>
+WebCamStreamTrack::CapturerTrackSource::create()
 {
     std::unique_ptr<VideoCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
@@ -193,7 +235,7 @@ VideoStreamTrack::CapturerTrackSource::create()
     return nullptr;
 }
 
-VideoStreamTrack::CapturerTrackSource::CapturerTrackSource(
+WebCamStreamTrack::CapturerTrackSource::CapturerTrackSource(
     std::unique_ptr<VideoCapturer> capturer)
     : VideoTrackSource(/*remote=*/false)
     , m_capturer(std::move(capturer))
@@ -201,7 +243,7 @@ VideoStreamTrack::CapturerTrackSource::CapturerTrackSource(
 }
 
 rtc::VideoSourceInterface<webrtc::VideoFrame>*
-VideoStreamTrack::CapturerTrackSource::source()
+WebCamStreamTrack::CapturerTrackSource::source()
 {
     return m_capturer.get();
 }
@@ -346,16 +388,16 @@ void MediaStream::addTrack(MediaStreamTrack* track)
         auto audioTrack = static_cast<AudioStreamTrack*>(track);
         if (audioTrack->backend()) {
             m_backend->AddTrack(audioTrack->backend());
+            m_audioTracks.insert(audioTrack);
+            audioTrack->attachTo(this);
         }
-        m_audioTracks.insert(audioTrack);
-        audioTrack->attachTo(this);
     } else if (track->kind() == MediaStreamTrack::Kind::Video) {
-        auto videoTrack = static_cast<VideoStreamTrack*>(track);
+        auto videoTrack = static_cast<WebCamStreamTrack*>(track);
         if (videoTrack->backend()) {
             m_backend->AddTrack(videoTrack->backend());
+            m_videoTracks.insert(videoTrack);
+            videoTrack->attachTo(this);
         }
-        m_videoTracks.insert(videoTrack);
-        videoTrack->attachTo(this);
     }
 }
 
@@ -370,7 +412,7 @@ void MediaStream::removeTrack(MediaStreamTrack* track)
         removeAudioTrack(audioTrack);
         audioTrack->removeFrom(this);
     } else if (track->kind() == MediaStreamTrack::Kind::Video) {
-        auto videoTrack = static_cast<VideoStreamTrack*>(track);
+        auto videoTrack = static_cast<WebCamStreamTrack*>(track);
         removeVideoTrack(videoTrack);
         videoTrack->removeFrom(this);
     }
@@ -386,7 +428,7 @@ void MediaStream::removeAudioTrack(AudioStreamTrack* track)
     m_audioTracks.erase(track);
 }
 
-void MediaStream::removeVideoTrack(VideoStreamTrack* track)
+void MediaStream::removeVideoTrack(WebCamStreamTrack* track)
 {
     STARFISH_ASSERT(track);
 
@@ -401,7 +443,7 @@ void MediaStream::startPlayVideoTrack(MediaPlayerWebRtc* player,
 {
     STARFISH_ASSERT(track);
 
-    VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
+    WebCamStreamTrack* videoTrack = track->asVideoStreamTrack();
     if (videoTrack->backend()) {
         m_videoRenderer.reset(new VideoRenderer(videoTrack->backend(), player));
     } else {

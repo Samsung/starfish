@@ -28,6 +28,7 @@
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
 #include "core/modules/mediastream/PeerConnectionClient.h"
+#include "core/modules/mediastream/RTCIceCandidate.h"
 
 #include "api/peer_connection_interface.h"
 #include "api/media_stream_interface.h"
@@ -107,7 +108,7 @@ public:
     void OnSignalingChange(
         webrtc::PeerConnectionInterface::SignalingState new_state) override{};
     void OnAddStream(
-        rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override{};
+        rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
     void OnRemoveStream(
         rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override{};
     void OnAddTrack(
@@ -132,7 +133,7 @@ public:
     void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState
                                   new_state) override{};
     void OnIceCandidate(
-        const webrtc::IceCandidateInterface* candidate) override{};
+        const webrtc::IceCandidateInterface* candidate) override;
     void OnIceCandidatesRemoved(
         const std::vector<cricket::Candidate>& candidates) override{};
     void OnIceConnectionReceivingChange(bool receiving) override{};
@@ -207,10 +208,6 @@ public:
     void OnMessageSent(int err) override;
     void OnServerConnectionFailure() override;
 
-    // CreateSessionDescriptionObserver implementation.
-    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
-    void OnFailure(webrtc::RTCError error) override{};
-
     static void* runSocketServer(void* arg);
     static rtc::Thread* socketThread()
     {
@@ -258,6 +255,9 @@ public:
     NULLABLE RTCSessionDescription* remoteDescription();
     NULLABLE RTCSessionDescription* currentRemoteDescription();
     NULLABLE RTCSessionDescription* pendingRemoteDescription();
+
+    Promise* addIceCandidate(
+        RTCIceCandidateInit candidate = RTCIceCandidateInit());
 
     String* signalingState();
     String* iceGatheringState();
