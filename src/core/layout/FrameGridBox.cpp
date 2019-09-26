@@ -1666,7 +1666,10 @@ void GridFormattingContext::alignGridLinesForRows(GridArea& area)
     LayoutUnit sumHeight(0);
     size_t start = area.m_rowStart;
     size_t end = area.m_rowEnd;
-    LayoutUnit contentHeight = gridItem->height();
+    LayoutUnit contentHeight =
+        gridItem->height() +
+        gridItem->style()->margin().top().specifiedValue(0, m_container) +
+        gridItem->style()->margin().bottom().specifiedValue(0, m_container);
 
     for (size_t i = start; i <= end - 1; i++) {
         sumHeight += m_gridLineRows[i].offset();
