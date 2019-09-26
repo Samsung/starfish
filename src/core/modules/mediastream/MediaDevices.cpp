@@ -115,8 +115,8 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             }
 
             if (constraints.video()) {
-                VideoStreamTrack* videoTrack =
-                    new VideoStreamTrack(md->executionContext());
+                WebCamStreamTrack* videoTrack =
+                    new WebCamStreamTrack(md->executionContext());
                 if (!videoTrack->backend()) {
                     auto exception = new DOMException(
                         md->executionContext(), DOMException::NOT_FOUND_ERR,

@@ -31,7 +31,7 @@
 
 namespace Starfish {
 class ExecutionContext;
-class VideoStreamTrack;
+class WebCamStreamTrack;
 class AudioStreamTrack;
 class MediaPlayerWebRtc;
 
@@ -76,7 +76,7 @@ public:
     }
 
     AudioStreamTrack* asAudioStreamTrack();
-    VideoStreamTrack* asVideoStreamTrack();
+    WebCamStreamTrack* asVideoStreamTrack();
 
 protected:
     ExecutionContext* m_executionContext{ nullptr };
@@ -107,6 +107,41 @@ private:
 
 class VideoStreamTrack : public MediaStreamTrack {
 public:
+    class VideoTrackSource
+        : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+    public:
+        VideoTrackSource(webrtc::VideoTrackInterface* trackToRender);
+        // VideoSinkInterface implementation
+        void OnFrame(const webrtc::VideoFrame& frame) override;
+
+    private:
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_back;
+    };
+
+    VideoStreamTrack(ExecutionContext* executionContext);
+    VideoStreamTrack(ExecutionContext* executionContext,
+                     rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
+
+    virtual ~VideoStreamTrack();
+    virtual bool isVideoStreamTrack() override
+    {
+        return true;
+    }
+
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> backend()
+    {
+        return m_backend;
+    }
+
+    void play();
+
+private:
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> m_backend;
+    std::unique_ptr<VideoTrackSource> m_source;
+};
+
+class WebCamStreamTrack : public MediaStreamTrack {
+public:
     class CapturerTrackSource : public webrtc::VideoTrackSource {
     public:
         // TODO: get values from user JS script
@@ -124,10 +159,10 @@ public:
         std::unique_ptr<VideoCapturer> m_capturer;
     };
 
-    VideoStreamTrack(ExecutionContext* executionContext);
-    VideoStreamTrack(ExecutionContext* executionContext,
-                     rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
-    virtual ~VideoStreamTrack();
+    WebCamStreamTrack(ExecutionContext* executionContext);
+    WebCamStreamTrack(ExecutionContext* executionContext,
+                      rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
+    virtual ~WebCamStreamTrack();
 
     virtual bool isVideoStreamTrack()
     {
@@ -146,7 +181,7 @@ private:
 class MediaStreamTrackObserver {
 public:
     virtual void removeAudioTrack(AudioStreamTrack* track) = 0;
-    virtual void removeVideoTrack(VideoStreamTrack* track) = 0;
+    virtual void removeVideoTrack(WebCamStreamTrack* track) = 0;
     virtual ~MediaStreamTrackObserver(){};
 };
 
@@ -197,7 +232,7 @@ public:
     void removeTrack(MediaStreamTrack* track);
 
     void removeAudioTrack(AudioStreamTrack* track) override;
-    void removeVideoTrack(VideoStreamTrack* track) override;
+    void removeVideoTrack(WebCamStreamTrack* track) override;
 
     void startPlayVideoTrack(MediaPlayerWebRtc* player,
                              MediaStreamTrack* track);
@@ -207,7 +242,7 @@ private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
     GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
-    GCUnorderedSet<VideoStreamTrack*> m_videoTracks;
+    GCUnorderedSet<WebCamStreamTrack*> m_videoTracks;
 
     std::unique_ptr<VideoRenderer> m_videoRenderer;
 };

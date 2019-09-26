@@ -660,6 +660,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "srcObject"));
     m_track =
         QualifiedName(AtomicString::createAtomicString(starfish, "track"));
+    m_icecandidate = QualifiedName(
+        AtomicString::createAtomicString(starfish, "icecandidate"));
 #endif
 }
 }
