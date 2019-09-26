@@ -1851,8 +1851,15 @@ public:
 
     bool needToEstablishKindsOfFormattingContext()
     {
-        return needToEstablishBlockFormattingContext() || isFrameGridBox() ||
-               isFrameFlexibleBox();
+        if (needToEstablishBlockFormattingContext()) {
+            return true;
+        }
+        ComputedStyle* cs = style();
+        if (cs) {
+            return cs->display() == DisplayValue::FlexDisplayValue ||
+                   cs->display() == DisplayValue::GridDisplayValue;
+        }
+        return false;
     }
 
     bool needToEstablishBlockFormattingContext() const

@@ -722,7 +722,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
                  ->toUTF8NonGCString()
                  .data());
         puts("<--- error html");
-        customExit(-1);
+        exit(-1);
     }
 
     pclose(fp);

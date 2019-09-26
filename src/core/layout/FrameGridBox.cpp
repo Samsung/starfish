@@ -2063,18 +2063,11 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
                                width, m_container)));
         widthWillBe -= style->border().right().width().fixed();
 
-        if (!isFixed) {
-            width = widthWillBe;
-            if (width < 0) {
-                width = 0;
-            }
+        width = widthWillBe;
+        if (width < 0) {
+            width = 0;
         }
-
-        if (width > mbp.width()) {
-            style->setWidth(Length(Length::Fixed, width));
-        } else {
-            style->setWidth(Length(Length::Fixed, width));
-        }
+        style->setWidth(Length(Length::Fixed, width));
 
         if (nonFixedHeight && !style->height().isFixed()) {
             LayoutUnit height;
