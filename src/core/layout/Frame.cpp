@@ -1152,7 +1152,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
 
     computeStyleFlags();
 
-    if (m_flags.m_needToEstablishBlockFormattingContext) {
+    if (needToEstablishKindsOfFormattingContext()) {
         m_flags.m_needsLayout = true;
     }
     m_flags.m_needsPainting = true;
