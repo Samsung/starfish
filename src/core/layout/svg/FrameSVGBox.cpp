@@ -126,7 +126,8 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
-    if (m_hasClipPath && node()->isSVGElement()) {
+    if (m_hasClipPath && node()->isSVGElement() &&
+        node()->asSVGElement()->clipPathElement()) {
         Frame* clipPathFrame =
             node()->asSVGElement()->clipPathElement()->frame();
         if (clipPathFrame && clipPathFrame->isFrameSVGClipPathBox()) {

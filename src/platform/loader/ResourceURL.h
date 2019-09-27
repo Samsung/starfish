@@ -204,6 +204,7 @@ public:
     ResourceURL* setSearch(String* newSearch);
     String* hash();
     ResourceURL* setHash(String* newHash);
+    String* getFragmentIdValue();
 
     virtual bool isDocumentURL()
     {

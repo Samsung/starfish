@@ -299,14 +299,17 @@ SVGElement* SVGElement::clipPathElement()
     if (!m_clipPathElement) {
         String* clipPathStr =
             getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
-
-        ResourceURL* clipPathURL =
-            new ResourceURL(clipPathStr, document()->baseURI());
-        String* fragmentIdentifier = clipPathURL->hash();
-        if (!fragmentIdentifier->isEmpty()) {
-            Element* clipPathElement =
-                document()->getElementById(fragmentIdentifier->substring(
-                    1, fragmentIdentifier->length() - 2));
+        ResourceURL* clipPathURL;
+        if (!document()->baseURL()->isDataURL()) {
+            clipPathURL = new ResourceURL(clipPathStr, document()->baseURI());
+        } else {
+            // TODO : fix ResourceURL fragment processing
+            clipPathURL = new ResourceURL(
+                clipPathStr, String::createASCIIString("file:///"));
+        }
+        String* id = clipPathURL->getFragmentIdValue();
+        if (!id->isEmpty()) {
+            Element* clipPathElement = document()->getElementById(id);
             if (clipPathElement) {
                 m_clipPathElement = (SVGElement*)clipPathElement;
             }

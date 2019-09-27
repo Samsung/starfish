@@ -36,9 +36,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGClipPathElement() const override;
-    virtual void didAttributeChanged(QualifiedName name, String* old,
-                                     String* value, bool attributeCreated,
-                                     bool attributeRemoved) override;
     virtual bool needsGeometryAttributes() override
     {
         return false;
