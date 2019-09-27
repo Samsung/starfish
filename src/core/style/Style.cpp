@@ -113,6 +113,9 @@ namespace Starfish {
 static const float fontSizeFactors[8] = { 0.60f, 0.75f, 0.89f, 1.0f,
                                           1.2f,  1.5f,  2.0f,  3.0f };
 
+static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
+                                     GCVector<GridTrackSize>* v);
+
 static FontWeightValue lighterWeight(FontWeightValue weight)
 {
     switch (weight) {
@@ -11021,6 +11024,47 @@ static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
     return true;
 }
 
+static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize>* v)
+{
+    Nullable<CSSTokenValue> repeat =
+        CSSPropertyParser::parseFunctionBlock((char*)str.data(), "repeat");
+    if (repeat.hasValue()) {
+        // split by comma, 1st = integer|auto-fill|auto-fit, 2nd = repeat
+        auto trimmed = repeat.getValue().trim();
+        CSSPropertyParser parser((char*)trimmed.data());
+        parser.consumeWhitespaces();
+        if (*(parser.curPos()) == 'a') {
+            // TODO: implement auto-fill and auto-fit
+        }
+
+        int32_t count = 0;
+        if (parser.consumeNumber()) {
+            count = parser.parsedNumber();
+            if (count < 0) {
+                return false;
+            }
+        }
+
+        parser.consumeWhitespaces();
+        if (parser.consumeIfNext(',')) {
+            CSSTokenValue value = CSSTokenValue(
+                parser.m_curPos, parser.m_endPos - parser.m_curPos);
+            const char* data = value.data();
+            size_t len = std::strlen(data);
+
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, data, len);
+            for (int32_t i = 0; i < count; ++i) {
+                if (!parseGridTemplateColumns(tokens, v)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v)
 {
@@ -11041,20 +11085,29 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
         if (*(parser.curPos()) == 'm') {
             parser.consumeString(0);
 
-            bool isMinMax = false;
             if (parser.parsedString() == "minmax") {
                 if (!parser.consumeIfNext('(')) {
                     return false;
                 }
                 GridLength min, max;
-                isMinMax = parseMinMax(parser, min, max);
-                if (isMinMax && parser.isEnd()) {
+                if (parseMinMax(parser, min, max) && parser.isEnd()) {
                     v->push_back(GridTrackSize(
                         min, max, GridTrackSize::GridTrackType::MinMaxType));
                     continue;
                 }
             }
+            return false;
+        } else if (*(parser.curPos()) == 'r') {
+            parser.consumeString(0);
 
+            if (parser.parsedString() == "repeat") {
+                if (!parser.consumeIfNext('(')) {
+                    return false;
+                }
+                if (parseRepeat(ss, v) && ss[ss.length() - 1] == ')') {
+                    continue;
+                }
+            }
             return false;
         }
 
