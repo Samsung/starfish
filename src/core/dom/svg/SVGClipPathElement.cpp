@@ -45,21 +45,6 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
 {
 }
 
-void SVGClipPathElement::didAttributeChanged(QualifiedName name, String* old,
-                                             String* value,
-                                             bool attributeCreated,
-                                             bool attributeRemoved)
-{
-    SVGElement::didAttributeChanged(name, old, value, attributeCreated,
-                                    attributeRemoved);
-    StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_href == name || ss->m_xlinkHref == name ||
-        (!name.hasPrefix() &&
-         ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
-         ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
-    }
-}
-
 void SVGClipPathElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {

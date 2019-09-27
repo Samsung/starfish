@@ -64,7 +64,14 @@ void SVGUseElement::didAttributeChanged(QualifiedName name, String* old,
             m_targetElementURL = nullptr;
         } else {
             document()->registerUseElement(this);
-            m_targetElementURL = new ResourceURL(value, document()->baseURI());
+            if (!document()->baseURL()->isDataURL()) {
+                m_targetElementURL =
+                    new ResourceURL(value, document()->baseURI());
+            } else {
+                // TODO : fix ResourceURL fragment processing
+                m_targetElementURL = new ResourceURL(
+                    value, String::createASCIIString("file:///"));
+            }
         }
     } else if (ss->m_rx == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
@@ -86,16 +93,14 @@ void SVGUseElement::updateShadowTree()
     // TODO:
     /*
     if (m_targetElement && !m_targetElement->needsFrameTreeBuild()) {
-    return;
-}
-*/
+        return;
+    }
+    */
     shadowRoot()->clear();
     if (m_targetElementURL) {
-        String* fragmentIdentifier = m_targetElementURL->hash();
-        if (fragmentIdentifier && fragmentIdentifier->length() != 0) {
-            Element* element =
-                document()->getElementById(fragmentIdentifier->substring(
-                    1, fragmentIdentifier->length() - 1));
+        String* id = m_targetElementURL->getFragmentIdValue();
+        if (!id->isEmpty()) {
+            Element* element = document()->getElementById(id);
             if (element && element->isSVGElement()) {
                 Node* newClonedElement = element->makeShadowClone();
                 if (newClonedElement && newClonedElement->isSVGElement()) {

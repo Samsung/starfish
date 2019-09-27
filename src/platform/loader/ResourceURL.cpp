@@ -1153,6 +1153,24 @@ String* ResourceURL::hash()
     }
 }
 
+String* ResourceURL::getFragmentIdValue()
+{
+    size_t start = 0, end = 0;
+    String* hashStr = hash();
+    if (hashStr->isStringView()) {
+        end = hashStr->length();
+        if (hashStr->startsWith("#", false)) {
+            start = 1;
+            end--;
+        }
+        if (hashStr->endsWith(")", false)) {
+            end--;
+        }
+        return hashStr->substring(start, end);
+    }
+    return String::emptyString;
+}
+
 ResourceURL* ResourceURL::setHash(String* newHash)
 {
     STARFISH_ASSERT(newHash != nullptr);
