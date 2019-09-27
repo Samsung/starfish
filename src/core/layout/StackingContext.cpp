@@ -44,6 +44,8 @@
 namespace Starfish {
 
 struct StackingContext::ComputeStackingContextContext {
+    bool needsToAllocateGraphicsBufferForFixedElement;
+    bool seenPositionFixed;
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
     std::unordered_map<StackingContext*, LayoutRect> clippedExtentPerLayer;
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
@@ -56,12 +58,12 @@ struct StackingContext::ComputeStackingContextContext {
     ComputeStackingContextContext(StackingContext* rootLayer)
         : rootLayer(rootLayer)
     {
-        STARFISH_ASSERT(rootLayer != nullptr);
+        seenPositionFixed = false;
+        needsToAllocateGraphicsBufferForFixedElement = false;
     }
 
     LayoutRect screenExtentPerLayer(StackingContext* c)
     {
-        STARFISH_ASSERT(c != nullptr);
         {
             auto iter = extentPerLayer.find(c);
             if (iter != extentPerLayer.end()) {
@@ -112,6 +114,9 @@ struct StackingContext::ComputeStackingContextContext {
         STARFISH_ASSERT(c != nullptr);
         STARFISH_ASSERT(!isCompsitedLayer(c));
 
+        if (seenPositionFixed) {
+            throw RecomputeStackContextReason::PositionFixed;
+        }
         compositedLayers.push_back(c);
         compositedDocuments.insert(c->m_owner->node()->document());
     }
@@ -958,7 +963,15 @@ void StackingContext::computeStackingContextProperties()
     STARFISH_ASSERT(isRootContext());
 
     ComputeStackingContextContext ctx(this);
-    computeStackingContextProperties(ctx);
+    try {
+        computeStackingContextProperties(ctx);
+    } catch (RecomputeStackContextReason e) {
+        if (e == RecomputeStackContextReason::PositionFixed) {
+            ctx = ComputeStackingContextContext(this);
+            ctx.needsToAllocateGraphicsBufferForFixedElement = true;
+            computeStackingContextProperties(ctx);
+        }
+    }
     applyStackingContextProperties(ctx);
 
     GCVector<StackingContext*> stackingContextsNeedsGraphicsBuffer;
@@ -991,6 +1004,18 @@ void StackingContext::computeStackingContextProperties(
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
 
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
+
+    if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
+        if (!compositingState.needsToAllocateGraphicsBufferForFixedElement &&
+            compositingState.seenCompsitedLayer()) {
+            throw RecomputeStackContextReason::PositionFixed;
+        } else if (compositingState
+                       .needsToAllocateGraphicsBufferForFixedElement) {
+            selfNeedsGraphicsBuffer = true;
+        } else {
+            compositingState.seenPositionFixed = true;
+        }
+    }
 
     // check self visibility
     if (selfNeedsGraphicsBuffer && m_owner->isBoxesInvisibleFromHere()) {

@@ -117,6 +117,7 @@ protected:
 
 class StackingContext : public gc {
 public:
+    enum RecomputeStackContextReason { PositionFixed, Unknown };
     StackingContext(FrameBox* owner, StackingContext* parent);
 
     const GCVector<StackingContextChild*>& childContexts()
