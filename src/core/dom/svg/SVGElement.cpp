@@ -300,12 +300,13 @@ SVGElement* SVGElement::clipPathElement()
         String* clipPathStr =
             getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
         ResourceURL* clipPathURL;
-        if (!document()->baseURL()->isDataURL()) {
-            clipPathURL = new ResourceURL(clipPathStr, document()->baseURI());
+        // In case that SVG element is loaded as an image resource through
+        // MockHTMLIFrameElement. At this case, we can find baseURI at its
+        // referrerURL.
+        if (document()->baseURL()->isDataURL()) {
+            clipPathURL = new ResourceURL(clipPathStr, document()->referrer());
         } else {
-            // TODO : fix ResourceURL fragment processing
-            clipPathURL = new ResourceURL(
-                clipPathStr, String::createASCIIString("file:///"));
+            clipPathURL = new ResourceURL(clipPathStr, document()->baseURI());
         }
         String* id = clipPathURL->getFragmentIdValue();
         if (!id->isEmpty()) {

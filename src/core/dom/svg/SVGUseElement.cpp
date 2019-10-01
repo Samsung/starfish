@@ -63,14 +63,17 @@ void SVGUseElement::didAttributeChanged(QualifiedName name, String* old,
             document()->unregisterUseElement(this);
             m_targetElementURL = nullptr;
         } else {
+            m_targetElement = nullptr;
             document()->registerUseElement(this);
-            if (!document()->baseURL()->isDataURL()) {
+            // In case that SVG element is loaded as an image resource through
+            // MockHTMLIFrameElement. At this case, we can find baseURI at its
+            // referrerURL.
+            if (document()->baseURL()->isDataURL()) {
+                m_targetElementURL =
+                    new ResourceURL(value, document()->referrer());
+            } else {
                 m_targetElementURL =
                     new ResourceURL(value, document()->baseURI());
-            } else {
-                // TODO : fix ResourceURL fragment processing
-                m_targetElementURL = new ResourceURL(
-                    value, String::createASCIIString("file:///"));
             }
         }
     } else if (ss->m_rx == name) {
@@ -90,12 +93,18 @@ void SVGUseElement::styleForPresentationAttribute(
 
 void SVGUseElement::updateShadowTree()
 {
-    // TODO:
-    /*
-    if (m_targetElement && !m_targetElement->needsFrameTreeBuild()) {
-        return;
+    if (m_targetElement) {
+        if (!m_targetElement->isConnected() ||
+            m_targetElement->needsFrameTreeBuild()) {
+            m_targetElement = nullptr;
+        } else if (m_targetElement->needsStyleRecalc()) {
+            setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
+            return;
+        } else {
+            return;
+        }
     }
-    */
+
     shadowRoot()->clear();
     if (m_targetElementURL) {
         String* id = m_targetElementURL->getFragmentIdValue();
