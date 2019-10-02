@@ -26,6 +26,7 @@
 
 namespace Starfish {
 class HTMLMediaElement;
+class Compositor;
 
 class MediaPlayerWebRtc : public MediaPlayer {
     friend MediaStream;

@@ -33,6 +33,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "core/dom/HTMLMediaElement.h"
+#include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
 
 namespace Starfish {
