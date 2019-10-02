@@ -112,7 +112,8 @@ BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
-#BuildRequires: pkgconfig(openssl)
+BuildRequires: libasound-devel
+BuildRequires: pkgconfig(libpulse)
 BuildRequires: giflib-devel
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
@@ -207,7 +208,7 @@ Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
 %description shell-profile_tv
 Development files for Lightweight Web Engine for tv. This package provides
-an standalone executable binary for tv.
+a standalone executable binary for tv.
 %endif
 
 %if "%{rpm}" == "headless"
@@ -219,7 +220,7 @@ Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
 %description shell-profile_headless
 Development files for Lightweight Web Engine for headless. This package provides
-an standalone executable binary for headless.
+a standalone executable binary for headless.
 %endif
 
 %if "%{rpm}" == "mobile"
@@ -231,7 +232,7 @@ Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
 %description shell-profile_mobile
 Development files for Lightweight Web Engine for mobile. This package provides
-an standalone executable binary for mobile.
+a standalone executable binary for mobile.
 %endif
 
 %if "%{rpm}" == "wearable"
@@ -243,7 +244,7 @@ Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 %description shell-profile_wearable
 Development files for Lightweight Web Engine for wearable. This package provides
-an standalone executable binary for wearable.
+a standalone executable binary for wearable.
 %endif
 
 

@@ -204,7 +204,10 @@ ENDIF()
 
 IF (${HOST} STREQUAL "linux")
     SET (WEBRTC "1")
-    SET (LWE_DEFINES_WEBRTC
+ENDIF()
+
+IF (${WEBRTC} STREQUAL "1")
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
         -DWEBRTC_POSIX
         -DWEBRTC_LINUX
@@ -218,7 +221,6 @@ SET (LWE_DEFINITIONS
     ${LWE_DEFINES_CUSTOM}
     ${LWE_DEFINES_MODE}
     ${LWE_DEFINES_BACKEND}
-    ${LWE_DEFINES_WEBRTC}
 )
 
 #######################################################
