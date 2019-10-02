@@ -27,7 +27,6 @@
 
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
-#include "core/modules/mediastream/PeerConnectionClient.h"
 #include "core/modules/mediastream/RTCIceCandidate.h"
 
 #include "api/peer_connection_interface.h"
@@ -94,10 +93,7 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 };
 
-// FIXME: remove webrtc::CreateSessionDescriptionObserver after removing
-// TestPeerConnectionObserver
-class PeerConnectionObserver : public webrtc::PeerConnectionObserver,
-                               public webrtc::CreateSessionDescriptionObserver {
+class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
@@ -139,10 +135,6 @@ public:
     void OnIceConnectionReceivingChange(bool receiving) override{};
     void OnInterestingUsage(int usage_pattern) override{};
 
-    // CreateSessionDescriptionObserver implementation.
-    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override{};
-    void OnFailure(webrtc::RTCError error) override{};
-
 protected:
     RTCPeerConnection* m_peerConnection;
 };
@@ -183,54 +175,8 @@ private:
     Promise* m_promise{ nullptr };
 };
 
-#if defined(STARFISH_ENABLE_TEST)
-class TestPeerConnectionObserver : public PeerConnectionObserver,
-                                   public PeerConnectionClientObserver {
-public:
-    // Names used for a IceCandidate JSON object.
-    const std::string kCandidateSdpMidName = "sdpMid";
-    const std::string kCandidateSdpMlineIndexName = "sdpMLineIndex";
-    const std::string kCandidateSdpName = "candidate";
-
-    // Names used for a SessionDescription JSON object.
-    const std::string kSessionDescriptionTypeName = "type";
-    const std::string kSessionDescriptionSdpName = "sdp";
-
-    TestPeerConnectionObserver();
-    TestPeerConnectionObserver(RTCPeerConnection* peerConnection);
-    virtual ~TestPeerConnectionObserver(){};
-
-    void OnSignedIn() override;
-    void OnDisconnected() override;
-    void OnPeerConnected(int id, const std::string& name) override;
-    void OnPeerDisconnected(int id) override;
-    void OnMessageFromPeer(int peer_id, const std::string& message) override;
-    void OnMessageSent(int err) override;
-    void OnServerConnectionFailure() override;
-
-    static void* runSocketServer(void* arg);
-    static rtc::Thread* socketThread()
-    {
-        return m_socketThread;
-    }
-
-private:
-    static rtc::Thread* m_socketThread;
-    std::unique_ptr<PeerConnectionClient> m_client =
-        std::unique_ptr<PeerConnectionClient>(new PeerConnectionClient());
-    int m_peerId{ -1 };
-    std::string m_server;
-    bool m_loopback{ false };
-
-    bool reinitializePeerConnectionForLoopback();
-    void startLogin(const std::string& server, int port);
-    void deletePeerConnection();
-};
-#endif
-
 class RTCPeerConnection : public EventTarget {
     friend class PeerConnectionObserver;
-    friend class TestPeerConnectionObserver;
 
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
@@ -290,11 +236,7 @@ private:
 
     RTCConfiguration m_configuration;
 
-#if defined(STARFISH_ENABLE_TEST)
-    rtc::scoped_refptr<TestPeerConnectionObserver> m_peerConnectionObserver;
-#else
-    rtc::scoped_refptr<PeerConnectionObserver> m_peerConnectionObserver;
-#endif
+    std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
     rtc::scoped_refptr<CreateSessionDescriptionObserver>
