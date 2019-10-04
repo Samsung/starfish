@@ -123,6 +123,13 @@ void PathCairo::copy(Path* src)
     cairo_path_destroy(p);
 }
 
+void PathCairo::append(Path* path)
+{
+    auto p = cairo_copy_path(((PathCairo*)path)->context());
+    cairo_append_path(m_cairoContext, p);
+    cairo_path_destroy(p);
+}
+
 bool PathCairo::isPointInPath(float x, float y, CanvasFillRule fillRule)
 {
     cairo_fill_rule_t backup = cairo_get_fill_rule(m_cairoContext);
@@ -173,6 +180,13 @@ void PathCairo::lineTo(float x, float y)
 {
     m_needNewSubPath = false;
     cairo_line_to(m_cairoContext, x, y);
+}
+
+void PathCairo::translate(float x, float y)
+{
+    SkMatrix matrix = SkMatrix::I();
+    matrix.postTranslate(-x, -y);
+    postMatrix(matrix);
 }
 
 void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)

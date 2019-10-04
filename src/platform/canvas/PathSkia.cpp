@@ -232,5 +232,15 @@ Unit::Rect PathSkia::boundingRect(bool isFill)
 {
     return Unit::Rect();
 }
+
+void PathSkia::translate(float x, float y)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+void PathSkia::append(Path* path)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
 }
 #endif

@@ -41,6 +41,8 @@ public:
     virtual bool isEmpty() override;
     virtual void currentPoint(float& x, float& y) override;
     virtual void copy(Path* src) override;
+    virtual void append(Path* path) override;
+
     virtual bool isPointInPath(float x, float y,
                                CanvasFillRule fillRule) override;
     virtual bool isPointInStroke(float x, float y) override;
@@ -64,6 +66,7 @@ public:
                          bool anticlockwise = false) override;
     virtual void postMatrix(const SkMatrix& matrix) override;
     virtual void setCTM(const SkMatrix& matrix) override;
+    virtual void translate(float x, float y) override;
     virtual Unit::Rect boundingRect(bool isFill) override;
 
 private:

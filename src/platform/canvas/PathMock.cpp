@@ -113,6 +113,14 @@ Unit::Rect PathMock::boundingRect(bool isFill)
     return Unit::Rect();
 }
 
+void PathMock::translate(float x, float y)
+{
+}
+
+void PathMock::append(Path* path)
+{
+}
+
 Path* Path::create()
 {
     return new PathMock();

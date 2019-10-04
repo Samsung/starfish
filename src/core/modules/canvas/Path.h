@@ -63,6 +63,9 @@ public:
     }
 
     virtual void setCTM(const SkMatrix& matrix) = 0;
+    virtual void translate(float x, float y) = 0;
+    virtual void append(Path* path) = 0;
+
     virtual void resetCTM()
     {
         SkMatrix matrix;
