@@ -51,11 +51,23 @@ void FrameSVGClipPathBox::paintContent(PaintingContext& ctx)
 
 Path* FrameSVGClipPathBox::path()
 {
-    // TODO
     Path* path = nullptr;
     Frame* child = firstChild();
-    if (child && child->isFrameSVGBox()) {
-        return child->asFrameSVGBox()->path();
+    while (child) {
+        if (child && child->isFrameSVGBox()) {
+            FrameSVGBox* childBox = child->asFrameSVGBox();
+            Path* childPath = childBox->path();
+            if (childPath) {
+                childPath->translate(childBox->x().toInt(),
+                                     childBox->y().toInt());
+                if (path) {
+                    path->append(childPath);
+                } else {
+                    path = childPath;
+                }
+            }
+        }
+        child = child->next();
     }
     return path;
 }

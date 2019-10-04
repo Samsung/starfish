@@ -65,6 +65,8 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) override;
     virtual void setCTM(const SkMatrix& matrix) override;
     virtual Unit::Rect boundingRect(bool isFill) override;
+    virtual void append(Path* path) override;
+    virtual void translate(float x, float y) override;
 
 private:
     SkPath* m_skiaPath;

@@ -328,7 +328,7 @@ test/cairo/reftest/vendor/blink_original/svg/as-image/svg-with-parse-error-crash
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-use-xy-properties.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-visible-element-as-visible-shape-element.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-w-broken-filter-on-shape.html
-#test/cairo/reftest/vendor/blink_original/svg/clip-path/display-none-children.html
+test/cairo/reftest/vendor/blink_original/svg/clip-path/display-none-children.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/multiple-nested-clip-paths-crash.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/nested-empty-clip.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/visible-clip-path-as-hidden-use-element.html
