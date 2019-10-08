@@ -283,6 +283,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
 #endif
             break;
+        case 'c':
+            if (memcmp(data, "clip-path", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::ClipPath;
+            }
+            break;
         case 'f':
             if (memcmp(data, "font-size", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::FontSize;

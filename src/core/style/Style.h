@@ -708,6 +708,7 @@ class CSSFilterFunction;
     F(ListStyleImage, listStyleImage, "list-style-image")                      \
     F(ListStyleType, listStyleType, "list-style-type")                         \
     F(Clip, clip, "clip")                                                      \
+    F(ClipPath, clipPath, "clip-path")                                         \
     F(LetterSpacing, letterSpacing, "letter-spacing")                          \
     F(UserSelect, userSelect, "user-select")                                   \
     F(GridTemplateColumns, gridTemplateColumns, "grid-template-columns")       \
@@ -1595,6 +1596,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == RectValueKind);
         return m_value.m_rect;
+    }
+
+    String* clipPath() const
+    {
+        STARFISH_ASSERT(m_valueKind == VarFunctionValueKind);
+        return m_value.m_stringValue;
     }
 
     UserSelectValue userSelectValue() const

@@ -129,6 +129,7 @@ public:
         R,
         D,
         Clip,
+        ClipPath,
         UserSelect,
         CaretColor,
         Hyphens,
@@ -527,6 +528,7 @@ public:
     GETTER_VALUE(BoxDecorationBreakValue, boxDecorationBreak,
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
+    GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
 
 #undef GETTER_VALUE
 
@@ -858,6 +860,11 @@ public:
         } else {
             m_rareComputedStyleData.clearClip();
         }
+    }
+
+    void setClipPath(String* url)
+    {
+        *m_rareComputedStyleData.ensureClipPath() = url;
     }
 
     void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
@@ -3046,6 +3053,19 @@ public:
     {
         RectData* rect = m_rareComputedStyleData.clip();
         return rect;
+    }
+
+    String* clipPath()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
+        }
+
+        Nullable<String*> clipPathValue = m_rareComputedStyleData.clipPath();
+        if (clipPathValue.hasValue()) {
+            return clipPathValue.getValue();
+        }
+        return String::emptyString;
     }
 
     bool hasZeroClipRect()

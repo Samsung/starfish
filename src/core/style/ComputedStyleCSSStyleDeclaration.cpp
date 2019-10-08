@@ -1060,6 +1060,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::ClipPath: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ClipPath);
+        p.setUrlValue(style->clipPath());
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::ListStyleImage: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleImage);
