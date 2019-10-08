@@ -322,7 +322,7 @@ test/cairo/reftest/vendor/blink_original/svg/as-image/svg-with-parse-error-crash
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-clipped-shape.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-invalid.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-on-lazy-root.html
-#test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-prefixed-vs-not.html
+test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-prefixed-vs-not.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-use-referencing-clipped-text.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-use-referencing-text.html
 #test/cairo/reftest/vendor/blink_original/svg/clip-path/clip-path-use-xy-properties.html

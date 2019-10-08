@@ -31,7 +31,6 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
     , m_preserveAspectRatioValue(
           NativeImageData::PreserveAspectRatioValue::None)
     , m_clipPathElement(nullptr)
-    , m_hasClipPath(false)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -104,13 +103,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (needsClipPathAttributes()) {
         if (ss->m_clipPath == name) {
-            if (attributeRemoved) {
-                // setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-                m_hasClipPath = false;
-            } else {
-                // setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-                m_hasClipPath = true;
-            }
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
     }
@@ -280,6 +273,23 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
     }
+
+    if (needsClipPathAttributes()) {
+        String* clipPathStr =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
+
+        if (clipPathStr->length()) {
+            pair.setKeyKind(CSSStyleValuePair::ClipPath);
+
+            auto str = clipPathStr->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueClipPath(document(), tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
 }
 
 int SVGElement::tabIndex()
@@ -292,13 +302,12 @@ int SVGElement::tabIndex()
 
 SVGElement* SVGElement::clipPathElement()
 {
-    if (!m_hasClipPath || !needsClipPathAttributes()) {
+    if (!hasClipPath() || !needsClipPathAttributes()) {
         return nullptr;
     }
 
     if (!m_clipPathElement) {
-        String* clipPathStr =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
+        String* clipPathStr = style()->clipPath();
         ResourceURL* clipPathURL;
         // In case that SVG element is loaded as an image resource through
         // MockHTMLIFrameElement. At this case, we can find baseURI at its

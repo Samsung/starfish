@@ -21,6 +21,7 @@
 #define __StarfishShadowRoot__
 
 #include "core/dom/DocumentFragment.h"
+#include "core/layout/Frame.h"
 
 namespace Starfish {
 
@@ -38,7 +39,11 @@ public:
     void clear()
     {
         while (firstChild()) {
-            removeChild(firstChild());
+            Frame* frame = firstChild()->frame();
+            if (frame) {
+                frame->parent()->removeChild(frame);
+            }
+            parserRemoveChild(firstChild());
         }
     }
 };

@@ -5981,6 +5981,24 @@ void StyleResolver::apply(Element* element,
                 style->setClip(nullptr);
             }
             break;
+        case CSSStyleValuePair::KeyKind::ClipPath:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::UrlValueKind) {
+                style->setClipPath(cssValues[k].urlStringValue());
+            } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Initial ||
+                       cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::Unset) {
+                style->setClipPath(String::emptyString);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setClipPath(String::emptyString);
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Auto) {
+                style->setClipPath(String::emptyString);
+            }
+            break;
         case CSSStyleValuePair::KeyKind::ListStyleType:
             if (cssValues[k].valueKind() == CSSStyleValuePair::Inherit ||
                 cssValues[k].valueKind() == CSSStyleValuePair::Unset) {
@@ -10949,6 +10967,15 @@ bool CSSStyleValuePair::updateValueClip(Document* document,
     }
 
     return true;
+}
+
+bool CSSStyleValuePair::updateValueClipPath(Document* document,
+                                            const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    if (tokens.size() != 1)
+        return false;
+    return CSSPropertyParser::parseUrl(tokens[0].data(), this);
 }
 
 static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
