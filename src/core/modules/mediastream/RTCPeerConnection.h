@@ -139,11 +139,11 @@ protected:
     RTCPeerConnection* m_peerConnection;
 };
 
-class CreateSessionDescriptionObserver
+class CreateOfferAnswerObserver
     : public webrtc::CreateSessionDescriptionObserver {
 public:
-    static CreateSessionDescriptionObserver* create(
-        RTCPeerConnection* peerConnection, Promise* promise);
+    static CreateOfferAnswerObserver* create(RTCPeerConnection* peerConnection,
+                                             Promise* promise);
 
     void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
     void OnFailure(webrtc::RTCError error) override;
@@ -157,10 +157,10 @@ private:
     Promise* m_promise{ nullptr };
 };
 
-class SetSessionDescriptionObserver
+class SetLocalRemoteDescriptionObserver
     : public webrtc::SetSessionDescriptionObserver {
 public:
-    static SetSessionDescriptionObserver* create(
+    static SetLocalRemoteDescriptionObserver* create(
         RTCPeerConnection* peerConnection, Promise* promise);
 
     virtual void OnSuccess() override;
@@ -239,13 +239,12 @@ private:
     std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
-    rtc::scoped_refptr<CreateSessionDescriptionObserver>
-        m_createOfferSessionObserver;
-    rtc::scoped_refptr<CreateSessionDescriptionObserver>
-        m_createAnswerSessionObserver;
-    rtc::scoped_refptr<SetSessionDescriptionObserver> m_setLocalSessionObserver;
-    rtc::scoped_refptr<SetSessionDescriptionObserver>
-        m_setRemoteSessionObserver;
+    rtc::scoped_refptr<CreateOfferAnswerObserver> m_createOfferObserver;
+    rtc::scoped_refptr<CreateOfferAnswerObserver> m_createAnswerObserver;
+    rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
+        m_setLocalDescriptionObserver;
+    rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
+        m_setRemoteDescriptionObserver;
 
     bool isClosed();
     void deletePeerConnection();

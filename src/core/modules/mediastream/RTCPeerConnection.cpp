@@ -192,17 +192,17 @@ void PeerConnectionObserver::OnIceCandidate(
             p);
 }
 
-CreateSessionDescriptionObserver* CreateSessionDescriptionObserver::create(
+CreateOfferAnswerObserver* CreateOfferAnswerObserver::create(
     RTCPeerConnection* peerConnection, Promise* promise)
 {
-    CreateSessionDescriptionObserver* observer =
-        new rtc::RefCountedObject<CreateSessionDescriptionObserver>();
+    CreateOfferAnswerObserver* observer =
+        new rtc::RefCountedObject<CreateOfferAnswerObserver>();
     observer->m_peerConnection = peerConnection;
     observer->m_promise = promise;
     return observer;
 }
 
-void CreateSessionDescriptionObserver::OnSuccess(
+void CreateOfferAnswerObserver::OnSuccess(
     webrtc::SessionDescriptionInterface* desc)
 {
     STARFISH_ASSERT(m_promise);
@@ -211,7 +211,7 @@ void CreateSessionDescriptionObserver::OnSuccess(
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
     struct Params {
-        CreateSessionDescriptionObserver* self;
+        CreateOfferAnswerObserver* self;
         std::unique_ptr<webrtc::SessionDescriptionInterface> desc;
         Promise* promise;
     };
@@ -229,7 +229,7 @@ void CreateSessionDescriptionObserver::OnSuccess(
             m_peerConnection->executionContext()->globalScope(),
             [](size_t, void* data) {
                 Params* p = (Params*)data;
-                CreateSessionDescriptionObserver* self = p->self;
+                CreateOfferAnswerObserver* self = p->self;
                 webrtc::SessionDescriptionInterface* desc = p->desc.get();
                 Promise* promise = p->promise;
 
@@ -250,7 +250,7 @@ void CreateSessionDescriptionObserver::OnSuccess(
             p);
 }
 
-void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
+void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
 {
     STARFISH_ASSERT(m_promise);
     STARFISH_LOG_WARN("CreateSessionDescriptionObserver::%s\n", __func__);
@@ -258,7 +258,7 @@ void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
     struct Params {
-        CreateSessionDescriptionObserver* self;
+        CreateOfferAnswerObserver* self;
         webrtc::RTCError error;
         Promise* promise;
     };
@@ -275,7 +275,7 @@ void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
             m_peerConnection->executionContext()->globalScope(),
             [](size_t, void* data) {
                 Params* p = (Params*)data;
-                CreateSessionDescriptionObserver* self = p->self;
+                CreateOfferAnswerObserver* self = p->self;
                 Promise* promise = p->promise;
 
                 DOMException* exception =
@@ -289,17 +289,17 @@ void CreateSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
             p);
 }
 
-SetSessionDescriptionObserver* SetSessionDescriptionObserver::create(
+SetLocalRemoteDescriptionObserver* SetLocalRemoteDescriptionObserver::create(
     RTCPeerConnection* peerConnection, Promise* promise)
 {
-    SetSessionDescriptionObserver* observer =
-        new rtc::RefCountedObject<SetSessionDescriptionObserver>();
+    SetLocalRemoteDescriptionObserver* observer =
+        new rtc::RefCountedObject<SetLocalRemoteDescriptionObserver>();
     observer->m_peerConnection = peerConnection;
     observer->m_promise = promise;
     return observer;
 }
 
-void SetSessionDescriptionObserver::OnSuccess()
+void SetLocalRemoteDescriptionObserver::OnSuccess()
 {
     STARFISH_ASSERT(m_promise);
     STARFISH_LOG_INFO("SetSessionDescriptionObserver::%s\n", __func__);
@@ -317,7 +317,7 @@ void SetSessionDescriptionObserver::OnSuccess()
             m_promise);
 }
 
-void SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
+void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
 {
     STARFISH_ASSERT(m_promise);
     STARFISH_LOG_WARN("SetSessionDescriptionObserver::%s\n", __func__);
@@ -325,7 +325,7 @@ void SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
     struct Params {
-        SetSessionDescriptionObserver* self;
+        SetLocalRemoteDescriptionObserver* self;
         webrtc::RTCError error;
         Promise* promise;
     };
@@ -342,7 +342,7 @@ void SetSessionDescriptionObserver::OnFailure(webrtc::RTCError error)
             m_peerConnection->executionContext()->globalScope(),
             [](size_t, void* data) {
                 Params* p = (Params*)data;
-                SetSessionDescriptionObserver* self = p->self;
+                SetLocalRemoteDescriptionObserver* self = p->self;
                 Promise* promise = p->promise;
 
                 DOMException* exception =
@@ -436,15 +436,12 @@ bool RTCPeerConnection::initializePeerConnection(
     m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
         config, std::move(dependencies));
 
-    m_createOfferSessionObserver =
-        CreateSessionDescriptionObserver::create(this, nullptr);
-    m_createAnswerSessionObserver =
-        CreateSessionDescriptionObserver::create(this, nullptr);
-
-    m_setLocalSessionObserver =
-        SetSessionDescriptionObserver::create(this, nullptr);
-    m_setRemoteSessionObserver =
-        SetSessionDescriptionObserver::create(this, nullptr);
+    m_createOfferObserver = CreateOfferAnswerObserver::create(this, nullptr);
+    m_createAnswerObserver = CreateOfferAnswerObserver::create(this, nullptr);
+    m_setLocalDescriptionObserver =
+        SetLocalRemoteDescriptionObserver::create(this, nullptr);
+    m_setRemoteDescriptionObserver =
+        SetLocalRemoteDescriptionObserver::create(this, nullptr);
 
     return m_backend != nullptr;
 }
@@ -490,9 +487,8 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                self->m_createOfferSessionObserver->setPromise(promise);
-                self->backend()->CreateOffer(self->m_createOfferSessionObserver,
-                                             *opt);
+                self->m_createOfferObserver->setPromise(promise);
+                self->backend()->CreateOffer(self->m_createOfferObserver, *opt);
                 delete opt;
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
@@ -535,9 +531,9 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                self->m_createAnswerSessionObserver->setPromise(promise);
-                self->backend()->CreateAnswer(
-                    self->m_createAnswerSessionObserver, *opt);
+                self->m_createAnswerObserver->setPromise(promise);
+                self->backend()->CreateAnswer(self->m_createAnswerObserver,
+                                              *opt);
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
@@ -604,7 +600,7 @@ Promise* RTCPeerConnection::setLocalDescription(
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                self->m_setLocalSessionObserver->setPromise(promise);
+                self->m_setLocalDescriptionObserver->setPromise(promise);
 
                 webrtc::SdpType type = self->toSdpType(p->type);
                 std::string sdpString =
@@ -614,7 +610,7 @@ Promise* RTCPeerConnection::setLocalDescription(
 
                 // SetLocalDescription takes the ownership of desc
                 self->backend()->SetLocalDescription(
-                    self->m_setLocalSessionObserver, desc.release());
+                    self->m_setLocalDescriptionObserver, desc.release());
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
@@ -681,7 +677,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
             if (self->backend()) {
                 // the observer creates an exception if needed
-                self->m_setRemoteSessionObserver->setPromise(promise);
+                self->m_setRemoteDescriptionObserver->setPromise(promise);
 
                 webrtc::SdpType type = self->toSdpType(p->type);
                 std::string sdpString =
@@ -692,7 +688,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
                 // SetRemoteDescription takes the ownership of desc
                 self->backend()->SetRemoteDescription(
-                    self->m_setRemoteSessionObserver, desc.release());
+                    self->m_setRemoteDescriptionObserver, desc.release());
             } else {
                 STARFISH_LOG_WARN("%s: connection failed\n", __func__);
                 auto exception = new DOMException(
