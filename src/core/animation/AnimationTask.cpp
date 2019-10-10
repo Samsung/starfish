@@ -2753,7 +2753,12 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
         break;
     case CSSStyleValuePair::Transform:
         if (neededOriginProperty == true) {
-            return new AnimatedValue(style->transforms());
+            StyleTransformDataGroup* transform = style->transforms();
+            if (transform) {
+                return new AnimatedValue(transform);
+            } else {
+                return new AnimatedValue(new StyleTransformDataGroup());
+            }
         }
 
         if (property.valueKind() ==
