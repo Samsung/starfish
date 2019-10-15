@@ -2014,7 +2014,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
             isFixed = true;
         } else {
             PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
-                                    gridItem, 0);
+                                    gridItem, m_availableWidth);
             p.computePreferredWidth();
             contentWidth = p.preferredWidth() + mbp.width();
             isFixed = false;
