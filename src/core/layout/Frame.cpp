@@ -1659,6 +1659,8 @@ LayoutLocation Frame::adjustedPositionRelativeToOffsetParent()
 
     FrameBox* box = frameObj->findNearestAssociateBox();
     LayoutRect rect = box->absoluteRect(offsetParent);
+    rect.setX(rect.x() - offsetParent->paddingLeft());
+    rect.setY(rect.y() - offsetParent->paddingTop());
     result.unite(rect);
 
     if (offsetParent->node()->isHTMLBodyElement()) {
