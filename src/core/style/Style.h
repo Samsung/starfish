@@ -169,7 +169,9 @@ enum FlexWrapValue ENSURE_ENUM_UNSIGNED {
 enum JustifyContentValue ENSURE_ENUM_UNSIGNED {
     FlexStartJustifyContentValue,
     FlexEndJustifyContentValue,
+    StartJustifyContentValue,
     CenterJustifyContentValue,
+    EndJustifyContentValue,
     SpaceBetweenJustifyContentValue,
     SpaceAroundJustifyContentValue,
 };

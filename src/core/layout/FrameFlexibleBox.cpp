@@ -513,8 +513,10 @@ void FlexFormattingContext::applyJustifyContent()
         JustifyContentValue justifyContent =
             m_container->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
             break;
+        case JustifyContentValue::EndJustifyContentValue:
         case JustifyContentValue::FlexEndJustifyContentValue:
             offset = m_availableMainSize - sumOfMainSize;
             break;
