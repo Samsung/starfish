@@ -1639,8 +1639,12 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("flex-start");
         case FlexEndJustifyContentValue:
             return String::fromUTF8("flex-end");
+        case StartJustifyContentValue:
+            return String::fromUTF8("start");
         case CenterJustifyContentValue:
             return String::fromUTF8("center");
+        case EndJustifyContentValue:
+            return String::fromUTF8("end");
         case SpaceBetweenJustifyContentValue:
             return String::fromUTF8("space-between");
         case SpaceAroundJustifyContentValue:
@@ -13146,9 +13150,14 @@ bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
     } else if (STRING_VALUE_IS_STRING("flex-end")) {
         m_value.m_justifyContent =
             JustifyContentValue::FlexEndJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("start")) {
+        m_value.m_justifyContent =
+            JustifyContentValue::StartJustifyContentValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_justifyContent =
             JustifyContentValue::CenterJustifyContentValue;
+    } else if (STRING_VALUE_IS_STRING("end")) {
+        m_value.m_justifyContent = JustifyContentValue::EndJustifyContentValue;
     } else if (STRING_VALUE_IS_STRING("space-between")) {
         m_value.m_justifyContent =
             JustifyContentValue::SpaceBetweenJustifyContentValue;

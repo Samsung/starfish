@@ -315,6 +315,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         JustifyContentValue justifyContent =
             flexibleBox->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
             break;
@@ -322,6 +323,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         case JustifyContentValue::SpaceAroundJustifyContentValue:
             offset = (flexibleBox->contentWidth() - outerWidth()) / 2;
             break;
+        case JustifyContentValue::EndJustifyContentValue:
         case JustifyContentValue::FlexEndJustifyContentValue:
             offset = flexibleBox->contentWidth() - outerWidth();
             break;
@@ -375,6 +377,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
         JustifyContentValue justifyContent =
             flexibleBox->style()->justifyContent();
         switch (justifyContent) {
+        case JustifyContentValue::StartJustifyContentValue:
         case JustifyContentValue::FlexStartJustifyContentValue:
         case JustifyContentValue::SpaceBetweenJustifyContentValue:
             break;
@@ -382,6 +385,7 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
         case JustifyContentValue::SpaceAroundJustifyContentValue:
             offset = (flexibleBox->contentHeight() - outerHeight()) / 2;
             break;
+        case JustifyContentValue::EndJustifyContentValue:
         case JustifyContentValue::FlexEndJustifyContentValue:
             offset = flexibleBox->contentHeight() - outerHeight();
             break;
