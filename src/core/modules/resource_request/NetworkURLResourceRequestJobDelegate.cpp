@@ -292,7 +292,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     if (nwd->request->webBase()->timer()) {
         size_t timerID = nwd->request->webBase()->timer()->addTimer(
-            STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS, nullptr,
+            STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
+            nwd->request->globalScope(),
             [](void* data) {
                 NetworkSharedResourceManager::getInstance()
                     ->clearAllCurlHandleDataCache();
