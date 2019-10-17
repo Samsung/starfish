@@ -91,6 +91,10 @@ struct StackingContext::ComputeStackingContextContext {
 
         LayoutRect rt = screenExtentPerLayer(c);
 
+        if (c->owner()->style()->position() == FixedPositionValue) {
+            return rt;
+        }
+
         Frame* f = c->owner()->layoutParent();
 
         while (f != nullptr) {
@@ -98,7 +102,9 @@ struct StackingContext::ComputeStackingContextContext {
                 LayoutRect parentExtent =
                     f->asFrameBox()->computeScreenExtent();
                 rt = LayoutRect::overlappedRect(parentExtent, rt);
-                if (rt.isEmpty()) {
+
+                if (rt.isEmpty() ||
+                    f->style()->position() == FixedPositionValue) {
                     break;
                 }
             }
