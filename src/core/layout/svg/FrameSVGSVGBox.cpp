@@ -129,8 +129,10 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
             } else {
                 f->asFrameSVGBox()->resolvePosition(ctx);
-                f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
-                f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
+                f->asFrameSVGBox()->setX(f->asFrameSVGBox()->x() +
+                                         borderLeft() + paddingLeft());
+                f->asFrameSVGBox()->setY(f->asFrameSVGBox()->y() + borderTop() +
+                                         paddingTop());
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
             }
 
