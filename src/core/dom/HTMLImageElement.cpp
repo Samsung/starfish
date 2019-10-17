@@ -403,7 +403,7 @@ void HTMLImageElement::updateFrame(size_t delay)
         document()->webView()->timer()->removeTimer(m_updateFrameTimer);
     }
     m_updateFrameTimer = document()->webView()->timer()->addTimer(
-        delay * 10, nullptr,
+        delay * 10, document()->window(),
         [](void* data) {
             HTMLImageElement* imageElement = (HTMLImageElement*)data;
             if (imageElement->m_imageData != nullptr) {

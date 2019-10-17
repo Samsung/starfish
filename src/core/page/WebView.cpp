@@ -717,7 +717,6 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     platformWindow()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(this);
 
-    m_timer->clear(nullptr);
     removeScriptEngineInstance();
 
     std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
