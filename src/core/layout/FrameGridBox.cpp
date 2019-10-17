@@ -789,6 +789,9 @@ void GridFormattingContext::buildGridAreaAndOrdering()
     for (auto gridItem : m_orderedGridItems) {
         ComputedStyle* style = gridItem->style();
 
+        if (style->position() == AbsolutePositionValue)
+            continue;
+
         size_t rowStart, rowEnd;
         size_t columnStart, columnEnd;
         convertToStartEndForRow(style, rowStart, rowEnd);
