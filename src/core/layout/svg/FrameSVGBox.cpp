@@ -104,6 +104,9 @@ void FrameSVGBox::resolvePosition(LayoutContext& ctx)
             yResult = styleY.specifiedValue(cb->height(), this);
         setX(xResult);
         setY(yResult);
+    } else {
+        setX(0);
+        setY(0);
     }
 }
 
