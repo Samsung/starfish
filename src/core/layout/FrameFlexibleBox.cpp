@@ -139,9 +139,11 @@ void FlexFormattingContext::computeMainSize()
         STARFISH_ASSERT(mainSize != intMaxForLayoutUnit);
 
         if (m_isMainAxisInInlineAxis) {
+            flexItem->computeBorderMarginPadding(m_layoutContext, m_availableMainSize);
             flexItem->setContentWidthConsideringMinMaxWidths(
                 m_layoutContext, mainSize, m_availableMainSize);
         } else {
+            flexItem->computeBorderMarginPadding(m_layoutContext, m_availableCrossSize);
             bool parentHasFixedHeight =
                 m_layoutContext.parentHasFixedHeight(flexItem);
             flexItem->setContentHeightConsideringMinMaxHeights(
