@@ -3855,11 +3855,11 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             } else {
                 if (style->height().isDefinite(parentHasFixedValue)) {
-                    LayoutUnit height = LayoutUnit(
+                    LayoutUnit h = LayoutUnit(
                         style->height().specifiedValue(parentHeight, this));
-                    height = contentHeightAfterApplyingBoxSizing(height);
+                    h = contentHeightAfterApplyingBoxSizing(h);
 
-                    minHeight = height;
+                    minHeight = h;
                 }
             }
             minHeight = std::min(minHeight, ctx.contentHeight(this));
