@@ -1115,7 +1115,7 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
         s = scrollWidth() - scrollMax;
     }
 
-    if (s < 0) {
+    if (s < 0 || std::isnan(s)) {
         s = 0;
     }
 
@@ -1255,7 +1255,7 @@ bool Element::setScrollTop(double s, bool layoutIfNeeds)
         s = scrollHeight() - scrollMax;
     }
 
-    if (s < 0) {
+    if (s < 0 || std::isnan(s)) {
         s = 0;
     }
 

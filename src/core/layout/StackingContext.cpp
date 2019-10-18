@@ -91,13 +91,19 @@ struct StackingContext::ComputeStackingContextContext {
 
         LayoutRect rt = screenExtentPerLayer(c);
 
-        if (c->owner()->style()->position() == FixedPositionValue) {
+        if (c->owner()->style()->position() == FixedPositionValue ||
+            c->isIFrameStackingContext()) {
             return rt;
         }
 
         Frame* f = c->owner()->layoutParent();
 
         while (f != nullptr) {
+            if (f->isFrameBox() && f->asFrameBox()->stackingContext() &&
+                f->asFrameBox()->stackingContext()->isIFrameStackingContext()) {
+                break;
+            }
+
             if (f->shouldApplyOverflow()) {
                 LayoutRect parentExtent =
                     f->asFrameBox()->computeScreenExtent();
