@@ -126,11 +126,21 @@ public:
         , m_hasLeft(true)
         , m_hasTop(true)
     {
+        if (std::isnan(left)) {
+            m_left = 0;
+        }
+        if (std::isnan(top)) {
+            m_top = 0;
+        }
     }
 
     void setLeft(double left)
     {
-        m_left = left;
+        if (std::isnan(left)) {
+            m_left = 0;
+        } else {
+            m_left = left;
+        }
         m_hasLeft = true;
     }
 
@@ -141,7 +151,11 @@ public:
 
     void setTop(double top)
     {
-        m_top = top;
+        if (std::isnan(top)) {
+            m_top = 0;
+        } else {
+            m_top = top;
+        }
         m_hasTop = true;
     }
 
