@@ -36,6 +36,7 @@
 #include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/layout/OverflowStatus.h"
 #include "core/layout/StackingContext.h"
 #include "core/style/CalcData.h"
 
@@ -984,7 +985,7 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
     , isForSpecialValueForTableCell(false)
     , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
     , sourceStackingContext(sourceStackingContext)
-    , sourceFrameBox(nullptr)
+    , sourceFrameBox(sourceStackingContext->owner())
     , tranformMatrix(tranformMatrix)
     , result(result)
 {
@@ -992,7 +993,8 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
         LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
 
         boundMaxExtentDueToOverflow.push_back(
-            std::make_tuple(computeBoxExtent(rt, SkMatrix::I()), true));
+            std::make_tuple(computeBoxExtent(rt, SkMatrix::I()),
+                            sourceStackingContext->owner()));
     }
 }
 
@@ -1000,10 +1002,59 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
     LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
 
-    for (size_t i = 0; i < boundMaxExtentDueToOverflow.size(); i++) {
-        if (std::get<1>(boundMaxExtentDueToOverflow[i])) {
+    // TODO CanvasStateRestorer, CompositorStateRestorer,
+    // Frame::ComputeVisibleRectContext::uniteRect have same source
+
+    if (boundMaxExtentDueToOverflow.size()) {
+        auto iter = fragmentBoxStack.rbegin();
+        OverflowStatus status(*iter);
+
+        bool shareWithStackingBuffer = true;
+        while (iter != fragmentBoxStack.rend()) {
+            FrameBox* f = (*iter);
+            iter++;
+
+            if (shareWithStackingBuffer && f &&
+                f->asFrameBox()->stackingContext() &&
+                f->asFrameBox()->stackingContext()->needsGraphicsBuffer() &&
+                f->asFrameBox()->stackingContext()->isAncestorOf(
+                    sourceStackingContext)) {
+                shareWithStackingBuffer = false;
+            }
+
+            if (shareWithStackingBuffer) {
+                if (status.canApplyOverflow(f, false)) {
+#ifndef NDEBUG
+                    bool finded = false;
+#endif
+                    for (size_t i = 0; i < boundMaxExtentDueToOverflow.size();
+                         i++) {
+                        if (std::get<1>(boundMaxExtentDueToOverflow[i]) == f) {
+#ifndef NDEBUG
+                            finded = true;
+#endif
+                            tmp = LayoutRect::overlappedRect(
+                                tmp,
+                                std::get<0>(boundMaxExtentDueToOverflow[i]));
+                            break;
+                        }
+                    }
+
+#ifndef NDEBUG
+                    STARFISH_ASSERT(finded);
+#endif
+                    status.reset(f);
+                }
+            }
+        }
+
+        // test source has buffer & overflow
+        if (sourceStackingContext && purpose >= GraphicsBufferBySelf &&
+            sourceFrameBox->shouldApplyOverflow()) {
+            STARFISH_ASSERT(std::get<1>(boundMaxExtentDueToOverflow[0]) ==
+                            sourceFrameBox);
             tmp = LayoutRect::overlappedRect(
-                tmp, std::get<0>(boundMaxExtentDueToOverflow[i]));
+                tmp, std::get<0>(boundMaxExtentDueToOverflow[0]));
         }
     }
 
@@ -1094,7 +1145,7 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
         ctx.boundMaxExtentDueToOverflow.push_back(
             std::make_tuple(computeBoxExtent(fragmentBox->frameVisibleRect(),
                                              ctx.tranformMatrix),
-                            true));
+                            fragmentBox));
     }
 }
 Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
