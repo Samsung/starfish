@@ -723,6 +723,8 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
     if (isGIFFormat(inputBuffer)) {
         int errorCode = 0;
         unsigned int imageNum = 0;
+        int ext_code = 0;
+        GifByteType* extension = nullptr;
 
         GifRecordType recordType = UNDEFINED_RECORD_TYPE;
         GifFileType* gifFile = nullptr;
@@ -748,6 +750,15 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
                 imageNum++;
                 break;
             case EXTENSION_RECORD_TYPE:
+                if (DGifGetExtension(gifFile, &ext_code, &extension) ==
+                    GIF_ERROR) {
+                    break;
+                }
+                while (extension != NULL) {
+                    if (DGifGetExtensionNext(gifFile, &extension) == GIF_OK) {
+                        continue;
+                    }
+                }
                 break;
             case TERMINATE_RECORD_TYPE:
                 break;
