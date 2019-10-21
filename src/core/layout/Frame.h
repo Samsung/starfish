@@ -1688,7 +1688,8 @@ public:
         SkMatrix& tranformMatrix;
         LayoutRect& result;
         std::vector<FrameBox*> fragmentBoxStack;
-        std::vector<std::tuple<LayoutRect, bool>> boundMaxExtentDueToOverflow;
+        std::vector<std::tuple<LayoutRect, FrameBox*>>
+            boundMaxExtentDueToOverflow;
 
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   StackingContext* sourceStackingContext,
