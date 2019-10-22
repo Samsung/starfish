@@ -44,20 +44,27 @@ ReadableStream::ReadableStream(ExecutionContext* executionContext,
 {
     ContextRef* context =
         executionContext->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
 
-    auto object = underlyingSource->asObject();
-    auto startkey = ValueRef::create(StringRef::fromASCII("start"));
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, ExecutionContext* executionContext,
+           ScriptObject underlyingSource, ReadableStream* self) -> ValueRef* {
+            auto object = underlyingSource->asObject();
+            auto startkey = StringRef::createFromASCII("start");
 
-    if (object->hasOwnProperty(state, startkey)) {
-        auto startFunction = object->getOwnProperty(state, startkey);
-        if (startFunction->isCallable()) {
-            ScriptValue argv[] = { m_controller->scriptValue() };
+            if (object->hasOwnProperty(state, startkey)) {
+                auto startFunction = object->getOwnProperty(state, startkey);
+                if (startFunction->isCallable()) {
+                    ScriptValue argv[] = { self->m_controller->scriptValue() };
 
-            callScriptFunction(executionContext->scriptBindingInstance(),
-                               startFunction, argv, 1, scriptUndefined());
-        }
-    }
+                    callScriptFunction(
+                        executionContext->scriptBindingInstance(),
+                        startFunction, argv, 1, scriptUndefined());
+                }
+            }
+            return ValueRef::createUndefined();
+        },
+        executionContext, underlyingSource, this);
 }
 
 ReadableStream::ReadableStream(ExecutionContext* executionContext,

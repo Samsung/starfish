@@ -73,61 +73,79 @@ unsigned scriptValueAsNumber(ScriptValue v)
 ScriptObject scriptError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret =
-        ErrorObjectRef::create(state, ErrorObjectRef::None, toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(state, ErrorObjectRef::None,
+                                                 toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 ScriptObject scriptEvalError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::EvalError,
-                                      toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(
+                       state, ErrorObjectRef::EvalError, toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 ScriptObject scriptRangeError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::RangeError,
-                                      toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(
+                       state, ErrorObjectRef::RangeError, toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 ScriptObject scriptReferenceError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::ReferenceError,
-                                      toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(
+                       state, ErrorObjectRef::ReferenceError, toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 ScriptObject scriptTypeError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::TypeError,
-                                      toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(
+                       state, ErrorObjectRef::TypeError, toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 ScriptObject scriptURIError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    auto ret = ErrorObjectRef::create(state, ErrorObjectRef::URIError,
-                                      toJSString(msg));
-    state->destroy();
-    return ret;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* msg) -> ValueRef* {
+                   return ErrorObjectRef::create(
+                       state, ErrorObjectRef::URIError, toJSString(msg));
+               },
+               msg)
+        .result->asObject();
 }
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -137,18 +155,15 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
 {
     FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
         AtomicStringRef::emptyAtomicString(),
-        (FunctionObjectRef::NativeFunctionPointer)getter, 0, nullptr, true,
-        false);
+        (FunctionObjectRef::NativeFunctionPointer)getter, 0, true, false);
     ValueRef* getterValue =
         ValueRef::create(FunctionObjectRef::create(state, nativeFunctionInfo));
-    NullablePtr<ValueRef> setterValue = ValueRef::createEmpty();
+    OptionalRef<ValueRef> setterValue;
     if (setter) {
         FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
             AtomicStringRef::emptyAtomicString(),
-            (FunctionObjectRef::NativeFunctionPointer)setter, 1, nullptr, true,
-            false);
-        setterValue = ValueRef::create(
-            FunctionObjectRef::create(state, nativeFunctionInfo));
+            (FunctionObjectRef::NativeFunctionPointer)setter, 1, true, false);
+        setterValue = FunctionObjectRef::create(state, nativeFunctionInfo);
     }
     ObjectRef::PresentAttribute attr = (ObjectRef::PresentAttribute)0;
     if (isEnumerable) {
@@ -160,27 +175,29 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
             attr | ObjectRef::PresentAttribute::ConfigurablePresent);
     }
     obj->defineAccessorProperty(
-        state, ValueRef::create(propertyName),
+        state, propertyName,
         ObjectRef::AccessorPropertyDescriptor(getterValue, setterValue, attr));
 }
 
 static void loggingJSErrorInfo(
     ScriptBindingInstance* instance,
-    const ::Escargot::SandBoxRef::SandBoxResult& sbResult)
+    const ::Escargot::Evaluator::EvaluatorResult& sbResult)
 {
-    STARFISH_LOG_ERROR("Uncaught %s\n",
-                       sbResult.msgStr->toStdUTF8String().data());
+    STARFISH_LOG_ERROR(
+        "Uncaught %s\n",
+        sbResult.resultOrErrorToString(instance->scriptContext())
+            ->toStdUTF8String()
+            .data());
     for (size_t i = 0; i < sbResult.stackTraceData.size(); i++) {
         STARFISH_LOG_ERROR(
             "at %s(%d:%d)\n",
-            toBrowserString(
-                instance, ValueRef::create(sbResult.stackTraceData[i].fileName))
+            toBrowserString(instance, sbResult.stackTraceData[i].src)
                 ->toUTF8NonGCString()
                 .data(),
             (int)sbResult.stackTraceData[i].loc.line,
             (int)sbResult.stackTraceData[i].loc.column);
 
-        Escargot::StringRef* src = sbResult.stackTraceData[i].source;
+        Escargot::StringRef* src = sbResult.stackTraceData[i].sourceCode;
         if (src->length()) {
             const size_t preLineMax = 40;
             const size_t afterLineMax = 40;
@@ -388,12 +405,12 @@ String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
                         bool* result)
 {
     ContextRef* ctx = instance->scriptContext();
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-
-    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        return ValueRef::create(v->toString(state));
-    });
-    sb->destroy();
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Escargot::ValueRef* v) -> ValueRef* {
+            return ValueRef::create(v->toString(state));
+        },
+        v);
     if (sbresult.error.hasValue()) {
         if (result) {
             *result = false;
@@ -421,7 +438,7 @@ ScriptObject toCalleeObject(Escargot::ExecutionStateRef* state)
 {
     auto callee = state->resolveCallee();
     if (callee) {
-        return callee.getValue()->asObject();
+        return callee.value()->asObject();
     }
     return nullptr;
 }
@@ -431,7 +448,7 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
                                        size_t argc, Escargot::ValueRef** argv,
                                        bool isNewExpression)
 {
-    StringRef* msg = StringRef::fromASCII("Illegal constructor");
+    StringRef* msg = StringRef::createFromASCII("Illegal constructor");
     ObjectRef* err =
         ErrorObjectRef::create(state, ErrorObjectRef::Code::TypeError, msg);
     state->throwException(ValueRef::create(err));
@@ -484,9 +501,9 @@ StringRef* createScriptString(String* str)
 {
     auto data = str->bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return StringRef::fromASCII(data.asciiData(), data.length);
+        return StringRef::createFromASCII(data.asciiData(), data.length);
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-        return StringRef::fromUTF16(data.utf16Data(), data.length);
+        return StringRef::createFromUTF16(data.utf16Data(), data.length);
     } else {
         UTF16StringDataNonGCStd out;
         for (size_t i = 0; i < str->length(); i++) {
@@ -504,34 +521,34 @@ StringRef* createScriptString(String* str)
             }
         }
 
-        return StringRef::fromUTF16(out.data(), out.length());
+        return StringRef::createFromUTF16(out.data(), out.length());
     }
 }
 
 ScriptValue createScriptValue(ScriptObject object)
 {
-    return ValueRef::create(object);
+    return object;
 }
 
 ScriptValue createScriptValue(ScriptString s)
 {
     StringRef* str = s;
-    return ValueRef::create(str);
+    return str;
 }
 
 ScriptValue createScriptValue(ScriptArrayBuffer buffer)
 {
-    return ValueRef::create(buffer);
+    return buffer;
 }
 
 ScriptValue createScriptValue(ScriptArrayBufferView buffer)
 {
-    return ValueRef::create(buffer);
+    return buffer;
 }
 
 ScriptValue createScriptValue(ScriptUint8ClampedArray array)
 {
-    return ValueRef::create(array);
+    return array;
 }
 
 ScriptValue createScriptValue(uint32_t value)
@@ -541,7 +558,7 @@ ScriptValue createScriptValue(uint32_t value)
 
 ScriptValue createScriptValue(String* value)
 {
-    return ValueRef::create(createScriptString(value));
+    return createScriptString(value);
 }
 
 ScriptValue createScriptValue(double value)
@@ -557,19 +574,21 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
 
     ContextRef* ctx = instance->scriptContext();
 
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-    auto result = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        ValueRef** argv = ALLOCA(sizeof(ValueRef*) * (1 + argc), ValueRef*);
-        for (size_t i = 0; i < argc; i++) {
-            argv[i] = ValueRef::create(createScriptString(argNames[i]));
-        }
-        argv[argc] = ValueRef::create(createScriptString(functionBody));
-        return state->context()->globalObject()->function()->call(
-            state, ValueRef::createUndefined(), argc + 1, argv);
-    });
-    sb->destroy();
+    auto result = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, String** argNames, size_t argc,
+           String* functionBody) -> ValueRef* {
+            ValueRef** argv = ALLOCA(sizeof(ValueRef*) * (1 + argc), ValueRef*);
+            for (size_t i = 0; i < argc; i++) {
+                argv[i] = ValueRef::create(createScriptString(argNames[i]));
+            }
+            argv[argc] = ValueRef::create(createScriptString(functionBody));
+            return state->context()->globalObject()->function()->call(
+                state, ValueRef::createUndefined(), argc + 1, argv);
+        },
+        argNames, argc, functionBody);
     if (result.error.hasValue()) {
-        ScriptValue errorValue = result.error.getValue();
+        ScriptValue errorValue = result.error.value();
         error = true;
         // Dispatch error event to window
         ErrorEventInit errorInfo;
@@ -577,8 +596,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
         if (result.stackTraceData.size() > 0) {
             size_t lastIndex = result.stackTraceData.size() - 1;
             errorInfo.setFilename(toBrowserString(
-                instance,
-                ValueRef::create(result.stackTraceData[lastIndex].fileName)));
+                instance, result.stackTraceData[lastIndex].src));
             errorInfo.setLineno(result.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
         }
@@ -600,9 +618,11 @@ ScriptValue createAttributeStringEventFunction(EventTarget* target,
     ScriptValue fn = createScriptFunction(target->scriptBindingInstance(), name,
                                           1, functionBody, result);
 
-    if (fn->isFunction()) {
-        fn->asFunction()->setExtraData(new AttributeEventFunction(target));
-        fn->asFunction()->markFunctionNeedsSlowVirtualIdentifierOperation();
+    if (fn->isFunctionObject()) {
+        fn->asFunctionObject()->setExtraData(
+            new AttributeEventFunction(target));
+        fn->asFunctionObject()
+            ->markFunctionNeedsSlowVirtualIdentifierOperation();
     }
 
     return fn;
@@ -615,22 +635,23 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
-        SandBoxRef* sb = SandBoxRef::create(ctx);
-        auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-            return fn->asObject()->call(state, thisValue, argc, argv);
-        });
-        sb->destroy();
+        auto sbresult = Evaluator::execute(
+            ctx,
+            [](ExecutionStateRef* state, ScriptValue fn, ScriptValue* argv,
+               size_t argc, ScriptValue thisValue) -> ValueRef* {
+                return fn->asObject()->call(state, thisValue, argc, argv);
+            },
+            fn, argv, argc, thisValue);
         if (sbresult.error.hasValue()) {
             // Dispatch error event to window
-            ScriptValue errorValue = sbresult.error.getValue();
+            ScriptValue errorValue = sbresult.error.value();
             ErrorEventInit errorInfo;
             errorInfo.setMessage(toBrowserString(instance, errorValue));
             if (sbresult.stackTraceData.size() > 0) {
                 size_t lastIndex = sbresult.stackTraceData.size() - 1;
                 errorInfo.setFilename(toBrowserString(
                     instance,
-                    ValueRef::create(
-                        sbresult.stackTraceData[lastIndex].fileName)));
+                    ValueRef::create(sbresult.stackTraceData[lastIndex].src)));
                 errorInfo.setLineno(
                     sbresult.stackTraceData[lastIndex].loc.line);
                 errorInfo.setColno(
@@ -657,22 +678,22 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
     ScriptValue result = ValueRef::createUndefined();
     if (fn->isCallable()) {
         ContextRef* ctx = instance->scriptContext();
-        SandBoxRef* sb = SandBoxRef::create(ctx);
-        auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-            return fn->asObject()->call(state, thisValue, argc, argv);
-        });
-        sb->destroy();
+        auto sbresult = Evaluator::execute(
+            ctx,
+            [](ExecutionStateRef* state, ScriptValue fn, ScriptValue* argv,
+               size_t argc, ScriptValue thisValue) -> ValueRef* {
+                return fn->asObject()->call(state, thisValue, argc, argv);
+            },
+            fn, argv, argc, thisValue);
         if (sbresult.error.hasValue()) {
             // Dispatch error event to window
-            ScriptValue errorValue = sbresult.error.getValue();
+            ScriptValue errorValue = sbresult.error.value();
             ErrorEventInit errorInfo;
             errorInfo.setMessage(toBrowserString(instance, errorValue));
             if (sbresult.stackTraceData.size() > 0) {
                 size_t lastIndex = sbresult.stackTraceData.size() - 1;
                 errorInfo.setFilename(toBrowserString(
-                    instance,
-                    ValueRef::create(
-                        sbresult.stackTraceData[lastIndex].fileName)));
+                    instance, sbresult.stackTraceData[lastIndex].src));
                 errorInfo.setLineno(
                     sbresult.stackTraceData[lastIndex].loc.line);
                 errorInfo.setColno(
@@ -682,9 +703,7 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
             instance->dispatchErrorEventToGlobalScope(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
             error = true;
-            ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-            state->throwException(ValueRef::create(errorValue));
-            state->destroy();
+            ctx->throwException(errorValue);
         } else {
             result = sbresult.result;
         }
@@ -701,13 +720,14 @@ ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
 {
     ScriptValue result = ValueRef::createUndefined();
     ContextRef* ctx = instance->scriptContext();
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        ValueRef* v = obj->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("handleEvent")));
-        return v;
-    });
-    sb->destroy();
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptValue obj) -> ValueRef* {
+            ValueRef* v = obj->asObject()->get(
+                state, StringRef::createFromASCII("handleEvent"));
+            return v;
+        },
+        obj);
 
     if (sbresult.error.hasValue()) {
         loggingJSErrorInfo(instance, sbresult);
@@ -726,13 +746,14 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
 {
     ScriptValue result = ValueRef::createUndefined();
     ContextRef* ctx = instance->scriptContext();
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        ValueRef* v = obj->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("acceptNode")));
-        return v;
-    });
-    sb->destroy();
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptValue obj) -> ValueRef* {
+            ValueRef* v = obj->asObject()->get(
+                state, StringRef::createFromASCII("acceptNode"));
+            return v;
+        },
+        obj);
 
     if (sbresult.error.hasValue()) {
         loggingJSErrorInfo(instance, sbresult);
@@ -755,13 +776,13 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     size_t parseStart = longTickCount();
 #endif
 
-    ScriptParserRef::ScriptParserResult scriptRef =
-        ctx->scriptParser()->parse(source, toJSString(fileName));
+    auto scriptRef =
+        ctx->scriptParser()->initializeScript(source, toJSString(fileName));
 
-    if (scriptRef.m_error->length()) {
+    if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
             "Script parse error: %s %s\n", fileName->toUTF8NonGCString().data(),
-            toBrowserString(instance, ValueRef::create(scriptRef.m_error))
+            toBrowserString(instance, scriptRef.parseErrorMessage)
                 ->toUTF8NonGCString()
                 .data());
         if (result)
@@ -775,10 +796,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     STARFISH_LOG_INFO("js parse %f ms\n", time);
 #endif
 
-    SandBoxRef* sb = SandBoxRef::create(ctx);
-    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        return scriptRef.m_script->execute(state);
-    });
+    auto sbresult = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptRef* script) -> ValueRef* {
+            return script->execute(state);
+        },
+        scriptRef.script.value());
 
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
     size_t executeEnd = longTickCount();
@@ -788,17 +811,15 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 
     clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
-    sb->destroy();
     if (sbresult.error.hasValue()) {
         // Dispatch error event to window
-        ScriptValue errorValue = sbresult.error.getValue();
+        ScriptValue errorValue = sbresult.error.value();
         ErrorEventInit errorInfo;
         errorInfo.setMessage(toBrowserString(instance, errorValue));
         if (sbresult.stackTraceData.size() > 0) {
             size_t lastIndex = sbresult.stackTraceData.size() - 1;
             errorInfo.setFilename(toBrowserString(
-                instance,
-                ValueRef::create(sbresult.stackTraceData[lastIndex].fileName)));
+                instance, sbresult.stackTraceData[lastIndex].src));
             errorInfo.setLineno(sbresult.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
         }
@@ -818,89 +839,124 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           void* bufferSrc, size_t len)
 {
-    STARFISH_ASSERT(instance != nullptr);
-    STARFISH_ASSERT(bufferSrc != nullptr);
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
-    obj->attachBuffer(bufferSrc, len);
-    state->destroy();
-    return obj;
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state, void* bufferSrc,
+                                 size_t len) -> ValueRef* {
+                                  ArrayBufferObjectRef* obj =
+                                      ArrayBufferObjectRef::create(state);
+                                  obj->attachBuffer(state, bufferSrc, len);
+                                  return obj;
+                              },
+                              bufferSrc, len)
+        .result->asArrayBufferObject();
 }
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           size_t len)
 {
-    STARFISH_ASSERT(instance != nullptr);
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
-    obj->allocateBuffer(len);
-    state->destroy();
-    return obj;
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, size_t len) -> ValueRef* {
+                   ArrayBufferObjectRef* obj =
+                       ArrayBufferObjectRef::create(state);
+                   obj->allocateBuffer(state, len);
+                   return obj;
+               },
+               len)
+        .result->asArrayBufferObject();
 }
 
 ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Int8ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Int8ArrayObjectRef::create(state);
+                              })
+        .result->asInt8ArrayObject();
 }
 
 ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Uint8ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Uint8ArrayObjectRef::create(state);
+                              })
+        .result->asUint8ArrayObject();
 }
 
 ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Int16ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Int16ArrayObjectRef::create(state);
+                              })
+        .result->asInt16ArrayObject();
 }
 
 ScriptUint16Array createEmptyUint16Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Uint16ArrayObjectRef::create(state);
-}
-
-ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance)
-{
-    ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Uint32ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Uint16ArrayObjectRef::create(state);
+                              })
+        .result->asUint16ArrayObject();
 }
 
 ScriptInt32Array createEmptyInt32Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Int32ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Int32ArrayObjectRef::create(state);
+                              })
+        .result->asInt32ArrayObject();
+}
+
+ScriptUint32Array createEmptyUint32Array(ScriptBindingInstance* instance)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Uint32ArrayObjectRef::create(state);
+                              })
+        .result->asUint32ArrayObject();
 }
 
 ScriptFloat32Array createEmptyFloat32Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Float32ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Float32ArrayObjectRef::create(state);
+                              })
+        .result->asFloat32ArrayObject();
 }
 
 ScriptFloat64Array createEmptyFloat64Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Float64ArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Float64ArrayObjectRef::create(state);
+                              })
+        .result->asFloat64ArrayObject();
 }
 
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    return Uint8ClampedArrayObjectRef::create(state);
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state) -> ValueRef* {
+                                  return Uint8ClampedArrayObjectRef::create(
+                                      state);
+                              })
+        .result->asUint8ClampedArrayObject();
 }
 
 void registerJavaScriptNativeInterface(
@@ -909,68 +965,95 @@ void registerJavaScriptNativeInterface(
     Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer)
 {
     ContextRef* context = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-    GlobalObjectRef* globalObject = context->globalObject();
 
-    ObjectRef* targetObject = nullptr;
-    auto key = ValueRef::create(toJSString(exposedObjectName));
-    if (globalObject->hasOwnProperty(state, key)) {
-        targetObject = globalObject->getOwnProperty(state, key)->asObject();
-    } else {
-        targetObject = ObjectRef::create(state);
-        globalObject->defineDataProperty(
-            state, ValueRef::create(toJSString(exposedObjectName)),
-            ValueRef::create(targetObject), false, false, true);
-    }
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, String* exposedObjectName,
+           String* jsFunctionName, void* scriptObject,
+           Escargot::ScriptNativeFunctionPointer
+               scriptNativeFunctionPointer) -> ValueRef* {
+            ContextRef* context = state->context();
+            GlobalObjectRef* globalObject = context->globalObject();
 
-    StringRef* nativeCallbackString = toJSString(jsFunctionName);
-    FunctionObjectRef* nativeCallbackESFn = FunctionObjectRef::create(
-        state, FunctionObjectRef::NativeFunctionInfo(
-                   AtomicStringRef::create(
-                       context, jsFunctionName->toUTF8NonGCString().data()),
-                   scriptNativeFunctionPointer, 1, nullptr, true, false));
+            ObjectRef* targetObject = nullptr;
+            ValueRef* key = toJSString(exposedObjectName);
+            if (globalObject->hasOwnProperty(state, key)) {
+                targetObject =
+                    globalObject->getOwnProperty(state, key)->asObject();
+            } else {
+                targetObject = ObjectRef::create(state);
+                globalObject->defineDataProperty(
+                    state, toJSString(exposedObjectName), targetObject, false,
+                    false, true);
+            }
 
-    nativeCallbackESFn->setExtraData(scriptObject);
-    targetObject->defineDataProperty(
-        state, Escargot::ValueRef::create(nativeCallbackString),
-        Escargot::ValueRef::create(nativeCallbackESFn), false, false, true);
-    state->destroy();
+            StringRef* nativeCallbackString = toJSString(jsFunctionName);
+            auto u8FunctionName = jsFunctionName->toUTF8NonGCString();
+            FunctionObjectRef* nativeCallbackESFn = FunctionObjectRef::create(
+                state,
+                FunctionObjectRef::NativeFunctionInfo(
+                    AtomicStringRef::create(context, u8FunctionName.data(),
+                                            u8FunctionName.length()),
+                    scriptNativeFunctionPointer, 1, true, false));
+
+            nativeCallbackESFn->setExtraData(scriptObject);
+            targetObject->defineDataProperty(
+                state, Escargot::ValueRef::create(nativeCallbackString),
+                Escargot::ValueRef::create(nativeCallbackESFn), false, false,
+                true);
+
+            return ValueRef::createUndefined();
+        },
+        exposedObjectName, jsFunctionName, scriptObject,
+        scriptNativeFunctionPointer);
 }
 void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
                                          String* exposedObjectName,
                                          String* jsFunctionName)
 {
     ContextRef* context = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-    GlobalObjectRef* globalObject = context->globalObject();
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, String* exposedObjectName,
+           String* jsFunctionName) -> ValueRef* {
+            ContextRef* context = state->context();
 
-    auto key = ValueRef::create(toJSString(exposedObjectName));
-    if (globalObject->hasOwnProperty(state, key)) {
-        ObjectRef* targetObject =
-            globalObject->getOwnProperty(state, key)->asObject();
-        auto nativeCallbackName = ValueRef::create(toJSString(jsFunctionName));
-        if (targetObject->hasOwnProperty(state, nativeCallbackName)) {
-            targetObject->deleteOwnProperty(state, nativeCallbackName);
-        }
-    }
-    state->destroy();
+            GlobalObjectRef* globalObject = context->globalObject();
+
+            ValueRef* key = toJSString(exposedObjectName);
+            if (globalObject->hasOwnProperty(state, key)) {
+                ObjectRef* targetObject =
+                    globalObject->getOwnProperty(state, key)->asObject();
+                ValueRef* nativeCallbackName = toJSString(jsFunctionName);
+                if (targetObject->hasOwnProperty(state, nativeCallbackName)) {
+                    targetObject->deleteOwnProperty(state, nativeCallbackName);
+                }
+            }
+            return ValueRef::createUndefined();
+        },
+        exposedObjectName, jsFunctionName);
 }
 
 void unregisterJavaScriptNativeInterface(ScriptBindingInstance* instance,
                                          String* exposedObjectName)
 {
     ContextRef* context = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-    GlobalObjectRef* globalObject = context->globalObject();
 
-    auto key = ValueRef::create(toJSString(exposedObjectName));
-    if (globalObject->hasOwnProperty(state, key)) {
-        ObjectRef* targetObject =
-            globalObject->getOwnProperty(state, key)->asObject();
-        globalObject->deleteOwnProperty(state, key);
-    }
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, String* exposedObjectName) -> ValueRef* {
+            ContextRef* context = state->context();
+            GlobalObjectRef* globalObject = context->globalObject();
 
-    state->destroy();
+            ValueRef* key = toJSString(exposedObjectName);
+            if (globalObject->hasOwnProperty(state, key)) {
+                ObjectRef* targetObject =
+                    globalObject->getOwnProperty(state, key)->asObject();
+                globalObject->deleteOwnProperty(state, key);
+            }
+            return ValueRef::createUndefined();
+        },
+        exposedObjectName);
 }
 
 ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
@@ -985,21 +1068,33 @@ ScriptValue parseJSON(ScriptBindingInstance* instance, String* jsonData)
 double parseDate(ScriptBindingInstance* instance, String* date)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    DateObjectRef* obj = DateObjectRef::create(state);
-    obj->setTimeValue(state, ValueRef::create(createScriptString(date)));
-    double ret = obj->primitiveValue();
-    state->destroy();
-    return ret;
+
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, String* date) -> ValueRef* {
+                   DateObjectRef* obj = DateObjectRef::create(state);
+                   obj->setTimeValue(
+                       state, ValueRef::create(createScriptString(date)));
+                   double ret = obj->primitiveValue();
+                   return ValueRef::create(ret);
+               },
+               date)
+        .result->asNumber();
 }
 
 String* timeToUTCString(ScriptBindingInstance* instance, int64_t value)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    DateObjectRef* obj = DateObjectRef::create(state);
-    obj->setTimeValue(value);
-    return toBrowserString(state, obj->toUTCString(state));
+    return toBrowserString(
+        instance, Evaluator::execute(
+                      ctx,
+                      [](ExecutionStateRef* state, int64_t value) -> ValueRef* {
+                          DateObjectRef* obj = DateObjectRef::create(state);
+                          obj->setTimeValue(value);
+                          return obj->toUTCString(state);
+                      },
+                      value)
+                      .result);
 }
 
 bool isCallableScriptValue(ScriptValue v)
@@ -1044,10 +1139,12 @@ bool isNullOrUndefinedScriptValue(ScriptValue v)
 void invokeTestStartFunction(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ScriptValue fn = ctx->globalObject()->get(
-        state, ValueRef::create(StringRef::fromASCII("testStart")));
-    state->destroy();
+    ScriptValue fn =
+        Evaluator::execute(ctx, [](ExecutionStateRef* state) -> ValueRef* {
+            ScriptValue fn = state->context()->globalObject()->get(
+                state, StringRef::createFromASCII("testStart"));
+            return fn;
+        }).result;
     callScriptFunction(instance, fn, nullptr, 0, scriptUndefined());
 }
 #endif
@@ -1064,37 +1161,50 @@ uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer)
 
 unsigned arrayBufferSize(ScriptArrayBuffer buffer)
 {
-    return buffer->bytelength();
+    return buffer->byteLength();
 }
 
 unsigned arrayBufferViewSize(ScriptArrayBufferView buffer)
 {
-    return buffer->bytelength();
+    return buffer->byteLength();
 }
 
 Promise::Promise(ScriptBindingInstance* instance)
 {
     m_instance = instance;
     ContextRef* ctx = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    m_scriptValue = ValueRef::create(PromiseObjectRef::create(state));
-    state->destroy();
+    m_scriptValue =
+        Evaluator::execute(ctx, [](ExecutionStateRef* state) -> ValueRef* {
+            return ValueRef::create(PromiseObjectRef::create(state));
+        }).result;
 }
 
 void Promise::fulfill(ScriptValue v)
 {
     ContextRef* ctx = m_instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    m_scriptValue->asObject()->asPromiseObject()->fulfill(state, v);
-    state->destroy();
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Promise* self,
+           ScriptValue v) -> ValueRef* {
+            self->m_scriptValue->asObject()->asPromiseObject()->fulfill(state,
+                                                                        v);
+            return ValueRef::createUndefined();
+        },
+        this, v);
 }
 
 void Promise::reject(ScriptValue v)
 {
     ContextRef* ctx = m_instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    m_scriptValue->asObject()->asPromiseObject()->reject(state, v);
-    state->destroy();
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Promise* self,
+           ScriptValue v) -> ValueRef* {
+            self->m_scriptValue->asObject()->asPromiseObject()->reject(state,
+                                                                       v);
+            return ValueRef::createUndefined();
+        },
+        this, v);
 }
 
 AttributeEventFunction::AttributeEventFunction(EventTarget* target)

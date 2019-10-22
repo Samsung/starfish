@@ -966,7 +966,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
             m_gifReadData.pos = 0;
             m_gifReadData.size = m_inputBuffer.size();
 #ifdef GIF_LIB_VERSION
-            gifFile = DGifOpen(&readData, gifRead);
+            gifFile = DGifOpen(&m_gifReadData, gifRead);
 #else
             gifFile = DGifOpen(&m_gifReadData, gifRead, &errorCode);
 #endif

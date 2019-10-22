@@ -47,7 +47,7 @@ class Float32ArrayObjectRef;
 class Float64ArrayObjectRef;
 
 template <typename T>
-struct NullablePtr;
+class OptionalRef;
 typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  ValueRef* thisValue,
                                                  size_t argc, ValueRef** argv,
@@ -99,7 +99,7 @@ typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
 typedef Escargot::Float32ArrayObjectRef* ScriptFloat32Array;
 typedef Escargot::Float64ArrayObjectRef* ScriptFloat64Array;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
-typedef Escargot::NullablePtr<Escargot::ValueRef> ScriptNullableValue;
+typedef Escargot::OptionalRef<Escargot::ValueRef> ScriptNullableValue;
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();
@@ -247,11 +247,11 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
     throw new DOMException(INSTANCE, ERR_CODE, MSG); \
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
-#define THROW_EXCEPTION(MSG)                                         \
-    state->throwException(                                           \
-        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create( \
-            state, Escargot::ErrorObjectRef::TypeError,              \
-            Escargot::StringRef::fromASCII(MSG))));                  \
+#define THROW_EXCEPTION(MSG)                                           \
+    state->throwException(                                             \
+        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create(   \
+            state, Escargot::ErrorObjectRef::TypeError,                \
+            Escargot::StringRef::createFromASCII(MSG, strlen(MSG))))); \
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define _CHECK_TYPEOF(v, type)                        \

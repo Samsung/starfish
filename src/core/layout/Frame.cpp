@@ -965,6 +965,37 @@ void LayoutContext::
     }
 }
 
+Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
+    Frame* flexItem, LayoutUnit cbSize, const Length& inputLength)
+{
+    auto iter = m_basisSizeCache.find(flexItem);
+    if (iter != m_basisSizeCache.end()) {
+        LayoutContext::CachedBasisSizeVector& v = iter->second;
+        for (size_t i = 0; i < v.size(); i++) {
+            if (std::get<0>(v[i]) == cbSize &&
+                std::get<1>(v[i]) == inputLength) {
+                return std::get<2>(v[i]);
+            }
+        }
+    }
+    return Nullable<LayoutUnit>();
+}
+
+void LayoutContext::registerToBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
+                                             const Length& inputLength,
+                                             LayoutUnit basisSize)
+{
+    auto iter = m_basisSizeCache.find(flexItem);
+    if (iter != m_basisSizeCache.end()) {
+        LayoutContext::CachedBasisSizeVector& v = iter->second;
+        v.push_back(std::make_tuple(cbSize, inputLength, basisSize));
+    } else {
+        LayoutContext::CachedBasisSizeVector v;
+        v.push_back(std::make_tuple(cbSize, inputLength, basisSize));
+        m_basisSizeCache.insert(std::make_pair(flexItem, std::move(v)));
+    }
+}
+
 PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
 {
     PreferredWidthContext* c = this;

@@ -95,7 +95,12 @@ public:
             if (m_element->frame()) {
                 m_element->setNeedsPainting();
                 if (sizeBefore != sizeNow) {
-                    m_element->setNeedsLayout();
+                    if (!m_element->frame()->style()->width().isDefinite(
+                            false) ||
+                        !m_element->frame()->style()->height().isDefinite(
+                            false)) {
+                        m_element->setNeedsLayout();
+                    }
                 }
             }
         }

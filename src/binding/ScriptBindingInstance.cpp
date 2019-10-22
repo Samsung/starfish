@@ -59,7 +59,8 @@ ScriptBindingInstance::ScriptBindingInstance(
             },
             NULL, NULL, NULL);
     */
-    m_scriptContext = ContextRef::create(engineInstance->engineInstance());
+    m_scriptContext =
+        ContextRef::create(engineInstance->engineInstance()).release();
 #ifdef TIZEN_DEVICE_API
     m_deviceAPI = nullptr;
 #endif
@@ -76,9 +77,13 @@ ScriptBindingInstance::ScriptBindingInstance(
 void ScriptBindingInstance::initBinding()
 {
     ContextRef* context = scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-    initJavaScriptBinding(context, state);
-    state->destroy();
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, ScriptBindingInstance* self) -> ValueRef* {
+            self->initJavaScriptBinding(state->context(), state);
+            return ValueRef::createUndefined();
+        },
+        this);
 
 #ifdef TIZEN_DEVICE_API
     m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
@@ -99,8 +104,8 @@ static String* toBrowserStringForConsole(ExecutionStateRef* state,
 {
     if (value->isObject() && value->asObject()->isErrorObject()) {
         ObjectRef* o = value->asObject();
-        ValueRef* stack = o->getOwnProperty(
-            state, ValueRef::create(StringRef::fromASCII("stack")));
+        ValueRef* stack =
+            o->getOwnProperty(state, StringRef::createFromASCII("stack"));
         if (stack->isString()) {
             return toBrowserString(state, stack);
         }
@@ -240,8 +245,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                 return true;                                                   \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \
-        state, ValueRef::create(StringRef::fromASCII(#exportName)),            \
-        newData##exportName);
+        state, StringRef::createFromASCII(#exportName), newData##exportName);
     STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
@@ -263,8 +267,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                 return false;                                                  \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \
-        state, ValueRef::create(StringRef::fromASCII(#exportName)),            \
-        newData##exportName);
+        state, StringRef::createFromASCII(#exportName), newData##exportName);
     STARFISH_ENUM_BINDING_UNIMPL_NAMES(DECLARE_NAME_FOR_UNIMPL_BINDING)
 #undef DECLARE_NAME_FOR_UNIMPL_BINDING
 
@@ -272,19 +275,19 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
 
     ObjectRef* console = ObjectRef::create(state);
 
-#define DECLARE_CONSOLE_APIS(name)                                           \
-    console->defineDataProperty(                                             \
-        state, ValueRef::create(StringRef::fromASCII(#name)),                \
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(           \
-            state, FunctionObjectRef::NativeFunctionInfo(                    \
-                       AtomicStringRef::create(context, #name),              \
-                       _##name##ConsoleFunction, 1, nullptr, true, false))), \
+#define DECLARE_CONSOLE_APIS(name)                                 \
+    console->defineDataProperty(                                   \
+        state, StringRef::createFromASCII(#name),                  \
+        FunctionObjectRef::createBuiltinFunction(                  \
+            state, FunctionObjectRef::NativeFunctionInfo(          \
+                       AtomicStringRef::create(context, #name),    \
+                       _##name##ConsoleFunction, 1, true, false)), \
         true, true, true);
     CONSOLE_APIS(DECLARE_CONSOLE_APIS)
 #undef DECLARE_CONSOLE_APIS
 
-    globalObject->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("console")),
-        ValueRef::create(console), true, true, true);
+    globalObject->defineDataProperty(state,
+                                     StringRef::createFromASCII("console"),
+                                     console, true, true, true);
 }
 }

@@ -1922,37 +1922,45 @@ void Element::makeKeyframesFromObject(
     ScriptObject object, std::vector<StyleRuleBase*>& keyframeRules)
 {
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ValueVectorRef* values = object->getOwnPropertyKeys(state);
-
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
 
-    for (size_t i = 0; i < values->size(); i++) {
-        auto key = values->at(i);
-        if (key->isString() && object->hasOwnProperty(state, key)) {
-            ScriptValue scirptValue = object->get(state, key);
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptObject object,
+           CSSStyleDeclaration* declarations) -> ValueRef* {
 
-            String* name = toBrowserString(state, key->toString(state));
-            CSSStyleValuePair::KeyKind kind = lookupCSSStyleCamelCase(
-                name->toUTF8NonGCString().data(), name->length());
+            ValueVectorRef* values = object->ownPropertyKeys(state);
 
-            String* value =
-                toBrowserString(state, scirptValue->toString(state));
-            size_t len = value->length();
-            bool priority = false;
+            for (size_t i = 0; i < values->size(); i++) {
+                auto key = values->at(i);
+                if (key->isString() && object->hasOwnProperty(state, key)) {
+                    ScriptValue scirptValue = object->get(state, key);
 
-            switch (kind) {
+                    String* name = toBrowserString(state, key->toString(state));
+                    CSSStyleValuePair::KeyKind kind = lookupCSSStyleCamelCase(
+                        name->toUTF8NonGCString().data(), name->length());
+
+                    String* value =
+                        toBrowserString(state, scirptValue->toString(state));
+                    size_t len = value->length();
+                    bool priority = false;
+
+                    switch (kind) {
 #define SET_ATTR(name, nameLower, nameCSSCase)                          \
     case CSSStyleValuePair::KeyKind::name: {                            \
         declarations->set##name(value->toUTF8NonGCString().data(), len, \
                                 priority);                              \
     } break;
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-            default:
-                break;
+                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                    default:
+                        break;
+                    }
+                }
             }
-        }
-    }
+
+            return ValueRef::createUndefined();
+        },
+        object, declarations);
 
     if (declarations->length() > 0) {
         GCAtomicVector<double> keyList;

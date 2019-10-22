@@ -127,9 +127,9 @@ static bool deserializingDeep(ExecutionContext* executionContext,
             if (!deserialized) {
                 return false;
             }
-            arrayobj->defineDataProperty(
-                state, ValueRef::create(ValueRef::create(i)->toString(state)),
-                deserialized, true, true, true);
+            arrayobj->defineDataProperty(state,
+                                         ValueRef::create(i)->toString(state),
+                                         deserialized, true, true, true);
         }
     } else if (src->isObject()) {
         ScriptObject obj = dst->asObject();
@@ -178,7 +178,7 @@ static bool serializingDeep(ExecutionContext* executionContext,
         }
     } else if (dst->isObject()) {
         ScriptObject obj = src->asObject();
-        ValueVectorRef* values = obj->getOwnPropertyKeys(state);
+        ValueVectorRef* values = obj->ownPropertyKeys(state);
         SerializedObjectData* serializedObject =
             dst->data()->asSerializedObjectData();
         for (size_t i = 0; i < values->size(); i++) {
@@ -256,12 +256,12 @@ static SerializedTypedData* serializeInternal(
             type = SerializedTypedData::Date;
             data = new SerializedPrimitiveValueData(
                 obj->asDateObject()->primitiveValue());
-        } else if (obj->isRegExpObject(state)) {
+        } else if (obj->isRegExpObject()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
-                state, ValueRef::create(StringRef::fromASCII("length")));
+                state, StringRef::createFromASCII("length"));
             data = new SerializedArrayData(length->asUint32());
             deep = true;
         } else if (obj->extraData()) {
@@ -362,47 +362,45 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
         result = ValueRef::create(
             value->data()->asSerializedPrimitiveValueData()->numberData());
     } else if (value->isStringPrimitive()) {
-        result = ValueRef::create(
-            value->data()->asSerializedStringData()->stringData());
+        result = value->data()->asSerializedStringData()->stringData();
     } else if (value->isBoolean()) {
         BooleanObjectRef* booleanObj = BooleanObjectRef::create(state);
         booleanObj->setPrimitiveValue(
             state, ValueRef::create(value->data()
                                         ->asSerializedPrimitiveValueData()
                                         ->booleanData()));
-        result = ValueRef::create(booleanObj);
+        result = booleanObj;
     } else if (value->isNumber()) {
         NumberObjectRef* numberObj = NumberObjectRef::create(state);
         numberObj->setPrimitiveValue(
             state,
             ValueRef::create(
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
-        result = ValueRef::create(numberObj);
+        result = numberObj;
     } else if (value->isString()) {
         StringObjectRef* stringObj = StringObjectRef::create(state);
         stringObj->setPrimitiveValue(
-            state, ValueRef::create(
-                       value->data()->asSerializedStringData()->stringData()));
-        result = ValueRef::create(stringObj);
+            state, value->data()->asSerializedStringData()->stringData());
+        result = stringObj;
     } else if (value->isDate()) {
         DateObjectRef* dateObj = DateObjectRef::create(state);
         dateObj->setTimeValue(
             state,
             ValueRef::create(
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
-        result = ValueRef::create(dateObj);
+        result = dateObj;
     } else if (value->isRegExp()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         result = ValueRef::createUndefined();
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
         array->set(
-            state, ValueRef::create(StringRef::fromASCII("length")),
+            state, StringRef::createFromASCII("length"),
             ValueRef::create(value->data()->asSerializedArrayData()->length()));
-        result = ValueRef::create(array);
+        result = array;
         deep = true;
     } else if (value->isObject()) {
-        result = ValueRef::create(ObjectRef::create(state));
+        result = ObjectRef::create(state);
         deep = true;
     } else if (value->isPlatformObject()) {
         result = value->data()
@@ -433,20 +431,27 @@ SerializedTypedData* Serializer::serialize(ExecutionContext* executionContext,
                                            ScriptValue value,
                                            SerializingMap& memory)
 {
-    SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->scriptBindingInstance()->scriptContext());
     SerializedTypedData* data = nullptr;
-    auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = serializeInternal(executionContext, state, value, memory);
-        return ValueRef::createNull();
-    });
-    sandBox->destroy();
+    auto result = Evaluator::execute(
+        executionContext->scriptBindingInstance()->scriptContext(),
+        [](ExecutionStateRef* state, SerializedTypedData** data,
+           ExecutionContext* executionContext, ScriptValue value,
+           SerializingMap* memory) -> ValueRef* {
+            *data = serializeInternal(executionContext, state, value, *memory);
+            return ValueRef::createNull();
+        },
+        &data, executionContext, value, &memory);
 
     if (!result.error.hasValue() && data) {
         return data;
     } else {
-        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
-                        result.msgStr->toStdUTF8String().data());
+        COMPOSE_MESSAGE(
+            reason, INVALID_DATA_CLONE,
+            result
+                .resultOrErrorToString(
+                    executionContext->scriptBindingInstance()->scriptContext())
+                ->toStdUTF8String()
+                .data());
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                reason);
     }
@@ -463,20 +468,28 @@ ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
                                     SerializedTypedData* value,
                                     DeserializingMap& memory)
 {
-    SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->scriptBindingInstance()->scriptContext());
     ScriptValue data = ValueRef::createUndefined();
-    auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = deserializeInternal(executionContext, state, value, memory);
-        return ValueRef::createNull();
-    });
-    sandBox->destroy();
+    auto result = Evaluator::execute(
+        executionContext->scriptBindingInstance()->scriptContext(),
+        [](ExecutionStateRef* state, ExecutionContext* executionContext,
+           SerializedTypedData* value, DeserializingMap* memory,
+           ScriptValue* data) -> ValueRef* {
+            *data =
+                deserializeInternal(executionContext, state, value, *memory);
+            return ValueRef::createNull();
+        },
+        executionContext, value, &memory, &data);
 
     if (!result.error.hasValue() && data) {
         return data;
     } else {
-        COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
-                        result.msgStr->toStdUTF8String().data());
+        COMPOSE_MESSAGE(
+            reason, INVALID_DATA_CLONE,
+            result
+                .resultOrErrorToString(
+                    executionContext->scriptBindingInstance()->scriptContext())
+                ->toStdUTF8String()
+                .data());
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
                                reason);
     }
@@ -546,32 +559,35 @@ void Serializer::deserializeWithTransfer(
     STARFISH_ASSERT(result.m_deserializedTransfer.size() == 0);
     DeserializingMap initialMap;
     ScriptValue deserialized = nullptr;
-    SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->scriptBindingInstance()->scriptContext());
     bool errorFound = false;
-    auto sandBoxResult =
-        sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-            deserialized = deserializeInternal(
-                executionContext, state, serialized.m_serialized, initialMap);
-            if (deserialized) {
-                for (size_t i = 0; i < serialized.m_serializedTransfer.size();
+    auto sandBoxResult = Evaluator::execute(
+        executionContext->scriptBindingInstance()->scriptContext(),
+        [](ExecutionStateRef* state, ExecutionContext* executionContext,
+           SerializeWithTransferResult* serialized,
+           DeserializeWithTransferResult* result, ScriptValue* deserialized,
+           DeserializingMap* initialMap, bool* errorFound) -> ValueRef* {
+            *deserialized = deserializeInternal(
+                executionContext, state, serialized->m_serialized, *initialMap);
+            if (*deserialized) {
+                for (size_t i = 0; i < serialized->m_serializedTransfer.size();
                      i++) {
                     ScriptValue v = deserializeInternal(
                         executionContext, state,
-                        serialized.m_serializedTransfer[i], initialMap);
+                        serialized->m_serializedTransfer[i], *initialMap);
                     if (v) {
-                        result.m_deserializedTransfer.push_back(v);
+                        result->m_deserializedTransfer.push_back(v);
                     } else {
-                        errorFound = true;
+                        *errorFound = true;
                         break;
                     }
                 }
             } else {
-                errorFound = true;
+                *errorFound = true;
             }
             return ValueRef::createNull();
-        });
-    sandBox->destroy();
+        },
+        executionContext, &serialized, &result, &deserialized, &initialMap,
+        &errorFound);
 
     if (!sandBoxResult.error.hasValue() && !errorFound) {
         result.m_deserialized = deserialized;

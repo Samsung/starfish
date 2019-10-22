@@ -34,8 +34,7 @@ using PromiseJobListener = void (*)(Escargot::ExecutionStateRef*,
 
 class ScriptEngineInstance : public gc {
 public:
-    ScriptEngineInstance(const char* locale, const char* timezone,
-                         PromiseJobListener listener);
+    ScriptEngineInstance(const char* locale, const char* timezone, WebView* wv);
 
     ScriptEngine engineInstance()
     {

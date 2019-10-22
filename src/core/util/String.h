@@ -72,20 +72,13 @@
 
 namespace Starfish {
 
-typedef BasicString<char,
-                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
-    ASCIIString;
-typedef BasicString<char,
-                    GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
-    UTF8String;
-typedef BasicString<
-    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
+typedef BasicString<char, GCUtil::gc_malloc_atomic_allocator<char>> ASCIIString;
+typedef BasicString<char, GCUtil::gc_malloc_atomic_allocator<char>> UTF8String;
+typedef BasicString<char16_t, GCUtil::gc_malloc_atomic_allocator<char16_t>>
     UTF16String;
-typedef BasicString<
-    char32_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char32_t>>
+typedef BasicString<char32_t, GCUtil::gc_malloc_atomic_allocator<char32_t>>
     UTF32String;
-typedef BasicString<
-    char16_t, GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char16_t>>
+typedef BasicString<char16_t, GCUtil::gc_malloc_atomic_allocator<char16_t>>
     BMPString;
 
 typedef std::basic_string<char, std::char_traits<char>> ASCIIStringDataNonGCStd;

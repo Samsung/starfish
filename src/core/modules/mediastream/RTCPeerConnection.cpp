@@ -551,19 +551,27 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
     RTCSdpType type, String* sdp)
 {
-    RTCSessionDescriptionInit sd(type, sdp);
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, RTCSdpType type,
+                  String* sdp) -> ValueRef* {
 
-    ScriptObject obj = ObjectRef::create(state);
-    String* sdValue = sd.type();
-    obj->set(state, ValueRef::create(StringRef::fromASCII("type")),
-             ValueRef::create(toJSString(sdValue)));
-    String* sdpValue = sd.sdp();
-    obj->set(state, ValueRef::create(StringRef::fromASCII("sdp")),
-             ValueRef::create(toJSString(sdpValue)));
+                   RTCSessionDescriptionInit sd(type, sdp);
+                   ScriptObject obj = ObjectRef::create(state);
+                   String* sdValue = sd.type();
+                   obj->set(state, ValueRef::create(
+                                       StringRef::createFromASCII("type")),
+                            ValueRef::create(toJSString(sdValue)));
+                   String* sdpValue = sd.sdp();
+                   obj->set(state,
+                            ValueRef::create(StringRef::createFromASCII("sdp")),
+                            ValueRef::create(toJSString(sdpValue)));
 
-    return obj;
+                   return obj;
+               },
+               type, sdp)
+        .result->asObject();
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setlocaldescription

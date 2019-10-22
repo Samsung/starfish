@@ -335,7 +335,7 @@ namespace WindowOrWorkerGlobalScope {
             size_t bufferLength = (size_t)imageData->data()
                                       ->asArrayBufferView()
                                       ->buffer()
-                                      ->bytelength();
+                                      ->byteLength();
 #if defined(PORT_PIXEL_ORDER_RGBA)
             memcpy(dstPtr, srcPtr, bufferLength);
 #else

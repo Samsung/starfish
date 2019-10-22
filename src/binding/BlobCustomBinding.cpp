@@ -65,16 +65,16 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         if (element->isObject() && element->asObject()->isArrayBufferView()) {
             ArrayBufferViewRef* v = element->asObject()->asArrayBufferView();
             const char* p = (const char*)v->buffer()->rawBuffer();
-            bufferInfo.push_back(std::make_pair((void*)p, v->bytelength()));
-            totalByteLength += v->bytelength();
+            bufferInfo.push_back(std::make_pair((void*)p, v->byteLength()));
+            totalByteLength += v->byteLength();
             continue;
         } else if (element->isObject() &&
                    element->asObject()->isArrayBufferObject()) {
             ArrayBufferObjectRef* v =
                 element->asObject()->asArrayBufferObject();
             bufferInfo.push_back(
-                std::make_pair((void*)v->rawBuffer(), v->bytelength()));
-            totalByteLength += v->bytelength();
+                std::make_pair((void*)v->rawBuffer(), v->byteLength()));
+            totalByteLength += v->byteLength();
             continue;
         } else if (element->isObject() && element->asObject()->extraData()) {
             void* extraData = element->asObject()->extraData();
@@ -108,7 +108,7 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         type = toBrowserString(state, secondArg)->toASCIILower();
     } else if (secondArg->isObject()) {
         ValueRef* arg0 = secondArg->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("type")));
+            state, StringRef::createFromASCII("type"));
         type = toBrowserString(state, arg0);
     }
 

@@ -589,6 +589,12 @@ public:
     void applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
         FrameBox* fb);
 
+    Nullable<LayoutUnit> testBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
+                                            const Length& inputLength);
+    void registerToBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
+                                  const Length& inputLength,
+                                  LayoutUnit basisSize);
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -659,6 +665,12 @@ private:
     std::unordered_map<FrameTableBox*, bool> m_didResetTables;
     GCVector<InlineTextBox*> m_inlineTextBoxPool;
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
+
+    // <container box {width, height}, Length input, computed {width, height}
+    typedef std::vector<std::tuple<LayoutUnit, Length, LayoutUnit>>
+        CachedBasisSizeVector;
+    std::unordered_map<Frame*, CachedBasisSizeVector> m_basisSizeCache;
+
     bool m_viewportWidthDamaged : 1;
     bool m_viewportHeightDamaged : 1;
     bool m_isQuickLayout : 1;

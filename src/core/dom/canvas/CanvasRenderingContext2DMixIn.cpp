@@ -1674,10 +1674,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     auto canvasPixelArrayBuffer = createScriptValue(scriptArrayBuffer);
     ContextRef* ctx =
         executionContext()->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
-                        ->asArrayBufferObject()
-                        ->rawBuffer();
+    uint8_t* dest =
+        canvasPixelArrayBuffer->asObject()->asArrayBufferObject()->rawBuffer();
 
     auto width = m_canvasSurface->bufferWidth();
     auto height = m_canvasSurface->bufferHeight();
@@ -1723,11 +1721,10 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
         executionContext()->scriptBindingInstance());
 
     uint8ClampedArray->setBuffer(
-        canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
-        destSize, destSize);
+        canvasPixelArrayBuffer->asObject()->asArrayBufferObject(), 0, destSize,
+        destSize);
 
     auto ret = new ImageData(executionContext(), uint8ClampedArray, sw, sh);
-    state->destroy();
     return ret;
 }
 
