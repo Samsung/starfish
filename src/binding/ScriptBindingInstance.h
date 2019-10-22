@@ -53,6 +53,8 @@ STARFISH_ENUM_BINDING_NAMES(FOR_EACH_DECLARE_FN);
 #undef FOR_EACH_DECLARE_FN
 
 class ScriptBindingInstance : public gc {
+    friend class ScriptEngineInstance;
+
 public:
     ScriptBindingInstance(ScriptEngineInstance* engineInstance);
     virtual ~ScriptBindingInstance()
@@ -127,6 +129,7 @@ protected:
 #endif
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,
                                        Escargot::ExecutionStateRef* state);
+    size_t m_promiseJobIdlerHandle;
 };
 }
 
