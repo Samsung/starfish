@@ -64,8 +64,7 @@ void ReadableStreamDefaultController::enqueue(ScriptValue chunk)
         auto stringObject = chunk->asString();
 
         if (m_readPromiseQueue.size() > 0) {
-            resolveRead(m_readPromiseQueue.front(),
-                        ValueRef::create(stringObject));
+            resolveRead(m_readPromiseQueue.front(), stringObject);
             m_readPromiseQueue.pop_front();
         }
     }
@@ -109,17 +108,25 @@ void ReadableStreamDefaultController::resolveRead(Promise* promise,
                                                   ScriptValue value)
 {
     ContextRef* context = m_scriptBindingInstance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-    ScriptObject obj = ObjectRef::create(state);
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, ReadableStreamDefaultController* self,
+           Promise* promise, ScriptValue value) -> ValueRef* {
+            ScriptObject obj = ObjectRef::create(state);
 
-    bool result = false;
-    if (m_stream->reader()->state() == ReadableStreamState::Readable) {
-        result = true;
-    }
+            bool result = false;
+            if (self->m_stream->reader()->state() ==
+                ReadableStreamState::Readable) {
+                result = true;
+            }
 
-    obj->set(state, ValueRef::create(StringRef::fromASCII("done")),
-             ValueRef::create(result));
-    obj->set(state, ValueRef::create(StringRef::fromASCII("value")), value);
-    promise->fulfill(createScriptValue(obj));
+            obj->set(state, StringRef::createFromASCII("done"),
+                     ValueRef::create(result));
+            obj->set(state, StringRef::createFromASCII("value"), value);
+            promise->fulfill(createScriptValue(obj));
+
+            return ValueRef::createUndefined();
+        },
+        this, promise, value);
 }
 }

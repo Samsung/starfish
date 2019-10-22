@@ -66,7 +66,7 @@ ValueRef* getCurrentPositionGeolocationFunction(ExecutionStateRef* state,
     bool enableHighAccuracy = false;
     if (opt->isObject()) {
         ValueRef* maximumAge = opt->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("maximumAge")));
+            state, StringRef::createFromASCII("maximumAge"));
         double maximumAgeNumberDouble = maximumAge->toNumber(state);
         if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumberDouble < 0) {
             maximumAgeNumber = 0;
@@ -74,8 +74,8 @@ ValueRef* getCurrentPositionGeolocationFunction(ExecutionStateRef* state,
             maximumAgeNumber = maximumAgeNumberDouble;
         }
 
-        ValueRef* timeout = opt->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("timeout")));
+        ValueRef* timeout =
+            opt->asObject()->get(state, StringRef::createFromASCII("timeout"));
         double timeoutNumberDouble = timeout->toNumber(state);
         if (std::isnan(timeoutNumberDouble)) {
             timeoutNumber = std::numeric_limits<int32_t>::max();
@@ -87,8 +87,7 @@ ValueRef* getCurrentPositionGeolocationFunction(ExecutionStateRef* state,
 
         enableHighAccuracy =
             opt->asObject()
-                ->get(state, ValueRef::create(
-                                 StringRef::fromASCII("enableHighAccuracy")))
+                ->get(state, StringRef::createFromASCII("enableHighAccuracy"))
                 ->toBoolean(state);
     }
 
@@ -120,7 +119,7 @@ ValueRef* watchPositionGeolocationFunction(ExecutionStateRef* state,
     bool enableHighAccuracy = false;
     if (opt->isObject()) {
         ValueRef* maximumAge = opt->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("maximumAge")));
+            state, StringRef::createFromASCII("maximumAge"));
         double maximumAgeNumberDouble = maximumAge->toNumber(state);
         if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumberDouble < 0) {
             maximumAgeNumber = 0;
@@ -128,8 +127,8 @@ ValueRef* watchPositionGeolocationFunction(ExecutionStateRef* state,
             maximumAgeNumber = maximumAgeNumberDouble;
         }
 
-        ValueRef* timeout = opt->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("timeout")));
+        ValueRef* timeout =
+            opt->asObject()->get(state, StringRef::createFromASCII("timeout"));
         double timeoutNumberDouble = timeout->toNumber(state);
         if (std::isnan(timeoutNumberDouble)) {
             timeoutNumber = std::numeric_limits<int32_t>::max();
@@ -141,8 +140,7 @@ ValueRef* watchPositionGeolocationFunction(ExecutionStateRef* state,
 
         enableHighAccuracy =
             opt->asObject()
-                ->get(state, ValueRef::create(
-                                 StringRef::fromASCII("enableHighAccuracy")))
+                ->get(state, StringRef::createFromASCII("enableHighAccuracy"))
                 ->toBoolean(state);
     }
 

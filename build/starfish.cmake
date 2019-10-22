@@ -96,7 +96,6 @@ ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_L
 SET (STARFISH_DEPENDENCIES_COMMON
     escargot
     clipper
-    gc
 )
 IF (NOT ${CUSTOM} MATCHES "wearable")
     SET (STARFISH_DEPENDENCIES_CUSTOM mp4parse webm)

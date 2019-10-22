@@ -64,7 +64,7 @@ ImageData::ImageData(ExecutionContext* ownerExecutionContext,
                      Nullable<uint32_t> sh)
     : ImageData(ownerExecutionContext)
 {
-    size_t length = data->bytelength();
+    size_t length = data->byteLength();
     if (!length || length % 4 != 0) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR);
@@ -100,17 +100,26 @@ void ImageData::initialize(int32_t rows, int32_t pixelsPerRow,
         auto canvasPixelArrayBuffer = createScriptValue(scriptArrayBuffer);
         ContextRef* ctx =
             executionContext()->scriptBindingInstance()->scriptContext();
-        ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-        uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
-                            ->asArrayBufferObject()
-                            ->rawBuffer();
-        auto uint8ClampedArray = createEmptyUint8ClampedArray(
-            executionContext()->scriptBindingInstance());
 
-        uint8ClampedArray->setBuffer(
-            canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
-            destSize, destSize);
-        setData(uint8ClampedArray);
+        Evaluator::execute(
+            ctx,
+            [](ExecutionStateRef* state, ScriptValue canvasPixelArrayBuffer,
+               ImageData* self, size_t destSize) -> ValueRef* {
+                uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
+                                    ->asArrayBufferObject()
+                                    ->rawBuffer();
+                auto uint8ClampedArray = createEmptyUint8ClampedArray(
+                    self->executionContext()->scriptBindingInstance());
+
+                uint8ClampedArray->setBuffer(
+                    canvasPixelArrayBuffer->toObject(state)
+                        ->asArrayBufferObject(),
+                    0, destSize, destSize);
+                self->setData(uint8ClampedArray);
+
+                return ValueRef::createUndefined();
+            },
+            canvasPixelArrayBuffer, this, destSize);
     }
     setWidth(pixelsPerRow);
     setHeight(rows);

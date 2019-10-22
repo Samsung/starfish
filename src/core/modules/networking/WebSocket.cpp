@@ -303,13 +303,13 @@ void WebSocket::send(Blob* data)
 void WebSocket::send(ScriptArrayBuffer data)
 {
     if (!data->isDetachedBuffer()) {
-        send(data->rawBuffer(), data->bytelength(), 1);
+        send(data->rawBuffer(), data->byteLength(), 1);
     }
 }
 
 void WebSocket::send(ScriptArrayBufferView data)
 {
-    send(data->rawBuffer(), data->bytelength(), 1);
+    send(data->rawBuffer(), data->byteLength(), 1);
 }
 }
 #endif

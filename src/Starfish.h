@@ -33,7 +33,9 @@ class ServiceWorkerProcessManager;
 class HTTPCache;
 #endif
 
-#define BDWGC_FREE_SPACE_DIVISOR 12
+#ifndef BDWGC_FREE_SPACE_DIVISOR
+#define BDWGC_FREE_SPACE_DIVISOR 6
+#endif
 
 void addGCCollectionListener(void (*fn)(GC_EventType));
 

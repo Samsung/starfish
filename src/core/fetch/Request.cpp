@@ -43,10 +43,18 @@ extern bool isBlobOrBufferSourceOrUSVString(ExecutionStateRef* state,
 
 static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
 {
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    BlobOrBufferSourceOrUSVStringOrReadableStream body =
-        toBlobOrBufferSourceOrUSVStringOrReadableStreamFromValueRef(state,
-                                                                    from);
+    BlobOrBufferSourceOrUSVStringOrReadableStream body;
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ValueRef* from,
+           BlobOrBufferSourceOrUSVStringOrReadableStream* body) -> ValueRef* {
+            *body = toBlobOrBufferSourceOrUSVStringOrReadableStreamFromValueRef(
+                state, from);
+
+            return ValueRef::createUndefined();
+        },
+        from, &body);
+
     return body;
 }
 

@@ -34,14 +34,14 @@
 
 namespace Starfish {
 
-static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
+static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                                        ValueRef* key)
 {
     Window* self = fetchWindow(state->context());
 
     auto callee = state->resolveCallee();
     if (callee) {
-        void* data = callee.getValue()->asObject()->extraData();
+        void* data = callee.value()->asObject()->extraData();
         if (data) {
             ScriptWrappable* w = (ScriptWrappable*)data;
             if (w->isAttributeEventFunction()) {
@@ -54,7 +54,7 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                         return elementDOMObject->asObject()->getOwnProperty(
                             state, key);
                     }
-                    return ValueRef::createEmpty();
+                    return OptionalRef<ValueRef>();
                 }
             }
         }
@@ -82,7 +82,7 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
     }
 #endif
 
-    return ValueRef::createEmpty();
+    return OptionalRef<ValueRef>();
 }
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)

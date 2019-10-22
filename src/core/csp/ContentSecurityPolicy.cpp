@@ -197,13 +197,11 @@ ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
     ContentSecurityPolicy* csp = executionContext->contentSecurityPolicy();
     if (!csp->allowEval(CSPDirectives::ScriptSrc)) {
         if (isEval) {
-            return ValueRef::create(
-                StringRef::fromASCII("Exception EvalError"));
+            return StringRef::createFromASCII("Exception EvalError");
         }
-        return ValueRef::create(
-            StringRef::fromASCII("Exception function EvalError"));
+        return StringRef::createFromASCII("Exception function EvalError");
     }
 
-    return ValueRef::createEmpty();
+    return ScriptNullableValue();
 }
 }

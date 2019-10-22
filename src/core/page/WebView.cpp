@@ -569,6 +569,7 @@ void WebView::destroy()
 void WebView::createScriptEngineInstance()
 {
     if (!m_scriptEngineInstance) {
+        /*
         PromiseJobListener listener = [](ExecutionStateRef* state,
                                          JobRef* job) {
             STARFISH_ASSERT(state != nullptr);
@@ -605,10 +606,9 @@ void WebView::createScriptEngineInstance()
                 },
                 window, job);
         };
-
+*/
         m_scriptEngineInstance = new ScriptEngineInstance(
-            locale().getName(), timezoneID()->toUTF8NonGCString().data(),
-            listener);
+            locale().getName(), timezoneID()->toUTF8NonGCString().data(), this);
     }
 }
 

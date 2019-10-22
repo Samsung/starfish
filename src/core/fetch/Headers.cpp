@@ -124,46 +124,65 @@ void Headers::initHeadersFromHeaders(Headers* headers)
 void Headers::initHeadersFromArrayObject(ScriptObject object)
 {
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ValueVectorRef* values = object->getOwnPropertyKeys(state);
 
-    for (size_t i = 0; i < values->size(); i++) {
-        ValueRef* key = values->at(i);
-        if (key->isNumber() && object->hasOwnProperty(state, key)) {
-            ScriptValue subObject = object->get(state, key);
-            if (subObject->isObject()) {
-                ScriptObject element = subObject->asObject();
-                if (element->isArrayObject()) {
-                    ScriptValue length = element->get(
-                        state,
-                        ValueRef::create(StringRef::fromASCII("length")));
-                    if (length->asNumber() != 2.0) {
-                        throw new DOMException(
-                            executionContext(),
-                            DOMException::Code::SCRIPT_TYPE_ERR);
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptObject object,
+           Headers* self) -> ValueRef* {
+            ValueVectorRef* values = object->ownPropertyKeys(state);
+
+            for (size_t i = 0; i < values->size(); i++) {
+                ValueRef* key = values->at(i);
+                auto index = key->toIndex(state);
+                if (index != ValueRef::InvalidIndexValue) {
+                    ScriptValue subObject = object->get(state, key);
+                    if (subObject->isObject()) {
+                        ScriptObject element = subObject->asObject();
+                        if (element->isArrayObject()) {
+                            ScriptValue length = element->get(
+                                state, StringRef::createFromASCII("length"));
+                            if (length->toNumber(state) != 2.0) {
+                                throw new DOMException(
+                                    self->executionContext(),
+                                    DOMException::Code::SCRIPT_TYPE_ERR);
+                            }
+                            auto elementKey =
+                                element->get(state, ValueRef::create(0));
+                            self->setHeader(
+                                elementKey,
+                                element->get(state, ValueRef::create(1)),
+                                state);
+                        }
                     }
-                    auto elementKey = element->get(state, ValueRef::create(0));
-                    setHeader(elementKey,
-                              element->get(state, ValueRef::create(1)), state);
                 }
             }
-        }
-    }
+
+            return ValueRef::createUndefined();
+        },
+        object, this);
 }
 
 void Headers::initHeadersFromObject(ScriptObject object)
 {
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    ValueVectorRef* values = object->getOwnPropertyKeys(state);
 
-    for (size_t i = 0; i < values->size(); i++) {
-        auto key = values->at(i);
-        if (key->isString() && object->hasOwnProperty(state, key)) {
-            ScriptValue value = object->get(state, key);
-            setHeader(key, value, state);
-        }
-    }
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptObject object,
+           Headers* self) -> ValueRef* {
+            ValueVectorRef* values = object->ownPropertyKeys(state);
+
+            for (size_t i = 0; i < values->size(); i++) {
+                auto key = values->at(i);
+                if (key->isString() && object->hasOwnProperty(state, key)) {
+                    ScriptValue value = object->get(state, key);
+                    self->setHeader(key, value, state);
+                }
+            }
+
+            return ValueRef::createUndefined();
+        },
+        object, this);
 }
 
 void Headers::setHeader(ScriptValue keyValue, ScriptValue nameValue,

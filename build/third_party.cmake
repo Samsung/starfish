@@ -126,6 +126,7 @@ ENDIF()
 IF (${ARCH} STREQUAL "x64")
     SET (LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
 
+    SET(LIBWEBSOCKETS_BUILD_OPTION -DLWS_MAX_SMP=8)
     SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build)
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.so)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.so)
@@ -244,86 +245,6 @@ IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND
                        COMMAND echo "SKIA TARGET"
     )
 ENDIF()
-
-
-#######################################################
-# GC
-#######################################################
-SET (GC_CFLAGS_COMMON "-g3 -fPIC -Wno-unused-variable -Wno-unused-function -fdata-sections -ffunction-sections -DESCARGOT -DUSE_GET_STACKBASE_FOR_MAIN -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA")
-
-IF (${CUSTOM} STREQUAL "unified_wearable")
-    SET (GC_CFLAGS_CUSTOM "-Os")
-ENDIF()
-
-IF (${HOST} STREQUAL "tizen")
-    SET (GC_CFLAGS_HOST "-DTIZEN")
-ENDIF()
-
-IF (${ARCH} STREQUAL "x86")
-    SET (GC_CFLAGS_ARCH "-m32")
-    SET (GC_LDFLAGS_ARCH "-m32")
-ENDIF()
-
-IF (${MODE} STREQUAL "debug")
-    SET (GC_CFLAGS_MODE "-O0")
-ELSE()
-    SET (GC_CFLAGS_MODE "-O2")
-ENDIF()
-
-SET (GC_CFLAGS "${GC_CFLAGS_COMMON} ${GC_CFLAGS_CUSTOM} ${GC_CFLAGS_HOST} ${GC_CFLAGS_ARCH} ${GC_CFLAGS_MODE} $ENV{CFLAGS}")
-SET (GC_LDFLAGS "${GC_LDFLAGS_ARCH} ${GC_CFLAGS}")
-
-SET (GC_CONFFLAGS_COMMON --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-threads)
-IF (${MODE} STREQUAL "debug")
-    SET (GC_CONFFLAGS_MODE --enable-debug --enable-gc-debug)
-ELSE()
-    SET (GC_CONFFLAGS_MODE --disable-debug --disable-gc-debug)
-ENDIF()
-SET (GC_CONFFLAGS
-    ${GC_CONFFLAGS_COMMON}
-    ${GC_CONFFLAGS_MODE}
-)
-
-SET (GC_BUILDDIR ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared)
-IF (${HOST} STREQUAL "linux")
-    SET (GC_LOCAL_TARGET ${GC_BUILDDIR}/.libs/libgc.so)
-    SET (GC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libgc.so)
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${GC_LOCAL_TARGET}
-        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
-        COMMENT "BUILD GC"
-        COMMAND autoreconf -vif
-        COMMAND automake --add-missing
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
-        COMMAND cd ${GC_BUILDDIR} && ../../../../configure ${GC_CONFFLAGS} CFLAGS=${GC_CFLAGS} LDFLAGS=${GC_LDFLAGS}
-        COMMAND cd ${GC_BUILDDIR} && make -j
-    )
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
-        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
-        DEPENDS ${GC_LOCAL_TARGET}
-        COMMENT "COPY GC"
-        COMMAND cp -P ${GC_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
-    )
-ELSEIF (${HOST} STREQUAL "tizen")
-    SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.a)
-    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
-        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
-        COMMENT "BUILD GC"
-        COMMAND autoreconf -vif
-        COMMAND automake --add-missing
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
-        COMMAND cd ${GC_BUILDDIR} && ../../../../configure ${GC_CONFFLAGS} CFLAGS=${GC_CFLAGS} LDFLAGS=${GC_LDFLAGS}
-        COMMAND cd ${GC_BUILDDIR} && make -j
-    )
-ELSE()
-    MESSAGE (FATAL_ERROR "GC is NOT SUPPORTED")
-ENDIF()
-
-ADD_CUSTOM_TARGET (gc
-        DEPENDS ${GC_TARGET}
-        COMMAND echo "GC TARGET"
-)
 
 #######################################################
 # ESCARGOT

@@ -408,70 +408,86 @@ void Avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 {
     ScriptBindingInstance* instance =
         browsingContext(this)->document()->scriptBindingInstance();
-    Escargot::ExecutionStateRef* state =
-        Escargot::ExecutionStateRef::create(instance->scriptContext());
-    ScriptValue thisValue = ValueRef::create(state->context()->globalObject());
+
     ScriptValue fn = scriptNull();
     ScriptValue argv[1] = {};
     size_t argc = 0;
 
-    switch (type) {
-    case prepare_async_CALLBACK:
-        fn = m_prepare_async;
-        break;
+    Evaluator::execute(
+        instance->scriptContext(),
+        [](ExecutionStateRef* state, Avplay* self, ScriptValue* fn,
+           ScriptValue argv, size_t* argc) -> ValueRef* {
+            ScriptValue thisValue =
+                ValueRef::create(state->context()->globalObject());
 
-    case onbufferingstart_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("onbufferingstart")));
-        break;
+            switch (type) {
+            case prepare_async_CALLBACK:
+                *fn = self->m_prepare_async;
+                break;
 
-    case onbufferingprogress_CALLBACK:
-        argv[0] = { ValueRef::create(m_bufferingPercent) };
-        argc = 1;
-        fn = m_listener->asObject()->get(
-            state,
-            ValueRef::create(StringRef::fromASCII("onbufferingprogress")));
-        break;
+            case onbufferingstart_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(
+                               StringRef::createFromASCII("onbufferingstart")));
+                break;
 
-    case onbufferingcomplete_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state,
-            ValueRef::create(StringRef::fromASCII("onbufferingcomplete")));
-        break;
+            case onbufferingprogress_CALLBACK:
+                argv[0] = { ValueRef::create(m_bufferingPercent) };
+                *argc = 1;
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(StringRef::createFromASCII(
+                               "onbufferingprogress")));
+                break;
 
-    case oncurrentplaytime_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("oncurrentplaytime")));
-        break;
+            case onbufferingcomplete_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(StringRef::createFromASCII(
+                               "onbufferingcomplete")));
+                break;
 
-    case onevent_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("onevent")));
-        break;
+            case oncurrentplaytime_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(StringRef::createFromASCII(
+                               "oncurrentplaytime")));
+                break;
 
-    case onerror_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("onerror")));
-        break;
+            case onevent_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state,
+                    ValueRef::create(StringRef::createFromASCII("onevent")));
+                break;
 
-    case onsubtitlechange_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("onsubtitlechange")));
-        break;
+            case onerror_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state,
+                    ValueRef::create(StringRef::createFromASCII("onerror")));
+                break;
 
-    case ondrmevent_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("ondrmevent")));
-        break;
+            case onsubtitlechange_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(
+                               StringRef::createFromASCII("onsubtitlechange")));
+                break;
 
-    case onstreamcompleted_CALLBACK:
-        fn = m_listener->asObject()->get(
-            state, ValueRef::create(StringRef::fromASCII("onstreamcompleted")));
-        break;
+            case ondrmevent_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state,
+                    ValueRef::create(StringRef::createFromASCII("ondrmevent")));
+                break;
 
-    default:
-        STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!\n");
-    }
+            case onstreamcompleted_CALLBACK:
+                *fn = self->m_listener->asObject()->get(
+                    state, ValueRef::create(StringRef::createFromASCII(
+                               "onstreamcompleted")));
+                break;
+
+            default:
+                STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!\n");
+            }
+            return ValueRef::createUndefined();
+        },
+        this, &fn, argv, &argc);
+
     callScriptFunction(instance, fn, argv, argc, thisValue);
 }
 }

@@ -152,44 +152,49 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::fromFloat32Array(
 {
     ContextRef* ctx =
         executionContext->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-
     DOMMatrixReadOnly* result = new DOMMatrixReadOnly(executionContext);
-    size_t arrayLength = array32->bytelength() / sizeof(float);
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ExecutionContext* executionContext,
+           ScriptFloat32Array array32, DOMMatrixReadOnly* result) -> ValueRef* {
+            size_t arrayLength = array32->byteLength() / sizeof(float);
+            if (arrayLength != 6 && arrayLength != 16) {
+                throw new DOMException(
+                    executionContext, DOMException::Code::SCRIPT_TYPE_ERR,
+                    "The sequence must contain 6 or 16 elements");
+            }
 
-    if (arrayLength != 6 && arrayLength != 16) {
-        throw new DOMException(executionContext,
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "The sequence must contain 6 or 16 elements");
-    }
+            if (arrayLength == 6) {
+                result->set2DMatrix(
+                    array32->get(state, ValueRef::create(0))->toNumber(state),
+                    array32->get(state, ValueRef::create(1))->toNumber(state),
+                    array32->get(state, ValueRef::create(2))->toNumber(state),
+                    array32->get(state, ValueRef::create(3))->toNumber(state),
+                    array32->get(state, ValueRef::create(4))->toNumber(state),
+                    array32->get(state, ValueRef::create(5))->toNumber(state));
+            } else {
+                result->set3DMatrix(
+                    array32->get(state, ValueRef::create(0))->toNumber(state),
+                    array32->get(state, ValueRef::create(1))->toNumber(state),
+                    array32->get(state, ValueRef::create(2))->toNumber(state),
+                    array32->get(state, ValueRef::create(3))->toNumber(state),
+                    array32->get(state, ValueRef::create(4))->toNumber(state),
+                    array32->get(state, ValueRef::create(5))->toNumber(state),
+                    array32->get(state, ValueRef::create(6))->toNumber(state),
+                    array32->get(state, ValueRef::create(7))->toNumber(state),
+                    array32->get(state, ValueRef::create(8))->toNumber(state),
+                    array32->get(state, ValueRef::create(9))->toNumber(state),
+                    array32->get(state, ValueRef::create(10))->toNumber(state),
+                    array32->get(state, ValueRef::create(11))->toNumber(state),
+                    array32->get(state, ValueRef::create(12))->toNumber(state),
+                    array32->get(state, ValueRef::create(13))->toNumber(state),
+                    array32->get(state, ValueRef::create(14))->toNumber(state),
+                    array32->get(state, ValueRef::create(15))->toNumber(state));
+            }
 
-    if (arrayLength == 6) {
-        result->set2DMatrix(
-            array32->get(state, ValueRef::create(0))->toNumber(state),
-            array32->get(state, ValueRef::create(1))->toNumber(state),
-            array32->get(state, ValueRef::create(2))->toNumber(state),
-            array32->get(state, ValueRef::create(3))->toNumber(state),
-            array32->get(state, ValueRef::create(4))->toNumber(state),
-            array32->get(state, ValueRef::create(5))->toNumber(state));
-    } else {
-        result->set3DMatrix(
-            array32->get(state, ValueRef::create(0))->toNumber(state),
-            array32->get(state, ValueRef::create(1))->toNumber(state),
-            array32->get(state, ValueRef::create(2))->toNumber(state),
-            array32->get(state, ValueRef::create(3))->toNumber(state),
-            array32->get(state, ValueRef::create(4))->toNumber(state),
-            array32->get(state, ValueRef::create(5))->toNumber(state),
-            array32->get(state, ValueRef::create(6))->toNumber(state),
-            array32->get(state, ValueRef::create(7))->toNumber(state),
-            array32->get(state, ValueRef::create(8))->toNumber(state),
-            array32->get(state, ValueRef::create(9))->toNumber(state),
-            array32->get(state, ValueRef::create(10))->toNumber(state),
-            array32->get(state, ValueRef::create(11))->toNumber(state),
-            array32->get(state, ValueRef::create(12))->toNumber(state),
-            array32->get(state, ValueRef::create(13))->toNumber(state),
-            array32->get(state, ValueRef::create(14))->toNumber(state),
-            array32->get(state, ValueRef::create(15))->toNumber(state));
-    }
+            return ValueRef::createUndefined();
+        },
+        executionContext, array32, result);
 
     return result;
 }
@@ -198,45 +203,51 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::fromFloat64Array(
     ExecutionContext* executionContext, ScriptFloat64Array array64)
 {
     DOMMatrixReadOnly* result = new DOMMatrixReadOnly(executionContext);
-    size_t arrayLength = array64->bytelength() / sizeof(double);
-
     ContextRef* ctx =
         executionContext->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
 
-    if (arrayLength != 6 && arrayLength != 16) {
-        throw new DOMException(executionContext,
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "The sequence must contain 6 or 16 elements");
-    }
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ExecutionContext* executionContext,
+           ScriptFloat64Array array64, DOMMatrixReadOnly* result) -> ValueRef* {
+            size_t arrayLength = array64->byteLength() / sizeof(double);
+            if (arrayLength != 6 && arrayLength != 16) {
+                throw new DOMException(
+                    executionContext, DOMException::Code::SCRIPT_TYPE_ERR,
+                    "The sequence must contain 6 or 16 elements");
+            }
 
-    if (arrayLength == 6) {
-        result->set2DMatrix(
-            array64->get(state, ValueRef::create(0))->toNumber(state),
-            array64->get(state, ValueRef::create(1))->toNumber(state),
-            array64->get(state, ValueRef::create(2))->toNumber(state),
-            array64->get(state, ValueRef::create(3))->toNumber(state),
-            array64->get(state, ValueRef::create(4))->toNumber(state),
-            array64->get(state, ValueRef::create(5))->toNumber(state));
-    } else {
-        result->set3DMatrix(
-            array64->get(state, ValueRef::create(0))->toNumber(state),
-            array64->get(state, ValueRef::create(1))->toNumber(state),
-            array64->get(state, ValueRef::create(2))->toNumber(state),
-            array64->get(state, ValueRef::create(3))->toNumber(state),
-            array64->get(state, ValueRef::create(4))->toNumber(state),
-            array64->get(state, ValueRef::create(5))->toNumber(state),
-            array64->get(state, ValueRef::create(6))->toNumber(state),
-            array64->get(state, ValueRef::create(7))->toNumber(state),
-            array64->get(state, ValueRef::create(8))->toNumber(state),
-            array64->get(state, ValueRef::create(9))->toNumber(state),
-            array64->get(state, ValueRef::create(10))->toNumber(state),
-            array64->get(state, ValueRef::create(11))->toNumber(state),
-            array64->get(state, ValueRef::create(12))->toNumber(state),
-            array64->get(state, ValueRef::create(13))->toNumber(state),
-            array64->get(state, ValueRef::create(14))->toNumber(state),
-            array64->get(state, ValueRef::create(15))->toNumber(state));
-    }
+            if (arrayLength == 6) {
+                result->set2DMatrix(
+                    array64->get(state, ValueRef::create(0))->toNumber(state),
+                    array64->get(state, ValueRef::create(1))->toNumber(state),
+                    array64->get(state, ValueRef::create(2))->toNumber(state),
+                    array64->get(state, ValueRef::create(3))->toNumber(state),
+                    array64->get(state, ValueRef::create(4))->toNumber(state),
+                    array64->get(state, ValueRef::create(5))->toNumber(state));
+            } else {
+                result->set3DMatrix(
+                    array64->get(state, ValueRef::create(0))->toNumber(state),
+                    array64->get(state, ValueRef::create(1))->toNumber(state),
+                    array64->get(state, ValueRef::create(2))->toNumber(state),
+                    array64->get(state, ValueRef::create(3))->toNumber(state),
+                    array64->get(state, ValueRef::create(4))->toNumber(state),
+                    array64->get(state, ValueRef::create(5))->toNumber(state),
+                    array64->get(state, ValueRef::create(6))->toNumber(state),
+                    array64->get(state, ValueRef::create(7))->toNumber(state),
+                    array64->get(state, ValueRef::create(8))->toNumber(state),
+                    array64->get(state, ValueRef::create(9))->toNumber(state),
+                    array64->get(state, ValueRef::create(10))->toNumber(state),
+                    array64->get(state, ValueRef::create(11))->toNumber(state),
+                    array64->get(state, ValueRef::create(12))->toNumber(state),
+                    array64->get(state, ValueRef::create(13))->toNumber(state),
+                    array64->get(state, ValueRef::create(14))->toNumber(state),
+                    array64->get(state, ValueRef::create(15))->toNumber(state));
+            }
+
+            return ValueRef::createUndefined();
+        },
+        executionContext, array64, result);
 
     return result;
 }
@@ -494,72 +505,127 @@ double DOMMatrixReadOnly::m44() const
 
 ScriptFloat32Array DOMMatrixReadOnly::toFloat32Array()
 {
-    static const int ArraySize = 16;
+    const int ArraySize = 16;
     size_t byteSize = ArraySize * sizeof(float);
 
     ContextRef* ctx =
         executionContext()->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+
     auto scriptArrayBuffer = createScriptArrayBuffer(
         executionContext()->scriptBindingInstance(), byteSize);
     auto martixArrayBuffer = createScriptValue(scriptArrayBuffer);
     auto float32Array =
         createEmptyFloat32Array(executionContext()->scriptBindingInstance());
-    float32Array->setBuffer(
-        martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0, byteSize,
-        ArraySize);
 
-    float32Array->set(state, ValueRef::create(0), ValueRef::create(m11()));
-    float32Array->set(state, ValueRef::create(1), ValueRef::create(m12()));
-    float32Array->set(state, ValueRef::create(2), ValueRef::create(m13()));
-    float32Array->set(state, ValueRef::create(3), ValueRef::create(m14()));
-    float32Array->set(state, ValueRef::create(4), ValueRef::create(m21()));
-    float32Array->set(state, ValueRef::create(5), ValueRef::create(m22()));
-    float32Array->set(state, ValueRef::create(7), ValueRef::create(m24()));
-    float32Array->set(state, ValueRef::create(8), ValueRef::create(m31()));
-    float32Array->set(state, ValueRef::create(9), ValueRef::create(m32()));
-    float32Array->set(state, ValueRef::create(10), ValueRef::create(m33()));
-    float32Array->set(state, ValueRef::create(11), ValueRef::create(m34()));
-    float32Array->set(state, ValueRef::create(12), ValueRef::create(m41()));
-    float32Array->set(state, ValueRef::create(13), ValueRef::create(m42()));
-    float32Array->set(state, ValueRef::create(14), ValueRef::create(m43()));
-    float32Array->set(state, ValueRef::create(15), ValueRef::create(m44()));
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptFloat32Array float32Array,
+           DOMMatrixReadOnly* self,
+           ScriptValue martixArrayBuffer) -> ValueRef* {
+            const int ArraySize = 16;
+            size_t byteSize = ArraySize * sizeof(float);
+
+            float32Array->setBuffer(
+                martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
+                byteSize, ArraySize);
+
+            float32Array->set(state, ValueRef::create(0),
+                              ValueRef::create(self->m11()));
+            float32Array->set(state, ValueRef::create(1),
+                              ValueRef::create(self->m12()));
+            float32Array->set(state, ValueRef::create(2),
+                              ValueRef::create(self->m13()));
+            float32Array->set(state, ValueRef::create(3),
+                              ValueRef::create(self->m14()));
+            float32Array->set(state, ValueRef::create(4),
+                              ValueRef::create(self->m21()));
+            float32Array->set(state, ValueRef::create(5),
+                              ValueRef::create(self->m22()));
+            float32Array->set(state, ValueRef::create(7),
+                              ValueRef::create(self->m24()));
+            float32Array->set(state, ValueRef::create(8),
+                              ValueRef::create(self->m31()));
+            float32Array->set(state, ValueRef::create(9),
+                              ValueRef::create(self->m32()));
+            float32Array->set(state, ValueRef::create(10),
+                              ValueRef::create(self->m33()));
+            float32Array->set(state, ValueRef::create(11),
+                              ValueRef::create(self->m34()));
+            float32Array->set(state, ValueRef::create(12),
+                              ValueRef::create(self->m41()));
+            float32Array->set(state, ValueRef::create(13),
+                              ValueRef::create(self->m42()));
+            float32Array->set(state, ValueRef::create(14),
+                              ValueRef::create(self->m43()));
+            float32Array->set(state, ValueRef::create(15),
+                              ValueRef::create(self->m44()));
+
+            return ValueRef::createUndefined();
+        },
+        float32Array, this, martixArrayBuffer);
 
     return float32Array;
 }
 
 ScriptFloat64Array DOMMatrixReadOnly::toFloat64Array()
 {
-    static const int ArraySize = 16;
+    const int ArraySize = 16;
     size_t byteSize = ArraySize * sizeof(double);
 
     ContextRef* ctx =
         executionContext()->scriptBindingInstance()->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     auto scriptArrayBuffer = createScriptArrayBuffer(
         executionContext()->scriptBindingInstance(), byteSize);
     auto martixArrayBuffer = createScriptValue(scriptArrayBuffer);
     auto float64Array =
         createEmptyFloat64Array(executionContext()->scriptBindingInstance());
-    float64Array->setBuffer(
-        martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0, byteSize,
-        ArraySize);
-    float64Array->set(state, ValueRef::create(0), ValueRef::create(m11()));
-    float64Array->set(state, ValueRef::create(1), ValueRef::create(m12()));
-    float64Array->set(state, ValueRef::create(2), ValueRef::create(m13()));
-    float64Array->set(state, ValueRef::create(3), ValueRef::create(m14()));
-    float64Array->set(state, ValueRef::create(4), ValueRef::create(m21()));
-    float64Array->set(state, ValueRef::create(5), ValueRef::create(m22()));
-    float64Array->set(state, ValueRef::create(6), ValueRef::create(m23()));
-    float64Array->set(state, ValueRef::create(7), ValueRef::create(m24()));
-    float64Array->set(state, ValueRef::create(8), ValueRef::create(m31()));
-    float64Array->set(state, ValueRef::create(9), ValueRef::create(m32()));
-    float64Array->set(state, ValueRef::create(10), ValueRef::create(m33()));
-    float64Array->set(state, ValueRef::create(11), ValueRef::create(m34()));
-    float64Array->set(state, ValueRef::create(12), ValueRef::create(m41()));
-    float64Array->set(state, ValueRef::create(13), ValueRef::create(m42()));
-    float64Array->set(state, ValueRef::create(14), ValueRef::create(m43()));
-    float64Array->set(state, ValueRef::create(15), ValueRef::create(m44()));
+
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptFloat64Array float64Array,
+           DOMMatrixReadOnly* self,
+           ScriptValue martixArrayBuffer) -> ValueRef* {
+            const int ArraySize = 16;
+            size_t byteSize = ArraySize * sizeof(double);
+
+            float64Array->setBuffer(
+                martixArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
+                byteSize, ArraySize);
+
+            float64Array->set(state, ValueRef::create(0),
+                              ValueRef::create(self->m11()));
+            float64Array->set(state, ValueRef::create(1),
+                              ValueRef::create(self->m12()));
+            float64Array->set(state, ValueRef::create(2),
+                              ValueRef::create(self->m13()));
+            float64Array->set(state, ValueRef::create(3),
+                              ValueRef::create(self->m14()));
+            float64Array->set(state, ValueRef::create(4),
+                              ValueRef::create(self->m21()));
+            float64Array->set(state, ValueRef::create(5),
+                              ValueRef::create(self->m22()));
+            float64Array->set(state, ValueRef::create(7),
+                              ValueRef::create(self->m24()));
+            float64Array->set(state, ValueRef::create(8),
+                              ValueRef::create(self->m31()));
+            float64Array->set(state, ValueRef::create(9),
+                              ValueRef::create(self->m32()));
+            float64Array->set(state, ValueRef::create(10),
+                              ValueRef::create(self->m33()));
+            float64Array->set(state, ValueRef::create(11),
+                              ValueRef::create(self->m34()));
+            float64Array->set(state, ValueRef::create(12),
+                              ValueRef::create(self->m41()));
+            float64Array->set(state, ValueRef::create(13),
+                              ValueRef::create(self->m42()));
+            float64Array->set(state, ValueRef::create(14),
+                              ValueRef::create(self->m43()));
+            float64Array->set(state, ValueRef::create(15),
+                              ValueRef::create(self->m44()));
+
+            return ValueRef::createUndefined();
+        },
+        float64Array, this, martixArrayBuffer);
 
     return float64Array;
 }

@@ -233,7 +233,8 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
         }
         int arg2Size =
             (int)arg2->asObject()
-                ->get(state, ValueRef::create(StringRef::fromASCII("length")))
+                ->get(state,
+                      ValueRef::create(StringRef::createFromASCII("length")))
                 ->toNumber(state);
         for (int i = 0; i < arg2Size; i++) {
             ValueRef* itemJS =
@@ -505,13 +506,15 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
         LayoutRect rect = fr->asFrameBox()->absoluteRect(
             value0->document()->frame()->asFrameBox());
         ObjectRef* result = ObjectRef::create(state);
-        result->set(state, ValueRef::create(StringRef::fromASCII("x")),
+        result->set(state, ValueRef::create(StringRef::createFromASCII("x")),
                     ValueRef::create(rect.x().toFloat()));
-        result->set(state, ValueRef::create(StringRef::fromASCII("y")),
+        result->set(state, ValueRef::create(StringRef::createFromASCII("y")),
                     ValueRef::create(rect.y().toFloat()));
-        result->set(state, ValueRef::create(StringRef::fromASCII("width")),
+        result->set(state,
+                    ValueRef::create(StringRef::createFromASCII("width")),
                     ValueRef::create(rect.width().toFloat()));
-        result->set(state, ValueRef::create(StringRef::fromASCII("height")),
+        result->set(state,
+                    ValueRef::create(StringRef::createFromASCII("height")),
                     ValueRef::create(rect.height().toFloat()));
         return ValueRef::create(result);
     } else {
@@ -733,39 +736,45 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
 void Window::postInit(ScriptBindingInstance* instance)
 {
     ContextRef* context = instance->scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
 
+    Evaluator::execute(context,
+                       [](ExecutionStateRef* state, Window* self) -> ValueRef* {
+                           ContextRef* context = state->context();
 #ifdef STARFISH_ENABLE_TEST
-#define DEFINE_TEST_FUNCTION(name, length)                              \
-    scriptObject()->defineDataProperty(                                 \
-        state, ValueRef::create(StringRef::fromASCII(#name "")),        \
-        ValueRef::create(FunctionObjectRef::create(                     \
-            state, FunctionObjectRef::NativeFunctionInfo(               \
-                       AtomicStringRef::create(context, #name ""),      \
-                       name##Function, length, nullptr, true, false))), \
+#define DEFINE_TEST_FUNCTION(name, length)                         \
+    self->scriptObject()->defineDataProperty(                      \
+        state, StringRef::createFromASCII(#name ""),               \
+        FunctionObjectRef::create(                                 \
+            state, FunctionObjectRef::NativeFunctionInfo(          \
+                       AtomicStringRef::create(context, #name ""), \
+                       name##Function, length, true, false)),      \
         true, true, true);
 
-    DEFINE_TEST_FUNCTION(debugPause, 0);
-    DEFINE_TEST_FUNCTION(debugResume, 0);
-    DEFINE_TEST_FUNCTION(networkEnable, 0);
-    DEFINE_TEST_FUNCTION(networkDisable, 0);
-    DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
-    DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
-    DEFINE_TEST_FUNCTION(isPixelTest, 0);
-    DEFINE_TEST_FUNCTION(screenShot, 2);
-    DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
-    DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
-    DEFINE_TEST_FUNCTION(getXYWH, 1);
-    DEFINE_TEST_FUNCTION(simulateClick, 2);
-    DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
-    DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
-    DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
-    DEFINE_TEST_FUNCTION(testAssert, 1);
-    DEFINE_TEST_FUNCTION(testEnd, 0);
-    DEFINE_TEST_FUNCTION(testImgDiff, 2);
-    DEFINE_TEST_FUNCTION(wptTestEnd, 0);
+                           DEFINE_TEST_FUNCTION(debugPause, 0);
+                           DEFINE_TEST_FUNCTION(debugResume, 0);
+                           DEFINE_TEST_FUNCTION(networkEnable, 0);
+                           DEFINE_TEST_FUNCTION(networkDisable, 0);
+                           DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
+                           DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
+                           DEFINE_TEST_FUNCTION(isPixelTest, 0);
+                           DEFINE_TEST_FUNCTION(screenShot, 2);
+                           DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
+                           DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
+                           DEFINE_TEST_FUNCTION(getXYWH, 1);
+                           DEFINE_TEST_FUNCTION(simulateClick, 2);
+                           DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
+                           DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
+                           DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
+                           DEFINE_TEST_FUNCTION(testAssert, 1);
+                           DEFINE_TEST_FUNCTION(testEnd, 0);
+                           DEFINE_TEST_FUNCTION(testImgDiff, 2);
+                           DEFINE_TEST_FUNCTION(wptTestEnd, 0);
 
-    state->destroy();
 #endif
+
+                           return ValueRef::createUndefined();
+
+                       },
+                       this);
 }
 }
