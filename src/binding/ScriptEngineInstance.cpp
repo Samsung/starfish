@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptEngineInstance.h"
+#include "binding/ScriptBindingInstance.h"
 
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -29,66 +30,75 @@
 
 namespace Starfish {
 
-class EscargotStarfishPlatform : public Escargot::PlatformRef {
-public:
-    EscargotStarfishPlatform(WebView* wv)
-        : m_webView(wv)
-    {
-    }
-
-    virtual void didPromiseJobEnqueued(Escargot::ContextRef* relatedContext,
-                                       Escargot::PromiseObjectRef* obj) override
-    {
-        Window* window = (Window*)relatedContext->globalObject()->extraData();
-
-        window->webView()->messageLoop()->addIdler(
-            window,
-            [](size_t, void* data, void* data2) {
-                Window* window = (Window*)data;
-                Escargot::ContextRef* relatedContext =
-                    (Escargot::ContextRef*)data2;
-                if (!window->webView()->isActive()) {
-                    return;
-                }
-
-                if (relatedContext->vmInstance()->hasPendingPromiseJob()) {
-                    auto jobResult = relatedContext->vmInstance()
-                                         ->executePendingPromiseJob();
-                    if (jobResult.error) {
-                        STARFISH_LOG_ERROR(
-                            "Uncaught %s in Promise job\n",
-                            toBrowserString(window->scriptBindingInstance(),
-                                            jobResult.error.value())
-                                ->toUTF8NonGCString()
-                                .data());
-                    }
-                }
-            },
-            window, relatedContext);
-    }
-
-    virtual LoadModuleResult onLoadModule(
-        Escargot::ContextRef* relatedContext,
-        Escargot::ScriptRef* whereRequestFrom,
-        Escargot::StringRef* moduleSrc) override
-    {
-        return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                Escargot::StringRef::emptyString());
-    }
-
-    virtual void didLoadModule(
-        Escargot::ContextRef* relatedContext,
-        Escargot::OptionalRef<Escargot::ScriptRef> referrer,
-        Escargot::ScriptRef* loadedModule) override
-    {
-    }
-
-    WebView* m_webView;
-};
-
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                                            const char* timezone, WebView* wv)
 {
+    class EscargotStarfishPlatform : public Escargot::PlatformRef {
+    public:
+        EscargotStarfishPlatform(WebView* wv)
+            : m_webView(wv)
+        {
+        }
+
+        virtual void didPromiseJobEnqueued(
+            Escargot::ContextRef* relatedContext,
+            Escargot::PromiseObjectRef* obj) override
+        {
+            Window* window =
+                (Window*)relatedContext->globalObject()->extraData();
+
+            if (window->scriptBindingInstance()->m_promiseJobIdlerHandle ==
+                MessageLoopInvalidID) {
+                window->scriptBindingInstance()->m_promiseJobIdlerHandle =
+                    window->webView()->messageLoop()->addIdler(
+                        window,
+                        [](size_t, void* data, void* data2) {
+                            Window* window = (Window*)data;
+                            Escargot::ContextRef* relatedContext =
+                                (Escargot::ContextRef*)data2;
+
+                            window->scriptBindingInstance()
+                                ->m_promiseJobIdlerHandle =
+                                MessageLoopInvalidID;
+                            while (relatedContext->vmInstance()
+                                       ->hasPendingPromiseJob()) {
+                                auto jobResult =
+                                    relatedContext->vmInstance()
+                                        ->executePendingPromiseJob();
+                                if (jobResult.error) {
+                                    STARFISH_LOG_ERROR(
+                                        "Uncaught %s in Promise job\n",
+                                        toBrowserString(
+                                            window->scriptBindingInstance(),
+                                            jobResult.error.value())
+                                            ->toUTF8NonGCString()
+                                            .data());
+                                }
+                            }
+                        },
+                        window, relatedContext);
+            }
+        }
+
+        virtual LoadModuleResult onLoadModule(
+            Escargot::ContextRef* relatedContext,
+            Escargot::ScriptRef* whereRequestFrom,
+            Escargot::StringRef* moduleSrc) override
+        {
+            return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                                    Escargot::StringRef::emptyString());
+        }
+
+        virtual void didLoadModule(
+            Escargot::ContextRef* relatedContext,
+            Escargot::OptionalRef<Escargot::ScriptRef> referrer,
+            Escargot::ScriptRef* loadedModule) override
+        {
+        }
+
+        WebView* m_webView;
+    };
+
     m_engineInstance = Escargot::VMInstanceRef::create(
         new EscargotStarfishPlatform(wv), locale, timezone);
 }
