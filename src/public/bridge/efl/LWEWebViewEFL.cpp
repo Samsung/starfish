@@ -351,12 +351,6 @@ public:
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
 
-        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL::clearEvasGL\n");
-        evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
-        m_glGlapi->glClearColor(0, 0, 0, 0);
-        m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
-        m_glGlapi->glFlush();
-
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
