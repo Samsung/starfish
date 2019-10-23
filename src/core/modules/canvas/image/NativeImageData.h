@@ -70,8 +70,9 @@ public:
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
 
-    virtual void prepareNextFrame()
+    virtual bool prepareNextFrame()
     {
+        return false;
     }
 
     virtual bool hasAnimatedGIF()
