@@ -152,9 +152,10 @@ public:
         }
     }
 
-    virtual void prepareNextFrame() override
+    virtual bool prepareNextFrame() override
     {
-        if (m_imageDecoder && hasAnimatedGIF()) {
+        if (m_width != 0 && m_height != 0 && m_imageDecoder &&
+            hasAnimatedGIF()) {
             STARFISH_ASSERT(m_imageDecoder != nullptr);
             auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF();
             m_delay = idResult.delay;
@@ -162,7 +163,9 @@ public:
                 m_delay = MinimumDelay;
             }
             m_image = idResult.m_buffer;
+            return true;
         }
+        return false;
     }
 
     virtual uint8_t* data() override

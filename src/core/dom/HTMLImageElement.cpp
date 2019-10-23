@@ -415,9 +415,10 @@ void HTMLImageElement::updateFrame(size_t delay)
                 if (imageElement->frame()) {
                     imageElement->setNeedsPainting();
                 }
-                imageElement->m_imageData->prepareNextFrame();
-                size_t delay = imageElement->m_imageData->delay();
-                imageElement->updateFrame(delay);
+                if (imageElement->m_imageData->prepareNextFrame()) {
+                    size_t delay = imageElement->m_imageData->delay();
+                    imageElement->updateFrame(delay);
+                }
             }
         },
         this, false);

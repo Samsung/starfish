@@ -854,7 +854,10 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
         DGifGetRecordType(gifFile, &recordType);
         switch (recordType) {
         case IMAGE_DESC_RECORD_TYPE:
-            DGifGetImageDesc(gifFile);
+            errorCode = DGifGetImageDesc(gifFile);
+            if (errorCode == GIF_ERROR) {
+                break;
+            }
 
             row = gifFile->Image.Top;
             col = gifFile->Image.Left;
