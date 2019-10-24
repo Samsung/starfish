@@ -1252,7 +1252,7 @@ void GridFormattingContext::buildGridLineTemplate()
     buildGridAreaAndOrdering();
 
     // adjust grid-lines' offset and grid-area's width using grid areas/lines
-    arrangeGridLinesWithGridAreas(true, false);
+    assumeGridItemWidths();
 
     // compute minmax size for grid lines
     applyMinMaxGridLineColumns();
@@ -1276,9 +1276,12 @@ void GridFormattingContext::buildGridLineTemplate()
 
     // update offset using flex factor
     applyFrUnitsWithColumns();
+
+    layoutGridLinesWithGridAreas();
+
     applyFrUnitsWithRows();
 
-    arrangeGridLinesWithGridAreas(false, true);
+    relayoutGridLinesWithGridAreasIfNeeded();
 }
 
 static bool hasBigAreasIncludingCurrentArea(GCVector<GridArea>& list,
@@ -1992,12 +1995,120 @@ LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
     return result;
 }
 
-void convertPercenMarginBorderPaddingToFixedValue(LayoutUnit cellWidth)
+void GridFormattingContext::assumeGridItemWidths()
 {
+    for (auto area : m_orderedGridArea) {
+        FrameBox* gridItem = area.m_box;
+        ComputedStyle* style = gridItem->style();
+
+        LayoutUnit width;
+        LayoutUnit contentWidth;
+        bool isFixed = true;
+
+        LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
+
+        if (style->width().isFixed()) {
+            width = style->width().fixed() + mbp.width();
+            contentWidth = width;
+            isFixed = true;
+        } else {
+            auto cache = m_layoutContext.testGridItemPreferredWidthCache(
+                gridItem, m_availableWidth);
+            if (cache.hasValue()) {
+                contentWidth = cache.getValue() + mbp.width();
+            } else {
+                PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
+                                        gridItem, m_availableWidth);
+                p.computePreferredWidth();
+                contentWidth = p.preferredWidth() + mbp.width();
+
+                m_layoutContext.registerToGridItemPreferredWidthCache(
+                    gridItem, m_availableWidth, p.preferredWidth());
+            }
+            isFixed = false;
+        }
+
+        // This part relies on calculating 'width'.
+        // grid lines' offset is updated.
+        alignGridLinesForColumns(area, width, contentWidth, isFixed);
+    }
 }
 
-void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
-                                                          bool nonFixedHeight)
+bool GridFormattingContext::needsGridItemLayout(FrameBox* gridItem,
+                                                ComputedStyle* style,
+                                                bool testWidthOnly)
+{
+    bool changed = false;
+
+    if (testWidthOnly) {
+        if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+            changed = changed || (gridItem->width() != style->width().fixed());
+        } else {
+            changed =
+                changed || (gridItem->contentWidth() != style->width().fixed());
+        }
+
+        auto styleMargin = style->margin();
+        auto stylePadding = style->padding();
+        auto styleBorder = style->border();
+
+        changed = changed || (gridItem->marginLeft() != styleMargin.left().fixed());
+        changed =
+            changed || (gridItem->marginRight() != styleMargin.right().fixed());
+
+        changed =
+            changed || (gridItem->paddingLeft() != stylePadding.left().fixed());
+        changed =
+            changed || (gridItem->paddingRight() != stylePadding.right().fixed());
+
+        changed = changed ||
+                  (gridItem->borderLeft() != styleBorder.left().width().fixed());
+        changed = changed ||
+                  (gridItem->borderRight() != styleBorder.right().width().fixed());
+    } else {
+        if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+            changed = changed || (gridItem->width() != style->width().fixed());
+            changed = changed || (gridItem->height() != style->height().fixed());
+        } else {
+            changed =
+                changed || (gridItem->contentWidth() != style->width().fixed());
+            changed =
+                changed || (gridItem->contentHeight() != style->height().fixed());
+        }
+
+        auto styleMargin = style->margin();
+        auto stylePadding = style->padding();
+        auto styleBorder = style->border();
+
+        changed = changed || (gridItem->marginLeft() != styleMargin.left().fixed());
+        changed = changed || (gridItem->marginTop() != styleMargin.top().fixed());
+        changed =
+            changed || (gridItem->marginRight() != styleMargin.right().fixed());
+        changed =
+            changed || (gridItem->marginBottom() != styleMargin.bottom().fixed());
+
+        changed =
+            changed || (gridItem->paddingLeft() != stylePadding.left().fixed());
+        changed = changed || (gridItem->paddingTop() != stylePadding.top().fixed());
+        changed =
+            changed || (gridItem->paddingRight() != stylePadding.right().fixed());
+        changed =
+            changed || (gridItem->paddingBottom() != stylePadding.bottom().fixed());
+
+        changed = changed ||
+                  (gridItem->borderLeft() != styleBorder.left().width().fixed());
+        changed =
+            changed || (gridItem->borderTop() != styleBorder.top().width().fixed());
+        changed = changed ||
+                  (gridItem->borderRight() != styleBorder.right().width().fixed());
+        changed = changed || (gridItem->borderBottom() !=
+                              styleBorder.bottom().width().fixed());
+    }
+
+    return changed;
+}
+
+void GridFormattingContext::layoutGridLinesWithGridAreas()
 {
     for (auto area : m_orderedGridArea) {
         FrameBox* gridItem = area.m_box;
@@ -2016,17 +2127,10 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
             contentWidth = width;
             isFixed = true;
         } else {
-            PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
-                                    gridItem, m_availableWidth);
-            p.computePreferredWidth();
-            contentWidth = p.preferredWidth() + mbp.width();
+            auto cache = m_layoutContext.testGridItemPreferredWidthCache(
+                gridItem, m_availableWidth);
+            contentWidth = cache.getValue() + mbp.width();
             isFixed = false;
-        }
-
-        // This part relies on calculating 'width'.
-        // grid lines' offset is updated.
-        if (layoutLines) {
-            alignGridLinesForColumns(area, width, contentWidth, isFixed);
         }
 
         if (!isFixed) {
@@ -2075,7 +2179,109 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
         }
         style->setWidth(Length(Length::Fixed, width));
 
-        if (nonFixedHeight && !style->height().isFixed()) {
+        style->setMarginTop(
+            Length(Length::Fixed,
+                   style->margin().top().specifiedValue(width, m_container)));
+        style->setMarginBottom(Length(
+            Length::Fixed,
+            style->margin().bottom().specifiedValue(width, m_container)));
+
+        style->setPaddingTop(
+            Length(Length::Fixed,
+                   style->padding().top().specifiedValue(width, m_container)));
+        style->setPaddingBottom(Length(
+            Length::Fixed,
+            style->padding().bottom().specifiedValue(width, m_container)));
+
+        style->setBorderTopWidth(Length(
+            Length::Fixed,
+            style->border().top().width().specifiedValue(width, m_container)));
+        style->setBorderBottomWidth(Length(
+            Length::Fixed, style->border().bottom().width().specifiedValue(
+                               width, m_container)));
+
+        if (needsGridItemLayout(gridItem, style, true)) {
+            gridItem->markNeedsLayout();
+        }
+        gridItem->layout(m_layoutContext,
+                         Frame::LayoutWantToResolve::ResolveAll);
+
+        alignGridLinesForRows(area);
+    }
+}
+
+void GridFormattingContext::relayoutGridLinesWithGridAreasIfNeeded()
+{
+    for (auto area : m_orderedGridArea) {
+        FrameBox* gridItem = area.m_box;
+        GridLayoutScope scope(gridItem);
+        ComputedStyle* style = gridItem->style();
+
+        LayoutUnit width;
+        LayoutUnit styleWidth;
+        LayoutUnit contentWidth;
+        bool isFixed = true;
+
+        LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
+
+        if (style->width().isFixed()) {
+            width = style->width().fixed() + mbp.width();
+            contentWidth = width;
+            isFixed = true;
+        } else {
+            auto cache = m_layoutContext.testGridItemPreferredWidthCache(
+                gridItem, m_availableWidth);
+            contentWidth = cache.getValue() + mbp.width();
+            isFixed = false;
+        }
+
+        if (!isFixed) {
+            width = 0;
+            for (size_t i = area.m_columnStart; i <= area.m_columnEnd - 1;
+                 i++) {
+                width += m_gridLineColumns[i].offset();
+            }
+
+            // Add the gap size of columns.
+            width +=
+                ((area.m_columnEnd - area.m_columnStart - 1) * m_columnGap);
+        }
+
+        LayoutUnit widthWillBe = width;
+        style->setMarginLeft(
+            Length(Length::Fixed,
+                   style->margin().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().left().fixed();
+        style->setMarginRight(
+            Length(Length::Fixed,
+                   style->margin().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().right().fixed();
+
+        style->setPaddingLeft(
+            Length(Length::Fixed,
+                   style->padding().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().left().fixed();
+        style->setPaddingRight(Length(
+            Length::Fixed,
+            style->padding().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().right().fixed();
+
+        style->setBorderLeftWidth(Length(
+            Length::Fixed,
+            style->border().left().width().specifiedValue(width, m_container)));
+        widthWillBe -= style->border().left().width().fixed();
+        style->setBorderRightWidth(Length(
+            Length::Fixed, style->border().right().width().specifiedValue(
+                               width, m_container)));
+        widthWillBe -= style->border().right().width().fixed();
+
+        width = widthWillBe;
+        if (width < 0) {
+            width = 0;
+        }
+        style->setWidth(Length(Length::Fixed, width));
+
+        if (!style->height().isFixed()) {
             LayoutUnit height;
             for (size_t i = area.m_rowStart; i <= area.m_rowEnd - 1; i++) {
                 height += m_gridLineRows[i].offset();
@@ -2140,9 +2346,11 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
                                    width, m_container)));
         }
 
-        gridItem->markNeedsLayout();
-        gridItem->layout(m_layoutContext,
-                         Frame::LayoutWantToResolve::ResolveAll);
+        if (needsGridItemLayout(gridItem, style, false)) {
+            gridItem->markNeedsLayout();
+            gridItem->layout(m_layoutContext,
+                             Frame::LayoutWantToResolve::ResolveAll);
+        }
 
         alignGridLinesForRows(area);
     }

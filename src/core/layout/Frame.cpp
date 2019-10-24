@@ -996,6 +996,36 @@ void LayoutContext::registerToBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
     }
 }
 
+Nullable<LayoutUnit> LayoutContext::testGridItemPreferredWidthCache(
+    Frame* gridItem, LayoutUnit availableWidth)
+{
+    auto iter = m_gridItemPreferredWidthCache.find(gridItem);
+    if (iter != m_gridItemPreferredWidthCache.end()) {
+        LayoutContext::CachedGridItemPreferredWidthVector& v = iter->second;
+        for (size_t i = 0; i < v.size(); i++) {
+            if (std::get<0>(v[i]) == availableWidth) {
+                return std::get<1>(v[i]);
+            }
+        }
+    }
+    return Nullable<LayoutUnit>();
+}
+
+void LayoutContext::registerToGridItemPreferredWidthCache(
+    Frame* gridItem, LayoutUnit availableWidth, LayoutUnit preferredWidth)
+{
+    auto iter = m_gridItemPreferredWidthCache.find(gridItem);
+    if (iter != m_gridItemPreferredWidthCache.end()) {
+        LayoutContext::CachedGridItemPreferredWidthVector& v = iter->second;
+        v.push_back(std::make_tuple(availableWidth, preferredWidth));
+    } else {
+        LayoutContext::CachedGridItemPreferredWidthVector v;
+        v.push_back(std::make_tuple(availableWidth, preferredWidth));
+        m_gridItemPreferredWidthCache.insert(
+            std::make_pair(gridItem, std::move(v)));
+    }
+}
+
 PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
 {
     PreferredWidthContext* c = this;
