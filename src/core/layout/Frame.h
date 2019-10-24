@@ -595,6 +595,12 @@ public:
                                   const Length& inputLength,
                                   LayoutUnit basisSize);
 
+    Nullable<LayoutUnit> testGridItemPreferredWidthCache(
+        Frame* gridItem, LayoutUnit availableWidth);
+    void registerToGridItemPreferredWidthCache(Frame* gridItem,
+                                               LayoutUnit availableWidth,
+                                               LayoutUnit preferredWidth);
+
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(
@@ -666,10 +672,16 @@ private:
     GCVector<InlineTextBox*> m_inlineTextBoxPool;
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
 
-    // <container box {width, height}, Length input, computed {width, height}
+    // <container box {width, height}, Length input, computed {width, height}>
     typedef std::vector<std::tuple<LayoutUnit, Length, LayoutUnit>>
         CachedBasisSizeVector;
     std::unordered_map<Frame*, CachedBasisSizeVector> m_basisSizeCache;
+
+    // <availableWidth, result>
+    typedef std::vector<std::tuple<LayoutUnit, LayoutUnit>>
+        CachedGridItemPreferredWidthVector;
+    std::unordered_map<Frame*, CachedGridItemPreferredWidthVector>
+        m_gridItemPreferredWidthCache;
 
     bool m_viewportWidthDamaged : 1;
     bool m_viewportHeightDamaged : 1;
