@@ -178,7 +178,10 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
 
     ctx.m_canvas->setLineWidth(
         style()->strokeWidth().specifiedValue(cb->width(), this));
-    ctx.m_canvas->setFillColor(style()->fill().color());
+    Unit::Color fillColor = style()->fill().color();
+    ctx.m_canvas->setFillColor(
+        Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
+                    fillColor.a() * style()->fillOpacity()));
     ctx.m_canvas->setFillRule(style()->fillRule());
     ctx.m_canvas->fillPath(newPath);
     ctx.m_canvas->setStrokeColor(style()->stroke().color());
