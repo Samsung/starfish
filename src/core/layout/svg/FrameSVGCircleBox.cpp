@@ -50,7 +50,10 @@ void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
     Path* newPath = path();
 
     ctx.m_canvas->setFillRule(style()->fillRule());
-    ctx.m_canvas->setFillColor(style()->fill().color());
+    Unit::Color fillColor = style()->fill().color();
+    ctx.m_canvas->setFillColor(
+        Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
+                    fillColor.a() * style()->fillOpacity()));
     ctx.m_canvas->fillPath(newPath);
 
     ctx.m_canvas->setLineWidth(

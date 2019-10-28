@@ -144,7 +144,9 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_baseURL));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(ExecutionContext, m_activeResourceRequests));
-
+#ifdef STARFISH_ENABLE_WEBSOCKET
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_activeWebSockets));
+#endif
         // we should mark every word of m_rootMap
         // because, we don't know that
         // where pointer of std:pair<Key,Value>* is located in GCUnodrderedMap
