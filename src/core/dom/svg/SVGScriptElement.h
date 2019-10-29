@@ -51,7 +51,12 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGScriptElement() const override;
 
-    virtual bool needsClipPathAttributes()
+    virtual bool needsClipPathAttributes() override
+    {
+        return false;
+    }
+
+    virtual bool needsTransparentAttributes() override
     {
         return false;
     }

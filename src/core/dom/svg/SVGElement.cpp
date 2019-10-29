@@ -98,6 +98,16 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
         } else if (ss->m_strokeWidth == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
+        } else if (ss->m_strokeOpacity == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    if (needsTransparentAttributes()) {
+        if (ss->m_opacity == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
         }
     }
 
@@ -253,6 +263,36 @@ void SVGElement::styleForPresentationAttribute(
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
             if (pair.updateValueStrokeWidth(document(), tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+
+        String* strokeOpacity =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_strokeOpacity);
+        if (strokeOpacity->length()) {
+            pair.setKeyKind(CSSStyleValuePair::StrokeOpacity);
+
+            auto str = strokeOpacity->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueStrokeOpacity(document(), tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
+
+    if (needsTransparentAttributes()) {
+        String* opacity =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_opacity);
+        if (opacity->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Opacity);
+
+            auto str = opacity->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueOpacity(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }

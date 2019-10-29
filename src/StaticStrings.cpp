@@ -331,6 +331,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_fill = QualifiedName(AtomicString::createAtomicString(starfish, "fill"));
     m_fillRule =
         QualifiedName(AtomicString::createAtomicString(starfish, "fill-rule"));
+    m_opacity =
+        QualifiedName(AtomicString::createAtomicString(starfish, "opacity"));
+    m_strokeOpacity = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stroke-opacity"));
     m_fillOpacity = QualifiedName(
         AtomicString::createAtomicString(starfish, "fill-opacity"));
     m_stroke =

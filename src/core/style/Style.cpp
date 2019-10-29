@@ -13517,6 +13517,14 @@ bool CSSStyleValuePair::updateValueFillOpacity(Document* document,
     return updateValueOpacity(document, tokens);
 }
 
+bool CSSStyleValuePair::updateValueStrokeOpacity(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+
+    return updateValueOpacity(document, tokens);
+}
+
 bool CSSStyleValuePair::updateValueFillRule(Document* document,
                                             const CSSTokenVector& tokens)
 {
