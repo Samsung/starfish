@@ -42,11 +42,16 @@ void* FrameSVGRectBox::operator new(size_t size)
 void FrameSVGRectBox::paintSVG(PaintingContext& ctx)
 {
     Path* newPath = path();
-
-    ctx.m_canvas->setFillColor(style()->fill().color());
+    float opacity = style()->opacity();
+    Unit::Color fillColor = style()->fill().color();
+    ctx.m_canvas->setFillColor(
+        Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
+                    fillColor.a() * style()->fillOpacity() * opacity));
+    Unit::Color strokeColor = style()->stroke().color();
+    ctx.m_canvas->setStrokeColor(
+        Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                    strokeColor.a() * style()->strokeOpacity() * opacity));
     ctx.m_canvas->fillPath(newPath);
-
-    ctx.m_canvas->setStrokeColor(style()->stroke().color());
     ctx.m_canvas->strokePath(newPath);
 }
 

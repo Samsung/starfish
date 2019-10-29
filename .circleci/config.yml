@@ -115,7 +115,6 @@ workflows:
   version: 2
   build_All:
     jobs:
-      - build_android
       - build_x64_glfw_debug
       - build_x64_glfw_release
       - build_x64_efl_headless_debug

@@ -695,6 +695,7 @@ class ComputedStyle : public gc {
         StylePaintData m_fill;   // svg
         float m_fillOpacity;     // svg
         StylePaintData m_stroke; // svg
+        float m_strokeOpacity;   // svg
         Length m_strokeWidth;    // svg
 
         ShadowDataList m_textShadowDataList;
@@ -713,6 +714,7 @@ class ComputedStyle : public gc {
             m_fill = Unit::Color(0, 0, 0, 0xff);
             m_fillRule = FillRuleNonZero;
             m_fillOpacity = 1;
+            m_strokeOpacity = 1;
             m_stroke = Unit::Color(0, 0, 0, 0);
             m_strokeWidth = Length(Length::Fixed, 1);
 
@@ -2845,6 +2847,20 @@ public:
     {
         if (v != fillOpacity())
             ensureInheritedRareData()->m_fillOpacity = v;
+    }
+
+    float strokeOpacity()
+    {
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_strokeOpacity;
+        }
+        return 1;
+    }
+
+    void setStrokeOpacity(float v)
+    {
+        if (v != fillOpacity())
+            ensureInheritedRareData()->m_strokeOpacity = v;
     }
 
     StylePaintData stroke()

@@ -1296,6 +1296,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    if (newStyle->strokeOpacity() != oldStyle->strokeOpacity()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StrokeOpacity] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     if (newStyle->strokeWidth() != oldStyle->strokeWidth()) {
         damagedKeys[CSSStyleValuePair::KeyKind::StrokeWidth] = true;
         damage = (ComputedStyleDamage)(

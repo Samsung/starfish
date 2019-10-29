@@ -60,6 +60,11 @@ public:
         return false;
     }
 
+    virtual bool needsTransparentAttributes() override
+    {
+        return false;
+    }
+
     /* Other methods (not in DOM API) */
 
     String* type();

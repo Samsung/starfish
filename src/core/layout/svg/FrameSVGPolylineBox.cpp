@@ -48,9 +48,13 @@ void FrameSVGPolylineBox::paintSVG(PaintingContext& ctx)
     Path* newPath = path();
     if (newPath) {
         FrameBox* cb = layoutParent()->asFrameBox();
+        float opacity = style()->opacity();
+        Unit::Color strokeColor = style()->stroke().color();
+        ctx.m_canvas->setStrokeColor(
+            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                        strokeColor.a() * style()->strokeOpacity() * opacity));
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setStrokeColor(style()->stroke().color());
         ctx.m_canvas->strokePath(newPath);
     }
 }

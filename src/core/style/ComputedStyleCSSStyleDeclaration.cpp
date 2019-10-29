@@ -1486,6 +1486,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::Stroke);
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::StrokeOpacity: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeOpacity);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        p.setNumberValue(style->strokeOpacity());
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::StrokeWidth: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->strokeWidth());
         p.setKeyKind(CSSStyleValuePair::KeyKind::StrokeWidth);

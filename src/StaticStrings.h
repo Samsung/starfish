@@ -426,6 +426,8 @@ public:
     QualifiedName m_readonly;
     QualifiedName m_fill;
     QualifiedName m_fillRule;
+    QualifiedName m_opacity;
+    QualifiedName m_strokeOpacity;
     QualifiedName m_fillOpacity;
     QualifiedName m_stroke;
     QualifiedName m_strokeWidth;

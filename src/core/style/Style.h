@@ -662,6 +662,7 @@ class CSSFilterFunction;
     F(BoxShadow, boxShadow, "box-shadow")                                      \
     F(BoxSizing, boxSizing, "box-sizing")                                      \
     F(Fill, fill, "fill")                                                      \
+    F(StrokeOpacity, strokeOpacity, "stroke-opacity")                          \
     F(FillOpacity, fillOpacity, "fill-opacity")                                \
     F(FillRule, fillRule, "fill-rule")                                         \
     F(Filter, filter, "filter")                                                \

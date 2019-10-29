@@ -104,6 +104,11 @@ public:
         return true;
     }
 
+    virtual bool needsTransparentAttributes()
+    {
+        return true;
+    }
+
     virtual bool needsStrokeAttributes()
     {
         return true;
