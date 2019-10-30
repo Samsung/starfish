@@ -36,7 +36,6 @@
 namespace Starfish {
 class ExecutionContext;
 class Event;
-class OperationQueue;
 class RTCRtpSender;
 class RTCPeerConnection;
 
@@ -232,10 +231,7 @@ public:
 private:
     ExecutionContext* m_executionContext;
 
-    OperationQueue* m_operationQueue;
-
     RTCConfiguration m_configuration;
-
     std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 

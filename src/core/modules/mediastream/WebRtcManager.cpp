@@ -47,7 +47,6 @@ WebRtcManager::WebRtcManager()
 WebRtcManager::~WebRtcManager()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-    deletePeerConnection();
 }
 
 void WebRtcManager::initPeerConnection()
@@ -77,17 +76,10 @@ void WebRtcManager::initPeerConnection()
     STARFISH_ASSERT(m_peerConnectionFactory);
 }
 
-void WebRtcManager::deletePeerConnection()
+void WebRtcManager::dispose()
 {
+    STARFISH_LOG_INFO("%s\n", __func__);
     m_peerConnectionFactory = nullptr;
-    m_networkThread.reset();
-    m_workerThread.reset();
-    m_signalingThread.reset();
-}
-
-void WebRtcManager::destroy()
-{
-    deletePeerConnection();
 }
 } // namespace Starfish
 
