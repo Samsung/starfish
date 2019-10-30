@@ -30,9 +30,7 @@ public:
     WebRtcManager();
     virtual ~WebRtcManager();
 
-    void initPeerConnection();
-    void deletePeerConnection();
-    void destroy();
+    void dispose();
 
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
     peerConnectionFactory()
@@ -46,6 +44,8 @@ private:
     std::unique_ptr<rtc::Thread> m_networkThread;
     std::unique_ptr<rtc::Thread> m_workerThread;
     std::unique_ptr<rtc::Thread> m_signalingThread;
+
+    void initPeerConnection();
 };
 } // namespace Starfish
 

@@ -119,9 +119,8 @@ void Navigator::dispose()
 
 #if defined(STARFISH_ENABLE_WEBRTC)
     if (m_webRtcManager) {
-        m_webRtcManager->destroy();
+        m_webRtcManager->dispose();
     }
-    m_webRtcManager = nullptr;
 #endif
 }
 

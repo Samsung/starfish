@@ -36,7 +36,6 @@
 #include "core/modules/mediastream/RTCCertificate.h"
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
-#include "core/modules/mediastream/OperationQueue.h"
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/mediastream/RTCRtpSender.h"
 #include "core/modules/mediastream/RTCTrackEvent.h"
@@ -360,7 +359,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
     : EventTarget()
     , m_executionContext(executionContext)
-    , m_operationQueue(new OperationQueue(executionContext))
 {
     if (!configuration.certificates().empty()) {
         // TODO
@@ -448,7 +446,10 @@ bool RTCPeerConnection::initializePeerConnection(
 
 RTCPeerConnection::~RTCPeerConnection()
 {
-    deletePeerConnection();
+    if (backend()) {
+        m_backend->Close();
+        deletePeerConnection();
+    }
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -474,31 +475,24 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
         return promise;
     }
 
-    Promise* promise = new (NoGC) Promise(scriptBindingInstance());
-    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
-        new webrtc::PeerConnectionInterface::RTCOfferAnswerOptions(
-            options.m_offerToReceiveVideo, options.m_offerToReceiveAudio,
-            options.m_voiceActivityDetection, options.m_iceRestart, true);
-    m_operationQueue->enqueue(
-        [](Promise* promise, void* data1, void* data2) {
-            RTCPeerConnection* self = (RTCPeerConnection*)data1;
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
-                (webrtc::PeerConnectionInterface::RTCOfferAnswerOptions*)data2;
+    if (backend() == nullptr) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_STATE_ERR,
+            "Internal Error: backend() == nullptr");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
 
-            if (self->backend()) {
-                // the observer creates an exception if needed
-                self->m_createOfferObserver->setPromise(promise);
-                self->backend()->CreateOffer(self->m_createOfferObserver, *opt);
-                delete opt;
-            } else {
-                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
-                auto exception = new DOMException(
-                    self->executionContext(), DOMException::INVALID_STATE_ERR,
-                    "InvalidStateError");
-                promise->reject(exception->scriptValue());
-            }
-        },
-        promise, this, opt);
+    Promise* promise = new (NoGC) Promise(scriptBindingInstance());
+    m_createOfferObserver->setPromise(promise);
+
+    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions opt(
+        options.m_offerToReceiveVideo, options.m_offerToReceiveAudio,
+        options.m_voiceActivityDetection, options.m_iceRestart, true);
+
+    m_backend->CreateOffer(m_createOfferObserver, opt);
 
     return promise;
 }
@@ -515,35 +509,27 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
         return promise;
     }
 
-    Promise* promise = new (NoGC) Promise(scriptBindingInstance());
-    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
-        new webrtc::PeerConnectionInterface::RTCOfferAnswerOptions(
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
-                kOfferToReceiveMediaTrue,
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
-                kOfferToReceiveMediaTrue,
-            options.m_voiceActivityDetection, false, true);
-    m_operationQueue->enqueue(
-        [](Promise* promise, void* data1, void* data2) {
-            RTCPeerConnection* self = (RTCPeerConnection*)data1;
-            webrtc::PeerConnectionInterface::RTCOfferAnswerOptions* opt =
-                (webrtc::PeerConnectionInterface::RTCOfferAnswerOptions*)data2;
+    if (backend() == nullptr) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_STATE_ERR,
+            "Internal Error: backend() == nullptr");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
 
-            if (self->backend()) {
-                // the observer creates an exception if needed
-                self->m_createAnswerObserver->setPromise(promise);
-                self->backend()->CreateAnswer(self->m_createAnswerObserver,
-                                              *opt);
-            } else {
-                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
-                auto exception = new DOMException(
-                    self->executionContext(), DOMException::INVALID_STATE_ERR,
-                    "InvalidStateError");
-                promise->reject(exception->scriptValue());
-            }
-            delete opt;
-        },
-        promise, this, opt);
+    Promise* promise = new (NoGC) Promise(scriptBindingInstance());
+    m_createAnswerObserver->setPromise(promise);
+
+    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions opt(
+        webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
+            kOfferToReceiveMediaTrue,
+        webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
+            kOfferToReceiveMediaTrue,
+        options.m_voiceActivityDetection, false, true);
+
+    m_backend->CreateAnswer(m_createAnswerObserver, opt);
 
     return promise;
 }
@@ -584,52 +570,27 @@ Promise* RTCPeerConnection::setLocalDescription(
         return promise;
     }
 
+    if (backend() == nullptr) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_STATE_ERR,
+            "Internal Error: backend() == nullptr");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     Promise* promise = new (NoGC) Promise(scriptBindingInstance());
-    struct Params : public gc {
-        RTCPeerConnection* self;
-        RTCSdpType type;
-        String* sdp;
-    };
-    Params* p = new (NoGC) Params();
-    p->self = this;
-    p->type = description.m_type;
-    p->sdp = description.m_sdp;
+    m_setLocalDescriptionObserver->setPromise(promise);
 
-    m_operationQueue->enqueue(
-        [](Promise* promise, void* data1) {
-            Params* p = (Params*)data1;
-            RTCPeerConnection* self = (RTCPeerConnection*)(p->self);
+    webrtc::SdpType type = toSdpType(description.m_type);
+    std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
+    std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
+        webrtc::CreateSessionDescription(type, sdpString);
 
-            if (self->isClosed()) {
-                promise->fulfill(scriptUndefined());
-                delete p;
-                return;
-            }
-
-            if (self->backend()) {
-                // the observer creates an exception if needed
-                self->m_setLocalDescriptionObserver->setPromise(promise);
-
-                webrtc::SdpType type = self->toSdpType(p->type);
-                std::string sdpString =
-                    std::string(p->sdp->toUTF8NonGCString());
-                std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-                    webrtc::CreateSessionDescription(type, sdpString);
-
-                // SetLocalDescription takes the ownership of desc
-                self->backend()->SetLocalDescription(
-                    self->m_setLocalDescriptionObserver, desc.release());
-            } else {
-                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
-                auto exception = new DOMException(
-                    self->executionContext(), DOMException::INVALID_STATE_ERR,
-                    "InvalidStateError");
-                promise->reject(exception->scriptValue());
-            }
-            delete p;
-            return;
-        },
-        promise, p);
+    // SetLocalDescription takes the ownership of desc
+    m_backend->SetLocalDescription(m_setLocalDescriptionObserver,
+                                   desc.release());
 
     return promise;
 }
@@ -661,53 +622,28 @@ Promise* RTCPeerConnection::setRemoteDescription(
         return promise;
     }
 
+    if (backend() == nullptr) {
+        Promise* promise = new Promise(scriptBindingInstance());
+        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_STATE_ERR,
+            "Internal Error: backend() == nullptr");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     Promise* promise = new (NoGC) Promise(scriptBindingInstance());
-    struct Params : public gc {
-        RTCPeerConnection* self;
-        RTCSdpType type;
-        String* sdp;
-    };
-    Params* p = new (NoGC) Params();
-    p->self = this;
-    p->type = description.m_type;
-    p->sdp = description.m_sdp;
+    m_setRemoteDescriptionObserver->setPromise(promise);
 
-    m_operationQueue->enqueue(
-        [](Promise* promise, void* data1) {
-            Params* p = (Params*)data1;
-            RTCPeerConnection* self = (RTCPeerConnection*)(p->self);
+    webrtc::SdpType type = toSdpType(description.m_type);
+    std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
-            if (self->isClosed()) {
-                promise->fulfill(scriptUndefined());
-                delete p;
-                return;
-            }
+    std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
+        webrtc::CreateSessionDescription(type, sdpString);
 
-            if (self->backend()) {
-                // the observer creates an exception if needed
-                self->m_setRemoteDescriptionObserver->setPromise(promise);
-
-                webrtc::SdpType type = self->toSdpType(p->type);
-                std::string sdpString =
-                    std::string(p->sdp->toUTF8NonGCString());
-
-                std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-                    webrtc::CreateSessionDescription(type, sdpString);
-
-                // SetRemoteDescription takes the ownership of desc
-                self->backend()->SetRemoteDescription(
-                    self->m_setRemoteDescriptionObserver, desc.release());
-            } else {
-                STARFISH_LOG_WARN("%s: connection failed\n", __func__);
-                auto exception = new DOMException(
-                    self->executionContext(), DOMException::INVALID_STATE_ERR,
-                    "InvalidStateError");
-                promise->reject(exception->scriptValue());
-            }
-            delete p;
-            return;
-        },
-        promise, p);
+    // SetRemoteDescription takes the ownership of desc
+    m_backend->SetRemoteDescription(m_setRemoteDescriptionObserver,
+                                    desc.release());
 
     return promise;
 }
