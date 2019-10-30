@@ -4039,6 +4039,11 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     }
 
     SkMatrix m = SkMatrix::I();
+
+    if (graphicsLayerHolder == self) {
+        return m;
+    }
+
     if (seenFixedPositionedLayer) {
         FrameBox* top = *frameList.rbegin();
         if (top->isFrameBlockBox()) {
