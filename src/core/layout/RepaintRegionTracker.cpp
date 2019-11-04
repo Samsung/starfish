@@ -244,12 +244,20 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
     StackingContext* sc = frame->stackingContext();
     if (sc) {
         if (frame->isBoxesInvisibleFromHere()) {
+            bool needToSkip = true;
             auto iter = m_prevDrawnStackingContextInfoMap.find(frame->node());
             if (iter != m_prevDrawnStackingContextInfoMap.end()) {
                 iter->second.hasThisLayerThisTime = true;
                 iter->second.isEqualsWithPrevDrawing = true;
+                if (!iter->second.isVisibleBefore) {
+                    needToSkip = false;
+                }
+            } else {
+                needToSkip = false;
             }
-            return;
+            if (needToSkip) {
+                return;
+            }
         }
 
         auto iter = m_prevDrawnStackingContextInfoMap.find(frame->node());
@@ -263,6 +271,9 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                             cb->computeScreenMatrix(), cb->frameVisibleRect());
             }
         } else {
+            if (!frame->isBoxesInvisibleFromHere()) {
+                iter->second.isVisibleBefore = true;
+            }
             iter->second.hasThisLayerThisTime = true;
 
             bool compositedBefore = iter->second.needsGraphicsBuffer;

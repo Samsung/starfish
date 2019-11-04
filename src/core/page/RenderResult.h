@@ -43,7 +43,7 @@ struct PrevDrawnStackingContextInfo {
     PrevDrawnStackingContextInfo()
     {
         needsGraphicsBuffer = hasThisLayerThisTime = isEqualsWithPrevDrawing =
-            false;
+            isVisibleBefore = false;
         graphicsBufferHolder = nullptr;
         graphicsLayerOwner = nullptr;
         opacity = 1;
@@ -54,6 +54,7 @@ struct PrevDrawnStackingContextInfo {
     bool isEqualsWithPrevDrawing;
     bool hasThisLayerThisTime;
     bool needsGraphicsBuffer;
+    bool isVisibleBefore;
 
     LayoutRect screenExtent;
     Node* graphicsLayerOwner;
