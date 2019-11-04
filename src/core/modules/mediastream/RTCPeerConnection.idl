@@ -143,3 +143,9 @@ partial interface RTCPeerConnection {
 //  [Unimplemented] RTCRtpTransceiver addTransceiver ((MediaStreamTrack or DOMString) trackOrKind, optional RTCRtpTransceiverInit init);
 //  [Unimplemented] attribute EventHandler ontrack;
 };
+
+[STARFISH_ENABLE_WEBRTC]
+partial interface RTCPeerConnection {
+//  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
+//  attribute EventHandler onstatsended;
+};
