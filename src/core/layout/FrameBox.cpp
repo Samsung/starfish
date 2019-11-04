@@ -3679,6 +3679,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                     ->browsingContext()
                     ->rootStackingContextNeedsGraphicsBuffer()) {
                 boxHasDrawableContents = false;
+            } else {
+                boxHasDrawableContents = drawableContentsInStyle;
             }
         }
     }

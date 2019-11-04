@@ -30,6 +30,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/layout/OverflowStatus.h"
 
 namespace Starfish {
 
@@ -38,7 +39,8 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
     : tracker(tracker)
     , frame(frame)
 {
-    if (frame->shouldApplyOverflow()) {
+    OverflowStatus status(frame);
+    if (status.canApplyOverflow(frame, false)) {
         if (tracker.m_willCompositing) {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
                 computeBoxExtent(
@@ -57,7 +59,8 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
 
 RepaintRegionTracker::ComputeOverflow::~ComputeOverflow()
 {
-    if (frame->shouldApplyOverflow()) {
+    OverflowStatus status(frame);
+    if (status.canApplyOverflow(frame, false)) {
         tracker.m_boundMaxExtentDueToOverflow.pop_back();
     }
 }

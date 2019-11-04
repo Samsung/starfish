@@ -2052,55 +2052,60 @@ bool GridFormattingContext::needsGridItemLayout(FrameBox* gridItem,
         auto stylePadding = style->padding();
         auto styleBorder = style->border();
 
-        changed = changed || (gridItem->marginLeft() != styleMargin.left().fixed());
+        changed =
+            changed || (gridItem->marginLeft() != styleMargin.left().fixed());
         changed =
             changed || (gridItem->marginRight() != styleMargin.right().fixed());
 
         changed =
             changed || (gridItem->paddingLeft() != stylePadding.left().fixed());
-        changed =
-            changed || (gridItem->paddingRight() != stylePadding.right().fixed());
+        changed = changed ||
+                  (gridItem->paddingRight() != stylePadding.right().fixed());
 
-        changed = changed ||
-                  (gridItem->borderLeft() != styleBorder.left().width().fixed());
-        changed = changed ||
-                  (gridItem->borderRight() != styleBorder.right().width().fixed());
+        changed = changed || (gridItem->borderLeft() !=
+                              styleBorder.left().width().fixed());
+        changed = changed || (gridItem->borderRight() !=
+                              styleBorder.right().width().fixed());
     } else {
         if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             changed = changed || (gridItem->width() != style->width().fixed());
-            changed = changed || (gridItem->height() != style->height().fixed());
+            changed =
+                changed || (gridItem->height() != style->height().fixed());
         } else {
             changed =
                 changed || (gridItem->contentWidth() != style->width().fixed());
-            changed =
-                changed || (gridItem->contentHeight() != style->height().fixed());
+            changed = changed ||
+                      (gridItem->contentHeight() != style->height().fixed());
         }
 
         auto styleMargin = style->margin();
         auto stylePadding = style->padding();
         auto styleBorder = style->border();
 
-        changed = changed || (gridItem->marginLeft() != styleMargin.left().fixed());
-        changed = changed || (gridItem->marginTop() != styleMargin.top().fixed());
+        changed =
+            changed || (gridItem->marginLeft() != styleMargin.left().fixed());
+        changed =
+            changed || (gridItem->marginTop() != styleMargin.top().fixed());
         changed =
             changed || (gridItem->marginRight() != styleMargin.right().fixed());
-        changed =
-            changed || (gridItem->marginBottom() != styleMargin.bottom().fixed());
+        changed = changed ||
+                  (gridItem->marginBottom() != styleMargin.bottom().fixed());
 
         changed =
             changed || (gridItem->paddingLeft() != stylePadding.left().fixed());
-        changed = changed || (gridItem->paddingTop() != stylePadding.top().fixed());
         changed =
-            changed || (gridItem->paddingRight() != stylePadding.right().fixed());
-        changed =
-            changed || (gridItem->paddingBottom() != stylePadding.bottom().fixed());
+            changed || (gridItem->paddingTop() != stylePadding.top().fixed());
+        changed = changed ||
+                  (gridItem->paddingRight() != stylePadding.right().fixed());
+        changed = changed ||
+                  (gridItem->paddingBottom() != stylePadding.bottom().fixed());
 
+        changed = changed || (gridItem->borderLeft() !=
+                              styleBorder.left().width().fixed());
         changed = changed ||
-                  (gridItem->borderLeft() != styleBorder.left().width().fixed());
-        changed =
-            changed || (gridItem->borderTop() != styleBorder.top().width().fixed());
-        changed = changed ||
-                  (gridItem->borderRight() != styleBorder.right().width().fixed());
+                  (gridItem->borderTop() != styleBorder.top().width().fixed());
+        changed = changed || (gridItem->borderRight() !=
+                              styleBorder.right().width().fixed());
         changed = changed || (gridItem->borderBottom() !=
                               styleBorder.bottom().width().fixed());
     }
