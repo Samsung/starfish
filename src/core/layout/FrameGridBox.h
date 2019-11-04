@@ -237,7 +237,8 @@ public:
     void layoutGridLinesWithGridAreas();
     void relayoutGridLinesWithGridAreasIfNeeded();
 
-    bool needsGridItemLayout(FrameBox* gridItem, ComputedStyle* style, bool testWidthOnly);
+    bool needsGridItemLayout(FrameBox* gridItem, ComputedStyle* style,
+                             bool testWidthOnly);
 
     bool fixGridAreaWithDefine(GridArea*, size_t);
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
