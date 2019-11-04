@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcdatachannel
+[ STARFISH_ENABLE_WEBRTC,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface RTCDataChannel : EventTarget {
+//  readonly attribute USVString label;
+//  readonly attribute boolean ordered;
+//  readonly attribute unsigned short? maxPacketLifeTime;
+//  readonly attribute unsigned short? maxRetransmits;
+//  readonly attribute USVString protocol;
+//  readonly attribute boolean negotiated;
+//  readonly attribute unsigned short? id;
+//  readonly attribute RTCPriorityType priority;
+//  readonly attribute RTCDataChannelState readyState;
+//  readonly attribute unsigned long bufferedAmount;
+//  [EnforceRange] attribute unsigned long bufferedAmountLowThreshold;
+//  attribute EventHandler onopen;
+//  attribute EventHandler onbufferedamountlow;
+//  attribute EventHandler onerror;
+//  attribute EventHandler onclosing;
+//  attribute EventHandler onclose;
+//  void close();
+//  attribute EventHandler onmessage;
+//  attribute DOMString binaryType;
+//  void send(USVString data);
+//  void send(Blob data);
+//  void send(ArrayBuffer data);
+//  void send(ArrayBufferView data);
+};

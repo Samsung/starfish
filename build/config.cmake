@@ -202,6 +202,11 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     ENDIF()
 ENDIF()
 
+# Enable in Docker
+IF (${HOST} STREQUAL "linux")
+#    SET (WEBRTC "1")
+ENDIF()
+
 IF (${WEBRTC} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
