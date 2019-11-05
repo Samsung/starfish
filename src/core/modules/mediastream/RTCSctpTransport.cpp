@@ -54,6 +54,11 @@ ScriptBindingInstance* RTCSctpTransport::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
+
+ExecutionContext* RTCSctpTransport::executionContext() const
+{
+    return m_executionContext;
+}
 } // namespace Starfish
 
 #endif

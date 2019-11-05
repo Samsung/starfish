@@ -55,5 +55,29 @@ void RTCIceServer::setUrls(GCVector<String*>& urls)
         m_backend.urls.push_back(std::string(url->toUTF8NonGCString().data()));
     }
 }
+
+String* RTCIceServer::username()
+{
+    return String::createASCIIString(m_backend.username.c_str(),
+                                     m_backend.username.length());
+}
+
+void RTCIceServer::setUsername(String* username)
+{
+    m_backend.username = std::string(username->toUTF8NonGCString().data());
+}
+
+RTCIceCredentialType RTCIceServer::credentialType()
+{
+    // Not supported by WebRTC
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return RTCIceCredentialType::Password;
+}
+
+void RTCIceServer::setCredentialType(RTCIceCredentialType type)
+{
+    // Not supported by WebRTC
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
 }
 #endif

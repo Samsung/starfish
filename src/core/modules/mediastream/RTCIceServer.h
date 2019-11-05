@@ -29,6 +29,11 @@
 
 namespace Starfish {
 
+enum class RTCIceCredentialType {
+    Password,
+    OAuth,
+};
+
 struct RTCIceServer {
 public:
     RTCIceServer();
@@ -37,6 +42,12 @@ public:
 
     GCVector<String*> urls();
     void setUrls(GCVector<String*>& value);
+
+    String* username();
+    void setUsername(String* username);
+
+    RTCIceCredentialType credentialType();
+    void setCredentialType(RTCIceCredentialType type);
 
     webrtc::PeerConnectionInterface::IceServer backend()
     {

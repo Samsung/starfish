@@ -77,6 +77,18 @@ partial dictionary RTCOfferOptions {
   boolean offerToReceiveVideo;
 };
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelinit
+[ STARFISH_ENABLE_WEBRTC ]
+dictionary RTCDataChannelInit {
+  boolean ordered = true;
+  [EnforceRange] unsigned short maxPacketLifeTime;
+  [EnforceRange] unsigned short maxRetransmits;
+  USVString protocol = "";
+  boolean negotiated = false;
+  [EnforceRange] unsigned short id;
+  // RTCPriorityType priority = "low"; // Not supported by WebRTC
+};
+
 [ STARFISH_ENABLE_WEBRTC,
   Constructor (optional RTCConfiguration configuration),
   ConstructorCallWith=ExecutionContext,
@@ -98,18 +110,18 @@ interface RTCPeerConnection : EventTarget {
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;
   readonly attribute RTCPeerConnectionState connectionState;
-  [Unimplemented] readonly attribute boolean? canTrickleIceCandidates;
-  [Unimplemented] static sequence<RTCIceServer> getDefaultIceServers ();
+  // readonly attribute boolean? canTrickleIceCandidates; // Not supported by WebRTC
+  static sequence<RTCIceServer> getDefaultIceServers ();
   RTCConfiguration getConfiguration ();
   [RaisesException] void setConfiguration (RTCConfiguration configuration);
   void close ();
-  [Unimplemented] attribute EventHandler onnegotiationneeded;
-  [Unimplemented] attribute EventHandler onicecandidate;
-  [Unimplemented] attribute EventHandler onicecandidateerror;
-  [Unimplemented] attribute EventHandler onsignalingstatechange;
-  [Unimplemented] attribute EventHandler oniceconnectionstatechange;
-  [Unimplemented] attribute EventHandler onicegatheringstatechange;
-  [Unimplemented] attribute EventHandler onconnectionstatechange;
+  attribute EventHandler onnegotiationneeded;
+  attribute EventHandler onicecandidate;
+  attribute EventHandler onicecandidateerror;
+  attribute EventHandler onsignalingstatechange;
+  attribute EventHandler oniceconnectionstatechange;
+  attribute EventHandler onicegatheringstatechange;
+  attribute EventHandler onconnectionstatechange;
 };
 
 [STARFISH_ENABLE_WEBRTC]
@@ -123,9 +135,9 @@ partial interface RTCPeerConnection {
 
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
-  [Unimplemented] readonly attribute RTCSctpTransport? sctp;
-  [Unimplemented] RTCDataChannel createDataChannel (USVString label, optional RTCDataChannelInit dataChannelDict);
-  [Unimplemented] attribute EventHandler ondatachannel;
+  readonly attribute RTCSctpTransport? sctp;
+  RTCDataChannel createDataChannel (USVString label, optional RTCDataChannelInit dataChannelDict);
+  attribute EventHandler ondatachannel;
 };
 
 [STARFISH_ENABLE_WEBRTC]
@@ -136,10 +148,10 @@ partial interface RTCPeerConnection {
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
   sequence<RTCRtpSender> getSenders ();
-//  [Unimplemented] sequence<RTCRtpReceiver> getReceivers ();
-//  [Unimplemented] sequence<RTCRtpTransceiver> getTransceivers ();
+  sequence<RTCRtpReceiver> getReceivers ();
+  sequence<RTCRtpTransceiver> getTransceivers ();
   RTCRtpSender addTrack (MediaStreamTrack track, MediaStream... streams);
-//  [Unimplemented] void removeTrack (RTCRtpSender sender);
+  void removeTrack (RTCRtpSender sender);
 //  [Unimplemented] RTCRtpTransceiver addTransceiver ((MediaStreamTrack or DOMString) trackOrKind, optional RTCRtpTransceiverInit init);
 //  [Unimplemented] attribute EventHandler ontrack;
 };

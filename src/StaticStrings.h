@@ -598,7 +598,14 @@ public:
 #ifdef STARFISH_ENABLE_WEBRTC
     QualifiedName m_srcObject;
     QualifiedName m_track;
+    QualifiedName m_negotiationneeded;
     QualifiedName m_icecandidate;
+    QualifiedName m_icecandidateerror;
+    QualifiedName m_signalingstatechange;
+    QualifiedName m_iceconnectionstatechange;
+    QualifiedName m_icegatheringstatechange;
+    QualifiedName m_connectionstatechange;
+    QualifiedName m_datachannel;
 #endif
 
 protected:

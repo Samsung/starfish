@@ -50,6 +50,11 @@ RTCDataChannel::~RTCDataChannel()
 {
 }
 
+ExecutionContext* RTCDataChannel::executionContext() const
+{
+    return m_executionContext;
+}
+
 ScriptBindingInstance* RTCDataChannel::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();

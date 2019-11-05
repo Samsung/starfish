@@ -40,9 +40,11 @@ public:
 
     MediaStreamTrack* track();
 
+    rtc::scoped_refptr<webrtc::RtpSenderInterface> backend();
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
-    rtc::scoped_refptr<webrtc::RtpSenderInterface> m_rtpSender;
+    rtc::scoped_refptr<webrtc::RtpSenderInterface> m_backend;
 
     MediaStreamTrack* m_track{ nullptr };
 };

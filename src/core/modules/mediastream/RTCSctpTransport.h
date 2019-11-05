@@ -37,7 +37,7 @@ public:
         ExecutionContext* executionContext,
         rtc::scoped_refptr<webrtc::SctpTransportInterface> rpcSctpTransport);
     virtual ~RTCSctpTransport();
-
+    virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCSctpTransport)
 
 private:

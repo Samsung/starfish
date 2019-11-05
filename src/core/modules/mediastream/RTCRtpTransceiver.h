@@ -39,8 +39,11 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpTransceiver)
 
+    String* mid();
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> m_backend;
 };
 }
 #endif
