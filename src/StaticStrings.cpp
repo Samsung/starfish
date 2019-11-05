@@ -664,8 +664,22 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "srcObject"));
     m_track =
         QualifiedName(AtomicString::createAtomicString(starfish, "track"));
+    m_negotiationneeded = QualifiedName(
+        AtomicString::createAtomicString(starfish, "negotiationneeded"));
     m_icecandidate = QualifiedName(
         AtomicString::createAtomicString(starfish, "icecandidate"));
+    m_icecandidateerror = QualifiedName(
+        AtomicString::createAtomicString(starfish, "icecandidateerror"));
+    m_signalingstatechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "signalingstatechange"));
+    m_iceconnectionstatechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "iceconnectionstatechange"));
+    m_icegatheringstatechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "icegatheringstatechange"));
+    m_connectionstatechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "connectionstatechange"));
+    m_datachannel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "datachannel"));
 #endif
 }
 }

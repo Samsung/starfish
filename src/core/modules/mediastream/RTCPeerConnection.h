@@ -28,6 +28,8 @@
 #include "core/modules/mediastream/RTCConfiguration.h"
 #include "core/modules/mediastream/RTCSessionDescription.h"
 #include "core/modules/mediastream/RTCIceCandidate.h"
+#include "core/modules/mediastream/RTCSctpTransport.h"
+#include "core/modules/mediastream/RTCDataChannel.h"
 
 #include "api/peer_connection_interface.h"
 #include "api/media_stream_interface.h"
@@ -90,6 +92,27 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
 };
 
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
+};
+
+struct RTCDataChannelInit {
+    DEFINE_GETTER_SETTER(bool, ordered, Ordered)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxPacketLifeTime,
+                                      MaxPacketLifeTime)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxRetransmits, MaxRetransmits)
+    DEFINE_GETTER_SETTER(String*, protocol, Protocol)
+    DEFINE_GETTER_SETTER(bool, negotiated, Negotiated)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, id, Id)
+
+    bool m_ordered{ true };
+    uint32_t m_maxPacketLifeTime;
+    uint32_t m_maxRetransmits;
+    String* m_protocol{ String::emptyString };
+    bool m_negotiated{ false };
+    uint32_t m_id;
+
+    bool m_hasMaxPacketLifeTime{ false };
+    bool m_hasMaxRetransmits{ false };
+    bool m_hasId{ false };
 };
 
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
@@ -209,14 +232,38 @@ public:
     String* iceConnectionState();
     String* connectionState();
 
+    static GCVector<RTCIceServer> getDefaultIceServers();
+
     RTCConfiguration& getConfiguration();
     void setConfiguration(RTCConfiguration& configuration);
 
     void close();
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(negotiationneeded);
+    DECLARE_EVENT_LISTENER(icecandidate);
+    DECLARE_EVENT_LISTENER(icecandidateerror);
+    DECLARE_EVENT_LISTENER(signalingstatechange);
+    DECLARE_EVENT_LISTENER(iceconnectionstatechange);
+    DECLARE_EVENT_LISTENER(icegatheringstatechange);
+    DECLARE_EVENT_LISTENER(connectionstatechange);
+    DECLARE_EVENT_LISTENER(datachannel);
+#undef VIRTUAL
+#undef OVERRIDE
+
+    RTCSctpTransport* sctp();
+    RTCDataChannel* createDataChannel(
+        String* label,
+        RTCDataChannelInit dataChannelDict = RTCDataChannelInit());
+
     GCVector<RTCRtpSender*> getSenders();
+    GCVector<RTCRtpReceiver*> getReceivers();
+    GCVector<RTCRtpTransceiver*> getTransceivers();
+
     RTCRtpSender* addTrack(MediaStreamTrack* track,
                            GCVector<MediaStream*>& streams);
+    void removeTrack(RTCRtpSender* sender);
 
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
     bool initializePeerConnection();

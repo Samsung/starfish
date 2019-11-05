@@ -37,6 +37,7 @@ public:
         rtc::scoped_refptr<webrtc::DataChannelInterface> rpcSctpTransport);
     virtual ~RTCDataChannel();
 
+    virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDataChannel)
 
 private:

@@ -38,7 +38,7 @@ RTCRtpSender::RTCRtpSender(
     rtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
-    , m_rtpSender(rtpSender)
+    , m_backend(rtpSender)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -58,6 +58,11 @@ ScriptBindingInstance* RTCRtpSender::scriptBindingInstance()
 MediaStreamTrack* RTCRtpSender::track()
 {
     return m_track;
+}
+
+rtc::scoped_refptr<webrtc::RtpSenderInterface> RTCRtpSender::backend()
+{
+    return m_backend;
 }
 }
 

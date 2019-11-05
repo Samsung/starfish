@@ -38,6 +38,8 @@
 #include "core/modules/mediastream/RTCSessionDescription.h"
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/mediastream/RTCRtpSender.h"
+#include "core/modules/mediastream/RTCRtpReceiver.h"
+#include "core/modules/mediastream/RTCRtpTransceiver.h"
 #include "core/modules/mediastream/RTCTrackEvent.h"
 #include "core/modules/mediastream/RTCPeerConnectionIceEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -781,6 +783,15 @@ String* RTCPeerConnection::connectionState()
     }
 }
 
+GCVector<RTCIceServer> RTCPeerConnection::getDefaultIceServers()
+{
+    // FIXME: IceServer is browser specific. Update as
+    // IceServers become available
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    GCVector<RTCIceServer> iceServers;
+    return std::move(iceServers);
+}
+
 RTCConfiguration& RTCPeerConnection::getConfiguration()
 {
     return m_configuration;
@@ -866,15 +877,107 @@ void RTCPeerConnection::close()
     m_backend->Close();
 }
 
+DEFINE_EVENT_LISTENER(RTCPeerConnection, negotiationneeded);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, icecandidate);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, icecandidateerror);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, signalingstatechange);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, iceconnectionstatechange);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, icegatheringstatechange);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, connectionstatechange);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, datachannel);
+
+RTCSctpTransport* RTCPeerConnection::sctp()
+{
+    if (!m_backend) {
+        return nullptr;
+    }
+
+    rtc::scoped_refptr<webrtc::SctpTransportInterface> sctp =
+        m_backend->GetSctpTransport();
+
+    if (sctp.get() == nullptr) {
+        return nullptr;
+    }
+
+    return new RTCSctpTransport(executionContext(), sctp);
+}
+
+RTCDataChannel* RTCPeerConnection::createDataChannel(
+    String* label, RTCDataChannelInit dataChannelDict)
+{
+    if (!m_backend) {
+        return nullptr;
+    }
+
+    webrtc::DataChannelInit init;
+    init.ordered = dataChannelDict.m_ordered;
+    init.protocol =
+        std::string(dataChannelDict.m_protocol->toUTF8NonGCString().data());
+    init.negotiated = dataChannelDict.m_negotiated;
+    if (dataChannelDict.m_hasMaxPacketLifeTime) {
+        init.maxRetransmitTime = dataChannelDict.m_maxPacketLifeTime;
+    }
+    if (dataChannelDict.m_hasMaxRetransmits) {
+        init.maxRetransmits = dataChannelDict.m_maxRetransmits;
+    }
+    if (dataChannelDict.m_hasId) {
+        init.id = dataChannelDict.m_id;
+    }
+
+    rtc::scoped_refptr<webrtc::DataChannelInterface> dataChannel =
+        m_backend->CreateDataChannel(
+            std::string(label->toUTF8NonGCString().data()), &init);
+
+    return new RTCDataChannel(executionContext(), dataChannel);
+}
+
 GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
 {
+    GCVector<RTCRtpSender*> results;
+    if (!m_backend) {
+        return std::move(results);
+    }
+
     std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
         backend()->GetSenders();
-    GCVector<RTCRtpSender*> results;
+
     for (auto& sender : senders) {
         results.push_back(new RTCRtpSender(executionContext(), sender));
     }
-    return results;
+    return std::move(results);
+}
+
+GCVector<RTCRtpReceiver*> RTCPeerConnection::getReceivers()
+{
+    GCVector<RTCRtpReceiver*> results;
+    if (!m_backend) {
+        return std::move(results);
+    }
+
+    std::vector<rtc::scoped_refptr<webrtc::RtpReceiverInterface>> receivers =
+        m_backend->GetReceivers();
+
+    for (auto& receiver : receivers) {
+        results.push_back(new RTCRtpReceiver(executionContext(), receiver));
+    }
+    return std::move(results);
+}
+
+GCVector<RTCRtpTransceiver*> RTCPeerConnection::getTransceivers()
+{
+    GCVector<RTCRtpTransceiver*> results;
+    if (!m_backend) {
+        return std::move(results);
+    }
+
+    std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+        transceivers = m_backend->GetTransceivers();
+
+    for (auto& transceiver : transceivers) {
+        results.push_back(
+            new RTCRtpTransceiver(executionContext(), transceiver));
+    }
+    return std::move(results);
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtrack
@@ -928,6 +1031,24 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessErr");
     }
+}
+
+void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
+{
+    if (isClosed()) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    if (!m_backend) {
+        return;
+    }
+    if (!sender->backend()) {
+        return;
+    }
+
+    m_backend->RemoveTrackNew(sender->backend());
 }
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()

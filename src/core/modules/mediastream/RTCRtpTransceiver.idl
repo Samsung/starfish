@@ -22,7 +22,7 @@
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface RTCRtpTransceiver {
-//  readonly attribute DOMString? mid;
+  readonly attribute DOMString? mid;
 //  [SameObject] readonly attribute RTCRtpSender sender;
 //  [SameObject] readonly attribute RTCRtpReceiver receiver;
 //  attribute RTCRtpTransceiverDirection direction;

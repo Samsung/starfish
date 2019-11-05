@@ -38,6 +38,7 @@ RTCRtpTransceiver::RTCRtpTransceiver(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_backend(rtpTransceiver)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
@@ -52,6 +53,20 @@ RTCRtpTransceiver::~RTCRtpTransceiver()
 ScriptBindingInstance* RTCRtpTransceiver::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+String* RTCRtpTransceiver::mid()
+{
+    if (!m_backend) {
+        return nullptr;
+    }
+
+    absl::optional<std::string> mid = m_backend->mid();
+    if (!mid.has_value()) {
+        return nullptr;
+    }
+
+    return String::createASCIIString(mid.value().c_str(), mid.value().length());
 }
 }
 
