@@ -535,7 +535,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "transitioncancel"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)
     m_statechange = QualifiedName(
         AtomicString::createAtomicString(starfish, "statechange"));
 #endif
@@ -680,6 +680,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "connectionstatechange"));
     m_datachannel = QualifiedName(
         AtomicString::createAtomicString(starfish, "datachannel"));
+
 #endif
 }
 }

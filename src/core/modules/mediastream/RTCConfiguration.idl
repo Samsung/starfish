@@ -44,6 +44,7 @@ dictionary RTCConfiguration {
   RTCBundlePolicy bundlePolicy;
   RTCRtcpMuxPolicy rtcpMuxPolicy;
   DOMString peerIdentity;
-  [Unimplemented] sequence<RTCCertificate> certificates;
-  [Unimplemented, EnforceRange] octet iceCandidatePoolSize = 0;
+  // sequence<RTCCertificate> certificates; // FIXME: incorrect code is generated
+  // [EnforceRange] octet iceCandidatePoolSize = 0;
+  [EnforceRange] unsigned short iceCandidatePoolSize = 0;
 };

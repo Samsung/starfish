@@ -17,14 +17,24 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dfn-dtlstransportstate
+[ STARFISH_ENABLE_WEBRTC ]
+enum RTCDtlsTransportState {
+  "new",
+  "connecting",
+  "connected",
+  "closed",
+  "failed"
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcdtlstransport
 [ STARFISH_ENABLE_WEBRTC,
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface RTCDtlsTransport : EventTarget {
-//  [SameObject] readonly attribute RTCIceTransport iceTransport;
-//  readonly attribute RTCDtlsTransportState state;
-//  sequence<ArrayBuffer> getRemoteCertificates();
-//  attribute EventHandler onstatechange;
-//  attribute EventHandler onerror;
+  [SameObject] readonly attribute RTCIceTransport iceTransport;
+  [Rename=stateStr] readonly attribute RTCDtlsTransportState state;
+  // sequence<ArrayBuffer> getRemoteCertificates();
+  attribute EventHandler onstatechange;
+  attribute EventHandler onerror;
 };

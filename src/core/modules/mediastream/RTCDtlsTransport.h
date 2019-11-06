@@ -29,6 +29,14 @@
 
 namespace Starfish {
 
+enum class RTCDtlsTransportState {
+    New,
+    Connecting,
+    Connected,
+    Closed,
+    Failed,
+};
+
 class RTCDtlsTransport : public EventTarget {
 public:
     RTCDtlsTransport(ExecutionContext* executionContext);
@@ -38,9 +46,23 @@ public:
     virtual ~RTCDtlsTransport();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDtlsTransport)
+    ExecutionContext* executionContext() const;
+
+    RTCIceTransport* iceTransport();
+    String* stateStr();
+    GCVector<ScriptArrayBuffer> getRemoteCertificates();
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(statechange);
+    DECLARE_EVENT_LISTENER(error);
+#undef VIRTUAL
+#undef OVERRIDE
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    rtc::scoped_refptr<webrtc::DtlsTransportInterface> m_backend;
+    RTCIceTransport* m_iceTransport{ nullptr };
 };
 }
 #endif

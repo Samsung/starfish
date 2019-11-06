@@ -17,14 +17,21 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate
+enum RTCSctpTransportState {
+  "connecting",
+  "connected",
+  "closed"
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcsctptransport
 [ STARFISH_ENABLE_WEBRTC,
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface RTCSctpTransport : EventTarget {
-//  readonly attribute RTCDtlsTransport transport;
-//  readonly attribute RTCSctpTransportState state;
-//  readonly attribute unrestricted double maxMessageSize;
-//  readonly attribute unsigned short? maxChannels;
-//  attribute EventHandler onstatechange;
+  readonly attribute RTCDtlsTransport transport;
+  [Rename=stateStr] readonly attribute RTCSctpTransportState state;
+  readonly attribute unrestricted double maxMessageSize;
+  readonly attribute unsigned short? maxChannels;
+  attribute EventHandler onstatechange;
 };

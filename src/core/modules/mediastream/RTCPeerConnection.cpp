@@ -47,6 +47,7 @@
 #include "core/page/GlobalScope.h"
 
 #include "api/rtp_transceiver_interface.h"
+#include "api/sctp_transport_interface.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"

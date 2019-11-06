@@ -26,18 +26,26 @@
 #include "binding/ScriptWrappable.h"
 
 #include "api/peer_connection_interface.h"
+#include "api/ice_transport_interface.h"
 
 namespace Starfish {
 
 class RTCIceTransport : public EventTarget {
 public:
     RTCIceTransport(ExecutionContext* executionContext);
+    RTCIceTransport(ExecutionContext* executionContext,
+                    rtc::scoped_refptr<webrtc::IceTransportInterface> backend);
+
     virtual ~RTCIceTransport();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceTransport)
+    virtual ExecutionContext* executionContext() const override;
+
+    void setBackend(rtc::scoped_refptr<webrtc::IceTransportInterface> backend);
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    rtc::scoped_refptr<webrtc::IceTransportInterface> m_backend;
 };
 }
 #endif
