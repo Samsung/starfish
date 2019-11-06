@@ -157,6 +157,16 @@ void RTCConfiguration::setRtcpMuxPolicy(String* rtcpMuxPolicy)
     }
 }
 
+int RTCConfiguration::iceCandidatePoolSize()
+{
+    return m_backend.ice_candidate_pool_size;
+}
+
+void RTCConfiguration::setIceCandidatePoolSize(int size)
+{
+    m_backend.ice_candidate_pool_size = size;
+}
+
 bool RTCConfiguration::isValid()
 {
     if (m_hasValidIceTransportPolicy && m_hasValidBundlePolicy &&

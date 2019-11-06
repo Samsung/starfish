@@ -26,9 +26,14 @@
 #include "binding/ScriptWrappable.h"
 
 #include "api/peer_connection_interface.h"
-#include "api/sctp_transport_interface.h"
 
 namespace Starfish {
+
+enum class RTCSctpTransportState {
+    Connecting,
+    Connected,
+    Closed,
+};
 
 class RTCSctpTransport : public EventTarget {
 public:
@@ -39,6 +44,19 @@ public:
     virtual ~RTCSctpTransport();
     virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCSctpTransport)
+
+    RTCDtlsTransport* transport();
+    RTCSctpTransportState state();
+    String* stateStr();
+
+    double maxMessageSize();
+    Nullable<uint32_t> maxChannels();
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(statechange);
+#undef VIRTUAL
+#undef OVERRIDE
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

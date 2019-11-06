@@ -24,7 +24,10 @@
 
 #include "core/modules/mediastream/RTCSctpTransport.h"
 
+#include "core/modules/mediastream/RTCDtlsTransport.h"
 #include "core/dom/ExecutionContext.h"
+
+#include "api/sctp_transport_interface.h"
 
 namespace Starfish {
 
@@ -59,6 +62,97 @@ ExecutionContext* RTCSctpTransport::executionContext() const
 {
     return m_executionContext;
 }
+
+RTCDtlsTransport* RTCSctpTransport::transport()
+{
+    if (!m_backend) {
+        return nullptr;
+    }
+
+    rtc::scoped_refptr<webrtc::DtlsTransportInterface> transport =
+        m_backend->dtls_transport();
+
+    if (!transport) {
+        return nullptr;
+    }
+
+    return new RTCDtlsTransport(executionContext(), transport);
+}
+
+RTCSctpTransportState RTCSctpTransport::state()
+{
+    if (!m_backend) {
+        return RTCSctpTransportState::Closed;
+    }
+
+    webrtc::SctpTransportInformation info = m_backend->Information();
+    switch (info.state()) {
+    case webrtc::SctpTransportState::kConnecting:
+        return RTCSctpTransportState::Connecting;
+    case webrtc::SctpTransportState::kConnected:
+        return RTCSctpTransportState::Connected;
+    case webrtc::SctpTransportState::kClosed:
+        return RTCSctpTransportState::Closed;
+    default:
+        // WebRTC has more internal states
+        return RTCSctpTransportState::Closed;
+    }
+}
+
+String* RTCSctpTransport::stateStr()
+{
+    if (!m_backend) {
+        return String::createASCIIString("closed");
+    }
+
+    webrtc::SctpTransportInformation info = m_backend->Information();
+    switch (info.state()) {
+    case webrtc::SctpTransportState::kConnecting:
+        return String::createASCIIString("connecting");
+    case webrtc::SctpTransportState::kConnected:
+        return String::createASCIIString("connected");
+    case webrtc::SctpTransportState::kClosed:
+        return String::createASCIIString("closed");
+    default:
+        // WebRTC has more internal states
+        return String::createASCIIString("closed");
+    }
+}
+
+double RTCSctpTransport::maxMessageSize()
+{
+    if (!m_backend) {
+        return 0;
+    }
+
+    webrtc::SctpTransportInformation info = m_backend->Information();
+    absl::optional<double> size = info.MaxMessageSize();
+    if (!size.has_value()) {
+        return 0;
+    }
+
+    return size.value();
+}
+
+Nullable<uint32_t> RTCSctpTransport::maxChannels()
+{
+    Nullable<uint32_t> result;
+    if (!m_backend) {
+        return result;
+    }
+
+    webrtc::SctpTransportInformation info = m_backend->Information();
+    absl::optional<int> channels = info.MaxChannels();
+    if (!channels.has_value()) {
+        return result;
+    }
+
+    result = channels.value();
+    return result;
+}
+
+DEFINE_EVENT_LISTENER(RTCSctpTransport, statechange);
+
 } // namespace Starfish
 
 #endif

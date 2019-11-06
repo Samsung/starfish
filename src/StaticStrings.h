@@ -540,7 +540,7 @@ public:
     QualifiedName m_onttsstart;
     QualifiedName m_ttsend;
     QualifiedName m_onttsend;
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)
     QualifiedName m_statechange;
 #endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA

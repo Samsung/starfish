@@ -65,6 +65,8 @@ public:
     DEFINE_GETTER_SETTER(String*, peerIdentity, PeerIdentity);
     GCVector<RTCCertificate*> certificates();
     void setCertificates(GCVector<RTCCertificate*>& certificates);
+    int iceCandidatePoolSize();
+    void setIceCandidatePoolSize(int size);
 
     bool isValid();
 

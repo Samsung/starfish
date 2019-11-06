@@ -26,6 +26,9 @@
 
 #include "core/dom/ExecutionContext.h"
 
+#include "core/modules/mediastream/RTCIceTransport.h"
+#include "api/dtls_transport_interface.h"
+
 namespace Starfish {
 
 RTCDtlsTransport::RTCDtlsTransport(ExecutionContext* executionContext)
@@ -39,6 +42,8 @@ RTCDtlsTransport::RTCDtlsTransport(
     : EventTarget()
     , m_executionContext(executionContext)
 {
+    m_backend = rtpDtlsTransport;
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
                  void* cd) { ((RTCDtlsTransport*)obj)->~RTCDtlsTransport(); },
@@ -53,6 +58,62 @@ ScriptBindingInstance* RTCDtlsTransport::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
+
+ExecutionContext* RTCDtlsTransport::executionContext() const
+{
+    return m_executionContext;
+}
+
+RTCIceTransport* RTCDtlsTransport::iceTransport()
+{
+    if (!m_backend) {
+        return nullptr;
+    }
+
+    rtc::scoped_refptr<webrtc::IceTransportInterface> iceTransport =
+        m_backend->ice_transport();
+    if (!iceTransport) {
+        return nullptr;
+    }
+
+    if (m_iceTransport) {
+        m_iceTransport->setBackend(iceTransport);
+    } else {
+        m_iceTransport = new RTCIceTransport(executionContext(), iceTransport);
+    }
+
+    return m_iceTransport;
+}
+
+String* RTCDtlsTransport::stateStr()
+{
+    webrtc::DtlsTransportInformation info = m_backend->Information();
+    switch (info.state()) {
+    case webrtc::DtlsTransportState::kNew:
+        return String::createASCIIString("new");
+    case webrtc::DtlsTransportState::kConnecting:
+        return String::createASCIIString("connecting");
+    case webrtc::DtlsTransportState::kConnected:
+        return String::createASCIIString("connected");
+    case webrtc::DtlsTransportState::kClosed:
+        return String::createASCIIString("closed");
+    case webrtc::DtlsTransportState::kFailed:
+        return String::createASCIIString("failed");
+    default:
+        return String::createASCIIString("failed");
+    }
+}
+
+GCVector<ScriptArrayBuffer> RTCDtlsTransport::getRemoteCertificates()
+{
+    GCVector<ScriptArrayBuffer> buffer;
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return buffer;
+}
+
+DEFINE_EVENT_LISTENER(RTCDtlsTransport, statechange);
+DEFINE_EVENT_LISTENER(RTCDtlsTransport, error);
+
 } // namespace Starfish
 
 #endif
