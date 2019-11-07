@@ -32,53 +32,56 @@ class ExecutionContext;
 
 struct RTCIceCandidateInit {
     DEFINE_GETTER_SETTER(String*, candidate, Candidate)
+    DEFINE_GETTER_SETTER(Nullable<String*>, sdpMid, SdpMid)
+    DEFINE_GETTER_SETTER(Nullable<uint32_t>, sdpMLineIndex, SdpMLineIndex)
+    DEFINE_GETTER_SETTER(Nullable<String*>, usernameFragment, UsernameFragment)
 
-    Nullable<String*> sdpMid()
+    Nullable<String*> ufrag()
     {
-        return m_sdpMid;
+        return m_usernameFragment;
     }
 
-    void setSdpMid(Nullable<String*> sdpMid)
+    void setUfrag(Nullable<String*> usernameFragment)
     {
-        m_sdpMid = sdpMid;
-    }
-
-    Nullable<uint32_t> sdpMLineIndex()
-    {
-        return m_sdpMLineIndex;
-    }
-
-    void setSdpMLineIndex(Nullable<uint32_t> sdpMLineIndex)
-    {
-        m_sdpMLineIndex = sdpMLineIndex;
+        m_usernameFragment = usernameFragment;
     }
 
     String* m_candidate{ String::emptyString };
     Nullable<String*> m_sdpMid;
     Nullable<uint32_t> m_sdpMLineIndex;
+    Nullable<String*> m_usernameFragment;
 };
 
 class RTCIceCandidate : public ScriptWrappable {
 public:
-    RTCIceCandidate(ExecutionContext* executionContext);
     RTCIceCandidate(ExecutionContext* executionContext,
-                    RTCIceCandidateInit init);
+                    RTCIceCandidateInit init = RTCIceCandidateInit());
     RTCIceCandidate(ExecutionContext* executionContext,
                     webrtc::IceCandidateInterface* candidate);
     virtual ~RTCIceCandidate();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceCandidate)
 
-    String* candidate();
+    DEFINE_GETTER(String*, candidate)
+    DEFINE_GETTER(Nullable<String*>, sdpMid)
+    DEFINE_GETTER(Nullable<uint32_t>, sdpMLineIndex)
+    DEFINE_GETTER(Nullable<String*>, usernameFragment)
 
-    const webrtc::IceCandidateInterface* backend()
+    Nullable<String*> ufrag()
     {
-        return m_backend.get();
+        return usernameFragment();
     }
+
+    const webrtc::IceCandidateInterface* backend();
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
-    std::unique_ptr<const webrtc::IceCandidateInterface> m_backend;
+    String* m_candidate{ String::emptyString };
+    Nullable<String*> m_sdpMid;
+    Nullable<uint32_t> m_sdpMLineIndex;
+    Nullable<String*> m_usernameFragment;
+
+    std::unique_ptr<webrtc::IceCandidateInterface> m_backend;
 };
 }
 #endif

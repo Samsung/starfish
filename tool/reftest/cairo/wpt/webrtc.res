@@ -12,7 +12,7 @@ http://web-platform.test:8000/webrtc/RTCConfiguration-rtcpMuxPolicy.html
 # http://web-platform.test:8000/webrtc/RTCDataChannel-send.html
 # http://web-platform.test:8000/webrtc/RTCDataChannelEvent-constructor.html
 # http://web-platform.test:8000/webrtc/RTCDtlsTransport-getRemoteCertificates.html
-# http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
+http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCIceTransport.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate.html

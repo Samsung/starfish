@@ -29,6 +29,15 @@
 
 namespace Starfish {
 
+struct RTCRtpParameters {
+};
+
+struct RTCRtpSendParameters : public RTCRtpParameters {
+    DEFINE_GETTER_SETTER(String*, transactionId, TransactionId);
+
+    String* m_transactionId{ String::emptyString };
+};
+
 class RTCRtpSender : public ScriptWrappable {
 public:
     RTCRtpSender(ExecutionContext* executionContext);
@@ -39,14 +48,17 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpSender)
 
     MediaStreamTrack* track();
+    RTCDtlsTransport* transport();
+    Promise* setParameters(RTCRtpSendParameters parameters);
+    RTCRtpSendParameters getParameters();
+    Promise* replaceTrack(MediaStreamTrack* withTrack);
+    void setStreams(GCVector<MediaStream*>& streams);
 
     rtc::scoped_refptr<webrtc::RtpSenderInterface> backend();
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::RtpSenderInterface> m_backend;
-
-    MediaStreamTrack* m_track{ nullptr };
 };
 }
 #endif
