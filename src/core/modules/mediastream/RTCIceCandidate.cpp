@@ -24,36 +24,25 @@
 
 #include "core/modules/mediastream/RTCIceCandidate.h"
 
+#include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
-
-RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext)
-    : RTCIceCandidate(executionContext, nullptr)
-{
-}
 
 RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
                                  RTCIceCandidateInit init)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
-    std::string sdpMid;
-    if (init.m_sdpMid.hasValue()) {
-        sdpMid = init.m_sdpMid.getValue()->toUTF8NonGCString();
+    m_candidate = init.m_candidate;
+    m_sdpMid = init.m_sdpMid;
+    m_sdpMLineIndex = init.m_sdpMLineIndex;
+    m_usernameFragment = init.m_usernameFragment;
+
+    if (!m_sdpMid.hasValue() && !m_sdpMLineIndex.hasValue()) {
+        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                               "TypeError");
     }
-
-    std::string sdp(init.m_candidate->toUTF8NonGCString());
-
-    uint32_t sdpMLineIndex = 0;
-    if (init.m_sdpMid.hasValue()) {
-        sdpMLineIndex = init.m_sdpMLineIndex.getValue();
-    }
-
-    webrtc::SdpParseError error;
-    std::unique_ptr<webrtc::IceCandidateInterface> candidate =
-        std::unique_ptr<webrtc::IceCandidateInterface>(
-            webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
@@ -83,15 +72,35 @@ ScriptBindingInstance* RTCIceCandidate::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-String* RTCIceCandidate::candidate()
+const webrtc::IceCandidateInterface* RTCIceCandidate::backend()
 {
-    std::string sdp;
-    if (m_backend == nullptr) {
-        return String::emptyString;
+    if (m_backend) {
+        return m_backend.get();
     }
 
-    m_backend->ToString(&sdp);
-    return String::createASCIIString(sdp.c_str(), sdp.length());
+    std::string sdpMid;
+    if (m_sdpMid.hasValue()) {
+        sdpMid = m_sdpMid.getValue()->toUTF8NonGCString();
+    }
+
+    std::string sdp(m_candidate->toUTF8NonGCString());
+
+    uint32_t sdpMLineIndex = 0;
+    if (m_sdpMLineIndex.hasValue()) {
+        sdpMLineIndex = m_sdpMLineIndex.getValue();
+    }
+
+    webrtc::SdpParseError error;
+    std::unique_ptr<webrtc::IceCandidateInterface> candidate =
+        std::unique_ptr<webrtc::IceCandidateInterface>(
+            webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
+    m_backend.reset(candidate.release());
+
+    if (!m_backend) {
+        STARFISH_LOG_WARN("IceCandidate was not created");
+    }
+
+    return m_backend.get();
 }
 }
 

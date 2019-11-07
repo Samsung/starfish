@@ -17,17 +17,34 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcrtpparameters
+[ STARFISH_ENABLE_WEBRTC ]
+dictionary RTCRtpParameters {
+  //required sequence<RTCRtpHeaderExtensionParameters> headerExtensions;
+  //required RTCRtcpParameters rtcp;
+  //required sequence<RTCRtpCodecParameters> codecs;
+};
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcrtpsendparameters
+[ STARFISH_ENABLE_WEBRTC ]
+dictionary RTCRtpSendParameters : RTCRtpParameters {
+  required DOMString transactionId;
+  //required sequence<RTCRtpEncodingParameters> encodings;
+  //RTCDegradationPreference degradationPreference = "balanced";
+  //RTCPriorityType priority = "low";
+};
+
 [ STARFISH_ENABLE_WEBRTC,
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
   //readonly attribute RTCDtlsTransport? transport;
-  //readonly attribute RTCDtlsTransport? rtcpTransport;
-  //static RTCRtpCapabilities? getCapabilities(DOMString kind);
+  //readonly attribute RTCDtlsTransport? rtcpTransport; // Not supported by WebRTC
+  //static RTCRtpCapabilities? getCapabilities(DOMString kind); // Not supported by WebRTC
   //Promise<void> setParameters(RTCRtpSendParameters parameters);
   //RTCRtpSendParameters getParameters();
   //Promise<void> replaceTrack(MediaStreamTrack? withTrack);
   //void setStreams(MediaStream... streams);
-  //Promise<RTCStatsReport> getStats();
+  //Promise<RTCStatsReport> getStats(); // Not supported by WebRTC
 };

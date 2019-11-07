@@ -57,7 +57,38 @@ ScriptBindingInstance* RTCRtpSender::scriptBindingInstance()
 
 MediaStreamTrack* RTCRtpSender::track()
 {
-    return m_track;
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+RTCDtlsTransport* RTCRtpSender::transport()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+Promise* RTCRtpSender::setParameters(RTCRtpSendParameters parameters)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+RTCRtpSendParameters RTCRtpSender::getParameters()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    RTCRtpSendParameters result;
+    return result;
+}
+
+Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+void RTCRtpSender::setStreams(GCVector<MediaStream*>& streams)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 rtc::scoped_refptr<webrtc::RtpSenderInterface> RTCRtpSender::backend()
