@@ -5,14 +5,18 @@ typedef (HTMLImageElement or
          SVGImageElement) HTMLOrSVGImageElement;
 
 [STARFISH_ENABLE_CANVAS]
-typedef (HTMLOrSVGImageElement or
+// NOTE: We expand
+// HTMLOrSVGImageElement -> HTMLImageElement or SVGImageElement
+// to overcome some bugs in the binding generator
+typedef (HTMLImageElement or
+         SVGImageElement or
          HTMLVideoElement or
          HTMLCanvasElement or
          ImageBitmap /*or
          OffscreenCanvas*/) CanvasImageSource;
 
 // mixin
-[STARFISH_ENABLE_CANVAS, 
+[STARFISH_ENABLE_CANVAS,
  PartialInterface,
  NoInterfaceObject]
 interface CanvasDrawImage {

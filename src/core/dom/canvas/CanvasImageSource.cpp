@@ -32,23 +32,20 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
     ExecutionContext* executionContext, CanvasImageSource image)
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
-    if (image.isHTMLImageElementOrSVGImageElementValue()) {
-        auto imgOrSvg = image.getHTMLImageElementOrSVGImageElementValue();
-
+    if (image.isHTMLImageElementValue() || image.isSVGImageElementValue()) {
         NativeImageData* imageData = nullptr;
-        if (imgOrSvg.isHTMLImageElementValue()) {
-            if (imgOrSvg.getHTMLImageElementValue()->hasRequestError() ==
-                true) {
+        if (image.isHTMLImageElementValue()) {
+            if (image.getHTMLImageElementValue()->hasRequestError()) {
                 return false;
             }
-            imageData = imgOrSvg.getHTMLImageElementValue()->imageData();
-        } else if (imgOrSvg.isSVGImageElementValue()) {
-            if (imgOrSvg.getSVGImageElementValue()->hasRequestError()) {
+            imageData = image.getHTMLImageElementValue()->imageData();
+        } else if (image.isSVGImageElementValue()) {
+            if (image.getSVGImageElementValue()->hasRequestError()) {
                 return false;
             }
-            imageData = imgOrSvg.getSVGImageElementValue()->imageData();
+            imageData = image.getSVGImageElementValue()->imageData();
         } else {
-            STARFISH_ASSERT(imgOrSvg.isNoneValue());
+            STARFISH_ASSERT(image.isNoneValue());
             return false;
         }
 
@@ -100,11 +97,9 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
     NativeImageData* nativeImageData = nullptr;
     bool clean = true;
 
-    if (image.isHTMLImageElementOrSVGImageElementValue()) {
-        if (image.getHTMLImageElementOrSVGImageElementValue()
-                .isHTMLImageElementValue()) {
-            auto htmlImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                 .getHTMLImageElementValue();
+    if (image.isHTMLImageElementValue() || image.isSVGImageElementValue()) {
+        if (image.isHTMLImageElementValue()) {
+            auto htmlImage = image.getHTMLImageElementValue();
 
             if (executionContext->document()->webOrigin()->isSameOrigin(
                     htmlImage->webOrigin()) == false) {
@@ -112,10 +107,8 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
             }
 
             nativeImageData = htmlImage->imageData();
-        } else if (image.getHTMLImageElementOrSVGImageElementValue()
-                       .isSVGImageElementValue()) {
-            auto svgImage = image.getHTMLImageElementOrSVGImageElementValue()
-                                .getSVGImageElementValue();
+        } else if (image.isSVGImageElementValue()) {
+            auto svgImage = image.getSVGImageElementValue();
 
             if (executionContext->document()->webOrigin()->isSameOrigin(
                     svgImage->webOrigin()) == false) {

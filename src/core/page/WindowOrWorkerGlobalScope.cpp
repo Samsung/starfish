@@ -271,10 +271,10 @@ namespace WindowOrWorkerGlobalScope {
         bool needsToSetOriginCleanFlag = false;
         bool setOriginCleanFlagValue = false;
         if (context.m_image
-                .isHTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
+                .isHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
             auto canvasImageSource =
                 context.m_image
-                    .getHTMLOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue();
+                    .getHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue();
             // Check the usability of the image argument. If this throws an
             // exception or returns bad, then return p rejected with an
             // "InvalidStateError" DOMException.
