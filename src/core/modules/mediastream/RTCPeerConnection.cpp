@@ -66,6 +66,37 @@ PeerConnectionObserver::PeerConnectionObserver(
 {
 }
 
+void PeerConnectionObserver::OnSignalingChange(
+    webrtc::PeerConnectionInterface::SignalingState new_state)
+{
+    struct Params {
+        PeerConnectionObserver* self;
+    };
+
+    Params* p = new Params();
+    p->self = this;
+
+    m_peerConnection->executionContext()
+        ->webBase()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            m_peerConnection->executionContext()->globalScope(),
+            [](size_t, void* data) {
+                Params* p = (Params*)data;
+                PeerConnectionObserver* self = p->self;
+
+                String* eventType =
+                    self->m_peerConnection->m_executionContext->starfish()
+                        ->staticStrings()
+                        ->m_signalingstatechange.localName();
+                Event* e = new Event(self->m_peerConnection->m_executionContext,
+                                     eventType);
+                self->m_peerConnection->dispatchEventByUA(e);
+                delete p;
+            },
+            p);
+}
+
 void PeerConnectionObserver::OnAddStream(
     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
 {
@@ -600,18 +631,36 @@ Promise* RTCPeerConnection::setLocalDescription(
 
 RTCSessionDescription* RTCPeerConnection::localDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->local_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->local_description());
 }
 
 RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->current_local_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->current_local_description());
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->pending_local_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->pending_local_description());
 }
@@ -653,18 +702,36 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
 RTCSessionDescription* RTCPeerConnection::remoteDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->remote_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->remote_description());
 }
 
 RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->remote_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->current_remote_description());
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
 {
+    const webrtc::SessionDescriptionInterface* desc =
+        m_backend->remote_description();
+    if (!desc) {
+        return nullptr;
+    }
+
     return new RTCSessionDescription(executionContext(),
                                      m_backend->pending_remote_description());
 }
@@ -1050,6 +1117,32 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
     }
 
     m_backend->RemoveTrackNew(sender->backend());
+}
+
+RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
+    DOMStringOrMediaStreamTrack trackOrKind, RTCRtpTransceiverInit init)
+{
+    if (!m_backend) {
+        return new RTCRtpTransceiver(executionContext());
+    }
+
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>> r;
+    if (trackOrKind.isDOMStringValue()) {
+        String* kind = trackOrKind.getDOMStringValue();
+        if (kind->equals("audio")) {
+            r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO);
+        } else if (kind->equals("audio")) {
+            r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO);
+        }
+    } else if (trackOrKind.isMediaStreamTrackValue()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    if (!r.ok()) {
+        return new RTCRtpTransceiver(executionContext());
+    }
+
+    return new RTCRtpTransceiver(executionContext(), r.value());
 }
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()

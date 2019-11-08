@@ -152,7 +152,8 @@ partial interface RTCPeerConnection {
   sequence<RTCRtpTransceiver> getTransceivers ();
   RTCRtpSender addTrack (MediaStreamTrack track, MediaStream... streams);
   void removeTrack (RTCRtpSender sender);
-//  [Unimplemented] RTCRtpTransceiver addTransceiver ((MediaStreamTrack or DOMString) trackOrKind, optional RTCRtpTransceiverInit init);
+  // Change (MediaStreamTrack or DOMString) -> (DOMString or MediaStreamTrack) to workaround the binding generator bugs
+  RTCRtpTransceiver addTransceiver ((DOMString or MediaStreamTrack) trackOrKind, optional RTCRtpTransceiverInit init);
 //  [Unimplemented] attribute EventHandler ontrack;
 };
 

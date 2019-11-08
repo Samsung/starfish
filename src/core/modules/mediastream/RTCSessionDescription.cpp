@@ -67,7 +67,15 @@ RTCSessionDescription::RTCSessionDescription(
     : EventTarget()
     , m_executionContext(executionContext)
 {
-    m_backend = backend;
+    // NOTE: backend is owned by native peerconnection
+    RTCSessionDescriptionInit init;
+    init.setType(String::createASCIIString(backend->type().data(),
+                                           backend->type().length()));
+    m_type = init.m_type;
+
+    std::string sdp;
+    backend->ToString(&sdp);
+    m_sdp = String::createASCIIString(sdp.data(), sdp.length());
 }
 
 RTCSessionDescription::RTCSessionDescription(

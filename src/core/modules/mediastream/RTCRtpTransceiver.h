@@ -29,6 +29,9 @@
 
 namespace Starfish {
 
+struct RTCRtpTransceiverInit {
+};
+
 class RTCRtpTransceiver : public ScriptWrappable {
 public:
     RTCRtpTransceiver(ExecutionContext* executionContext);

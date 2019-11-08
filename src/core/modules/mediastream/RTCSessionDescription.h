@@ -74,7 +74,6 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    const webrtc::SessionDescriptionInterface* m_backend{ nullptr };
     RTCSdpType m_type;
     String* m_sdp;
 };

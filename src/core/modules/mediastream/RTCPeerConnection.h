@@ -30,16 +30,31 @@
 #include "core/modules/mediastream/RTCIceCandidate.h"
 #include "core/modules/mediastream/RTCSctpTransport.h"
 #include "core/modules/mediastream/RTCDataChannel.h"
+#include "core/modules/mediastream/RTCRtpTransceiver.h"
+#include "core/modules/mediastream/MediaStream.h"
+#include "core/modules/mediastream/MediaStreamTrack.h"
+
+#include "binding/DOMStringOrMediaStreamTrackUnion.h"
 
 #include "api/peer_connection_interface.h"
 #include "api/media_stream_interface.h"
 #include "api/rtp_receiver_interface.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
 
 namespace Starfish {
 class ExecutionContext;
 class Event;
 class RTCRtpSender;
 class RTCPeerConnection;
+
+// FIXME: The binding generator does not generate the following code, so they
+// are manually included here. They are used in RTCPeerConnectionBinding.cpp
+extern DOMStringOrMediaStreamTrack toDOMStringOrMediaStreamTrackFromValueRef(
+    ExecutionStateRef* state, ValueRef* from);
+extern ValueRef* toValueRefFromDOMStringOrMediaStreamTrack(
+    ExecutionStateRef* state, const DOMStringOrMediaStreamTrack& from);
 
 enum class RTCSignalingState {
     Stable,
@@ -124,7 +139,7 @@ public:
     virtual ~PeerConnectionObserver(){};
 
     void OnSignalingChange(
-        webrtc::PeerConnectionInterface::SignalingState new_state) override{};
+        webrtc::PeerConnectionInterface::SignalingState new_state) override;
     void OnAddStream(
         rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
     void OnRemoveStream(
@@ -264,6 +279,9 @@ public:
     RTCRtpSender* addTrack(MediaStreamTrack* track,
                            GCVector<MediaStream*>& streams);
     void removeTrack(RTCRtpSender* sender);
+    RTCRtpTransceiver* addTransceiver(
+        DOMStringOrMediaStreamTrack trackOrKind,
+        RTCRtpTransceiverInit init = RTCRtpTransceiverInit());
 
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
     bool initializePeerConnection();
