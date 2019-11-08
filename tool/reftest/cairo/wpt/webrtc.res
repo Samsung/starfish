@@ -24,7 +24,7 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer-offerToReceive.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html # Pass but fails in docker
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-generateCertificate.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-getDefaultIceServers.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-getIdentityAssertion.sub.html

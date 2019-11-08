@@ -17,37 +17,23 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBRTC)
-
-#ifndef __StarfishRTCRtpTransceiver__
-#define __StarfishRTCRtpTransceiver__
-
-#include "core/dom/EventTarget.h"
-#include "binding/ScriptWrappable.h"
-
-#include "api/peer_connection_interface.h"
-
-namespace Starfish {
-
-struct RTCRtpTransceiverInit {
+[ STARFISH_ENABLE_WEBRTC,
+  Exposed=Window,
+  ConstructorCallWith=ExecutionContext ]
+interface MediaStreamTrack : EventTarget {
+  [Rename=kindString] readonly attribute DOMString kind;
+  //readonly attribute DOMString id;
+  //readonly attribute DOMString label;
+  //attribute boolean enabled;
+  //readonly attribute boolean muted;
+  //attribute EventHandler onmute;
+  //attribute EventHandler onunmute;
+  //readonly attribute MediaStreamTrackState readyState;
+  //attribute EventHandler onended;
+  //MediaStreamTrack clone();
+  //void stop();
+  //MediaTrackCapabilities getCapabilities();
+  //MediaTrackConstraints getConstraints();
+  //MediaTrackSettings getSettings();
+  //Promise<void> applyConstraints(optional MediaTrackConstraints constraints);
 };
-
-class RTCRtpTransceiver : public ScriptWrappable {
-public:
-    RTCRtpTransceiver(ExecutionContext* executionContext);
-    RTCRtpTransceiver(
-        ExecutionContext* executionContext,
-        rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rptTransceiver);
-    virtual ~RTCRtpTransceiver();
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpTransceiver)
-
-    String* mid();
-
-private:
-    ExecutionContext* m_executionContext{ nullptr };
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> m_backend;
-};
-}
-#endif
-#endif

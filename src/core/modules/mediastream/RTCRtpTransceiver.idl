@@ -17,6 +17,14 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiverinit
+[ STARFISH_ENABLE_WEBRTC ]
+dictionary RTCRtpTransceiverInit {
+//  RTCRtpTransceiverDirection direction = "sendrecv";
+//  sequence<MediaStream> streams = [];
+//  sequence<RTCRtpEncodingParameters> sendEncodings = [];
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver
 [ STARFISH_ENABLE_WEBRTC,
   ConstructorCallWith=ExecutionContext,
