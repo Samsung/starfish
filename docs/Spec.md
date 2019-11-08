@@ -24,6 +24,7 @@ lightweight Web engine (LWE).
     - [Web Device API](#web-device-api)
     - [Accessible Rich Internet Applications (WAI-ARIA)](#accessible-rich-internet-applications-wai-aria)
     - [Web Speech APIs](#web-speech-apis)
+    - [WebRTC](#webrtc)
 
 ## Encoding Scheme
 All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
@@ -1824,3 +1825,84 @@ The following describes Web Speech APIs supported by lightweight web engine. Ple
 | | attribute | lang  | This attribute is a BCP 47 language tag indicating the language of the voice.| |
 | | attribute | localService | This attribute is true for voices supplied by a local speech synthesizer, and is false for voices supplied by a remote speech synthesizer service.| |
 | | attribute | default  | This attribute is true for at most one voice per language.| |
+
+## WebRTC
+The following describes WebRTC APIs supported by lightweight web engine. Please, see [WebRTC Spec](https://w3c.github.io/webrtc-pc/) for more information.
+The WebRTC support is in the early alpha stage.
+
+| Interface | Type | Name | Description | Note |
+|-----------|------|------|-------------|------|
+| [RTCPeerConnection](https://w3c.github.io/webrtc-pc/#rtcpeerconnection-interface) | interface | RTCPeerConnection | The main interface for WebRTC | |
+| | constructor | constructor | Calling new RTCPeerConnection(configuration) creates an RTCPeerConnection object. | |
+| | attribute | localDescription (of type RTCSessionDescription, readonly, and nullable) | This attribute returns PendingLocalDescription if it is not null and otherwise it returns CurrentLocalDescription. | |
+| | attribute | currentLocalDescription (of type RTCSessionDescription, readonly, nullable) | This attribute returns CurrentLocalDescription. | |
+| | attribute | pendingLocalDescription (of type RTCSessionDescription, readonly, nullable) | This attribute returns PendingLocalDescription. | |
+| | attribute | remoteDescription (of type RTCSessionDescription, readonly, nullable) | This attribute returns PendingRemoteDescription if it is not null and otherwise it returns CurrentRemoteDescription. | |
+| | attribute | currentRemoteDescription (of type RTCSessionDescription, readonly, nullable) | This attribute returns CurrentRemoteDescription. | |
+| | attribute | pendingRemoteDescription (of type RTCSessionDescription, readonly, nullable) | This attribute returns PendingRemoteDescription. | |
+| | attribute | signalingState (of type RTCSignalingState, readonly) | This attribute returns the RTCPeerConnection object's signaling state. | |
+| | method |  Promise<RTCSessionDescriptionInit> createOffer(optional RTCOfferOptions options = {}) | The createOffer method generates a blob of SDP that contains an RFC 3264 offer with the supported configurations for the session, including descriptions of the local MediaStreamTracks attached to this RTCPeerConnection, the codec/RTP/RTCP capabilities supported by this implementation, and parameters of the ICE agent and the DTLS connection. The options parameter may be supplied to provide additional control over the offer generated. | |
+| | method |  Promise<RTCSessionDescriptionInit> createAnswer(optional RTCAnswerOptions options = {}) | The createAnswer method generates an [SDP] answer with the supported configuration for the session that is compatible with the parameters in the remote configuration. | |
+| | method | Promise<void> setLocalDescription(optional RTCSessionDescriptionInit description = {})  | The setLocalDescription method instructs the RTCPeerConnection to apply the supplied RTCSessionDescriptionInit as the local description. | |
+| | method | Promise<void> setRemoteDescription(optional RTCSessionDescriptionInit description = {}) | The setRemoteDescription method instructs the RTCPeerConnection to apply the supplied RTCSessionDescriptionInit as the remote offer or answer. This API changes the local media state. | |
+| | method | Promise<void> addIceCandidate(optional RTCIceCandidateInit candidate = {}) | The addIceCandidate method provides a remote candidate to the ICE Agent. | |
+| | method | RTCConfiguration getConfiguration() | Returns an RTCConfiguration object representing the current configuration of this RTCPeerConnection object. | |
+| | method | void setConfiguration(RTCConfiguration configuration) | The setConfiguration method updates the configuration of this RTCPeerConnection object. | |
+| | method | void close() | Closes the connection. | |
+| | method | sequence<RTCRtpTransceiver> getTransceivers() | Returns a sequence of RTCRtpTransceiver objects representing the RTP transceivers that are currently attached to this RTCPeerConnection object. | | |
+| | method | RTCRtpSender addTrack(MediaStreamTrack track, MediaStream... streams) | Adds a new track to the RTCPeerConnection, and indicates that it is contained in the specified MediaStreams. | |
+| | method | void removeTrack(RTCRtpSender sender) | Stops sending media from sender. | |
+| [RTCConfiguration](https://w3c.github.io/webrtc-pc/#rtcconfiguration-dictionary) | dictionary | RTCConfiguration | The RTCConfiguration defines a set of parameters to configure how the peer-to-peer communication established via RTCPeerConnection is established or re-established. | |
+| | attribute | iceTransportPolicy (of type RTCIceTransportPolicy) | Indicates which candidates the ICE Agent is allowed to use. | |
+| | attribute | bundlePolicy (of type RTCBundlePolicy. | Indicates which media-bundling policy to use when gathering ICE candidates. | |
+| | attribute | rtcpMuxPolicy (of type RTCRtcpMuxPolicy) | Indicates which rtcp-mux policy to use when gathering ICE candidates. | |
+| | attribute | peerIdentity (of type DOMString) | Sets the target peer identity for the RTCPeerConnection. | |
+| | attribute | iceCandidatePoolSize (of type octet, defaulting to 0) | Size of the prefetched ICE pool as defined in [JSEP] (section 3.5.4. and section 4.1.1.). | |
+| [RTCIceTransportPolicy](https://w3c.github.io/webrtc-pc/#dom-rtcicetransportpolicy) | enum | RTCIceTransportPolicy | | |
+| | value | relay | The ICE Agent uses only media relay candidates such as candidates passing through a TURN server. | |
+| | value | all | The ICE Agent can use any type of candidate when this value is specified. | |
+| [RTCBundlePolicy](https://w3c.github.io/webrtc-pc/#dom-rtcbundlepolicy) | enum | RTCBundlePolicy | | |
+| | value | balanced | Gather ICE candidates for each media type in use (audio, video, and data). | |
+| | value | max-compat | Gather ICE candidates for each track.  | |
+| | value | max-bundle | Gather ICE candidates for only one track. | |
+| [RTCRtcpMuxPolicy](https://w3c.github.io/webrtc-pc/#dom-rtcrtcpmuxpolicy) | enum | RTCRtcpMuxPolicy | |
+| | value | negotiate | Gather ICE candidates for both RTP and RTCP candidates.  | |
+| | value | require | Gather ICE candidates only for RTP and multiplex RTCP on the RTP candidates. | |
+| [RTCSessionDescriptionInit](https://w3c.github.io/webrtc-pc/#dom-rtcsessiondescriptioninit) | dictionary | RTCSessionDescriptionInit | | |
+| | value | type (of type RTCSdpType) | The type of this description. If not present, then setLocalDescription will infer the type based on the RTCPeerConnection's signaling state, whereas setRemoteDescription and the RTCSessionDescription constructor will throw a TypeError, because they require the argument. | |
+| | value | sdp (of type DOMString) | The string representation of the SDP; if type is "rollback", this member is unused. | |
+| [RTCSessionDescription](https://w3c.github.io/webrtc-pc/#dom-rtcsessiondescription) | interface | RTCSessionDescription | | |
+| | constructor |  constructor(optional RTCSessionDescriptionInit descriptionInitDict = {}) | The RTCSessionDescription() constructor takes a dictionary argument, description, whose content is used to initialize the new RTCSessionDescription object. | |
+| | attribute | type (of type RTCSdpType, readonly) | The type of this RTCSessionDescription. | |
+| | attribute | sdp (of type DOMString, readonly) | The string representation of the SDP. | |
+| [RTCSdpType](https://w3c.github.io/webrtc-pc/#dom-rtcsdptype) | enum | RTCSdpType | | |
+| | value | offer | An RTCSdpType of offer indicates that a description MUST be treated as an SDPoffer. | |
+| | value | pranswer | An RTCSdpType of pranswer indicates that a description MUST be treated as an SDP answer, but not a final answer.  | |
+| | value | answer | An RTCSdpType of answer indicates that a description MUST be treated as an SDP final answer, and the offer-answer exchange MUST be considered complete.  | |
+| [RTCIceCandidateInit](https://w3c.github.io/webrtc-pc/#dom-rtcicecandidateinit) | dictionary | RTCIceCandidateInit | | |
+| | attribute | candidate of type DOMString, defaulting to "" | This carries the candidate-attribute as defined in section 15.1 of [ICE]. If this represents an end-of-candidates indication, candidate is an empty string. | |
+| | attribute | sdpMid of type DOMString, nullable, defaulting to null | If not null, this contains the media stream "identification-tag" defined in [RFC5888] for the media component this candidate is associated with. | |
+| | attribute | sdpMLineIndex of type unsigned short, nullable, defaulting to null | If not null, this indicates the index (starting at zero) of the media description in the SDP this candidate is associated with. | |
+| | attribute | usernameFragment of type DOMString, nullable, defaulting to null | If not null, this carries the ufrag as defined in section 15.4 of [ICE]. | |
+| [RTCIceCandidate](https://w3c.github.io/webrtc-pc/#rtcicecandidate-interface) | interface | RTCIceCandidate | | |
+| | constructor |  constructor(optional RTCIceCandidateInit candidateInitDict = {}) | The RTCIceCandidate() constructor takes a dictionary argument, candidateInitDict, whose content is used to initialize the new RTCIceCandidate object. | |
+| | attribute | candidate of type DOMString, readonly | This carries the candidate-attribute as defined in section 15.1 of [ICE]. | |
+| | attribute | sdpMid of type DOMString, readonly, nullable | If not null, this contains the media stream "identification-tag" defined in [RFC5888] for the media component this candidate is associated with. | |
+| | attribute | sdpMLineIndex of type unsigned short, readonly, nullable | If not null, this indicates the index (starting at zero) of the media description in the SDP this candidate is associated with. | |
+| [RTCSignalingState](https://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate) | enum | RTCSignalingState | | |
+| | value | stable | There is no offer/answer exchange in progress. This is also the initial state, in which case the local and remote descriptions are empty. | |
+| | value | have-local-offer| A local description, of type "offer", has been successfully applied. | |
+| | value | have-remote-offer | A remote description, of type "offer", has been successfully applied. | |
+| | value | have-local-pranswer | A remote description of type "offer" has been successfully applied and a local description of type "pranswer" has been successfully applied. | |
+| | value | have-remote-pranswer | A local description of type "offer" has been successfully applied and a remote description of type "pranswer" has been successfully applied. | |
+| | value | closed | The RTCPeerConnection has been closed; its [[IsClosed]] slot is true. | |
+| [RTCRtpSender](https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender) | interface | RTCRtpSender | | |
+| | attribute | track (of type MediaStreamTrack, readonly, nullable) | The track attribute is the track that is associated with this RTCRtpSender object.  | |
+| [RTCRtpTransceiver](https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver) | interface | RTCRtpTransceiver | | |
+| | attribute | mid (of type DOMString, readonly, nullable) | The mid attribute is the mid negotatiated and present in the local and remote descriptions as defined in [JSEP] (section 5.2.1. and section 5.3.1.). | |
+| [MediaStream](https://w3c.github.io/mediacapture-main/#mediastream) | interface | MediaStream | | |
+| | method | sequence<MediaStreamTrack> getVideoTracks() | Returns a sequence of MediaStreamTrack objects representing the video tracks in this stream. | |
+| | method | sequence<MediaStreamTrack> getTracks() | Returns a sequence of MediaStreamTrack objects representing all the tracks in this stream. | |
+| | method | void addTrack(MediaStreamTrack track) | Adds the given MediaStreamTrack to this MediaStream. | |
+| [MediaStreamTrack](https://w3c.github.io/mediacapture-main/#mediastreamtrack) | interface | MediaStreamTrack | | |
+| | attribute | kind of type DOMString, readonly | The kind attribute MUST return the string "audio" if this object represents an audio track or "video" if this object represents a video track. | |
