@@ -225,14 +225,29 @@ void PeerConnectionObserver::OnIceCandidate(
             p);
 }
 
-CreateOfferAnswerObserver* CreateOfferAnswerObserver::create(
+CreateOfferObserver* CreateOfferObserver::create(
     RTCPeerConnection* peerConnection, Promise* promise)
 {
-    CreateOfferAnswerObserver* observer =
-        new rtc::RefCountedObject<CreateOfferAnswerObserver>();
-    observer->m_peerConnection = peerConnection;
-    observer->m_promise = promise;
+    CreateOfferObserver* observer =
+        new rtc::RefCountedObject<CreateOfferObserver>();
+    observer->init(peerConnection, promise);
     return observer;
+}
+
+CreateAnswerObserver* CreateAnswerObserver::create(
+    RTCPeerConnection* peerConnection, Promise* promise)
+{
+    CreateAnswerObserver* observer =
+        new rtc::RefCountedObject<CreateAnswerObserver>();
+    observer->init(peerConnection, promise);
+    return observer;
+}
+
+void CreateOfferAnswerObserver::init(RTCPeerConnection* peerConnection,
+                                     Promise* promise)
+{
+    m_peerConnection = peerConnection;
+    m_promise = promise;
 }
 
 void CreateOfferAnswerObserver::OnSuccess(
@@ -275,6 +290,12 @@ void CreateOfferAnswerObserver::OnSuccess(
                     self->m_peerConnection->createSessionDescriptionInitObject(
                         type, String::createASCIIString(sdpString.c_str(),
                                                         sdpString.size()));
+                if (self->isCreateOffer()) {
+                    self->m_peerConnection->m_lastCreatedOffer = sdpString;
+                } else if (self->isCreateAnswer()) {
+                    self->m_peerConnection->m_lastCreatedAnswer = sdpString;
+                }
+
                 promise->fulfill(createScriptValue(sd));
                 self->setPromise(nullptr);
                 delete promise;
@@ -468,8 +489,8 @@ bool RTCPeerConnection::initializePeerConnection(
     m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
         config, std::move(dependencies));
 
-    m_createOfferObserver = CreateOfferAnswerObserver::create(this, nullptr);
-    m_createAnswerObserver = CreateOfferAnswerObserver::create(this, nullptr);
+    m_createOfferObserver = CreateOfferObserver::create(this, nullptr);
+    m_createAnswerObserver = CreateAnswerObserver::create(this, nullptr);
     m_setLocalDescriptionObserver =
         SetLocalRemoteDescriptionObserver::create(this, nullptr);
     m_setRemoteDescriptionObserver =
@@ -619,12 +640,49 @@ Promise* RTCPeerConnection::setLocalDescription(
 
     webrtc::SdpType type = toSdpType(description.m_type);
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
+    // 4.2
+    if ((description.m_type == RTCSdpType::Offer) &&
+        !description.m_sdp->equals("") && (m_lastCreatedOffer != sdpString)) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_MODIFICATION_ERR,
+            "setLocalDescription");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 4.3
+    if ((description.m_type == RTCSdpType::Answer ||
+         description.m_type == RTCSdpType::Pranswer) &&
+        !description.m_sdp->equals("") && (m_lastCreatedAnswer != sdpString)) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::INVALID_MODIFICATION_ERR,
+            "setLocalDescription");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 4.4
+    if ((description.m_type == RTCSdpType::Offer) &&
+        description.m_sdp->equals("")) {
+        sdpString = m_lastCreatedOffer;
+    }
+
+    // 4.5
+    if ((description.m_type == RTCSdpType::Answer ||
+         description.m_type == RTCSdpType::Pranswer) &&
+        description.m_sdp->equals("")) {
+        sdpString = m_lastCreatedAnswer;
+    }
+
+    // 4.6
     std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
         webrtc::CreateSessionDescription(type, sdpString);
 
-    // SetLocalDescription takes the ownership of desc
-    m_backend->SetLocalDescription(m_setLocalDescriptionObserver,
-                                   desc.release());
+    if (desc) {
+        // SetLocalDescription takes the ownership of desc
+        m_backend->SetLocalDescription(m_setLocalDescriptionObserver,
+                                       desc.release());
+    }
 
     return promise;
 }

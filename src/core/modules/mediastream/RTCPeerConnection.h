@@ -179,19 +179,48 @@ protected:
 class CreateOfferAnswerObserver
     : public webrtc::CreateSessionDescriptionObserver {
 public:
-    static CreateOfferAnswerObserver* create(RTCPeerConnection* peerConnection,
-                                             Promise* promise);
-
-    void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
-    void OnFailure(webrtc::RTCError error) override;
-    void setPromise(Promise* promise)
+    virtual void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
+    virtual void OnFailure(webrtc::RTCError error) override;
+    virtual void setPromise(Promise* promise)
     {
         m_promise = promise;
     }
 
-private:
+    virtual bool isCreateOffer()
+    {
+        return false;
+    }
+
+    virtual bool isCreateAnswer()
+    {
+        return false;
+    }
+
+protected:
     RTCPeerConnection* m_peerConnection{ nullptr };
     Promise* m_promise{ nullptr };
+
+    void init(RTCPeerConnection* peerConnection, Promise* promise);
+};
+
+class CreateOfferObserver : public CreateOfferAnswerObserver {
+public:
+    static CreateOfferObserver* create(RTCPeerConnection* peerConnection,
+                                       Promise* promise);
+    bool isCreateOffer() override
+    {
+        return true;
+    }
+};
+
+class CreateAnswerObserver : public CreateOfferAnswerObserver {
+public:
+    static CreateAnswerObserver* create(RTCPeerConnection* peerConnection,
+                                        Promise* promise);
+    bool isCreateAnswer() override
+    {
+        return true;
+    }
 };
 
 class SetLocalRemoteDescriptionObserver
@@ -214,6 +243,7 @@ private:
 
 class RTCPeerConnection : public EventTarget {
     friend class PeerConnectionObserver;
+    friend class CreateOfferAnswerObserver;
 
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
@@ -300,12 +330,15 @@ private:
     std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
-    rtc::scoped_refptr<CreateOfferAnswerObserver> m_createOfferObserver;
-    rtc::scoped_refptr<CreateOfferAnswerObserver> m_createAnswerObserver;
+    rtc::scoped_refptr<CreateOfferObserver> m_createOfferObserver;
+    rtc::scoped_refptr<CreateAnswerObserver> m_createAnswerObserver;
     rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
         m_setLocalDescriptionObserver;
     rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
         m_setRemoteDescriptionObserver;
+
+    std::string m_lastCreatedOffer;
+    std::string m_lastCreatedAnswer;
 
     bool isClosed();
     void deletePeerConnection();
