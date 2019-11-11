@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+// https://webaudio.github.io/web-audio-api/#BaseAudioContext
+
+//callback DecodeErrorCallback = void (DOMException error);
+//callback DecodeSuccessCallback = void (AudioBuffer decodedData);
+
+[ STARFISH_ENABLE_WEBAUDIO,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface BaseAudioContext : EventTarget {
+  //readonly attribute AudioDestinationNode destination;
+  //readonly attribute float sampleRate;
+  //readonly attribute double currentTime;
+  //readonly attribute AudioListener listener;
+  //readonly attribute AudioContextState state;
+  //[SameObject, SecureContext] readonly attribute AudioWorklet audioWorklet;
+  //attribute EventHandler onstatechange;
+
+  //AnalyserNode createAnalyser ();
+  //BiquadFilterNode createBiquadFilter ();
+  //AudioBuffer createBuffer (unsigned long numberOfChannels, unsigned long length, float sampleRate);
+  //AudioBufferSourceNode createBufferSource ();
+  //ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
+  //ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
+  //ConstantSourceNode createConstantSource ();
+  //ConvolverNode createConvolver ();
+  //DelayNode createDelay (optional double maxDelayTime = 1.0);
+  //DynamicsCompressorNode createDynamicsCompressor ();
+  //GainNode createGain ();
+  //IIRFilterNode createIIRFilter (sequence<double> feedforward, sequence<double> feedback);
+  //OscillatorNode createOscillator ();
+  //PannerNode createPanner ();
+  //PeriodicWave createPeriodicWave (sequence<float> real, sequence<float> imag, optional PeriodicWaveConstraints constraints = {});
+  //ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
+  //                                          optional unsigned long numberOfInputChannels = 2,
+  //                                          optional unsigned long numberOfOutputChannels = 2);
+  //StereoPannerNode createStereoPanner ();
+  //WaveShaperNode createWaveShaper ();
+
+  //Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
+  //                                      optional DecodeSuccessCallback? successCallback,
+  //                                      optional DecodeErrorCallback? errorCallback);
+};
