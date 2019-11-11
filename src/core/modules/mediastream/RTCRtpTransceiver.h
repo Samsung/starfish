@@ -29,6 +29,14 @@
 
 namespace Starfish {
 
+enum RTCRtpTransceiverDirection {
+    Sendrecv,
+    Sendonly,
+    Recvonly,
+    Inactive,
+    Stopped
+};
+
 struct RTCRtpTransceiverInit {
 };
 
@@ -43,6 +51,8 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpTransceiver)
 
     String* mid();
+    String* direction();
+    void setDirection(String* direction);
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

@@ -17,6 +17,16 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiverdirection
+[ STARFISH_ENABLE_WEBRTC ]
+enum RTCRtpTransceiverDirection {
+  "sendrecv",
+  "sendonly",
+  "recvonly",
+  "inactive",
+  "stopped"
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiverinit
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary RTCRtpTransceiverInit {
@@ -33,7 +43,7 @@ interface RTCRtpTransceiver {
   readonly attribute DOMString? mid;
 //  [SameObject] readonly attribute RTCRtpSender sender;
 //  [SameObject] readonly attribute RTCRtpReceiver receiver;
-//  attribute RTCRtpTransceiverDirection direction;
+  attribute RTCRtpTransceiverDirection direction;
 //  readonly attribute RTCRtpTransceiverDirection? currentDirection;
 //  void stop();
 //  void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);

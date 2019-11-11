@@ -106,12 +106,11 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             }
 
             // 5-6.3.1
+            MediaStream* mediaStream = new MediaStream(md->executionContext());
             if (constraints.audio()) {
-                auto exception = new DOMException(
-                    md->executionContext(), DOMException::NOT_FOUND_ERR,
-                    "NotFoundErr: audio is not supported");
-                promise->reject(exception->scriptValue());
-                return;
+                AudioStreamTrack* audioTrack =
+                    new AudioStreamTrack(md->executionContext());
+                mediaStream->addTrack(audioTrack);
             }
 
             if (constraints.video()) {
@@ -131,14 +130,8 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
                 MediaStream* mediaStream =
                     new MediaStream(md->executionContext());
                 mediaStream->addTrack(videoTrack);
-                promise->fulfill(mediaStream->scriptValue());
-                return;
             }
-
-            auto exception =
-                new DOMException(md->executionContext(),
-                                 DOMException::SCRIPT_TYPE_ERR, "TypeError");
-            promise->reject(exception->scriptValue());
+            promise->fulfill(mediaStream->scriptValue());
         },
         promise, p);
 
