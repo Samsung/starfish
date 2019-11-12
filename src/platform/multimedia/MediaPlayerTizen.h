@@ -68,7 +68,7 @@ class MediaSource;
 class MediaPlayerTizenMediaSourceClient;
 class Mutex;
 
-class MediaStream : public gc {
+class MediaPlayerSourceStream : public gc {
 public:
     enum BufferState {
         BUFFERSTATE_INITIAL,
@@ -78,7 +78,7 @@ public:
         BUFFERSTATE_EOS,
     };
 
-    MediaStream(StreamType type);
+    MediaPlayerSourceStream(StreamType type);
     StreamType type()
     {
         return m_type;
@@ -185,8 +185,8 @@ public:
     virtual void printNativePlayerError(int errorCode);
 
     void handlePlayerBuffer(StreamType type, uint64_t currentBytes);
-    void fillBufferWithoutGuard(MediaStream* stream);
-    void fillBuffer(MediaStream* stream);
+    void fillBufferWithoutGuard(MediaPlayerSourceStream* stream);
+    void fillBuffer(MediaPlayerSourceStream* stream);
     void fillBufferIfNeeded(StreamType type);
     void dispose();
 
@@ -222,12 +222,12 @@ public:
     virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
     virtual void prepareMediaSource();
 
-    void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
+    void updateStreamInfo(MediaPlayerSourceStream* stream, size_t pastInitIndex,
                           size_t newInitIndex);
-    void updateAudioStreamInfo(MediaStream* audio, size_t pastInitIndex,
-                               size_t newInitIndex);
-    void updateVideoStreamInfo(MediaStream* video, size_t pastInitIndex,
-                               size_t newInitIndex);
+    void updateAudioStreamInfo(MediaPlayerSourceStream* audio,
+                               size_t pastInitIndex, size_t newInitIndex);
+    void updateVideoStreamInfo(MediaPlayerSourceStream* video,
+                               size_t pastInitIndex, size_t newInitIndex);
     void enterUnderrunState();
     void exitUnderrunState();
 
@@ -249,11 +249,11 @@ public:
     Thread* m_mseThread;
 #endif
     volatile bool* m_playerDeadFlag;
-    MediaStream* m_audioStream;
-    MediaStream* m_videoStream;
+    MediaPlayerSourceStream* m_audioStream;
+    MediaPlayerSourceStream* m_videoStream;
 
     // Helpers
-    MediaStream* currentStream(StreamType type)
+    MediaPlayerSourceStream* currentStream(StreamType type)
     {
         return type == StreamTypeAudio ? m_audioStream : m_videoStream;
     }
@@ -285,7 +285,8 @@ protected:
                                      StreamInfo* info);
     void setMediaFormatExtraForAudio(media_format_h& mediaFormat,
                                      StreamInfo* info);
-    void videoFramerateChanged(MediaStream* stream, int num, int den);
+    void videoFramerateChanged(MediaPlayerSourceStream* stream, int num,
+                               int den);
 };
 }
 

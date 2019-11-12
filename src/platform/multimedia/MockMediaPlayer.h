@@ -29,7 +29,7 @@ class HTMLMediaElement;
 class MediaPlayerMediaSourceClient;
 class URL;
 
-class MockMediaStream : public gc {
+class MockMediaPlayerSourceStream : public gc {
 public:
     enum BufferState {
         BUFFERSTATE_INITIAL,
@@ -39,7 +39,7 @@ public:
         BUFFERSTATE_EOS,
     };
 
-    MockMediaStream(StreamType type)
+    MockMediaPlayerSourceStream(StreamType type)
         : m_type(type)
         , m_bufferState(BUFFERSTATE_INITIAL)
         , m_maxBufferSize(0)
@@ -170,9 +170,9 @@ public:
 
     void handleEnded();
     void handleSeeked();
-    void fillBuffer(MockMediaStream* stream);
+    void fillBuffer(MockMediaPlayerSourceStream* stream);
     void fillBufferIfNeeded(StreamType type);
-    MockMediaStream* currentStream(StreamType type)
+    MockMediaPlayerSourceStream* currentStream(StreamType type)
     {
         return type == StreamTypeAudio ? m_audioStream : m_videoStream;
     }
@@ -201,8 +201,8 @@ protected:
     {
     }
     uint64_t m_currentTimestamp;
-    MockMediaStream* m_audioStream;
-    MockMediaStream* m_videoStream;
+    MockMediaPlayerSourceStream* m_audioStream;
+    MockMediaPlayerSourceStream* m_videoStream;
     bool m_seeking;
     size_t m_seekingTimer;
     MediaPlayerMediaSourceClient* m_mseClient;

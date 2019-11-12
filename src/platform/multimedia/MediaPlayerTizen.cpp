@@ -270,7 +270,7 @@ public:
     MediaPlayerTizen* m_player;
 };
 
-MediaStream::MediaStream(StreamType type)
+MediaPlayerSourceStream::MediaPlayerSourceStream(StreamType type)
     : m_type(type)
     , m_bufferState(BUFFERSTATE_INITIAL)
     , m_mediaStreamMutex(new Mutex())
@@ -290,7 +290,7 @@ MediaStream::MediaStream(StreamType type)
     }
 }
 
-bool MediaStream::createMediaFormat()
+bool MediaPlayerSourceStream::createMediaFormat()
 {
     STARFISH_ASSERT(m_mediaFormat == nullptr);
     int ret = media_format_create(&m_mediaFormat);
@@ -302,7 +302,7 @@ bool MediaStream::createMediaFormat()
     return true;
 }
 
-void MediaStream::releaseMediaFormat()
+void MediaPlayerSourceStream::releaseMediaFormat()
 {
     if (m_mediaFormat != nullptr) {
         media_format_unref(m_mediaFormat);
@@ -311,78 +311,78 @@ void MediaStream::releaseMediaFormat()
     releaseMediaFormatStreamType();
 }
 
-uint64_t MediaStream::maxBufferSize()
+uint64_t MediaPlayerSourceStream::maxBufferSize()
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_maxBufferSize;
 }
 
-void MediaStream::setMaxBufferSize(uint64_t value)
+void MediaPlayerSourceStream::setMaxBufferSize(uint64_t value)
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     m_maxBufferSize = value;
 }
 
-bool MediaStream::needPacket()
+bool MediaPlayerSourceStream::needPacket()
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_bufferState == BUFFERSTATE_UNDER_RUN ||
            m_bufferState == BUFFERSTATE_NEED_PACKET;
 }
 
-bool MediaStream::isBufferState(BufferState state)
+bool MediaPlayerSourceStream::isBufferState(BufferState state)
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_bufferState == state;
 }
 
-MediaStream::BufferState MediaStream::bufferState()
+MediaPlayerSourceStream::BufferState MediaPlayerSourceStream::bufferState()
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_bufferState;
 }
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-static const char* bufferStateString(MediaStream::BufferState value)
+static const char* bufferStateString(MediaPlayerSourceStream::BufferState value)
 {
-    if (value == MediaStream::BUFFERSTATE_INITIAL) {
+    if (value == MediaPlayerSourceStream::BUFFERSTATE_INITIAL) {
         return "INITIAL";
-    } else if (value == MediaStream::BUFFERSTATE_UNDER_RUN) {
+    } else if (value == MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN) {
         return "UNDERRUN";
-    } else if (value == MediaStream::BUFFERSTATE_NEED_PACKET) {
+    } else if (value == MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET) {
         return "NEED_PACKET";
-    } else if (value == MediaStream::BUFFERSTATE_NORMAL) {
+    } else if (value == MediaPlayerSourceStream::BUFFERSTATE_NORMAL) {
         return "NORMAL";
     }
     return "EOS";
 }
 #endif
 
-void MediaStream::setBufferState(BufferState value)
+void MediaPlayerSourceStream::setBufferState(BufferState value)
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     m_bufferState = value;
 }
 
-bool MediaStream::waitingDemuxer()
+bool MediaPlayerSourceStream::waitingDemuxer()
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_waitingDemuxer;
 }
 
-void MediaStream::setWaitingDemuxer(bool value)
+void MediaPlayerSourceStream::setWaitingDemuxer(bool value)
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     m_waitingDemuxer = value;
 }
 
-uint64_t MediaStream::lastBufferBytes()
+uint64_t MediaPlayerSourceStream::lastBufferBytes()
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     return m_lastBufferBytes;
 }
 
-void MediaStream::setLastBufferBytes(size_t value)
+void MediaPlayerSourceStream::setLastBufferBytes(size_t value)
 {
     Locker<Mutex> locker(*m_mediaStreamMutex);
     m_lastBufferBytes = value;
@@ -451,7 +451,7 @@ void MediaPlayerTizen::handlePlayerError()
 
 void MediaPlayerTizen::fillBufferIfNeeded(StreamType type)
 {
-    MediaStream* stream = currentStream(type);
+    MediaPlayerSourceStream* stream = currentStream(type);
     if (stream == nullptr) {
         return;
     }
@@ -490,10 +490,12 @@ void MediaPlayerTizen::seek(double time)
     if (playbackState() == PLAYBACK_STATE_END) {
         setPlaybackState(PLAYBACK_STATE_PAUSED);
         if (m_audioStream != nullptr) {
-            m_audioStream->setBufferState(MediaStream::BUFFERSTATE_INITIAL);
+            m_audioStream->setBufferState(
+                MediaPlayerSourceStream::BUFFERSTATE_INITIAL);
         }
         if (m_videoStream != nullptr) {
-            m_videoStream->setBufferState(MediaStream::BUFFERSTATE_INITIAL);
+            m_videoStream->setBufferState(
+                MediaPlayerSourceStream::BUFFERSTATE_INITIAL);
         }
         player_start(m_nativePlayer);
         player_pause(m_nativePlayer);
@@ -1149,8 +1151,10 @@ static void* threadFillingBuffer(void* data)
     while (!(*playerDeadFlag)) {
         MediaPlayer::PlaybackState state = self->playbackState();
         if (state != MediaPlayer::PLAYBACK_STATE_END) {
-            MediaStream* audioStream = self->currentStream(StreamTypeAudio);
-            MediaStream* videoStream = self->currentStream(StreamTypeVideo);
+            MediaPlayerSourceStream* audioStream =
+                self->currentStream(StreamTypeAudio);
+            MediaPlayerSourceStream* videoStream =
+                self->currentStream(StreamTypeVideo);
             if (audioStream != nullptr &&
                 audioStream->waitingDemuxer() == false &&
                 audioStream->needPacket() == true) {
@@ -1223,7 +1227,7 @@ void MediaPlayerTizen::prepareMediaSource()
     PLAYER_LOGI("MediaPlayerTizen::prepareMediaSource end\n");
 }
 
-void MediaPlayerTizen::fillBuffer(MediaStream* stream)
+void MediaPlayerTizen::fillBuffer(MediaPlayerSourceStream* stream)
 {
     Locker<Mutex> locker(*m_fillBufferMutex);
     fillBufferWithoutGuard(stream);
@@ -1307,11 +1311,11 @@ void MediaPlayerTizen::exitUnderrunState()
         bool allOut = true;
         if (m_audioStream != nullptr) {
             allOut &= !m_audioStream->isBufferState(
-                MediaStream::BUFFERSTATE_UNDER_RUN);
+                MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN);
         }
         if (m_videoStream != nullptr) {
             allOut &= !m_videoStream->isBufferState(
-                MediaStream::BUFFERSTATE_UNDER_RUN);
+                MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN);
         }
         if (allOut == false) {
             return;
@@ -1328,36 +1332,37 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
 {
 // Other thread
 #ifdef STARFISH_RUN_MSE_THREAD
-    MediaStream* stream = currentStream(type);
+    MediaPlayerSourceStream* stream = currentStream(type);
     if (alive() == false || stream == false) {
         return;
     }
-    MediaStream::BufferState prevState = stream->bufferState();
-    if (prevState == MediaStream::BUFFERSTATE_EOS) {
+    MediaPlayerSourceStream::BufferState prevState = stream->bufferState();
+    if (prevState == MediaPlayerSourceStream::BUFFERSTATE_EOS) {
         return;
     }
     uint64_t maxSize = stream->maxBufferSize();
     uint64_t rate = currentBytes * 100 / maxSize;
-    MediaStream::BufferState state = MediaStream::BUFFERSTATE_NORMAL;
+    MediaPlayerSourceStream::BufferState state =
+        MediaPlayerSourceStream::BUFFERSTATE_NORMAL;
     if (rate < 1) {
-        state = MediaStream::BUFFERSTATE_UNDER_RUN;
+        state = MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN;
     } else if (rate < 30) {
-        state = MediaStream::BUFFERSTATE_NEED_PACKET;
+        state = MediaPlayerSourceStream::BUFFERSTATE_NEED_PACKET;
     }
     if (prevState != state) {
         DEBUG_STREAMBUFFER_LOG("Buffer state: %s > %s\n",
                                bufferStateString(prevState),
                                bufferStateString(state));
         stream->setBufferState(state);
-        if (prevState == MediaStream::BUFFERSTATE_UNDER_RUN) {
+        if (prevState == MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN) {
             exitUnderrunState();
-        } else if (prevState > MediaStream::BUFFERSTATE_UNDER_RUN &&
-                   state == MediaStream::BUFFERSTATE_UNDER_RUN) {
+        } else if (prevState > MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN &&
+                   state == MediaPlayerSourceStream::BUFFERSTATE_UNDER_RUN) {
             enterUnderrunState();
         }
     }
 #else
-    MediaStream* stream = currentStream(type);
+    MediaPlayerSourceStream* stream = currentStream(type);
     uint64_t lastBytes;
     uint64_t maxSize;
     {
@@ -1379,11 +1384,11 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
 #endif
 }
 
-void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
+void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
 {
     STARFISH_ASSERT(stream);
     if (alive() == false || stream->mediaFormat() == false ||
-        stream->isBufferState(MediaStream::BUFFERSTATE_EOS)) {
+        stream->isBufferState(MediaPlayerSourceStream::BUFFERSTATE_EOS)) {
         return;
     }
     media_format_h format = stream->mediaFormat();
@@ -1429,7 +1434,8 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
             if ((endTime - lastDTS) < 10 ||
                 ((lastDTS == lastBufferedTime) &&
                  (std::abs(endTime - lastBufferedTime) < 1000))) {
-                stream->setBufferState(MediaStream::BUFFERSTATE_EOS);
+                stream->setBufferState(
+                    MediaPlayerSourceStream::BUFFERSTATE_EOS);
                 media_packet_create(format, NULL, NULL, &mediaPacket);
                 media_packet_set_flags(mediaPacket, MEDIA_PACKET_END_OF_STREAM);
                 player_push_media_stream(m_nativePlayer, mediaPacket);
@@ -1524,10 +1530,12 @@ bool MediaPlayerTizen::isMSEBufferEOS()
 {
     bool isEOS = true;
     if (m_audioStream != nullptr) {
-        isEOS &= m_audioStream->isBufferState(MediaStream::BUFFERSTATE_EOS);
+        isEOS &= m_audioStream->isBufferState(
+            MediaPlayerSourceStream::BUFFERSTATE_EOS);
     }
     if (m_videoStream != nullptr) {
-        isEOS &= m_videoStream->isBufferState(MediaStream::BUFFERSTATE_EOS);
+        isEOS &= m_videoStream->isBufferState(
+            MediaPlayerSourceStream::BUFFERSTATE_EOS);
     }
     return isEOS;
 }
@@ -1542,7 +1550,7 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     // set video options
     PLAYER_LOGI("MediaPlayerTizen::initVideoStreamInfo\n");
 
-    m_videoStream = new MediaStream(StreamTypeVideo);
+    m_videoStream = new MediaPlayerSourceStream(StreamTypeVideo);
     if (m_container != nullptr) {
         m_videoStream->setLastSubmittedDTS(
             m_container->defaultPlaybackStartPosition() * 1000);
@@ -1624,7 +1632,7 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
     // set audio options
     PLAYER_LOGI("MediaPlayerTizen::initAudioStreamInfo\n");
 
-    m_audioStream = new MediaStream(StreamTypeAudio);
+    m_audioStream = new MediaPlayerSourceStream(StreamTypeAudio);
     if (m_container != nullptr) {
         m_audioStream->setLastSubmittedDTS(
             m_container->defaultPlaybackStartPosition() * 1000);
@@ -1698,7 +1706,7 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
 }
 #undef RETURN_WHEN_PLAYER_ERROR
 
-void MediaPlayerTizen::updateStreamInfo(MediaStream* stream,
+void MediaPlayerTizen::updateStreamInfo(MediaPlayerSourceStream* stream,
                                         size_t pastInitIndex,
                                         size_t newInitIndex)
 {
@@ -1710,7 +1718,7 @@ void MediaPlayerTizen::updateStreamInfo(MediaStream* stream,
     }
 }
 
-void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
+void MediaPlayerTizen::updateVideoStreamInfo(MediaPlayerSourceStream* stream,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
