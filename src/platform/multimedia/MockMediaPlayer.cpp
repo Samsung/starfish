@@ -102,7 +102,7 @@ void MockMediaPlayer::prepareMediaSource()
 {
     if (activeMediaSource()->activeVideoSourceBuffer()) {
         m_hasVideo = true;
-        m_videoStream = new MockMediaStream(StreamTypeVideo);
+        m_videoStream = new MockMediaPlayerSourceStream(StreamTypeVideo);
         StreamInfo* v =
             activeMediaSource()->activeVideoSourceBuffer()->streamInfo(
                 0, activeMediaSource()->activeVideoStreamIndex());
@@ -115,7 +115,7 @@ void MockMediaPlayer::prepareMediaSource()
         MOCKPLAYER_LOG(this, "---------------------------------------\n");
     }
     if (activeMediaSource()->activeAudioSourceBuffer()) {
-        m_audioStream = new MockMediaStream(StreamTypeAudio);
+        m_audioStream = new MockMediaPlayerSourceStream(StreamTypeAudio);
     }
     if (container()->isHTMLVideoElement() && container()->frame()) {
         container()->setNeedsLayout();
@@ -127,7 +127,7 @@ void MockMediaPlayer::prepareMediaSource()
         HTMLMediaElement::HAVE_ENOUGH_DATA);
 }
 
-void MockMediaPlayer::fillBuffer(MockMediaStream* stream)
+void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
 {
     SourceBuffer* sb = activeSourceBuffer(stream->type());
     if (!sb) {
@@ -156,7 +156,8 @@ void MockMediaPlayer::fillBuffer(MockMediaStream* stream)
             if ((endTime - lastDTS) < 10 ||
                 ((lastDTS == lastBufferedTime) &&
                  (std::llabs(endTime - lastBufferedTime) < 1000))) {
-                stream->setBufferState(MockMediaStream::BUFFERSTATE_EOS);
+                stream->setBufferState(
+                    MockMediaPlayerSourceStream::BUFFERSTATE_EOS);
                 MOCKPLAYER_LOG(this, "fillBuffer detect EOS\n");
                 break;
             }
@@ -228,9 +229,9 @@ void MockMediaPlayer::play()
                 if (self->seeking()) {
                     return;
                 }
-                MockMediaStream* audioStream =
+                MockMediaPlayerSourceStream* audioStream =
                     self->currentStream(StreamTypeAudio);
-                MockMediaStream* videoStream =
+                MockMediaPlayerSourceStream* videoStream =
                     self->currentStream(StreamTypeVideo);
                 uint64_t currentTime = self->currentTimeInMS();
                 uint64_t targetTime = currentTime + timerInterval;
@@ -364,9 +365,9 @@ void MockMediaPlayer::seek(double time)
         [](void* data) {
             MockMediaPlayer* self = (MockMediaPlayer*)data;
             if (self->isMSE()) {
-                MockMediaStream* audioStream =
+                MockMediaPlayerSourceStream* audioStream =
                     self->currentStream(StreamTypeAudio);
-                MockMediaStream* videoStream =
+                MockMediaPlayerSourceStream* videoStream =
                     self->currentStream(StreamTypeVideo);
                 uint64_t currentTime = self->currentTimeInMS();
                 uint64_t targetTime = currentTime + forwardDuration;
@@ -418,7 +419,7 @@ void MockMediaPlayer::handleSeeked()
 }
 void MockMediaPlayer::fillBufferIfNeeded(StreamType type)
 {
-    MockMediaStream* stream = currentStream(type);
+    MockMediaPlayerSourceStream* stream = currentStream(type);
     if (!stream) {
         return;
     }

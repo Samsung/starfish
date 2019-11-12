@@ -49,19 +49,19 @@ namespace Starfish {
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
 
-void MediaStream::initFormatExtraForAudio()
+void MediaPlayerSourceStream::initFormatExtraForAudio()
 {
 }
 
-void MediaStream::initFormatExtraForVideo()
+void MediaPlayerSourceStream::initFormatExtraForVideo()
 {
 }
 
-void MediaStream::createMediaFormatStreamType()
+void MediaPlayerSourceStream::createMediaFormatStreamType()
 {
 }
 
-void MediaStream::releaseMediaFormatStreamType()
+void MediaPlayerSourceStream::releaseMediaFormatStreamType()
 {
 }
 
@@ -134,14 +134,14 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
 #endif
 }
 
-void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* audio,
+void MediaPlayerTizen::updateAudioStreamInfo(MediaPlayerSourceStream* audio,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
 }
 
-void MediaPlayerTizen::videoFramerateChanged(MediaStream* stream, int num,
-                                             int den)
+void MediaPlayerTizen::videoFramerateChanged(MediaPlayerSourceStream* stream,
+                                             int num, int den)
 {
 }
 

@@ -48,19 +48,19 @@ namespace Starfish {
 #define STARFISH_VIDEO_DEFAULT_FRAMERATE_DEN 100
 #define STARFISH_MSE_SUBMIT_BYTES_RATE 0.3
 
-void MediaStream::initFormatExtraForAudio()
+void MediaPlayerSourceStream::initFormatExtraForAudio()
 {
     m_formatExtra.m_audioFormatExtra.codec_extradata = nullptr;
     m_formatExtra.m_audioFormatExtra.extradata_size = 0;
 }
 
-void MediaStream::initFormatExtraForVideo()
+void MediaPlayerSourceStream::initFormatExtraForVideo()
 {
     m_formatExtra.m_videoFormatExtra.codec_extradata = nullptr;
     m_formatExtra.m_videoFormatExtra.extradata_size = 0;
 }
 
-void MediaStream::createMediaFormatStreamType()
+void MediaPlayerSourceStream::createMediaFormatStreamType()
 {
     if (m_type == StreamTypeAudio) {
         player_media_stream_audio_extra_info_s& extra =
@@ -80,7 +80,7 @@ void MediaStream::createMediaFormatStreamType()
     }
 }
 
-void MediaStream::releaseMediaFormatStreamType()
+void MediaPlayerSourceStream::releaseMediaFormatStreamType()
 {
     if (m_type == StreamTypeAudio) {
         player_media_stream_audio_extra_info_s& extra =
@@ -193,7 +193,7 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
 #endif
 }
 
-void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* stream,
+void MediaPlayerTizen::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
@@ -201,8 +201,8 @@ void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* stream,
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
-void MediaPlayerTizen::videoFramerateChanged(MediaStream* stream, int num,
-                                             int den)
+void MediaPlayerTizen::videoFramerateChanged(MediaPlayerSourceStream* stream,
+                                             int num, int den)
 {
     media_format_h mediaFormat = stream->mediaFormat();
     auto mediaFormatExtra = stream->videoFormatExtra();
