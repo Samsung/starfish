@@ -60,7 +60,6 @@ ScriptBindingInstance::ScriptBindingInstance(
             },
             NULL, NULL, NULL);
     */
-    m_promiseJobIdlerHandle = MessageLoopInvalidID;
     m_scriptContext =
         ContextRef::create(engineInstance->engineInstance()).release();
 #ifdef TIZEN_DEVICE_API
@@ -94,11 +93,6 @@ void ScriptBindingInstance::initBinding()
 
 void ScriptBindingInstance::destroy()
 {
-    if (m_promiseJobIdlerHandle != MessageLoopInvalidID) {
-        ownerWindow()->webView()->messageLoop()->removeIdler(
-            m_promiseJobIdlerHandle);
-        m_promiseJobIdlerHandle = MessageLoopInvalidID;
-    }
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::close(m_scriptContext);
 #endif

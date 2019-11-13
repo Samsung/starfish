@@ -37,6 +37,7 @@ constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 class MessageLoop : public BASE_CLASS {
     friend class MessageLoopImpl;
     friend class MessageLoopMixin;
+    friend class Timer;
 
 public:
     MessageLoop();
@@ -61,6 +62,12 @@ public:
     void clearPendingIdlers(
         GlobalScope* globalScope); // give nullptr to clear every idlers
 
+    // microtask is similar with idler, but it is executed before
+    // idler(microtask has higher priority)
+    size_t addMicroTask(GlobalScope* globalScope,
+                        void (*fn)(size_t handle, void*), void* data);
+    void removeMicroTask(size_t handle);
+
     void destroy();
 
     static void init();
@@ -74,6 +81,20 @@ protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
+
+    struct MicroTask {
+        size_t m_id;
+        GlobalScope* m_globalScope;
+        void (*m_callback)(size_t handle, void*);
+        void* m_data;
+    };
+
+    void invokeMicroTasksIfExist();
+    void clearMicroTasks(GlobalScope* globalScope);
+
+    size_t m_microTaskCounter;
+    size_t m_microTaskIdler;
+    GCVector<MicroTask> m_microTasks;
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     std::list<size_t> m_idlersFromOtherThreadForUV;

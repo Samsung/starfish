@@ -129,7 +129,6 @@ protected:
 #endif
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,
                                        Escargot::ExecutionStateRef* state);
-    size_t m_promiseJobIdlerHandle;
 };
 }
 

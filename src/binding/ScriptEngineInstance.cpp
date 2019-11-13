@@ -47,37 +47,27 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
             Window* window =
                 (Window*)relatedContext->globalObject()->extraData();
 
-            if (window->scriptBindingInstance()->m_promiseJobIdlerHandle ==
-                MessageLoopInvalidID) {
-                window->scriptBindingInstance()->m_promiseJobIdlerHandle =
-                    window->webView()->messageLoop()->addIdler(
-                        window,
-                        [](size_t, void* data, void* data2) {
-                            Window* window = (Window*)data;
-                            Escargot::ContextRef* relatedContext =
-                                (Escargot::ContextRef*)data2;
+            window->webView()->messageLoop()->addMicroTask(
+                window,
+                [](size_t handle, void* data) {
+                    ContextRef* relatedContext = (ContextRef*)data;
+                    Window* window =
+                        (Window*)relatedContext->globalObject()->extraData();
 
-                            window->scriptBindingInstance()
-                                ->m_promiseJobIdlerHandle =
-                                MessageLoopInvalidID;
-                            while (relatedContext->vmInstance()
-                                       ->hasPendingPromiseJob()) {
-                                auto jobResult =
-                                    relatedContext->vmInstance()
-                                        ->executePendingPromiseJob();
-                                if (jobResult.error) {
-                                    STARFISH_LOG_ERROR(
-                                        "Uncaught %s in Promise job\n",
-                                        toBrowserString(
-                                            window->scriptBindingInstance(),
-                                            jobResult.error.value())
-                                            ->toUTF8NonGCString()
-                                            .data());
-                                }
-                            }
-                        },
-                        window, relatedContext);
-            }
+                    if (relatedContext->vmInstance()->hasPendingPromiseJob()) {
+                        auto jobResult = relatedContext->vmInstance()
+                                             ->executePendingPromiseJob();
+                        if (jobResult.error) {
+                            STARFISH_LOG_ERROR(
+                                "Uncaught %s in Promise job\n",
+                                toBrowserString(window->scriptBindingInstance(),
+                                                jobResult.error.value())
+                                    ->toUTF8NonGCString()
+                                    .data());
+                        }
+                    }
+                },
+                relatedContext);
         }
 
         virtual LoadModuleResult onLoadModule(

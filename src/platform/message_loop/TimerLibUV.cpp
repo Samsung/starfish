@@ -24,6 +24,9 @@
 
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/GlobalScope.h"
+#include "core/page/WebBase.h"
 
 #include <uv.h>
 
@@ -90,6 +93,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             [](uv_timer_t* handle) -> void {
                 TimeoutData* td = (TimeoutData*)handle->data;
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
+                td->m_timer->m_webBase->messageLoop()
+                    ->invokeMicroTasksIfExist();
                 td->m_handler(td->m_data);
             },
             static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
@@ -101,6 +106,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                                td->m_timer->m_timeoutHandler.find(td->m_id);
                            if (iter != td->m_timer->m_timeoutHandler.end()) {
                                td->m_timer->m_timeoutHandler.erase(iter);
+                               td->m_timer->m_webBase->messageLoop()
+                                   ->invokeMicroTasksIfExist();
                                td->m_handler(td->m_data);
                                GC_FREE(td);
                            }

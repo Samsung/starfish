@@ -24,6 +24,9 @@
 
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/GlobalScope.h"
+#include "core/page/WebBase.h"
 
 #include <Windows.h>
 
@@ -79,6 +82,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                 auto iter = td->m_timer->m_timeoutHandler.find(td->m_id);
                 if (iter != td->m_timer->m_timeoutHandler.end()) {
                     td->m_timer->m_timeoutHandler.erase(iter);
+                    td->m_timer->m_webBase->messageLoop()
+                        ->invokeMicroTasksIfExist();
                     td->m_handler(td->m_data);
                     GC_FREE(td);
                     g_windowsTimerData.erase((size_t)timerId);

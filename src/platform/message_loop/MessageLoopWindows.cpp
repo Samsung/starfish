@@ -48,7 +48,10 @@ struct IdlerData {
 };
 
 MessageLoop::MessageLoop()
-    : m_idlersFromOtherThreadMutex(new Mutex())
+    : m_inClosingState(false)
+    , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_microTaskCounter(0)
+    , m_microTaskIdler(MessageLoopInvalidID)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -71,6 +74,7 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
+                id->m_ml->invokeMicroTasksIfExist();
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {
@@ -94,6 +98,7 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE_FROM_OTHER_THREAD);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
+                id->m_ml->invokeMicroTasksIfExist();
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {
@@ -257,6 +262,9 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
+
+    clearMicroTasks(globalScope);
+
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
