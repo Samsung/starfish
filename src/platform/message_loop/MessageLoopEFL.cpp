@@ -40,6 +40,8 @@ namespace Starfish {
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_microTaskCounter(0)
+    , m_microTaskIdler(MessageLoopInvalidID)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -107,6 +109,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
                             IdlerData* id = (IdlerData*)data;
                             removeIderFromList(id->m_ml->m_idlers, id);
 
+                            id->m_ml->invokeMicroTasksIfExist();
                             id->m_fn((size_t)id, id->m_data);
 
                             GC_FREE(id);
@@ -135,6 +138,8 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
                         [](void* data) -> Eina_Bool {
                             IdlerData* id = (IdlerData*)data;
                             removeIderFromList(id->m_ml->m_idlers, id);
+
+                            id->m_ml->invokeMicroTasksIfExist();
                             ((void (*)(size_t, void*, void*))id->m_fn)(
                                 (size_t)id, id->m_data, id->m_data1);
 
@@ -165,6 +170,8 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
+
+            id->m_ml->invokeMicroTasksIfExist();
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
 
@@ -205,6 +212,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                                            id);
                     }
                     if (id->m_valid) {
+                        id->m_ml->invokeMicroTasksIfExist();
                         id->m_fn((size_t)id, id->m_data);
                     }
 
@@ -248,6 +256,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                                            id);
                     }
                     if (id->m_valid) {
+                        id->m_ml->invokeMicroTasksIfExist();
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
                     }
@@ -286,6 +295,9 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_ASSERT(isMainThread());
+
+    clearMicroTasks(globalScope);
+
     // Remove idlers
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {

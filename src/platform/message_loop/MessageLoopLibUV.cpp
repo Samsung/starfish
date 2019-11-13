@@ -58,6 +58,8 @@ struct IdlerData {
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_microTaskCounter(0)
+    , m_microTaskIdler(MessageLoopInvalidID)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -88,6 +90,7 @@ MessageLoop::MessageLoop()
 
                     if (id) {
                         if (id->m_shouldExecute) {
+                            id->m_ml->invokeMicroTasksIfExist();
                             if (id->m_pararmNum == 1) {
                                 id->m_fn((size_t)id, id->m_data);
                             } else if (id->m_pararmNum == 2) {
@@ -123,6 +126,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
                        IdlerData* id = (IdlerData*)handle->data;
                        id->m_ml->m_idlers.erase(
                            id->m_ml->m_idlers.find((size_t)id));
+                       id->m_ml->invokeMicroTasksIfExist();
                        id->m_fn((size_t)id, id->m_data);
                        uv_timer_stop(handle);
                        GC_FREE(id);
@@ -154,6 +158,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
         [](uv_timer_t* handle) {
             IdlerData* id = (IdlerData*)handle->data;
             id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
+            id->m_ml->invokeMicroTasksIfExist();
             ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                        id->m_data1);
             uv_timer_stop(handle);
@@ -188,7 +193,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
                        IdlerData* id = (IdlerData*)handle->data;
                        id->m_ml->m_idlers.erase(
                            id->m_ml->m_idlers.find((size_t)id));
-
+                       id->m_ml->invokeMicroTasksIfExist();
                        ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                            (size_t)id, id->m_data, id->m_data1, id->m_data2);
                        uv_timer_stop(handle);
@@ -267,6 +272,8 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 
 void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
 {
+    clearMicroTasks(globalScope);
+
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;

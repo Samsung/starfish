@@ -26,6 +26,67 @@
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
+
+size_t MessageLoop::addMicroTask(GlobalScope* globalScope,
+                                 void (*fn)(size_t handle, void*), void* data)
+{
+    MicroTask m;
+    m.m_id = m_microTaskCounter++;
+    m.m_globalScope = globalScope;
+    m.m_data = data;
+    m.m_callback = fn;
+    m_microTasks.push_back(m);
+
+    if (m_microTaskIdler == MessageLoopInvalidID) {
+        m_microTaskIdler = addIdler(globalScope,
+                                    [](size_t handle, void* data) {
+                                        MessageLoop* self = (MessageLoop*)data;
+                                        self->m_microTaskIdler =
+                                            MessageLoopInvalidID;
+                                    },
+                                    this);
+    }
+
+    return m.m_id;
+}
+
+void MessageLoop::removeMicroTask(size_t handle)
+{
+    for (size_t i = 0; i < m_microTasks.size(); i++) {
+        if (m_microTasks[i].m_id == handle) {
+            m_microTasks.erase(i);
+            break;
+        }
+    }
+}
+
+void MessageLoop::invokeMicroTasksIfExist()
+{
+    for (size_t i = 0; i < m_microTasks.size(); i++) {
+        m_microTasks[i].m_callback(m_microTasks[i].m_id,
+                                   m_microTasks[i].m_data);
+    }
+
+    m_microTasks.clear();
+}
+
+void MessageLoop::clearMicroTasks(GlobalScope* globalScope)
+{
+    if (globalScope == nullptr) {
+        m_microTasks.clear();
+        if (m_microTaskIdler != MessageLoopInvalidID) {
+            removeIdler(m_microTaskIdler);
+        }
+    } else {
+        for (size_t i = 0; i < m_microTasks.size(); i++) {
+            if (m_microTasks[i].m_globalScope == globalScope) {
+                m_microTasks.erase(i);
+                i--;
+            }
+        }
+    }
+}
+
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 int MessageLoop::runningThreadCount()
 {

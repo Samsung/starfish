@@ -23,6 +23,8 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/GlobalScope.h"
+#include "core/page/WebBase.h"
 
 #include <Ecore.h>
 
@@ -77,6 +79,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
+                td->m_timer->m_webBase->messageLoop()
+                    ->invokeMicroTasksIfExist();
                 td->m_handler(td->m_data);
                 return ECORE_CALLBACK_RENEW;
             },
@@ -89,6 +93,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                                 TimeoutData* td = (TimeoutData*)data;
                                 Timer* timer = td->m_timer;
                                 int32_t id = td->m_id;
+                                td->m_timer->m_webBase->messageLoop()
+                                    ->invokeMicroTasksIfExist();
                                 td->m_handler(td->m_data);
                                 auto iter = timer->m_timeoutHandler.find(id);
                                 if (iter != timer->m_timeoutHandler.end()) {
