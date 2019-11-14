@@ -17,8 +17,14 @@
  *  USA
  */
 
-// https://webaudio.github.io/web-audio-api/#BaseAudioContext
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum AudioContextState {
+  "suspended",
+  "running",
+  "closed"
+};
 
+// https://webaudio.github.io/web-audio-api/#BaseAudioContext
 //callback DecodeErrorCallback = void (DOMException error);
 //callback DecodeSuccessCallback = void (AudioBuffer decodedData);
 
@@ -26,18 +32,18 @@
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface BaseAudioContext : EventTarget {
-  //readonly attribute AudioDestinationNode destination;
+  readonly attribute AudioDestinationNode destination;
   //readonly attribute float sampleRate;
   //readonly attribute double currentTime;
   //readonly attribute AudioListener listener;
-  //readonly attribute AudioContextState state;
+  readonly attribute AudioContextState state;
   //[SameObject, SecureContext] readonly attribute AudioWorklet audioWorklet;
   //attribute EventHandler onstatechange;
 
   //AnalyserNode createAnalyser ();
   //BiquadFilterNode createBiquadFilter ();
   //AudioBuffer createBuffer (unsigned long numberOfChannels, unsigned long length, float sampleRate);
-  //AudioBufferSourceNode createBufferSource ();
+  AudioBufferSourceNode createBufferSource ();
   //ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
   //ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
   //ConstantSourceNode createConstantSource ();

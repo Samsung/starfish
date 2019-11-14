@@ -28,14 +28,41 @@
 namespace Starfish {
 class ExecutionContext;
 
+enum class ChannelCountMode { Max, ClampedMax, Explicit };
+
+enum class ChannelInterpretation { Speakers, Discrete };
+
 class AudioNode : public EventTarget {
 public:
     AudioNode(ExecutionContext* executionContext);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioNode)
 
+    DEFINE_GETTER(uint32_t, numberOfInputs)
+    DEFINE_GETTER(uint32_t, numberOfOutputs)
+    DEFINE_GETTER_SETTER(uint32_t, channelCount, ChannelCount)
+
+    DEFINE_GETTER_SETTER(ChannelCountMode, channelCountMode, ChannelCountMode)
+    String* channelCountModeStr();
+    void setChannelCountModeStr(String* channelCountMode);
+
+    DEFINE_GETTER_SETTER(ChannelInterpretation, channelInterpretation,
+                         ChannelInterpretation)
+    String* channelInterpretationStr();
+    void setChannelInterpretationStr(String* channelInterpretation);
+
+protected:
+    ExecutionContext* m_executionContext{ nullptr };
+
+    uint32_t m_numberOfInputs{ 0 };
+    uint32_t m_numberOfOutputs{ 1 };
+    uint32_t m_channelCount{ 2 };
+    ChannelCountMode m_channelCountMode{ ChannelCountMode::Max };
+    ChannelInterpretation m_channelInterpretation{
+        ChannelInterpretation::Speakers
+    };
+
 private:
-    ExecutionContext* m_executionContext;
 };
 }
 #endif

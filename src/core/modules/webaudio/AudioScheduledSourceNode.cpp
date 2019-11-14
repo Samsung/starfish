@@ -37,6 +37,9 @@ ScriptBindingInstance* AudioScheduledSourceNode::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
+
+DEFINE_EVENT_LISTENER(AudioScheduledSourceNode, ended);
+
 } // namespace Starfish
 
 #endif

@@ -25,6 +25,7 @@
 #include "core/modules/webaudio/BaseAudioContext.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/webaudio/AudioBufferSourceNode.h"
 
 namespace Starfish {
 BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext)
@@ -36,6 +37,31 @@ BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext)
 ScriptBindingInstance* BaseAudioContext::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+AudioBufferSourceNode* BaseAudioContext::createBufferSource()
+{
+    AudioBufferSourceOptions options;
+    AudioBufferSourceNode* node =
+        new AudioBufferSourceNode(m_executionContext, this, options);
+
+    return node;
+}
+
+String* BaseAudioContext::state()
+{
+    switch (m_state) {
+    case AudioContextState::Suspended:
+        return String::createASCIIString("suspended");
+    case AudioContextState::Running:
+        return String::createASCIIString("running");
+    case AudioContextState::Closed:
+        return String::createASCIIString("closed");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return String::emptyString;
 }
 } // namespace Starfish
 

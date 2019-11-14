@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    ExecutionContext* m_executionContext;
+    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif

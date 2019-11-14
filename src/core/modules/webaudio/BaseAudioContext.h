@@ -27,6 +27,9 @@
 
 namespace Starfish {
 class ExecutionContext;
+class AudioDestinationNode;
+
+enum class AudioContextState { Suspended, Running, Closed };
 
 class BaseAudioContext : public EventTarget {
 public:
@@ -34,8 +37,15 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(BaseAudioContext)
 
+    DEFINE_GETTER(AudioDestinationNode*, destination)
+    AudioBufferSourceNode* createBufferSource();
+    String* state();
+
 private:
-    ExecutionContext* m_executionContext;
+    ExecutionContext* m_executionContext{ nullptr };
+
+    AudioDestinationNode* m_destination{ nullptr };
+    AudioContextState m_state{ AudioContextState::Closed };
 };
 }
 #endif

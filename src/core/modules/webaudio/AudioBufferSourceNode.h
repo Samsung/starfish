@@ -30,8 +30,12 @@
 namespace Starfish {
 class ExecutionContext;
 class BaseAudioContext;
+class AudioBuffer;
 
 struct AudioBufferSourceOptions {
+    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+
+    AudioBuffer* m_buffer{ nullptr };
 };
 
 class AudioBufferSourceNode : public AudioScheduledSourceNode {
@@ -47,8 +51,12 @@ public:
         return m_executionContext;
     }
 
+    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+
 private:
-    ExecutionContext* m_executionContext;
+    ExecutionContext* m_executionContext{ nullptr };
+
+    AudioBuffer* m_buffer{ nullptr };
 };
 }
 #endif
