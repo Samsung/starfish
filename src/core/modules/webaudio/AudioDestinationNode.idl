@@ -17,37 +17,10 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-
-#ifndef __StarfishAudioContext__
-#define __StarfishAudioContext__
-
-#include "core/dom/EventTarget.h"
-#include "binding/ScriptWrappable.h"
-
-#include "core/modules/webaudio/BaseAudioContext.h"
-
-namespace Starfish {
-class ExecutionContext;
-
-struct AudioContextOptions {
+// https://webaudio.github.io/web-audio-api/#AudioDestinationNode
+[ STARFISH_ENABLE_WEBAUDIO,
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface AudioDestinationNode : AudioNode {
+  readonly attribute unsigned long maxChannelCount;
 };
-
-class AudioContext : public BaseAudioContext {
-public:
-    AudioContext(ExecutionContext* executionContext,
-                 AudioContextOptions contextOptions = AudioContextOptions());
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
-
-    ExecutionContext* executionContext() const override
-    {
-        return m_executionContext;
-    }
-
-private:
-    ExecutionContext* m_executionContext{ nullptr };
-};
-}
-#endif
-#endif

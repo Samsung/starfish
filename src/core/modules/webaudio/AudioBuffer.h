@@ -19,44 +19,45 @@
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 
-#ifndef __StarfishAudioBufferSourceNode__
-#define __StarfishAudioBufferSourceNode__
+#ifndef __StarfishAudioBuffer__
+#define __StarfishAudioBuffer__
 
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "core/modules/webaudio/AudioScheduledSourceNode.h"
+#include "core/modules/webaudio/BaseAudioContext.h"
 
 namespace Starfish {
 class ExecutionContext;
-class BaseAudioContext;
-class AudioBuffer;
 
-struct AudioBufferSourceOptions {
-    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+struct AudioBufferOptions {
+    DEFINE_GETTER_SETTER(uint32_t, numberOfChannels, NumberOfChannels)
+    DEFINE_GETTER_SETTER(uint32_t, length, Length)
+    DEFINE_GETTER_SETTER(double, sampleRate, SampleRate)
 
-    AudioBuffer* m_buffer{ nullptr };
+    uint32_t m_numberOfChannels{ 1 };
+    uint32_t m_length{ 0 };
+    double m_sampleRate{ 0 };
 };
 
-class AudioBufferSourceNode : public AudioScheduledSourceNode {
+class AudioBuffer : public ScriptWrappable {
 public:
-    AudioBufferSourceNode(
-        ExecutionContext* executionContext, BaseAudioContext* context,
-        AudioBufferSourceOptions options = AudioBufferSourceOptions());
+    AudioBuffer(ExecutionContext* executionContext, AudioBufferOptions options);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBufferSourceNode)
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBuffer)
 
-    ExecutionContext* executionContext() const override
-    {
-        return m_executionContext;
-    }
+    DEFINE_GETTER(double, sampleRate)
+    DEFINE_GETTER(uint32_t, length)
+    DEFINE_GETTER(double, duration)
+    DEFINE_GETTER(uint32_t, numberOfChannels)
 
-    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+    double m_sampleRate{ 0 };
+    uint32_t m_length{ 0 };
+    double m_duration{ 0 };
+    uint32_t m_numberOfChannels{ 1 };
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
-
-    AudioBuffer* m_buffer{ nullptr };
 };
 }
 #endif

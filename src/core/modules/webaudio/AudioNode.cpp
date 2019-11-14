@@ -37,6 +37,55 @@ ScriptBindingInstance* AudioNode::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
+
+String* AudioNode::channelCountModeStr()
+{
+    switch (m_channelCountMode) {
+    case ChannelCountMode::Max:
+        return String::createASCIIString("max");
+    case ChannelCountMode::ClampedMax:
+        return String::createASCIIString("clamped-max");
+    case ChannelCountMode::Explicit:
+        return String::createASCIIString("explicit");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return String::emptyString;
+}
+void AudioNode::setChannelCountModeStr(String* channelCountMode)
+{
+    if (channelCountMode->equals("max")) {
+        m_channelCountMode = ChannelCountMode::Max;
+    } else if (channelCountMode->equals("clamped-max")) {
+        m_channelCountMode = ChannelCountMode::ClampedMax;
+    } else if (channelCountMode->equals("explicit")) {
+        m_channelCountMode = ChannelCountMode::Explicit;
+    }
+}
+
+String* AudioNode::channelInterpretationStr()
+{
+    switch (m_channelInterpretation) {
+    case ChannelInterpretation::Speakers:
+        return String::createASCIIString("speakers");
+    case ChannelInterpretation::Discrete:
+        return String::createASCIIString("discrete");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    return String::emptyString;
+}
+
+void AudioNode::setChannelInterpretationStr(String* channelInterpretation)
+{
+    if (channelInterpretation->equals("speakers")) {
+        m_channelInterpretation = ChannelInterpretation::Speakers;
+    } else if (channelInterpretation->equals("discrete")) {
+        m_channelInterpretation = ChannelInterpretation::Discrete;
+    }
+}
 } // namespace Starfish
 
 #endif

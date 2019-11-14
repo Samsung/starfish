@@ -17,27 +17,25 @@
  *  USA
  */
 
-// https://webaudio.github.io/web-audio-api/#dictdef-audiocontextoptions
+// https://webaudio.github.io/web-audio-api/#dictdef-audiobufferoptions
 [ STARFISH_ENABLE_WEBAUDIO ]
-dictionary AudioContextOptions {
-  //(AudioContextLatencyCategory or double) latencyHint = "interactive";
-  //float sampleRate;
+dictionary AudioBufferOptions {
+  unsigned long numberOfChannels = 1;
+  required unsigned long length;
+  required float sampleRate;
 };
 
-// https://webaudio.github.io/web-audio-api/#AudioContext
+// https://webaudio.github.io/web-audio-api/#audiobuffer
 [ STARFISH_ENABLE_WEBAUDIO,
-  Constructor (optional AudioContextOptions contextOptions),
+  Constructor (AudioBufferOptions options),
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
-interface AudioContext : BaseAudioContext {
-  //readonly attribute double baseLatency;
-  //readonly attribute double outputLatency;
-  //AudioTimestamp getOutputTimestamp ();
-  //Promise<void> resume ();
-  //Promise<void> suspend ();
-  //Promise<void> close ();
-  //MediaElementAudioSourceNode createMediaElementSource (HTMLMediaElement mediaElement);
-  //MediaStreamAudioSourceNode createMediaStreamSource (MediaStream mediaStream);
-  //MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (MediaStreamTrack mediaStreamTrack);
-  //MediaStreamAudioDestinationNode createMediaStreamDestination ();
+interface AudioBuffer {
+  readonly attribute float sampleRate;
+  readonly attribute unsigned long length;
+  readonly attribute double duration;
+  readonly attribute unsigned long numberOfChannels;
+  //Float32Array getChannelData (unsigned long channel);
+  //void copyFromChannel (Float32Array destination, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
+  //void copyToChannel (Float32Array source, unsigned long channelNumber, optional unsigned long bufferOffset = 0);
 };

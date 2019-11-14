@@ -32,12 +32,20 @@ class ExecutionContext;
 
 class AudioScheduledSourceNode : public AudioNode {
 public:
-    AudioScheduledSourceNode(ExecutionContext* executionContext);
-
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioScheduledSourceNode)
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(ended);
+#undef VIRTUAL
+#undef OVERRIDE
+
+protected:
+    // interface class
+    AudioScheduledSourceNode(ExecutionContext* executionContext);
+
 private:
-    ExecutionContext* m_executionContext;
+    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif

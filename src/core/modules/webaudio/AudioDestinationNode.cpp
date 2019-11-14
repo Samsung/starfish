@@ -19,35 +19,18 @@
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 
-#ifndef __StarfishAudioContext__
-#define __StarfishAudioContext__
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
-#include "core/dom/EventTarget.h"
-#include "binding/ScriptWrappable.h"
+#include "core/modules/webaudio/AudioDestinationNode.h"
 
-#include "core/modules/webaudio/BaseAudioContext.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
-class ExecutionContext;
 
-struct AudioContextOptions {
-};
-
-class AudioContext : public BaseAudioContext {
-public:
-    AudioContext(ExecutionContext* executionContext,
-                 AudioContextOptions contextOptions = AudioContextOptions());
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
-
-    ExecutionContext* executionContext() const override
-    {
-        return m_executionContext;
-    }
-
-private:
-    ExecutionContext* m_executionContext{ nullptr };
-};
+AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
+    : AudioNode(executionContext)
+{
 }
-#endif
+} // namespace Starfish
 #endif

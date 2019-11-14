@@ -20,7 +20,7 @@
 // https://webaudio.github.io/web-audio-api/#dictdef-audiobuffersourceoptions
 [ STARFISH_ENABLE_WEBAUDIO ]
 dictionary AudioBufferSourceOptions {
-//  AudioBuffer? buffer;
+  AudioBuffer? buffer;
 //  float detune = 0;
 //  boolean loop = false;
 //  double loopEnd = 0;
@@ -34,7 +34,7 @@ dictionary AudioBufferSourceOptions {
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface AudioBufferSourceNode : AudioScheduledSourceNode {
-  //attribute AudioBuffer? buffer;
+  attribute AudioBuffer? buffer;
   //readonly attribute AudioParam playbackRate;
   //readonly attribute AudioParam detune;
   //attribute boolean loop;

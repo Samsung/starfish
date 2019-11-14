@@ -25,6 +25,7 @@
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 
 namespace Starfish {
@@ -33,6 +34,17 @@ AudioBufferSourceNode::AudioBufferSourceNode(ExecutionContext* executionContext,
                                              AudioBufferSourceOptions options)
     : AudioScheduledSourceNode(executionContext)
 {
+    // https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode
+    m_numberOfInputs = 0;
+    m_numberOfOutputs = 1;
+    m_channelCount = 2;
+    m_channelCountMode = ChannelCountMode::Max;
+    m_channelInterpretation = ChannelInterpretation::Speakers;
+
+    m_buffer = options.m_buffer;
+    if (m_buffer) {
+        m_channelCount = m_buffer->numberOfChannels();
+    }
 }
 
 ScriptBindingInstance* AudioBufferSourceNode::scriptBindingInstance()

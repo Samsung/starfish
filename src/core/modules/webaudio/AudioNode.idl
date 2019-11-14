@@ -17,6 +17,21 @@
  *  USA
  */
 
+// https://webaudio.github.io/web-audio-api/#enumdef-channelcountmode
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum ChannelCountMode {
+  "max",
+  "clamped-max",
+  "explicit"
+};
+
+// https://webaudio.github.io/web-audio-api/#enumdef-channelinterpretation
+[ STARFISH_ENABLE_WEBAUDIO ]
+enum ChannelInterpretation {
+  "speakers",
+  "discrete"
+};
+
 // https://webaudio.github.io/web-audio-api/#audionode
 [ STARFISH_ENABLE_WEBAUDIO,
   ConstructorCallWith=ExecutionContext,
@@ -32,9 +47,9 @@ interface AudioNode : EventTarget {
   //void disconnect (AudioParam destinationParam);
   //void disconnect (AudioParam destinationParam, unsigned long output);
   //readonly attribute BaseAudioContext context;
-  //readonly attribute unsigned long numberOfInputs;
-  //readonly attribute unsigned long numberOfOutputs;
-  //attribute unsigned long channelCount;
-  //attribute ChannelCountMode channelCountMode;
-  //attribute ChannelInterpretation channelInterpretation;
+  readonly attribute unsigned long numberOfInputs;
+  readonly attribute unsigned long numberOfOutputs;
+  attribute unsigned long channelCount;
+  [Rename=channelCountModeStr] attribute ChannelCountMode channelCountMode;
+  [Rename=channelInterpretationStr] attribute ChannelInterpretation channelInterpretation;
 };
