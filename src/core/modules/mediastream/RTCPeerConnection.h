@@ -342,6 +342,8 @@ private:
 
     bool isClosed();
     void deletePeerConnection();
+
+    bool isValidRemoteState(RTCSdpType type);
 };
 }
 

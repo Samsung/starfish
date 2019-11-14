@@ -44,7 +44,7 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-rollback.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-answer.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-offer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-offer.html # Pass but fails in docker
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-pranswer.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-replaceTrack.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-rollback.html
