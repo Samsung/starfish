@@ -286,8 +286,9 @@ CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 %endif
 
 # Add tizen security options
-CFLAGS+=" -fPIE -Wl,-z,relro -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 "
-LDFLAGS+=" -pie "
+CFLAGS+=" -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro -fPIE -pie "
+CXXFLAGS+=" -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro -fPIE -pie "
+#LDFLAGS+=" -pie -Wl,-z,relro "
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 # For Dali
