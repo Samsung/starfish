@@ -741,6 +741,25 @@ private:
     LayoutUnit m_horizontalBoundary;
 };
 
+class LayoutContextQuickLayoutStateMaker {
+public:
+    LayoutContextQuickLayoutStateMaker(LayoutContext& ctx, bool inQuickLayout)
+        : m_oldQuickLayoutState(ctx.isQuickLayout())
+        , m_layoutContext(ctx)
+    {
+        m_layoutContext.setIsQuickLayout(inQuickLayout);
+    }
+
+    ~LayoutContextQuickLayoutStateMaker()
+    {
+        m_layoutContext.setIsQuickLayout(m_oldQuickLayoutState);
+    }
+
+private:
+    bool m_oldQuickLayoutState;
+    LayoutContext& m_layoutContext;
+};
+
 enum HasFloat {
     HasNone,
     HasLeft,

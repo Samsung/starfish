@@ -97,6 +97,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         }
     }
 
+    LayoutContextQuickLayoutStateMaker m(ctx, false);
+
     if (isFrameTableBox()) {
         FrameTableBox* tableBox = asFrameTableBox();
         tableBox->computeTableWidth(ctx);
@@ -194,10 +196,11 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     if (needToEstablishKindsOfFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
-            ctx.setIsQuickLayout(true);
-            quickLayout(ctx);
-            ctx.setIsQuickLayout(isQuickLayout);
-            if ((!isQuickLayout && blockContainer(this)->hasBlockFlow()) ||
+            {
+                LayoutContextQuickLayoutStateMaker m(ctx, true);
+                quickLayout(ctx);
+            }
+            if (blockContainer(this)->hasBlockFlow() ||
                 blockContainer(this)
                     ->needToEstablishKindsOfFormattingContext()) {
                 if (style()->position() ==
@@ -212,6 +215,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             return;
         }
     }
+
+    LayoutContextQuickLayoutStateMaker m(ctx, false);
 
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutTable(ctx);
@@ -443,12 +448,6 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            if (child->needToEstablishKindsOfFormattingContext()) {
-                child->layout(ctx, ResolveAll);
-            } else {
-                child->quickLayout(ctx);
-            }
-
             if (child->isFrameBox() &&
                 child->style()->position() == RelativePositionValue) {
                 auto box = child->asFrameBox();
@@ -465,6 +464,13 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                     box);
                 ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
+
+            if (child->needToEstablishKindsOfFormattingContext()) {
+                child->layout(ctx, ResolveAll);
+            } else {
+                child->quickLayout(ctx);
+            }
+
             child = child->next();
         }
     } else {
