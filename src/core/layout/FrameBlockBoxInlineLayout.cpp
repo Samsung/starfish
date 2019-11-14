@@ -4630,7 +4630,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 maxContentContributeSize =
                     flexItem->widthAfterApplyingMinMaxWidths(
                         ctx.layoutContext(), maxContentContributeSize, unused,
-                        false);
+                        true);
                 LayoutUnit diff = maxContentContributeSize - outerBasisSize;
                 if (diff > 0) {
                     if (f->style()->flexGrow() > 0) {
@@ -4672,7 +4672,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                                 -maxContentFlexShrinkFraction;
                 }
                 itemWidth = flexItem->widthAfterApplyingMinMaxWidths(
-                    ctx.layoutContext(), itemWidth, unused, false);
+                    ctx.layoutContext(), itemWidth, unused, true);
                 w += itemWidth;
                 w += mbpWidth;
                 f = f->next();
