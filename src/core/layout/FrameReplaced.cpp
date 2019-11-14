@@ -284,6 +284,9 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             return;
         }
     }
+
+    LayoutContextQuickLayoutStateMaker m(ctx, false);
+
     Length width = style()->width();
     Length height = style()->height();
     LayoutUnit intrinsicWidth, intrinsicHeight;

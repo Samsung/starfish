@@ -1360,16 +1360,26 @@ void StackingContext::applyStackingContextProperties(
 
         if (m_owner->isRootElement()) {
             if (m_rareData->m_visibleRect.x() < 0) {
-                m_rareData->m_visibleRect.setWidth(
-                    m_rareData->m_visibleRect.width() +
-                    m_rareData->m_visibleRect.x());
-                m_rareData->m_visibleRect.setX(0);
+                if (m_rareData->m_visibleRect.width() +
+                    m_rareData->m_visibleRect.x() > 0) {
+                    m_rareData->m_visibleRect.setWidth(
+                        m_rareData->m_visibleRect.width() +
+                        m_rareData->m_visibleRect.x());
+                    m_rareData->m_visibleRect.setX(0);
+                } else {
+                    m_rareData->m_visibleRect.setWidth(0);
+                }
             }
             if (m_rareData->m_visibleRect.y() < 0) {
-                m_rareData->m_visibleRect.setHeight(
-                    m_rareData->m_visibleRect.height() +
-                    m_rareData->m_visibleRect.y());
-                m_rareData->m_visibleRect.setY(0);
+                if (m_rareData->m_visibleRect.height() +
+                    m_rareData->m_visibleRect.y() > 0) {
+                    m_rareData->m_visibleRect.setHeight(
+                        m_rareData->m_visibleRect.height() +
+                        m_rareData->m_visibleRect.y());
+                    m_rareData->m_visibleRect.setY(0);
+                } else {
+                    m_rareData->m_visibleRect.setHeight(0);
+                }
             }
         }
 
