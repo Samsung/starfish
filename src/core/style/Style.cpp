@@ -13330,7 +13330,11 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 minArgCnt = maxArgCnt = 6;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "matrix");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "matrix3d") {
                 fkind = CSSTransformFunction::Kind::Matrix3D;
                 units[0] = units[1] = units[2] = units[3] = units[4] =
@@ -13341,14 +13345,22 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 minArgCnt = maxArgCnt = 16;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "matrix3d");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "translate") {
                 fkind = CSSTransformFunction::Kind::Translate;
                 maxArgCnt = 2;
                 units[0] = units[1] = TranslationValue;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "translate");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "translate3d") {
                 fkind = CSSTransformFunction::Kind::Translate3D;
                 maxArgCnt = 3;
@@ -13356,25 +13368,41 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 units[2] = Length;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "translate3d");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "translatex") {
                 fkind = CSSTransformFunction::Kind::TranslateX;
                 units[0] = TranslationValue;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "translatex");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "translatey") {
                 fkind = CSSTransformFunction::Kind::TranslateY;
                 units[0] = TranslationValue;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "translatey");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "translatez") {
                 fkind = CSSTransformFunction::Kind::TranslateZ;
                 units[0] = Length;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "translatez");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "scale") {
                 maxArgCnt = 2;
                 fkind = CSSTransformFunction::Kind::Scale;
@@ -13388,25 +13416,41 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 units[0] = units[1] = units[2] = Number;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "scale3d");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "scalex") {
                 fkind = CSSTransformFunction::Kind::ScaleX;
                 units[0] = Number;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "scalex");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "scaley") {
                 fkind = CSSTransformFunction::Kind::ScaleY;
                 units[0] = Number;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "scaley");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "rotate") {
                 fkind = CSSTransformFunction::Kind::Rotate;
                 units[0] = Angle;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "rotate");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "rotate3d") {
                 fkind = CSSTransformFunction::Kind::Rotate3D;
                 minArgCnt = 4;
@@ -13415,32 +13459,52 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 units[3] = Angle;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "rotate3d");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "skew") {
                 fkind = CSSTransformFunction::Kind::Skew;
                 maxArgCnt = 2;
                 units[0] = units[1] = Angle;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "skew");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "skewx") {
                 fkind = CSSTransformFunction::Kind::SkewX;
                 units[0] = Angle;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "skewx");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "skewy") {
                 fkind = CSSTransformFunction::Kind::SkewY;
                 units[0] = Angle;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "skewy");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "perspective") {
                 fkind = CSSTransformFunction::Kind::Perspective;
                 units[0] = Number;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "perspective");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else {
                 return false;
             }
