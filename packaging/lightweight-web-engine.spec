@@ -285,6 +285,10 @@ CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 %define tizen_arch x86_64
 %endif
 
+# Add tizen security options
+CFLAGS+=" -fPIE -Wl,-z,relro -fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 "
+LDFLAGS+=" -pie "
+
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 # For Dali
 rm -f CMakeCache.txt
