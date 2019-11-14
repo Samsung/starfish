@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcerrordetailtype
+[STARFISH_ENABLE_WEBRTC]
+enum RTCErrorDetailType {
+  "data-channel-failure",
+  "dtls-failure",
+  "fingerprint-failure",
+  "idp-bad-script-failure",
+  "idp-execution-failure",
+  "idp-load-failure",
+  "idp-need-login",
+  "idp-timeout",
+  "idp-tls-failure",
+  "idp-token-expired",
+  "idp-token-invalid",
+  "sctp-failure",
+  "sdp-syntax-error",
+  "hardware-encoder-not-available",
+  "hardware-encoder-error"
+};
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcerrorinit
+[STARFISH_ENABLE_WEBRTC]
+dictionary RTCErrorInit {
+  required RTCErrorDetailType errorDetail;
+  //long sdpLineNumber;
+  //long httpRequestStatusCode;
+  //long sctpCauseCode;
+  //unsigned long receivedAlert;
+  //unsigned long sentAlert;
+};
+
+// https://w3c.github.io/webrtc-pc/#dom-rtcerror
+[ STARFISH_ENABLE_WEBRTC,
+  constructor(RTCErrorInit init, optional DOMString message = ""),
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface RTCError : DOMException {
+  [Rename=errorDetailStr] readonly attribute RTCErrorDetailType errorDetail;
+  //readonly attribute long? sdpLineNumber;
+  //readonly attribute long? httpRequestStatusCode;
+  //readonly attribute long? sctpCauseCode;
+  //readonly attribute unsigned long? receivedAlert;
+  //readonly attribute unsigned long? sentAlert;
+};

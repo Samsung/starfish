@@ -29,6 +29,21 @@
 
 namespace Starfish {
 
+RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
+                                                     String* sdp)
+{
+    if (type == webrtc::SdpType::kOffer) {
+        m_type = RTCSdpType::Offer;
+    } else if (type == webrtc::SdpType::kPrAnswer) {
+        m_type = RTCSdpType::Pranswer;
+    } else if (type == webrtc::SdpType::kAnswer) {
+        m_type = RTCSdpType::Answer;
+    } else {
+        m_type = RTCSdpType::Unknown;
+    }
+    m_sdp = sdp;
+}
+
 String* RTCSessionDescriptionInit::type()
 {
     switch (m_type) {
@@ -38,11 +53,10 @@ String* RTCSessionDescriptionInit::type()
         return String::createASCIIString("pranswer");
     case RTCSdpType::Answer:
         return String::createASCIIString("answer");
-    // FIXME: libwebrtc does not support rollback
-    // case RTCSdpType::Rollback:
-    //     return String::createASCIIString("rollback");
+    case RTCSdpType::Rollback:
+        return String::createASCIIString("rollback");
     default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
     }
 }
 
@@ -54,11 +68,25 @@ void RTCSessionDescriptionInit::setType(String* type)
         m_type = RTCSdpType::Pranswer;
     } else if (type->equals("answer")) {
         m_type = RTCSdpType::Answer;
+    } else if (type->equals("rollback")) {
+        m_type = RTCSdpType::Rollback;
     }
-    // FIXME: libwebrtc does not support rollback
-    // else if (type->equals("rollback")) {
-    //     m_type = RTCSdpType::Rollback;
-    // }
+}
+
+webrtc::SdpType RTCSessionDescriptionInit::toSdpType()
+{
+    switch (m_type) {
+    case RTCSdpType::Offer:
+        return webrtc::SdpType::kOffer;
+    case RTCSdpType::Pranswer:
+        return webrtc::SdpType::kPrAnswer;
+    case RTCSdpType::Answer:
+        return webrtc::SdpType::kAnswer;
+    case RTCSdpType::Rollback:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
 }
 
 RTCSessionDescription::RTCSessionDescription(
@@ -104,19 +132,8 @@ ExecutionContext* RTCSessionDescription::executionContext() const
 
 String* RTCSessionDescription::type()
 {
-    switch (m_type) {
-    case RTCSdpType::Offer:
-        return String::createASCIIString("offer");
-    case RTCSdpType::Pranswer:
-        return String::createASCIIString("pranswer");
-    case RTCSdpType::Answer:
-        return String::createASCIIString("answer");
-    // FIXME: libwebrtc does not support rollback
-    // case RTCSdpType::Rollback:
-    //     return String::createASCIIString("rollback");
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
+    RTCSessionDescriptionInit init(m_type, m_sdp);
+    return init.type();
 }
 }
 

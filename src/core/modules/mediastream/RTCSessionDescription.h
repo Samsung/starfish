@@ -28,12 +28,13 @@
 
 namespace webrtc {
 class SessionDescriptionInterface;
+enum class SdpType;
 }
 
 namespace Starfish {
 class ExecutionContext;
 
-enum class RTCSdpType { Offer, Pranswer, Answer /*, Rollback */ };
+enum class RTCSdpType { Offer, Pranswer, Answer, Rollback, Unknown };
 
 struct RTCSessionDescriptionInit {
     friend class RTCSessionDescription;
@@ -50,12 +51,16 @@ public:
     {
     }
 
+    RTCSessionDescriptionInit(webrtc::SdpType type, String* sdp);
+
     String* type();
     void setType(String* type);
-    DEFINE_GETTER_SETTER(String*, sdp, Sdp)
+    DEFINE_GETTER_SETTER(String*, sdp, Sdp);
+
+    webrtc::SdpType toSdpType();
 
 private:
-    RTCSdpType m_type{ RTCSdpType::Offer };
+    RTCSdpType m_type{ RTCSdpType::Unknown };
     String* m_sdp{ String::emptyString };
 };
 
@@ -74,8 +79,8 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    RTCSdpType m_type;
-    String* m_sdp;
+    RTCSdpType m_type{ RTCSdpType::Unknown };
+    String* m_sdp{ String::emptyString };
 };
 } // namespace Starfish
 
