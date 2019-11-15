@@ -28,6 +28,31 @@ class SVGSVGElement;
 
 class SVGTextElement : public SVGElement {
 public:
+    // ‘text-anchor’
+    //  start | middle | end | inherit
+    enum class TextAnchor { START, MIDDLE, END };
+
+    // ‘alignment-baseline'
+    // auto | baseline | before-edge | text-before-edge | middle | central |
+    // after-edge | text-after-edge | ideographic | alphabetic | hanging |
+    // mathematical | inherit
+    enum class AlignmentBaseline { AUTO, MIDDLE };
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(SVGTextElement));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(SVGTextElement)] = { 0 };
+            SVGElement::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGTextElement));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
     SVGTextElement(Document* document, const QualifiedName& qname)
         : SVGElement(document, qname)
     {
@@ -48,6 +73,30 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
+
+    void setTextAnchor(TextAnchor value)
+    {
+        m_textAnchor = value;
+    }
+
+    TextAnchor textAnchor()
+    {
+        return m_textAnchor;
+    }
+
+    void setAlignmentBaseline(AlignmentBaseline value)
+    {
+        m_alignmentBaseline = value;
+    }
+
+    AlignmentBaseline alignmentBaseline()
+    {
+        return m_alignmentBaseline;
+    }
+
+private:
+    TextAnchor m_textAnchor;
+    AlignmentBaseline m_alignmentBaseline;
 };
 }
 

@@ -21,6 +21,7 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "core/dom/svg/SVGTextElement.h"
 #include "FrameSVGTextBox.h"
 #include "core/dom/Document.h"
 #include "core/layout/FrameBlockBox.h"
@@ -54,8 +55,39 @@ void FrameSVGTextBox::paintSVG(PaintingContext& ctx)
     PaintingContext newCtx(ctx.m_canvas);
     newCtx.m_paintingStage = PaintingNormalFlowInline;
     newCtx.m_canvas->save();
-    newCtx.m_canvas->translate(0,
-                               -(float)style()->font()->metrics().m_ascender);
+
+    if (node() && node()->isSVGTextElement() &&
+        !firstChild()->asFrameBlockBox()->lineBoxes().empty()) {
+        SVGTextElement* textElement = (SVGTextElement*)node();
+
+        // text-anchor
+        float textBoxWidth = firstChild()
+                                 ->asFrameBlockBox()
+                                 ->lineBoxes()[0]
+                                 ->firstInlineBox()
+                                 ->width()
+                                 .toFloat();
+        if (textElement->textAnchor() == SVGTextElement::TextAnchor::MIDDLE) {
+            newCtx.m_canvas->translate(-textBoxWidth / 2, 0);
+        } else if (textElement->textAnchor() ==
+                   SVGTextElement::TextAnchor::END) {
+            newCtx.m_canvas->translate(-textBoxWidth, 0);
+        }
+
+        // alignment-baseline
+        if (textElement->alignmentBaseline() ==
+            SVGTextElement::AlignmentBaseline::MIDDLE) {
+            newCtx.m_canvas->translate(
+                0, -(float)style()->font()->metrics().m_fontHeight / 2);
+            newCtx.m_canvas->translate(
+                0, -((float)style()->font()->metrics().m_xheightRate *
+                     style()->font()->size()) /
+                       2);
+        } else {
+            newCtx.m_canvas->translate(
+                0, -(float)style()->font()->metrics().m_ascender);
+        }
+    }
     firstChild()->asFrameBlockBox()->paintContent(newCtx);
     newCtx.m_canvas->restore();
 }

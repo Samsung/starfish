@@ -1883,6 +1883,7 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("slice");
         }
         break;
+
     case CSSStyleValuePair::ValueKind::PathFunctionValueKind: {
         StringBuilder builder;
         builder.appendString("path(\"");
@@ -8982,6 +8983,7 @@ bool CSSStyleValuePair::updateValueObjectPosition(Document* document,
     }
     return false;
 }
+
 bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens,
                                                   CSSStyleValuePair& xPair,
                                                   CSSStyleValuePair& yPair)

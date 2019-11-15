@@ -451,6 +451,9 @@ public:
     QualifiedName m_fontDashSize;
     QualifiedName m_start;
     QualifiedName m_clipPath;
+    QualifiedName m_textAnchor;
+    QualifiedName m_alignmentBaseline;
+
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;
     QualifiedName m_pause;

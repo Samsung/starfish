@@ -1603,7 +1603,7 @@ public:
 
     String* clipPath() const
     {
-        STARFISH_ASSERT(m_valueKind == VarFunctionValueKind);
+        STARFISH_ASSERT(m_valueKind == StringValueKind);
         return m_value.m_stringValue;
     }
 
