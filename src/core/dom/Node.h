@@ -43,6 +43,7 @@ class RareNodeMembers;
 class RareElementMembers;
 class NodeOrDOMString;
 class PseudoElement;
+class StyleResolveContext;
 
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 typedef GCVector<std::pair<std::pair<String*, String*>, HTMLCollection*>>
@@ -555,11 +556,12 @@ public:
     void setNeedsPainting();
     void setNeedsComposite();
 
-    void setStyle(ComputedStyle* style)
+    void setStyle(ComputedStyle* style, Nullable<StyleResolveContext*> ctx =
+                                            Nullable<StyleResolveContext*>())
     {
         ComputedStyle* old = m_style;
         m_style = style;
-        didComputedStyleChanged(old, style);
+        didComputedStyleChanged(old, style, ctx);
     }
 
     ComputedStyle* style() const
@@ -606,7 +608,8 @@ public:
     Element* previousElementSibling();
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle);
+                                         ComputedStyle* newStyle,
+                                         Nullable<StyleResolveContext*> ctx);
 
     template <typename F>
     void notifyDOMEventToParentTree(Node* parent, const F& fn)

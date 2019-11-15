@@ -917,6 +917,8 @@ public:
     LayoutRect computeVisibleRectForScroll(
         bool isForSpecialValueForTableCell = false);
 
+    void computeScrollRectIfNeeded();
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

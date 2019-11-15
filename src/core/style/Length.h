@@ -231,7 +231,16 @@ public:
     }
 
     float specifiedValue(const LayoutUnit& parentLength, Frame* f) const;
-    float specifiedValue(const LayoutUnit& parentLength, Node* n) const;
+    ALWAYS_INLINE float specifiedValue(const LayoutUnit& parentLength,
+                                       Node* n) const
+    {
+        STARFISH_ASSERT(n);
+        STARFISH_ASSERT(isSpecified());
+        if (isFixed()) {
+            return fixed();
+        }
+        return specifiedValueSlowCase(parentLength, n);
+    }
     float specifiedFontValue(Node* n);
     float specifiedFontValue(Element* e);
 
@@ -295,6 +304,7 @@ public:
 
 protected:
     bool compareWithSlowCase(const Length& src) const;
+    float specifiedValueSlowCase(const LayoutUnit& parentLength, Node* n) const;
 
     union ValueData {
         float m_numberData;

@@ -40,10 +40,11 @@ DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, message);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, messageerror);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, unload);
 
-void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
-                                              ComputedStyle* newStyle)
+void HTMLBodyElement::didComputedStyleChanged(
+    ComputedStyle* oldStyle, ComputedStyle* newStyle,
+    Nullable<StyleResolveContext*> ctx)
 {
-    HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
+    HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||
                      newStyle->backgroundLayerSize())) {
         document()->browsingContext()->m_hasBodyElementBackground = true;

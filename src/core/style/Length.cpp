@@ -150,13 +150,12 @@ float Length::specifiedValue(const LayoutUnit& parentLength, Frame* f) const
     return specifiedValue(parentLength, f->nearstNotAnonymousNode());
 }
 
-float Length::specifiedValue(const LayoutUnit& parentLength, Node* n) const
+float Length::specifiedValueSlowCase(const LayoutUnit& parentLength,
+                                     Node* n) const
 {
     STARFISH_ASSERT(n);
     STARFISH_ASSERT(isSpecified());
-    if (isFixed()) {
-        return fixed();
-    } else if (isViewportPercent()) {
+    if (isViewportPercent()) {
         Window* w = n->window();
         return viewportPercentValue(w->innerWidth(), w->innerHeight());
     } else if (isPercent()) {
@@ -260,7 +259,7 @@ float Length::fontPercentValue(Node* n, bool isFontSize) const
 
 bool Length::compareWithSlowCase(const Length& src) const
 {
-    return calcData()->toString()->equals(src.calcData()->toString());
+    return calcData()->equals(src.calcData());
 }
 
 String* Length::dumpString() const

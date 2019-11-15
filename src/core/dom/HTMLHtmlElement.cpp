@@ -27,10 +27,11 @@
 
 namespace Starfish {
 
-void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
-                                              ComputedStyle* newStyle)
+void HTMLHtmlElement::didComputedStyleChanged(
+    ComputedStyle* oldStyle, ComputedStyle* newStyle,
+    Nullable<StyleResolveContext*> ctx)
 {
-    HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
+    HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||
                      newStyle->backgroundLayerSize())) {
         window()->browsingContext()->m_hasRootElementBackground = true;

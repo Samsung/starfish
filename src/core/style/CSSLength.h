@@ -61,6 +61,16 @@ public:
 
     String* toString() const;
 
+    bool operator==(const CSSLength& other) const
+    {
+        return m_kind == other.m_kind && m_value == other.m_value;
+    }
+
+    bool operator!=(const CSSLength& other) const
+    {
+        return !(operator==(other));
+    }
+
 protected:
     Kind m_kind;
     float m_value;

@@ -292,9 +292,7 @@ static void invalidateStyleOfMatchedElementWorker(
     Node* parentElement, AncestorSelectorFilter& filter,
     GCVector<std::pair<StyleRule*, ResourceURL*>>& styleRules)
 {
-    if (parentElement->isElement()) {
-        filter.pushElement(parentElement->asElement());
-    }
+    filter.pushNode(parentElement);
 
     Node* child = parentElement->firstChild();
     while (child) {
@@ -338,9 +336,7 @@ static void invalidateStyleOfMatchedElementWorker(
         child = child->nextSibling();
     }
 
-    if (parentElement->isElement()) {
-        filter.popElement();
-    }
+    filter.popNode();
 }
 
 void CSSStyleSheet::willRemovedFromDocument()

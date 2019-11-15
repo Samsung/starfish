@@ -76,6 +76,29 @@ String* CalcValue::toString()
     return String::emptyString;
 }
 
+bool CalcValue::equals(const CalcValue& with) const
+{
+    if (m_type != with.m_type) {
+        return false;
+    }
+
+    if (m_type.isNumber()) {
+        return m_data.m_numberData == with.m_data.m_numberData;
+    } else if (m_type.isLength()) {
+        return m_data.m_lengthData == with.m_data.m_lengthData;
+    } else if (m_type.isAngle()) {
+        return m_data.m_angleData == with.m_data.m_angleData;
+    } else if (m_type.isTime()) {
+        return m_data.m_timeData == with.m_data.m_timeData;
+    } else if (m_type.isPercentage()) {
+        return m_data.m_numberData == with.m_data.m_numberData;
+    } else if (m_type.isCalcData()) {
+        return m_data.m_calcData->equals(with.m_data.m_calcData);
+    } else {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+}
+
 #define MUL true
 #define DIV false
 
@@ -341,6 +364,32 @@ String* CalcTerm::toString()
 #undef MUL
 #undef DIV
 
+bool CalcTerm::equals(CalcTerm* with) const
+{
+    if (m_operators.size() != with->m_operators.size()) {
+        return false;
+    }
+    if (m_values.size() != with->m_values.size()) {
+        return false;
+    }
+
+    size_t len = m_operators.size();
+    for (size_t i = 0; i < len; i++) {
+        if (m_operators[i] != with->m_operators[i]) {
+            return false;
+        }
+    }
+
+    len = m_values.size();
+    for (size_t i = 0; i < len; i++) {
+        if (!m_values[i].equals(with->m_values[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 String* CalcData::toString()
 {
     StringBuilder builder;
@@ -368,5 +417,21 @@ String* CalcData::toString()
     }
     builder.appendChar(')');
     return builder.finalize();
+}
+
+bool CalcData::equals(CalcData* with) const
+{
+    if (m_terms.size() != with->m_terms.size()) {
+        return false;
+    }
+
+    size_t len = m_terms.size();
+    for (size_t i = 0; i < len; i++) {
+        if (!m_terms[i]->equals(with->m_terms[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 }

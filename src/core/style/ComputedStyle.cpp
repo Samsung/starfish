@@ -40,6 +40,7 @@
 #include "core/style/FilterFunctions.h"
 #include "core/style/WillChangeData.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/AncestorSelectorFilter.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "platform/loader/ResourceLoader.h"
@@ -2231,7 +2232,8 @@ void ComputedStyle::removeCachedPseudoStyle(PseudoElementType pid)
 ComputedStyle* ComputedStyle::pseudoStyle(Element* containerElement,
                                           PseudoElementType pseudoType,
                                           ComputedStyle* stickyInheritFrom,
-                                          ComputedStyle* oldPseudoStyleIfHas)
+                                          ComputedStyle* oldPseudoStyleIfHas,
+                                          Nullable<StyleResolveContext*> ctx)
 {
     if (!seenPseudoElement(pseudoType)) {
         return nullptr;
@@ -2239,15 +2241,75 @@ ComputedStyle* ComputedStyle::pseudoStyle(Element* containerElement,
 
     ComputedStyle* cs = cachedPseudoStyle(pseudoType);
     if (!cs) {
-        cs = FrameTreeBuilder::pseudoStyleForElementInternal(
+        cs = ComputedStyle::pseudoStyleForElementInternal(
             containerElement, pseudoType,
-            stickyInheritFrom ? stickyInheritFrom : this, oldPseudoStyleIfHas);
+            stickyInheritFrom ? stickyInheritFrom : this, oldPseudoStyleIfHas,
+            ctx);
         addCachedPseudoStyle(cs);
 
         m_styleDamageSource = (StyleResolver::StyleDamageSource)(
             m_styleDamageSource | cs->m_styleDamageSource);
     }
     return cs;
+}
+
+ComputedStyle* ComputedStyle::pseudoStyleForElementInternal(
+    Node* parent, PseudoElementType pseudoId, ComputedStyle* parentStyle,
+    ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx)
+{
+    STARFISH_ASSERT(pseudoId != PseudoElementType::PseudoElementNone);
+    STARFISH_ASSERT(parentStyle);
+
+    ComputedStyle* style;
+    if (ctx) {
+        style = new (ctx->allocateComputedStyle()) ComputedStyle(parentStyle);
+    } else {
+        style = new ComputedStyle(parentStyle);
+    }
+
+    StyleResolveContext* resolveContext;
+
+    if (ctx) {
+        resolveContext = ctx.value();
+    } else {
+        resolveContext = new (alloca(sizeof(StyleResolveContext)))
+            StyleResolveContext(parent->document());
+        VectorWithInlineStorage<16, Node*, std::allocator<Node*>> tree;
+
+        Node* n = parent->parentNode();
+        while (n) {
+            tree.push_back(n);
+            n = n->parentNode();
+        }
+
+        for (size_t i = tree.size(); i > 0; i--) {
+            resolveContext->m_ancestorSelectorFilter->pushNode(tree[i - 1]);
+        }
+    }
+
+    parent->document()->styleResolver().matchAllRules(
+        *resolveContext, parent->asElement(), style, parentStyle, pseudoId);
+    Length fontSize = style->fontSize();
+    fontSize.changeToFixedIfNeeded(
+        parentStyle->fontSize(),
+        parent->document()->rootElement()->style()->fontSize(),
+        parentStyle->font(), parent->window()->innerWidth(),
+        parent->window()->innerHeight(), style);
+    style->setFontSize(fontSize);
+
+    // TODO: Set the proper style according to the type of pseudo-elements
+    if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
+        style->setDisplay(DisplayValue::InlineDisplayValue);
+        style->setPosition(PositionValue::StaticPositionValue);
+    }
+    style->loadResources(parent, oldPseudoStyleIfHas);
+    style->arrangeStyleValues(parentStyle, parent);
+
+    if (!ctx) {
+        resolveContext->~StyleResolveContext();
+    }
+
+    return style;
 }
 
 bool ComputedStyle::isFourSideBorderStyleValueSolid()

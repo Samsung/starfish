@@ -138,28 +138,37 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     LayoutUnit oldPaddingWidth = paddingWidth();
     LayoutUnit oldPaddingHeight = paddingHeight();
 
+    Node* node = nearstNotAnonymousNode();
+    auto mbp = style()->marginBorderPadding();
     // padding
-    LengthData padding = style()->padding();
-    if (padding.left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setPaddingLeft(padding.left().specifiedValue(parentContentWidth, this));
+    auto padding = std::get<2>(mbp);
+    if (padding) {
+        if (padding->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
+            setPaddingLeft(padding->left().specifiedValue(parentContentWidth, node));
+        } else {
+            setPaddingLeft(0);
+        }
+        if (padding->top().isSpecified()) {
+            setPaddingTop(padding->top().specifiedValue(parentContentWidth, node));
+        } else {
+            setPaddingTop(0);
+        }
+        if (padding->right().isSpecified() && !m_flags.m_isRightMBPCleared) {
+            setPaddingRight(
+                padding->right().specifiedValue(parentContentWidth, node));
+        } else {
+            setPaddingRight(0);
+        }
+        if (padding->bottom().isSpecified()) {
+            setPaddingBottom(
+                padding->bottom().specifiedValue(parentContentWidth, node));
+        } else {
+            setPaddingBottom(0);
+        }
     } else {
         setPaddingLeft(0);
-    }
-    if (padding.top().isSpecified()) {
-        setPaddingTop(padding.top().specifiedValue(parentContentWidth, this));
-    } else {
         setPaddingTop(0);
-    }
-    if (padding.right().isSpecified() && !m_flags.m_isRightMBPCleared) {
-        setPaddingRight(
-            padding.right().specifiedValue(parentContentWidth, this));
-    } else {
         setPaddingRight(0);
-    }
-    if (padding.bottom().isSpecified()) {
-        setPaddingBottom(
-            padding.bottom().specifiedValue(parentContentWidth, this));
-    } else {
         setPaddingBottom(0);
     }
 
@@ -176,31 +185,31 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
 
     // border
-    BorderData border = style()->border();
-    if (border.hasBorderStyle()) {
-        if (border.left().width().isSpecified() &&
+    auto border = std::get<1>(mbp);
+    if (border && border->hasBorderStyle()) {
+        if (border->left().width().isSpecified() &&
             !m_flags.m_isLeftMBPCleared) {
             setBorderLeft(
-                border.left().width().specifiedValue(parentContentWidth, this));
+                border->left().width().specifiedValue(parentContentWidth, node));
         } else {
             setBorderLeft(0);
         }
-        if (border.top().width().isSpecified()) {
+        if (border->top().width().isSpecified()) {
             setBorderTop(
-                border.top().width().specifiedValue(parentContentWidth, this));
+                border->top().width().specifiedValue(parentContentWidth, node));
         } else {
             setBorderTop(0);
         }
-        if (border.right().width().isSpecified() &&
+        if (border->right().width().isSpecified() &&
             !m_flags.m_isRightMBPCleared) {
-            setBorderRight(border.right().width().specifiedValue(
-                parentContentWidth, this));
+            setBorderRight(border->right().width().specifiedValue(
+                parentContentWidth, node));
         } else {
             setBorderRight(0);
         }
-        if (border.bottom().width().isSpecified()) {
-            setBorderBottom(border.bottom().width().specifiedValue(
-                parentContentWidth, this));
+        if (border->bottom().width().isSpecified()) {
+            setBorderBottom(border->bottom().width().specifiedValue(
+                parentContentWidth, node));
         } else {
             setBorderBottom(0);
         }
@@ -212,26 +221,33 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
 
     // margin
-    LengthData margin = style()->margin();
-    if (margin.left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-        setMarginLeft(margin.left().specifiedValue(parentContentWidth, this));
+    auto margin = std::get<0>(mbp);
+    if (margin) {
+        if (margin->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
+            setMarginLeft(margin->left().specifiedValue(parentContentWidth, node));
+        } else {
+            setMarginLeft(0);
+        }
+        if (margin->top().isSpecified()) {
+            setMarginTop(margin->top().specifiedValue(parentContentWidth, node));
+        } else {
+            setMarginTop(0);
+        }
+        if (margin->right().isSpecified() && !m_flags.m_isRightMBPCleared) {
+            setMarginRight(margin->right().specifiedValue(parentContentWidth, node));
+        } else {
+            setMarginRight(0);
+        }
+        if (margin->bottom().isSpecified()) {
+            setMarginBottom(
+                margin->bottom().specifiedValue(parentContentWidth, node));
+        } else {
+            setMarginBottom(0);
+        }
     } else {
         setMarginLeft(0);
-    }
-    if (margin.top().isSpecified()) {
-        setMarginTop(margin.top().specifiedValue(parentContentWidth, this));
-    } else {
         setMarginTop(0);
-    }
-    if (margin.right().isSpecified() && !m_flags.m_isRightMBPCleared) {
-        setMarginRight(margin.right().specifiedValue(parentContentWidth, this));
-    } else {
         setMarginRight(0);
-    }
-    if (margin.bottom().isSpecified()) {
-        setMarginBottom(
-            margin.bottom().specifiedValue(parentContentWidth, this));
-    } else {
         setMarginBottom(0);
     }
 }

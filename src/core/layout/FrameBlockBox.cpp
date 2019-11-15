@@ -684,6 +684,11 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     m_flags.m_needsToComputeScrollVisbleRect = true;
 
+    clearNeedsLayout();
+}
+
+void FrameBlockBox::computeScrollRectIfNeeded()
+{
     auto overflowX = appliedOverflowX();
     if (isFrameDocument()) {
         overflowX = OverflowValue::AutoOverflow;
@@ -738,8 +743,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             node()->asElement()->ensureRareElementMembers()->m_scrollTop = 0;
         }
     }
-
-    clearNeedsLayout();
 }
 
 void FrameBlockBox::updateScrollWidthAndHeightIfNeeds()
