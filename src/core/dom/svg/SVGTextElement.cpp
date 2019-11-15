@@ -39,6 +39,22 @@ void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (ss->m_fontDashFamily == name) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
         setNeedsPainting();
+    } else if (ss->m_textAnchor == name) {
+        TextAnchor ta = TextAnchor::START;
+        if (value->equals(String::createASCIIString("middle"))) {
+            ta = TextAnchor::MIDDLE;
+        } else if (value->equals(String::createASCIIString("end"))) {
+            ta = TextAnchor::END;
+        }
+        setTextAnchor(ta);
+        setNeedsPainting();
+    } else if (ss->m_alignmentBaseline == name) {
+        AlignmentBaseline al = AlignmentBaseline::AUTO;
+        if (value->equals(String::createASCIIString("middle"))) {
+            al = AlignmentBaseline::MIDDLE;
+        }
+        setAlignmentBaseline(al);
+        setNeedsPainting();
     }
 }
 
