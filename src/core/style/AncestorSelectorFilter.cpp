@@ -63,14 +63,17 @@ static void collectElementIdentifierHashes(Element* element,
     }
 }
 
-void AncestorSelectorFilter::pushElement(Element* e)
+void AncestorSelectorFilter::pushNode(Node* n)
 {
-    AncestorStackFrame frame(e);
-    collectElementIdentifierHashes(e, frame.m_identifierHashes, m_bloomFilter);
+    AncestorStackFrame frame(n);
+    if (n->isElement()) {
+        collectElementIdentifierHashes(n->asElement(), frame.m_identifierHashes,
+                                       m_bloomFilter);
+    }
     m_parentStack.push_back(std::move(frame));
 }
 
-void AncestorSelectorFilter::popElement()
+void AncestorSelectorFilter::popNode()
 {
     AncestorStackFrame& frame = m_parentStack.back();
     size_t cnt = frame.m_identifierHashes.size();

@@ -70,8 +70,9 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle) override;
+    virtual void didComputedStyleChanged(
+        ComputedStyle* oldStyle, ComputedStyle* newStyle,
+        Nullable<StyleResolveContext*> ctx) override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

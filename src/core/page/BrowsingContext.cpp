@@ -594,6 +594,15 @@ bool BrowsingContext::layoutIfNeeded()
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
 
+        // compute scroll width & height of each FrameBlockBox if need
+        document()->frame()->asFrameBlockBox()->computeScrollRectIfNeeded();
+        document()->frame()->asFrameBox()->iterateChildFrameBox(
+            [](FrameBox* fb) {
+                if (fb->isFrameBlockBox()) {
+                    fb->asFrameBlockBox()->computeScrollRectIfNeeded();
+                }
+            });
+
         registerDidLayoutInWebView();
 
         webView()->setNeedsComputeStackingContextProperties();

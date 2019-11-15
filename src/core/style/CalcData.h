@@ -91,12 +91,12 @@ public:
         return m_type == CalcDataValue;
     }
 
-    bool operator==(CalcValueType& other) const
+    bool operator==(const CalcValueType& other) const
     {
         return m_type == other.m_type;
     }
 
-    bool operator!=(CalcValueType& other) const
+    bool operator!=(const CalcValueType& other) const
     {
         return !(operator==(other));
     }
@@ -241,6 +241,7 @@ public:
     }
 
     String* toString();
+    bool equals(const CalcValue& with) const;
 
 private:
     CalcValueType m_type;
@@ -289,6 +290,7 @@ public:
     CSSTime timeValue() const;
 
     String* toString();
+    bool equals(CalcTerm* with) const;
 
 private:
     GCVector<bool> m_operators;
@@ -402,6 +404,8 @@ public:
     }
 
     String* toString();
+
+    bool equals(CalcData* with) const;
 
 private:
     GCVector<CalcTerm*> m_terms;

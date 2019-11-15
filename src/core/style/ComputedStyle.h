@@ -47,6 +47,7 @@ namespace Starfish {
 
 class Frame;
 class AnimationTimingFunction;
+class StyleResolveContext;
 
 enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,
@@ -2007,6 +2008,11 @@ public:
         return b;
     }
 
+    Nullable<BorderData*> nullableBorder()
+    {
+        return m_rareComputedStyleData.border();
+    }
+
     StyleTransformOrigin* transformOrigin()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -2494,32 +2500,65 @@ public:
     GEN_FOURSIDE(GET_SIDE)
 #undef GET_SIDE
 
+    Nullable<LengthData*> nullableMargin()
+    {
+        return Nullable<LengthData*>(m_rareComputedStyleData.margin());
+    }
+
     LengthData margin()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return LengthData();
+        LengthData* d = m_rareComputedStyleData.margin();
+        if (d) {
+            return *d;
         }
-
-        LengthData* margin = m_rareComputedStyleData.margin();
-        if (margin) {
-            return *margin;
-        }
-
         return LengthData();
+    }
+
+    Nullable<LengthData*> nullablePadding()
+    {
+        return Nullable<LengthData*>(m_rareComputedStyleData.padding());
     }
 
     LengthData padding()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return LengthData();
-        }
-
         LengthData* padding = m_rareComputedStyleData.padding();
         if (padding) {
             return *padding;
         }
 
         return LengthData();
+    }
+
+    // <margin, border, padding>
+    std::tuple<Nullable<LengthData*>, Nullable<BorderData*>,
+               Nullable<LengthData*>>
+    marginBorderPadding()
+    {
+        Nullable<LengthData*> margin;
+        Nullable<BorderData*> border;
+        Nullable<LengthData*> padding;
+
+        auto it = m_rareComputedStyleData.m_styles.begin();
+        auto end = m_rareComputedStyleData.m_styles.end();
+        while (end != it) {
+            auto kk = (*it).keyKind();
+            switch (kk) {
+            case RareComputedStyleData::Margin:
+                margin = it->m_value.m_lengthData;
+                break;
+            case RareComputedStyleData::Border:
+                border = it->m_value.m_borderData;
+                break;
+            case RareComputedStyleData::Padding:
+                padding = it->m_value.m_lengthData;
+                break;
+            default:
+                break;
+            }
+            it++;
+        }
+
+        return std::make_tuple(margin, border, padding);
     }
 
     Length fontSize()
@@ -3426,9 +3465,11 @@ public:
         return nullptr;
     }
 
-    ComputedStyle* pseudoStyle(Element* containerElement, PseudoElementType pid,
-                               ComputedStyle* stickyInheritFrom = nullptr,
-                               ComputedStyle* oldPseudoStyleIfHas = nullptr);
+    ComputedStyle* pseudoStyle(
+        Element* containerElement, PseudoElementType pid,
+        ComputedStyle* stickyInheritFrom = nullptr,
+        ComputedStyle* oldPseudoStyleIfHas = nullptr,
+        Nullable<StyleResolveContext*> ctx = Nullable<StyleResolveContext*>());
     bool seenPseudoElement(PseudoElementType pseudoId)
     {
         if (pseudoId == PseudoElementType::PseudoElementBefore) {
@@ -3850,6 +3891,9 @@ public:
 protected:
     ComputedStyle* cachedPseudoStyle(PseudoElementType pid);
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
+    static ComputedStyle* pseudoStyleForElementInternal(
+        Node* node, PseudoElementType pseudoId, ComputedStyle* parentStyle,
+        ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx);
     void removeCachedPseudoStyle(PseudoElementType pid);
 
     InheritedStylesRareData* ensureInheritedRareData()

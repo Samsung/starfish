@@ -8051,7 +8051,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         if (style->display() == DisplayValue::NoneDisplayValue &&
             (!element->style() ||
              element->style()->display() == DisplayValue::NoneDisplayValue)) {
-            element->setStyle(style);
+            element->setStyle(style, &ctx);
             element->clearNeedsStyleRecalc();
             return damage;
         }
@@ -8158,7 +8158,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             element->setNeedsComposite();
         }
 
-        element->setStyle(style);
+        element->setStyle(style, &ctx);
         element->clearNeedsStyleRecalc();
     }
 
@@ -8202,9 +8202,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     ComputedStyleDamage childTextNodeComputedStyleDamage =
         ComputedStyleDamage::ComputedStyleDamageNone;
 
-    if (parentElement->isElement()) {
-        ctx.m_ancestorSelectorFilter->pushElement(parentElement->asElement());
-    }
+    ctx.m_ancestorSelectorFilter->pushNode(parentElement);
 
     Node* child = parentElement->firstChild();
     while (child) {
@@ -8330,7 +8328,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 }
                 for (auto iter = m_ancestorSelectorList.rbegin();
                      iter != m_ancestorSelectorList.rend(); ++iter) {
-                    ctx2.m_ancestorSelectorFilter->pushElement(*iter);
+                    ctx2.m_ancestorSelectorFilter->pushNode(*iter);
                 }
                 shadowFirstChild = sr->firstChild();
                 shadowFirstChild->setParentNode(
@@ -8343,9 +8341,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     }
 
     parentElement->clearChildNeedsStyleRecalc();
-    if (parentElement->isElement()) {
-        ctx.m_ancestorSelectorFilter->popElement();
-    }
+    ctx.m_ancestorSelectorFilter->popNode();
 }
 
 void StyleResolver::resolveDOMStyle(Document* document, bool force)

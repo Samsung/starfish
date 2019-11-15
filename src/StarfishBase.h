@@ -511,6 +511,18 @@ public:
     {
     }
 
+    T value()
+    {
+        STARFISH_ASSERT(m_hasValue);
+        return m_value;
+    }
+
+    const T value() const
+    {
+        STARFISH_ASSERT(m_hasValue);
+        return m_value;
+    }
+
     T getValue()
     {
         STARFISH_ASSERT(m_hasValue);
@@ -524,6 +536,11 @@ public:
     }
 
     bool hasValue() const
+    {
+        return m_hasValue;
+    }
+
+    operator bool() const
     {
         return m_hasValue;
     }
@@ -567,6 +584,112 @@ inline bool operator==(const T& a, const Nullable<T>& b)
 
 template <typename T>
 inline bool operator!=(const T& a, const Nullable<T>& b)
+{
+    return b != a;
+}
+
+template <typename T>
+class Nullable<T*> {
+public:
+    Nullable()
+        : m_value(nullptr)
+    {
+    }
+
+    Nullable(T* value)
+        : m_value(value)
+    {
+    }
+
+    Nullable(std::nullptr_t value)
+        : m_value(nullptr)
+    {
+    }
+
+    T* value()
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    const T* value() const
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    T* getValue()
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    T* getValue() const
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    bool hasValue() const
+    {
+        return !!m_value;
+    }
+
+    operator bool() const
+    {
+        return hasValue();
+    }
+
+    T* operator->()
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    T* operator->() const
+    {
+        STARFISH_ASSERT(hasValue());
+        return m_value;
+    }
+
+    bool operator==(const Nullable<T*>& other) const
+    {
+        if (hasValue() != other.hasValue()) {
+            return false;
+        }
+        return hasValue() ? m_value == other.m_value : true;
+    }
+
+    bool operator!=(const Nullable<T*>& other) const
+    {
+        return !this->operator==(other);
+    }
+
+    bool operator==(const T*& other) const
+    {
+        if (hasValue()) {
+            return value() == other;
+        }
+        return false;
+    }
+
+    bool operator!=(const T*& other) const
+    {
+        return !operator==(other);
+    }
+
+protected:
+    T* m_value;
+};
+
+template <typename T>
+inline bool operator==(const T*& a, const Nullable<T*>& b)
+{
+    return b == a;
+}
+
+template <typename T>
+inline bool operator!=(const T*& a, const Nullable<T*>& b)
 {
     return b != a;
 }

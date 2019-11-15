@@ -161,9 +161,6 @@ public:
 
     static void createPseudoElement(Node* parent, PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
-    static ComputedStyle* pseudoStyleForElementInternal(
-        Node* node, PseudoElementType pseudoId, ComputedStyle* parentStyle,
-        ComputedStyle* oldPseudoStyleIfHas);
 
     static Frame* buildSVGFrameTree(SVGElement* svgElement, Frame* parentFrame);
 #ifdef STARFISH_ENABLE_TEST

@@ -38,14 +38,14 @@ public:
     {
     }
 
-    void pushElement(Element* e);
-    void popElement();
+    void pushNode(Node* n);
+    void popNode();
 
     static void computeIdentifierHash(StyleRule* rule);
     ALWAYS_INLINE bool canUseAncestorSelectorFilter(Element* e)
     {
         if (!m_parentStack.size() ||
-            (Node*)m_parentStack.back().m_element != e->parentNode()) {
+            (Node*)m_parentStack.back().m_node != e->parentNode()) {
             return false;
         }
         return true;
@@ -68,18 +68,18 @@ public:
 
 private:
     struct AncestorStackFrame {
-        AncestorStackFrame(Element* element)
-            : m_element(element)
+        AncestorStackFrame(Node* node)
+            : m_node(node)
         {
         }
 
         AncestorStackFrame(AncestorStackFrame&& frame)
         {
-            m_element = frame.m_element;
+            m_node = frame.m_node;
             m_identifierHashes = std::move(frame.m_identifierHashes);
         }
 
-        Element* m_element;
+        Node* m_node;
         VectorWithInlineStorage<16, unsigned, std::allocator<unsigned>>
             m_identifierHashes;
     };

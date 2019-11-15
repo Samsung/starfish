@@ -231,8 +231,9 @@ public:
     {
     }
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle) override;
+    virtual void didComputedStyleChanged(
+        ComputedStyle* oldStyle, ComputedStyle* newStyle,
+        Nullable<StyleResolveContext*> ctx) override;
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump() override

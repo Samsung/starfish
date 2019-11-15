@@ -37,8 +37,9 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle) override;
+    virtual void didComputedStyleChanged(
+        ComputedStyle* oldStyle, ComputedStyle* newStyle,
+        Nullable<StyleResolveContext*> ctx) override;
 
     HTMLBodyElement* body()
     {

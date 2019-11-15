@@ -666,9 +666,10 @@ static ComputedStyleDamage comparePseudoElementStyle(ComputedStyle* oldStyle,
 }
 
 void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
-                                      ComputedStyle* newStyle)
+                                      ComputedStyle* newStyle,
+                                      Nullable<StyleResolveContext*> ctx)
 {
-    Node::didComputedStyleChanged(oldStyle, newStyle);
+    Node::didComputedStyleChanged(oldStyle, newStyle, ctx);
 
     Frame* frame = Element::frame();
     if (newStyle == nullptr) {
@@ -689,10 +690,14 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                 PseudoElementMap* pseudoElementMap =
                     ensureRareElementMembers()->ensurePseudoElementMap();
                 ComputedStyle* ocs =
-                    oldStyle ? oldStyle->pseudoStyle(this, type) : nullptr;
+                    oldStyle
+                        ? oldStyle->pseudoStyle(this, type, nullptr, nullptr,
+                                                ctx)
+                        : nullptr;
                 o = ocs && pseudoElementFrameIsNeeded(ocs) && ocs->content();
                 ComputedStyle* ncs =
-                    n ? newStyle->pseudoStyle(this, type) : nullptr;
+                    n ? newStyle->pseudoStyle(this, type, nullptr, nullptr, ctx)
+                      : nullptr;
                 n = ncs && pseudoElementFrameIsNeeded(ncs) && ncs->content();
                 // we should test actual visiblity on FrameTree. not style
                 // existence
@@ -773,6 +778,10 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                             setNeedsComposite();
                         }
                     }
+                }
+
+                if (ctx && ocs) {
+                    ctx->pushIntoComputedStylePool(ocs);
                 }
             } else {
                 // test just style existence is ok

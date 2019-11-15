@@ -2287,7 +2287,8 @@ void Node::setNeedsComposite()
 }
 
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
-                                   ComputedStyle* newStyle)
+                                   ComputedStyle* newStyle,
+                                   Nullable<StyleResolveContext*> ctx)
 {
     if (newStyle && frame()) {
         frame()->computeStyleFlags();

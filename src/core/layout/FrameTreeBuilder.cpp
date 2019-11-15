@@ -531,36 +531,6 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
     }
 }
 
-ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
-    Node* parent, PseudoElementType pseudoId, ComputedStyle* parentStyle,
-    ComputedStyle* oldPseudoStyleIfHas)
-{
-    STARFISH_ASSERT(pseudoId != PseudoElementType::PseudoElementNone);
-    STARFISH_ASSERT(parentStyle);
-
-    ComputedStyle* style = new ComputedStyle(parentStyle);
-    StyleResolveContext ctx(parent->document());
-    parent->document()->styleResolver().matchAllRules(
-        ctx, parent->asElement(), style, parentStyle, pseudoId);
-    Length fontSize = style->fontSize();
-    fontSize.changeToFixedIfNeeded(
-        parentStyle->fontSize(),
-        parent->document()->rootElement()->style()->fontSize(),
-        parentStyle->font(), parent->window()->innerWidth(),
-        parent->window()->innerHeight(), style);
-    style->setFontSize(fontSize);
-
-    // TODO: Set the proper style according to the type of pseudo-elements
-    if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
-        style->setDisplay(DisplayValue::InlineDisplayValue);
-        style->setPosition(PositionValue::StaticPositionValue);
-    }
-    style->loadResources(parent, oldPseudoStyleIfHas);
-    style->arrangeStyleValues(parentStyle, parent);
-
-    return style;
-}
-
 Frame* findPseudoFrameForTable(Frame* frame, bool isBefore = true)
 {
     Frame* pseudoFrame = frame;
