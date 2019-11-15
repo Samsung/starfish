@@ -19,33 +19,40 @@
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 
-#ifndef __StarfishAudioContext__
-#define __StarfishAudioContext__
+#ifndef __StarfishMediaElementAudioSourceNode__
+#define __StarfishMediaElementAudioSourceNode__
 
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "core/modules/webaudio/BaseAudioContext.h"
+#include "core/modules/webaudio/AudioNode.h"
 
 namespace Starfish {
 class ExecutionContext;
 class HTMLMediaElement;
-class MediaElementAudioSourceNode;
+class AudioContext;
 
-struct AudioContextOptions {
+struct MediaElementAudioSourceOptions {
+    DEFINE_GETTER_SETTER(HTMLMediaElement*, mediaElement, MediaElement)
+
+    HTMLMediaElement* m_mediaElement;
 };
 
-class AudioContext : public BaseAudioContext {
+class MediaElementAudioSourceNode : public AudioNode {
 public:
-    AudioContext(ExecutionContext* executionContext,
-                 AudioContextOptions contextOptions = AudioContextOptions());
+    MediaElementAudioSourceNode(ExecutionContext* executionContext,
+                                AudioContext* context,
+                                MediaElementAudioSourceOptions options);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaElementAudioSourceNode)
 
-    MediaElementAudioSourceNode* createMediaElementSource(
-        HTMLMediaElement* mediaElement);
+    AudioNode* connect(AudioNode* destinationNode, uint32_t output = 0,
+                       uint32_t input = 0) override;
+
+    DEFINE_GETTER(HTMLMediaElement*, mediaElement)
 
 private:
+    HTMLMediaElement* m_mediaElement{ nullptr };
 };
 }
 #endif

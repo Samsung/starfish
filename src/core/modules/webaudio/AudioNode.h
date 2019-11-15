@@ -27,6 +27,7 @@
 
 namespace Starfish {
 class ExecutionContext;
+class BaseAudioContext;
 
 enum class ChannelCountMode { Max, ClampedMax, Explicit };
 
@@ -34,9 +35,22 @@ enum class ChannelInterpretation { Speakers, Discrete };
 
 class AudioNode : public EventTarget {
 public:
-    AudioNode(ExecutionContext* executionContext);
+    AudioNode(ExecutionContext* executionContext, BaseAudioContext* context);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioNode)
+
+    virtual ExecutionContext* executionContext() const override
+    {
+        return m_executionContext;
+    }
+
+    virtual AudioNode* connect(AudioNode* destinationNode, uint32_t output = 0,
+                               uint32_t input = 0);
+
+    virtual BaseAudioContext* context()
+    {
+        return m_context;
+    }
 
     DEFINE_GETTER(uint32_t, numberOfInputs)
     DEFINE_GETTER(uint32_t, numberOfOutputs)
@@ -62,7 +76,10 @@ protected:
         ChannelInterpretation::Speakers
     };
 
+    BaseAudioContext* m_context{ nullptr };
+
 private:
+    AudioNode(ExecutionContext* executionContext);
 };
 }
 #endif

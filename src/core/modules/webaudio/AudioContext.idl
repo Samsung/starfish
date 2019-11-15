@@ -36,7 +36,7 @@ interface AudioContext : BaseAudioContext {
   //Promise<void> resume ();
   //Promise<void> suspend ();
   //Promise<void> close ();
-  //MediaElementAudioSourceNode createMediaElementSource (HTMLMediaElement mediaElement);
+  MediaElementAudioSourceNode createMediaElementSource (HTMLMediaElement mediaElement);
   //MediaStreamAudioSourceNode createMediaStreamSource (MediaStream mediaStream);
   //MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (MediaStreamTrack mediaStreamTrack);
   //MediaStreamAudioDestinationNode createMediaStreamDestination ();

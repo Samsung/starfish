@@ -22,24 +22,33 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/modules/webaudio/AudioScheduledSourceNode.h"
+#include "core/modules/webaudio/MediaElementAudioSourceNode.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/webaudio/AudioNode.h"
+#include "core/modules/webaudio/AudioContext.h"
 
 namespace Starfish {
-AudioScheduledSourceNode::AudioScheduledSourceNode(
-    ExecutionContext* executionContext, BaseAudioContext* context)
+MediaElementAudioSourceNode::MediaElementAudioSourceNode(
+    ExecutionContext* executionContext, AudioContext* context,
+    MediaElementAudioSourceOptions options)
     : AudioNode(executionContext, context)
 {
+    m_mediaElement = options.m_mediaElement;
 }
 
-ScriptBindingInstance* AudioScheduledSourceNode::scriptBindingInstance()
+ScriptBindingInstance* MediaElementAudioSourceNode::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
 
-DEFINE_EVENT_LISTENER(AudioScheduledSourceNode, ended);
-
+// https://webaudio.github.io/web-audio-api/#dom-audionode-connect
+AudioNode* MediaElementAudioSourceNode::connect(AudioNode* destinationNode,
+                                                uint32_t output, uint32_t input)
+{
+    AudioNode::connect(destinationNode, output, input);
+    return destinationNode;
+}
 } // namespace Starfish
 
 #endif

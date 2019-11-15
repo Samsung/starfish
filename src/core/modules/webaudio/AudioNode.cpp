@@ -25,17 +25,41 @@
 #include "core/modules/webaudio/AudioNode.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/DOMException.h"
+#include "core/modules/webaudio/AudioContext.h"
 
 namespace Starfish {
+
 AudioNode::AudioNode(ExecutionContext* executionContext)
+    : AudioNode(executionContext, nullptr)
+{
+}
+
+AudioNode::AudioNode(ExecutionContext* executionContext,
+                     BaseAudioContext* context)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_context(context)
 {
 }
 
 ScriptBindingInstance* AudioNode::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-audionode-connect
+AudioNode* AudioNode::connect(AudioNode* destinationNode, uint32_t output,
+                              uint32_t input)
+{
+    if (destinationNode->context() != context()) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_ACCESS_ERR,
+                               "InvalidAccessError");
+    }
+
+    // TODO: Connect to destinationNode
+    return destinationNode;
 }
 
 String* AudioNode::channelCountModeStr()

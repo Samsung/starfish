@@ -17,36 +17,15 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-
-#ifndef __StarfishAudioContext__
-#define __StarfishAudioContext__
-
-#include "core/dom/EventTarget.h"
-#include "binding/ScriptWrappable.h"
-
-#include "core/modules/webaudio/BaseAudioContext.h"
-
-namespace Starfish {
-class ExecutionContext;
-class HTMLMediaElement;
-class MediaElementAudioSourceNode;
-
-struct AudioContextOptions {
+[ STARFISH_ENABLE_WEBAUDIO ]
+dictionary MediaElementAudioSourceOptions {
+  required HTMLMediaElement mediaElement;
 };
 
-class AudioContext : public BaseAudioContext {
-public:
-    AudioContext(ExecutionContext* executionContext,
-                 AudioContextOptions contextOptions = AudioContextOptions());
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
-
-    MediaElementAudioSourceNode* createMediaElementSource(
-        HTMLMediaElement* mediaElement);
-
-private:
+[ STARFISH_ENABLE_WEBAUDIO,
+  ConstructorCallWith=ExecutionContext,
+  constructor (AudioContext context, MediaElementAudioSourceOptions options),
+  Exposed=Window ]
+interface MediaElementAudioSourceNode : AudioNode {
+  [SameObject] readonly attribute HTMLMediaElement mediaElement;
 };
-}
-#endif
-#endif
