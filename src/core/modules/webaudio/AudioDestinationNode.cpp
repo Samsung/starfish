@@ -29,8 +29,19 @@
 namespace Starfish {
 
 AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
-    : AudioNode(executionContext)
+    : AudioDestinationNode(executionContext, nullptr)
 {
+}
+
+AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
+                                           BaseAudioContext* context)
+    : AudioNode(executionContext, context)
+{
+}
+
+ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
 }
 } // namespace Starfish
 #endif

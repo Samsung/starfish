@@ -25,6 +25,7 @@
 #include "core/modules/webaudio/AudioContext.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/webaudio/MediaElementAudioSourceNode.h"
 
 namespace Starfish {
 AudioContext::AudioContext(ExecutionContext* executionContext,
@@ -35,7 +36,17 @@ AudioContext::AudioContext(ExecutionContext* executionContext,
 
 ScriptBindingInstance* AudioContext::scriptBindingInstance()
 {
-    return m_executionContext->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
+}
+
+MediaElementAudioSourceNode* AudioContext::createMediaElementSource(
+    HTMLMediaElement* mediaElement)
+{
+    MediaElementAudioSourceOptions init;
+    init.m_mediaElement = mediaElement;
+    MediaElementAudioSourceNode* source =
+        new MediaElementAudioSourceNode(executionContext(), this, init);
+    return source;
 }
 } // namespace Starfish
 

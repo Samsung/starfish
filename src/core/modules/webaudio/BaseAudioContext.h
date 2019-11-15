@@ -37,9 +37,15 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(BaseAudioContext)
 
-    DEFINE_GETTER(AudioDestinationNode*, destination)
-    AudioBufferSourceNode* createBufferSource();
-    String* state();
+    virtual ExecutionContext* executionContext() const override
+    {
+        return m_executionContext;
+    }
+
+    virtual AudioDestinationNode* destination();
+    virtual String* state();
+
+    virtual AudioBufferSourceNode* createBufferSource();
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

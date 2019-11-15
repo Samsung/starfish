@@ -46,16 +46,11 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBufferSourceNode)
 
-    ExecutionContext* executionContext() const override
-    {
-        return m_executionContext;
-    }
-
     DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
 
-private:
-    ExecutionContext* m_executionContext{ nullptr };
+    void start(double when = 0, double offset = 0, double duration = 0);
 
+private:
     AudioBuffer* m_buffer{ nullptr };
 };
 }

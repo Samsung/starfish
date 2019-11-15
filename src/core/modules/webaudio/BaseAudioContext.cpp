@@ -26,6 +26,7 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
+#include "core/modules/webaudio/AudioDestinationNode.h"
 
 namespace Starfish {
 BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext)
@@ -39,13 +40,12 @@ ScriptBindingInstance* BaseAudioContext::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-AudioBufferSourceNode* BaseAudioContext::createBufferSource()
+AudioDestinationNode* BaseAudioContext::destination()
 {
-    AudioBufferSourceOptions options;
-    AudioBufferSourceNode* node =
-        new AudioBufferSourceNode(m_executionContext, this, options);
-
-    return node;
+    // TODO: destination represents the actual hardware output stream
+    AudioDestinationNode* dest =
+        new AudioDestinationNode(m_executionContext, this);
+    return dest;
 }
 
 String* BaseAudioContext::state()
@@ -62,6 +62,15 @@ String* BaseAudioContext::state()
     }
 
     return String::emptyString;
+}
+
+AudioBufferSourceNode* BaseAudioContext::createBufferSource()
+{
+    AudioBufferSourceOptions options;
+    AudioBufferSourceNode* node =
+        new AudioBufferSourceNode(m_executionContext, this, options);
+
+    return node;
 }
 } // namespace Starfish
 

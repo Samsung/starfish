@@ -28,14 +28,14 @@
 
 namespace Starfish {
 AudioScheduledSourceNode::AudioScheduledSourceNode(
-    ExecutionContext* executionContext)
-    : AudioNode(executionContext)
+    ExecutionContext* executionContext, BaseAudioContext* context)
+    : AudioNode(executionContext, context)
 {
 }
 
 ScriptBindingInstance* AudioScheduledSourceNode::scriptBindingInstance()
 {
-    return m_executionContext->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
 DEFINE_EVENT_LISTENER(AudioScheduledSourceNode, ended);

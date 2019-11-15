@@ -29,6 +29,8 @@
 
 namespace Starfish {
 class ExecutionContext;
+class HTMLMediaElement;
+class MediaElementAudioSourceNode;
 
 struct AudioContextOptions {
 };
@@ -40,13 +42,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
 
-    ExecutionContext* executionContext() const override
-    {
-        return m_executionContext;
-    }
+    MediaElementAudioSourceNode* createMediaElementSource(
+        HTMLMediaElement* mediaElement);
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif

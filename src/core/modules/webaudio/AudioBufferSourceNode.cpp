@@ -32,7 +32,7 @@ namespace Starfish {
 AudioBufferSourceNode::AudioBufferSourceNode(ExecutionContext* executionContext,
                                              BaseAudioContext* context,
                                              AudioBufferSourceOptions options)
-    : AudioScheduledSourceNode(executionContext)
+    : AudioScheduledSourceNode(executionContext, context)
 {
     // https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode
     m_numberOfInputs = 0;
@@ -49,7 +49,11 @@ AudioBufferSourceNode::AudioBufferSourceNode(ExecutionContext* executionContext,
 
 ScriptBindingInstance* AudioBufferSourceNode::scriptBindingInstance()
 {
-    return m_executionContext->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
+}
+
+void AudioBufferSourceNode::start(double when, double offset, double duration)
+{
 }
 } // namespace Starfish
 

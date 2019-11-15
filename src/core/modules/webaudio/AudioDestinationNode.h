@@ -32,13 +32,16 @@ class ExecutionContext;
 
 class AudioDestinationNode : public AudioNode {
 public:
-    AudioDestinationNode(ExecutionContext* executionContext);
+    AudioDestinationNode(ExecutionContext* executionContext,
+                         BaseAudioContext* context);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioDestinationNode)
 
     DEFINE_GETTER_SETTER(uint32_t, maxChannelCount, MaxChannelCount)
 
 private:
+    AudioDestinationNode(ExecutionContext* executionContext);
+
     uint32_t m_maxChannelCount{ 0 };
 };
 }

@@ -29,6 +29,7 @@
 
 namespace Starfish {
 class ExecutionContext;
+class BaseAudioContext;
 
 class AudioScheduledSourceNode : public AudioNode {
 public:
@@ -42,10 +43,10 @@ public:
 
 protected:
     // interface class
-    AudioScheduledSourceNode(ExecutionContext* executionContext);
+    AudioScheduledSourceNode(ExecutionContext* executionContext,
+                             BaseAudioContext* context);
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif
