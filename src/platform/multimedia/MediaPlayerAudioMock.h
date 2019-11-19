@@ -18,32 +18,48 @@
  */
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
 
-#include "StarfishConfig.h"
-#include "Starfish.h"
-
-#include "core/modules/webaudio/AudioDestinationNode.h"
-
-#include "core/dom/ExecutionContext.h"
+#ifndef __StarfishMediaPlayerAudioMock__
+#define __StarfishMediaPlayerAudioMock__
 
 #include "platform/multimedia/MediaPlayerAudio.h"
 
 namespace Starfish {
+class HTMLMediaElement;
+class AudioNode;
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
-    : AudioDestinationNode(executionContext, nullptr)
-{
-}
+class MediaPlayerAudioMock : public MediaPlayerAudio {
+public:
+    MediaPlayerAudioMock(AudioNode* element);
+    MediaPlayerAudioMock(HTMLMediaElement* element);
+    virtual ~MediaPlayerAudioMock(){};
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
-                                           BaseAudioContext* context)
-    : AudioNode(executionContext, context)
-{
-}
+    virtual void destroy() override;
+    virtual void play() override;
+    virtual void pause() override{};
+    virtual void seek(double time) override{};
 
-ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()
-{
-    return executionContext()->scriptBindingInstance();
-}
+    void prepare(ResourceURL* url) override;
+
+    virtual double currentTime()
+    {
+        return 0;
+    }
+
+    virtual double duration()
+    {
+        return 0;
+    }
+
+    virtual void setVolume(double volume) override{};
+    virtual void setMuted(bool muted) override{};
+    virtual void prepareMediaSource() override{};
+
+private:
+};
 } // namespace Starfish
+
+#endif
+#endif
 #endif

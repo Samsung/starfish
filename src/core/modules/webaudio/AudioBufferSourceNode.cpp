@@ -28,6 +28,8 @@
 #include "core/modules/webaudio/AudioBuffer.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 
+#include "platform/multimedia/MediaPlayerAudio.h"
+
 namespace Starfish {
 AudioBufferSourceNode::AudioBufferSourceNode(ExecutionContext* executionContext,
                                              BaseAudioContext* context,
@@ -52,8 +54,13 @@ ScriptBindingInstance* AudioBufferSourceNode::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-audiobuffersourcenode-start
 void AudioBufferSourceNode::start(double when, double offset, double duration)
 {
+    // TODO
+    MediaPlayerAudio* player = MediaPlayerAudio::create(this);
+    player->setBuffer(m_buffer->rawBuffer(), m_buffer->length());
+    player->play();
 }
 } // namespace Starfish
 

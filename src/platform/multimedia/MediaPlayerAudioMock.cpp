@@ -18,37 +18,56 @@
  */
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/modules/webaudio/AudioContext.h"
+#include "MediaPlayerAudioMock.h"
 
-#include "core/dom/ExecutionContext.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
+#include "core/page/Window.h"
+#include "core/modules/message_loop/MessageLoop.h"
+
 #include "core/dom/HTMLMediaElement.h"
-#include "core/modules/webaudio/MediaElementAudioSourceNode.h"
+#include "core/modules/webaudio/AudioBufferSourceNode.h"
 
 namespace Starfish {
-AudioContext::AudioContext(ExecutionContext* executionContext,
-                           AudioContextOptions contextOptions)
-    : BaseAudioContext(executionContext)
+MediaPlayerAudioMock::MediaPlayerAudioMock(AudioNode* element)
+    : MediaPlayerAudio(element)
 {
 }
 
-ScriptBindingInstance* AudioContext::scriptBindingInstance()
+MediaPlayerAudioMock::MediaPlayerAudioMock(HTMLMediaElement* element)
+    : MediaPlayerAudio(element)
 {
-    return executionContext()->scriptBindingInstance();
 }
 
-MediaElementAudioSourceNode* AudioContext::createMediaElementSource(
-    HTMLMediaElement* mediaElement)
+void MediaPlayerAudioMock::play()
 {
-    MediaElementAudioSourceOptions init;
-    init.m_mediaElement = mediaElement;
-    MediaElementAudioSourceNode* source =
-        new MediaElementAudioSourceNode(executionContext(), this, init);
-    return source;
+    STARFISH_LOG_INFO("%s\n", __func__);
+}
+
+void MediaPlayerAudioMock::destroy()
+{
+    STARFISH_LOG_INFO("%s\n", __func__);
+}
+
+void MediaPlayerAudioMock::prepare(ResourceURL* url)
+{
+}
+
+MediaPlayerAudio* MediaPlayerAudio::create(HTMLMediaElement* element)
+{
+    return new MediaPlayerAudioMock(element);
+}
+
+MediaPlayerAudio* MediaPlayerAudio::create(AudioNode* element)
+{
+    return new MediaPlayerAudioMock(element);
 }
 } // namespace Starfish
 
+#endif
 #endif

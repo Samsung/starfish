@@ -25,8 +25,8 @@ enum AudioContextState {
 };
 
 // https://webaudio.github.io/web-audio-api/#BaseAudioContext
-//callback DecodeErrorCallback = void (DOMException error);
-//callback DecodeSuccessCallback = void (AudioBuffer decodedData);
+callback DecodeErrorCallback = void (DOMException error);
+callback DecodeSuccessCallback = void (AudioBuffer decodedData);
 
 [ STARFISH_ENABLE_WEBAUDIO,
   ConstructorCallWith=ExecutionContext,
@@ -61,7 +61,7 @@ interface BaseAudioContext : EventTarget {
   //StereoPannerNode createStereoPanner ();
   //WaveShaperNode createWaveShaper ();
 
-  //Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
-  //                                      optional DecodeSuccessCallback? successCallback,
-  //                                      optional DecodeErrorCallback? errorCallback);
+  Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData,
+                                        optional DecodeSuccessCallback? successCallback,
+                                        optional DecodeErrorCallback? errorCallback);
 };

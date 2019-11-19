@@ -33,7 +33,7 @@ class HTMLMediaElement;
 class AudioContext;
 
 struct MediaElementAudioSourceOptions {
-    DEFINE_GETTER_SETTER(HTMLMediaElement*, mediaElement, MediaElement)
+    DEFINE_GETTER_SETTER(HTMLMediaElement*, mediaElement, MediaElement);
 
     HTMLMediaElement* m_mediaElement;
 };
@@ -44,12 +44,12 @@ public:
                                 AudioContext* context,
                                 MediaElementAudioSourceOptions options);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaElementAudioSourceNode)
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaElementAudioSourceNode);
 
     AudioNode* connect(AudioNode* destinationNode, uint32_t output = 0,
                        uint32_t input = 0) override;
 
-    DEFINE_GETTER(HTMLMediaElement*, mediaElement)
+    DEFINE_GETTER(HTMLMediaElement*, mediaElement);
 
 private:
     HTMLMediaElement* m_mediaElement{ nullptr };

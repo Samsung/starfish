@@ -50,6 +50,7 @@ public:
         TIMEOUT_ERR = 23,
         INVALID_NODE_TYPE_ERR = 24,
         DATA_CLONE_ERR = 25,
+        ENCODING_ERROR, // No legacy code from here
         NOT_ALLOWED_ERROR,
 
         SCRIPT_ERROR = 101,

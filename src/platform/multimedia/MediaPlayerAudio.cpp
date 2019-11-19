@@ -22,28 +22,28 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "core/modules/webaudio/AudioDestinationNode.h"
+#include "MediaPlayerAudio.h"
 
-#include "core/dom/ExecutionContext.h"
-
-#include "platform/multimedia/MediaPlayerAudio.h"
+#include "core/dom/HTMLMediaElement.h"
+#include "core/modules/webaudio/AudioBufferSourceNode.h"
 
 namespace Starfish {
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
-    : AudioDestinationNode(executionContext, nullptr)
+MediaPlayerAudio::MediaPlayerAudio(AudioNode* element)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((MediaPlayerAudio*)obj)->~MediaPlayerAudio(); },
+        NULL, NULL, NULL);
 }
 
-AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
-                                           BaseAudioContext* context)
-    : AudioNode(executionContext, context)
+MediaPlayerAudio::MediaPlayerAudio(HTMLMediaElement* element)
 {
-}
-
-ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()
-{
-    return executionContext()->scriptBindingInstance();
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((MediaPlayerAudio*)obj)->~MediaPlayerAudio(); },
+        NULL, NULL, NULL);
 }
 } // namespace Starfish
+
 #endif

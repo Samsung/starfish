@@ -43,7 +43,6 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/multimedia/MediaPlayerWebRtc.h"
-
 #include "core/modules/mediastream/MediaStream.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG

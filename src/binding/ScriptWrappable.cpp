@@ -1169,6 +1169,19 @@ unsigned arrayBufferViewSize(ScriptArrayBufferView buffer)
     return buffer->byteLength();
 }
 
+void detachArrayBuffer(ScriptBindingInstance* instance,
+                       ScriptArrayBuffer buffer)
+{
+    ContextRef* ctx = instance->scriptContext();
+    Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, ScriptArrayBuffer buffer) -> ValueRef* {
+            buffer->detachArrayBuffer(state);
+            return ValueRef::createUndefined();
+        },
+        buffer);
+}
+
 Promise::Promise(ScriptBindingInstance* instance)
 {
     m_instance = instance;
