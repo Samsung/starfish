@@ -26,6 +26,8 @@
 
 #include "core/dom/ExecutionContext.h"
 
+#include "platform/multimedia/MediaPlayerAudio.h"
+
 namespace Starfish {
 
 AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)

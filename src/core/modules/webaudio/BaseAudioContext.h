@@ -25,11 +25,58 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+namespace Escargot {
+class ValueRef;
+}
+
 namespace Starfish {
 class ExecutionContext;
 class AudioDestinationNode;
 
 enum class AudioContextState { Suspended, Running, Closed };
+
+class DecodeSuccessCallback {
+public:
+    static DecodeSuccessCallback* toDecodeSuccessCallback(ScriptValue fn)
+    {
+        if (!isCallableScriptValue(fn)) {
+            return nullptr;
+        }
+
+        return new DecodeSuccessCallback(fn);
+    }
+
+    void call(ScriptBindingInstance* instance, AudioBuffer* decodedData);
+
+private:
+    DecodeSuccessCallback(ScriptValue fn)
+        : m_callback(fn)
+    {
+    }
+
+    ScriptValue m_callback;
+};
+
+class DecodeErrorCallback {
+public:
+    static DecodeErrorCallback* toDecodeErrorCallback(ScriptValue fn)
+    {
+        if (!isCallableScriptValue(fn)) {
+            return nullptr;
+        }
+        return new DecodeErrorCallback(fn);
+    }
+
+    void call(ScriptBindingInstance* instance, DOMException* error);
+
+private:
+    DecodeErrorCallback(ScriptValue fn)
+        : m_callback(fn)
+    {
+    }
+
+    ScriptValue m_callback;
+};
 
 class BaseAudioContext : public EventTarget {
 public:
@@ -46,6 +93,10 @@ public:
     virtual String* state();
 
     virtual AudioBufferSourceNode* createBufferSource();
+
+    Promise* decodeAudioData(ScriptArrayBuffer audioData,
+                             DecodeSuccessCallback* successCallback = nullptr,
+                             DecodeErrorCallback* errorCallback = nullptr);
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

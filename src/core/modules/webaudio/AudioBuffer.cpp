@@ -32,11 +32,36 @@ AudioBuffer::AudioBuffer(ExecutionContext* executionContext,
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj, void* cd) { ((AudioBuffer*)obj)->~AudioBuffer(); },
+        NULL, NULL, NULL);
+}
+
+AudioBuffer::AudioBuffer(ExecutionContext* executionContext,
+                         std::unique_ptr<uint8_t> buffer, uint32_t length)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+{
+    m_buffer = std::move(buffer);
+    m_length = length;
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj, void* cd) { ((AudioBuffer*)obj)->~AudioBuffer(); },
+        NULL, NULL, NULL);
+}
+
+AudioBuffer::~AudioBuffer()
+{
 }
 
 ScriptBindingInstance* AudioBuffer::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
+}
+
+uint8_t* AudioBuffer::rawBuffer()
+{
+    return m_buffer.get();
 }
 } // namespace Starfish
 

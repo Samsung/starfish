@@ -43,6 +43,9 @@ struct AudioBufferOptions {
 class AudioBuffer : public ScriptWrappable {
 public:
     AudioBuffer(ExecutionContext* executionContext, AudioBufferOptions options);
+    AudioBuffer(ExecutionContext* executionContext,
+                std::unique_ptr<uint8_t> buffer, uint32_t length);
+    virtual ~AudioBuffer();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBuffer)
 
@@ -51,13 +54,15 @@ public:
     DEFINE_GETTER(double, duration)
     DEFINE_GETTER(uint32_t, numberOfChannels)
 
+    uint8_t* rawBuffer();
+
+private:
+    ExecutionContext* m_executionContext{ nullptr };
+    std::unique_ptr<uint8_t> m_buffer;
     double m_sampleRate{ 0 };
     uint32_t m_length{ 0 };
     double m_duration{ 0 };
     uint32_t m_numberOfChannels{ 1 };
-
-private:
-    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif

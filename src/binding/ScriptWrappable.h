@@ -229,6 +229,9 @@ uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);
 unsigned arrayBufferSize(ScriptArrayBuffer buffer);
 unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
 
+void detachArrayBuffer(ScriptBindingInstance* instance,
+                       ScriptArrayBuffer buffer);
+
 #ifdef STARFISH_ENABLE_TEST
 void invokeTestStartFunction(ScriptBindingInstance* instance);
 #endif

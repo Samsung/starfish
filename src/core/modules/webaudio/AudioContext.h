@@ -40,7 +40,7 @@ public:
     AudioContext(ExecutionContext* executionContext,
                  AudioContextOptions contextOptions = AudioContextOptions());
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext)
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioContext);
 
     MediaElementAudioSourceNode* createMediaElementSource(
         HTMLMediaElement* mediaElement);

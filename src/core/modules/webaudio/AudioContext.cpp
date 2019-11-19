@@ -25,6 +25,7 @@
 #include "core/modules/webaudio/AudioContext.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/HTMLMediaElement.h"
 #include "core/modules/webaudio/MediaElementAudioSourceNode.h"
 
 namespace Starfish {
