@@ -58,7 +58,7 @@ AudioNode* AudioNode::connect(AudioNode* destinationNode, uint32_t output,
                                "InvalidAccessError");
     }
 
-    // TODO: Connect to destinationNode
+    m_destinationNode = destinationNode;
     return destinationNode;
 }
 

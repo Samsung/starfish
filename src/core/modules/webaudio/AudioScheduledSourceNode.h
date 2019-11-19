@@ -35,6 +35,8 @@ class AudioScheduledSourceNode : public AudioNode {
 public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioScheduledSourceNode)
 
+    virtual void stop(double when = 0);
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(ended);
@@ -45,6 +47,9 @@ protected:
     // interface class
     AudioScheduledSourceNode(ExecutionContext* executionContext,
                              BaseAudioContext* context);
+
+    bool m_hasStartCalled{ false };
+    bool m_hasStopCalled{ false };
 
 private:
 };

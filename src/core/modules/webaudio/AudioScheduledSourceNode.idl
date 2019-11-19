@@ -24,5 +24,5 @@
 interface AudioScheduledSourceNode : AudioNode {
   attribute EventHandler onended;
   //void start(optional double when = 0);
-  //void stop(optional double when = 0);
+  [RaisesException] void stop(optional double when = 0);
 };

@@ -29,6 +29,7 @@
 
 namespace Starfish {
 class ExecutionContext;
+class MediaPlayerAudio;
 
 class AudioDestinationNode : public AudioNode {
 public:
@@ -39,10 +40,19 @@ public:
 
     DEFINE_GETTER_SETTER(uint32_t, maxChannelCount, MaxChannelCount)
 
+    bool isAudioDestinationNode() override
+    {
+        return true;
+    }
+
+    void setBuffer(uint8_t* buffer, uint32_t length);
+    void play();
+
 private:
     AudioDestinationNode(ExecutionContext* executionContext);
 
     uint32_t m_maxChannelCount{ 0 };
+    MediaPlayerAudio* m_player{ nullptr };
 };
 }
 #endif

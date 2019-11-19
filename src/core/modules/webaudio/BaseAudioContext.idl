@@ -38,7 +38,7 @@ interface BaseAudioContext : EventTarget {
   //readonly attribute AudioListener listener;
   readonly attribute AudioContextState state;
   //[SameObject, SecureContext] readonly attribute AudioWorklet audioWorklet;
-  //attribute EventHandler onstatechange;
+  attribute EventHandler onstatechange;
 
   //AnalyserNode createAnalyser ();
   //BiquadFilterNode createBiquadFilter ();

@@ -45,8 +45,10 @@ public:
     MediaElementAudioSourceNode* createMediaElementSource(
         HTMLMediaElement* mediaElement);
 
+    Promise* close();
+
 private:
 };
-}
+} // namespace Starfish
 #endif
 #endif
