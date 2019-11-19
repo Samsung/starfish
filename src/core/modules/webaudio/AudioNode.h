@@ -65,6 +65,17 @@ public:
     String* channelInterpretationStr();
     void setChannelInterpretationStr(String* channelInterpretation);
 
+    virtual bool isAudioDestinationNode()
+    {
+        return false;
+    }
+
+    AudioDestinationNode* asAudioDestinationNode()
+    {
+        STARFISH_ASSERT(isAudioDestinationNode());
+        return (AudioDestinationNode*)this;
+    }
+
 protected:
     ExecutionContext* m_executionContext{ nullptr };
 
@@ -77,6 +88,7 @@ protected:
     };
 
     BaseAudioContext* m_context{ nullptr };
+    AudioNode* m_destinationNode{ nullptr };
 
 private:
     AudioNode(ExecutionContext* executionContext);

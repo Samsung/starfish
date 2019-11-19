@@ -46,12 +46,14 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(AudioBufferSourceNode)
 
-    DEFINE_GETTER_SETTER(AudioBuffer*, buffer, Buffer);
+    DEFINE_GETTER(AudioBuffer*, buffer);
+    void setBuffer(AudioBuffer* buffer);
 
     void start(double when = 0, double offset = 0, double duration = 0);
 
 private:
     AudioBuffer* m_buffer{ nullptr };
+    bool m_bufferSet{ false };
 };
 }
 #endif

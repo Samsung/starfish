@@ -36,6 +36,34 @@
 #include "core/page/WebBase.h"
 
 namespace Starfish {
+
+WebAudioMessageQueue::WebAudioMessageQueue(ExecutionContext* executionContext)
+    : m_executionContext(executionContext)
+    , m_state(AudioContextState::Suspended)
+{
+}
+
+void WebAudioMessageQueue::enqueue(MessageQueueFunction fn, void* data)
+{
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->globalScope(),
+        [](size_t, void* func, void* data) {
+            MessageQueueFunction fn = (MessageQueueFunction)func;
+            fn(data);
+        },
+        (void*)fn, data);
+}
+
+ControlMessageQueue::ControlMessageQueue(ExecutionContext* executionContext)
+    : WebAudioMessageQueue(executionContext)
+{
+}
+
+RenderingMessageQueue::RenderingMessageQueue(ExecutionContext* executionContext)
+    : WebAudioMessageQueue(executionContext)
+{
+}
+
 void DecodeSuccessCallback::call(ScriptBindingInstance* instance,
                                  AudioBuffer* decodedData)
 {
@@ -53,6 +81,8 @@ void DecodeErrorCallback::call(ScriptBindingInstance* instance,
 BaseAudioContext::BaseAudioContext(ExecutionContext* executionContext)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_controlQueue(new ControlMessageQueue(executionContext))
+    , m_renderingQueue(new RenderingMessageQueue(executionContext))
 {
 }
 
@@ -63,7 +93,6 @@ ScriptBindingInstance* BaseAudioContext::scriptBindingInstance()
 
 AudioDestinationNode* BaseAudioContext::destination()
 {
-    // TODO: destination represents the actual hardware output stream
     AudioDestinationNode* dest =
         new AudioDestinationNode(m_executionContext, this);
     return dest;
@@ -71,7 +100,7 @@ AudioDestinationNode* BaseAudioContext::destination()
 
 String* BaseAudioContext::state()
 {
-    switch (m_state) {
+    switch (m_controlQueue->state()) {
     case AudioContextState::Suspended:
         return String::createASCIIString("suspended");
     case AudioContextState::Running:
@@ -84,6 +113,8 @@ String* BaseAudioContext::state()
 
     return String::emptyString;
 }
+
+DEFINE_EVENT_LISTENER(BaseAudioContext, statechange);
 
 AudioBufferSourceNode* BaseAudioContext::createBufferSource()
 {
@@ -159,6 +190,15 @@ Promise* BaseAudioContext::decodeAudioData(
         p);
 
     return promise;
+}
+
+// https://webaudio.github.io/web-audio-api/#allowed-to-start
+bool BaseAudioContext::isAllowedToStart()
+{
+    if (m_controlQueue->state() == AudioContextState::Suspended) {
+        return true;
+    }
+    return false;
 }
 } // namespace Starfish
 

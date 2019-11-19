@@ -35,6 +35,42 @@ class AudioDestinationNode;
 
 enum class AudioContextState { Suspended, Running, Closed };
 
+typedef void (*MessageQueueFunction)(void*);
+
+class WebAudioMessageQueue : public gc {
+public:
+    void enqueue(MessageQueueFunction fn, void* data);
+
+    virtual AudioContextState state()
+    {
+        return m_state;
+    }
+
+    virtual void setState(AudioContextState state)
+    {
+        m_state = state;
+    }
+
+protected:
+    WebAudioMessageQueue(ExecutionContext* executionContext);
+    ExecutionContext* m_executionContext{ nullptr };
+    AudioContextState m_state{ AudioContextState::Suspended };
+};
+
+class ControlMessageQueue : public WebAudioMessageQueue {
+public:
+    ControlMessageQueue(ExecutionContext* executionContext);
+
+private:
+};
+
+class RenderingMessageQueue : public WebAudioMessageQueue {
+public:
+    RenderingMessageQueue(ExecutionContext* executionContext);
+
+private:
+};
+
 class DecodeSuccessCallback {
 public:
     static DecodeSuccessCallback* toDecodeSuccessCallback(ScriptValue fn)
@@ -80,8 +116,6 @@ private:
 
 class BaseAudioContext : public EventTarget {
 public:
-    BaseAudioContext(ExecutionContext* executionContext);
-
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(BaseAudioContext)
 
     virtual ExecutionContext* executionContext() const override
@@ -92,17 +126,46 @@ public:
     virtual AudioDestinationNode* destination();
     virtual String* state();
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(statechange);
+#undef VIRTUAL
+#undef OVERRIDE
+
     virtual AudioBufferSourceNode* createBufferSource();
 
-    Promise* decodeAudioData(ScriptArrayBuffer audioData,
-                             DecodeSuccessCallback* successCallback = nullptr,
-                             DecodeErrorCallback* errorCallback = nullptr);
+    virtual Promise* decodeAudioData(
+        ScriptArrayBuffer audioData,
+        DecodeSuccessCallback* successCallback = nullptr,
+        DecodeErrorCallback* errorCallback = nullptr);
 
-private:
+    virtual ControlMessageQueue* controlQueue()
+    {
+        return m_controlQueue;
+    }
+
+    virtual RenderingMessageQueue* renderingQueue()
+    {
+        return m_renderingQueue;
+    }
+
+    virtual bool isAllowedToStart();
+
+    virtual bool suspendedByUser()
+    {
+        return m_suspendedByUser;
+    }
+
+protected:
+    BaseAudioContext(ExecutionContext* executionContext);
+
     ExecutionContext* m_executionContext{ nullptr };
 
     AudioDestinationNode* m_destination{ nullptr };
-    AudioContextState m_state{ AudioContextState::Closed };
+
+    ControlMessageQueue* m_controlQueue{ nullptr };
+    RenderingMessageQueue* m_renderingQueue{ nullptr };
+    bool m_suspendedByUser{ false };
 };
 }
 #endif

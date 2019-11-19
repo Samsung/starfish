@@ -38,12 +38,22 @@ AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext)
 AudioDestinationNode::AudioDestinationNode(ExecutionContext* executionContext,
                                            BaseAudioContext* context)
     : AudioNode(executionContext, context)
+    , m_player(MediaPlayerAudio::create(this))
 {
 }
 
 ScriptBindingInstance* AudioDestinationNode::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
+}
+
+void AudioDestinationNode::setBuffer(uint8_t* buffer, uint32_t length)
+{
+    m_player->setBuffer(buffer, length);
+}
+void AudioDestinationNode::play()
+{
+    m_player->play();
 }
 } // namespace Starfish
 #endif

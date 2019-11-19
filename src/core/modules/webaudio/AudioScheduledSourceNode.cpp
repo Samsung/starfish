@@ -24,6 +24,7 @@
 
 #include "core/modules/webaudio/AudioScheduledSourceNode.h"
 
+#include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
@@ -36,6 +37,18 @@ AudioScheduledSourceNode::AudioScheduledSourceNode(
 ScriptBindingInstance* AudioScheduledSourceNode::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
+}
+
+// https://webaudio.github.io/web-audio-api/#dom-audioscheduledsourcenode-stop
+void AudioScheduledSourceNode::stop(double when)
+{
+    if (!m_hasStartCalled) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    // TODO: Timer
 }
 
 DEFINE_EVENT_LISTENER(AudioScheduledSourceNode, ended);

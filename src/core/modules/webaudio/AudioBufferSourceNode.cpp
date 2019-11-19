@@ -24,8 +24,10 @@
 
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
 
+#include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/webaudio/AudioBuffer.h"
+#include "core/modules/webaudio/AudioDestinationNode.h"
 #include "core/modules/webaudio/BaseAudioContext.h"
 
 #include "platform/multimedia/MediaPlayerAudio.h"
@@ -54,13 +56,49 @@ ScriptBindingInstance* AudioBufferSourceNode::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+// https://webaudio.github.io/web-audio-api/#dom-audiobuffersourcenode-buffe
+void AudioBufferSourceNode::setBuffer(AudioBuffer* buffer)
+{
+    if (buffer && m_bufferSet) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+    if (buffer) {
+        m_bufferSet = true;
+        m_buffer = buffer;
+    }
+}
+
 // https://webaudio.github.io/web-audio-api/#dom-audiobuffersourcenode-start
 void AudioBufferSourceNode::start(double when, double offset, double duration)
 {
-    // TODO
-    MediaPlayerAudio* player = MediaPlayerAudio::create(this);
-    player->setBuffer(m_buffer->rawBuffer(), m_buffer->length());
-    player->play();
+    // 1
+    if (m_hasStopCalled || m_hasStartCalled) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    // TODO: Timer
+    if ((context()->controlQueue()->state() == AudioContextState::Suspended) &&
+        context()->isAllowedToStart() && !context()->suspendedByUser()) {
+        context()->renderingQueue()->enqueue(
+            [](void* data) {
+                AudioBufferSourceNode* self = (AudioBufferSourceNode*)data;
+                self->m_hasStartCalled = true;
+                if (self->m_destinationNode &&
+                    self->m_destinationNode->isAudioDestinationNode()) {
+                    AudioDestinationNode* destinationNode =
+                        self->m_destinationNode->asAudioDestinationNode();
+                    destinationNode->setBuffer(self->m_buffer->rawBuffer(),
+                                               self->m_buffer->length());
+                    destinationNode->play();
+                }
+                self->m_hasStartCalled = false;
+            },
+            this);
+    }
 }
 } // namespace Starfish
 
