@@ -51,7 +51,7 @@ public:
     {
     }
 
-    RTCSessionDescriptionInit(webrtc::SdpType type, String* sdp);
+    RTCSessionDescriptionInit(webrtc::SdpType type, std::string sdp);
 
     String* type();
     void setType(String* type);
