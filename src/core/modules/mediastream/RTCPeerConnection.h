@@ -41,7 +41,24 @@
 #include "api/rtp_receiver_interface.h"
 
 #include <EscargotPublic.h>
-using namespace Escargot;
+
+#define STARFISH_WEBRTC_DEBUG
+
+#ifdef STARFISH_WEBRTC_DEBUG
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <pthread.h>
+
+#define WEBRTC_LOGI(STR, ...) \
+    STARFISH_LOG_INFO(        \
+        "[WEBRTC_LOG|%ld] "   \
+        "" STR,               \
+        syscall(SYS_gettid), ##__VA_ARGS__);
+#define WEBRTC_LOGE(...) WEBRTC_LOGI(__VA_ARGS__)
+#else
+#define WEBRTC_LOGI(...)
+#define WEBRTC_LOGE(...)
+#endif
 
 namespace Starfish {
 class ExecutionContext;
@@ -52,9 +69,10 @@ class RTCPeerConnection;
 // FIXME: The binding generator does not generate the following code, so they
 // are manually included here. They are used in RTCPeerConnectionBinding.cpp
 extern DOMStringOrMediaStreamTrack toDOMStringOrMediaStreamTrackFromValueRef(
-    ExecutionStateRef* state, ValueRef* from);
-extern ValueRef* toValueRefFromDOMStringOrMediaStreamTrack(
-    ExecutionStateRef* state, const DOMStringOrMediaStreamTrack& from);
+    Escargot::ExecutionStateRef* state, Escargot::ValueRef* from);
+extern Escargot::ValueRef* toValueRefFromDOMStringOrMediaStreamTrack(
+    Escargot::ExecutionStateRef* state,
+    const DOMStringOrMediaStreamTrack& from);
 
 enum class RTCSignalingState {
     Stable,
@@ -173,18 +191,21 @@ public:
     void OnInterestingUsage(int usage_pattern) override{};
 
 protected:
+    // The pointer is always valid as: scope(PeerConnectionObserver) <=
+    // scope(RTCPeerConnection)
     RTCPeerConnection* m_peerConnection;
 };
 
 class CreateOfferAnswerObserver
     : public webrtc::CreateSessionDescriptionObserver {
 public:
+    CreateOfferAnswerObserver(RTCPeerConnection* peerConnection)
+        : m_peerConnection(peerConnection)
+    {
+    }
+
     virtual void OnSuccess(webrtc::SessionDescriptionInterface* desc) override;
     virtual void OnFailure(webrtc::RTCError error) override;
-    virtual void setPromise(Promise* promise)
-    {
-        m_promise = promise;
-    }
 
     virtual bool isCreateOffer()
     {
@@ -197,16 +218,18 @@ public:
     }
 
 protected:
+    // The pointer is always valid as: scope(PeerConnectionObserver) <=
+    // scope(RTCPeerConnection)
     RTCPeerConnection* m_peerConnection{ nullptr };
-    Promise* m_promise{ nullptr };
-
-    void init(RTCPeerConnection* peerConnection, Promise* promise);
 };
 
 class CreateOfferObserver : public CreateOfferAnswerObserver {
 public:
-    static CreateOfferObserver* create(RTCPeerConnection* peerConnection,
-                                       Promise* promise);
+    CreateOfferObserver(RTCPeerConnection* peerConnection)
+        : CreateOfferAnswerObserver(peerConnection)
+    {
+    }
+
     bool isCreateOffer() override
     {
         return true;
@@ -215,8 +238,11 @@ public:
 
 class CreateAnswerObserver : public CreateOfferAnswerObserver {
 public:
-    static CreateAnswerObserver* create(RTCPeerConnection* peerConnection,
-                                        Promise* promise);
+    CreateAnswerObserver(RTCPeerConnection* peerConnection)
+        : CreateOfferAnswerObserver(peerConnection)
+    {
+    }
+
     bool isCreateAnswer() override
     {
         return true;
@@ -226,24 +252,86 @@ public:
 class SetLocalRemoteDescriptionObserver
     : public webrtc::SetSessionDescriptionObserver {
 public:
-    static SetLocalRemoteDescriptionObserver* create(
-        RTCPeerConnection* peerConnection, Promise* promise);
+    SetLocalRemoteDescriptionObserver(RTCPeerConnection* peerConnection)
+        : m_peerConnection(peerConnection)
+    {
+    }
 
     virtual void OnSuccess() override;
     virtual void OnFailure(webrtc::RTCError error) override;
+
+    virtual bool isLocalDescription()
+    {
+        return false;
+    }
+
+    virtual bool isRemoteDescription()
+    {
+        return false;
+    }
+
+protected:
+    // The pointer is always valid as: scope(PeerConnectionObserver) <=
+    // scope(RTCPeerConnection)
+    RTCPeerConnection* m_peerConnection{ nullptr };
+};
+
+class SetLocalDescriptionObserver : public SetLocalRemoteDescriptionObserver {
+public:
+    SetLocalDescriptionObserver(RTCPeerConnection* peerConnection)
+        : SetLocalRemoteDescriptionObserver(peerConnection)
+    {
+    }
+
+    bool isLocalDescription() override
+    {
+        return true;
+    }
+};
+
+class SetRemoteDescriptionObserver : public SetLocalRemoteDescriptionObserver {
+public:
+    SetRemoteDescriptionObserver(RTCPeerConnection* peerConnection)
+        : SetLocalRemoteDescriptionObserver(peerConnection)
+    {
+    }
+
+    bool isRemoteDescription() override
+    {
+        return true;
+    }
+};
+
+template <typename T>
+class PcObserver : public gc {
+    friend class RTCPeerConnection;
+
+public:
+    PcObserver(RTCPeerConnection* peerConnection)
+        : m_observer(new rtc::RefCountedObject<T>(peerConnection))
+        , m_promise(nullptr)
+    {
+    }
+
+    Promise* promise()
+    {
+        return m_promise;
+    }
+
     void setPromise(Promise* promise)
     {
         m_promise = promise;
     }
 
 private:
-    RTCPeerConnection* m_peerConnection{ nullptr };
+    rtc::scoped_refptr<T> m_observer;
     Promise* m_promise{ nullptr };
 };
 
 class RTCPeerConnection : public EventTarget {
     friend class PeerConnectionObserver;
     friend class CreateOfferAnswerObserver;
+    friend class SetLocalRemoteDescriptionObserver;
 
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
@@ -330,12 +418,10 @@ private:
     std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
-    rtc::scoped_refptr<CreateOfferObserver> m_createOfferObserver;
-    rtc::scoped_refptr<CreateAnswerObserver> m_createAnswerObserver;
-    rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
-        m_setLocalDescriptionObserver;
-    rtc::scoped_refptr<SetLocalRemoteDescriptionObserver>
-        m_setRemoteDescriptionObserver;
+    PcObserver<CreateOfferObserver>* m_createOfferObserver;
+    PcObserver<CreateAnswerObserver>* m_createAnswerObserver;
+    PcObserver<SetLocalDescriptionObserver>* m_setLocalDescriptionObserver;
+    PcObserver<SetRemoteDescriptionObserver>* m_setRemoteDescriptionObserver;
 
     std::string m_lastCreatedOffer;
     std::string m_lastCreatedAnswer;
@@ -344,6 +430,8 @@ private:
     void deletePeerConnection();
 
     bool isValidRemoteState(RTCSdpType type);
+    Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,
+                                      Promise* promise, bool isRemote);
 };
 }
 

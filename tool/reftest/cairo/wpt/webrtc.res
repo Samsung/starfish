@@ -21,7 +21,7 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-connectionState.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html # Pass but fails in docker
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer-offerToReceive.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html # Pass but fails in docker
@@ -38,7 +38,7 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-peerIdentity.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-removeTrack.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setDescription-transceiver.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-answer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-answer.html # Pass but fails in docker and random crash due to Escargot
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-offer.html # Pass but fails in docker
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-pranswer.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-rollback.html

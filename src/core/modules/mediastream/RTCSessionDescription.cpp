@@ -30,7 +30,7 @@
 namespace Starfish {
 
 RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
-                                                     String* sdp)
+                                                     std::string sdp)
 {
     if (type == webrtc::SdpType::kOffer) {
         m_type = RTCSdpType::Offer;
@@ -41,7 +41,7 @@ RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
     } else {
         m_type = RTCSdpType::Unknown;
     }
-    m_sdp = sdp;
+    m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
 }
 
 String* RTCSessionDescriptionInit::type()
