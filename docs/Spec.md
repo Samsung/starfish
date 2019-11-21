@@ -25,6 +25,7 @@ lightweight Web engine (LWE).
     - [Accessible Rich Internet Applications (WAI-ARIA)](#accessible-rich-internet-applications-wai-aria)
     - [Web Speech APIs](#web-speech-apis)
     - [WebRTC](#webrtc)
+    - [WebAudio](#webaudio)
 
 ## Encoding Scheme
 All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
@@ -1906,3 +1907,50 @@ The WebRTC support is in the early alpha stage.
 | | method | void addTrack(MediaStreamTrack track) | Adds the given MediaStreamTrack to this MediaStream. | |
 | [MediaStreamTrack](https://w3c.github.io/mediacapture-main/#mediastreamtrack) | interface | MediaStreamTrack | | |
 | | attribute | kind of type DOMString, readonly | The kind attribute MUST return the string "audio" if this object represents an audio track or "video" if this object represents a video track. | |
+
+## WebAudio
+The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
+The WebAudio support is in the early alpha stage.
+
+| Interface | Type | Name | Description | Note |
+|-----------|------|------|-------------|------|
+| [BaseAudioContext](https://webaudio.github.io/web-audio-api/#BaseAudioContext) | interface | BaseAudioContext | | |
+| | callback | DecodeErrorCallback = void (DOMException error); | | |
+| | callback | DecodeSuccessCallback = void (AudioBuffer decodedData); | | |
+| | attribute | readonly AudioDestinationNode destination | An AudioDestinationNode with a single input representing the final destination for all audio. | |
+| | attribute | readonly attribute AudioContextState state | Describes the current state of the AudioContext. | |
+| | attribute | attribute EventHandler onstatechange; | A property used to set the EventHandler for an event that is dispatched to BaseAudioContext when the state of the AudioContext has changed (i.e. when the corresponding promise would have resolved). | |
+| | method | AudioBufferSourceNode createBufferSource(); | Factory method for a AudioBufferSourceNode. | |
+| | method | Promise<AudioBuffer> decodeAudioData (ArrayBuffer audioData, optional DecodeSuccessCallback? successCallback, optional DecodeErrorCallback? errorCallback); | Asynchronously decodes the audio file data contained in the ArrayBuffer. | |
+| [AudioContext](https://webaudio.github.io/web-audio-api/#AudioContext) | interface | AudioContext | | |
+| | constructor | constructor (optional AudioContextOptions contextOptions = {}); | | |
+| | method | Promise<void> close (); | Closes the AudioContext, releasing the system resources being used. | |
+| [AudioBufferOptions](https://webaudio.github.io/web-audio-api/#dictdef-audiobufferoptions) | dictionary | AudioBufferOptions | | |
+| | attribute | long numberOfChannels = 1; | The number of channels for the buffer.  | |
+| | attribute | unsigned long length; | The length in sample frames of the buffer. | |
+| | attribute | float sampleRate; | The sample rate in Hz for the buffer. | |
+| [AudioBuffer](https://webaudio.github.io/web-audio-api/#AudioBuffer) | interface | AudioBuffer | | |
+| | constructor | constructor (AudioBufferOptions options); | | |
+| | attribute | readonly attribute float sampleRate; | The sample-rate for the PCM audio data in samples per second. | |
+| | attribute | readonly attribute unsigned long length; | Length of the PCM audio data in sample-frames.  | |
+| | attribute | readonly attribute double duration; | Duration of the PCM audio data in seconds. | |
+| | attribute | readonly attribute unsigned long numberOfChannels; | The number of discrete audio channels. | |
+| [ChannelCountMode](https://webaudio.github.io/web-audio-api/#enumdef-channelcountmode) | enum | ChannelCountMode | | |
+| | value | "max" | computedNumberOfChannels is the maximum of the number of channels of all connections to an input. | |
+| | value | "clamped-max" | computedNumberOfChannels is determined as for "max" and then clamped to a maximum value of the given channelCount. | |
+| | value | "explicit" | computedNumberOfChannels is the exact value as specified by the channelCount. | |
+| [ChannelInterpretation](https://webaudio.github.io/web-audio-api/#enumdef-channelinterpretation) | enum | ChannelInterpretation | | |
+| | value | "speakers" | use up-mix equations or down-mix equations. | |
+| | value | "discrete" | Up-mix by filling channels until they run out then zero out remaining channels. | |
+| [AudioNode](https://webaudio.github.io/web-audio-api/#audionode) | interface | AudioNode | | |
+| | attribute | readonly BaseAudioContext context;| The BaseAudioContext which owns this AudioNode. | |
+| | method | AudioNode connect (AudioNode destinationNode, optional unsigned long output = 0, optional unsigned long input = 0); | There can only be one connection between a given output of one specific node and a given input of another specific node. | |
+| [AudioScheduledSourceNode](https://webaudio.github.io/web-audio-api/#AudioScheduledSourceNode) | interface | AudioScheduledSourceNode | | |
+| | attribute | EventHandler onended; | A property used to set the EventHandler (described in HTML[HTML]) for the ended event that is dispatched for AudioScheduledSourceNode node types. | |
+| | method | void stop(optional double when = 0); | Schedules a sound to stop playback at an exact time. | Only when = 0 is supported at the moment. |
+| [AudioBufferSourceOptions](https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode) | dictionary | AudioBufferSourceOptions | | |
+| | attribute | AudioBuffer? buffer; | Represents the audio asset to be played. | |
+| [AudioBufferSourceNode](https://webaudio.github.io/web-audio-api/#AudioBufferSourceNode) | interface | AudioBufferSourceNode | | |
+| | constructor | constructor (BaseAudioContext context, optional AudioBufferSourceOptions options = {}); | | |
+| | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules a sound to playback at an exact time. | Only when = 0 is supported at the moment. |
+| [AudioDestinationNode](https://webaudio.github.io/web-audio-api/#AudioDestinationNode) | interface | AudioDestinationNode | | |
