@@ -34,7 +34,7 @@ enum class SdpType;
 namespace Starfish {
 class ExecutionContext;
 
-enum class RTCSdpType { Offer, Pranswer, Answer, Rollback, Unknown };
+enum class RTCSdpType { Offer, Pranswer, Answer, Rollback };
 
 struct RTCSessionDescriptionInit {
     friend class RTCSessionDescription;
@@ -51,16 +51,23 @@ public:
     {
     }
 
+    RTCSessionDescriptionInit(Nullable<RTCSdpType> type, String* sdp)
+        : m_type(type)
+        , m_sdp(sdp)
+    {
+    }
+
+    RTCSessionDescriptionInit(Nullable<webrtc::SdpType> type, std::string sdp);
     RTCSessionDescriptionInit(webrtc::SdpType type, std::string sdp);
 
     String* type();
     void setType(String* type);
     DEFINE_GETTER_SETTER(String*, sdp, Sdp);
 
-    webrtc::SdpType toSdpType();
+    Nullable<webrtc::SdpType> toSdpType();
 
 private:
-    RTCSdpType m_type{ RTCSdpType::Unknown };
+    Nullable<RTCSdpType> m_type;
     String* m_sdp{ String::emptyString };
 };
 
@@ -79,7 +86,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    RTCSdpType m_type{ RTCSdpType::Unknown };
+    Nullable<RTCSdpType> m_type;
     String* m_sdp{ String::emptyString };
 };
 } // namespace Starfish

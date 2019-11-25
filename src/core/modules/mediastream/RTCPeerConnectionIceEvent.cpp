@@ -35,19 +35,13 @@ RTCPeerConnectionIceEvent::RTCPeerConnectionIceEvent(
 }
 
 RTCPeerConnectionIceEvent::RTCPeerConnectionIceEvent(
-    ExecutionContext* executionContext, String* type)
-    : RTCPeerConnectionIceEvent(executionContext, type,
-                                RTCPeerConnectionIceEventInit())
-{
-}
-
-RTCPeerConnectionIceEvent::RTCPeerConnectionIceEvent(
     ExecutionContext* executionContext, String* type,
     RTCPeerConnectionIceEventInit init)
-    : Event(executionContext, type)
+    : Event(executionContext, type, { init.bubbles(), init.cancelable() })
     , m_executionContext(executionContext)
+    , m_candidate(init.m_candidate)
+    , m_url(init.m_url)
 {
-    m_candidate = init.m_candidate;
 }
 
 ScriptBindingInstance* RTCPeerConnectionIceEvent::scriptBindingInstance()

@@ -33,7 +33,7 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-iceConnectionState.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-iceGatheringState.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-ondatachannel.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-onnegotiationneeded.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-onnegotiationneeded.html # Pass 6/7: libwebrtc needs to be fixed.
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-ontrack.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-peerIdentity.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-removeTrack.https.html
@@ -43,15 +43,15 @@ http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-pranswer.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-rollback.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-answer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-answer.html # Pass but fails in docker and random crash due to Escargot
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-offer.html # Pass but fails in docker
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-pranswer.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-pranswer.html # Pass but fails in docker and random crash due to Escargot
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-replaceTrack.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-rollback.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-tracks.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-track-stats.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnectionIceEvent-constructor.html
+http://web-platform.test:8000/webrtc/RTCPeerConnectionIceEvent-constructor.html
 # http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
 # http://web-platform.test:8000/webrtc/RTCRtpParameters-degradationPreference.html
 # http://web-platform.test:8000/webrtc/RTCRtpParameters-encodings.html

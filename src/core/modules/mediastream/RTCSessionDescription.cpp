@@ -29,6 +29,22 @@
 
 namespace Starfish {
 
+RTCSessionDescriptionInit::RTCSessionDescriptionInit(
+    Nullable<webrtc::SdpType> type, std::string sdp)
+{
+    if (type.hasValue()) {
+        if (type.value() == webrtc::SdpType::kOffer) {
+            m_type = RTCSdpType::Offer;
+        } else if (type.value() == webrtc::SdpType::kPrAnswer) {
+            m_type = RTCSdpType::Pranswer;
+        } else if (type.value() == webrtc::SdpType::kAnswer) {
+            m_type = RTCSdpType::Answer;
+        }
+    }
+
+    m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
+}
+
 RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
                                                      std::string sdp)
 {
@@ -38,15 +54,17 @@ RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
         m_type = RTCSdpType::Pranswer;
     } else if (type == webrtc::SdpType::kAnswer) {
         m_type = RTCSdpType::Answer;
-    } else {
-        m_type = RTCSdpType::Unknown;
     }
     m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
 }
 
 String* RTCSessionDescriptionInit::type()
 {
-    switch (m_type) {
+    if (!m_type.hasValue()) {
+        return String::emptyString;
+    }
+
+    switch (m_type.value()) {
     case RTCSdpType::Offer:
         return String::createASCIIString("offer");
     case RTCSdpType::Pranswer:
@@ -73,19 +91,23 @@ void RTCSessionDescriptionInit::setType(String* type)
     }
 }
 
-webrtc::SdpType RTCSessionDescriptionInit::toSdpType()
+Nullable<webrtc::SdpType> RTCSessionDescriptionInit::toSdpType()
 {
-    switch (m_type) {
+    if (!m_type.hasValue()) {
+        return Nullable<webrtc::SdpType>();
+    }
+
+    switch (m_type.value()) {
     case RTCSdpType::Offer:
-        return webrtc::SdpType::kOffer;
+        return Nullable<webrtc::SdpType>(webrtc::SdpType::kOffer);
     case RTCSdpType::Pranswer:
-        return webrtc::SdpType::kPrAnswer;
+        return Nullable<webrtc::SdpType>(webrtc::SdpType::kPrAnswer);
     case RTCSdpType::Answer:
-        return webrtc::SdpType::kAnswer;
+        return Nullable<webrtc::SdpType>(webrtc::SdpType::kAnswer);
     case RTCSdpType::Rollback:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return Nullable<webrtc::SdpType>();
     default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return Nullable<webrtc::SdpType>();
     }
 }
 

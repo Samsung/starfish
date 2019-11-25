@@ -176,6 +176,32 @@ void PeerConnectionObserver::OnTrack(
             p);
 }
 
+// https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
+void PeerConnectionObserver::OnRenegotiationNeeded()
+{
+    if (!isMainThread()) {
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    PeerConnectionObserver* observer =
+                        (PeerConnectionObserver*)data;
+                    observer->OnRenegotiationNeeded();
+                },
+                this);
+        return;
+    }
+
+    String* eventType = m_peerConnection->executionContext()
+                            ->starfish()
+                            ->staticStrings()
+                            ->m_negotiationneeded.localName();
+    Event* e = new Event(m_peerConnection->executionContext(), eventType);
+    m_peerConnection->dispatchEventByUA(e);
+}
+
 void PeerConnectionObserver::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate)
 {
@@ -254,7 +280,8 @@ void CreateOfferAnswerObserver::OnSuccess(
                 webrtc::SessionDescriptionInterface* desc = p->desc.get();
 
                 RTCSdpType type =
-                    self->m_peerConnection->toRtcSdpType(desc->GetType());
+                    self->m_peerConnection->toRtcSdpType(desc->GetType())
+                        .value();
                 std::string sdpString;
                 desc->ToString(&sdpString);
 
@@ -649,7 +676,7 @@ Promise* RTCPeerConnection::setLocalDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setLocalDescriptionObserver->setPromise(promise);
 
-    webrtc::SdpType type = toSdpType(description.m_type);
+    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
     // 4.2
@@ -698,27 +725,51 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
 {
     WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
 
-    if ((description.m_type == RTCSdpType::Answer) ||
-        (description.m_type == RTCSdpType::Pranswer)) {
-        if (!((m_backend->signaling_state() ==
-               webrtc::PeerConnectionInterface::SignalingState::
-                   kHaveRemoteOffer) ||
-              (m_backend->signaling_state() ==
-               webrtc::PeerConnectionInterface::SignalingState::
-                   kHaveLocalPrAnswer))) {
-            auto exception = new DOMException(executionContext(),
-                                              DOMException::INVALID_STATE_ERR,
-                                              "InvalidStateError");
-            promise->reject(exception->scriptValue());
-            return promise;
+    // 3.1.2
+    if (isRemote) {
+        if ((description.m_type == RTCSdpType::Answer)) {
+            if (!((m_backend->signaling_state() ==
+                   webrtc::PeerConnectionInterface::SignalingState::
+                       kHaveLocalOffer) ||
+                  (m_backend->signaling_state() ==
+                   webrtc::PeerConnectionInterface::SignalingState::
+                       kHaveRemotePrAnswer))) {
+                auto exception = new DOMException(
+                    executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
+                promise->reject(exception->scriptValue());
+                return promise;
+            }
+        }
+    } else {
+        if ((description.m_type == RTCSdpType::Answer) ||
+            (description.m_type == RTCSdpType::Pranswer)) {
+            if (!((m_backend->signaling_state() ==
+                   webrtc::PeerConnectionInterface::SignalingState::
+                       kHaveRemoteOffer) ||
+                  (m_backend->signaling_state() ==
+                   webrtc::PeerConnectionInterface::SignalingState::
+                       kHaveLocalPrAnswer))) {
+                auto exception = new DOMException(
+                    executionContext(), DOMException::INVALID_STATE_ERR,
+                    "InvalidStateError");
+                promise->reject(exception->scriptValue());
+                return promise;
+            }
         }
     }
 
-    webrtc::SdpType type = toSdpType(description.m_type);
+    // 3.2.2 and 3.2.3
+    if (description.m_type == RTCSdpType::Answer) {
+        m_lastCreatedOffer = "";
+        m_lastCreatedAnswer = "";
+    }
+
+    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
     std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-        webrtc::CreateSessionDescription(type, sdpString);
+        webrtc::CreateSessionDescription(type.value(), sdpString);
 
     if (!desc) {
         STARFISH_LOG_WARN("%s: desc = nullptr\n", __func__);
@@ -747,8 +798,7 @@ RTCSessionDescription* RTCPeerConnection::localDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->local_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
@@ -759,8 +809,7 @@ RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->current_local_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
@@ -771,8 +820,7 @@ RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->pending_local_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
@@ -800,12 +848,12 @@ Promise* RTCPeerConnection::setRemoteDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setRemoteDescriptionObserver->setPromise(promise);
 
-    webrtc::SdpType type = toSdpType(description.m_type);
+    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
     // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
     // 3
-    if (description.m_type == RTCSdpType::Unknown) {
+    if (!description.m_type.hasValue()) {
         auto exception =
             new DOMException(executionContext(), DOMException::SCRIPT_TYPE_ERR,
                              "setRemoteDescription");
@@ -815,7 +863,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
     // 4
     if ((description.m_type == RTCSdpType::Offer) &&
-        !isValidRemoteState(description.m_type)) {
+        !isValidRemoteState(description.m_type.value())) {
         auto exception = new DOMException(executionContext(),
                                           DOMException::INVALID_STATE_ERR,
                                           "setRemoteDescription");
@@ -827,7 +875,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
     // 3.3
     webrtc::SdpParseError error;
     std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-        webrtc::CreateSessionDescription(type, sdpString, &error);
+        webrtc::CreateSessionDescription(type.value(), sdpString, &error);
 
     if (error.line == "Invalid SDP") {
         RTCErrorInit init;
@@ -849,8 +897,7 @@ RTCSessionDescription* RTCPeerConnection::remoteDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->remote_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
@@ -861,8 +908,7 @@ RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->current_remote_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
@@ -873,8 +919,7 @@ RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
         return nullptr;
     }
 
-    return new RTCSessionDescription(executionContext(),
-                                     m_backend->pending_remote_description());
+    return new RTCSessionDescription(executionContext(), desc);
 }
 
 Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
@@ -1309,13 +1354,14 @@ void RTCPeerConnection::deletePeerConnection()
     m_backend = nullptr;
 }
 
-RTCSdpType RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)
+Nullable<RTCSdpType> RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)
 {
     RTCSessionDescriptionInit init(type, std::string(""));
     return init.m_type;
 }
 
-webrtc::SdpType RTCPeerConnection::toSdpType(RTCSdpType type)
+Nullable<webrtc::SdpType> RTCPeerConnection::toSdpType(
+    Nullable<RTCSdpType> type)
 {
     RTCSessionDescriptionInit init(type, String::emptyString);
     return init.toSdpType();
