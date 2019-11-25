@@ -32,25 +32,29 @@ class RTCIceCandidate;
 
 struct RTCPeerConnectionIceEventInit : public EventInit {
     DEFINE_GETTER_SETTER(RTCIceCandidate*, candidate, Candidate)
+    DEFINE_GETTER_SETTER(Nullable<String*>, url, Url)
 
     RTCIceCandidate* m_candidate{ nullptr };
+    Nullable<String*> m_url;
 };
 
 class RTCPeerConnectionIceEvent : public Event {
 public:
     RTCPeerConnectionIceEvent(ExecutionContext* executionContext);
-    RTCPeerConnectionIceEvent(ExecutionContext* executionContext, String* type);
     RTCPeerConnectionIceEvent(ExecutionContext* executionContext, String* type,
-                              RTCPeerConnectionIceEventInit iceEventInit);
+                              RTCPeerConnectionIceEventInit iceEventInit =
+                                  RTCPeerConnectionIceEventInit());
     virtual ~RTCPeerConnectionIceEvent(){};
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCPeerConnectionIceEvent)
 
     DEFINE_GETTER(RTCIceCandidate*, candidate);
+    DEFINE_GETTER(Nullable<String*>, url);
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
     RTCIceCandidate* m_candidate{ nullptr };
+    Nullable<String*> m_url;
 };
 }
 #endif

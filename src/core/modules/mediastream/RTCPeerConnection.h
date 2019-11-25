@@ -172,7 +172,7 @@ public:
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override{};
     void OnDataChannel(
         rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override{};
-    void OnRenegotiationNeeded() override{};
+    void OnRenegotiationNeeded() override;
     void OnIceConnectionChange(
         webrtc::PeerConnectionInterface::IceConnectionState new_state)
         override{};
@@ -407,8 +407,8 @@ public:
 
     ScriptObject createSessionDescriptionInitObject(RTCSdpType type,
                                                     String* sdp);
-    RTCSdpType toRtcSdpType(webrtc::SdpType type);
-    webrtc::SdpType toSdpType(RTCSdpType type);
+    Nullable<RTCSdpType> toRtcSdpType(webrtc::SdpType type);
+    Nullable<webrtc::SdpType> toSdpType(Nullable<RTCSdpType> type);
     DOMException* toDomException(webrtc::RTCError error);
 
 private:
