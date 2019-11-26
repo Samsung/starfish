@@ -24,6 +24,10 @@
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/CompressedNativeImageData.h"
+#include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
+#include "core/modules/canvas/image/SVGNativeImageData.h"
+
 #include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
@@ -40,9 +44,9 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
     NativeImageData* id = node()->asHTMLImageElement()->imageData();
 
     if (id) {
-        if (id->hasCompressedData()) {
+        if (id->isCompressedNativeImageData() && id->asCompressedNativeImageData()->hasCompressedData()) {
             node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
-                id->compressedImageURL());
+                id->asCompressedNativeImageData()->compressedImageURL());
         }
     } else if (node()->asHTMLImageElement()->imageResource()) {
         node()->webView()->putURLIntoActiveImageURLsInRenderingSet(

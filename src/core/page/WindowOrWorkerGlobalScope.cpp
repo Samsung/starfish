@@ -28,6 +28,7 @@
 #include "core/dom/DOMExceptionOr.h"
 #include "core/page/WebBase.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/CanvasImageSource.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -215,7 +216,7 @@ namespace WindowOrWorkerGlobalScope {
             return nullptr;
         }
 
-        result = NativeImageData::create(
+        result = CompressedNativeImageData::create(
             internalBuffer, UTF8StringDataNonGCStd(), decodeResult.m_buffer,
             decodeResult.m_width, decodeResult.m_height, decodeResult.m_stride);
         return result;
@@ -229,9 +230,9 @@ namespace WindowOrWorkerGlobalScope {
         ResponseBody internalBuffer;
         internalBuffer.insert(internalBuffer.begin(), buffer,
                               buffer + buffer_size);
-        result =
-            NativeImageData::create(internalBuffer, UTF8StringDataNonGCStd(),
-                                    (uint8_t*)buffer, width, height, stride);
+        result = CompressedNativeImageData::create(
+            internalBuffer, UTF8StringDataNonGCStd(), (uint8_t*)buffer, width,
+            height, stride);
         return result;
     }
 

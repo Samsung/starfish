@@ -34,6 +34,8 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/modules/canvas/image/CompressedNativeImageData.h"
+#include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/file/File.h"
@@ -208,7 +210,7 @@ void ImageResource::didLoadFinished()
                                     if (d->decodeResult.m_isSuccessful) {
                                         if (d->decodeResult.m_isAnimatedGIF) {
                                             d->imageResource->m_imageData =
-                                                NativeImageData::create(
+                                                AnimatedGIFNativeImageData::create(
                                                     buffer,
                                                     std::move(
                                                         d->imageResource->url()
@@ -219,7 +221,7 @@ void ImageResource::didLoadFinished()
                                                     d->decodeResult.m_stride);
                                         } else {
                                             d->imageResource->m_imageData =
-                                                NativeImageData::create(
+                                                CompressedNativeImageData::create(
                                                     buffer,
                                                     std::move(
                                                         d->imageResource->url()
@@ -251,12 +253,12 @@ void ImageResource::didLoadFinished()
         if (ImageDecoder::isAnimatedGIF(m_resourceRequest->response())) {
             ImageDecoder id(m_resourceRequest->response());
             auto result = id.decodeJustImageSize();
-            m_imageData = NativeImageData::create(
+            m_imageData = AnimatedGIFNativeImageData::create(
                 m_resourceRequest->response(),
                 url()->urlString()->toUTF8NonGCString(), result.m_width,
                 result.m_height, result.m_stride);
         } else {
-            m_imageData = NativeImageData::create(
+            m_imageData = CompressedNativeImageData::create(
                 m_resourceRequest->response(),
                 url()->urlString()->toUTF8NonGCString());
         }

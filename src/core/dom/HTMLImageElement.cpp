@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
+#include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/csp/ContentSecurityPolicy.h"
@@ -89,7 +90,7 @@ public:
         }
 
         m_element->m_imageData = imageData;
-        if (imageData->hasAnimatedGIF()) {
+        if (imageData->isAnimatedGIFNativeImageData()) {
             m_element->updateFrame(0);
         } else {
             if (m_element->frame()) {
@@ -415,8 +416,11 @@ void HTMLImageElement::updateFrame(size_t delay)
                 if (imageElement->frame()) {
                     imageElement->setNeedsPainting();
                 }
-                if (imageElement->m_imageData->prepareNextFrame()) {
-                    size_t delay = imageElement->m_imageData->delay();
+                if (imageElement->m_imageData->asAnimatedGIFNativeImageData()
+                        ->prepareNextFrame()) {
+                    size_t delay = imageElement->m_imageData
+                                       ->asAnimatedGIFNativeImageData()
+                                       ->delay();
                     imageElement->updateFrame(delay);
                 }
             }
