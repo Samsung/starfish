@@ -24,6 +24,9 @@ namespace Starfish {
 
 class CanvasShadowData;
 class Canvas;
+class AnimatedGIFNativeImageData;
+class CompressedNativeImageData;
+class SVGNativeImageData;
 
 class NativeImageData : public gc {
     friend class ResourceLoader;
@@ -45,15 +48,6 @@ public:
     static int nativeImageDataGCKind();
     static std::vector<NativeImageData*>& everyNativeImageInstances();
 
-    static NativeImageData* create(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL);
-    static NativeImageData* create(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL,
-                                   uint8_t* decodedImageBuffer, size_t width,
-                                   size_t height, size_t stride);
-    static NativeImageData* create(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL, size_t width,
-                                   size_t height, size_t stride);
     static NativeImageData* create(size_t actualDeviceWidth,
                                    size_t actualDeviceHeight);
     static NativeImageData* create(float devicePixelRatio, size_t width,
@@ -62,41 +56,63 @@ public:
                                                    // width, height
     static NativeImageData* attach(Canvas* canvas);
 
-    virtual size_t bufferSize() = 0;
-    virtual uint8_t* data() = 0;
-    virtual void clear() = 0;
-    virtual void* unwrap() = 0;
-    virtual size_t width() = 0;
-    virtual size_t height() = 0;
-    virtual size_t stride() = 0;
-
-    virtual bool prepareNextFrame()
+    virtual bool isAnimatedGIFNativeImageData() const
     {
         return false;
     }
 
-    virtual bool hasAnimatedGIF()
+    virtual bool isCompressedNativeImageData() const
     {
         return false;
     }
 
-    virtual size_t delay()
+    virtual bool isSVGNativeImageData() const
     {
+        return false;
+    }
+
+    AnimatedGIFNativeImageData* asAnimatedGIFNativeImageData()
+    {
+        STARFISH_ASSERT(isAnimatedGIFNativeImageData());
+        return (AnimatedGIFNativeImageData*)this;
+    }
+
+    CompressedNativeImageData* asCompressedNativeImageData()
+    {
+        STARFISH_ASSERT(isCompressedNativeImageData());
+        return (CompressedNativeImageData*)this;
+    }
+
+    SVGNativeImageData* asSVGNativeImageData()
+    {
+        STARFISH_ASSERT(isSVGNativeImageData());
+        return (SVGNativeImageData*)this;
+    }
+
+    virtual size_t bufferSize()
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return 0;
     }
-
-    virtual bool hasCompressedData()
+    virtual uint8_t* data()
     {
-        return false;
-    }
-    virtual bool isDecompressed()
-    {
-        return true;
-    }
-    virtual const std::string& compressedImageURL()
-    {
-        STARFISH_ASSERT(hasCompressedData());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return nullptr;
+    }
+
+    virtual void* unwrap()
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return nullptr;
+    }
+
+    virtual void clear() = 0;
+    virtual size_t width() = 0;
+    virtual size_t height() = 0;
+    virtual size_t stride()
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return 0;
     }
 
     virtual void pruneInternalDataIfPossible()
