@@ -403,6 +403,8 @@ void WebView::enterIdleMode()
                     }
                 }
             }
+        } else {
+            m_needsFullPainting = true;
         }
 
         platformWindow()->onClearDrawnBuffers();
@@ -1138,7 +1140,8 @@ static void saveCurrentPaintingState(StackingContext* ctx)
             info.graphicsLayerOwner = owner->owner()->node();
         }
         info.extentOnGraphicsLayer = computeBoxExtent(
-            ctx->visibleRect(), ctx->owner()->computeMatrixOnGraphicsBuffer());
+            LayoutRect(0, 0, ctx->owner()->width(), ctx->owner()->height()),
+            ctx->owner()->computeMatrixOnGraphicsBuffer());
     }
 
     ctx->owner()->node()->webView()->prevDrawnStackingContextInfo().insert(
@@ -1278,12 +1281,19 @@ RenderResult WebView::rendering(bool force)
                 std::move(m_prevDrawnStackingContextInfo);
             auto oldRepaintRegionTrackerContext =
                 std::move(m_repaintRegionTrackerContext);
-            RepaintRegionTracker tracker(
-                oldRepaintRegionTrackerContext, m_repaintRegionTrackerContext,
-                mainBrowsingContext()->document()->frame()->asFrameBlockBox(),
-                needsFullPainting, prevDrawnStackingContextInfo, scrollX,
-                scrollY, m_needsComposite);
-            m_repaintRegionInRendering = std::move(tracker.repaintRegion());
+            {
+                INSTALL_PROFILE_TIMER("track repaint region");
+                RepaintRegionTracker tracker(
+                    oldRepaintRegionTrackerContext,
+                    m_repaintRegionTrackerContext, mainBrowsingContext()
+                                                       ->document()
+                                                       ->frame()
+                                                       ->asFrameBlockBox(),
+                    needsFullPainting, prevDrawnStackingContextInfo, scrollX,
+                    scrollY, m_needsComposite);
+                m_repaintRegionInRendering = std::move(tracker.repaintRegion());
+            }
+
             auto repaintRect = m_repaintRegionInRendering[nullptr];
             cleanupLayoutRepaintTracker(mainBrowsingContext());
 
@@ -1334,6 +1344,8 @@ RenderResult WebView::rendering(bool force)
                     iter++;
                 }
             } else {
+                INSTALL_PROFILE_TIMER(
+                    "remove definitely useless graphics buffer first");
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();
                 while (iter != prevDrawnStackingContextInfo.end()) {
@@ -1362,6 +1374,7 @@ RenderResult WebView::rendering(bool force)
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
                 m_repaintRegionInRendering, scrollX, scrollY);
             if (!m_needsComposite) {
+                INSTALL_PROFILE_TIMER("painting job");
                 canvas = platformWindow()->preparePainting();
                 canvas->save();
                 renderResult.updateRect = canvas->pixelSnappedClip(repaintRect);
@@ -1388,6 +1401,7 @@ RenderResult WebView::rendering(bool force)
                 canvas->restore();
                 m_didCompositeBefore = false;
             } else {
+                INSTALL_PROFILE_TIMER("painting job(composite)");
                 platformWindow()->willCompositing();
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
@@ -1415,6 +1429,7 @@ RenderResult WebView::rendering(bool force)
                 }
                 iter++;
             }
+
             if (m_rootStackingContext) {
                 saveCurrentPaintingState(m_rootStackingContext);
             }

@@ -40,21 +40,16 @@
  */
 
 #include "StarfishConfig.h"
-#include <curl/curl.h>
 
 #include "Starfish.h"
 #include "Profiling.h"
 
-#if defined(STARFISH_ANDROID)
 #include <sys/time.h>
-#else
-#include <sys/timeb.h>
-#endif
 
 #if defined(OS_WINDOWS)
 // https : // gist.github.com/ugovaretto/5875385
-#include < time.h >
-#include < windows.h >
+#include <time.h>
+#include <windows.h>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
@@ -98,7 +93,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
     return 0;
 }
-
 #endif
 
 namespace Starfish {

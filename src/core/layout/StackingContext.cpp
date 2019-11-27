@@ -473,9 +473,9 @@ public:
             }
         }
 
-        std::vector<FrameBox*> frameList;
+        VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
+            frameList;
 
-        frameList.reserve(32);
         m_canApplyOverflowOrScrolls.reserve(32);
 
         Frame* nearstBufferedFrame = nullptr;
@@ -709,9 +709,9 @@ public:
         }
 
         FrameBox* self = sCtx->owner();
-        std::vector<FrameBox*> frameList;
+        VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
+            frameList;
 
-        frameList.reserve(32);
         m_canApplyOverflowOrScrolls.reserve(32);
 
         {
@@ -1662,6 +1662,10 @@ void StackingContext::fillGraphicsBufferContents(
     bool canRejectPainting =
         canvas->canRejectPainting(StackingContext::visibleRect());
 
+    if (!canRejectPainting) {
+        m_owner->paintBackgroundAndBorders(canvas);
+    }
+
     bool needsComputeScroll = !isRootContext() && !isIFrameStackingContext() &&
                               m_owner->isFrameBlockBox();
     if (needsComputeScroll) {
@@ -1670,10 +1674,6 @@ void StackingContext::fillGraphicsBufferContents(
                           -m_owner->asFrameBlockBox()->scrollTop());
         ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
         ctx.layerScrollY = m_owner->asFrameBlockBox()->scrollTop();
-    }
-
-    if (!canRejectPainting) {
-        m_owner->paintBackgroundAndBorders(canvas);
     }
 
     // Within each stacking context, the following layers are painted in
@@ -2153,7 +2153,7 @@ bool StackingContext::fillGraphicsBufferContents(
     }
 
     if (bufferWidth == 0 || bufferHeight == 0) {
-        return drawnSomething;
+        return false;
     }
 
     LayoutRect deviceLayerClipRect;
@@ -2209,7 +2209,7 @@ bool StackingContext::fillGraphicsBufferContents(
         if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
             iter->second.graphicsBufferHolder = nullptr;
         }
-        return drawnSomething;
+        return false;
     }
 
     size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
@@ -3006,6 +3006,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                     x = oldX;
                     y = oldY;
                     if (result) {
+                        // TODO test overflow between sCtx and this
                         return result;
                     }
 

@@ -4026,8 +4026,7 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     FrameBox* turnOffScrollUntilMeet = nullptr;
     FrameBox* graphicsLayerHolder = nullptr;
 
-    std::vector<FrameBox*> frameList;
-    frameList.reserve(32);
+    VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>> frameList;
 
     Frame* f = self;
 

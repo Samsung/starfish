@@ -455,7 +455,8 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
         return;
     }
 
-    auto iter = frame->childFrameBoxiterator();
+    auto iter = frame->childFrameBoxIterator(
+        alloca(FrameBox::maxChildFrameBoxIteratorSize));
     while (iter->hasNext()) {
         auto box = iter->next();
         SkMatrix childMatrix = currentMatrix;

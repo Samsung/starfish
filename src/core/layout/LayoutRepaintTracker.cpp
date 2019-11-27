@@ -23,8 +23,9 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
-#include "FrameDocument.h"
 #include "core/dom/Element.h"
+#include "core/layout/StackingContext.h"
+#include "core/layout/FrameDocument.h"
 
 namespace Starfish {
 
@@ -142,53 +143,99 @@ static void traceRepaintRegionJob(
 
         rootedNodeSet.insert(node);
         rootedNodeSet.insert(lastStackingContextOwner->node());
-        // check last result
-        auto iter = oldResultMap.find(node);
-        LayoutRect newLayoutResultRect =
-            currentFrameBox->absoluteRectIncludingScroll(
-                lastStackingContextOwner);
 
-        bool gotNewNode = iter == oldResultMap.end();
-        bool frameRectChanged =
-            !gotNewNode && (iter->second.first != newLayoutResultRect);
-        if (gotNewNode || frameRectChanged) {
-            // got new node || frameRectChanged -> dirty
-            gotPaintingDirty = true;
-            LayoutRect rt = newLayoutResultRect;
-            if (iter != oldResultMap.end()) {
-                rt.unite(iter->second.first);
-            }
+        // if frame box establish StackingContext, this box cared by
+        // RepaintTracker
+        bool needToEstablishStackingContext =
+            currentFrame->needToEstablishStackingContext();
+        if (needToEstablishStackingContext) {
+            // check last result
+            auto iter = oldResultMap.find(node);
+            LayoutRect newLayoutResultRect =
+                currentFrameBox->absoluteRectIncludingScroll(
+                    lastStackingContextOwner);
 
-            if (frameRectChanged) {
+            bool gotNewNode = iter == oldResultMap.end();
+            bool frameRectChanged =
+                !gotNewNode && (iter->second.first != newLayoutResultRect);
+            if (gotNewNode || frameRectChanged) {
+                // got new node || frameRectChanged -> dirty
+                gotPaintingDirty = true;
+                LayoutRect rt = newLayoutResultRect;
+                if (iter != oldResultMap.end()) {
+                    rt.unite(iter->second.first);
+                }
+
+                if (frameRectChanged) {
+                    iter->second.first.setX(LayoutUnit::min());
+                    iter->second.first.setY(LayoutUnit::min());
+                }
+
+                if (!lastStackingContextOwner->stackingContext() ||
+                    !lastStackingContextOwner->stackingContext()
+                         ->needsGraphicsBufferReason() ||
+                    !currentFrame->asFrameBox()->stackingContext() ||
+                    !currentFrame->asFrameBox()
+                         ->stackingContext()
+                         ->needsGraphicsBufferReason()) {
+                    node->setNeedsPainting();
+                }
+            } else {
+                // finded & result are same
                 iter->second.first.setX(LayoutUnit::min());
                 iter->second.first.setY(LayoutUnit::min());
             }
 
-            LayoutRepaintTracker::ComputeOverflow::reduceRect(
-                tracker, rt, lastStackingContextOwner);
+            newLayoutResultMap.insert(std::make_pair(
+                node, std::make_pair(newLayoutResultRect,
+                                     lastStackingContextOwner->node())));
 
-            Node* stackingContextOwner = lastStackingContextOwner->node();
-            auto iter2 =
-                dirtyAreaMapPerStackingContext.find(stackingContextOwner);
-            if (iter2 == dirtyAreaMapPerStackingContext.end()) {
-                dirtyAreaMapPerStackingContext.insert(
-                    std::make_pair(stackingContextOwner, rt));
-            } else {
-                iter2->second.unite(rt);
-            }
-        } else {
-            // finded & result are same
-            iter->second.first.setX(LayoutUnit::min());
-            iter->second.first.setY(LayoutUnit::min());
-        }
-
-        if (currentFrame->needToEstablishStackingContext()) {
             lastStackingContextOwner = currentFrameBox;
-        }
+        } else {
+            // check last result
+            auto iter = oldResultMap.find(node);
+            LayoutRect newLayoutResultRect =
+                currentFrameBox->absoluteRectIncludingScroll(
+                    lastStackingContextOwner);
 
-        newLayoutResultMap.insert(std::make_pair(
-            node, std::make_pair(newLayoutResultRect,
-                                 lastStackingContextOwner->node())));
+            bool gotNewNode = iter == oldResultMap.end();
+            bool frameRectChanged =
+                !gotNewNode && (iter->second.first != newLayoutResultRect);
+            if (gotNewNode || frameRectChanged) {
+                // got new node || frameRectChanged -> dirty
+                gotPaintingDirty = true;
+                LayoutRect rt = newLayoutResultRect;
+                if (iter != oldResultMap.end()) {
+                    rt.unite(iter->second.first);
+                }
+
+                if (frameRectChanged) {
+                    iter->second.first.setX(LayoutUnit::min());
+                    iter->second.first.setY(LayoutUnit::min());
+                }
+
+                LayoutRepaintTracker::ComputeOverflow::reduceRect(
+                    tracker, rt, lastStackingContextOwner);
+
+                Node* stackingContextOwner = lastStackingContextOwner->node();
+                auto iter2 =
+                    dirtyAreaMapPerStackingContext.find(stackingContextOwner);
+                if (iter2 == dirtyAreaMapPerStackingContext.end()) {
+                    dirtyAreaMapPerStackingContext.insert(
+                        std::make_pair(stackingContextOwner, rt));
+                } else {
+                    iter2->second.unite(rt);
+                }
+            } else {
+                // finded & result are same
+                iter->second.first.setX(LayoutUnit::min());
+                iter->second.first.setY(LayoutUnit::min());
+            }
+
+            newLayoutResultMap.insert(std::make_pair(
+                node, std::make_pair(newLayoutResultRect,
+                                     lastStackingContextOwner->node())));
+        }
     }
 
     // collect inline layout result(not on frame tree)
