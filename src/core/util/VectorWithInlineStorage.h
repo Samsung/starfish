@@ -29,6 +29,11 @@ template <unsigned int InlineStorageSize, typename T,
           typename ExternalStoreageAllocator>
 class VectorWithInlineStorage : public gc {
 public:
+    typedef T* iterator;
+    typedef const T* const_iterator;
+    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef std::reverse_iterator<iterator> reverse_iterator;
+
     VectorWithInlineStorage()
     {
         m_size = 0;
@@ -128,6 +133,41 @@ public:
     {
         m_size = 0;
         m_externalStorage.clear();
+    }
+
+    iterator begin()
+    {
+        return iterator(data());
+    }
+
+    const_iterator cbegin()
+    {
+        return const_iterator(data());
+    }
+
+    T& front()
+    {
+        return *begin();
+    }
+
+    iterator end()
+    {
+        return iterator(data() + m_size);
+    }
+
+    const_iterator cend()
+    {
+        return const_iterator(data() + m_size);
+    }
+
+    reverse_iterator rbegin()
+    {
+        return reverse_iterator(end());
+    }
+
+    reverse_iterator rend()
+    {
+        return reverse_iterator(begin());
     }
 
 protected:

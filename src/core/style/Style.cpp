@@ -6489,10 +6489,14 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                         ret->m_seenPseudoElementFirstLetter = true;
                     } else if (result.pseudoType ==
                                PseudoElementType::PseudoElementBefore) {
-                        ret->m_seenPseudoElementBefore = true;
+                        ret->m_seenPseudoElementBefore |=
+                            rule->styleDeclaration()->hasCSSValuePair(
+                                CSSStyleValuePair::KeyKind::Content);
                     } else if (result.pseudoType ==
                                PseudoElementType::PseudoElementAfter) {
-                        ret->m_seenPseudoElementAfter = true;
+                        ret->m_seenPseudoElementAfter |=
+                            rule->styleDeclaration()->hasCSSValuePair(
+                                CSSStyleValuePair::KeyKind::Content);
                     }
                 }
             } else if (pseudoElementType ==

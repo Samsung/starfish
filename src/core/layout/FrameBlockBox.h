@@ -196,11 +196,9 @@ public:
     }
     void* operator new[](size_t size) = delete;
 
-    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
-        override
+    virtual ChildFrameBoxIterator* childFrameBoxIterator(void* mem) override
     {
-        return std::unique_ptr<ChildFrameBoxIterator>(
-            new ChildFrameBoxIteratorNull());
+        return new (mem) ChildFrameBoxIteratorNull;
     }
 
     // this value used for layout result chaning
@@ -388,11 +386,14 @@ public:
         size_t pos;
     };
 
-    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
-        override
+    STARFISH_COMPILE_ASSERT(
+        sizeof(ChildFrameBoxIteratorInlineBoxLayoutParentBox) <
+            maxChildFrameBoxIteratorSize,
+        "");
+
+    virtual ChildFrameBoxIterator* childFrameBoxIterator(void* mem) override
     {
-        return std::unique_ptr<ChildFrameBoxIterator>(
-            new ChildFrameBoxIteratorInlineBoxLayoutParentBox(this));
+        return new ChildFrameBoxIteratorInlineBoxLayoutParentBox(this);
     }
 
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
@@ -878,14 +879,16 @@ public:
         size_t pos;
     };
 
-    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
-        override
+    STARFISH_COMPILE_ASSERT(sizeof(ChildFrameBoxIteratorFrameBoxInlineFlow) <
+                                maxChildFrameBoxIteratorSize,
+                            "");
+
+    virtual ChildFrameBoxIterator* childFrameBoxIterator(void* mem) override
     {
         if (hasBlockFlow()) {
-            return FrameBox::childFrameBoxiterator();
+            return FrameBox::childFrameBoxIterator(mem);
         } else {
-            return std::unique_ptr<ChildFrameBoxIterator>(
-                new ChildFrameBoxIteratorFrameBoxInlineFlow(this));
+            return new (mem) ChildFrameBoxIteratorFrameBoxInlineFlow(this);
         }
     }
 

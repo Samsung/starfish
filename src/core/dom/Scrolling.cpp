@@ -443,16 +443,25 @@ void Scrolling::giveDamageToTarget(bool inScrollbarDisappearing)
             }
         }
     } else {
-        if (inScrollbarDisappearing) {
-            m_target->asElement()->setNeedsPainting();
-        } else {
-            // just set needs layout flag solo
-            // this will trigger only layout painting dirty check
-            m_target->asElement()
-                ->document()
-                ->browsingContext()
-                ->setNeedsLayout();
+        m_target->asElement()
+            ->webView()
+            ->setNeedsComputeStackingContextProperties();
+
+        if (m_target->asElement()->frame() &&
+            m_target->asElement()->frame()->isFrameBox() &&
+            m_target->asElement()->frame()->asFrameBox()->stackingContext()) {
+            FrameBox* box = m_target->asElement()->frame()->asFrameBox();
+            StackingContext* sc = box->stackingContext();
+
+            if (sc->needsGraphicsBufferReason() &&
+                sc->visibleRect().isEmpty()) {
+                m_target->asElement()
+                    ->webView()
+                    ->markNeedsCompositeConsiderInRendering();
+                return;
+            }
         }
+        m_target->asElement()->setNeedsPainting();
     }
 }
 

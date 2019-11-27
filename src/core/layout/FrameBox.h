@@ -818,6 +818,7 @@ public:
     SkMatrix computeMatrixOnWindow();
     SkMatrix computeMatrixOnGraphicsBufferOnGraphicsBuffer();
 
+    static unsigned constexpr maxChildFrameBoxIteratorSize = sizeof(size_t) * 5;
     class ChildFrameBoxIterator {
     public:
         virtual ~ChildFrameBoxIterator()
@@ -854,6 +855,9 @@ public:
 
         FrameBox* pos;
     };
+    STARFISH_COMPILE_ASSERT(sizeof(ChildFrameBoxIteratorBase) <
+                                maxChildFrameBoxIteratorSize,
+                            "");
 
     class ChildFrameBoxIteratorNull : public ChildFrameBoxIterator {
     public:
@@ -871,24 +875,25 @@ public:
             return false;
         }
     };
+    STARFISH_COMPILE_ASSERT(sizeof(ChildFrameBoxIteratorBase) <
+                                maxChildFrameBoxIteratorSize,
+                            "");
 
     // This iterator not using GC alloctor
     // use return value only temporary
-    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
+    virtual ChildFrameBoxIterator* childFrameBoxIterator(void* mem)
     {
         auto fs = firstChild();
         if (fs) {
-            return std::unique_ptr<ChildFrameBoxIterator>(
-                new ChildFrameBoxIteratorBase(fs->asFrameBox()));
+            return new (mem) ChildFrameBoxIteratorBase(fs->asFrameBox());
         }
-        return std::unique_ptr<ChildFrameBoxIterator>(
-            new ChildFrameBoxIteratorNull());
+        return new (mem) ChildFrameBoxIteratorNull();
     }
 
     void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
-        auto iter = childFrameBoxiterator();
+        auto iter = childFrameBoxIterator(alloca(maxChildFrameBoxIteratorSize));
         while (iter->hasNext()) {
             auto box = iter->next();
             box->iterateChildFrameBox(fn);
