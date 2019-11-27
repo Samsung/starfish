@@ -22,7 +22,7 @@
 
 #include <SkMatrix44.h>
 #include "core/dom/DOMMatrixReadOnly.h"
-#include "binding/DOMStringOrSequenceUnion.h"
+#include "binding/DOMStringOrSequenceOfdoubleUnion.h"
 
 namespace Starfish {
 class DOMMatrix : public DOMMatrixReadOnly {
@@ -40,7 +40,8 @@ public:
     static DOMMatrix* fromMatrix(ExecutionContext* executionContext);
 
     DOMMatrix(ExecutionContext* executionContext);
-    DOMMatrix(ExecutionContext* executionContext, DOMStringOrSequence value);
+    DOMMatrix(ExecutionContext* executionContext,
+              DOMStringOrSequenceOfdouble value);
     DOMMatrix(ExecutionContext* executionContext, SkMatrix44 matrix, bool is2D);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMMatrix)

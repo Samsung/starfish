@@ -170,7 +170,7 @@ DOMMatrix::DOMMatrix(ExecutionContext* executionContext)
 }
 
 DOMMatrix::DOMMatrix(ExecutionContext* executionContext,
-                     DOMStringOrSequence value)
+                     DOMStringOrSequenceOfdouble value)
     : DOMMatrixReadOnly(executionContext, value)
 {
     STARFISH_ASSERT(executionContext != nullptr);

@@ -270,7 +270,7 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext)
 }
 
 DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
-                                     DOMStringOrSequence value)
+                                     DOMStringOrSequenceOfdouble value)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_matrix(SkMatrix44::I())
@@ -324,8 +324,8 @@ DOMMatrixReadOnly::DOMMatrixReadOnly(ExecutionContext* executionContext,
                                    "Failed to parse a string into an matrix");
         }
 
-    } else if (value.isSequenceValue()) {
-        GCAtomicVector<double> param = value.getSequenceValue();
+    } else if (value.isSequenceOfdoubleValue()) {
+        GCAtomicVector<double> param = value.getSequenceOfdoubleValue();
         if (param.size() == 6) {
             set2DMatrix(param[0], param[1], param[2], param[3], param[4],
                         param[5]);
