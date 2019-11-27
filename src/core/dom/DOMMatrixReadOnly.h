@@ -23,7 +23,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/page/Serializer.h"
 #include <SkMatrix44.h>
-#include "binding/DOMStringOrSequenceUnion.h"
+#include "binding/DOMStringOrSequenceOfdoubleUnion.h"
 #include "core/dom/DOMMatrix2DInit.h"
 #include "core/dom/DOMMatrixInit.h"
 #include "DOMExceptionOr.h"
@@ -50,7 +50,7 @@ public:
 
     DOMMatrixReadOnly(ExecutionContext* executionContext);
     DOMMatrixReadOnly(ExecutionContext* executionContext,
-                      DOMStringOrSequence value);
+                      DOMStringOrSequenceOfdouble value);
     DOMMatrixReadOnly(ExecutionContext* executionContext, SkMatrix44 matrix,
                       bool is2D);
 
