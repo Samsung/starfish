@@ -32,8 +32,6 @@ class SVGNativeImageData;
 class DrawImageInfo;
 
 class NativeImageData : public gc {
-    friend class ResourceLoader;
-
 public:
     enum PreserveAspectRatioValue ENSURE_ENUM_UNSIGNED {
         None,
@@ -47,16 +45,6 @@ public:
         xMidYMax,
         xMaxYMax,
     };
-
-    static int nativeImageDataGCKind();
-    static std::vector<NativeImageData*>& everyNativeImageInstances();
-
-    static NativeImageData* create(size_t actualDeviceWidth,
-                                   size_t actualDeviceHeight);
-    static NativeImageData* create(float devicePixelRatio, size_t width,
-                                   size_t height); // this function will apply
-                                                   // device-pixel-ratio to
-                                                   // width, height
     static NativeImageData* attach(Canvas* canvas);
 
     virtual bool isAnimatedGIFNativeImageData() const
@@ -122,13 +110,11 @@ public:
     virtual void pruneInternalDataIfPossible()
     {
     }
+
     virtual void disposeNativeImageData()
     {
-#if !defined(OS_WINDOWS)
-        auto& r = everyNativeImageInstances();
-        r.erase(std::find(r.begin(), r.end(), this));
-#endif
     }
+
     virtual ~NativeImageData()
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
@@ -180,20 +166,8 @@ public:
 protected:
     NativeImageData()
     {
-        m_isSeenByGC = false;
         m_preserveAspectRatioValue = None;
-#if !defined(OS_WINDOWS)
-        everyNativeImageInstances().push_back(this);
-#endif
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           NativeImageData* self =
-                                               (NativeImageData*)obj;
-                                           self->disposeNativeImageData();
-                                       },
-                                       NULL, NULL, NULL);
     }
-    bool m_isSeenByGC : 1;
     PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
 };
 } // namespace Starfish

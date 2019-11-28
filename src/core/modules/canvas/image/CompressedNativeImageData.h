@@ -20,11 +20,11 @@
 #ifndef __CompressedNativeImageData__
 #define __CompressedNativeImageData__
 
-#include "NativeImageData.h"
+#include "BufferedNativeImageData.h"
 
 namespace Starfish {
 
-class CompressedNativeImageData : public NativeImageData {
+class CompressedNativeImageData : public BufferedNativeImageData {
 public:
     static NativeImageData* create(const std::vector<char>& compressedImageData,
                                    std::string&& imageURL);

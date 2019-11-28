@@ -41,6 +41,7 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/ShadowBlur.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 namespace Starfish {
 
@@ -1491,9 +1492,9 @@ public:
                 bufferHeight = renderTarget.m_height;
             }
 
-            m_nativeImageToApplyFilter =
-                NativeImageData::create(bufferWidth + ceil(m_maxRadiusOffset),
-                                        bufferHeight + ceil(m_maxRadiusOffset));
+            m_nativeImageToApplyFilter = BufferedNativeImageData::create(
+                bufferWidth + ceil(m_maxRadiusOffset),
+                bufferHeight + ceil(m_maxRadiusOffset));
 
             m_canvasToApplyFilter = Canvas::create(
                 m_ownerStackingContext->owner()->node()->webView(),

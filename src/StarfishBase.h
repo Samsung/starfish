@@ -694,6 +694,28 @@ inline bool operator!=(const T*& a, const Nullable<T*>& b)
     return b != a;
 }
 
+class StorePositiveIntergerAsOdd {
+public:
+    StorePositiveIntergerAsOdd()
+        : StorePositiveIntergerAsOdd(0)
+    {
+    }
+
+    StorePositiveIntergerAsOdd(const size_t& src)
+    {
+        STARFISH_ASSERT(src < std::numeric_limits<size_t>::max() / 2);
+        m_data = (src << 1) | 0x1;
+    }
+
+    operator size_t() const
+    {
+        return m_data >> 1;
+    }
+
+private:
+    size_t m_data;
+};
+
 #include "core/util/Vector.h"
 
 // typedef of GC-aware vector

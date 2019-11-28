@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/Canvas.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -32,8 +32,9 @@ class NativeImageDataImpl : public NativeImageData {
 public:
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(NativeImageDataImpl),
-                                 NativeImageData::nativeImageDataGCKind());
+        return GC_GENERIC_MALLOC(
+            sizeof(NativeImageDataImpl),
+            BufferedNativeImageData::nativeImageDataGCKind());
     }
 
     NativeImageDataImpl(size_t w, size_t h)
@@ -157,7 +158,7 @@ protected:
 #endif
 };
 
-NativeImageData* NativeImageData::create(size_t width, size_t height)
+NativeImageData* BufferedNativeImageData::create(size_t width, size_t height)
 {
     return new NativeImageDataImpl(width, height);
 }

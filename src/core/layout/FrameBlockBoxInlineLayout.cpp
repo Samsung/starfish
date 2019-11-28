@@ -37,6 +37,7 @@
 #include "core/util/LineBreakerIteratorPool.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 namespace Starfish {
 
@@ -5021,8 +5022,8 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
                 auto imageWidth = width + ceil(radiusOffset);
                 auto imageHeight = height + ceil(radiusOffset);
-                NativeImageData* nativeImage =
-                    NativeImageData::create(dp, imageWidth, imageHeight);
+                NativeImageData* nativeImage = BufferedNativeImageData::create(
+                    dp, imageWidth, imageHeight);
                 Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());

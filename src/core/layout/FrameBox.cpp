@@ -33,6 +33,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/page/BrowsingContext.h"
@@ -1033,7 +1034,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     size_t bufImageSize = std::max((double)ceil(radiusOffset),
                                                    (double)topLeftHorizontal);
                     NativeImageData* nativeImage =
-                        NativeImageData::create(bufImageSize, bufImageSize);
+                        BufferedNativeImageData::create(bufImageSize,
+                                                        bufImageSize);
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     auto shadowColor =
@@ -1198,9 +1200,10 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     delete nativeImage;
                 } else {
                     canvas->save();
-                    NativeImageData* nativeImage = NativeImageData::create(
-                        ceil(shadowRect.width() + radiusOffset),
-                        ceil(shadowRect.height() + radiusOffset));
+                    NativeImageData* nativeImage =
+                        BufferedNativeImageData::create(
+                            ceil(shadowRect.width() + radiusOffset),
+                            ceil(shadowRect.height() + radiusOffset));
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1296,7 +1299,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect ImageRect(0, 0, exteriorRect.width() + margin,
                                      exteriorRect.height() + margin);
 
-                NativeImageData* nativeImage = NativeImageData::create(
+                NativeImageData* nativeImage = BufferedNativeImageData::create(
                     ceil(ImageRect.width()), ceil(ImageRect.height()));
                 Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->unsetDevicePixelRatio();
@@ -1528,7 +1531,8 @@ static inline void paintRepeatGradient(
         }
         canvas->save();
         if (gradient->gradientImageDataCached() == nullptr) {
-            auto imageData = NativeImageData::create(ceil(width), ceil(height));
+            auto imageData =
+                BufferedNativeImageData::create(ceil(width), ceil(height));
             Canvas* cv = Canvas::create(box->node()->webView(), imageData);
 
             cv->clearColor(Unit::Color(0, 0, 0, 0));

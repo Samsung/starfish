@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/canvas/image/SVGNativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/Document.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
@@ -30,8 +31,7 @@ class SVGNativeImageDataImpl : public SVGNativeImageData {
 public:
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(SVGNativeImageDataImpl),
-                                 NativeImageData::nativeImageDataGCKind());
+        return GC_MALLOC(sizeof(SVGNativeImageDataImpl));
     }
 
     SVGNativeImageDataImpl(size_t w, size_t h, FrameSVGSVGBox* box)
@@ -43,12 +43,10 @@ public:
 
     virtual ~SVGNativeImageDataImpl()
     {
-        disposeNativeImageData();
     }
 
     virtual void disposeNativeImageData() override
     {
-        NativeImageData::disposeNativeImageData();
     }
 
     virtual size_t width() override
@@ -120,7 +118,7 @@ public:
     NativeImageData* rasterizedImage()
     {
         NativeImageData* rasterizedSVGImage =
-            NativeImageData::create(width(), height());
+            BufferedNativeImageData::create(width(), height());
         STARFISH_ASSERT(rasterizedSVGImage != nullptr);
         rasterizedSVGImage->clear();
         Canvas* dummyCanvas = Canvas::create(
@@ -133,8 +131,8 @@ public:
     }
 
 protected:
-    size_t m_width;
-    size_t m_height;
+    StorePositiveIntergerAsOdd m_width;
+    StorePositiveIntergerAsOdd m_height;
     FrameSVGSVGBox* m_frameBox;
 };
 

@@ -35,8 +35,9 @@ class AnimatedGIFNativeImageDataImpl : public AnimatedGIFNativeImageData {
 public:
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(AnimatedGIFNativeImageDataImpl),
-                                 NativeImageData::nativeImageDataGCKind());
+        return GC_GENERIC_MALLOC(
+            sizeof(AnimatedGIFNativeImageDataImpl),
+            BufferedNativeImageData::nativeImageDataGCKind());
     }
 
     AnimatedGIFNativeImageDataImpl(const std::vector<char>& compressedImageData,
