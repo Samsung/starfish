@@ -107,14 +107,6 @@ public:
         return 0;
     }
 
-    virtual void pruneInternalDataIfPossible()
-    {
-    }
-
-    virtual void disposeNativeImageData()
-    {
-    }
-
     virtual ~NativeImageData()
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);

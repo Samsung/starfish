@@ -129,7 +129,7 @@ public:
         free(m_image);
         std::vector<char>().swap(m_inputBuffer);
         std::string().swap(m_imageURL);
-        NativeImageData::disposeNativeImageData();
+        AnimatedGIFNativeImageData::disposeNativeImageData();
     }
 
     void initInternalSurface()

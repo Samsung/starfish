@@ -154,7 +154,7 @@ public:
         free(m_image);
         std::vector<char>().swap(m_inputBuffer);
         std::string().swap(m_imageURL);
-        NativeImageData::disposeNativeImageData();
+        CompressedNativeImageData::disposeNativeImageData();
     }
 
     void initInternalSurface()
