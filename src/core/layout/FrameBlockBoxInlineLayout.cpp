@@ -4465,7 +4465,12 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.handleFloatingBox(this, w);
     } else {
         w = ctx.widthAppliedByTextIndent(w);
-        ctx.updatePreferredMinWidth(w);
+        if (width.isPercent()) {
+            LayoutUnit minWidth = (w == 0) ? 0 : 1;
+            ctx.updatePreferredMinWidth(minWidth);
+        } else {
+            ctx.updatePreferredMinWidth(w);
+        }
         ctx.setIsWhiteSpaceAtLast(false, 0);
         ctx.updateCurrentLineWidth(this, w + ctx.unprocessedStartingMBPWidth());
     }

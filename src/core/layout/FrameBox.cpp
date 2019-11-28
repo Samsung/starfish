@@ -144,12 +144,14 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     auto padding = std::get<2>(mbp);
     if (padding) {
         if (padding->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-            setPaddingLeft(padding->left().specifiedValue(parentContentWidth, node));
+            setPaddingLeft(
+                padding->left().specifiedValue(parentContentWidth, node));
         } else {
             setPaddingLeft(0);
         }
         if (padding->top().isSpecified()) {
-            setPaddingTop(padding->top().specifiedValue(parentContentWidth, node));
+            setPaddingTop(
+                padding->top().specifiedValue(parentContentWidth, node));
         } else {
             setPaddingTop(0);
         }
@@ -189,8 +191,8 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     if (border && border->hasBorderStyle()) {
         if (border->left().width().isSpecified() &&
             !m_flags.m_isLeftMBPCleared) {
-            setBorderLeft(
-                border->left().width().specifiedValue(parentContentWidth, node));
+            setBorderLeft(border->left().width().specifiedValue(
+                parentContentWidth, node));
         } else {
             setBorderLeft(0);
         }
@@ -224,17 +226,20 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     auto margin = std::get<0>(mbp);
     if (margin) {
         if (margin->left().isSpecified() && !m_flags.m_isLeftMBPCleared) {
-            setMarginLeft(margin->left().specifiedValue(parentContentWidth, node));
+            setMarginLeft(
+                margin->left().specifiedValue(parentContentWidth, node));
         } else {
             setMarginLeft(0);
         }
         if (margin->top().isSpecified()) {
-            setMarginTop(margin->top().specifiedValue(parentContentWidth, node));
+            setMarginTop(
+                margin->top().specifiedValue(parentContentWidth, node));
         } else {
             setMarginTop(0);
         }
         if (margin->right().isSpecified() && !m_flags.m_isRightMBPCleared) {
-            setMarginRight(margin->right().specifiedValue(parentContentWidth, node));
+            setMarginRight(
+                margin->right().specifiedValue(parentContentWidth, node));
         } else {
             setMarginRight(0);
         }
