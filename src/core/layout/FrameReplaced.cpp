@@ -57,8 +57,8 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
         result.m_intrinsicContentSize =
             LayoutSize(siz.m_intrinsicContentSize.width(),
                        siz.m_intrinsicContentSize.height());
-        bool widthIsEmpty = widthString->equals(String::emptyString);
-        bool heightIsEmpty = heightString->equals(String::emptyString);
+        bool widthIsEmpty = widthString->isEmpty();
+        bool heightIsEmpty = heightString->isEmpty();
         if (widthIsEmpty && heightIsEmpty) {
             result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
                 std::make_pair(Length(), Length());
@@ -99,8 +99,8 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     } else {
         result.m_intrinsicSizeIsSpecifiedByAttributeOfElement =
             std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
-        bool widthIsEmpty = widthString->equals(String::emptyString);
-        bool heightIsEmpty = heightString->equals(String::emptyString);
+        bool widthIsEmpty = widthString->isEmpty();
+        bool heightIsEmpty = heightString->isEmpty();
         if (widthIsEmpty && heightIsEmpty) {
         } else if (widthIsEmpty) {
             float h = String::parseFloat(heightString);

@@ -44,7 +44,8 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
     NativeImageData* id = node()->asHTMLImageElement()->imageData();
 
     if (id) {
-        if (id->isCompressedNativeImageData() && id->asCompressedNativeImageData()->hasCompressedData()) {
+        if (id->isCompressedNativeImageData() &&
+            id->asCompressedNativeImageData()->hasCompressedData()) {
             node()->webView()->putURLIntoActiveImageURLsInRenderingSet(
                 id->asCompressedNativeImageData()->compressedImageURL());
         }
