@@ -1272,8 +1272,9 @@ public:
         }
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode) override
+    virtual void drawNativeImageData(
+        NativeImageData* data, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode) override
     {
         STARFISH_ASSERT(data != nullptr);
 
@@ -1342,10 +1343,10 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst,
-                           const DrawImageInfo& borderinfo,
-                           ImageRenderingValue imageRenderingMode) override
+    virtual void drawNativeImageData(
+        NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
+        const DrawImageInfo& borderinfo,
+        ImageRenderingValue imageRenderingMode) override
     {
         STARFISH_ASSERT(data != nullptr);
 
@@ -1422,7 +1423,7 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawRepeatImage(
+    virtual void drawRepeatNativeImageData(
         NativeImageData* data, const Unit::Rect& dst, float imageWidth,
         float imageHeight, bool xRepeat, bool yRepeat,
         ImageRenderingValue imageRenderingMode) override
@@ -2408,6 +2409,11 @@ public:
     }
 
     virtual void pruneInternalDataIfPossible() override
+    {
+    }
+
+    virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
+                              ImageRenderingValue imageRenderingMode) override
     {
     }
 

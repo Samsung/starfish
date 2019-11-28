@@ -990,8 +990,9 @@ public:
         }
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawNativeImageData(NativeImageData* data,
+                                     const Unit::Rect& dst,
+                                     ImageRenderingValue imageRenderingMode)
     {
         if (!lastState()->m_visible) {
             return;
@@ -999,10 +1000,11 @@ public:
         drawImageInner(data, dst, imageRenderingMode);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst,
-                           const DrawImageInfo& borderinfo,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawNativeImageData(NativeImageData* data,
+                                     const Unit::Rect& src,
+                                     const Unit::Rect& dst,
+                                     const DrawImageInfo& borderinfo,
+                                     ImageRenderingValue imageRenderingMode)
     {
         if (!lastState()->m_visible) {
             return;
@@ -1010,7 +1012,7 @@ public:
         drawImageInner(data, src, dst, borderinfo, imageRenderingMode);
     }
 
-    virtual void drawRepeatImage(
+    virtual void drawRepeatNativeImageData(
         NativeImageData* data, const Unit::Rect& dst, float imageWidth,
         float imageHeight, bool xRepeat, bool yRepeat,
         ImageRenderingValue imageRenderingMode =

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,57 +19,44 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
-#include "core/modules/canvas/image/ImageDecoder.h"
+#include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/Canvas.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
 #endif
 
-#define MinimumDelay 3
-
 namespace Starfish {
 
-class AnimatedGIFNativeImageDataMISC : public AnimatedGIFNativeImageData {
+class NativeImageDataImpl : public NativeImageData {
 public:
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(AnimatedGIFNativeImageDataMISC),
+        return GC_GENERIC_MALLOC(sizeof(NativeImageDataImpl),
                                  NativeImageData::nativeImageDataGCKind());
     }
 
-    AnimatedGIFNativeImageDataMISC(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL, size_t width,
-                                   size_t height, size_t stride)
-        : m_image(nullptr)
-        , m_width(width)
-        , m_stride(stride)
-        , m_height(height)
-        , m_imageURL(imageURL)
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
-        , m_imageSurface(nullptr)
-#endif
-        , m_delay(0)
-        , m_imageDecoder(nullptr)
+    NativeImageDataImpl(size_t w, size_t h)
     {
-        STARFISH_ASSERT(width != 0);
-        STARFISH_ASSERT(height != 0);
-        STARFISH_ASSERT(compressedImageData.size() != 0);
-
-        m_inputBuffer.insert(m_inputBuffer.end(), compressedImageData.begin(),
-                             compressedImageData.end());
-
-        m_imageDecoder = new ImageDecoder(m_inputBuffer);
+        m_image = (unsigned char*)malloc(w * h * 4);
+        STARFISH_RELEASE_ASSERT(m_image);
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+        m_imageSurface = nullptr;
+#endif
+        m_width = w;
+        m_height = h;
+        m_stride = w * 4;
+        initInternalSurface();
     }
 
-    virtual ~AnimatedGIFNativeImageDataMISC()
+    virtual ~NativeImageDataImpl()
     {
         disposeNativeImageData();
     }
 
     virtual void pruneInternalDataIfPossible() override
     {
-        if (m_image && m_inputBuffer.size()) {
+        if (m_image) {
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
             cairo_surface_destroy(m_imageSurface);
             m_imageSurface = nullptr;
@@ -77,21 +64,6 @@ public:
             free(m_image);
             m_image = nullptr;
         }
-    }
-
-    virtual bool prepareNextFrame() override
-    {
-        if (m_width != 0 && m_height != 0 && m_imageDecoder) {
-            STARFISH_ASSERT(m_imageDecoder != nullptr);
-            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF();
-            m_delay = idResult.delay;
-            if (m_delay <= MinimumDelay) {
-                m_delay = MinimumDelay;
-            }
-            m_image = idResult.m_buffer;
-            return true;
-        }
-        return false;
     }
 
     virtual uint8_t* data() override
@@ -120,13 +92,7 @@ public:
             cairo_surface_destroy(m_imageSurface);
         }
 #endif
-        if (m_imageDecoder) {
-            delete m_imageDecoder;
-            m_imageDecoder = nullptr;
-        }
         free(m_image);
-        std::vector<char>().swap(m_inputBuffer);
-        std::string().swap(m_imageURL);
         NativeImageData::disposeNativeImageData();
     }
 
@@ -169,11 +135,6 @@ public:
         return m_height;
     }
 
-    virtual size_t delay() override
-    {
-        return m_delay;
-    }
-
 private:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dumpImage(const char* path)
@@ -191,25 +152,13 @@ protected:
     size_t m_width;
     size_t m_stride;
     size_t m_height;
-    std::vector<char> m_inputBuffer;
-    std::string m_imageURL;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
-    size_t m_delay{ 0 };
-    ImageDecoder* m_imageDecoder{ nullptr };
 };
 
-NativeImageData* AnimatedGIFNativeImageData::create(
-    const std::vector<char>& compressedImageData, std::string&& imageURL,
-    size_t width, size_t height, size_t stride)
+NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
-    STARFISH_ASSERT(width != 0);
-    STARFISH_ASSERT(height != 0);
-    STARFISH_ASSERT(compressedImageData.size() != 0);
-
-    NativeImageData* imageData = new AnimatedGIFNativeImageDataMISC(
-        compressedImageData, std::move(imageURL), width, height, stride);
-    return imageData;
+    return new NativeImageDataImpl(width, height);
 }
 } // namespace Starfish

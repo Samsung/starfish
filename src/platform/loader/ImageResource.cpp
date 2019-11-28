@@ -36,6 +36,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/modules/canvas/image/AnimatedGIFNativeImageData.h"
+#include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/file/File.h"
@@ -96,14 +97,10 @@ protected:
                 m_resource->Resource::didLoadFinished();
                 return;
             }
-            NativeImageData* imageData = NativeImageData::create(w, h);
+            NativeImageData* imageData =
+                SVGNativeImageData::create(w, h, svgBox);
             STARFISH_ASSERT(imageData != nullptr);
             imageData->clear();
-            Canvas* canvas = Canvas::create(
-                m_browsingContext->webView(), imageData->data(),
-                imageData->width(), imageData->height(), imageData->stride());
-            svgBox->paintReplaced(canvas);
-            delete canvas;
 
             m_resource->m_imageData = imageData;
             m_resource->m_mockFrameForSVGDocument = nullptr;
