@@ -28,16 +28,16 @@
 
 namespace Starfish {
 
-class NativeImageDataImpl : public NativeImageData {
+class BufferedNativeImageDataImpl : public BufferedNativeImageData {
 public:
     void* operator new(size_t size)
     {
         return GC_GENERIC_MALLOC(
-            sizeof(NativeImageDataImpl),
+            sizeof(BufferedNativeImageDataImpl),
             BufferedNativeImageData::nativeImageDataGCKind());
     }
 
-    NativeImageDataImpl(size_t w, size_t h)
+    BufferedNativeImageDataImpl(size_t w, size_t h)
     {
         m_image = (unsigned char*)malloc(w * h * 4);
         STARFISH_RELEASE_ASSERT(m_image);
@@ -50,7 +50,7 @@ public:
         initInternalSurface();
     }
 
-    virtual ~NativeImageDataImpl()
+    virtual ~BufferedNativeImageDataImpl()
     {
         disposeNativeImageData();
     }
@@ -94,7 +94,7 @@ public:
         }
 #endif
         free(m_image);
-        NativeImageData::disposeNativeImageData();
+        BufferedNativeImageData::disposeNativeImageData();
     }
 
     void initInternalSurface()
@@ -160,6 +160,6 @@ protected:
 
 NativeImageData* BufferedNativeImageData::create(size_t width, size_t height)
 {
-    return new NativeImageDataImpl(width, height);
+    return new BufferedNativeImageDataImpl(width, height);
 }
 } // namespace Starfish

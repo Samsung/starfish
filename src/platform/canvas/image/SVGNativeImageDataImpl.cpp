@@ -45,10 +45,6 @@ public:
     {
     }
 
-    virtual void disposeNativeImageData() override
-    {
-    }
-
     virtual size_t width() override
     {
         return m_width;
@@ -85,8 +81,9 @@ public:
                               const DrawImageInfo& borderinfo,
                               ImageRenderingValue imageRenderingMode) override
     {
-        canvas->drawImage(rasterizedImage(), src, dst, borderinfo,
-                          imageRenderingMode);
+        auto img = rasterizedImage();
+        canvas->drawImage(img, src, dst, borderinfo, imageRenderingMode);
+        delete img;
     }
 
     virtual void paintRepeatContent(
@@ -119,7 +116,6 @@ public:
     {
         NativeImageData* rasterizedSVGImage =
             BufferedNativeImageData::create(width(), height());
-        STARFISH_ASSERT(rasterizedSVGImage != nullptr);
         rasterizedSVGImage->clear();
         Canvas* dummyCanvas = Canvas::create(
             m_frameBox->document()->browsingContext()->webView(),

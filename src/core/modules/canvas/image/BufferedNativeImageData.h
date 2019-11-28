@@ -21,7 +21,7 @@
 #define __BufferedNativeImageData__
 
 #include "core/style/Style.h"
-#include "NativeImageData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace Starfish {
 

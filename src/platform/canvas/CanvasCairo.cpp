@@ -2409,10 +2409,6 @@ public:
         return true;
     }
 
-    virtual void pruneInternalDataIfPossible() override
-    {
-    }
-
     virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
                               ImageRenderingValue imageRenderingMode) override
     {
@@ -2420,9 +2416,7 @@ public:
 
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(
-            sizeof(CanvasAttachableNativeImageCairo),
-            BufferedNativeImageData::nativeImageDataGCKind());
+        return GC_MALLOC_ATOMIC(sizeof(CanvasAttachableNativeImageCairo));
     }
 
 private:
