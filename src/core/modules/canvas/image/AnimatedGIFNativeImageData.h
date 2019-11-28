@@ -20,11 +20,11 @@
 #ifndef __AmimatedGIFNativeImageData__
 #define __AmimatedGIFNativeImageData__
 
-#include "NativeImageData.h"
+#include "BufferedNativeImageData.h"
 
 namespace Starfish {
 
-class AnimatedGIFNativeImageData : public NativeImageData {
+class AnimatedGIFNativeImageData : public BufferedNativeImageData {
 public:
     static NativeImageData* create(const std::vector<char>& compressedImageData,
                                    std::string&& imageURL, size_t width,

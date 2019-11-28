@@ -82,6 +82,7 @@
 #include "core/inspector/Inspector.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 #if defined(OS_POSIX)
 #include <malloc.h>
@@ -421,7 +422,8 @@ void WebView::enterIdleMode()
         LongTaskFinder f(
             "drop decoded image datas in NativeImageData when entering idle "
             "mode");
-        auto& globalImages = NativeImageData::everyNativeImageInstances();
+        auto& globalImages =
+            BufferedNativeImageData::everyNativeImageInstances();
         for (size_t i = 0; i < globalImages.size(); i++) {
             globalImages[i]->pruneInternalDataIfPossible();
         }

@@ -36,6 +36,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -345,7 +346,8 @@ void ResourceLoader::cachePruning()
         }
 
 #if !defined(OS_WINDOWS)
-        auto& globalImages = NativeImageData::everyNativeImageInstances();
+        auto& globalImages =
+            BufferedNativeImageData::everyNativeImageInstances();
         for (size_t i = 0; i < globalImages.size(); i++) {
             globalImages[i]->m_isSeenByGC = false;
         }
@@ -360,10 +362,10 @@ void ResourceLoader::cachePruning()
 
                 int srcKind = (int)(size_t)cd;
                 if (kind == srcKind) {
-                    ((NativeImageData*)ptr)->m_isSeenByGC = true;
+                    ((BufferedNativeImageData*)ptr)->m_isSeenByGC = true;
                 }
             },
-            (void*)(size_t)NativeImageData::nativeImageDataGCKind());
+            (void*)(size_t)BufferedNativeImageData::nativeImageDataGCKind());
         GC_enable();
         for (size_t i = 0; i < globalImages.size(); i++) {
             if (!globalImages[i]->m_isSeenByGC) {

@@ -32,8 +32,9 @@ class CompressedNativeImageDataImpl : public CompressedNativeImageData {
 public:
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(CompressedNativeImageDataImpl),
-                                 NativeImageData::nativeImageDataGCKind());
+        return GC_GENERIC_MALLOC(
+            sizeof(CompressedNativeImageDataImpl),
+            BufferedNativeImageData::nativeImageDataGCKind());
     }
 
     CompressedNativeImageDataImpl(const std::vector<char>& compressedImageData,

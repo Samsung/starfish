@@ -36,6 +36,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/NativePattern.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/CSSGradientValue.h"
@@ -2419,8 +2420,9 @@ public:
 
     void* operator new(size_t size)
     {
-        return GC_GENERIC_MALLOC(sizeof(CanvasAttachableNativeImageCairo),
-                                 NativeImageData::nativeImageDataGCKind());
+        return GC_GENERIC_MALLOC(
+            sizeof(CanvasAttachableNativeImageCairo),
+            BufferedNativeImageData::nativeImageDataGCKind());
     }
 
 private:

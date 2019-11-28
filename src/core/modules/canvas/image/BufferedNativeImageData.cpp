@@ -21,7 +21,7 @@
 #define ESCARGOT // for GCutil
 #endif
 #include "StarfishConfig.h"
-#include "NativeImageData.h"
+#include "BufferedNativeImageData.h"
 #include "core/modules/threading/Thread.h"
 
 template <GC_get_sub_pointer_proc proc, const int number_of_sub_pointer>
@@ -44,7 +44,7 @@ int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
 
 namespace Starfish {
 
-int NativeImageData::nativeImageDataGCKind()
+int BufferedNativeImageData::nativeImageDataGCKind()
 {
     static bool isInited = false;
     static int gcKind;
@@ -60,19 +60,20 @@ int NativeImageData::nativeImageDataGCKind()
     return gcKind;
 }
 
-std::vector<NativeImageData*>& NativeImageData::everyNativeImageInstances()
+std::vector<BufferedNativeImageData*>&
+BufferedNativeImageData::everyNativeImageInstances()
 {
     STARFISH_ASSERT(isMainThread());
-    static std::vector<NativeImageData*> v;
+    static std::vector<BufferedNativeImageData*> v;
     return v;
 }
 
-NativeImageData* NativeImageData::create(float devicePixelRatio, size_t width,
-                                         size_t height)
+NativeImageData* BufferedNativeImageData::create(float devicePixelRatio,
+                                                 size_t width, size_t height)
 {
     size_t deviceImageWidth = ceil(width * devicePixelRatio);
     size_t deviceImageHeight = ceil(height * devicePixelRatio);
-    return NativeImageData::create(deviceImageWidth, deviceImageHeight);
+    return BufferedNativeImageData::create(deviceImageWidth, deviceImageHeight);
 }
 
 } // namespace Starfish

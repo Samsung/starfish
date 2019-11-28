@@ -27,7 +27,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMExceptionOr.h"
 #include "core/page/WebBase.h"
-#include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/CanvasImageSource.h"
@@ -163,7 +163,7 @@ namespace WindowOrWorkerGlobalScope {
         resolveOutputSize(sw, sh, options, outputWidth, outputHight);
 
         NativeImageData* destImage =
-            NativeImageData::create(outputWidth, outputHight);
+            BufferedNativeImageData::create(outputWidth, outputHight);
         Canvas* canvas =
             Canvas::create(executionContext->webBase()->asWebView(), destImage);
 

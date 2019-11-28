@@ -31,7 +31,7 @@
 #include "core/dom/canvas/CanvasTextAlign.h"
 #include "core/dom/canvas/CanvasTextBaseline.h"
 #include "core/modules/canvas/CanvasShadowData.h"
-#include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/Path.h"
@@ -396,7 +396,7 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         setNeedsNoneAntialias();
         size_t bufImageSize = (size_t)ceil(radiusOffset);
         NativeImageData* nativeImage =
-            NativeImageData::create(bufImageSize, bufImageSize);
+            BufferedNativeImageData::create(bufImageSize, bufImageSize);
         Canvas* cv = Canvas::create(m_webView, nativeImage);
         cv->unsetDevicePixelRatio();
         cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -541,9 +541,9 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         delete nativeImage;
     } else {
         save();
-        NativeImageData* nativeImage =
-            NativeImageData::create(ceil(shadowRect.width() + radiusOffset),
-                                    ceil(shadowRect.height() + radiusOffset));
+        NativeImageData* nativeImage = BufferedNativeImageData::create(
+            ceil(shadowRect.width() + radiusOffset),
+            ceil(shadowRect.height() + radiusOffset));
         Canvas* cv = Canvas::create(m_webView, nativeImage);
         cv->unsetDevicePixelRatio();
         cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -629,7 +629,7 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     auto imageWidth = width + ceil(radiusOffset);
     auto imageHeight = height + ceil(radiusOffset);
     NativeImageData* nativeImage =
-        NativeImageData::create(imageWidth, imageHeight);
+        BufferedNativeImageData::create(imageWidth, imageHeight);
     Canvas* cv = Canvas::create(m_webView, nativeImage);
     cv->unsetDevicePixelRatio();
     cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -729,7 +729,7 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     auto imageWidth = width + ceil(radiusOffset);
     auto imageHeight = height + ceil(radiusOffset);
     NativeImageData* nativeImage =
-        NativeImageData::create(imageWidth, imageHeight);
+        BufferedNativeImageData::create(imageWidth, imageHeight);
     Canvas* cv = Canvas::create(m_webView, nativeImage);
     cv->unsetDevicePixelRatio();
     cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -778,9 +778,9 @@ void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
         radiusOffset *= 2;
     }
     save();
-    NativeImageData* nativeImage =
-        NativeImageData::create(ceil(shadowRect.width() + radiusOffset),
-                                ceil(shadowRect.height() + radiusOffset));
+    NativeImageData* nativeImage = BufferedNativeImageData::create(
+        ceil(shadowRect.width() + radiusOffset),
+        ceil(shadowRect.height() + radiusOffset));
     Canvas* cv = Canvas::create(m_webView, nativeImage);
     cv->unsetDevicePixelRatio();
     cv->clearColor(Unit::Color(0, 0, 0, 0));
