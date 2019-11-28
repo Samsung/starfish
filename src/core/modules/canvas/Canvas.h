@@ -27,6 +27,7 @@
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/modules/canvas/CanvasFillStrokeSource.h"
 #include "core/modules/canvas/CanvasShadowData.h"
+#include "core/modules/canvas/image/SVGNativeImageData.h"
 
 namespace Starfish {
 
@@ -391,21 +392,45 @@ public:
                                 LayoutUnit stringWidth, const StringView& text,
                                 bool shouldSkipUnresolvedWebFont = true) = 0;
 
-    virtual void drawImage(
-        NativeImageData* data, const Unit::Rect& dst,
-        ImageRenderingValue imageRenderingMode =
-            ImageRenderingValue::ImageRenderingAutoValue) = 0;
-    virtual void drawImage(
-        NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
-        const DrawImageInfo& borderinfo,
-        ImageRenderingValue imageRenderingMode =
-            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    void drawImage(NativeImageData* data, const Unit::Rect& dst,
+                   ImageRenderingValue imageRenderingMode =
+                       ImageRenderingValue::ImageRenderingAutoValue)
+    {
+        if (data->isSVGNativeImageData()) {
+            data->asSVGNativeImageData()->paintContent(this, dst,
+                                                       imageRenderingMode);
+        } else {
+            drawNativeImageData(data, dst, imageRenderingMode);
+        }
+    }
+    void drawImage(NativeImageData* data, const Unit::Rect& src,
+                   const Unit::Rect& dst, const DrawImageInfo& borderinfo,
+                   ImageRenderingValue imageRenderingMode =
+                       ImageRenderingValue::ImageRenderingAutoValue)
+    {
+        if (data->isSVGNativeImageData()) {
+            data->asSVGNativeImageData()->paintContent(
+                this, src, dst, borderinfo, imageRenderingMode);
+        } else {
+            drawNativeImageData(data, src, dst, borderinfo, imageRenderingMode);
+        }
+    }
 
-    virtual void drawRepeatImage(
-        NativeImageData* data, const Unit::Rect& dst, float imageWidth,
-        float imageHeight, bool xRepeat, bool yRepeat,
-        ImageRenderingValue imageRenderingMode =
-            ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
+                         float imageWidth, float imageHeight, bool xRepeat,
+                         bool yRepeat,
+                         ImageRenderingValue imageRenderingMode =
+                             ImageRenderingValue::ImageRenderingAutoValue)
+    {
+        if (data->isSVGNativeImageData()) {
+            data->asSVGNativeImageData()->paintRepeatContent(
+                this, dst, imageWidth, imageHeight, xRepeat, yRepeat,
+                imageRenderingMode);
+        } else {
+            drawRepeatNativeImageData(data, dst, imageWidth, imageHeight,
+                                      xRepeat, yRepeat, imageRenderingMode);
+        }
+    }
     virtual void drawLinearGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info,
                                     NativeGradient* gradient) = 0;
@@ -582,7 +607,18 @@ protected:
         const DrawImageInfo& borderinfo,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
+    virtual void drawNativeImageData(
+        NativeImageData* data, const Unit::Rect& dst,
+        ImageRenderingValue imageRenderingMode) = 0;
+    virtual void drawNativeImageData(
+        NativeImageData* data, const Unit::Rect& src, const Unit::Rect& dst,
+        const DrawImageInfo& borderinfo,
+        ImageRenderingValue imageRenderingMode) = 0;
 
+    virtual void drawRepeatNativeImageData(
+        NativeImageData* data, const Unit::Rect& dst, float imageWidth,
+        float imageHeight, bool xRepeat, bool yRepeat,
+        ImageRenderingValue imageRenderingMode) = 0;
     CanvasState* lastState()
     {
         STARFISH_ASSERT(m_state.size() != 0);

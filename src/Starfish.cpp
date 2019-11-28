@@ -24,7 +24,6 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/modules/canvas/image/NativeImageData.h"
 #include "core/util/LineBreakerIteratorPool.h"
 #include "LWEWebView.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE

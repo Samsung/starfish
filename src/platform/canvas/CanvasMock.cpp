@@ -307,22 +307,24 @@ public:
     {
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawNativeImageData(NativeImageData* data,
+                                     const Unit::Rect& dst,
+                                     ImageRenderingValue imageRenderingMode)
     {
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst,
-                           const DrawImageInfo& borderinfo,
-                           ImageRenderingValue imageRenderingMode)
+    virtual void drawNativeImageData(NativeImageData* data,
+                                     const Unit::Rect& src,
+                                     const Unit::Rect& dst,
+                                     const DrawImageInfo& borderinfo,
+                                     ImageRenderingValue imageRenderingMode)
     {
     }
 
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat,
-                                 ImageRenderingValue imageRenderingMode)
+    virtual void drawRepeatNativeImageData(
+        NativeImageData* data, const Unit::Rect& dst, float imageWidth,
+        float imageHeight, bool xRepeat, bool yRepeat,
+        ImageRenderingValue imageRenderingMode)
     {
     }
 

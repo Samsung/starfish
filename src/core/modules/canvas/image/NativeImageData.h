@@ -20,6 +20,8 @@
 #ifndef __NativeImageData__
 #define __NativeImageData__
 
+#include "core/style/Style.h"
+
 namespace Starfish {
 
 class CanvasShadowData;
@@ -27,6 +29,7 @@ class Canvas;
 class AnimatedGIFNativeImageData;
 class CompressedNativeImageData;
 class SVGNativeImageData;
+class DrawImageInfo;
 
 class NativeImageData : public gc {
     friend class ResourceLoader;
@@ -94,6 +97,7 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return 0;
     }
+
     virtual uint8_t* data()
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -143,6 +147,25 @@ public:
     void setPreserveAspectRatioValue(PreserveAspectRatioValue v)
     {
         m_preserveAspectRatioValue = v;
+    }
+
+    virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
+                              ImageRenderingValue imageRenderingMode)
+    {
+    }
+
+    virtual void paintContent(Canvas* canvas, const Unit::Rect& src,
+                              const Unit::Rect& dst,
+                              const DrawImageInfo& borderinfo,
+                              ImageRenderingValue imageRenderingMode)
+    {
+    }
+
+    virtual void paintRepeatContent(Canvas* canvas, const Unit::Rect& dst,
+                                    float imageWidth, float imageHeight,
+                                    bool xRepeat, bool yRepeat,
+                                    ImageRenderingValue imageRenderingMode)
+    {
     }
 
     void* operator new(size_t size) = delete;

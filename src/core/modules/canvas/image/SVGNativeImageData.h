@@ -24,8 +24,13 @@
 
 namespace Starfish {
 
+class FrameSVGSVGBox;
+
 class SVGNativeImageData : public NativeImageData {
 public:
+    static NativeImageData* create(size_t actualDeviceWidth,
+                                   size_t actualDeviceHeight,
+                                   FrameSVGSVGBox* box);
     virtual bool isSVGNativeImageData() const
     {
         return true;
