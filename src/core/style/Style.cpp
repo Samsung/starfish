@@ -7301,12 +7301,12 @@ static void recomputeStyleDamageInAnimation(
     if (isRunningOpacityAnimationAfter != isRunningOpacityAnimationBefore &&
         style->opacity() == 1) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamageEstablishesStackingContext);
+            damage | ComputedStyleDamageEstablishesStackingContext);
     }
     if (isRunningTransformAnimationAfter != isRunningTransformAnimationBefore &&
         (style->transforms() == nullptr || style->transforms()->size() == 0)) {
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamageEstablishesStackingContext);
+            damage | ComputedStyleDamageEstablishesStackingContext);
     }
 }
 
