@@ -30,7 +30,14 @@
 namespace Starfish {
 class ExecutionContext;
 
-struct RTCIceCandidateInit {
+struct RTCIceCandidateInit : public gc {
+    RTCIceCandidateInit()
+    {
+    }
+
+    RTCIceCandidateInit(std::string& candidate, std::string& sdpMid,
+                        int sdpMLineIndex);
+
     DEFINE_GETTER_SETTER(String*, candidate, Candidate)
     DEFINE_GETTER_SETTER(Nullable<String*>, sdpMid, SdpMid)
     DEFINE_GETTER_SETTER(Nullable<uint32_t>, sdpMLineIndex, SdpMLineIndex)
@@ -56,8 +63,6 @@ class RTCIceCandidate : public ScriptWrappable {
 public:
     RTCIceCandidate(ExecutionContext* executionContext,
                     RTCIceCandidateInit init = RTCIceCandidateInit());
-    RTCIceCandidate(ExecutionContext* executionContext,
-                    webrtc::IceCandidateInterface* candidate);
     virtual ~RTCIceCandidate();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceCandidate)
@@ -72,7 +77,7 @@ public:
         return usernameFragment();
     }
 
-    const webrtc::IceCandidateInterface* backend();
+    std::unique_ptr<webrtc::IceCandidateInterface> genBackend();
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
@@ -80,8 +85,6 @@ private:
     Nullable<String*> m_sdpMid;
     Nullable<uint32_t> m_sdpMLineIndex;
     Nullable<String*> m_usernameFragment;
-
-    std::unique_ptr<webrtc::IceCandidateInterface> m_backend;
 };
 }
 #endif

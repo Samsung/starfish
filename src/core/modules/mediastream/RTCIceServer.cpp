@@ -33,51 +33,70 @@ RTCIceServer::RTCIceServer()
 {
 }
 
-RTCIceServer::RTCIceServer(webrtc::PeerConnectionInterface::IceServer& server)
-    : m_backend(server)
+RTCIceServer::RTCIceServer(DOMStringOrSequenceOfDOMString urls,
+                           String* username)
 {
 }
 
-GCVector<String*> RTCIceServer::urls()
+DOMStringOrSequenceOfDOMString RTCIceServer::urls()
 {
-    GCVector<String*> urls;
-    for (auto& url : m_backend.urls) {
-        urls.push_back(String::fromUTF8(url.data(), url.size()));
+    return DOMStringOrSequenceOfDOMString::createSequenceOfDOMString(m_urls);
+}
+
+void RTCIceServer::setUrls(DOMStringOrSequenceOfDOMString& value)
+{
+    if (value.isNoneValue()) {
+        return;
     }
 
-    return std::move(urls);
-}
-
-void RTCIceServer::setUrls(GCVector<String*>& urls)
-{
-    m_backend.urls.clear();
-    for (auto url : urls) {
-        m_backend.urls.push_back(std::string(url->toUTF8NonGCString().data()));
+    m_urls.clear();
+    if (value.isDOMStringValue()) {
+        String* url = value.getDOMStringValue();
+        m_urls.push_back(url);
+    } else if (value.isSequenceOfDOMStringValue()) {
+        for (String* url : value.getSequenceOfDOMStringValue()) {
+            m_urls.push_back(url);
+        }
     }
 }
 
 String* RTCIceServer::username()
 {
-    return String::createASCIIString(m_backend.username.c_str(),
-                                     m_backend.username.length());
+    if (!hasUsername()) {
+        return String::emptyString;
+    }
+
+    return m_username;
 }
 
-void RTCIceServer::setUsername(String* username)
+String* RTCIceServer::credentialType()
 {
-    m_backend.username = std::string(username->toUTF8NonGCString().data());
+    if (!hasValidCredentialType()) {
+        return String::emptyString;
+    }
+
+    switch (m_credentialType) {
+    case RTCIceCredentialType::Password:
+        return String::createASCIIString("password");
+    case RTCIceCredentialType::OAuth:
+        return String::createASCIIString("oauth");
+    default:
+        return String::emptyString;
+    }
+
+    return String::emptyString;
 }
 
-RTCIceCredentialType RTCIceServer::credentialType()
+void RTCIceServer::setCredentialType(String* type)
 {
-    // Not supported by WebRTC
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return RTCIceCredentialType::Password;
-}
-
-void RTCIceServer::setCredentialType(RTCIceCredentialType type)
-{
-    // Not supported by WebRTC
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    m_hasValidCredentialType = true;
+    if (type->equals("password")) {
+        m_credentialType = RTCIceCredentialType::Password;
+    } else if (type->equals("oauth")) {
+        m_credentialType = RTCIceCredentialType::OAuth;
+    } else {
+        m_hasValidCredentialType = false;
+    }
 }
 }
 #endif

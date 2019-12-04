@@ -491,7 +491,7 @@ const char* getWindowsTempDir();
                                                    : GC_MALLOC(bytes))
 
 template <typename T>
-struct Nullable {
+struct Nullable : public gc {
 public:
     Nullable()
         : m_hasValue(false)
@@ -589,7 +589,7 @@ inline bool operator!=(const T& a, const Nullable<T>& b)
 }
 
 template <typename T>
-class Nullable<T*> {
+class Nullable<T*> : public gc {
 public:
     Nullable()
         : m_value(nullptr)

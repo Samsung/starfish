@@ -148,7 +148,8 @@ struct RTCDataChannelInit {
     bool m_hasId{ false };
 };
 
-class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
+class PeerConnectionObserver : public gc,
+                               public webrtc::PeerConnectionObserver {
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
@@ -191,8 +192,6 @@ public:
     void OnInterestingUsage(int usage_pattern) override{};
 
 protected:
-    // The pointer is always valid as: scope(PeerConnectionObserver) <=
-    // scope(RTCPeerConnection)
     RTCPeerConnection* m_peerConnection;
 };
 
@@ -367,8 +366,9 @@ public:
 
     static GCVector<RTCIceServer> getDefaultIceServers();
 
-    RTCConfiguration& getConfiguration();
-    void setConfiguration(RTCConfiguration& configuration);
+    RTCConfiguration getConfiguration();
+    void setConfiguration(RTCConfiguration& configuration,
+                          bool checkStatus = true);
 
     void close();
 
@@ -415,7 +415,8 @@ private:
     ExecutionContext* m_executionContext;
 
     RTCConfiguration m_configuration;
-    std::unique_ptr<PeerConnectionObserver> m_peerConnectionObserver;
+    PeerConnectionObserver* m_peerConnectionObserver;
+
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
     PcObserver<CreateOfferObserver>* m_createOfferObserver;

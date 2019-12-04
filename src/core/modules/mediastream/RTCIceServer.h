@@ -26,6 +26,9 @@
 #include "binding/ScriptWrappable.h"
 
 #include "api/peer_connection_interface.h"
+#include "binding/DOMStringOrSequenceOfDOMStringUnion.h"
+#include "core/modules/mediastream/RTCOAuthCredential.h"
+#include "binding/DOMStringOrRTCOAuthCredentialUnion.h"
 
 namespace Starfish {
 
@@ -34,28 +37,36 @@ enum class RTCIceCredentialType {
     OAuth,
 };
 
-struct RTCIceServer {
-public:
+struct RTCIceServer : public gc {
     RTCIceServer();
-    RTCIceServer(webrtc::PeerConnectionInterface::IceServer& server);
+    RTCIceServer(DOMStringOrSequenceOfDOMString urls,
+                 String* username = String::emptyString);
     virtual ~RTCIceServer(){};
 
-    GCVector<String*> urls();
-    void setUrls(GCVector<String*>& value);
+    DOMStringOrSequenceOfDOMString urls();
+    void setUrls(DOMStringOrSequenceOfDOMString& value);
 
     String* username();
-    void setUsername(String* username);
+    DEFINE_SETTER_WITH_HASFLAG(String*, username, Username);
+    DEFINE_HASFLAG_GETTER(Username);
 
-    RTCIceCredentialType credentialType();
-    void setCredentialType(RTCIceCredentialType type);
+    DEFINE_GETTER_SETTER(DOMStringOrRTCOAuthCredential, credential, Credential)
 
-    webrtc::PeerConnectionInterface::IceServer backend()
+    String* credentialType();
+    void setCredentialType(String* type);
+
+    bool hasValidCredentialType()
     {
-        return m_backend;
+        return m_hasValidCredentialType;
     }
 
-private:
-    webrtc::PeerConnectionInterface::IceServer m_backend;
+    GCVector<String*> m_urls;
+    String* m_username{ String::emptyString };
+    DOMStringOrRTCOAuthCredential m_credential;
+    RTCIceCredentialType m_credentialType{ RTCIceCredentialType::Password };
+
+    bool m_hasUsername{ false };
+    bool m_hasValidCredentialType{ true };
 };
 }
 #endif

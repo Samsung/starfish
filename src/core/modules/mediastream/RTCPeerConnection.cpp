@@ -234,8 +234,9 @@ void PeerConnectionObserver::OnIceCandidate(
                     webrtc::CreateIceCandidate(p->sdpMid, p->sdpMlineIndex,
                                                p->sdp, nullptr);
 
+                RTCIceCandidateInit cinit(p->sdp, p->sdpMid, p->sdpMlineIndex);
                 RTCIceCandidate* cand = new RTCIceCandidate(
-                    self->m_peerConnection->executionContext(), candidate);
+                    self->m_peerConnection->executionContext(), cinit);
 
                 RTCPeerConnectionIceEventInit init;
                 init.m_candidate = cand;
@@ -451,10 +452,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
     } else {
     }
 
-    if (!configuration.isValid()) {
-        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
-                               "TypeError");
-    }
+    setConfiguration(configuration, false);
 
     if (!initializePeerConnection(configuration)) {
         deletePeerConnection();
@@ -462,9 +460,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
                                "UnknownError");
     }
-
-    // 9--11
-    m_configuration = configuration;
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
@@ -480,8 +475,7 @@ bool RTCPeerConnection::initializePeerConnection()
 bool RTCPeerConnection::initializePeerConnection(
     RTCConfiguration& configuration)
 {
-    m_peerConnectionObserver = std::unique_ptr<PeerConnectionObserver>(
-        new PeerConnectionObserver(this));
+    m_peerConnectionObserver = new (NoGC) PeerConnectionObserver(this);
 
     WebRtcManager* webRtcManager = this->executionContext()
                                        ->document()
@@ -492,30 +486,9 @@ bool RTCPeerConnection::initializePeerConnection(
 
     bool dtls = true;
     webrtc::PeerConnectionInterface::RTCConfiguration config =
-        configuration.backend();
+        configuration.genBackend();
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-    config.enable_rtp_data_channel = true;
-    config.enable_dtls_srtp = dtls;
-    config.set_dscp(false);
-
-    // NOTE: libwebrtc still uses uri internally, and when it is empty
-    // random crash occurs.
-    // for testing server.uri = "stun:stun.l.google.com:19302" can be used
-    for (auto& server : config.servers) {
-        if (server.uri.empty() && !server.urls.empty()) {
-            server.uri = server.urls[0];
-            server.urls.clear();
-        }
-    }
-
-    // FIXME: Due to a bug in the binding generator, iceservers cannot be
-    // obtained. Use the default server
-    webrtc::PeerConnectionInterface::IceServer server;
-    server.uri = m_stun;
-    config.servers.push_back(server);
-    webrtc::PeerConnectionDependencies dependencies{
-        m_peerConnectionObserver.get()
-    };
+    webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
     m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
         config, std::move(dependencies));
 
@@ -1046,17 +1019,28 @@ GCVector<RTCIceServer> RTCPeerConnection::getDefaultIceServers()
     return std::move(iceServers);
 }
 
-RTCConfiguration& RTCPeerConnection::getConfiguration()
+RTCConfiguration RTCPeerConnection::getConfiguration()
 {
     return m_configuration;
 }
 
-void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration)
+void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration,
+                                         bool checkStatus)
 {
-    if (isClosed()) {
+    if (checkStatus && isClosed()) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
+    }
+
+    if (!configuration.isValid()) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR, "TypeError");
+    }
+
+    if (!configuration.hasIceServers()) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR, "TypeError");
     }
 
     // 1-3
@@ -1094,29 +1078,84 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration)
     }
 
     // 5
-    if (m_configuration.backend().bundle_policy !=
-        configuration.backend().bundle_policy) {
+    if (m_configuration.hasBundlePolicy() &&
+        (m_configuration.m_bundlePolicy != configuration.m_bundlePolicy)) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_MODIFICATION_ERR,
                                "InvalidModificationError");
     }
     // 6
-    if (m_configuration.backend().rtcp_mux_policy !=
-        configuration.backend().rtcp_mux_policy) {
+    if (m_configuration.hasRtcpMuxPolicy() &&
+        (m_configuration.m_rtcpMuxPolicy != configuration.m_rtcpMuxPolicy)) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_MODIFICATION_ERR,
                                "InvalidModificationError");
     }
-    if (configuration.backend().rtcp_mux_policy ==
-        webrtc::PeerConnectionInterface::RtcpMuxPolicy::
-            kRtcpMuxPolicyNegotiate) {
+    if (configuration.hasRtcpMuxPolicy() &&
+        (configuration.m_rtcpMuxPolicy == RTCRtcpMuxPolicy::Negotiate)) {
         // TODO: Support non-muxed RTCP
         throw new DOMException(executionContext(),
                                DOMException::NOT_SUPPORTED_ERR,
                                "NotSupportedError");
     }
 
-    // 7 - 11: TODO
+    // 7 - 10: TODO
+
+    // 11
+    if (configuration.hasIceServers()) {
+        for (RTCIceServer& server : configuration.iceServers()) {
+            GCVector<String*> urls = server.m_urls;
+            for (String* u : urls) {
+                String* url = u->trim()->toLower();
+                if (url->startsWith("turn") || url->startsWith("turns")) {
+                    if (!server.hasUsername()) {
+                        if (!server.m_credential.isNoneValue()) {
+                            throw new DOMException(
+                                executionContext(),
+                                DOMException::INVALID_ACCESS_ERR,
+                                "InvalidAccessError");
+                        }
+                    } else if (!server.m_username->equals(
+                                   String::emptyString)) {
+                        if (server.m_credential.isNoneValue()) {
+                            throw new DOMException(
+                                executionContext(),
+                                DOMException::INVALID_ACCESS_ERR,
+                                "InvalidAccessError");
+                        }
+                    }
+
+                    if ((server.m_credentialType ==
+                         RTCIceCredentialType::Password) &&
+                        !server.m_credential.isDOMStringValue()) {
+                        throw new DOMException(executionContext(),
+                                               DOMException::INVALID_ACCESS_ERR,
+                                               "InvalidAccessError");
+                    }
+                    if ((server.m_credentialType ==
+                         RTCIceCredentialType::OAuth) &&
+                        !server.m_credential.isRTCOAuthCredentialValue()) {
+                        throw new DOMException(executionContext(),
+                                               DOMException::INVALID_ACCESS_ERR,
+                                               "InvalidAccessError");
+                    }
+                } else if (url->startsWith("stun") ||
+                           url->startsWith("stuns")) {
+                } else if (url->startsWith("relative-url") ||
+                           url->startsWith("http:") ||
+                           url->startsWith("https:")) {
+                    throw new DOMException(executionContext(),
+                                           DOMException::SYNTAX_ERR,
+                                           "SyntaxError");
+                }
+            }
+            if (!server.hasValidCredentialType()) {
+                throw new DOMException(executionContext(),
+                                       DOMException::SCRIPT_TYPE_ERR,
+                                       "TypeError");
+            }
+        }
+    }
 
     // 12
     m_configuration = configuration;
@@ -1352,6 +1391,7 @@ bool RTCPeerConnection::isClosed()
 void RTCPeerConnection::deletePeerConnection()
 {
     m_backend = nullptr;
+    delete m_peerConnectionObserver;
 }
 
 Nullable<RTCSdpType> RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)
