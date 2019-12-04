@@ -48,7 +48,7 @@ enum class RTCErrorDetailType {
     HardwareEncoderError
 };
 
-struct RTCErrorInit {
+struct RTCErrorInit : public gc {
     String* errorDetail();
     void setErrorDetail(String* errorDetail);
 

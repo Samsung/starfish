@@ -29,6 +29,15 @@
 
 namespace Starfish {
 
+RTCIceCandidateInit::RTCIceCandidateInit(std::string& candidate,
+                                         std::string& sdpMid, int sdpMLineIndex)
+{
+    m_candidate =
+        String::createASCIIString(candidate.c_str(), candidate.length());
+    m_sdpMid = String::createASCIIString(sdpMid.c_str(), sdpMid.length());
+    m_sdpMLineIndex = sdpMLineIndex;
+}
+
 RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
                                  RTCIceCandidateInit init)
     : ScriptWrappable(this)
@@ -50,19 +59,6 @@ RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
         NULL, NULL, NULL);
 }
 
-RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
-                                 webrtc::IceCandidateInterface* candidate)
-    : ScriptWrappable(this)
-    , m_executionContext(executionContext)
-{
-    m_backend = std::unique_ptr<webrtc::IceCandidateInterface>(candidate);
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCIceCandidate*)obj)->~RTCIceCandidate(); },
-        NULL, NULL, NULL);
-}
-
 RTCIceCandidate::~RTCIceCandidate()
 {
 }
@@ -72,12 +68,8 @@ ScriptBindingInstance* RTCIceCandidate::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-const webrtc::IceCandidateInterface* RTCIceCandidate::backend()
+std::unique_ptr<webrtc::IceCandidateInterface> RTCIceCandidate::genBackend()
 {
-    if (m_backend) {
-        return m_backend.get();
-    }
-
     std::string sdpMid;
     if (m_sdpMid.hasValue()) {
         sdpMid = m_sdpMid.getValue()->toUTF8NonGCString();
@@ -94,13 +86,12 @@ const webrtc::IceCandidateInterface* RTCIceCandidate::backend()
     std::unique_ptr<webrtc::IceCandidateInterface> candidate =
         std::unique_ptr<webrtc::IceCandidateInterface>(
             webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
-    m_backend.reset(candidate.release());
 
-    if (!m_backend) {
+    if (!candidate) {
         STARFISH_LOG_WARN("IceCandidate was not created");
     }
 
-    return m_backend.get();
+    return std::move(candidate);
 }
 }
 

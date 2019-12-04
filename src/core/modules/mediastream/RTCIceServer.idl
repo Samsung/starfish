@@ -26,9 +26,8 @@ enum RTCIceCredentialType {
 // https://w3c.github.io/webrtc-pc/#rtciceserver-dictionary
 [STARFISH_ENABLE_WEBRTC]
 dictionary RTCIceServer {
-  // required (DOMString or sequence<DOMString>) urls; // FIXME: sequence
-  required sequence<DOMString> urls;
+  required (DOMString or sequence<DOMString>) urls;
   DOMString username;
-  // (DOMString or RTCOAuthCredential) credential; // Not supported by WebRTC
-  // RTCIceCredentialType credentialType = "password"; // Not supported by WebRTC
+  (DOMString or RTCOAuthCredential) credential;
+  RTCIceCredentialType credentialType = "password";
 };

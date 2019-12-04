@@ -127,8 +127,6 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
                 // 6.3.2-6.10: TODO: Support constraints and permissions
                 // 7
                 STARFISH_LOG_INFO("%s: video successful\n", __func__);
-                MediaStream* mediaStream =
-                    new MediaStream(md->executionContext());
                 mediaStream->addTrack(videoTrack);
             }
             promise->fulfill(mediaStream->scriptValue());

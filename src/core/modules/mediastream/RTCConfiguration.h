@@ -47,39 +47,51 @@ enum class RTCRtcpMuxPolicy {
     Require,
 };
 
-struct RTCConfiguration {
+struct RTCConfiguration : public gc {
     friend class RTCPeerConnection;
 
 public:
     RTCConfiguration();
     virtual ~RTCConfiguration(){};
 
-    std::vector<RTCIceServer> iceServers();
-    void setIceServers(std::vector<RTCIceServer>& iceServers);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCIceServer>, iceServers,
+                                      IceServers);
+
     String* iceTransportPolicy();
     void setIceTransportPolicy(String* iceTransportPolicy);
+    DEFINE_HASFLAG_GETTER(IceTransportPolicy);
+
     String* bundlePolicy();
     void setBundlePolicy(String* bundlePolicy);
+    DEFINE_HASFLAG_GETTER(BundlePolicy);
+
     String* rtcpMuxPolicy();
     void setRtcpMuxPolicy(String* rtcpMuxPolicy);
+    DEFINE_HASFLAG_GETTER(RtcpMuxPolicy);
+
     DEFINE_GETTER_SETTER(String*, peerIdentity, PeerIdentity);
-    GCVector<RTCCertificate*> certificates();
-    void setCertificates(GCVector<RTCCertificate*>& certificates);
-    int iceCandidatePoolSize();
-    void setIceCandidatePoolSize(int size);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCCertificate*>, certificates,
+                                      Certificates);
+    DEFINE_GETTER_SETTER(int, iceCandidatePoolSize, IceCandidatePoolSize);
 
     bool isValid();
 
-    webrtc::PeerConnectionInterface::RTCConfiguration backend()
-    {
-        return m_backend;
-    }
+    webrtc::PeerConnectionInterface::RTCConfiguration genBackend();
 
 private:
-    GCVector<RTCCertificate*> m_certificates;
-    webrtc::PeerConnectionInterface::RTCConfiguration m_backend;
-
+    GCVector<RTCIceServer> m_iceServers;
+    RTCIceTransportPolicy m_iceTransportPolicy{ RTCIceTransportPolicy::All };
+    RTCBundlePolicy m_bundlePolicy{ RTCBundlePolicy::Balanced };
+    RTCRtcpMuxPolicy m_rtcpMuxPolicy{ RTCRtcpMuxPolicy::Require };
     String* m_peerIdentity{ String::emptyString };
+    GCVector<RTCCertificate*> m_certificates;
+    int m_iceCandidatePoolSize{ 0 };
+
+    bool m_hasIceServers{ true };
+    bool m_hasIceTransportPolicy{ false };
+    bool m_hasBundlePolicy{ false };
+    bool m_hasRtcpMuxPolicy{ false };
+    bool m_hasCertificates{ true };
 
     bool m_hasValidIceTransportPolicy{ true };
     bool m_hasValidBundlePolicy{ true };
