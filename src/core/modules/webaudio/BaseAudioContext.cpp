@@ -171,7 +171,7 @@ Promise* BaseAudioContext::decodeAudioData(
 
             if (!canDecode) {
                 auto exception = new DOMException(self->executionContext(),
-                                                  DOMException::ENCODING_ERROR,
+                                                  DOMException::ENCODING_ERR,
                                                   "Encoding error");
                 promise->reject(exception->scriptValue());
             }
