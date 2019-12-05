@@ -895,30 +895,115 @@ RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
     return new RTCSessionDescription(executionContext(), desc);
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-peerconnection-addicecandidate
 Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
 {
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    // 1-3
+    if (!init.m_candidate->equals(String::emptyString) &&
+        !init.m_sdpMid.hasValue() && !init.m_sdpMLineIndex.hasValue()) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::SCRIPT_TYPE_ERR, "TypeError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 4.1
+    const webrtc::SessionDescriptionInterface* remoteDescription =
+        backend()->remote_description();
+    if (!remoteDescription) {
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    if (init.m_candidate->equals(String::emptyString) &&
+        !init.m_sdpMid.hasValue() && !init.m_sdpMLineIndex.hasValue()) {
+        auto exception = new DOMException(
+            executionContext(), DOMException::SCRIPT_TYPE_ERR, "TypeError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     std::string sdpMid;
     if (init.m_sdpMid.hasValue()) {
         sdpMid = init.m_sdpMid.getValue()->toUTF8NonGCString();
     }
 
-    std::string sdp(init.m_candidate->toUTF8NonGCString());
-
     uint32_t sdpMLineIndex = 0;
-    if (init.m_sdpMid.hasValue()) {
+    if (init.m_sdpMLineIndex.hasValue()) {
         sdpMLineIndex = init.m_sdpMLineIndex.getValue();
     }
+
+    bool hasValidSdpMid = false;
+    if (init.m_sdpMid.hasValue()) {
+        size_t lineIndex;
+        size_t mediaSectionSize = remoteDescription->number_of_mediasections();
+        for (size_t i = 0; i < mediaSectionSize; i++) {
+            const webrtc::IceCandidateCollection* candidateCollection =
+                remoteDescription->candidates(i);
+
+            for (size_t j = 0; j < candidateCollection->count(); j++) {
+                const webrtc::IceCandidateInterface* candidate =
+                    candidateCollection->at(j);
+                if (candidate->sdp_mid() == sdpMid) {
+                    hasValidSdpMid = true;
+                    lineIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (hasValidSdpMid && (sdpMLineIndex >= mediaSectionSize)) {
+            sdpMLineIndex = lineIndex;
+        }
+    } else if (init.m_sdpMLineIndex.hasValue()) {
+        const webrtc::IceCandidateCollection* candidateCollection =
+            remoteDescription->candidates(sdpMLineIndex);
+
+        if (!candidateCollection) {
+            auto exception = new DOMException(
+                executionContext(), String::createASCIIString("OperationError"),
+                String::createASCIIString("OperationError"));
+            promise->reject(exception->scriptValue());
+            return promise;
+        }
+    }
+
+    if (init.m_candidate->equals(String::emptyString)) {
+        // TODO: add a:end-of-candidates to sdp
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::NOT_SUPPORTED_ERR,
+                                          "NotSupportedError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    std::string sdp(init.m_candidate->toUTF8NonGCString());
 
     webrtc::SdpParseError error;
     std::unique_ptr<webrtc::IceCandidateInterface> candidate =
         std::unique_ptr<webrtc::IceCandidateInterface>(
             webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
 
-    bool r = backend()->AddIceCandidate(candidate.get());
+    if (!candidate) {
+        auto exception = new DOMException(
+            executionContext(), String::createASCIIString("OperationError"),
+            String::createASCIIString("OperationError"));
 
-    Promise* promise = new Promise(scriptBindingInstance());
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    bool r = backend()->AddIceCandidate(candidate.get());
     if (!r) {
-        promise->reject(scriptUndefined());
+        auto exception = new DOMException(
+            executionContext(), String::createASCIIString("OperationError"),
+            String::createASCIIString("OperationError"));
+        promise->reject(exception->scriptValue());
         return promise;
     }
 

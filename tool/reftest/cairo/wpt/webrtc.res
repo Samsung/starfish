@@ -1,7 +1,7 @@
 # http://web-platform.test:8000/webrtc/RTCCertificate.html
 http://web-platform.test:8000/webrtc/RTCConfiguration-bundlePolicy.html
 # http://web-platform.test:8000/webrtc/RTCConfiguration-iceCandidatePoolSize.html
-# http://web-platform.test:8000/webrtc/RTCConfiguration-iceServers.html
+# http://web-platform.test:8000/webrtc/RTCConfiguration-iceServers.html # Partial Pass
 http://web-platform.test:8000/webrtc/RTCConfiguration-iceTransportPolicy.html
 http://web-platform.test:8000/webrtc/RTCConfiguration-rtcpMuxPolicy.html
 # http://web-platform.test:8000/webrtc/RTCDTMFSender-insertDTMF.https.html
@@ -15,12 +15,12 @@ http://web-platform.test:8000/webrtc/RTCConfiguration-rtcpMuxPolicy.html
 http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
 # http://web-platform.test:8000/webrtc/RTCIceTransport.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate.html # Partial Pass
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-addTrack.https.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-addTransceiver.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-connectionState.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
+# http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html # Partial Pass
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html # Pass but fails in docker
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
 # http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer-offerToReceive.html
