@@ -25,6 +25,7 @@
 #include "core/modules/mediastream/RTCRtpReceiver.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/mediastream/MediaStreamTrack.h"
 
 namespace Starfish {
 
@@ -57,6 +58,37 @@ ScriptBindingInstance* RTCRtpReceiver::scriptBindingInstance()
 
 MediaStreamTrack* RTCRtpReceiver::track()
 {
+    if (m_track) {
+        if (m_track->isAudioStreamTrack()) {
+            STARFISH_RELEASE_ASSERT(
+                m_track->asAudioStreamTrack()->backend().get() ==
+                m_backend->track().get());
+        } else {
+            STARFISH_RELEASE_ASSERT(
+                m_track->asVideoStreamTrack()->backend().get() ==
+                m_backend->track().get());
+        }
+
+        return m_track;
+    }
+
+    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> mediaTrack =
+        m_backend->track();
+
+    if (!mediaTrack) {
+        return nullptr;
+    }
+
+    if (mediaTrack->kind() == "audio") {
+        rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(
+            (webrtc::AudioTrackInterface*)(mediaTrack.get()));
+        m_track = new AudioStreamTrack(m_executionContext, audioTrack);
+    } else if (mediaTrack->kind() == "video") {
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
+            (webrtc::VideoTrackInterface*)(mediaTrack.get()));
+        m_track = new VideoStreamTrack(m_executionContext, videoTrack);
+    }
+
     return m_track;
 }
 }

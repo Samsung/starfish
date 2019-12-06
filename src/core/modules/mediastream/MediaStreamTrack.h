@@ -49,6 +49,8 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStreamTrack)
     virtual ExecutionContext* executionContext() const override;
 
+    virtual std::string id() = 0;
+
     virtual Kind kind()
     {
         return m_kind;
@@ -98,6 +100,11 @@ public:
                      rtc::scoped_refptr<webrtc::AudioTrackInterface> backend);
     virtual ~AudioStreamTrack();
 
+    std::string id() override
+    {
+        return m_backend->id();
+    }
+
     virtual bool isAudioStreamTrack()
     {
         return true;
@@ -130,6 +137,12 @@ public:
                      rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
 
     virtual ~VideoStreamTrack();
+
+    std::string id() override
+    {
+        return m_backend->id();
+    }
+
     virtual bool isVideoStreamTrack() override
     {
         return true;

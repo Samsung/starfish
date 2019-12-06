@@ -30,7 +30,7 @@ enum RTCRtpTransceiverDirection {
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiverinit
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary RTCRtpTransceiverInit {
-//  RTCRtpTransceiverDirection direction = "sendrecv";
+  RTCRtpTransceiverDirection direction = "sendrecv";
 //  sequence<MediaStream> streams = [];
 //  sequence<RTCRtpEncodingParameters> sendEncodings = [];
 };
@@ -41,10 +41,10 @@ dictionary RTCRtpTransceiverInit {
   Exposed=Window ]
 interface RTCRtpTransceiver {
   readonly attribute DOMString? mid;
-//  [SameObject] readonly attribute RTCRtpSender sender;
-//  [SameObject] readonly attribute RTCRtpReceiver receiver;
-  attribute RTCRtpTransceiverDirection direction;
-//  readonly attribute RTCRtpTransceiverDirection? currentDirection;
+  [SameObject] readonly attribute RTCRtpSender sender;
+  [SameObject] readonly attribute RTCRtpReceiver receiver;
+  [Rename=directionStr] attribute RTCRtpTransceiverDirection direction;
+  readonly attribute RTCRtpTransceiverDirection? currentDirection; // FIXME: binding generator expects an empty string
 //  void stop();
 //  void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
 };

@@ -25,8 +25,27 @@
 #include "core/modules/mediastream/RTCRtpTransceiver.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/mediastream/RTCRtpSender.h"
+#include "core/modules/mediastream/RTCRtpReceiver.h"
 
 namespace Starfish {
+
+webrtc::RtpTransceiverInit RTCRtpTransceiverInit::toRtpTransceiverInit()
+{
+    webrtc::RtpTransceiverInit init;
+
+    if (m_direction->equals("sendrecv")) {
+        init.direction = webrtc::RtpTransceiverDirection::kSendRecv;
+    } else if (m_direction->equals("sendonly")) {
+        init.direction = webrtc::RtpTransceiverDirection::kSendOnly;
+    } else if (m_direction->equals("recvonly")) {
+        init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
+    } else if (m_direction->equals("inactive")) {
+        init.direction = webrtc::RtpTransceiverDirection::kInactive;
+    }
+
+    return init;
+}
 
 RTCRtpTransceiver::RTCRtpTransceiver(ExecutionContext* executionContext)
     : RTCRtpTransceiver(executionContext, nullptr)
@@ -69,7 +88,39 @@ String* RTCRtpTransceiver::mid()
     return String::createASCIIString(mid.value().c_str(), mid.value().length());
 }
 
-String* RTCRtpTransceiver::direction()
+RTCRtpSender* RTCRtpTransceiver::sender()
+{
+    if (m_sender) {
+        return m_sender;
+    }
+
+    m_sender = new RTCRtpSender(m_executionContext, m_backend->sender());
+    return m_sender;
+}
+
+RTCRtpReceiver* RTCRtpTransceiver::receiver()
+{
+    if (m_receiver) {
+        return m_receiver;
+    }
+
+    m_receiver = new RTCRtpReceiver(m_executionContext, m_backend->receiver());
+    return m_receiver;
+}
+
+void RTCRtpTransceiver::setDirection(webrtc::RtpTransceiverDirection direction)
+{
+    m_backend->SetDirection(direction);
+
+    if ((m_backend->current_direction() ==
+         webrtc::RtpTransceiverDirection::kSendRecv) ||
+        (m_backend->current_direction() ==
+         webrtc::RtpTransceiverDirection::kSendOnly)) {
+        m_sentBefore = true;
+    }
+}
+
+String* RTCRtpTransceiver::directionStr()
 {
     if (!m_backend) {
         return String::createASCIIString("stopped");
@@ -79,7 +130,7 @@ String* RTCRtpTransceiver::direction()
     case webrtc::RtpTransceiverDirection::kSendRecv:
         return String::createASCIIString("sendrecv");
     case webrtc::RtpTransceiverDirection::kSendOnly:
-        return String::createASCIIString("sendOnly");
+        return String::createASCIIString("sendonly");
     case webrtc::RtpTransceiverDirection::kRecvOnly:
         return String::createASCIIString("recvonly");
     case webrtc::RtpTransceiverDirection::kInactive:
@@ -89,21 +140,60 @@ String* RTCRtpTransceiver::direction()
     }
 }
 
-void RTCRtpTransceiver::setDirection(String* direction)
+void RTCRtpTransceiver::setDirectionStr(String* direction)
 {
     if (!m_backend) {
         return;
     }
 
     if (direction->equals("sendrecv")) {
-        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kSendRecv);
+        setDirection(webrtc::RtpTransceiverDirection::kSendRecv);
     } else if (direction->equals("sendonly")) {
-        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kSendOnly);
+        setDirection(webrtc::RtpTransceiverDirection::kSendOnly);
     } else if (direction->equals("recvonly")) {
-        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kRecvOnly);
+        setDirection(webrtc::RtpTransceiverDirection::kRecvOnly);
     } else if (direction->equals("inactive")) {
-        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kInactive);
+        setDirection(webrtc::RtpTransceiverDirection::kInactive);
     }
+}
+
+String* RTCRtpTransceiver::currentDirection()
+{
+    if (!m_backend) {
+        return String::emptyString;
+    }
+
+    absl::optional<webrtc::RtpTransceiverDirection> curDirection =
+        m_backend->current_direction();
+    if (!curDirection.has_value()) {
+        return String::emptyString;
+    }
+
+    switch (curDirection.value()) {
+    case webrtc::RtpTransceiverDirection::kSendRecv:
+        return String::createASCIIString("sendrecv");
+    case webrtc::RtpTransceiverDirection::kSendOnly:
+        return String::createASCIIString("sendonly");
+    case webrtc::RtpTransceiverDirection::kRecvOnly:
+        return String::createASCIIString("recvonly");
+    case webrtc::RtpTransceiverDirection::kInactive:
+        return String::createASCIIString("inactive");
+    }
+
+    return String::emptyString;
+}
+
+bool RTCRtpTransceiver::stopped()
+{
+    if (!m_backend) {
+        return false;
+    }
+    return m_backend->stopped();
+}
+
+bool RTCRtpTransceiver::sentBefore()
+{
+    return m_sentBefore;
 }
 }
 
