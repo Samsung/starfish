@@ -427,6 +427,8 @@ private:
     std::string m_lastCreatedOffer;
     std::string m_lastCreatedAnswer;
 
+    GCVector<RTCRtpTransceiver*> m_transceivers;
+
     bool isClosed();
     void deletePeerConnection();
 

@@ -48,6 +48,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpSender)
 
     MediaStreamTrack* track();
+    void setTrack(MediaStreamTrack* track);
     RTCDtlsTransport* transport();
     Promise* setParameters(RTCRtpSendParameters parameters);
     RTCRtpSendParameters getParameters();
@@ -59,6 +60,8 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::RtpSenderInterface> m_backend;
+
+    MediaStreamTrack* m_track{ nullptr };
 };
 }
 #endif

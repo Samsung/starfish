@@ -25,6 +25,10 @@
 #include "core/modules/mediastream/RTCRtpSender.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/mediastream/MediaStream.h"
+#include "core/modules/mediastream/MediaStreamTrack.h"
+
+#include "api/rtp_sender_interface.h"
 
 namespace Starfish {
 
@@ -57,8 +61,53 @@ ScriptBindingInstance* RTCRtpSender::scriptBindingInstance()
 
 MediaStreamTrack* RTCRtpSender::track()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    if (m_track) {
+        if (m_track->isAudioStreamTrack()) {
+            STARFISH_RELEASE_ASSERT(
+                m_track->asAudioStreamTrack()->backend().get() ==
+                m_backend->track().get());
+        } else {
+            STARFISH_RELEASE_ASSERT(
+                m_track->asVideoStreamTrack()->backend().get() ==
+                m_backend->track().get());
+        }
+
+        return m_track;
+    }
+
+    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> mediaTrack =
+        m_backend->track();
+
+    if (!mediaTrack) {
+        return nullptr;
+    }
+
+    if (mediaTrack->kind() == "audio") {
+        rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(
+            (webrtc::AudioTrackInterface*)(mediaTrack.get()));
+        m_track = new AudioStreamTrack(m_executionContext, audioTrack);
+    } else if (mediaTrack->kind() == "video") {
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
+            (webrtc::VideoTrackInterface*)(mediaTrack.get()));
+        m_track = new VideoStreamTrack(m_executionContext, videoTrack);
+    }
+
+    return m_track;
+}
+
+void RTCRtpSender::setTrack(MediaStreamTrack* track)
+{
+    m_track = track;
+    bool r;
+    if (track->isAudioStreamTrack()) {
+        r = backend()->SetTrack(track->asAudioStreamTrack()->backend());
+    } else if (track->isVideoStreamTrack()) {
+        r = backend()->SetTrack(track->asVideoStreamTrack()->backend());
+    }
+
+    if (!r) {
+        STARFISH_LOG_ERROR("%s: failed\n", __func__);
+    }
 }
 
 RTCDtlsTransport* RTCRtpSender::transport()
@@ -88,7 +137,12 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
 
 void RTCRtpSender::setStreams(GCVector<MediaStream*>& streams)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    std::vector<std::string> streamIds;
+    for (auto stream : streams) {
+        streamIds.push_back(stream->backend()->id());
+    }
+
+    m_backend->SetStreams(streamIds);
 }
 
 rtc::scoped_refptr<webrtc::RtpSenderInterface> RTCRtpSender::backend()

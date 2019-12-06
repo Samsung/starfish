@@ -1311,51 +1311,43 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
 
 GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
 {
-    GCVector<RTCRtpSender*> results;
+    GCVector<RTCRtpSender*> senders;
     if (!m_backend) {
-        return std::move(results);
+        return std::move(senders);
     }
 
-    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders =
+    for (auto transceiver : m_transceivers) {
+        senders.push_back(transceiver->sender());
+    }
+
+    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> backendSenders =
         backend()->GetSenders();
+    STARFISH_ASSERT(senders.size() == backendSenders.size());
 
-    for (auto& sender : senders) {
-        results.push_back(new RTCRtpSender(executionContext(), sender));
-    }
-    return std::move(results);
+    return std::move(senders);
 }
 
 GCVector<RTCRtpReceiver*> RTCPeerConnection::getReceivers()
 {
-    GCVector<RTCRtpReceiver*> results;
+    GCVector<RTCRtpReceiver*> receivers;
     if (!m_backend) {
-        return std::move(results);
+        return std::move(receivers);
     }
 
-    std::vector<rtc::scoped_refptr<webrtc::RtpReceiverInterface>> receivers =
-        m_backend->GetReceivers();
-
-    for (auto& receiver : receivers) {
-        results.push_back(new RTCRtpReceiver(executionContext(), receiver));
+    for (auto transceiver : m_transceivers) {
+        receivers.push_back(transceiver->receiver());
     }
-    return std::move(results);
+
+    std::vector<rtc::scoped_refptr<webrtc::RtpReceiverInterface>>
+        backendReceivers = m_backend->GetReceivers();
+    STARFISH_ASSERT(receivers.size() == backendReceivers.size());
+
+    return std::move(receivers);
 }
 
 GCVector<RTCRtpTransceiver*> RTCPeerConnection::getTransceivers()
 {
-    GCVector<RTCRtpTransceiver*> results;
-    if (!m_backend) {
-        return std::move(results);
-    }
-
-    std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-        transceivers = m_backend->GetTransceivers();
-
-    for (auto& transceiver : transceivers) {
-        results.push_back(
-            new RTCRtpTransceiver(executionContext(), transceiver));
-    }
-    return std::move(results);
+    return m_transceivers;
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtrack
@@ -1364,55 +1356,106 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
 {
     WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
 
+    // 5
     if (isClosed()) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
 
-    for (auto& transceiver : backend()->GetTransceivers()) {
-        std::string id = "";
-        if (track->isAudioStreamTrack()) {
-            id = track->asAudioStreamTrack()->backend()->id();
-        } else if (track->isVideoStreamTrack()) {
-            id = track->asVideoStreamTrack()->backend()->id();
-        }
-
-        if (!transceiver->stopped() &&
-            transceiver->sender()->track()->id() == id) {
-            throw new DOMException(executionContext(),
-                                   DOMException::INVALID_ACCESS_ERR,
-                                   "InvalidAccessErr");
-        }
-    }
-
+    // 1-4
     std::vector<std::string> streamIds;
     for (auto stream : streams) {
         streamIds.push_back(stream->backend()->id());
     }
 
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>> r;
+    // 6
+    std::string id = "";
     if (track->isAudioStreamTrack()) {
-        r = backend()->AddTrack(track->asAudioStreamTrack()->backend(),
-                                std::move(streamIds));
+        id = track->asAudioStreamTrack()->backend()->id();
     } else if (track->isVideoStreamTrack()) {
-        r = backend()->AddTrack(track->asVideoStreamTrack()->backend(),
-                                std::move(streamIds));
+        id = track->asVideoStreamTrack()->backend()->id();
+    }
+
+    // 7
+    GCVector<RTCRtpSender*> senders;
+    RTCRtpSender* senderToReturn = nullptr;
+    RTCRtpTransceiver* transceiverWithSender = nullptr;
+    for (auto transceiver : m_transceivers) {
+        if (!transceiver->stopped()) {
+            senders.push_back(transceiver->sender());
+
+            if (transceiver->sender()->track() &&
+                transceiver->sender()->track()->id() == id) {
+                throw new DOMException(executionContext(),
+                                       DOMException::INVALID_ACCESS_ERR,
+                                       "InvalidAccessErr");
+            }
+
+            RTCRtpSender* sender = transceiver->sender();
+            if (!sender->track() &&
+                (transceiver->receiver()->track()->kind() == track->kind()) &&
+                !transceiver->sentBefore()) {
+                senderToReturn = sender;
+            }
+        }
+    }
+
+    // 8
+    if (senderToReturn) {
+        senderToReturn->setTrack(track);
+        senderToReturn->setStreams(streams);
+
+        RTCRtpTransceiver* transceiverWithSender = nullptr;
+        for (auto transceiver : m_transceivers) {
+            if (transceiver->sender() == senderToReturn) {
+                transceiverWithSender = transceiver;
+                break;
+            }
+        }
+
+        if (transceiverWithSender) {
+            if (transceiverWithSender->direction() ==
+                webrtc::RtpTransceiverDirection::kRecvOnly) {
+                transceiverWithSender->setDirection(
+                    webrtc::RtpTransceiverDirection::kSendRecv);
+            } else if (transceiverWithSender->direction() ==
+                       webrtc::RtpTransceiverDirection::kInactive) {
+                transceiverWithSender->setDirection(
+                    webrtc::RtpTransceiverDirection::kSendOnly);
+            }
+        }
+    } else { // 9
+        webrtc::RtpTransceiverInit init;
+        init.stream_ids = streamIds;
+
+        webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+            r;
+        if (track->isAudioStreamTrack()) {
+            r = backend()->AddTransceiver(
+                track->asAudioStreamTrack()->backend(), init);
+        } else if (track->isVideoStreamTrack()) {
+            r = backend()->AddTransceiver(
+                track->asVideoStreamTrack()->backend(), init);
+        }
+
+        if (!r.ok()) {
+            STARFISH_LOG_ERROR("Failed to add an audio/video track: %s\n",
+                               r.error().message());
+            throw new DOMException(executionContext(),
+                                   DOMException::INVALID_ACCESS_ERR,
+                                   "InvalidAccessErr");
+        }
+        RTCRtpTransceiver* transceiver =
+            new RTCRtpTransceiver(executionContext(), r.value());
+        m_transceivers.push_back(transceiver);
+        senderToReturn = transceiver->sender();
+        senderToReturn->setTrack(track);
+        senderToReturn->setStreams(streams);
     }
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
-
-    if (r.ok()) {
-        RTCRtpSender* rtpSender =
-            new RTCRtpSender(executionContext(), r.value());
-        return rtpSender;
-    } else {
-        STARFISH_LOG_ERROR("Failed to add audio/video track: %s\n",
-                           r.error().message());
-        throw new DOMException(executionContext(),
-                               DOMException::INVALID_ACCESS_ERR,
-                               "InvalidAccessErr");
-    }
+    return senderToReturn;
 }
 
 void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
@@ -1437,26 +1480,54 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     DOMStringOrMediaStreamTrack trackOrKind, RTCRtpTransceiverInit init)
 {
     if (!m_backend) {
+        STARFISH_LOG_ERROR("%s: backend not exist\n", __func__);
         return new RTCRtpTransceiver(executionContext());
+    }
+
+    if (isClosed()) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    String* kind = nullptr;
+    MediaStreamTrack* track = nullptr;
+    if (trackOrKind.isDOMStringValue()) {
+        kind = trackOrKind.getDOMStringValue();
+        if (!kind->equals("audio") && !kind->equals("video")) {
+            throw new DOMException(executionContext(),
+                                   DOMException::SCRIPT_TYPE_ERR,
+                                   "ScriptTypeError");
+        }
+    } else if (trackOrKind.isMediaStreamTrackValue()) {
+        track = trackOrKind.getMediaStreamTrackValue();
     }
 
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>> r;
-    if (trackOrKind.isDOMStringValue()) {
-        String* kind = trackOrKind.getDOMStringValue();
-        if (kind->equals("audio")) {
-            r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO);
-        } else if (kind->equals("audio")) {
-            r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO);
-        }
-    } else if (trackOrKind.isMediaStreamTrackValue()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if ((kind && kind->equals("audio")) ||
+        (track && track->kind() == MediaStreamTrack::Kind::Audio)) {
+        r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO,
+                                      init.toRtpTransceiverInit());
+    } else if ((kind && kind->equals("video")) ||
+               (track && track->kind() == MediaStreamTrack::Kind::Video)) {
+        r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO,
+                                      init.toRtpTransceiverInit());
     }
 
     if (!r.ok()) {
+        STARFISH_LOG_ERROR("%s: failed to add a transceiver\n", __func__);
         return new RTCRtpTransceiver(executionContext());
     }
 
-    return new RTCRtpTransceiver(executionContext(), r.value());
+    RTCRtpTransceiver* transceiver =
+        new RTCRtpTransceiver(executionContext(), r.value());
+    m_transceivers.push_back(transceiver);
+
+    if (track) {
+        transceiver->sender()->setTrack(track);
+    }
+
+    return transceiver;
 }
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()
