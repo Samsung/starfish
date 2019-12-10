@@ -59,17 +59,27 @@ struct OverflowStatus {
         }
 
         if (m_seenAbsBlock) {
-            bool b =
-                parent->canBeContainingBlockOfAbsolutePositionedBox(m_absChild);
-            if (!m_seenContainingBlockForAbsBlock && b) {
-                if (parent->style()->position() == RelativePositionValue) {
-                    m_seenAbsBlock = false;
-                    return parent->shouldApplyOverflow();
+            if (parent->style()->position() ==
+                PositionValue::FixedPositionValue) {
+                if (m_child && m_child->style() &&
+                    m_child->style()->position() ==
+                        PositionValue::FixedPositionValue) {
+                    return false;
                 }
+                return parent->shouldApplyOverflow();
+            } else {
+                bool b = parent->canBeContainingBlockOfAbsolutePositionedBox(
+                    m_absChild);
+                if (!m_seenContainingBlockForAbsBlock && b) {
+                    if (parent->style()->position() == RelativePositionValue) {
+                        m_seenAbsBlock = false;
+                        return parent->shouldApplyOverflow();
+                    }
+                }
+                m_seenContainingBlockForAbsBlock =
+                    b || m_seenContainingBlockForAbsBlock;
+                return b && parent->shouldApplyOverflow();
             }
-            m_seenContainingBlockForAbsBlock =
-                b || m_seenContainingBlockForAbsBlock;
-            return b && parent->shouldApplyOverflow();
         }
 
         return parent->shouldApplyOverflow();
