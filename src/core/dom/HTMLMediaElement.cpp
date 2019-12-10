@@ -515,7 +515,7 @@ void HTMLMediaElement::setSrcObject(MediaProvider* provider)
 {
     m_mediaProvider = provider;
 #if defined(STARFISH_ENABLE_WEBRTC)
-    m_mediaPlayer = new MediaPlayerWebRtc(this);
+    m_mediaPlayer = MediaPlayerWebRtc::create(this);
     load();
 #endif
 }

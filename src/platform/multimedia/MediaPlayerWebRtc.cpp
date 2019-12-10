@@ -24,99 +24,13 @@
 
 #include "MediaPlayerWebRtc.h"
 
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
-#include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/Compositor.h"
-#include "core/modules/mediastream/MediaStream.h"
-#include "core/modules/message_loop/MessageLoop.h"
-
 #include "core/dom/HTMLMediaElement.h"
-#include "core/dom/HTMLVideoElement.h"
-#include "core/layout/FrameReplacedVideo.h"
 
 namespace Starfish {
 
 MediaPlayerWebRtc::MediaPlayerWebRtc(HTMLMediaElement* element)
     : MediaPlayer(element)
 {
-    if (element->isHTMLVideoElement()) {
-        HTMLVideoElement* elem = element->asHTMLVideoElement();
-        m_canvasSurface =
-            CanvasSurface::create(m_container->webView()->platformWindow(),
-                                  elem->width(), elem->height());
-    }
-}
-
-void MediaPlayerWebRtc::play()
-{
-}
-
-// https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
-void MediaPlayerWebRtc::prepare(MediaProvider* mediaProvider)
-{
-    STARFISH_LOG_INFO("%s\n", __func__);
-    STARFISH_ASSERT(mediaProvider);
-
-    // TODO: Impl resource selection algorithm
-    // TODO: The spec assumes there is one video track
-    GCVector<MediaStreamTrack*> tracks = mediaProvider->getVideoTracks();
-    if (!tracks.empty()) {
-        mediaProvider->startPlayVideoTrack(this, tracks[0]);
-    }
-}
-
-void MediaPlayerWebRtc::prepareMediaSource()
-{
-    STARFISH_LOG_INFO("%s\n", __func__);
-}
-
-void MediaPlayerWebRtc::willDrawVideo(Compositor* canvas,
-                                      const LayoutRect& videoRect)
-{
-    STARFISH_ASSERT(canvas != nullptr);
-}
-
-void MediaPlayerWebRtc::onFrame(uint8_t* image)
-{
-    STARFISH_ASSERT(image != nullptr);
-
-    m_container->window()
-        ->webView()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data1, void* data2) {
-                MediaPlayerWebRtc* self = (MediaPlayerWebRtc*)data1;
-                BrowsingContext* b =
-                    self->container()->window()->browsingContext();
-                uint8_t* image = (uint8_t*)data2;
-                CanvasSurface* canvasSurface = self->canvasSurface();
-                FrameReplaced* frame =
-                    self->container()->frame()->asFrameReplaced();
-                auto ptr = canvasSurface->mapBuffer();
-                if (image != nullptr) {
-                    memcpy(ptr, image, canvasSurface->bufferStride() *
-                                           canvasSurface->height());
-                    canvasSurface->unmapBufferAndNotifyUpdatedRegion(
-                        frame->x().toInt(), frame->y().toInt(),
-                        canvasSurface->width(), canvasSurface->height());
-                    b->setNeedsComposite();
-                }
-            },
-            this, image);
-}
-
-void MediaPlayerWebRtc::didDrawVideo(Compositor* canvas,
-                                     const LayoutRect& videoRect,
-                                     const LayoutRect& absVideoRect)
-{
-}
-
-MediaPlayer* MediaPlayerWebRtc::create(HTMLMediaElement* element)
-{
-    return new MediaPlayerWebRtc(element);
 }
 } // namespace Starfish
 

@@ -24,6 +24,8 @@
 
 #include "platform/multimedia/MediaPlayer.h"
 
+#include "core/dom/HTMLMediaElement.h"
+
 namespace Starfish {
 class HTMLMediaElement;
 class Compositor;
@@ -32,45 +34,50 @@ class MediaPlayerWebRtc : public MediaPlayer {
     friend MediaStream;
 
 public:
-    MediaPlayerWebRtc(HTMLMediaElement* element);
     virtual ~MediaPlayerWebRtc(){};
 
     static MediaPlayer* create(HTMLMediaElement* element);
 
-    virtual void destroy(){};
-    virtual void play();
-    virtual void pause(){};
-    virtual void seek(double time){};
+    void destroy() override{};
+    void play() override{};
+    void pause() override{};
+    void seek(double time) override{};
 
-    void prepare(MediaProvider* mediaProvider);
-    virtual bool isWebRtcPlayer()
+    virtual void prepare(MediaProvider* mediaProvider){};
+    bool isWebRtcPlayer() override
     {
         return true;
     }
 
-    virtual double currentTime()
+    double currentTime() override
     {
         return 0;
     }
 
-    virtual double duration()
+    double duration() override
     {
         return 0;
     }
 
-    virtual void setVolume(double volume){};
-    virtual void setMuted(bool muted){};
-    virtual void prepareMediaSource();
+    void setVolume(double volume) override{};
+    void setMuted(bool muted) override{};
+    void prepareMediaSource() override{};
 
-    virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                              const LayoutRect& absVideoRect);
-    virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
+    void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
+                      const LayoutRect& absVideoRect) override{};
+    void willDrawVideo(Compositor* canvas,
+                       const LayoutRect& videoRect) override{};
 
-    void onFrame(uint8_t* image);
+    virtual void onFrame(uint8_t* image) = 0;
+
+protected:
+    MediaProvider* m_mediaProvider{ nullptr };
+
+    MediaPlayerWebRtc(HTMLMediaElement* element);
 
 private:
 };
-}
+} // namespace Starfish
 
 #endif
 #endif
