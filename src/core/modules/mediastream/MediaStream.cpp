@@ -96,6 +96,33 @@ void MediaStream::MediaStreamObserver::OnFrame(
     m_player->onFrame(m_image.get());
 }
 
+#if defined(STARFISH_WEBRTC_DEBUG)
+void MediaStream::MediaStreamObserver::writeImageToFile(std::string& filename)
+{
+    FILE* imageFile = fopen(filename.data(), "wb");
+    if (imageFile == nullptr) {
+        STARFISH_LOG_WARN("ERROR: Cannot open output file");
+    }
+
+    fprintf(imageFile, "P3\n");                       // P3 filetype
+    fprintf(imageFile, "%d %d\n", m_width, m_height); // dimensions
+    fprintf(imageFile, "255\n");                      // Max pixel
+
+    int pos = 0;
+    for (int y = 0; y < m_height; y++) {
+        for (int x = 0; x < m_width; x++) {
+            fprintf(imageFile, "%d ", m_image[pos + 0]); // r
+            fprintf(imageFile, "%d ", m_image[pos + 1]); // g
+            fprintf(imageFile, "%d ", m_image[pos + 2]); // b
+            pos += 4;                                    // skip a
+        }
+        fprintf(imageFile, "\n");
+    }
+    fprintf(imageFile, "\n");
+    fclose(imageFile);
+}
+#endif
+
 MediaStream::MediaStream(ExecutionContext* executionContext)
     : MediaStream(executionContext, nullptr)
 {
@@ -248,8 +275,8 @@ void MediaStream::startPlayVideoTrack(MediaPlayerWebRtc* player,
         VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
 
         if (videoTrack->backend()) {
-            m_mediaStreamObserver.reset(
-                new MediaStreamObserver(videoTrack->backend(), player));
+            m_mediaStreamObserver =
+                new MediaStreamObserver(videoTrack->backend(), player);
         } else {
             STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
         }
@@ -258,7 +285,7 @@ void MediaStream::startPlayVideoTrack(MediaPlayerWebRtc* player,
 
 void MediaStream::stopPlayVideoTrack()
 {
-    m_mediaStreamObserver == nullptr;
+    m_mediaStreamObserver = nullptr;
 }
 }
 #endif

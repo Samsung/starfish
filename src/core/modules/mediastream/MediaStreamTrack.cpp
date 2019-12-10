@@ -155,8 +155,7 @@ VideoStreamTrack::~VideoStreamTrack()
 
 void VideoStreamTrack::play()
 {
-    m_source = std::unique_ptr<VideoStreamTrackObserver>(
-        new VideoStreamTrackObserver(m_backend));
+    m_source = new VideoStreamTrackObserver(m_backend);
 }
 
 VideoStreamTrack::VideoStreamTrackObserver::VideoStreamTrackObserver(

@@ -1891,15 +1891,23 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
         if (canSkipFillGraphicsBufferDueToOpacityIsZero(this)) {
             return false;
         }
-        if (!owner()->hasOwnGraphicsBufferMethod()) {
-            LayoutRect visibleRect = StackingContext::visibleRect();
-            LayoutUnit minX = visibleRect.x();
-            LayoutUnit maxX = visibleRect.maxX();
-            LayoutUnit minY = visibleRect.y();
-            LayoutUnit maxY = visibleRect.maxY();
-            size_t bufferWidth = (int)(maxX - minX);
-            size_t bufferHeight = (int)(maxY - minY);
 
+        LayoutRect visibleRect = StackingContext::visibleRect();
+        LayoutUnit minX = visibleRect.x();
+        LayoutUnit maxX = visibleRect.maxX();
+        LayoutUnit minY = visibleRect.y();
+        LayoutUnit maxY = visibleRect.maxY();
+        size_t bufferWidth = (int)(maxX - minX);
+        size_t bufferHeight = (int)(maxY - minY);
+
+        if (owner()->hasOwnGraphicsBufferMethod()) {
+            CanvasSurface* s = nullptr;
+            owner()->createGraphicsBuffer(&s, bufferWidth, bufferHeight);
+            if (s) {
+                ensureRareData()->m_graphicsBufferHolder =
+                    new GraphicsBufferHolder(s);
+            }
+        } else {
             if (bufferWidth && bufferHeight) {
                 ensureRareData();
                 if (!m_rareData->m_graphicsBufferHolder) {

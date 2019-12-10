@@ -122,7 +122,8 @@ private:
 class VideoStreamTrack : public MediaStreamTrack {
 public:
     class VideoStreamTrackObserver
-        : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+        : public gc,
+          public rtc::VideoSinkInterface<webrtc::VideoFrame> {
     public:
         VideoStreamTrackObserver(webrtc::VideoTrackInterface* trackToRender);
         // VideoSinkInterface implementation
@@ -157,7 +158,7 @@ public:
 
 protected:
     rtc::scoped_refptr<webrtc::VideoTrackInterface> m_backend;
-    std::unique_ptr<VideoStreamTrackObserver> m_source;
+    VideoStreamTrackObserver* m_source{ nullptr };
 };
 
 class WebCamStreamTrack : public VideoStreamTrack {

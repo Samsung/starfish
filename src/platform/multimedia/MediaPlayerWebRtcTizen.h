@@ -18,66 +18,49 @@
  */
 
 #if defined(STARFISH_ENABLE_WEBRTC)
+#if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
-#ifndef __StarfishMediaPlayerWebRtc__
-#define __StarfishMediaPlayerWebRtc__
+#ifndef __StarfishMediaPlayerWebRtcTizen__
+#define __StarfishMediaPlayerWebRtcTizen__
 
-#include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayerWebRtc.h"
 
-#include "core/dom/HTMLMediaElement.h"
+#include <media/player.h>
 
 namespace Starfish {
 class HTMLMediaElement;
 class Compositor;
 
-class MediaPlayerWebRtc : public MediaPlayer {
+class MediaPlayerWebRtcTizen : public MediaPlayerWebRtc {
     friend MediaStream;
 
 public:
-    virtual ~MediaPlayerWebRtc(){};
+    MediaPlayerWebRtcTizen(HTMLMediaElement* element);
+    virtual ~MediaPlayerWebRtcTizen();
 
-    static MediaPlayer* create(HTMLMediaElement* element);
-
-    void destroy() override{};
-    void play() override{};
+    void destroy() override;
+    void play() override;
     void pause() override{};
     void seek(double time) override{};
 
-    virtual void prepare(MediaProvider* mediaProvider){};
-    bool isWebRtcPlayer() override
-    {
-        return true;
-    }
-
-    double currentTime() override
-    {
-        return 0;
-    }
-
-    double duration() override
-    {
-        return 0;
-    }
+    void prepare(MediaProvider* mediaProvider) override;
 
     void setVolume(double volume) override{};
     void setMuted(bool muted) override{};
     void prepareMediaSource() override{};
 
-    void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                      const LayoutRect& absVideoRect) override{};
-    void willDrawVideo(Compositor* canvas,
-                       const LayoutRect& videoRect) override{};
-
-    virtual void onFrame(uint8_t* image) = 0;
-
-protected:
-    MediaProvider* m_mediaProvider{ nullptr };
-
-    MediaPlayerWebRtc(HTMLMediaElement* element);
+    void onFrame(uint8_t* image) override;
 
 private:
+    player_h m_player{ nullptr };
+    tbm_surface_h m_surface{ nullptr };
+    tbm_surface_info_s m_surfaceInfo;
+
+    void errorHandlerMediaFormat(int err, std::string msg);
+    void errorHandlerMediaPacket(int err, std::string msg);
 };
 } // namespace Starfish
 
+#endif
 #endif
 #endif

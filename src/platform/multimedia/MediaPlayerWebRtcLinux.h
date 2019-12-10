@@ -18,20 +18,38 @@
  */
 
 #if defined(STARFISH_ENABLE_WEBRTC)
+#if !defined(STARFISH_TIZEN)
 
-#include "StarfishConfig.h"
-#include "Starfish.h"
+#ifndef __StarfishMediaPlayerWebRtcLinux__
+#define __StarfishMediaPlayerWebRtcLinux__
 
-#include "MediaPlayerWebRtc.h"
-
-#include "core/dom/HTMLMediaElement.h"
+#include "platform/multimedia/MediaPlayerWebRtc.h"
 
 namespace Starfish {
+class MediaPlayerWebRtcLinux : public MediaPlayerWebRtc {
+    friend MediaStream;
 
-MediaPlayerWebRtc::MediaPlayerWebRtc(HTMLMediaElement* element)
-    : MediaPlayer(element)
-{
-}
+public:
+    MediaPlayerWebRtcLinux(HTMLMediaElement* element);
+    virtual ~MediaPlayerWebRtcLinux(){};
+
+    void destroy() override{};
+    void play() override;
+    void pause() override{};
+    void seek(double time) override{};
+
+    void prepare(MediaProvider* mediaProvider) override;
+
+    void setVolume(double volume) override{};
+    void setMuted(bool muted) override{};
+    void prepareMediaSource() override;
+
+    void onFrame(uint8_t* image) override;
+
+private:
+};
 } // namespace Starfish
 
+#endif
+#endif
 #endif

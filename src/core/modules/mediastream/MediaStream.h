@@ -38,7 +38,8 @@ class MediaPlayerWebRtc;
 class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
     class MediaStreamObserver
-        : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+        : public gc,
+          public rtc::VideoSinkInterface<webrtc::VideoFrame> {
     public:
         MediaStreamObserver(webrtc::VideoTrackInterface* trackToRender,
                             MediaPlayerWebRtc* player);
@@ -47,10 +48,13 @@ public:
         // VideoSinkInterface implementation
         void OnFrame(const webrtc::VideoFrame& frame) override;
 
-        MediaPlayerWebRtc* m_player;
+        MediaPlayerWebRtc* m_player{ nullptr };
 
     private:
         void setSize(int width, int height);
+#if defined(STARFISH_WEBRTC_DEBUG)
+        void writeImageToFile(std::string& filename);
+#endif
 
         std::unique_ptr<uint8_t[]> m_image;
         int m_width{ 0 };
@@ -95,7 +99,7 @@ private:
     GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
     GCUnorderedSet<VideoStreamTrack*> m_videoTracks;
 
-    std::unique_ptr<MediaStreamObserver> m_mediaStreamObserver;
+    MediaStreamObserver* m_mediaStreamObserver{ nullptr };
 };
 } // namespace Starfish
 
