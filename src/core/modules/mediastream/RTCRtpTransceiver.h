@@ -61,11 +61,8 @@ public:
     RTCRtpSender* sender();
     RTCRtpReceiver* receiver();
 
-    webrtc::RtpTransceiverDirection direction()
-    {
-        return m_backend->direction();
-    }
-    void setDirection(webrtc::RtpTransceiverDirection direction);
+    RTCRtpTransceiverDirection direction();
+    void setDirection(RTCRtpTransceiverDirection direction);
 
     String* directionStr();
     void setDirectionStr(String* direction);
@@ -73,6 +70,11 @@ public:
 
     bool stopped();
     bool sentBefore();
+
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backend()
+    {
+        return m_backend;
+    }
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

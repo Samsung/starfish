@@ -382,6 +382,7 @@ public:
     DECLARE_EVENT_LISTENER(icegatheringstatechange);
     DECLARE_EVENT_LISTENER(connectionstatechange);
     DECLARE_EVENT_LISTENER(datachannel);
+    DECLARE_EVENT_LISTENER(track);
 #undef VIRTUAL
 #undef OVERRIDE
 
@@ -435,6 +436,9 @@ private:
     bool isValidRemoteState(RTCSdpType type);
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,
                                       Promise* promise, bool isRemote);
+    void syncTransceivers();
+    RTCRtpTransceiver* getTransceiver(
+        rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backendTransceiver);
 };
 }
 

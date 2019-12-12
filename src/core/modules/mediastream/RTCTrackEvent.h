@@ -31,6 +31,8 @@ namespace Starfish {
 class ExecutionContext;
 class MediaStream;
 class MediaStreamTrack;
+class RTCRtpReceiver;
+class RTCRtpTransceiver;
 
 struct RTCTrackEventInit : public EventInit {
     friend class RTCTrackEvent;
@@ -41,19 +43,27 @@ public:
     {
     }
 
-    RTCTrackEventInit(MediaStreamTrack* track, GCVector<MediaStream*> streams)
+    RTCTrackEventInit(RTCRtpReceiver* receiver, MediaStreamTrack* track,
+                      GCVector<MediaStream*> streams,
+                      RTCRtpTransceiver* transceiver)
         : EventInit()
+        , m_receiver(receiver)
         , m_track(track)
         , m_streams(streams)
+        , m_transceiver(transceiver)
     {
     }
 
+    DEFINE_GETTER_SETTER(RTCRtpReceiver*, receiver, Receiver);
     DEFINE_GETTER_SETTER(MediaStreamTrack*, track, Track);
     DEFINE_GETTER_SETTER(GCVector<MediaStream*>, streams, Streams);
+    DEFINE_GETTER_SETTER(RTCRtpTransceiver*, transceiver, Transceiver);
 
 private:
+    RTCRtpReceiver* m_receiver{ nullptr };
     MediaStreamTrack* m_track{ nullptr };
     GCVector<MediaStream*> m_streams;
+    RTCRtpTransceiver* m_transceiver{ nullptr };
 };
 
 class RTCTrackEvent : public Event {
@@ -66,19 +76,25 @@ public:
     RTCTrackEvent(ExecutionContext* executionContext, String* type,
                   RTCTrackEventInit eventInitDict)
         : Event(executionContext, type)
+        , m_receiver(eventInitDict.m_receiver)
         , m_track(eventInitDict.m_track)
         , m_streams(eventInitDict.m_streams)
+        , m_transceiver(eventInitDict.m_transceiver)
     {
     }
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCTrackEvent)
 
+    DEFINE_GETTER(RTCRtpReceiver*, receiver);
     DEFINE_GETTER(MediaStreamTrack*, track);
     DEFINE_GETTER(GCVector<MediaStream*>, streams);
+    DEFINE_GETTER(RTCRtpTransceiver*, transceiver);
 
 private:
+    RTCRtpReceiver* m_receiver{ nullptr };
     MediaStreamTrack* m_track{ nullptr };
     GCVector<MediaStream*> m_streams;
+    RTCRtpTransceiver* m_transceiver{ nullptr };
 };
 }
 #endif

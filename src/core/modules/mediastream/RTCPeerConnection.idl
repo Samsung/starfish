@@ -154,7 +154,7 @@ partial interface RTCPeerConnection {
   [RaisesException] void removeTrack (RTCRtpSender sender);
   // Change (MediaStreamTrack or DOMString) -> (DOMString or MediaStreamTrack) to workaround the binding generator bugs
   [RaisesException] RTCRtpTransceiver addTransceiver ((DOMString or MediaStreamTrack) trackOrKind, optional RTCRtpTransceiverInit init);
-//  [Unimplemented] attribute EventHandler ontrack;
+  attribute EventHandler ontrack;
 };
 
 [STARFISH_ENABLE_WEBRTC]

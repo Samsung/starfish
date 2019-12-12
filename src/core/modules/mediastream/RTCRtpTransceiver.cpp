@@ -108,9 +108,35 @@ RTCRtpReceiver* RTCRtpTransceiver::receiver()
     return m_receiver;
 }
 
-void RTCRtpTransceiver::setDirection(webrtc::RtpTransceiverDirection direction)
+RTCRtpTransceiverDirection RTCRtpTransceiver::direction()
 {
-    m_backend->SetDirection(direction);
+    if (stopped()) {
+        return RTCRtpTransceiverDirection::Stopped;
+    }
+
+    switch (m_backend->direction()) {
+    case webrtc::RtpTransceiverDirection::kSendRecv:
+        return RTCRtpTransceiverDirection::Sendrecv;
+    case webrtc::RtpTransceiverDirection::kSendOnly:
+        return RTCRtpTransceiverDirection::Sendonly;
+    case webrtc::RtpTransceiverDirection::kRecvOnly:
+        return RTCRtpTransceiverDirection::Recvonly;
+    default: // case webrtc::RtpTransceiverDirection::kInactive:
+        return RTCRtpTransceiverDirection::Inactive;
+    }
+}
+
+void RTCRtpTransceiver::setDirection(RTCRtpTransceiverDirection direction)
+{
+    if (direction == RTCRtpTransceiverDirection::Sendrecv) {
+        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kSendRecv);
+    } else if (direction == RTCRtpTransceiverDirection::Sendonly) {
+        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kSendOnly);
+    } else if (direction == RTCRtpTransceiverDirection::Recvonly) {
+        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kRecvOnly);
+    } else if (direction == RTCRtpTransceiverDirection::Inactive) {
+        m_backend->SetDirection(webrtc::RtpTransceiverDirection::kInactive);
+    }
 
     if ((m_backend->current_direction() ==
          webrtc::RtpTransceiverDirection::kSendRecv) ||
@@ -147,13 +173,13 @@ void RTCRtpTransceiver::setDirectionStr(String* direction)
     }
 
     if (direction->equals("sendrecv")) {
-        setDirection(webrtc::RtpTransceiverDirection::kSendRecv);
+        setDirection(RTCRtpTransceiverDirection::Sendrecv);
     } else if (direction->equals("sendonly")) {
-        setDirection(webrtc::RtpTransceiverDirection::kSendOnly);
+        setDirection(RTCRtpTransceiverDirection::Sendonly);
     } else if (direction->equals("recvonly")) {
-        setDirection(webrtc::RtpTransceiverDirection::kRecvOnly);
+        setDirection(RTCRtpTransceiverDirection::Recvonly);
     } else if (direction->equals("inactive")) {
-        setDirection(webrtc::RtpTransceiverDirection::kInactive);
+        setDirection(RTCRtpTransceiverDirection::Inactive);
     }
 }
 
@@ -186,7 +212,7 @@ String* RTCRtpTransceiver::currentDirection()
 bool RTCRtpTransceiver::stopped()
 {
     if (!m_backend) {
-        return false;
+        return true;
     }
     return m_backend->stopped();
 }

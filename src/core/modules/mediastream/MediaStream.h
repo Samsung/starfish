@@ -75,11 +75,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStream)
     virtual ExecutionContext* executionContext() const override;
 
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend()
-    {
-        return m_backend;
-    }
-
+    String* id();
     GCVector<MediaStreamTrack*> getAudioTracks();
     GCVector<MediaStreamTrack*> getVideoTracks();
     GCVector<MediaStreamTrack*> getTracks();
@@ -92,6 +88,11 @@ public:
     void startPlayVideoTrack(MediaPlayerWebRtc* player,
                              MediaStreamTrack* track);
     void stopPlayVideoTrack();
+
+    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend()
+    {
+        return m_backend;
+    }
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
