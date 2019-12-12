@@ -228,6 +228,34 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::TVHomeKey;
     } else if (strcmp("XF86Exit", ecoreKeyString) == 0) {
         return KeyValue::TVExitKey;
+    } else if (strcmp("XF86PreviousChannel", ecoreKeyString) == 0) {
+        return KeyValue::TVPreviousChannel;
+    } else if (strcmp("XF86ChannelList", ecoreKeyString) == 0) {
+        return KeyValue::TVChannelList;
+    } else if (strcmp("XF86ChannelGuide", ecoreKeyString) == 0) {
+        return KeyValue::TVChannelGuide;
+    } else if (strcmp("XF86SimpleMenu", ecoreKeyString) == 0) {
+        return KeyValue::TVSimpleMenu;
+    } else if (strcmp("XF86EManual", ecoreKeyString) == 0) {
+        return KeyValue::TVEManual;
+    } else if (strcmp("XF86ExtraApp", ecoreKeyString) == 0) {
+        return KeyValue::TVExtraApp;
+    } else if (strcmp("XF86Search", ecoreKeyString) == 0) {
+        return KeyValue::TVSearch;
+    } else if (strcmp("XF86PictureSize", ecoreKeyString) == 0) {
+        return KeyValue::TVPictureSize;
+    } else if (strcmp("XF86Sleep", ecoreKeyString) == 0) {
+        return KeyValue::TVSleep;
+    } else if (strcmp("XF86Caption", ecoreKeyString) == 0) {
+        return KeyValue::TVCaption;
+    } else if (strcmp("XF86More", ecoreKeyString) == 0) {
+        return KeyValue::TVMore;
+    } else if (strcmp("XF86BTVoice", ecoreKeyString) == 0) {
+        return KeyValue::TVBTVoice;
+    } else if (strcmp("XF86Color", ecoreKeyString) == 0) {
+        return KeyValue::TVColor;
+    } else if (strcmp("XF86PlayBack", ecoreKeyString) == 0) {
+        return KeyValue::TVPlayBack;
     }
 
     STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s\n", ecoreKeyString);

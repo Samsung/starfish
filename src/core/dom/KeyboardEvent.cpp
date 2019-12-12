@@ -36,8 +36,6 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString(ch);
     } else if (v == EnterKey) {
         return String::createASCIIString("Enter");
-    } else if (v == EscapeKey) {
-        return String::createASCIIString("Escape");
     } else if (v == SpaceKey) {
         return String::createASCIIString(" ");
     } else if (v == AtMarkKey) {
@@ -57,10 +55,77 @@ String* keyValueToKey(KeyValue v)
     } else if (v == DeleteKey) {
         return String::createASCIIString("Delete");
 #ifdef STARFISH_TIZEN_TV
+    } else if (v == EscapeKey) {
+        return String::createASCIIString("XF86Back");
     } else if (v == TVHomeKey) {
         return String::createASCIIString("XF86Home");
     } else if (v == TVExitKey) {
         return String::createASCIIString("XF86Exit");
+    } else if (v == TVPreviousChannel) {
+        return String::createASCIIString("XF86PreviousChannel");
+    } else if (v == TVVolumeUpKey) {
+        return String::createASCIIString("F10");
+    } else if (v == TVVolumeDownKey) {
+        return String::createASCIIString("F9");
+    } else if (v == TVChannelUpKey) {
+        return String::createASCIIString("XF86RaiseChannel");
+    } else if (v == TVChannelDownKey) {
+        return String::createASCIIString("XF86LowerChannel");
+    } else if (v == TVMuteKey) {
+        return String::createASCIIString("F8");
+    } else if (v == TVChannelList) {
+        return String::createASCIIString("XF86ChannelList");
+    } else if (v == TVMenuKey) {
+        return String::createASCIIString("XF86SysMenu");
+    } else if (v == TVChannelGuide) {
+        return String::createASCIIString("XF86ChannelGuide");
+    } else if (v == TVSimpleMenu) {
+        return String::createASCIIString("XF86SimpleMenu");
+    } else if (v == TVInfoKey) {
+        return String::createASCIIString("XF86Info");
+    } else if (v == TVRedKey) {
+        return String::createASCIIString("XF86Red");
+    } else if (v == TVGreenKey) {
+        return String::createASCIIString("XF86Green");
+    } else if (v == TVYellowKey) {
+        return String::createASCIIString("XF86Yellow");
+    } else if (v == TVBlueKey) {
+        return String::createASCIIString("XF86Blue");
+    } else if (v == TVEManual) {
+        return String::createASCIIString("XF86EManual");
+    } else if (v == TVExtraApp) {
+        return String::createASCIIString("XF86ExtraApp");
+    } else if (v == TVSearch) {
+        return String::createASCIIString("XF86Search");
+    } else if (v == TVPictureSize) {
+        return String::createASCIIString("XF86PictureSize");
+    } else if (v == TVSleep) {
+        return String::createASCIIString("XF86Sleep");
+    } else if (v == TVCaption) {
+        return String::createASCIIString("XF86Caption");
+    } else if (v == MediaTrackPreviousKey) {
+        return String::createASCIIString("XF86AudioRewind");
+    } else if (v == MediaTrackNextKey) {
+        return String::createASCIIString("XF86AudioNext");
+    } else if (v == MediaPauseKey) {
+        return String::createASCIIString("XF86AudioPause");
+    } else if (v == MediaRecordKey) {
+        return String::createASCIIString("XF86AudioRecord");
+    } else if (v == MediaPlayKey) {
+        return String::createASCIIString("XF86AudioPlay");
+    } else if (v == MediaStopKey) {
+        return String::createASCIIString("XF86AudioStop");
+    } else if (v == TVMore) {
+        return String::createASCIIString("XF86More");
+    } else if (v == TVBTVoice) {
+        return String::createASCIIString("XF86BTVoice");
+    } else if (v == TVColor) {
+        return String::createASCIIString("XF86Color");
+    } else if (v == TVPlayBack) {
+        return String::createASCIIString("XF86PlayBack");
+#else
+    } else if (v == EscapeKey) {
+        return String::createASCIIString("Escape");
 #endif
     } else {
         if (v == UnidentifiedKey) {
@@ -115,6 +180,70 @@ String* keyValueToCode(KeyValue v)
 #ifdef STARFISH_TIZEN_TV
     } else if (v == TVHomeKey) {
         return String::createASCIIString("F5");
+    } else if (v == TVExitKey) {
+        return String::createASCIIString("");
+    } else if (v == TVPreviousChannel) {
+        return String::createASCIIString("");
+    } else if (v == TVVolumeUpKey) {
+        return String::createASCIIString("F10");
+    } else if (v == TVVolumeDownKey) {
+        return String::createASCIIString("F9");
+    } else if (v == TVChannelUpKey) {
+        return String::createASCIIString("F12");
+    } else if (v == TVChannelDownKey) {
+        return String::createASCIIString("F11");
+    } else if (v == TVMuteKey) {
+        return String::createASCIIString("F8");
+    } else if (v == TVChannelList) {
+        return String::createASCIIString("F7");
+    } else if (v == TVMenuKey) {
+        return String::createASCIIString("MetaLeft");
+    } else if (v == TVChannelGuide) {
+        return String::createASCIIString("");
+    } else if (v == TVSimpleMenu) {
+        return String::createASCIIString("ContextMenu");
+    } else if (v == TVInfoKey) {
+        return String::createASCIIString("F18");
+    } else if (v == TVRedKey) {
+        return String::createASCIIString("F1");
+    } else if (v == TVGreenKey) {
+        return String::createASCIIString("F2");
+    } else if (v == TVYellowKey) {
+        return String::createASCIIString("F3");
+    } else if (v == TVBlueKey) {
+        return String::createASCIIString("F4");
+    } else if (v == TVEManual) {
+        return String::createASCIIString("Help");
+    } else if (v == TVExtraApp) {
+        return String::createASCIIString("");
+    } else if (v == TVSearch) {
+        return String::createASCIIString("BrowserSearch");
+    } else if (v == TVPictureSize) {
+        return String::createASCIIString("Select");
+    } else if (v == TVSleep) {
+        return String::createASCIIString("Sleep");
+    } else if (v == TVCaption) {
+        return String::createASCIIString("");
+    } else if (v == MediaTrackPreviousKey) {
+        return String::createASCIIString("MediaRewind");
+    } else if (v == MediaTrackNextKey) {
+        return String::createASCIIString("MediaFastForward");
+    } else if (v == MediaPauseKey) {
+        return String::createASCIIString("");
+    } else if (v == MediaRecordKey) {
+        return String::createASCIIString("MediaRecord");
+    } else if (v == MediaPlayKey) {
+        return String::createASCIIString("");
+    } else if (v == MediaStopKey) {
+        return String::createASCIIString("MediaStop");
+    } else if (v == TVMore) {
+        return String::createASCIIString("LaunchApp2");
+    } else if (v == TVBTVoice) {
+        return String::createASCIIString("");
+    } else if (v == TVColor) {
+        return String::createASCIIString("");
+    } else if (v == TVPlayBack) {
+        return String::createASCIIString("");
 #endif
     } else {
         if (v == UnidentifiedKey) {
@@ -154,8 +283,6 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         return 40;
     } else if (v == EnterKey) {
         return 13;
-    } else if (v == EscapeKey) {
-        return 27;
     } else if (v == BackspaceKey) {
         return 8;
     } else if (v == MinusMarkKey) {
@@ -202,11 +329,44 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
     } else if (v == TVBlueKey) {
         return 406;
     } else if (v == TVMenuKey) {
-        return 18;
+        return 10133;
     } else if (v == TVHomeKey) {
         return 10071;
     } else if (v == TVExitKey) {
-        return 182;
+        return 10182;
+    } else if (v == EscapeKey) {
+        return 10009;
+    } else if (v == TVPreviousChannel) {
+        return 10190;
+    } else if (v == TVChannelList) {
+        return 10073;
+    } else if (v == TVChannelGuide) {
+        return 458;
+    } else if (v == TVSimpleMenu) {
+        return 10135;
+    } else if (v == TVEManual) {
+        return 10146;
+    } else if (v == TVExtraApp) {
+        return 10253;
+    } else if (v == TVSearch) {
+        return 10225;
+    } else if (v == TVPictureSize) {
+        return 10140;
+    } else if (v == TVSleep) {
+        return 10150;
+    } else if (v == TVCaption) {
+        return 10221;
+    } else if (v == TVMore) {
+        return 10148;
+    } else if (v == TVBTVoice) {
+        return 10224;
+    } else if (v == TVColor) {
+        return 10385;
+    } else if (v == TVPlayBack) {
+        return 10252;
+#else
+    } else if (v == EscapeKey) {
+        return 27;
 #endif
     } else {
         return 0;
