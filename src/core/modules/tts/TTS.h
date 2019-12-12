@@ -40,8 +40,9 @@ public:
         , m_isCreatedVoiceList(false)
         , m_isPaused(false)
         , m_state(-1)
-        , m_mode(LWE::TTSMode::Default)
+        , m_lweTTSMode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
+        , m_ttsText(String::emptyString)
         , m_currentUtterId(0)
     {
         initialize();
@@ -61,14 +62,12 @@ public:
         m_isAccessibilityMode = value;
     }
 
-    bool isPaused();
-
-    void setMode(LWE::TTSMode mode);
-
     LWE::TTSMode mode() const
     {
-        return m_mode;
+        return m_lweTTSMode;
     }
+
+    void setMode(LWE::TTSMode lweTTSMode);
 
     Element* element()
     {
@@ -83,6 +82,16 @@ public:
     void setUtterance(SpeechSynthesisUtterance* u)
     {
         m_utterance = u;
+    }
+
+    String* ttsText()
+    {
+        return m_ttsText;
+    }
+
+    void clearTTSText()
+    {
+        m_ttsText = String::emptyString;
     }
 
     GCUnorderedMap<int, SpeechSynthesisUtterance*>& utteranceList()
@@ -100,27 +109,29 @@ public:
         return m_defaultLanguage;
     }
 
-    void setCurrentUtterId(int id)
-    {
-        m_currentUtterId = id;
-    }
-
     int currentUtterId()
     {
         return m_currentUtterId;
     }
 
+    void setCurrentUtterId(int id)
+    {
+        m_currentUtterId = id;
+    }
+
     void destroy();
+    int prepare();
+    void unprepare();
+    int ttsPlay();
+    int ttsState();
+
     void speech(Element* element, String* text);
     void speech(SpeechSynthesisUtterance* utterance);
+    void changeDefaultVoice(String* language, const int voiceType);
+    bool isPaused();
     void pause();
     void resume();
     void cancel();
-    void changeDefaultVoice(String* language, const int voiceType);
-
-    int ttsState();
-    int prepare();
-    void unprepare();
 
 #if defined(STARFISH_TIZEN)
     tts_h& handle()
@@ -132,7 +143,7 @@ public:
 private:
     void initialize();
     int createHandle();
-    int speechElementText(const char* text);
+    int speechElementText();
     int speechUtterances();
 
 #if defined(STARFISH_TIZEN)
@@ -143,8 +154,9 @@ private:
     bool m_isCreatedVoiceList;
     bool m_isPaused;
     int m_state;
-    LWE::TTSMode m_mode;
+    LWE::TTSMode m_lweTTSMode;
     SpeechSynthesisUtterance* m_utterance;
+    String* m_ttsText;
     GCUnorderedMap<int, SpeechSynthesisUtterance*> m_utteranceList;
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;

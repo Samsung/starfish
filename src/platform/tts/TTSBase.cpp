@@ -48,7 +48,7 @@ void TTS::destroy()
 {
 }
 
-void TTS::setMode(LWE::TTSMode mode)
+void TTS::setMode(LWE::TTSMode lweTTSMode)
 {
 }
 
@@ -75,7 +75,7 @@ void TTS::speech(Element* element, String* text)
     }
 }
 
-int TTS::speechElementText(const char* text)
+int TTS::speechElementText()
 {
     return 0;
 }
@@ -111,6 +111,11 @@ void TTS::changeDefaultVoice(String* language, const int voiceType)
 }
 
 int TTS::ttsState()
+{
+    return 0;
+}
+
+int TTS::ttsPlay()
 {
     return 0;
 }

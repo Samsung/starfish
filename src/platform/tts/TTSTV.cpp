@@ -103,19 +103,6 @@ const char* stateToString(int state)
     }
 }
 
-static void accessibilityChangedCB(keynode_t* keynodeName, void* data)
-{
-    STARFISH_LOG_INFO("[TTS] accessibilityChangedCB");
-
-    // Do not free data
-    TTS* t = (TTS*)data;
-    int result = 0;
-    if (vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &result) != 0) {
-        return;
-    }
-    t->setAccessibilityMode(result == 1);
-}
-
 static SpeechSynthesisUtterance* findUtterance(TTS* t, int id)
 {
     if (t) {
@@ -127,42 +114,58 @@ static SpeechSynthesisUtterance* findUtterance(TTS* t, int id)
     return nullptr;
 }
 
-static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
-                           void* data)
+static void dispatchStartEvent(TTS* t, int id)
 {
-    TTS* tts = (TTS*)data;
-    if (!tts) {
-        return;
-    }
-
-    int utterId = tts->currentUtterId();
-    STARFISH_LOG_INFO("[TTS] State changed Callback [ID:%d]: [%s] to [%s]\n",
-                      utterId, stateToString(prev), stateToString(cur));
-
-    if (prev == TTS_STATE_PAUSED && cur == TTS_STATE_PLAYING && utterId) {
-        SpeechSynthesisUtterance* u = findUtterance(tts, utterId);
+    // STARFISH_LOG_INFO("[TTS] Started speaking! [ID:%d]\n", id);
+    if (t != nullptr) {
+        SpeechSynthesisUtterance* u = findUtterance(t, id);
         if (u) {
-            STARFISH_LOG_INFO("[TTS] TTS_STATE_RESUME !!!!");
+            t->setUtterance(u);
             String* eventName =
-                u->webView()->starfish()->staticStrings()->m_resume.localName();
+                u->webView()->starfish()->staticStrings()->m_start.localName();
+            u->setStartTime(timestamp());
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
                 u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
         }
-    } else if (prev == TTS_STATE_PLAYING && cur == TTS_STATE_PAUSED &&
-               utterId) {
-        SpeechSynthesisUtterance* u = findUtterance(tts, utterId);
-        if (u) {
-            STARFISH_LOG_INFO("[TTS] TTS_STATE_PAUSED !!!!");
+
+        // NOTE : Hold this code according to VD requirement for now.
+        Element* element = t->element();
+        if (!u && element) {
             String* eventName =
-                u->webView()->starfish()->staticStrings()->m_pause.localName();
+                element->starfish()->staticStrings()->m_ttsstart.localName();
+            Event* e = new Event(element->executionContext(), eventName);
+            element->window()->dispatchEventByUA(e);
+        }
+    }
+}
+
+static void dispatchCompleteEvent(TTS* t, int id)
+{
+    // STARFISH_LOG_INFO("[TTS] Completed speaking! [ID:%d]\n", id);
+    if (t) {
+        SpeechSynthesisUtterance* u = findUtterance(t, id);
+        if (u) {
+            String* eventName =
+                u->webView()->starfish()->staticStrings()->m_end.localName();
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
                 u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
+
+            t->utteranceList().erase(id);
+        }
+
+        // NOTE : Hold this code according to VD requirement for now.
+        Element* element = t->element();
+        if (!u && element) {
+            String* eventName =
+                element->starfish()->staticStrings()->m_ttsend.localName();
+            Event* e = new Event(element->executionContext(), eventName);
+            element->window()->dispatchEventByUA(e);
         }
     }
 }
@@ -198,79 +201,89 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
     }
 }
 
-static void errorCB(tts_h handle, int utteranceId, tts_error_e reason,
-                    void* data)
+static void accessibilityChangedCB(keynode_t* keynodeName, void* data)
+{
+    // STARFISH_LOG_INFO("[TTS] accessibility changed callback()\n");
+
+    // Do not free data
+    TTS* t = (TTS*)data;
+    int result = 0;
+    if (vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &result) != 0) {
+        return;
+    }
+    t->setAccessibilityMode(result == 1);
+}
+
+static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
+                           void* data)
+{
+    TTS* t = (TTS*)data;
+    if (!t) {
+        return;
+    }
+
+    int utterId = t->currentUtterId();
+    // STARFISH_LOG_INFO("[TTS] State changed callback [ID:%d]: [%s] to [%s]\n",
+    // utterId, stateToString(prev), stateToString(cur));
+
+    if (prev == TTS_STATE_PAUSED && cur == TTS_STATE_PLAYING && utterId) {
+        SpeechSynthesisUtterance* u = findUtterance(t, utterId);
+        if (u) {
+            String* eventName =
+                u->webView()->starfish()->staticStrings()->m_resume.localName();
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->executionContext(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
+            u->dispatchEventByUA(e);
+        }
+    } else if (prev == TTS_STATE_PLAYING && cur == TTS_STATE_PAUSED &&
+               utterId) {
+        SpeechSynthesisUtterance* u = findUtterance(t, utterId);
+        if (u) {
+            String* eventName =
+                u->webView()->starfish()->staticStrings()->m_pause.localName();
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->executionContext(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
+            u->dispatchEventByUA(e);
+        }
+    } else if (prev == TTS_STATE_CREATED && cur == TTS_STATE_READY) {
+        if (!t->ttsText()->isEmpty()) {
+            t->ttsPlay();
+        }
+    } else if (prev == TTS_STATE_READY && cur == TTS_STATE_CREATED) {
+    }
+}
+
+static void ttsErrorCB(tts_h handle, int utteranceId, tts_error_e reason,
+                       void* data)
 {
     dispatchErrorEvent((TTS*)data, utteranceId, errorToString(reason),
                        errorToString(reason));
 }
 
-static void dispatchStartEvent(TTS* t, int id)
+static void utteranceStartedCB(tts_h handle, int utteranceId, void* data)
 {
-    STARFISH_LOG_INFO("[TTS] Started Speaking! [ID:%d]\n", id);
-    if (t != nullptr) {
-        SpeechSynthesisUtterance* u = findUtterance(t, id);
-        if (u) {
-            t->setUtterance(u);
-            String* eventName =
-                u->webView()->starfish()->staticStrings()->m_start.localName();
-            u->setStartTime(timestamp());
-            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->executionContext(), eventName,
-                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
-                                         String::emptyString));
-            u->dispatchEventByUA(e);
-        }
-
-        // NOTE : Hold this code according to VD requirement for now.
-        Element* element = t->element();
-        if (!u && element) {
-            String* eventName =
-                element->starfish()->staticStrings()->m_ttsstart.localName();
-            Event* e = new Event(element->executionContext(), eventName);
-            element->window()->dispatchEventByUA(e);
-        }
-    }
+    TTS* t = (TTS*)data;
+    t->setCurrentUtterId(utteranceId);
+    dispatchStartEvent(t, utteranceId);
 }
 
-static void startedCB(tts_h handle, int utteranceId, void* data)
+static void utteranceCompletedCB(tts_h handle, int utteranceId, void* data)
 {
-    ((TTS*)data)->setCurrentUtterId(utteranceId);
-    dispatchStartEvent((TTS*)data, utteranceId);
-}
-
-static void dispatchCompleteEvent(TTS* t, int id)
-{
-    STARFISH_LOG_INFO("[TTS] Completed Speaking! [ID:%d]\n", id);
-    if (t) {
-        SpeechSynthesisUtterance* u = findUtterance(t, id);
-        if (u) {
-            String* eventName =
-                u->webView()->starfish()->staticStrings()->m_end.localName();
-            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->executionContext(), eventName,
-                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
-                                         String::emptyString));
-            u->dispatchEventByUA(e);
-
-            t->utteranceList().erase(id);
-        }
-
-        // NOTE : Hold this code according to VD requirement for now.
-        Element* element = t->element();
-        if (!u && element) {
-            String* eventName =
-                element->starfish()->staticStrings()->m_ttsend.localName();
-            Event* e = new Event(element->executionContext(), eventName);
-            element->window()->dispatchEventByUA(e);
-        }
-    }
-}
-
-static void completedCB(tts_h handle, int utteranceId, void* data)
-{
-    dispatchCompleteEvent((TTS*)data, utteranceId);
-    ((TTS*)data)->setCurrentUtterId(0);
+    // STARFISH_LOG_INFO("[TTS] Completed callback() start\n");
+    TTS* t = (TTS*)data;
+    dispatchCompleteEvent(t, utteranceId);
+    t->setCurrentUtterId(0);
+    t->webView()->mainBrowsingContext()->document()->window()->setTimeout(
+        [](void* data1) {
+            // STARFISH_LOG_INFO("[TTS] setTimeout() for unprepare()\n");
+            TTS* t = (TTS*)data1;
+            t->unprepare();
+        },
+        10, t);
 }
 
 static bool supportedVoiceCB(tts_h handle, const char* language, int voiceType,
@@ -346,10 +359,10 @@ void TTS::initialize()
     if (m_handle == NULL) {
         ecore_main_loop_thread_safe_call_async(
             [](void* data) -> void {
-                TTS* tts = (TTS*)data;
-                int ret = tts->createHandle();
+                TTS* t = (TTS*)data;
+                int ret = t->createHandle();
                 if (ret != TTS_ERROR_NONE) {
-                    dispatchErrorEvent(tts, 0, errorToString(ret),
+                    dispatchErrorEvent(t, 0, errorToString(ret),
                                        errorToString(ret));
                 }
             },
@@ -387,94 +400,42 @@ int TTS::createHandle()
         return ret;
     }
 
-    ret = tts_set_error_cb(m_handle, errorCB, this);
+    ret = tts_set_error_cb(m_handle, ttsErrorCB, this);
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_set_error_cb failed : %d", ret);
         return ret;
     }
 
-    ret = tts_set_utterance_started_cb(m_handle, startedCB, this);
+    ret = tts_set_utterance_started_cb(m_handle, utteranceStartedCB, this);
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_set_utterance_started_cb failed : %d",
                            ret);
         return ret;
     }
 
-    ret = tts_set_utterance_completed_cb(m_handle, completedCB, this);
+    ret = tts_set_utterance_completed_cb(m_handle, utteranceCompletedCB, this);
     if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_INFO("[TTS] tts_set_utterance_completed_cb failed : %d",
-                          ret);
+        STARFISH_LOG_ERROR("[TTS] tts_set_utterance_completed_cb failed : %d\n",
+                           ret);
         return ret;
     }
 
     ret = tts_foreach_supported_voices(m_handle, supportedVoiceCB, this);
     if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_INFO("[TTS] tts_foreach_supported_voices failed : %d",
-                          ret);
+        STARFISH_LOG_ERROR("[TTS] tts_foreach_supported_voices failed : %d",
+                           ret);
         return ret;
     }
 
     ret =
         tts_set_default_voice_changed_cb(m_handle, defaultVoiceChangedCB, this);
     if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_INFO("[TTS] tts_set_default_voice_changed_cb failed : %d",
-                          ret);
+        STARFISH_LOG_ERROR("[TTS] tts_set_default_voice_changed_cb failed : %d",
+                           ret);
         return ret;
     }
 
-    // Initialize engine
-    return prepare();
-}
-
-void TTS::setMode(LWE::TTSMode mode)
-{
-    if (m_mode != mode) {
-        unprepare();
-        m_mode = mode;
-        prepare();
-    }
-}
-
-int TTS::prepare()
-{
-    tts_mode_e mode = TTS_MODE_SCREEN_READER;
-    if (m_mode == LWE::TTSMode::Forced) {
-        STARFISH_LOG_INFO("[TTS] LWE::TTSMode::Forced");
-        mode = TTS_MODE_DEFAULT;
-    }
-
-    int ret = tts_set_mode(m_handle, mode);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_set_mode failed : %d", ret);
-        return ret;
-    }
-
-    ret = tts_prepare(m_handle);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_prepare failed : %d", ret);
-    }
-
-    return ret;
-}
-
-void TTS::unprepare()
-{
-    int state = ttsState();
-    if (state == TTS_STATE_PLAYING || state == TTS_STATE_PAUSED) {
-        int ret = tts_stop(m_handle);
-        if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
-        }
-        ret = tts_unprepare(m_handle);
-        if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("[TTS] tts_unprepare failed : %d", ret);
-        }
-    } else if (state == TTS_STATE_READY) {
-        int ret = tts_unprepare(m_handle);
-        if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("[TTS] tts_unprepare failed : %d", ret);
-        }
-    }
+    return TTS_ERROR_NONE;
 }
 
 void TTS::destroy()
@@ -501,13 +462,13 @@ void TTS::destroy()
 
         ret = tts_unset_utterance_completed_cb(m_handle);
         if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_INFO(
+            STARFISH_LOG_ERROR(
                 "[TTS] tts_unset_utterance_completed_cb failed : %d", ret);
         }
 
         ret = tts_unset_default_voice_changed_cb(m_handle);
         if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_INFO(
+            STARFISH_LOG_ERROR(
                 "[TTS] tts_unset_default_voice_changed_cb failed : %d", ret);
         }
 
@@ -516,19 +477,158 @@ void TTS::destroy()
             STARFISH_LOG_ERROR("[TTS] tts_destroy failed : %d", ret);
         }
 
-        STARFISH_LOG_INFO("[TTS] destroyed successfully");
+        // STARFISH_LOG_INFO("[TTS] Destroyed successfully");
         m_handle = NULL;
     } else {
-        STARFISH_LOG_INFO("[TTS] handle is null in destroyTTSHandle()");
+        STARFISH_LOG_ERROR("[TTS] handle is null in destroyTTSHandle()");
     }
 
     vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
                              accessibilityChangedCB);
 }
 
+void TTS::setMode(LWE::TTSMode lweTTSMode)
+{
+    if (m_lweTTSMode != lweTTSMode) {
+        // STARFISH_LOG_INFO("[TTS] LWE TTSMode: %s\n", lweTTSMode ==
+        // LWE::TTSMode::Forced?"Forced":"Not Forced");
+
+        unprepare();
+        tts_mode_e mode = TTS_MODE_SCREEN_READER;
+        if (lweTTSMode == LWE::TTSMode::Forced) {
+            mode = TTS_MODE_DEFAULT;
+        }
+
+        int ret = tts_set_mode(m_handle, mode);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_set_mode failed : %d", ret);
+            return;
+        }
+
+        m_lweTTSMode = lweTTSMode;
+    }
+}
+
+int TTS::prepare()
+{
+    // STARFISH_LOG_INFO("[TTS] prepare() start\n");
+    int state = ttsState();
+    int ret = TTS_ERROR_NONE;
+    if (state == TTS_STATE_CREATED) {
+        ret = tts_prepare(m_handle);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_prepare failed : %d", ret);
+            return ret;
+        }
+    }
+    return ret;
+}
+
+void TTS::unprepare()
+{
+    // STARFISH_LOG_INFO("[TTS] unprepare() start\n");
+    int state = ttsState();
+    if (state != TTS_STATE_CREATED) {
+        int ret = TTS_ERROR_NONE;
+        if (state == TTS_STATE_PLAYING || state == TTS_STATE_PAUSED) {
+            ret = tts_stop(m_handle);
+            if (ret != TTS_ERROR_NONE) {
+                STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
+            }
+        }
+
+        ret = tts_unprepare(m_handle);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_unprepare failed : %d", ret);
+        }
+    }
+}
+
+void TTS::speech(Element* element, String* text)
+{
+    if (!text->isEmpty()) {
+        m_element = element;
+        m_ttsText = text;
+
+        ecore_main_loop_thread_safe_call_async(
+            [](void* data) -> void {
+                TTS* t = (TTS*)data;
+
+                // STARFISH_LOG_INFO("[TTS] speech TV : %s\n",
+                // t->ttsText()->toUTF8NonGCString().data());
+                if (t->handle() != NULL) {
+                    int ret = t->speechElementText();
+                    if (ret != TTS_ERROR_NONE) {
+                        dispatchErrorEvent(t, 0, errorToString(ret),
+                                           errorToString(ret));
+                    }
+                } else {
+                    STARFISH_LOG_ERROR("[TTS] handle is null");
+                }
+            },
+            this);
+    }
+}
+
+int TTS::speechElementText()
+{
+    int state = ttsState();
+    int ret = TTS_ERROR_NONE;
+    if (state == TTS_STATE_CREATED) {
+        return prepare();
+    } else if (state == TTS_STATE_PLAYING || state == TTS_STATE_PAUSED) {
+        ret = tts_stop(m_handle);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
+        }
+    }
+
+    if (!ttsText()->isEmpty()) {
+        ret = ttsPlay();
+    }
+
+    return ret;
+}
+
+int TTS::ttsPlay()
+{
+    int ret = TTS_ERROR_NONE;
+    String* text = ttsText();
+    ret = tts_add_text(m_handle, CSTR(text), NULL, TTS_VOICE_TYPE_AUTO,
+                       TTS_SPEED_AUTO, &gUtteranceId);
+    if (ret != TTS_ERROR_NONE) {
+        STARFISH_LOG_ERROR("[TTS] tts_add_text failed : %d", ret);
+        return ret;
+    }
+    // STARFISH_LOG_INFO("[TTS] tts_add_text: %s\n", CSTR(text));
+
+    ret = tts_play(m_handle);
+    if (ret != TTS_ERROR_NONE) {
+        STARFISH_LOG_ERROR("[TTS] tts_play failed : %d", ret);
+        return ret;
+    }
+    clearTTSText();
+
+    return ret;
+}
+
+int TTS::ttsState()
+{
+    tts_state_e cur;
+    int ret = tts_get_state(m_handle, &cur);
+    if (ret != TTS_ERROR_NONE) {
+        STARFISH_LOG_ERROR("[TTS] tts_get_state failed : %d", ret);
+        dispatchErrorEvent(this, currentUtterId(), errorToString(ret),
+                           errorToString(ret));
+        return -1;
+    }
+    // STARFISH_LOG_INFO("[TTS] Current state: %s\n", stateToString(cur));
+    return cur;
+}
+
 void TTS::speech(SpeechSynthesisUtterance* utterance)
 {
-    if (!utterance || utterance->text()->length() == 0) {
+    if (!utterance || utterance->text()->isEmpty()) {
         return;
     }
 
@@ -543,17 +643,17 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-            STARFISH_LOG_INFO("[TTS] speech(SpeechSynthesisUtterance*)");
+            // STARFISH_LOG_INFO("[TTS] speech(SpeechSynthesisUtterance*)\n");
             Dummy* d = (Dummy*)data;
-            TTS* tts = d->t;
+            TTS* t = d->t;
             SpeechSynthesisUtterance* utter = d->u;
 
-            if (tts->handle() != NULL) {
-                tts->setUtterance(utter);
+            if (t->handle() != NULL) {
+                t->setUtterance(utter);
 
-                int ret = tts->speechUtterances();
+                int ret = t->speechUtterances();
                 if (ret != TTS_ERROR_NONE) {
-                    dispatchErrorEvent(tts, tts->utterance()->id(),
+                    dispatchErrorEvent(t, t->utterance()->id(),
                                        errorToString(ret), errorToString(ret));
                 }
             } else {
@@ -566,7 +666,7 @@ void TTS::speech(SpeechSynthesisUtterance* utterance)
 
 int TTS::speechUtterances()
 {
-    STARFISH_LOG_INFO("[TTS] speechUtterances()");
+    // STARFISH_LOG_INFO("[TTS] speechUtterances()\n");
 
     String* curLang = m_defaultLanguage;
     String* lang = m_utterance->lang();
@@ -615,94 +715,10 @@ int TTS::speechUtterances()
     return ret;
 }
 
-void TTS::speech(Element* element, String* text)
-{
-    if (!text->equals(String::emptyString)) {
-        auto u8String = text->toUTF8NonGCString();
-        char* buf = (char*)malloc(u8String.length() + 1);
-        memcpy(buf, u8String.data(), u8String.length());
-        buf[u8String.length()] = 0;
-        m_element = element;
-
-        struct Dummy {
-            TTS* tts;
-            char* buf;
-        };
-
-        Dummy* d = new Dummy;
-        d->tts = this;
-        d->buf = buf;
-
-        ecore_main_loop_thread_safe_call_async(
-            [](void* data) -> void {
-                Dummy* d = (Dummy*)data;
-                TTS* tts = d->tts;
-                char* text = d->buf;
-
-                STARFISH_LOG_INFO("[TTS] speech TV : %s\n", text);
-                if (tts->handle() != NULL) {
-                    int ret = tts->speechElementText(text);
-                    if (ret != TTS_ERROR_NONE) {
-                        dispatchErrorEvent(tts, 0, errorToString(ret),
-                                           errorToString(ret));
-                    }
-                } else {
-                    STARFISH_LOG_ERROR("[TTS] handle is null");
-                }
-
-                free(text);
-                delete d;
-            },
-            d);
-    }
-}
-
-int TTS::speechElementText(const char* text)
-{
-    int ret = tts_stop(m_handle);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
-        return ret;
-    }
-
-    if (utteranceList().size() > 0) {
-        utteranceList().clear();
-    }
-
-    ret = tts_add_text(m_handle, text, NULL, TTS_VOICE_TYPE_AUTO,
-                       TTS_SPEED_AUTO, &gUtteranceId);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_add_text failed : %d", ret);
-        return ret;
-    }
-
-    ret = tts_play(m_handle);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_play failed : %d", ret);
-        return ret;
-    }
-    STARFISH_LOG_INFO("[TTS] tts_play : %s ", text);
-
-    return ret;
-}
-
 void TTS::changeDefaultVoice(String* language, const int voiceType)
 {
     m_defaultLanguage = language;
     m_defaultVoiceType = voiceType;
-}
-
-int TTS::ttsState()
-{
-    tts_state_e curState;
-    int ret = tts_get_state(m_handle, &curState);
-    if (ret != TTS_ERROR_NONE) {
-        STARFISH_LOG_ERROR("[TTS] tts_get_state failed : %d", ret);
-        dispatchErrorEvent(this, currentUtterId(), errorToString(ret),
-                           errorToString(ret));
-        return -1;
-    }
-    return curState;
 }
 
 bool TTS::isPaused()
@@ -717,7 +733,7 @@ void TTS::pause()
         return;
     }
 
-    STARFISH_LOG_INFO("[TTS] Pause Speaking! [ID:%d] \n", utterId);
+    // STARFISH_LOG_INFO("[TTS] Pause speaking! [ID:%d] \n", utterId);
     int ret = tts_pause(m_handle);
     if (ret != TTS_ERROR_NONE) {
         dispatchErrorEvent(this, utterId, errorToString(ret),
@@ -732,7 +748,7 @@ void TTS::resume()
         return;
     }
 
-    STARFISH_LOG_INFO("[TTS] Resume Speaking! [ID:%d] \n", utterId);
+    // STARFISH_LOG_INFO("[TTS] Resume speaking! [ID:%d] \n", utterId);
     int ret = tts_play(m_handle);
     if (ret != TTS_ERROR_NONE) {
         dispatchErrorEvent(this, utterId, errorToString(ret),
@@ -747,7 +763,7 @@ void TTS::cancel()
         return;
     }
 
-    STARFISH_LOG_INFO("[TTS] Cancel Speaking! [ID:%d] \n", utterId);
+    // STARFISH_LOG_INFO("[TTS] Cancel speaking! [ID:%d] \n", utterId);
     int ret = tts_stop(m_handle);
     if (ret != TTS_ERROR_NONE) {
         dispatchErrorEvent(this, utterId, errorToString(ret),
