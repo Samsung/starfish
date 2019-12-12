@@ -19,11 +19,11 @@
 
 [STARFISH_ENABLE_WEBRTC]
 dictionary RTCTrackEventInit : EventInit {
-//  required RTCRtpReceiver receiver;
+  required RTCRtpReceiver receiver;
   required MediaStreamTrack track;
 // FIXME: sequence<MediaStream> streams = [];
   sequence<MediaStream> streams;
-//  required RTCRtpTransceiver transceiver;
+  required RTCRtpTransceiver transceiver;
 };
 
 [ STARFISH_ENABLE_WEBRTC,
@@ -31,9 +31,9 @@ dictionary RTCTrackEventInit : EventInit {
   ConstructorCallWith=ExecutionContext,
   Exposed=Window ]
 interface RTCTrackEvent : Event {
-//  readonly attribute RTCRtpReceiver receiver;
+  readonly attribute RTCRtpReceiver receiver;
   readonly attribute MediaStreamTrack track;
   // FIXME: FrozenArray<MediaStream> -> sequence<MediaStream>;
   [SameObject] readonly attribute sequence<MediaStream> streams;
-//  readonly attribute RTCRtpTransceiver transceiver;
+  readonly attribute RTCRtpTransceiver transceiver;
 };

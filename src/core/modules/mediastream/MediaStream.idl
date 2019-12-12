@@ -25,7 +25,7 @@
   Constructor (sequence<MediaStreamTrack> tracks),
   ConstructorCallWith=ExecutionContext ]
 interface MediaStream : EventTarget {
-  //readonly attribute DOMString id;
+  readonly attribute DOMString id;
   sequence<MediaStreamTrack> getAudioTracks();
   sequence<MediaStreamTrack> getVideoTracks();
   sequence<MediaStreamTrack> getTracks();

@@ -140,6 +140,33 @@ webrtc::PeerConnectionInterface::RTCConfiguration RTCConfiguration::genBackend()
 {
     webrtc::PeerConnectionInterface::RTCConfiguration config;
 
+    for (auto& iceServer : m_iceServers) {
+        webrtc::PeerConnectionInterface::IceServer server;
+        bool hasIceServer = false;
+
+        if (iceServer.hasUsername()) {
+            server.username = iceServer.username()->toUTF8NonGCString().data();
+            hasIceServer = true;
+        }
+
+        if (iceServer.credential().isDOMStringValue()) {
+            server.password = iceServer.credential()
+                                  .getDOMStringValue()
+                                  ->toUTF8NonGCString()
+                                  .data();
+            hasIceServer = true;
+        }
+
+        for (auto url : iceServer.m_urls) {
+            server.urls.push_back(url->toUTF8NonGCString().data());
+            hasIceServer = true;
+        }
+
+        if (hasIceServer) {
+            config.servers.push_back(std::move(server));
+        }
+    }
+
     if (m_iceTransportPolicy == RTCIceTransportPolicy::Relay) {
         config.type =
             webrtc::PeerConnectionInterface::IceTransportsType::kRelay;

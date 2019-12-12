@@ -104,76 +104,70 @@ void PeerConnectionObserver::OnAddStream(
 {
 }
 
+#if defined(STARFISH_WEBRTC_DEBUG)
+class VideoFrameObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+public:
+    void OnFrame(const webrtc::VideoFrame& frame) override
+    {
+    }
+};
+#endif
+
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver)
 {
-    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track =
-        transceiver->receiver()->track();
-    std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams =
-        transceiver->receiver()->streams();
+    if (!isMainThread()) {
+        struct Params {
+            PeerConnectionObserver* self;
+            rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver;
+        };
 
-    struct Params {
-        PeerConnectionObserver* self;
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack;
-        std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams;
-    };
+        Params* p = new Params{ this, transceiver };
 
-    Params* p = new Params();
-    p->self = this;
-    p->streams = streams;
-
-    std::string videoKind(track->kVideoKind);
-    std::string audioKind(track->kAudioKind);
-    if (track->kind() == videoKind) {
-        webrtc::VideoTrackInterface* videoTrack =
-            (webrtc::VideoTrackInterface*)track.get();
-        p->videoTrack = m_peerConnection->executionContext()
-                            ->document()
-                            ->window()
-                            ->navigator()
-                            ->webRtcManager()
-                            ->peerConnectionFactory()
-                            ->CreateVideoTrack("asdf", videoTrack->GetSource());
-    } else if (track->kind() == audioKind) {
-        STARFISH_LOG_WARN("%s: AudioTrack not yet supported.\n", __func__);
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    p->self->OnTrack(p->transceiver);
+                    delete p;
+                },
+                p);
         return;
     }
 
-    m_peerConnection->executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            m_peerConnection->executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                PeerConnectionObserver* self = p->self;
-                rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack =
-                    p->videoTrack;
+    RTCRtpTransceiver* rtpTransceiver = new RTCRtpTransceiver(
+        m_peerConnection->m_executionContext, transceiver);
+    RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
+    MediaStreamTrack* track = rtpReceiver->track();
+    std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams =
+        rtpReceiver->backend()->streams();
 
-                VideoStreamTrack* videoStreamTrack = new VideoStreamTrack(
-                    self->m_peerConnection->executionContext(), videoTrack);
+    GCVector<MediaStream*> rtpStreams;
+    for (size_t i = 0; i < streams.size(); i++) {
+        MediaStream* stream =
+            new MediaStream(m_peerConnection->executionContext(), streams[i]);
+        stream->addTrack(track);
+        rtpStreams.push_back(stream);
+    }
 
-                GCVector<MediaStream*> streams;
-                for (size_t i = 0; i < p->streams.size(); i++) {
-                    MediaStream* stream = new MediaStream(
-                        self->m_peerConnection->executionContext(),
-                        p->streams[i]);
-                    stream->addTrack(videoStreamTrack);
-                    streams.push_back(stream);
-                }
+#if defined(STARFISH_WEBRTC_DEBUG)
+    VideoFrameObserver* videoFrameObserver = new VideoFrameObserver();
+    if (track->isVideoStreamTrack()) {
+        track->asVideoStreamTrack()->backend()->AddOrUpdateSink(
+            videoFrameObserver, rtc::VideoSinkWants());
+    }
+#endif
 
-                String* eventType =
-                    self->m_peerConnection->m_executionContext->starfish()
-                        ->staticStrings()
-                        ->m_track.localName();
-                RTCTrackEventInit init(videoStreamTrack, streams);
-                RTCTrackEvent* e = new RTCTrackEvent(
-                    self->m_peerConnection->m_executionContext, eventType,
-                    init);
-                self->m_peerConnection->dispatchEventByUA(e);
-                delete p;
-            },
-            p);
+    String* eventType = m_peerConnection->m_executionContext->starfish()
+                            ->staticStrings()
+                            ->m_track.localName();
+    RTCTrackEventInit init(rtpReceiver, track, rtpStreams, rtpTransceiver);
+    RTCTrackEvent* e = new RTCTrackEvent(m_peerConnection->m_executionContext,
+                                         eventType, init);
+    m_peerConnection->dispatchEventByUA(e);
 }
 
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
@@ -297,6 +291,7 @@ void CreateOfferAnswerObserver::OnSuccess(
                     self->m_peerConnection->m_createOfferObserver->setPromise(
                         nullptr);
                     self->m_peerConnection->m_lastCreatedOffer = sdpString;
+                    self->m_peerConnection->syncTransceivers();
                 } else if (self->isCreateAnswer()) {
                     promise = self->m_peerConnection->m_createAnswerObserver
                                   ->promise();
@@ -458,7 +453,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
         deletePeerConnection();
         STARFISH_LOG_ERROR("%s: PeerConnection: failed\n", __func__);
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
-                               "UnknownError");
+                               "Invalid Configuration");
     }
 
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -484,10 +479,13 @@ bool RTCPeerConnection::initializePeerConnection(
                                        ->webRtcManager();
     STARFISH_ASSERT(webRtcManager->peerConnectionFactory());
 
-    bool dtls = true;
     webrtc::PeerConnectionInterface::RTCConfiguration config =
         configuration.genBackend();
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+    config.enable_rtp_data_channel = true;
+    config.enable_dtls_srtp = true;
+    config.set_dscp(false);
+
     webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
     m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
         config, std::move(dependencies));
@@ -596,6 +594,41 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
     return promise;
+}
+
+void RTCPeerConnection::syncTransceivers()
+{
+    GCUnorderedMap<webrtc::RtpTransceiverInterface*, RTCRtpTransceiver*>
+        curTransceivers;
+    for (auto transceiver : m_transceivers) {
+        curTransceivers.insert(
+            std::make_pair(transceiver->backend().get(), transceiver));
+    }
+    m_transceivers.clear();
+
+    std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+        backendTransceivers = m_backend->GetTransceivers();
+    for (auto transceiver : backendTransceivers) {
+        auto itr = curTransceivers.find(transceiver.get());
+        if (itr != curTransceivers.end()) {
+            m_transceivers.push_back(itr->second);
+        } else {
+            RTCRtpTransceiver* newTransceiver =
+                new RTCRtpTransceiver(executionContext(), transceiver);
+            m_transceivers.push_back(newTransceiver);
+        }
+    }
+}
+
+RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backendTransceiver)
+{
+    for (auto transceiver : m_transceivers) {
+        if (transceiver->backend() == backendTransceiver.get()) {
+            return transceiver;
+        }
+    }
+    return nullptr;
 }
 
 ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
@@ -1263,6 +1296,7 @@ DEFINE_EVENT_LISTENER(RTCPeerConnection, iceconnectionstatechange);
 DEFINE_EVENT_LISTENER(RTCPeerConnection, icegatheringstatechange);
 DEFINE_EVENT_LISTENER(RTCPeerConnection, connectionstatechange);
 DEFINE_EVENT_LISTENER(RTCPeerConnection, datachannel);
+DEFINE_EVENT_LISTENER(RTCPeerConnection, track);
 
 RTCSctpTransport* RTCPeerConnection::sctp()
 {
@@ -1416,27 +1450,26 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
 
         if (transceiverWithSender) {
             if (transceiverWithSender->direction() ==
-                webrtc::RtpTransceiverDirection::kRecvOnly) {
+                RTCRtpTransceiverDirection::Recvonly) {
                 transceiverWithSender->setDirection(
-                    webrtc::RtpTransceiverDirection::kSendRecv);
+                    RTCRtpTransceiverDirection::Sendrecv);
             } else if (transceiverWithSender->direction() ==
-                       webrtc::RtpTransceiverDirection::kInactive) {
+                       RTCRtpTransceiverDirection::Inactive) {
                 transceiverWithSender->setDirection(
-                    webrtc::RtpTransceiverDirection::kSendOnly);
+                    RTCRtpTransceiverDirection::Sendonly);
             }
         }
     } else { // 9
         webrtc::RtpTransceiverInit init;
         init.stream_ids = streamIds;
 
-        webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-            r;
+        webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>> r;
         if (track->isAudioStreamTrack()) {
-            r = backend()->AddTransceiver(
-                track->asAudioStreamTrack()->backend(), init);
+            r = backend()->AddTrack(track->asAudioStreamTrack()->backend(),
+                                    streamIds);
         } else if (track->isVideoStreamTrack()) {
-            r = backend()->AddTransceiver(
-                track->asVideoStreamTrack()->backend(), init);
+            r = backend()->AddTrack(track->asVideoStreamTrack()->backend(),
+                                    streamIds);
         }
 
         if (!r.ok()) {
@@ -1446,12 +1479,18 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                    DOMException::INVALID_ACCESS_ERR,
                                    "InvalidAccessErr");
         }
-        RTCRtpTransceiver* transceiver =
-            new RTCRtpTransceiver(executionContext(), r.value());
-        m_transceivers.push_back(transceiver);
-        senderToReturn = transceiver->sender();
-        senderToReturn->setTrack(track);
-        senderToReturn->setStreams(streams);
+
+        syncTransceivers();
+
+        for (auto transceiver : m_transceivers) {
+            if (transceiver->sender()->backend() == r.value()) {
+                senderToReturn = transceiver->sender();
+                senderToReturn->setTrack(track);
+                break;
+            }
+        }
+
+        STARFISH_ASSERT(senderToReturn);
     }
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
@@ -1519,9 +1558,8 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
         return new RTCRtpTransceiver(executionContext());
     }
 
-    RTCRtpTransceiver* transceiver =
-        new RTCRtpTransceiver(executionContext(), r.value());
-    m_transceivers.push_back(transceiver);
+    syncTransceivers();
+    RTCRtpTransceiver* transceiver = getTransceiver(r.value());
 
     if (track) {
         transceiver->sender()->setTrack(track);

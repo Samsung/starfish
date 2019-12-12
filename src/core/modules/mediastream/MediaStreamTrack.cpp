@@ -205,6 +205,7 @@ WebCamStreamTrack::WebCamStreamTrack(
 WebCamStreamTrack::~WebCamStreamTrack()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
+    m_backend = nullptr;
 }
 
 rtc::scoped_refptr<WebCamStreamTrack::WebCamStreamTrackCapturer>

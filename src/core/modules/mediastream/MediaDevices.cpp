@@ -89,6 +89,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 
             // 1-3: TODO: Accept constraint sets
             if (!constraints.m_audio && !constraints.m_video) {
+                STARFISH_LOG_ERROR("%s: TypeError\n", __func__);
                 auto exception = new DOMException(md->executionContext(),
                                                   DOMException::SCRIPT_TYPE_ERR,
                                                   "TypeError");
@@ -98,6 +99,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 
             // 4
             if (!md->document()->isFullyActive()) {
+                STARFISH_LOG_ERROR("%s: InvalidStateError\n", __func__);
                 auto exception = new DOMException(
                     md->executionContext(), DOMException::INVALID_STATE_ERR,
                     "InvalidStateError");
@@ -117,9 +119,11 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
                 WebCamStreamTrack* videoTrack =
                     new WebCamStreamTrack(md->executionContext());
                 if (!videoTrack->backend()) {
+                    STARFISH_LOG_ERROR("%s: Failed to create a WebCamStream\n",
+                                       __func__);
                     auto exception = new DOMException(
-                        md->executionContext(), DOMException::NOT_FOUND_ERR,
-                        "NotFoundErr: video is not supported");
+                        md->executionContext(), DOMException::DOM_EXCEPTION,
+                        "Failed to create a WebCamStream");
                     promise->reject(exception->scriptValue());
                     return;
                 }

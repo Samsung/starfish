@@ -184,6 +184,12 @@ ExecutionContext* MediaStream::executionContext() const
     return m_executionContext;
 }
 
+String* MediaStream::id()
+{
+    std::string id = m_backend->id();
+    return String::createASCIIString(id.data(), id.length());
+}
+
 GCVector<MediaStreamTrack*> MediaStream::getAudioTracks()
 {
     GCVector<MediaStreamTrack*> tracks;
