@@ -2986,8 +2986,10 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     size_t cur = token.m_start;
     size_t end = token.m_end;
     while (cur < end) {
+        WordBreakValue wb = token.m_frameText->style()->wordBreak();
         if (String::isNonBreakingSpace(
-                token.m_frameText->text()->charAt(cur))) {
+                token.m_frameText->text()->charAt(cur)) ||
+            wb == WordBreakValue::BreakAllWordBreakValue) {
             TextToken t = TextToken(token.m_frameText, cur, cur + 1,
                                     token.m_type, token.m_isFirstLine);
             tokens.push_back(t);
@@ -3016,7 +3018,11 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         char32_t c = t.m_frameText->text()->charAt(t.m_end - 1);
         bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
 
-        if (isSoftWrapOpportunity(c) || isHyphenAtLast) {
+        WordBreakValue wb = t.m_frameText->style()->wordBreak();
+        if ((wb == WordBreakValue::BreakAllWordBreakValue) ||
+            (isSoftWrapOpportunity(c) &&
+             wb != WordBreakValue::KeepAllWordBreakValue) ||
+            isHyphenAtLast) {
             insertWord(t.m_frameText);
         }
         if (isHyphenAtLast) {

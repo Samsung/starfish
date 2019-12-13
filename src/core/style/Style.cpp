@@ -14101,7 +14101,6 @@ bool CSSStyleValuePair::updateValueWordBreak(Document* document,
         m_value.m_wordBreak = WordBreakValue::NormalWordBreakValue;
     } else if (STRING_VALUE_IS_STRING("break-all")) {
         m_value.m_wordBreak = WordBreakValue::BreakAllWordBreakValue;
-        return false; // unsupported yet
     } else if (STRING_VALUE_IS_STRING("keep-all")) {
         m_value.m_wordBreak = WordBreakValue::KeepAllWordBreakValue;
     } else if (STRING_VALUE_IS_STRING("break-word")) {

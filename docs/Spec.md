@@ -1427,6 +1427,7 @@ section are supported.
 | | line-break | auto &#124; normal &#124; loose &#124; strict | Specifies how (or if) to break lines when working with punctuation and symbols. This only affects text in Chinese, Japanese, or Korean (CJK). | At present, loose and strict behaves the same as normal. |
 | | hyphens | none &#124; auto | This property controls whether hyphenation is allowed to create more soft wrap opportunities within a line of text. | At present, only none is supported. auto behaves the same as none. |
 | [Text](https://www.w3.org/TR/css-text-3/) | overflow-wrap &#124; word-wrap | normal &#124; break-word | Specifies whether the UA may break at otherwise disallowed points within a line to prevent overflow, when an otherwise-unbreakable string is too long to fit within the line box, or when sequences of preserved white space would hang. | It only has an effect when white-space allows wrapping. |
+| | word-break | normal &#124; break-all &#124; keep-all | sets whether line breaks appear wherever the text would otherwise overflow its content box. |
 | [Table](https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#q17.0) | table-layout | fixed &#124; auto | Defines the algorithm to be used to lay out table cells, rows, and columns. | |
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
