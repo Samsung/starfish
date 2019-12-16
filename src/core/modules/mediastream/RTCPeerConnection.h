@@ -412,6 +412,8 @@ public:
     Nullable<webrtc::SdpType> toSdpType(Nullable<RTCSdpType> type);
     DOMException* toDomException(webrtc::RTCError error);
 
+    bool isClosed();
+
 private:
     ExecutionContext* m_executionContext;
 
@@ -430,7 +432,6 @@ private:
 
     GCVector<RTCRtpTransceiver*> m_transceivers;
 
-    bool isClosed();
     void deletePeerConnection();
 
     bool isValidRemoteState(RTCSdpType type);

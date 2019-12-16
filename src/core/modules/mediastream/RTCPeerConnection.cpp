@@ -139,7 +139,7 @@ void PeerConnectionObserver::OnTrack(
     }
 
     RTCRtpTransceiver* rtpTransceiver = new RTCRtpTransceiver(
-        m_peerConnection->m_executionContext, transceiver);
+        m_peerConnection->m_executionContext, m_peerConnection, transceiver);
     RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
     MediaStreamTrack* track = rtpReceiver->track();
     std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams =
@@ -614,7 +614,7 @@ void RTCPeerConnection::syncTransceivers()
             m_transceivers.push_back(itr->second);
         } else {
             RTCRtpTransceiver* newTransceiver =
-                new RTCRtpTransceiver(executionContext(), transceiver);
+                new RTCRtpTransceiver(executionContext(), this, transceiver);
             m_transceivers.push_back(newTransceiver);
         }
     }
@@ -862,7 +862,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
     if (!description.m_type.hasValue()) {
         auto exception =
             new DOMException(executionContext(), DOMException::SCRIPT_TYPE_ERR,
-                             "setRemoteDescription");
+                             "Invalid description type");
         promise->reject(exception->scriptValue());
         return promise;
     }
@@ -1497,32 +1497,63 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
     return senderToReturn;
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-removetrack
 void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
 {
+    // 1-3
     if (isClosed()) {
+        STARFISH_LOG_ERROR("%s: InvalidStateError\n", __func__);
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
 
-    if (!m_backend) {
+    // 4-6
+    RTCRtpSender* existingSender = nullptr;
+    RTCRtpSender* aliveSender = nullptr;
+    RTCRtpTransceiver* existingTransceiver = nullptr;
+
+    for (auto transceiver : getTransceivers()) {
+        if (transceiver->sender() == sender) {
+            existingSender = transceiver->sender();
+            if (!transceiver->stopped()) {
+                aliveSender = transceiver->sender();
+                existingTransceiver = transceiver;
+            }
+        }
+    }
+
+    if (!existingSender) {
+        STARFISH_LOG_ERROR("%s: InvalidAccessError\n", __func__);
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_ACCESS_ERR,
+                               "InvalidAccessError");
+    }
+
+    if (!aliveSender) {
         return;
     }
-    if (!sender->backend()) {
+
+    // 7
+    if (!aliveSender->track()) {
         return;
     }
 
     m_backend->RemoveTrackNew(sender->backend());
+    aliveSender->setTrack(nullptr);
+    if (existingTransceiver->direction() ==
+        RTCRtpTransceiverDirection::Sendrecv) {
+        existingTransceiver->setDirection(RTCRtpTransceiverDirection::Recvonly);
+    }
+    if (existingTransceiver->direction() ==
+        RTCRtpTransceiverDirection::Sendonly) {
+        existingTransceiver->setDirection(RTCRtpTransceiverDirection::Inactive);
+    }
 }
 
 RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     DOMStringOrMediaStreamTrack trackOrKind, RTCRtpTransceiverInit init)
 {
-    if (!m_backend) {
-        STARFISH_LOG_ERROR("%s: backend not exist\n", __func__);
-        return new RTCRtpTransceiver(executionContext());
-    }
-
     if (isClosed()) {
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
@@ -1554,8 +1585,9 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     }
 
     if (!r.ok()) {
-        STARFISH_LOG_ERROR("%s: failed to add a transceiver\n", __func__);
-        return new RTCRtpTransceiver(executionContext());
+        STARFISH_LOG_ERROR("%s: internal error\n", __func__);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               "addTransceiver: internal error");
     }
 
     syncTransceivers();
@@ -1575,6 +1607,10 @@ rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()
 
 bool RTCPeerConnection::isClosed()
 {
+    if (!m_backend) {
+        return true;
+    }
+
     if (m_backend->peer_connection_state() ==
         webrtc::PeerConnectionInterface::PeerConnectionState::kClosed) {
         return true;

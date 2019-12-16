@@ -49,9 +49,8 @@ class RTCRtpSender;
 class RTCRtpReceiver;
 class RTCRtpTransceiver : public ScriptWrappable {
 public:
-    RTCRtpTransceiver(ExecutionContext* executionContext);
     RTCRtpTransceiver(
-        ExecutionContext* executionContext,
+        ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
         rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rptTransceiver);
     virtual ~RTCRtpTransceiver();
 
@@ -66,10 +65,17 @@ public:
 
     String* directionStr();
     void setDirectionStr(String* direction);
-    String* currentDirection();
+    Nullable<String*> currentDirection();
 
     bool stopped();
     bool sentBefore();
+
+    RTCPeerConnection* peerConnection()
+    {
+        return m_peerConnection;
+    }
+
+    bool canSend();
 
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backend()
     {
@@ -78,6 +84,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    RTCPeerConnection* m_peerConnection{ nullptr };
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> m_backend;
 
     RTCRtpSender* m_sender{ nullptr };

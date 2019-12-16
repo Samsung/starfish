@@ -95,17 +95,17 @@ dictionary RTCDataChannelInit {
   RaisesException=Constructor,
   Exposed=Window ]
 interface RTCPeerConnection : EventTarget {
-  Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
-  Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options);
-  Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
+  [RaisesException] Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
+  [RaisesException] Promise<RTCSessionDescriptionInit> createAnswer (optional RTCAnswerOptions options);
+  [RaisesException] Promise<void> setLocalDescription (RTCSessionDescriptionInit description);
   readonly attribute RTCSessionDescription? localDescription;
   readonly attribute RTCSessionDescription? currentLocalDescription;
   readonly attribute RTCSessionDescription? pendingLocalDescription;
-  Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
+  [RaisesException] Promise<void> setRemoteDescription (RTCSessionDescriptionInit description);
   readonly attribute RTCSessionDescription? remoteDescription;
   readonly attribute RTCSessionDescription? currentRemoteDescription;
   readonly attribute RTCSessionDescription? pendingRemoteDescription;
-  Promise<void> addIceCandidate (optional RTCIceCandidateInit candidate);
+  [RaisesException] Promise<void> addIceCandidate (optional RTCIceCandidateInit candidate);
   readonly attribute RTCSignalingState signalingState;
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;

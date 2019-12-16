@@ -28,12 +28,12 @@
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
+class RTCRtpTransceiver;
 
 class RTCRtpReceiver : public ScriptWrappable {
 public:
-    RTCRtpReceiver(ExecutionContext* executionContext);
     RTCRtpReceiver(
-        ExecutionContext* executionContext,
+        ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
     virtual ~RTCRtpReceiver();
 
@@ -48,6 +48,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    RTCRtpTransceiver* m_transceiver{ nullptr };
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> m_backend;
 
     MediaStreamTrack* m_track{ nullptr };

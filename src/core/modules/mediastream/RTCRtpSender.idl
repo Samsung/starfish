@@ -44,7 +44,7 @@ interface RTCRtpSender {
   //static RTCRtpCapabilities? getCapabilities(DOMString kind); // Not supported by WebRTC
   //Promise<void> setParameters(RTCRtpSendParameters parameters);
   //RTCRtpSendParameters getParameters();
-  //Promise<void> replaceTrack(MediaStreamTrack? withTrack);
+  [RaisesException] Promise<void> replaceTrack(MediaStreamTrack? withTrack);
   //void setStreams(MediaStream... streams);
   //Promise<RTCStatsReport> getStats(); // Not supported by WebRTC
 };

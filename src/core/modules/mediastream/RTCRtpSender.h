@@ -28,6 +28,7 @@
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
+class RTCRtpTransceiver;
 
 struct RTCRtpParameters {
 };
@@ -40,15 +41,15 @@ struct RTCRtpSendParameters : public RTCRtpParameters {
 
 class RTCRtpSender : public ScriptWrappable {
 public:
-    RTCRtpSender(ExecutionContext* executionContext);
     RTCRtpSender(ExecutionContext* executionContext,
+                 RTCRtpTransceiver* transceiver,
                  rtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender);
     virtual ~RTCRtpSender();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpSender)
 
     MediaStreamTrack* track();
-    void setTrack(MediaStreamTrack* track);
+    bool setTrack(MediaStreamTrack* track);
     RTCDtlsTransport* transport();
     Promise* setParameters(RTCRtpSendParameters parameters);
     RTCRtpSendParameters getParameters();
@@ -59,6 +60,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    RTCRtpTransceiver* m_transceiver{ nullptr };
     rtc::scoped_refptr<webrtc::RtpSenderInterface> m_backend;
 
     MediaStreamTrack* m_track{ nullptr };
