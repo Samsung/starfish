@@ -26,19 +26,16 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/mediastream/MediaStreamTrack.h"
+#include "core/modules/mediastream/RTCRtpTransceiver.h"
 
 namespace Starfish {
 
-RTCRtpReceiver::RTCRtpReceiver(ExecutionContext* executionContext)
-    : RTCRtpReceiver(executionContext, nullptr)
-{
-}
-
 RTCRtpReceiver::RTCRtpReceiver(
-    ExecutionContext* executionContext,
+    ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_transceiver(transceiver)
     , m_backend(rtpReceiver)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(

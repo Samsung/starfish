@@ -47,16 +47,12 @@ webrtc::RtpTransceiverInit RTCRtpTransceiverInit::toRtpTransceiverInit()
     return init;
 }
 
-RTCRtpTransceiver::RTCRtpTransceiver(ExecutionContext* executionContext)
-    : RTCRtpTransceiver(executionContext, nullptr)
-{
-}
-
 RTCRtpTransceiver::RTCRtpTransceiver(
-    ExecutionContext* executionContext,
+    ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rtpTransceiver)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_peerConnection(peerConnection)
     , m_backend(rtpTransceiver)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -94,7 +90,7 @@ RTCRtpSender* RTCRtpTransceiver::sender()
         return m_sender;
     }
 
-    m_sender = new RTCRtpSender(m_executionContext, m_backend->sender());
+    m_sender = new RTCRtpSender(m_executionContext, this, m_backend->sender());
     return m_sender;
 }
 
@@ -104,7 +100,8 @@ RTCRtpReceiver* RTCRtpTransceiver::receiver()
         return m_receiver;
     }
 
-    m_receiver = new RTCRtpReceiver(m_executionContext, m_backend->receiver());
+    m_receiver =
+        new RTCRtpReceiver(m_executionContext, this, m_backend->receiver());
     return m_receiver;
 }
 
@@ -183,30 +180,35 @@ void RTCRtpTransceiver::setDirectionStr(String* direction)
     }
 }
 
-String* RTCRtpTransceiver::currentDirection()
+Nullable<String*> RTCRtpTransceiver::currentDirection()
 {
+    Nullable<String*> r;
     if (!m_backend) {
-        return String::emptyString;
+        return r;
     }
 
     absl::optional<webrtc::RtpTransceiverDirection> curDirection =
         m_backend->current_direction();
     if (!curDirection.has_value()) {
-        return String::emptyString;
+        return r;
     }
 
     switch (curDirection.value()) {
     case webrtc::RtpTransceiverDirection::kSendRecv:
-        return String::createASCIIString("sendrecv");
+        r = String::createASCIIString("sendrecv");
+        break;
     case webrtc::RtpTransceiverDirection::kSendOnly:
-        return String::createASCIIString("sendonly");
+        r = String::createASCIIString("sendonly");
+        break;
     case webrtc::RtpTransceiverDirection::kRecvOnly:
-        return String::createASCIIString("recvonly");
+        r = String::createASCIIString("recvonly");
+        break;
     case webrtc::RtpTransceiverDirection::kInactive:
-        return String::createASCIIString("inactive");
+        r = String::createASCIIString("inactive");
+        break;
     }
 
-    return String::emptyString;
+    return r;
 }
 
 bool RTCRtpTransceiver::stopped()
@@ -221,6 +223,19 @@ bool RTCRtpTransceiver::sentBefore()
 {
     return m_sentBefore;
 }
+
+bool RTCRtpTransceiver::canSend()
+{
+    switch (direction()) {
+    case RTCRtpTransceiverDirection::Sendrecv:
+    case RTCRtpTransceiverDirection::Sendonly:
+        return true;
+    default:
+        return false;
+    }
+
+    return false;
 }
+} // namespace Starfish
 
 #endif
