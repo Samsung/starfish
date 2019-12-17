@@ -69,8 +69,9 @@ RTCDtlsTransport* RTCSctpTransport::transport()
         return nullptr;
     }
 
+    webrtc::SctpTransportInformation info = m_backend->Information();
     rtc::scoped_refptr<webrtc::DtlsTransportInterface> transport =
-        m_backend->dtls_transport();
+        info.dtls_transport();
 
     if (!transport) {
         return nullptr;

@@ -17,17 +17,10 @@
  *  USA
  */
 
-// https://w3c.github.io/webrtc-pc/#dom-rtcdatachanneleventinit
-[STARFISH_ENABLE_WEBRTC]
-dictionary RTCDataChannelEventInit : EventInit {
-//  required RTCDataChannel channel;
-};
-
-// https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelevent
+// https://w3c.github.io/webrtc-pc/#dom-rtcstatsreport
 [ STARFISH_ENABLE_WEBRTC,
-  Exposed=Window,
-  Constructor(DOMString type, RTCDataChannelEventInit eventInitDict),
-  ConstructorCallWith=ExecutionContext ]
-interface RTCDataChannelEvent : Event {
-  readonly attribute RTCDataChannel channel;
+  ConstructorCallWith=ExecutionContext,
+  Exposed=Window ]
+interface RTCStatsReport {
+  //readonly maplike<DOMString, object>;
 };

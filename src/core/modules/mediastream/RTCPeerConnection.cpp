@@ -42,6 +42,7 @@
 #include "core/modules/mediastream/RTCRtpTransceiver.h"
 #include "core/modules/mediastream/RTCTrackEvent.h"
 #include "core/modules/mediastream/RTCPeerConnectionIceEvent.h"
+#include "core/modules/mediastream/RTCDataChannelEvent.h"
 #include "core/modules/mediastream/RTCError.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
@@ -170,6 +171,46 @@ void PeerConnectionObserver::OnTrack(
     m_peerConnection->dispatchEventByUA(e);
 }
 
+// https://w3c.github.io/webrtc-pc/#event-datachannel
+void PeerConnectionObserver::OnDataChannel(
+    rtc::scoped_refptr<webrtc::DataChannelInterface> channel)
+{
+    if (!isMainThread()) {
+        struct Params {
+            PeerConnectionObserver* self;
+            rtc::scoped_refptr<webrtc::DataChannelInterface> channel;
+        };
+
+        Params* p = new Params{ this, channel };
+
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    p->self->OnDataChannel(p->channel);
+                    delete p;
+                },
+                p);
+        return;
+    }
+
+    RTCDataChannelInit channelInit;
+    RTCDataChannel* rtcChannel = new RTCDataChannel(
+        m_peerConnection->executionContext(), channelInit, channel);
+
+    String* eventType = m_peerConnection->executionContext()
+                            ->starfish()
+                            ->staticStrings()
+                            ->m_datachannel.localName();
+    RTCDataChannelEventInit eventInit;
+    RTCDataChannelEvent* e = new RTCDataChannelEvent(
+        m_peerConnection->executionContext(), eventType, eventInit, rtcChannel);
+    m_peerConnection->dispatchEventByUA(e);
+}
+
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
 void PeerConnectionObserver::OnRenegotiationNeeded()
 {
@@ -192,6 +233,105 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                             ->starfish()
                             ->staticStrings()
                             ->m_negotiationneeded.localName();
+    Event* e = new Event(m_peerConnection->executionContext(), eventType);
+    m_peerConnection->dispatchEventByUA(e);
+}
+
+void PeerConnectionObserver::OnIceConnectionChange(
+    webrtc::PeerConnectionInterface::IceConnectionState newState)
+{
+    if (!isMainThread()) {
+        struct Params {
+            PeerConnectionObserver* self;
+            webrtc::PeerConnectionInterface::IceConnectionState newState;
+        };
+
+        Params* p = new Params{ this, newState };
+
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    p->self->OnIceConnectionChange(p->newState);
+                    delete p;
+                },
+                p);
+        return;
+    }
+
+    String* eventType = m_peerConnection->executionContext()
+                            ->starfish()
+                            ->staticStrings()
+                            ->m_iceconnectionstatechange.localName();
+    Event* e = new Event(m_peerConnection->executionContext(), eventType);
+    m_peerConnection->dispatchEventByUA(e);
+}
+
+void PeerConnectionObserver::OnConnectionChange(
+    webrtc::PeerConnectionInterface::PeerConnectionState newState)
+{
+    if (!isMainThread()) {
+        struct Params {
+            PeerConnectionObserver* self;
+            webrtc::PeerConnectionInterface::PeerConnectionState newState;
+        };
+
+        Params* p = new Params{ this, newState };
+
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    p->self->OnConnectionChange(p->newState);
+                    delete p;
+                },
+                p);
+        return;
+    }
+
+    String* eventType = m_peerConnection->executionContext()
+                            ->starfish()
+                            ->staticStrings()
+                            ->m_connectionstatechange.localName();
+    Event* e = new Event(m_peerConnection->executionContext(), eventType);
+    m_peerConnection->dispatchEventByUA(e);
+}
+
+void PeerConnectionObserver::OnIceGatheringChange(
+    webrtc::PeerConnectionInterface::IceGatheringState newState)
+{
+    if (!isMainThread()) {
+        struct Params {
+            PeerConnectionObserver* self;
+            webrtc::PeerConnectionInterface::IceGatheringState newState;
+        };
+
+        Params* p = new Params{ this, newState };
+
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    p->self->OnIceGatheringChange(p->newState);
+                    delete p;
+                },
+                p);
+        return;
+    }
+
+    String* eventType = m_peerConnection->executionContext()
+                            ->starfish()
+                            ->staticStrings()
+                            ->m_icegatheringstatechange.localName();
     Event* e = new Event(m_peerConnection->executionContext(), eventType);
     m_peerConnection->dispatchEventByUA(e);
 }
@@ -482,9 +622,6 @@ bool RTCPeerConnection::initializePeerConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration config =
         configuration.genBackend();
     config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
-    config.enable_rtp_data_channel = true;
-    config.enable_dtls_srtp = true;
-    config.set_dscp(false);
 
     webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
     m_backend = webRtcManager->peerConnectionFactory()->CreatePeerConnection(
@@ -683,6 +820,15 @@ Promise* RTCPeerConnection::setLocalDescription(
     m_setLocalDescriptionObserver->setPromise(promise);
 
     Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
+    if (!type.hasValue()) {
+        STARFISH_LOG_ERROR("%s: rollback is not supported\n", __func__);
+        auto exception =
+            new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                             "rollback is not supported");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
     // 4.2
@@ -855,6 +1001,15 @@ Promise* RTCPeerConnection::setRemoteDescription(
     m_setRemoteDescriptionObserver->setPromise(promise);
 
     Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
+    if (!type.hasValue()) {
+        STARFISH_LOG_ERROR("%s: rollback is not supported\n", __func__);
+        auto exception =
+            new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                             "rollback is not supported");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
 
     // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
@@ -1314,33 +1469,77 @@ RTCSctpTransport* RTCPeerConnection::sctp()
     return new RTCSctpTransport(executionContext(), sctp);
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-peerconnection-createdatachannel
 RTCDataChannel* RTCPeerConnection::createDataChannel(
     String* label, RTCDataChannelInit dataChannelDict)
 {
-    if (!m_backend) {
-        return nullptr;
+    // 1-4
+    if (isClosed()) {
+        STARFISH_LOG_ERROR("%s: connection closed\n", __func__);
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "connection closed");
+    }
+    // 5-15
+    if ((label->length() > 65535)) {
+        STARFISH_LOG_ERROR("%s: label.length() > 65535\n", __func__);
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "label.length() > 65535");
+    }
+    if (!dataChannelDict.negotiated() &&
+        (dataChannelDict.protocol()->length() > 65535)) {
+        STARFISH_LOG_ERROR("%s: protocol.length() > 65535\n", __func__);
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "protocol.length() > 65535");
     }
 
     webrtc::DataChannelInit init;
-    init.ordered = dataChannelDict.m_ordered;
+    if (dataChannelDict.hasMaxPacketLifeTime()) {
+        init.maxRetransmitTime = dataChannelDict.maxPacketLifeTime();
+    }
+    if (dataChannelDict.hasMaxRetransmits()) {
+        init.maxRetransmits = dataChannelDict.maxRetransmits();
+    }
+    init.ordered = dataChannelDict.ordered();
     init.protocol =
-        std::string(dataChannelDict.m_protocol->toUTF8NonGCString().data());
-    init.negotiated = dataChannelDict.m_negotiated;
-    if (dataChannelDict.m_hasMaxPacketLifeTime) {
-        init.maxRetransmitTime = dataChannelDict.m_maxPacketLifeTime;
+        std::string(dataChannelDict.protocol()->toUTF8NonGCString().data());
+    init.negotiated = dataChannelDict.negotiated();
+    if (dataChannelDict.hasId() && dataChannelDict.negotiated()) {
+        init.id = dataChannelDict.id();
     }
-    if (dataChannelDict.m_hasMaxRetransmits) {
-        init.maxRetransmits = dataChannelDict.m_maxRetransmits;
+    if (dataChannelDict.negotiated() && !dataChannelDict.hasId()) {
+        STARFISH_LOG_ERROR("%s: negotiated=true but id=null\n", __func__);
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "negotiated=true but id=null");
     }
-    if (dataChannelDict.m_hasId) {
-        init.id = dataChannelDict.m_id;
+    if (dataChannelDict.hasMaxPacketLifeTime() &&
+        dataChannelDict.hasMaxRetransmits()) {
+        STARFISH_LOG_ERROR(
+            "%s: both maxPacketLifeTime=true and maxRetransmits=true\n",
+            __func__);
+        throw new DOMException(
+            executionContext(), DOMException::SCRIPT_TYPE_ERR,
+            "both maxPacketLifeTime=true and maxRetransmits=true");
+    }
+    if (dataChannelDict.hasId() && (dataChannelDict.id() >= 65535)) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR, "id >= 65535");
     }
 
     rtc::scoped_refptr<webrtc::DataChannelInterface> dataChannel =
         m_backend->CreateDataChannel(
             std::string(label->toUTF8NonGCString().data()), &init);
 
-    return new RTCDataChannel(executionContext(), dataChannel);
+    if (!dataChannel) {
+        STARFISH_LOG_ERROR("%s: Invalid configuration\n", __func__);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               "Invalid configuration");
+    }
+
+    return new RTCDataChannel(executionContext(), dataChannelDict, dataChannel);
 }
 
 GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
@@ -1598,6 +1797,35 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     }
 
     return transceiver;
+}
+
+// https://w3c.github.io/webrtc-pc/#widl-RTCPeerConnection-getStats-Promise-RTCStatsReport--MediaStreamTrack-selector
+Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
+{
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    if (selector) {
+        int count = 0;
+        for (auto transceiver : m_transceivers) {
+            if (transceiver->sender()->track() == selector) {
+                count++;
+            } else if (transceiver->receiver()->track() == selector) {
+                count++;
+            }
+        }
+
+        if (count != 1) {
+            STARFISH_LOG_ERROR("%s: The track does not exist in this pc\n",
+                               __func__);
+            auto exception = new DOMException(
+                executionContext(), DOMException::INVALID_ACCESS_ERR,
+                "The track does not exist in the pc");
+            promise->reject(exception->scriptValue());
+            return promise;
+        }
+    }
+    promise->fulfill(scriptUndefined());
+    return promise;
 }
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()

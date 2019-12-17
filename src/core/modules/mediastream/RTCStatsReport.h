@@ -19,35 +19,24 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#ifndef __StarfishRTCDataChannelEvent__
-#define __StarfishRTCDataChannelEvent__
+#ifndef __StarfishRTCStatsReport__
+#define __StarfishRTCStatsReport__
 
-#include "core/dom/Event.h"
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
-class ExecutionContext;
-class RTCDataChannel;
 
-struct RTCDataChannelEventInit : public EventInit {
-};
-
-class RTCDataChannelEvent : public Event {
+class RTCStatsReport : public ScriptWrappable {
 public:
-    RTCDataChannelEvent(ExecutionContext* executionContext, String* type,
-                        RTCDataChannelEventInit eventInitDict);
-    RTCDataChannelEvent(ExecutionContext* executionContext, String* type,
-                        RTCDataChannelEventInit eventInitDict,
-                        RTCDataChannel* channel);
-    virtual ~RTCDataChannelEvent(){};
+    RTCStatsReport(ExecutionContext* executionContext);
+    virtual ~RTCStatsReport();
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDataChannelEvent)
-
-    DEFINE_GETTER(RTCDataChannel*, channel);
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCStatsReport)
+    virtual ExecutionContext* executionContext() const;
 
 private:
-    RTCDataChannel* m_channel{ nullptr };
+    ExecutionContext* m_executionContext{ nullptr };
 };
 }
 #endif

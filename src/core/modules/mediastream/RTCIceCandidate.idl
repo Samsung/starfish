@@ -17,6 +17,13 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcicecandidatepair
+[ STARFISH_ENABLE_WEBRTC ]
+dictionary RTCIceCandidatePair {
+  RTCIceCandidate local;
+  RTCIceCandidate remote;
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcicecandidateinit
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary RTCIceCandidateInit {

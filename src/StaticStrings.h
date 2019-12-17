@@ -610,6 +610,8 @@ public:
     QualifiedName m_icegatheringstatechange;
     QualifiedName m_connectionstatechange;
     QualifiedName m_datachannel;
+    QualifiedName m_bufferedamountlow;
+    QualifiedName m_closing;
 #endif
 
 protected:
