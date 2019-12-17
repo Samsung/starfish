@@ -25,10 +25,22 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+#include "core/modules/mediastream/RTCIceCandidate.h"
+
 #include "api/peer_connection_interface.h"
 #include "api/ice_transport_interface.h"
 
 namespace Starfish {
+
+enum RTCIceTransportState {
+    New,
+    Checking,
+    Connected,
+    Completed,
+    Disconnected,
+    Failed,
+    Closed,
+};
 
 class RTCIceTransport : public EventTarget {
 public:
@@ -40,6 +52,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceTransport)
     virtual ExecutionContext* executionContext() const override;
+
+    String* state();
+    GCVector<RTCIceCandidate*> getRemoteCandidates();
+    Nullable<RTCIceCandidatePair> getSelectedCandidatePair();
 
     void setBackend(rtc::scoped_refptr<webrtc::IceTransportInterface> backend);
 

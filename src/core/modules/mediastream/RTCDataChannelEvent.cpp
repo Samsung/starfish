@@ -25,24 +25,23 @@
 #include "core/modules/mediastream/RTCDataChannelEvent.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/mediastream/RTCDataChannel.h"
 
 namespace Starfish {
 
-RTCDataChannelEvent::RTCDataChannelEvent(ExecutionContext* executionContext)
-    : Event(executionContext)
-{
-}
-
 RTCDataChannelEvent::RTCDataChannelEvent(ExecutionContext* executionContext,
-                                         String* type)
-    : RTCDataChannelEvent(executionContext, type, RTCDataChannelEventInit())
+                                         String* type,
+                                         RTCDataChannelEventInit eventInitDict)
+    : RTCDataChannelEvent(executionContext, type, eventInitDict, nullptr)
 {
 }
 
 RTCDataChannelEvent::RTCDataChannelEvent(ExecutionContext* executionContext,
                                          String* type,
-                                         RTCDataChannelEventInit eventInitDict)
+                                         RTCDataChannelEventInit eventInitDict,
+                                         RTCDataChannel* channel)
     : Event(executionContext, type)
+    , m_channel(channel)
 {
 }
 

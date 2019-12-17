@@ -30,6 +30,14 @@
 namespace Starfish {
 class ExecutionContext;
 
+struct RTCIceCandidatePair {
+    DEFINE_GETTER_SETTER(RTCIceCandidate*, local, Local);
+    DEFINE_GETTER_SETTER(RTCIceCandidate*, remote, Remote);
+
+    RTCIceCandidate* m_local;
+    RTCIceCandidate* m_remote;
+};
+
 struct RTCIceCandidateInit : public gc {
     RTCIceCandidateInit()
     {
@@ -87,5 +95,6 @@ private:
     Nullable<String*> m_usernameFragment;
 };
 }
+
 #endif
 #endif

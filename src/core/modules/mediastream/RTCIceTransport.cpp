@@ -26,6 +26,8 @@
 
 #include "core/dom/ExecutionContext.h"
 
+#include "p2p/base/ice_transport_internal.h"
+
 namespace Starfish {
 
 RTCIceTransport::RTCIceTransport(ExecutionContext* executionContext)
@@ -58,6 +60,45 @@ ScriptBindingInstance* RTCIceTransport::scriptBindingInstance()
 ExecutionContext* RTCIceTransport::executionContext() const
 {
     return m_executionContext;
+}
+
+String* RTCIceTransport::state()
+{
+    // TODO: libwebrtc requires to access to internal data
+    webrtc::IceTransportState state =
+        m_backend->internal()->GetIceTransportState();
+    switch (state) {
+    case webrtc::IceTransportState::kNew:
+        return String::createASCIIString("new");
+    case webrtc::IceTransportState::kChecking:
+        return String::createASCIIString("checking");
+    case webrtc::IceTransportState::kConnected:
+        return String::createASCIIString("connected");
+    case webrtc::IceTransportState::kCompleted:
+        return String::createASCIIString("completed");
+    case webrtc::IceTransportState::kFailed:
+        return String::createASCIIString("failed");
+    case webrtc::IceTransportState::kDisconnected:
+        return String::createASCIIString("disconnected");
+    case webrtc::IceTransportState::kClosed:
+        return String::createASCIIString("closed");
+    }
+
+    return String::emptyString;
+}
+
+GCVector<RTCIceCandidate*> RTCIceTransport::getRemoteCandidates()
+{
+    // TODO: unsupported
+    GCVector<RTCIceCandidate*> candidates;
+    return candidates;
+}
+
+Nullable<RTCIceCandidatePair> RTCIceTransport::getSelectedCandidatePair()
+{
+    // TODO: unsupported
+    Nullable<RTCIceCandidatePair> pair;
+    return pair;
 }
 
 void RTCIceTransport::setBackend(

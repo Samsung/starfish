@@ -77,18 +77,6 @@ partial dictionary RTCOfferOptions {
   boolean offerToReceiveVideo;
 };
 
-// https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelinit
-[ STARFISH_ENABLE_WEBRTC ]
-dictionary RTCDataChannelInit {
-  boolean ordered = true;
-  [EnforceRange] unsigned short maxPacketLifeTime;
-  [EnforceRange] unsigned short maxRetransmits;
-  USVString protocol = "";
-  boolean negotiated = false;
-  [EnforceRange] unsigned short id;
-  // RTCPriorityType priority = "low"; // Not supported by WebRTC
-};
-
 [ STARFISH_ENABLE_WEBRTC,
   Constructor (optional RTCConfiguration configuration),
   ConstructorCallWith=ExecutionContext,
@@ -136,7 +124,8 @@ partial interface RTCPeerConnection {
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
   readonly attribute RTCSctpTransport? sctp;
-  RTCDataChannel createDataChannel (USVString label, optional RTCDataChannelInit dataChannelDict);
+  // USVString -> DOMString
+  [RaisesException] RTCDataChannel createDataChannel (DOMString label, optional RTCDataChannelInit dataChannelDict);
   attribute EventHandler ondatachannel;
 };
 
@@ -159,6 +148,6 @@ partial interface RTCPeerConnection {
 
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
-//  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
+  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
 //  attribute EventHandler onstatsended;
 };

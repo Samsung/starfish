@@ -28,20 +28,89 @@
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
+class RTCDataChannel;
+
+struct RTCDataChannelInit {
+    DEFINE_GETTER_SETTER(bool, ordered, Ordered)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxPacketLifeTime,
+                                      MaxPacketLifeTime)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxRetransmits, MaxRetransmits)
+    DEFINE_GETTER_SETTER(String*, protocol, Protocol)
+    DEFINE_GETTER_SETTER(bool, negotiated, Negotiated)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, id, Id)
+
+    bool m_ordered{ true };
+    uint32_t m_maxPacketLifeTime{ 0 };
+    uint32_t m_maxRetransmits{ 0 };
+    String* m_protocol{ String::emptyString };
+    bool m_negotiated{ false };
+    uint32_t m_id{ 0 };
+
+    bool m_hasMaxPacketLifeTime{ false };
+    bool m_hasMaxRetransmits{ false };
+    bool m_hasId{ false };
+};
+
+class RTCDataChannelObserver : public gc, public webrtc::DataChannelObserver {
+public:
+    RTCDataChannelObserver(RTCDataChannel* dataChannel);
+    void OnStateChange() override;
+    void OnMessage(const webrtc::DataBuffer& buffer) override;
+    void OnBufferedAmountChange(uint64_t sent_data_size) override{};
+
+private:
+    RTCDataChannel* m_dataChannel{ nullptr };
+};
 
 class RTCDataChannel : public EventTarget {
 public:
-    RTCDataChannel(ExecutionContext* executionContext);
     RTCDataChannel(
-        ExecutionContext* executionContext,
+        ExecutionContext* executionContext, RTCDataChannelInit init,
         rtc::scoped_refptr<webrtc::DataChannelInterface> rpcSctpTransport);
     virtual ~RTCDataChannel();
 
     virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDataChannel)
 
+    String* label();
+    bool ordered();
+    Nullable<uint32_t> maxPacketLifeTime();
+    Nullable<uint32_t> maxRetransmits();
+    DEFINE_GETTER(String*, protocol);
+    bool negotiated();
+    Nullable<uint32_t> id();
+    DEFINE_GETTER(String*, priority);
+    String* readyState();
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(open);
+    DECLARE_EVENT_LISTENER(bufferedamountlow);
+    DECLARE_EVENT_LISTENER(error);
+    DECLARE_EVENT_LISTENER(closing);
+    DECLARE_EVENT_LISTENER(close);
+    DECLARE_EVENT_LISTENER(message);
+#undef VIRTUAL
+#undef OVERRIDE
+
+    String* binaryType();
+    void setBinaryType(String* binaryType);
+
+    void send(String* data);
+
+    rtc::scoped_refptr<webrtc::DataChannelInterface> backend()
+    {
+        return m_backend;
+    }
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    RTCDataChannelObserver* m_observer{ nullptr };
+
+    String* m_protocol{ String::emptyString };
+    String* m_priority{ String::createASCIIString("low") };
+    String* m_binaryType{ String::createASCIIString("blob") };
+
     rtc::scoped_refptr<webrtc::DataChannelInterface> m_backend;
 };
 }

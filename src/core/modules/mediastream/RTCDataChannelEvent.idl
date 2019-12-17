@@ -29,5 +29,5 @@ dictionary RTCDataChannelEventInit : EventInit {
   Constructor(DOMString type, RTCDataChannelEventInit eventInitDict),
   ConstructorCallWith=ExecutionContext ]
 interface RTCDataChannelEvent : Event {
-//  readonly attribute RTCDataChannel channel;
+  readonly attribute RTCDataChannel channel;
 };

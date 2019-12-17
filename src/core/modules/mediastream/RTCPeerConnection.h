@@ -127,27 +127,6 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 };
 
-struct RTCDataChannelInit {
-    DEFINE_GETTER_SETTER(bool, ordered, Ordered)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxPacketLifeTime,
-                                      MaxPacketLifeTime)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, maxRetransmits, MaxRetransmits)
-    DEFINE_GETTER_SETTER(String*, protocol, Protocol)
-    DEFINE_GETTER_SETTER(bool, negotiated, Negotiated)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, id, Id)
-
-    bool m_ordered{ true };
-    uint32_t m_maxPacketLifeTime;
-    uint32_t m_maxRetransmits;
-    String* m_protocol{ String::emptyString };
-    bool m_negotiated{ false };
-    uint32_t m_id;
-
-    bool m_hasMaxPacketLifeTime{ false };
-    bool m_hasMaxRetransmits{ false };
-    bool m_hasId{ false };
-};
-
 class PeerConnectionObserver : public gc,
                                public webrtc::PeerConnectionObserver {
 public:
@@ -158,7 +137,7 @@ public:
     virtual ~PeerConnectionObserver(){};
 
     void OnSignalingChange(
-        webrtc::PeerConnectionInterface::SignalingState new_state) override;
+        webrtc::PeerConnectionInterface::SignalingState newState) override;
     void OnAddStream(
         rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
     void OnRemoveStream(
@@ -172,24 +151,23 @@ public:
     void OnRemoveTrack(
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override{};
     void OnDataChannel(
-        rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override{};
+        rtc::scoped_refptr<webrtc::DataChannelInterface> channel) override;
     void OnRenegotiationNeeded() override;
     void OnIceConnectionChange(
-        webrtc::PeerConnectionInterface::IceConnectionState new_state)
-        override{};
+        webrtc::PeerConnectionInterface::IceConnectionState newState) override;
     void OnStandardizedIceConnectionChange(
-        webrtc::PeerConnectionInterface::IceConnectionState new_state)
+        webrtc::PeerConnectionInterface::IceConnectionState newState)
         override{};
     void OnConnectionChange(webrtc::PeerConnectionInterface::PeerConnectionState
-                                new_state) override{};
-    void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState
-                                  new_state) override{};
+                                newSstate) override;
+    void OnIceGatheringChange(
+        webrtc::PeerConnectionInterface::IceGatheringState newState) override;
     void OnIceCandidate(
         const webrtc::IceCandidateInterface* candidate) override;
     void OnIceCandidatesRemoved(
         const std::vector<cricket::Candidate>& candidates) override{};
     void OnIceConnectionReceivingChange(bool receiving) override{};
-    void OnInterestingUsage(int usage_pattern) override{};
+    void OnInterestingUsage(int usagePattern) override{};
 
 protected:
     RTCPeerConnection* m_peerConnection;
@@ -401,6 +379,8 @@ public:
     RTCRtpTransceiver* addTransceiver(
         DOMStringOrMediaStreamTrack trackOrKind,
         RTCRtpTransceiverInit init = RTCRtpTransceiverInit());
+
+    Promise* getStats(MediaStreamTrack* selector = nullptr);
 
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
     bool initializePeerConnection();

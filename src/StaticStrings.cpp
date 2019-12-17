@@ -684,7 +684,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "connectionstatechange"));
     m_datachannel = QualifiedName(
         AtomicString::createAtomicString(starfish, "datachannel"));
-
+    m_bufferedamountlow = QualifiedName(
+        AtomicString::createAtomicString(starfish, "bufferedamountlow"));
+    m_closing =
+        QualifiedName(AtomicString::createAtomicString(starfish, "closing"));
 #endif
 }
 }

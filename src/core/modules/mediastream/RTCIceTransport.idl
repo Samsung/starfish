@@ -17,6 +17,17 @@
  *  USA
  */
 
+// https://w3c.github.io/webrtc-pc/#rtcicetransportstate
+enum RTCIceTransportState {
+  "new",
+  "checking",
+  "connected",
+  "completed",
+  "disconnected",
+  "failed",
+  "closed"
+};
+
 // https://w3c.github.io/webrtc-pc/#dom-rtcicetransport
 [ STARFISH_ENABLE_WEBRTC,
   ConstructorCallWith=ExecutionContext,
@@ -27,8 +38,8 @@ interface RTCIceTransport : EventTarget {
 //  readonly attribute RTCIceTransportState state;
 //  readonly attribute RTCIceGathererState gatheringState;
 //  sequence<RTCIceCandidate> getLocalCandidates();
-//  sequence<RTCIceCandidate> getRemoteCandidates();
-//  RTCIceCandidatePair? getSelectedCandidatePair();
+  sequence<RTCIceCandidate> getRemoteCandidates();
+  RTCIceCandidatePair? getSelectedCandidatePair();
 //  RTCIceParameters? getLocalParameters();
 //  RTCIceParameters? getRemoteParameters();
 //  attribute EventHandler onstatechange;
