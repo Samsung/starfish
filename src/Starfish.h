@@ -37,8 +37,6 @@ class HTTPCache;
 #define BDWGC_FREE_SPACE_DIVISOR 6
 #endif
 
-void addGCCollectionListener(void (*fn)(GC_EventType));
-
 // ctor of Starfish class is NOT THREAD-SAFE
 class Starfish : public gc {
     friend class AtomicString;

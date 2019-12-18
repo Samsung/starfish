@@ -393,7 +393,7 @@ public:
 
     virtual ChildFrameBoxIterator* childFrameBoxIterator(void* mem) override
     {
-        return new ChildFrameBoxIteratorInlineBoxLayoutParentBox(this);
+        return new (mem) ChildFrameBoxIteratorInlineBoxLayoutParentBox(this);
     }
 
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
