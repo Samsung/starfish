@@ -50,11 +50,15 @@ int g_referenceTestState = 0;
 #endif
 
 static bool g_starfishGlobalInit = false;
-typedef void (*GCCollectionEventListenter)(GC_EventType);
-static std::list<GCCollectionEventListenter> g_gcCollectionEventListenterList;
-void addGCCollectionListener(void (*fn)(GC_EventType))
+static void StarfishGCMemoryLogger(GC_EventType evtType, void* data)
 {
-    g_gcCollectionEventListenterList.push_back(fn);
+#if !defined(STARFISH_ANDROID)
+    if (GC_EVENT_RECLAIM_END == evtType) {
+        STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
+                          GC_get_memory_use() / 1024.f / 1024.f,
+                          GC_get_heap_size() / 1024.f / 1024.f);
+    }
+#endif
 }
 
 Starfish::Starfish(const char* localStorageFilePath,
@@ -87,22 +91,10 @@ Starfish::Starfish(const char* localStorageFilePath,
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
-        GC_set_on_collection_event([](GC_EventType evtType) {
+        // remove if exists
+        GC_remove_event_callback(StarfishGCMemoryLogger, nullptr);
+        GC_add_event_callback(StarfishGCMemoryLogger, nullptr);
 
-#if !defined(STARFISH_ANDROID)
-            if (GC_EVENT_RECLAIM_END == evtType) {
-                STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
-                                  GC_get_memory_use() / 1024.f / 1024.f,
-                                  GC_get_heap_size() / 1024.f / 1024.f);
-            }
-#endif
-
-            auto iter = g_gcCollectionEventListenterList.begin();
-            while (iter != g_gcCollectionEventListenterList.end()) {
-                (*iter)(evtType);
-                iter++;
-            }
-        });
         GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
         GC_set_force_unmap_on_gcollect(1);
     }
