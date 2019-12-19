@@ -42,27 +42,65 @@
 
 namespace Starfish {
 
-MediaStream::MediaStreamObserver::MediaStreamObserver(
-    webrtc::VideoTrackInterface* trackToRender, MediaPlayerWebRtc* player)
-    : m_trackToRender(trackToRender)
+MediaStream::AudioTrackObserver::AudioTrackObserver(
+    webrtc::AudioTrackInterface* audioTrack, MediaPlayerWebRtc* player)
+    : m_audioTrack(audioTrack)
 {
-    m_trackToRender->AddOrUpdateSink(this, rtc::VideoSinkWants());
+    if (audioTrack) {
+        audioTrack->AddSink(this);
+    }
+
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            ((AudioTrackObserver*)obj)->~AudioTrackObserver();
+        },
+        NULL, NULL, NULL);
+}
+
+MediaStream::AudioTrackObserver::~AudioTrackObserver()
+{
+    stop();
+}
+
+// AudioAudioTrackSinkInterface implementation
+void MediaStream::AudioTrackObserver::OnData(const void* audioData,
+                                             int bitsPerSample, int sampleRate,
+                                             size_t numberOfChannels,
+                                             size_t numberOfFrames)
+{
+}
+
+void MediaStream::AudioTrackObserver::stop()
+{
+    if (m_audioTrack) {
+        m_audioTrack->RemoveSink(this);
+    }
+}
+
+MediaStream::VideoFrameObserver::VideoFrameObserver(
+    webrtc::VideoTrackInterface* videoTrack, MediaPlayerWebRtc* player)
+    : m_videoTrack(videoTrack)
+{
+    if (m_videoTrack) {
+        m_videoTrack->AddOrUpdateSink(this, rtc::VideoSinkWants());
+    }
     m_player = player;
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            ((MediaStreamObserver*)obj)->~MediaStreamObserver();
+            ((VideoFrameObserver*)obj)->~VideoFrameObserver();
         },
         NULL, NULL, NULL);
 }
 
-MediaStream::MediaStreamObserver::~MediaStreamObserver()
+MediaStream::VideoFrameObserver::~VideoFrameObserver()
 {
-    m_trackToRender->RemoveSink(this);
+    stop();
 }
 
-void MediaStream::MediaStreamObserver::setSize(int width, int height)
+void MediaStream::VideoFrameObserver::setSize(int width, int height)
 {
     if (m_width == width && m_height == height) {
         return;
@@ -70,10 +108,10 @@ void MediaStream::MediaStreamObserver::setSize(int width, int height)
 
     m_width = width;
     m_height = height;
-    m_image.reset(new uint8_t[width * height * 4]);
+    m_image.reset(new uint8_t[width * height * pixelStride()]);
 }
 
-void MediaStream::MediaStreamObserver::OnFrame(
+void MediaStream::VideoFrameObserver::OnFrame(
     const webrtc::VideoFrame& videoFrame)
 {
     // TODO: Consider having a thread after measuring the performance
@@ -93,11 +131,18 @@ void MediaStream::MediaStreamObserver::OnFrame(
                        m_image.get(), m_width * 4, buffer->width(),
                        buffer->height());
 
-    m_player->onFrame(m_image.get());
+    m_player->onFrame(this);
+}
+
+void MediaStream::VideoFrameObserver::stop()
+{
+    if (m_videoTrack) {
+        m_videoTrack->RemoveSink(this);
+    }
 }
 
 #if defined(STARFISH_WEBRTC_DEBUG)
-void MediaStream::MediaStreamObserver::writeImageToFile(std::string& filename)
+void MediaStream::VideoFrameObserver::writeImageToFile(std::string& filename)
 {
     FILE* imageFile = fopen(filename.data(), "wb");
     if (imageFile == nullptr) {
@@ -148,6 +193,10 @@ MediaStream::MediaStream(
     , m_executionContext(executionContext)
     , m_backend(backend)
 {
+    if (backend) {
+        syncTracks();
+    }
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
@@ -168,8 +217,10 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 MediaStream::~MediaStream()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
+    stopTrack();
+    m_audioTrackObserver = nullptr;
+    m_videoFrameObserver = nullptr;
     m_backend = nullptr;
-    m_mediaStreamObserver = nullptr;
     m_audioTracks.clear();
     m_videoTracks.clear();
 }
@@ -272,26 +323,91 @@ void MediaStream::removeVideoTrack(VideoStreamTrack* track)
     m_videoTracks.erase(track);
 }
 
-void MediaStream::startPlayVideoTrack(MediaPlayerWebRtc* player,
-                                      MediaStreamTrack* track)
+void MediaStream::playTrack(MediaPlayerWebRtc* player, MediaStreamTrack* track)
 {
     STARFISH_ASSERT(track);
 
-    if (track->isVideoStreamTrack()) {
+    if (track->isAudioStreamTrack()) {
+        AudioStreamTrack* audioTrack = track->asAudioStreamTrack();
+
+        if (audioTrack->backend()) {
+            m_audioTrackObserver =
+                new AudioTrackObserver(audioTrack->backend(), player);
+        } else {
+            STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        }
+    } else if (track->isVideoStreamTrack()) {
         VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
 
         if (videoTrack->backend()) {
-            m_mediaStreamObserver =
-                new MediaStreamObserver(videoTrack->backend(), player);
+            m_videoFrameObserver =
+                new VideoFrameObserver(videoTrack->backend(), player);
         } else {
             STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
         }
     }
 }
 
-void MediaStream::stopPlayVideoTrack()
+void MediaStream::stopTrack()
 {
-    m_mediaStreamObserver = nullptr;
+    if (m_audioTrackObserver) {
+        m_audioTrackObserver->stop();
+    }
+    if (m_videoFrameObserver) {
+        m_videoFrameObserver->stop();
+    }
+
+    m_audioTrackObserver = nullptr;
+    m_videoFrameObserver = nullptr;
+}
+
+void MediaStream::syncTracks()
+{
+    {
+        GCUnorderedMap<webrtc::AudioTrackInterface*, AudioStreamTrack*>
+            curAudioTracks;
+        for (auto audioTrack : m_audioTracks) {
+            curAudioTracks.insert(
+                std::make_pair(audioTrack->backend().get(), audioTrack));
+        }
+        m_audioTracks.clear();
+
+        std::vector<rtc::scoped_refptr<webrtc::AudioTrackInterface>>
+            backendAudioTracks = m_backend->GetAudioTracks();
+        for (auto audioTrack : backendAudioTracks) {
+            auto itr = curAudioTracks.find(audioTrack.get());
+            if (itr != curAudioTracks.end()) {
+                m_audioTracks.insert(itr->second);
+            } else {
+                AudioStreamTrack* newAudioTrack =
+                    new AudioStreamTrack(executionContext(), audioTrack);
+                addTrack(newAudioTrack);
+            }
+        }
+    }
+
+    {
+        GCUnorderedMap<webrtc::VideoTrackInterface*, VideoStreamTrack*>
+            curVideoTracks;
+        for (auto videoTrack : m_videoTracks) {
+            curVideoTracks.insert(
+                std::make_pair(videoTrack->backend().get(), videoTrack));
+        }
+        m_videoTracks.clear();
+
+        std::vector<rtc::scoped_refptr<webrtc::VideoTrackInterface>>
+            backendVideoTracks = m_backend->GetVideoTracks();
+        for (auto videoTrack : backendVideoTracks) {
+            auto itr = curVideoTracks.find(videoTrack.get());
+            if (itr != curVideoTracks.end()) {
+                m_videoTracks.insert(itr->second);
+            } else {
+                VideoStreamTrack* newVideoTrack =
+                    new VideoStreamTrack(executionContext(), videoTrack);
+                addTrack(newVideoTrack);
+            }
+        }
+    }
 }
 }
 #endif

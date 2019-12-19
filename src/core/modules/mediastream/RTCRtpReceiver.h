@@ -46,12 +46,20 @@ public:
         return m_backend;
     }
 
+    GCVector<MediaStream*> streams()
+    {
+        return m_streams;
+    }
+
+    void syncStreams();
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
     RTCRtpTransceiver* m_transceiver{ nullptr };
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> m_backend;
 
     MediaStreamTrack* m_track{ nullptr };
+    GCVector<MediaStream*> m_streams;
 };
 }
 #endif

@@ -79,9 +79,16 @@ void MediaPlayerWebRtcTizen::play()
 {
     PLAYER_LOGI("%s\n", __func__);
 
-    GCVector<MediaStreamTrack*> tracks = m_mediaProvider->getVideoTracks();
-    if (!tracks.empty()) {
-        m_mediaProvider->startPlayVideoTrack(this, tracks[0]);
+    // TODO: Impl resource selection algorithm
+    // TODO: The spec assumes there is one video track
+    // TODO: Plays the first audio track.
+    GCVector<MediaStreamTrack*> videoTracks = m_mediaProvider->getVideoTracks();
+    if (!videoTracks.empty()) {
+        m_mediaProvider->playTrack(this, videoTracks[0]);
+    }
+    GCVector<MediaStreamTrack*> audioTracks = m_mediaProvider->getAudioTracks();
+    if (!audioTracks.empty()) {
+        m_mediaProvider->playTrack(this, audioTracks[0]);
     }
 }
 
@@ -132,15 +139,15 @@ void MediaPlayerWebRtcTizen::errorHandlerMediaPacket(int err, std::string msg)
     }
 }
 
-void MediaPlayerWebRtcTizen::onFrame(uint8_t* image)
+void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
 {
     if (!isMainThread()) {
         struct Params {
             MediaPlayerWebRtcTizen* self;
-            uint8_t* image;
+            MediaStream::VideoFrameObserver* observer;
         };
 
-        Params* p = new Params{ this, image };
+        Params* p = new Params{ this, observer };
 
         container()
             ->webView()
@@ -149,7 +156,7 @@ void MediaPlayerWebRtcTizen::onFrame(uint8_t* image)
                 container()->window(),
                 [](size_t, void* data) {
                     Params* p = (Params*)data;
-                    p->self->onFrame(p->image);
+                    p->self->onFrame(p->observer);
                     delete p;
                 },
                 p);
@@ -162,8 +169,8 @@ void MediaPlayerWebRtcTizen::onFrame(uint8_t* image)
     BrowsingContext* b = container()->window()->browsingContext();
     auto ptr = m_canvasSurface->mapBuffer();
 
-    memcpy(ptr, image,
-           m_canvasSurface->bufferStride() * m_canvasSurface->height());
+    memcpy(ptr, observer->image(),
+           observer->width() * observer->height() * observer->pixelStride());
     m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
         frame->x().toInt(), frame->y().toInt(), m_canvasSurface->width(),
         m_canvasSurface->height());

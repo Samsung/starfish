@@ -51,6 +51,7 @@
 
 #include "api/rtp_transceiver_interface.h"
 #include "api/sctp_transport_interface.h"
+#include "api/media_stream_interface.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"
@@ -106,6 +107,14 @@ void PeerConnectionObserver::OnAddStream(
 }
 
 #if defined(STARFISH_WEBRTC_DEBUG)
+class AudioTrackObserver : public webrtc::AudioTrackSinkInterface {
+    virtual void OnData(const void* audioData, int bitsPerSample,
+                        int sampleRate, size_t numberOfChannels,
+                        size_t numberOfFrames)
+    {
+    }
+};
+
 class VideoFrameObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 public:
     void OnFrame(const webrtc::VideoFrame& frame) override
@@ -139,24 +148,24 @@ void PeerConnectionObserver::OnTrack(
         return;
     }
 
-    RTCRtpTransceiver* rtpTransceiver = new RTCRtpTransceiver(
-        m_peerConnection->m_executionContext, m_peerConnection, transceiver);
+    m_peerConnection->syncTransceivers();
+    RTCRtpTransceiver* rtpTransceiver =
+        m_peerConnection->getTransceiver(transceiver);
     RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
     MediaStreamTrack* track = rtpReceiver->track();
-    std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>> streams =
-        rtpReceiver->backend()->streams();
 
     GCVector<MediaStream*> rtpStreams;
-    for (size_t i = 0; i < streams.size(); i++) {
-        MediaStream* stream =
-            new MediaStream(m_peerConnection->executionContext(), streams[i]);
+    for (auto stream : rtpReceiver->streams()) {
         stream->addTrack(track);
         rtpStreams.push_back(stream);
     }
 
 #if defined(STARFISH_WEBRTC_DEBUG)
-    VideoFrameObserver* videoFrameObserver = new VideoFrameObserver();
-    if (track->isVideoStreamTrack()) {
+    if (track->isAudioStreamTrack()) {
+        AudioTrackObserver* audioTrackObserver = new AudioTrackObserver();
+        track->asAudioStreamTrack()->backend()->AddSink(audioTrackObserver);
+    } else if (track->isVideoStreamTrack()) {
+        VideoFrameObserver* videoFrameObserver = new VideoFrameObserver();
         track->asVideoStreamTrack()->backend()->AddOrUpdateSink(
             videoFrameObserver, rtc::VideoSinkWants());
     }
