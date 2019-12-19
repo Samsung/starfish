@@ -44,7 +44,7 @@ public:
     void setMuted(bool muted) override{};
     void prepareMediaSource() override;
 
-    void onFrame(uint8_t* image) override;
+    void onFrame(MediaStream::VideoFrameObserver* observer) override;
 
 private:
 };

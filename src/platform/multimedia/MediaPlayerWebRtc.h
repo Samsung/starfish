@@ -25,6 +25,7 @@
 #include "platform/multimedia/MediaPlayer.h"
 
 #include "core/dom/HTMLMediaElement.h"
+#include "core/modules/mediastream/MediaStream.h"
 
 namespace Starfish {
 class HTMLMediaElement;
@@ -68,7 +69,7 @@ public:
     void willDrawVideo(Compositor* canvas,
                        const LayoutRect& videoRect) override{};
 
-    virtual void onFrame(uint8_t* image) = 0;
+    virtual void onFrame(MediaStream::VideoFrameObserver* observer) = 0;
 
 protected:
     MediaProvider* m_mediaProvider{ nullptr };

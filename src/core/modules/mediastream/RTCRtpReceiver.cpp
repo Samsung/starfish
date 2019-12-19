@@ -25,6 +25,7 @@
 #include "core/modules/mediastream/RTCRtpReceiver.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/mediastream/MediaStreamTrack.h"
 #include "core/modules/mediastream/RTCRtpTransceiver.h"
 
@@ -38,6 +39,8 @@ RTCRtpReceiver::RTCRtpReceiver(
     , m_transceiver(transceiver)
     , m_backend(rtpReceiver)
 {
+    syncStreams();
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) { ((RTCRtpReceiver*)obj)->~RTCRtpReceiver(); },
@@ -88,6 +91,28 @@ MediaStreamTrack* RTCRtpReceiver::track()
 
     return m_track;
 }
+
+void RTCRtpReceiver::syncStreams()
+{
+    GCUnorderedMap<webrtc::MediaStreamInterface*, MediaStream*> curStreams;
+    for (auto stream : m_streams) {
+        curStreams.insert(std::make_pair(stream->backend().get(), stream));
+    }
+    m_streams.clear();
+
+    std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>
+        backendStreams = m_backend->streams();
+    for (auto stream : backendStreams) {
+        auto itr = curStreams.find(stream.get());
+        if (itr != curStreams.end()) {
+            m_streams.push_back(itr->second);
+        } else {
+            MediaStream* newMediaStream =
+                new MediaStream(m_executionContext, stream);
+            m_streams.push_back(newMediaStream);
+        }
+    }
 }
+} // namespace Starfish
 
 #endif
