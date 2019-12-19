@@ -272,6 +272,7 @@ public:
 
 protected:
     void rootPointerValueIfExists(const CSSStyleValuePair& v);
+    void removeRootPointerValue(const CSSStyleValuePair& v);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     GCVector<MutablePropertyValue> m_cssCustomValues;

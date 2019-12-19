@@ -1366,11 +1366,23 @@ void CSSStyleDeclaration::rootPointerValueIfExists(const CSSStyleValuePair& v)
     }
 }
 
+void CSSStyleDeclaration::removeRootPointerValue(const CSSStyleValuePair& v)
+{
+    auto p = v.pointerValue();
+    if (p) {
+        m_pointerRooter.erase(
+            std::remove_if(m_pointerRooter.begin(), m_pointerRooter.end(),
+                           [p](void* ptr) { return ptr == p; }),
+            m_pointerRooter.end());
+    }
+}
+
 void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
 {
     for (size_t i = 0; i < m_cssValues.size(); i++) {
         CSSStyleValuePair v = m_cssValues[i];
         if (v.keyKind() == p.keyKind()) {
+            removeRootPointerValue(m_cssValues[i]);
             m_cssValues[i] = p;
             rootPointerValueIfExists(p);
             return;
@@ -1523,6 +1535,7 @@ void CSSStyleDeclaration::addCSSValuePairForVar(CSSStyleValuePair::KeyKind name,
             if (isInlineStyle() || ret.flagImportant() == true ||
                 (ret.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
+                removeRootPointerValue(m_cssValues[i]);
                 m_cssValues[i].setValueKind(ret.valueKind());
                 m_cssValues[i].setValue(ret.value());
                 m_cssValues[i].setFlagImportant(ret.flagImportant());
@@ -1548,6 +1561,7 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
             if (isInlineStyle() || ret.flagImportant() == true ||
                 (ret.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
+                removeRootPointerValue(m_cssValues[i]);
                 m_cssValues[i].setValueKind(ret.valueKind());
                 m_cssValues[i].setValue(ret.value());
                 m_cssValues[i].setFlagImportant(ret.flagImportant());
