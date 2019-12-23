@@ -35,6 +35,10 @@ class MediaPlayerWebRtcTizen : public MediaPlayerWebRtc {
     friend MediaStream;
 
 public:
+    // TODO: Obtain the values from a target device
+    static const int AUDIO_CHANNELS = 1;
+    static const int AUDIO_SAMPLE_RATE = 48000;
+
     MediaPlayerWebRtcTizen(HTMLMediaElement* element);
     virtual ~MediaPlayerWebRtcTizen();
 
@@ -50,14 +54,18 @@ public:
     void prepareMediaSource() override{};
 
     void onFrame(MediaStream::VideoFrameObserver* observer) override;
+    void onData(MediaStream::AudioTrackObserver* observer) override;
 
 private:
     player_h m_player{ nullptr };
+    media_format_h m_audioFormat;
+
     tbm_surface_h m_surface{ nullptr };
     tbm_surface_info_s m_surfaceInfo;
 
-    void errorHandlerMediaFormat(int err, std::string msg);
-    void errorHandlerMediaPacket(int err, std::string msg);
+    bool checkStatusPlayer(int err, std::string msg);
+    bool checkStatusMediaFormat(int err, std::string msg);
+    bool checkStatusMediaPacket(int err, std::string msg);
 };
 } // namespace Starfish
 

@@ -70,6 +70,7 @@ public:
                        const LayoutRect& videoRect) override{};
 
     virtual void onFrame(MediaStream::VideoFrameObserver* observer) = 0;
+    virtual void onData(MediaStream::AudioTrackObserver* observer) = 0;
 
 protected:
     MediaProvider* m_mediaProvider{ nullptr };

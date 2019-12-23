@@ -56,6 +56,18 @@ MediaPlayerWebRtcLinux::MediaPlayerWebRtcLinux(HTMLMediaElement* element)
     }
 }
 
+MediaPlayerWebRtcLinux::~MediaPlayerWebRtcLinux()
+{
+    destroy();
+}
+
+void MediaPlayerWebRtcLinux::destroy()
+{
+    if (m_mediaProvider) {
+        m_mediaProvider->setMediaPlayer(nullptr);
+    }
+};
+
 void MediaPlayerWebRtcLinux::play()
 {
     PLAYER_LOGI("%s\n", __func__);
@@ -65,11 +77,11 @@ void MediaPlayerWebRtcLinux::play()
     // TODO: Plays the first audio track.
     GCVector<MediaStreamTrack*> videoTracks = m_mediaProvider->getVideoTracks();
     if (!videoTracks.empty()) {
-        m_mediaProvider->playTrack(this, videoTracks[0]);
+        m_mediaProvider->playVideoTrack(videoTracks[0]);
     }
     GCVector<MediaStreamTrack*> audioTracks = m_mediaProvider->getAudioTracks();
     if (!audioTracks.empty()) {
-        m_mediaProvider->playTrack(this, audioTracks[0]);
+        m_mediaProvider->playAudioTrack(audioTracks[0]);
     }
 }
 
@@ -79,6 +91,7 @@ void MediaPlayerWebRtcLinux::prepare(MediaProvider* mediaProvider)
     PLAYER_LOGI("%s\n", __func__);
 
     m_mediaProvider = mediaProvider;
+    m_mediaProvider->setMediaPlayer(this);
 
     MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(
@@ -138,6 +151,11 @@ void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
 
     b->setNeedsComposite();
 }
+
+void MediaPlayerWebRtcLinux::onData(MediaStream::AudioTrackObserver* observer)
+{
+}
+
 } // namespace Starfish
 
 #endif

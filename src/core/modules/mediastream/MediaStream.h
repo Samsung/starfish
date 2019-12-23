@@ -34,6 +34,7 @@
 namespace Starfish {
 class ExecutionContext;
 class MediaPlayerWebRtc;
+class Mutex;
 
 class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
@@ -42,9 +43,11 @@ public:
     class VideoFrameObserver
         : public gc,
           public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+        friend MediaStream;
+
     public:
-        VideoFrameObserver(webrtc::VideoTrackInterface* videoTrack,
-                           MediaPlayerWebRtc* player);
+        VideoFrameObserver(MediaStream* mediaStream,
+                           webrtc::VideoTrackInterface* videoTrack);
         virtual ~VideoFrameObserver();
 
         // VideoSinkInterface implementation
@@ -72,34 +75,67 @@ public:
             return PIXEL_STRIDE;
         }
 
+        Mutex* imageLock()
+        {
+            return m_imageLock;
+        }
+
     private:
         void setSize(int width, int height);
 #if defined(STARFISH_WEBRTC_DEBUG)
         void writeImageToFile(std::string& filename);
 #endif
-        MediaPlayerWebRtc* m_player{ nullptr };
+        MediaStream* m_mediaStream{ nullptr };
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_videoTrack;
 
         std::unique_ptr<uint8_t[]> m_image;
+        Mutex* m_imageLock{ nullptr };
         int m_width{ 0 };
         int m_height{ 0 };
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_videoTrack;
     };
 
     class AudioTrackObserver : public gc,
                                public webrtc::AudioTrackSinkInterface {
+        friend MediaStream;
+
     public:
-        AudioTrackObserver(webrtc::AudioTrackInterface* audioTrack,
-                           MediaPlayerWebRtc* player);
+        AudioTrackObserver(MediaStream* mediaStream,
+                           webrtc::AudioTrackInterface* audioTrack);
         virtual ~AudioTrackObserver();
 
         // AudioAudioTrackSinkInterface implementation
         void OnData(const void* audioData, int bitsPerSample, int sampleRate,
                     size_t numberOfChannels, size_t numberOfFrames) override;
 
+        int16_t* audioData()
+        {
+            return m_audioData.get();
+        }
+
+        int numberOfFrames()
+        {
+            return m_numberOfFrames;
+        }
+
+        void setSize(int size);
         void stop();
 
+        Mutex* audioLock()
+        {
+            return m_audioLock;
+        }
+
     private:
+        MediaStream* m_mediaStream{ nullptr };
         rtc::scoped_refptr<webrtc::AudioTrackInterface> m_audioTrack;
+
+        std::unique_ptr<int16_t[]> m_audioData;
+        Mutex* m_audioLock{ nullptr };
+
+        int m_bitsPerSample{ 0 };
+        int m_sampleRate{ 0 };
+        int m_numberOfChannels{ 0 };
+        int m_numberOfFrames{ 0 };
     };
 
     const std::string m_mediaStreamLabel = "MediaStream";
@@ -125,14 +161,22 @@ public:
     void removeAudioTrack(AudioStreamTrack* track) override;
     void removeVideoTrack(VideoStreamTrack* track) override;
 
-    void playTrack(MediaPlayerWebRtc* player, MediaStreamTrack* track);
-    void stopTrack();
+    void playAudioTrack(MediaStreamTrack* track);
+    void playVideoTrack(MediaStreamTrack* track);
+
+    void stopAudioTrack();
+    void stopVideoTrack();
 
     void syncTracks();
 
     rtc::scoped_refptr<webrtc::MediaStreamInterface> backend()
     {
         return m_backend;
+    }
+
+    void setMediaPlayer(MediaPlayerWebRtc* mediaPlayer)
+    {
+        m_mediaPlayer = mediaPlayer;
     }
 
 private:
@@ -143,6 +187,7 @@ private:
 
     AudioTrackObserver* m_audioTrackObserver{ nullptr };
     VideoFrameObserver* m_videoFrameObserver{ nullptr };
+    MediaPlayerWebRtc* m_mediaPlayer{ nullptr };
 };
 } // namespace Starfish
 
