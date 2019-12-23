@@ -31,9 +31,9 @@ class MediaPlayerWebRtcLinux : public MediaPlayerWebRtc {
 
 public:
     MediaPlayerWebRtcLinux(HTMLMediaElement* element);
-    virtual ~MediaPlayerWebRtcLinux(){};
+    virtual ~MediaPlayerWebRtcLinux();
 
-    void destroy() override{};
+    void destroy() override;
     void play() override;
     void pause() override{};
     void seek(double time) override{};
@@ -45,6 +45,7 @@ public:
     void prepareMediaSource() override;
 
     void onFrame(MediaStream::VideoFrameObserver* observer) override;
+    void onData(MediaStream::AudioTrackObserver* observer) override;
 
 private:
 };

@@ -28,7 +28,13 @@
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
 #include "core/page/Navigator.h"
+#include "core/page/WebBase.h"
 #include "core/modules/mediastream/WebRtcManager.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
+
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_factory.h"
 
@@ -40,11 +46,15 @@
 
 #include "platform/multimedia/MediaPlayerWebRtc.h"
 
+#include "core/page/GlobalScope.h"
+
 namespace Starfish {
 
 MediaStream::AudioTrackObserver::AudioTrackObserver(
-    webrtc::AudioTrackInterface* audioTrack, MediaPlayerWebRtc* player)
-    : m_audioTrack(audioTrack)
+    MediaStream* mediaStream, webrtc::AudioTrackInterface* audioTrack)
+    : m_mediaStream(mediaStream)
+    , m_audioTrack(audioTrack)
+    , m_audioLock(new Mutex())
 {
     if (audioTrack) {
         audioTrack->AddSink(this);
@@ -63,12 +73,34 @@ MediaStream::AudioTrackObserver::~AudioTrackObserver()
     stop();
 }
 
+void MediaStream::AudioTrackObserver::setSize(int size)
+{
+    if (m_numberOfFrames == size) {
+        return;
+    }
+
+    m_audioData.reset(new int16_t[size]);
+}
+
 // AudioAudioTrackSinkInterface implementation
 void MediaStream::AudioTrackObserver::OnData(const void* audioData,
                                              int bitsPerSample, int sampleRate,
                                              size_t numberOfChannels,
                                              size_t numberOfFrames)
 {
+    {
+        Locker<Mutex> lock(*m_audioLock);
+        setSize(numberOfFrames);
+        memcpy(m_audioData.get(), audioData, numberOfFrames);
+        m_bitsPerSample = bitsPerSample;
+        m_sampleRate = sampleRate;
+        m_numberOfChannels = numberOfChannels;
+        m_numberOfFrames = numberOfFrames;
+    }
+
+    if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
+        m_mediaStream->m_mediaPlayer->onData(this);
+    }
 }
 
 void MediaStream::AudioTrackObserver::stop()
@@ -79,13 +111,14 @@ void MediaStream::AudioTrackObserver::stop()
 }
 
 MediaStream::VideoFrameObserver::VideoFrameObserver(
-    webrtc::VideoTrackInterface* videoTrack, MediaPlayerWebRtc* player)
-    : m_videoTrack(videoTrack)
+    MediaStream* mediaStream, webrtc::VideoTrackInterface* videoTrack)
+    : m_mediaStream(mediaStream)
+    , m_videoTrack(videoTrack)
+    , m_imageLock(new Mutex())
 {
     if (m_videoTrack) {
         m_videoTrack->AddOrUpdateSink(this, rtc::VideoSinkWants());
     }
-    m_player = player;
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -120,18 +153,24 @@ void MediaStream::VideoFrameObserver::OnFrame(
     if (videoFrame.rotation() != webrtc::kVideoRotation_0) {
         buffer = webrtc::I420Buffer::Rotate(*buffer, videoFrame.rotation());
     }
-    setSize(buffer->width(), buffer->height());
 
     // Due to a bug (https://bugs.webrtc.org/6857), libyuv::I420ToRGBA()
     // generates a red video output.
     // I420ToABGR generates [(r,g,b,a)]
     // I420ToARGB generates [(b,g,r,a)]
-    libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
-                       buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
-                       m_image.get(), m_width * 4, buffer->width(),
-                       buffer->height());
+    {
+        Locker<Mutex> lock(*m_imageLock);
+        setSize(buffer->width(), buffer->height());
+        libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+                           buffer->StrideU(), buffer->DataV(),
+                           buffer->StrideV(), m_image.get(),
+                           m_width * MediaStream::PIXEL_STRIDE, buffer->width(),
+                           buffer->height());
+    }
 
-    m_player->onFrame(this);
+    if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
+        m_mediaStream->m_mediaPlayer->onFrame(this);
+    }
 }
 
 void MediaStream::VideoFrameObserver::stop()
@@ -216,10 +255,18 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
-    stopTrack();
-    m_audioTrackObserver = nullptr;
-    m_videoFrameObserver = nullptr;
+    STARFISH_LOG_INFO("MediaStream::%s\n", __func__);
+    stopAudioTrack();
+    stopVideoTrack();
+    if (m_audioTrackObserver) {
+        m_audioTrackObserver->m_mediaStream = nullptr;
+        m_audioTrackObserver = nullptr;
+    }
+    if (m_videoFrameObserver) {
+        m_videoFrameObserver->m_mediaStream = nullptr;
+        m_videoFrameObserver = nullptr;
+    }
+    m_mediaPlayer = nullptr;
     m_backend = nullptr;
     m_audioTracks.clear();
     m_videoTracks.clear();
@@ -323,41 +370,51 @@ void MediaStream::removeVideoTrack(VideoStreamTrack* track)
     m_videoTracks.erase(track);
 }
 
-void MediaStream::playTrack(MediaPlayerWebRtc* player, MediaStreamTrack* track)
+void MediaStream::playAudioTrack(MediaStreamTrack* track)
 {
     STARFISH_ASSERT(track);
 
     if (track->isAudioStreamTrack()) {
         AudioStreamTrack* audioTrack = track->asAudioStreamTrack();
-
         if (audioTrack->backend()) {
             m_audioTrackObserver =
-                new AudioTrackObserver(audioTrack->backend(), player);
-        } else {
-            STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
-        }
-    } else if (track->isVideoStreamTrack()) {
-        VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
-
-        if (videoTrack->backend()) {
-            m_videoFrameObserver =
-                new VideoFrameObserver(videoTrack->backend(), player);
+                new AudioTrackObserver(this, audioTrack->backend());
         } else {
             STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
         }
     }
 }
 
-void MediaStream::stopTrack()
+void MediaStream::playVideoTrack(MediaStreamTrack* track)
+{
+    STARFISH_ASSERT(track);
+
+    if (track->isVideoStreamTrack()) {
+        VideoStreamTrack* videoTrack = track->asVideoStreamTrack();
+        if (videoTrack->backend()) {
+            m_videoFrameObserver =
+                new VideoFrameObserver(this, videoTrack->backend());
+        } else {
+            STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        }
+    }
+}
+
+void MediaStream::stopAudioTrack()
 {
     if (m_audioTrackObserver) {
         m_audioTrackObserver->stop();
     }
+
+    m_audioTrackObserver = nullptr;
+}
+
+void MediaStream::stopVideoTrack()
+{
     if (m_videoFrameObserver) {
         m_videoFrameObserver->stop();
     }
 
-    m_audioTrackObserver = nullptr;
     m_videoFrameObserver = nullptr;
 }
 
