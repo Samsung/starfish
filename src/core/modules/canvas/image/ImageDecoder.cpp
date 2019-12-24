@@ -754,7 +754,7 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
                     GIF_ERROR) {
                     break;
                 }
-                while (extension != NULL) {
+                while (extension != NULL && readData.pos < readData.size) {
                     if (DGifGetExtensionNext(gifFile, &extension) == GIF_OK) {
                         continue;
                     }
@@ -769,7 +769,8 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
                 result = true;
                 break;
             }
-        } while (recordType != TERMINATE_RECORD_TYPE);
+        } while (recordType != TERMINATE_RECORD_TYPE &&
+                 readData.pos < readData.size);
 #ifdef GIF_LIB_VERSION
         DGifCloseFile(gifFile);
 #elif GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1
