@@ -32,6 +32,7 @@ struct OverflowStatus {
     FrameBox* m_absChild;
     bool m_seenContainingBlockForAbsBlock;
     bool m_seenAbsBlock;
+    bool m_seenFixedBlock;
     OverflowStatus(Frame* child)
     {
         reset(child);
@@ -59,8 +60,12 @@ struct OverflowStatus {
         }
 
         if (m_seenAbsBlock) {
+            if (m_seenFixedBlock) {
+                return false;
+            }
             if (parent->style()->position() ==
                 PositionValue::FixedPositionValue) {
+                m_seenFixedBlock = true;
                 if (m_child && m_child->style() &&
                     m_child->style()->position() ==
                         PositionValue::FixedPositionValue) {
@@ -96,6 +101,7 @@ struct OverflowStatus {
             m_seenAbsBlock = false;
         }
         m_seenContainingBlockForAbsBlock = false;
+        m_seenFixedBlock = false;
     }
 };
 

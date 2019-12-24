@@ -44,7 +44,7 @@ public:
 
     void setScrollPosition()
     {
-        m_contents = true;
+        m_scrollPosition = true;
     }
 
     bool scrollPosition() const
