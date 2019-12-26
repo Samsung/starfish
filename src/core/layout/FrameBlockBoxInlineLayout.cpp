@@ -4463,10 +4463,6 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         w = widthAndHeight.first;
     }
 
-    if (boxSizing == BorderBoxBoxSizingValue) {
-        w += marginWidth();
-    }
-
     if (isFloating()) {
         ctx.updatePreferredMinWidth(w);
         ctx.handleFloatingBox(this, w);
