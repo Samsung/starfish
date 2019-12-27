@@ -2350,7 +2350,7 @@ static void clearStyle(Element* element)
 
 void Node::didNodeRemovedFromDocumentTree()
 {
-    clearDoesExistInFrameTree();
+    clearDidPrepareAnimation();
     setState(NodeStateNormal, false);
     setStyle(nullptr);
     if (isElement()) {

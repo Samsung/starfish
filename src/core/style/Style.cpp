@@ -7987,7 +7987,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     if (toStyle->display() != DisplayValue::NoneDisplayValue &&
         animationData != nullptr &&
         damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-        element->doesExistInFrameTree() == false) {
+        element->didPrepareAnimation() == false) {
         if (animationData->allKeyframeListSize() > 0 &&
             applyAnimationIfNeeds(element, toStyle) == true) {
             elementHasAnimation = true;
@@ -8075,6 +8075,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             }
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(element->style(), style, damagedKeys));
+
+            if (damagedKeys[CSSStyleValuePair::KeyKind::Animation] ||
+                damagedKeys[CSSStyleValuePair::KeyKind::AnimationName]) {
+                element->clearDidPrepareAnimation();
+            }
         }
 
         ComputedStyle* oldStyle = element->style();
@@ -8086,7 +8091,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         computeAnimation(*resolver, element, oldStyle, oldFrame, style, damage,
                          damagedKeys);
 #endif
-        element->markDoesExistInFrameTree();
+        element->markDidPrepareAnimation();
 
         {
 // #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
@@ -8173,7 +8178,7 @@ static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
     STARFISH_ASSERT(element != nullptr);
 
-    element->clearDoesExistInFrameTree();
+    element->clearDidPrepareAnimation();
 
     Node* child = element->firstChild();
     while (child != nullptr) {
