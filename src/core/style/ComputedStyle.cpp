@@ -1822,6 +1822,30 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    StyleAnimationData* oldAnimation =
+        oldStyle->hasRareComputeStyleData() ? oldStyle->animation() : nullptr;
+    StyleAnimationData* newAnimation =
+        newStyle->hasRareComputeStyleData() ? newStyle->animation() : nullptr;
+
+    if (!oldAnimation && !newAnimation) {
+    } else if (!oldAnimation || !newAnimation) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Animation] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+    }
+
+    String* oldAnimationName = oldStyle->hasRareComputeStyleData()
+                                   ? oldStyle->animationName()
+                                   : String::emptyString;
+    String* newAnimationName = newStyle->hasRareComputeStyleData()
+                                   ? newStyle->animationName()
+                                   : String::emptyString;
+    if (!oldAnimationName->equals(newAnimationName)) {
+        damagedKeys[CSSStyleValuePair::KeyKind::AnimationName] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+    }
+
     if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
         damagedKeys[CSSStyleValuePair::KeyKind::BoxSizing] = true;
         damage = (ComputedStyleDamage)(
