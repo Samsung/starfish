@@ -239,6 +239,10 @@ ELSEIF (${COMPILER} STREQUAL "clang")
     SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -stdlib=libc++ -Wno-expansion-to-defined -Wno-dynamic-class-memaccess)
 ENDIF()
 
+if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9)
+    SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-attributes -Wno-class-memaccess -Wno-deprecated-copy -Wno-cast-function-type -Wno-stringop-truncation -Wno-pessimizing-move)
+endif()
+
 #IF (${HOST} STREQUAL "tizen" AND (${CUSTOM} STREQUAL "unified_wearable" OR ${CUSTOM} STREQUAL "prod_wearable"))
 #    SET (LWE_CXXFLAGS_MODE -Os)
 #ELSE

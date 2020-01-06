@@ -1333,7 +1333,7 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
 // Other thread
 #ifdef STARFISH_RUN_MSE_THREAD
     MediaPlayerSourceStream* stream = currentStream(type);
-    if (alive() == false || stream == false) {
+    if (alive() == false || stream == nullptr) {
         return;
     }
     MediaPlayerSourceStream::BufferState prevState = stream->bufferState();
@@ -1387,7 +1387,7 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
 void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
 {
     STARFISH_ASSERT(stream);
-    if (alive() == false || stream->mediaFormat() == false ||
+    if (alive() == false || stream->mediaFormat() == nullptr ||
         stream->isBufferState(MediaPlayerSourceStream::BUFFERSTATE_EOS)) {
         return;
     }
@@ -1423,7 +1423,7 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             sb->findProperMediaPacket(streamIdx, lastDTS);
         media_packet_h mediaPacket = nullptr;
 
-        if (packet.first == false) {
+        if (packet.first == nullptr) {
             uint64_t endTime = m_activeMediaSource->duration() * 1000;
             if (std::isinf(m_activeMediaSource->duration())) {
                 endTime = std::numeric_limits<uint64_t>::max();
@@ -1431,9 +1431,10 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             DEBUG_STREAMBUFFER_LOG("fillBuffer try to detect end -> %d %d\n",
                                    (int)endTime, (int)lastDTS);
             uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
+            uint64_t elapsedTime = endTime - lastBufferedTime;
+            elapsedTime = elapsedTime < 0 ? elapsedTime * -1 : elapsedTime;
             if ((endTime - lastDTS) < 10 ||
-                ((lastDTS == lastBufferedTime) &&
-                 (std::abs(endTime - lastBufferedTime) < 1000))) {
+                ((lastDTS == lastBufferedTime) && (elapsedTime < 1000))) {
                 stream->setBufferState(
                     MediaPlayerSourceStream::BUFFERSTATE_EOS);
                 media_packet_create(format, NULL, NULL, &mediaPacket);
