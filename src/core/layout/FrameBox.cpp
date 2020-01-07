@@ -3669,6 +3669,10 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         if (isLineBox()) {
             parentStyle = layoutParent()->style();
         }
+    } else if (cs &&
+               ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
+               cs->position() == PositionValue::FixedPositionValue) {
+        return false;
     }
 
     if ((cs && cs->visibility() == HiddenVisibilityValue) ||

@@ -246,6 +246,7 @@ test/cairo/internal-test/css/length/calc_lineheight.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow2.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-transform.html
+test/cairo/internal-test/css/overflow/scroll-rect-fixed-child.html
 test/cairo/internal-test/css/legacy/center.html
 test/cairo/internal-test/css/fontSize/font_size_with_viewport_percent.html
 test/cairo/internal-test/css/float/preferred-width-with-overflowhidden.html
