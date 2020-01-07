@@ -50,7 +50,7 @@ IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
     ${THIRD_PARTY_ROOT}/skia_matrix/include/core)
 ENDIF()
 
-IF (${ARCH} STREQUAL "x64")
+IF (${ARCH} STREQUAL "x64" OR ${HOST} STREQUAL "tizen")
     SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_INCLUDE_DIRS}
     ${STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS}
@@ -97,6 +97,7 @@ ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_L
 SET (STARFISH_DEPENDENCIES_COMMON
     escargot
     clipper
+    libwebsockets
 )
 IF (NOT ${CUSTOM} MATCHES "wearable")
     SET (STARFISH_DEPENDENCIES_CUSTOM mp4parse webm)

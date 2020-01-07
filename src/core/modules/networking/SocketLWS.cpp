@@ -35,6 +35,7 @@
 #include "core/dom/CloseEvent.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/EventTarget.h"
+#include "core/dom/Document.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/networking/LWSRunnable.h"
 #include "core/fileapi/Blob.h"
@@ -118,6 +119,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
         break;
     }
 
+    case LWS_CALLBACK_CLIENT_CLOSED:
     case LWS_CALLBACK_CLOSED:
         socket->updateState(WebSocket::ReadyState::CLOSED);
         socket->publishEvent(SocketLWS::LwsEvent::CLOSE);
@@ -132,8 +134,7 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
 }
 
 static struct lws_protocols protocols[] = {
-    { NULL, LWSSimpleCB, 0, 0, 0, NULL, 0 },
-    { NULL, NULL, 0, 0, 0, NULL, 0 } /* terminator */
+    { "", LWSSimpleCB, 0, 0, 0, NULL, 0 }, { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
 const char* SocketLWS::Exception::what() const throw()
@@ -162,6 +163,12 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
     , m_txBufferSize(0)
 {
+    int logs = LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO |
+               LLL_PARSER | LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY |
+               LLL_DEBUG | LLL_THREAD;
+
+    // lws_set_log_level(logs, NULL);
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((SocketLWS*)obj)->~SocketLWS(); },
         NULL, NULL, NULL);
@@ -192,12 +199,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
     m_lwsContextCreationInfo.protocols = protocols;
-    m_lwsContextCreationInfo.gid = -1;
-    m_lwsContextCreationInfo.uid = -1;
     m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-    // Do not use Proxy
-    m_lwsContextCreationInfo.http_proxy_address = "";
-    m_lwsContextCreationInfo.socks_proxy_address = "";
 
     if (useSSL) {
         m_lwsContextCreationInfo.client_ssl_ca_filepath =
@@ -209,7 +211,6 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_thread = new AdaptedThread(webBase->threadPool());
     m_runnable = new LWSRunnable(webBase->messageLoop(), this);
     m_thread->start(m_runnable);
-
     // TODO
     protocols[0].name = m_protocol.data();
 
@@ -218,10 +219,14 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     // TODO Should handle origin property
     // m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
-    m_lwsClientConnectInfo.protocol = protocols[0].name;
+    if (m_protocol.size() != 0) {
+        m_lwsClientConnectInfo.protocol = m_protocol.data();
+    }
     m_lwsClientConnectInfo.ssl_connection = useSSL;
     m_lwsClientConnectInfo.userdata = this;
-    m_lwsClient = lws_client_connect_via_info(&m_lwsClientConnectInfo);
+    m_lwsClientConnectInfo.pwsi = &m_lwsClient;
+
+    lws_client_connect_via_info(&m_lwsClientConnectInfo);
 }
 SocketLWS::~SocketLWS()
 {
@@ -240,7 +245,7 @@ void SocketLWS::finalize()
 void SocketLWS::run()
 {
     if (m_lwsContext != nullptr) {
-        lws_service(m_lwsContext, 250);
+        lws_service(m_lwsContext, 0);
     }
 }
 
@@ -304,7 +309,13 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
     m_txBuffer.push_back(newData);
     m_txBufferSize += len;
     if (m_lwsClient) {
-        lws_callback_on_writable(m_lwsClient);
+        parent()->executionContext()->webBase()->messageLoop()->addIdler(
+            parent()->executionContext()->document()->window(),
+            [](size_t, void* data) {
+                lws* lwsClient = (lws*)data;
+                lws_callback_on_writable(lwsClient);
+            },
+            m_lwsClient);
     }
     return 0;
 }

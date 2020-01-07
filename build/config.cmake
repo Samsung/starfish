@@ -286,13 +286,13 @@ ENDIF()
 IF (${BACKEND} STREQUAL "efl" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "efl" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf-evas efl-extension libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf-evas efl-extension )
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "efl_headless" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf )
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "x64")
@@ -304,7 +304,7 @@ ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz )
 ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
     pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
@@ -338,6 +338,7 @@ SET (STARFISH_LIBRARIES_DEFAULT
     curl
     ssl
     crypto
+    websockets
     # -lasan # for -fsanitize=address
 )
 
