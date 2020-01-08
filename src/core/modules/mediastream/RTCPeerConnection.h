@@ -50,7 +50,7 @@
 #include <pthread.h>
 
 #define WEBRTC_LOGI(STR, ...) \
-    STARFISH_LOG_INFO(        \
+    STARFISH_LOG_WARN(        \
         "[WEBRTC_LOG|%ld] "   \
         "" STR,               \
         syscall(SYS_gettid), ##__VA_ARGS__);
@@ -129,12 +129,13 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 
 class PeerConnectionObserver : public gc,
                                public webrtc::PeerConnectionObserver {
+    friend class RTCPeerConnection;
+
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
-    PeerConnectionObserver();
     PeerConnectionObserver(RTCPeerConnection* peerConnection);
-    virtual ~PeerConnectionObserver(){};
+    virtual ~PeerConnectionObserver();
 
     void OnSignalingChange(
         webrtc::PeerConnectionInterface::SignalingState newState) override;
@@ -169,12 +170,15 @@ public:
     void OnIceConnectionReceivingChange(bool receiving) override{};
     void OnInterestingUsage(int usagePattern) override{};
 
-protected:
-    RTCPeerConnection* m_peerConnection;
+private:
+    RTCPeerConnection* m_peerConnection{ nullptr };
+    ExecutionContext* executionContext() const;
 };
 
 class CreateOfferAnswerObserver
     : public webrtc::CreateSessionDescriptionObserver {
+    friend class RTCPeerConnection;
+
 public:
     CreateOfferAnswerObserver(RTCPeerConnection* peerConnection)
         : m_peerConnection(peerConnection)
@@ -195,8 +199,6 @@ public:
     }
 
 protected:
-    // The pointer is always valid as: scope(PeerConnectionObserver) <=
-    // scope(RTCPeerConnection)
     RTCPeerConnection* m_peerConnection{ nullptr };
 };
 
@@ -228,6 +230,8 @@ public:
 
 class SetLocalRemoteDescriptionObserver
     : public webrtc::SetSessionDescriptionObserver {
+    friend class RTCPeerConnection;
+
 public:
     SetLocalRemoteDescriptionObserver(RTCPeerConnection* peerConnection)
         : m_peerConnection(peerConnection)
@@ -248,8 +252,6 @@ public:
     }
 
 protected:
-    // The pointer is always valid as: scope(PeerConnectionObserver) <=
-    // scope(RTCPeerConnection)
     RTCPeerConnection* m_peerConnection{ nullptr };
 };
 
@@ -398,8 +400,7 @@ private:
     ExecutionContext* m_executionContext;
 
     RTCConfiguration m_configuration;
-    PeerConnectionObserver* m_peerConnectionObserver;
-
+    PeerConnectionObserver* m_peerConnectionObserver{ nullptr };
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> m_backend;
 
     PcObserver<CreateOfferObserver>* m_createOfferObserver;
@@ -411,8 +412,15 @@ private:
     std::string m_lastCreatedAnswer;
 
     GCVector<RTCRtpTransceiver*> m_transceivers;
+    GCUnorderedSet<MediaStreamTrack*> m_mediaTracks; // for rooting
+    GCVector<RTCDataChannel*> m_dataChannels;
+
+    bool m_closed{ false };
+
+    bool m_wait{ false };
 
     void deletePeerConnection();
+    void cleanup();
 
     bool isValidRemoteState(RTCSdpType type);
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,

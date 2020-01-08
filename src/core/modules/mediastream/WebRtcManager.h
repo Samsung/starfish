@@ -24,6 +24,7 @@
 #include "api/peer_connection_interface.h"
 
 namespace Starfish {
+class RTCPeerConnection;
 
 class WebRtcManager : public gc {
 public:
@@ -33,19 +34,16 @@ public:
     void dispose();
 
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-    peerConnectionFactory()
-    {
-        return m_peerConnectionFactory;
-    }
+    peerConnectionFactory();
+
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> createPeerConnection(
+        const webrtc::PeerConnectionInterface::RTCConfiguration& configuration,
+        webrtc::PeerConnectionDependencies dependencies);
+    void deletePeerConnection();
 
 private:
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        m_peerConnectionFactory;
-    std::unique_ptr<rtc::Thread> m_networkThread;
-    std::unique_ptr<rtc::Thread> m_workerThread;
-    std::unique_ptr<rtc::Thread> m_signalingThread;
-
-    void initPeerConnection();
+    void initPeerConnectionFactory();
+    void deletePeerConnectionFactory();
 };
 } // namespace Starfish
 

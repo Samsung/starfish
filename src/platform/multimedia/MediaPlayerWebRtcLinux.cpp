@@ -63,10 +63,14 @@ MediaPlayerWebRtcLinux::~MediaPlayerWebRtcLinux()
 
 void MediaPlayerWebRtcLinux::destroy()
 {
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s>\n", __func__);
     if (m_mediaProvider) {
+        m_mediaProvider->stopAudioTrack();
+        m_mediaProvider->stopVideoTrack();
         m_mediaProvider->setMediaPlayer(nullptr);
     }
-};
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s>\n", __func__);
+}
 
 void MediaPlayerWebRtcLinux::play()
 {

@@ -27,6 +27,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/Event.h"
 #include "core/dom/MessageEvent.h"
+#include "core/modules/mediastream/RTCPeerConnection.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/page/WebBase.h"
@@ -37,10 +38,36 @@ namespace Starfish {
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s> %p : %p\n", __func__,
+                (void*)this, (void*)m_dataChannel);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
+        },
+        NULL, NULL, NULL);
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s> %p : %p\n", __func__,
+                (void*)this, (void*)m_dataChannel);
+}
+
+RTCDataChannelObserver::~RTCDataChannelObserver()
+{
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s> %p : %p\n", __func__,
+                (void*)this, (void*)m_dataChannel);
+    if (m_dataChannel) {
+        m_dataChannel->m_observer = nullptr;
+        m_dataChannel = nullptr;
+    }
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s> %p : %p\n", __func__,
+                (void*)this, (void*)m_dataChannel);
 }
 
 void RTCDataChannelObserver::OnStateChange()
 {
+    if (!m_dataChannel) {
+        return;
+    }
+
     if (!isMainThread()) {
         m_dataChannel->executionContext()
             ->webBase()
@@ -69,6 +96,10 @@ void RTCDataChannelObserver::OnStateChange()
 
 void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
 {
+    if (!m_dataChannel) {
+        return;
+    }
+
     if (!isMainThread()) {
         struct Params {
             RTCDataChannelObserver* self;
@@ -107,14 +138,17 @@ void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
 }
 
 RTCDataChannel::RTCDataChannel(
-    ExecutionContext* executionContext, RTCDataChannelInit init,
+    ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
+    RTCDataChannelInit init,
     rtc::scoped_refptr<webrtc::DataChannelInterface> dataChannel)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_peerConnection(peerConnection)
     , m_backend(dataChannel)
 {
+    WEBRTC_LOGI("<RTCDataChannel::%s>: %p, pc:%p\n", __func__, (void*)this,
+                (void*)m_peerConnection);
     m_protocol = init.m_protocol;
-
     m_observer = new RTCDataChannelObserver(this);
     m_backend->RegisterObserver(m_observer);
 
@@ -122,14 +156,29 @@ RTCDataChannel::RTCDataChannel(
         this,
         [](void* obj, void* cd) { ((RTCDataChannel*)obj)->~RTCDataChannel(); },
         NULL, NULL, NULL);
+    WEBRTC_LOGI("</RTCDataChannel::%s>: %p\n", __func__, (void*)this);
 }
 
 RTCDataChannel::~RTCDataChannel()
 {
-    if (m_backend) {
+    WEBRTC_LOGI("<RTCDataChannel::%s>: %p, %p, pc:%p\n", __func__, (void*)this,
+                (void*)m_observer, (void*)m_peerConnection);
+    if (!m_peerConnection) {
+        return;
+    }
+
+    if (m_backend && m_observer) {
         m_backend->UnregisterObserver();
     }
+
+    if (m_observer) {
+        m_observer->m_dataChannel = nullptr;
+        m_observer = nullptr;
+    }
+
+    m_peerConnection = nullptr;
     m_backend = nullptr;
+    WEBRTC_LOGI("</RTCDataChannel::%s>: %p\n", __func__, (void*)this);
 }
 
 ExecutionContext* RTCDataChannel::executionContext() const
@@ -144,12 +193,20 @@ ScriptBindingInstance* RTCDataChannel::scriptBindingInstance()
 
 String* RTCDataChannel::label()
 {
+    if (!m_peerConnection) {
+        return String::emptyString;
+    }
+
     std::string label = m_backend->label();
     return String::createASCIIString(label.data(), label.length());
 }
 
 bool RTCDataChannel::ordered()
 {
+    if (!m_peerConnection) {
+        return String::emptyString;
+    }
+
     return m_backend->ordered();
 }
 
@@ -214,6 +271,10 @@ void RTCDataChannel::setBinaryType(String* binaryType)
 
 void RTCDataChannel::send(String* data)
 {
+    if (!m_peerConnection) {
+        return;
+    }
+
     webrtc::DataBuffer buffer(data->toUTF8NonGCString().data());
     m_backend->Send(buffer);
 }
