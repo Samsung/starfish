@@ -23,6 +23,7 @@
 #include "Starfish.h"
 
 #include "core/modules/mediastream/WebRtcManager.h"
+#include "core/modules/mediastream/RTCPeerConnection.h"
 
 #include "api/create_peerconnection_factory.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
@@ -33,10 +34,16 @@
 
 namespace Starfish {
 
+static rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+    m_peerConnectionFactory;
+static std::unique_ptr<rtc::Thread> m_networkThread;
+static std::unique_ptr<rtc::Thread> m_workerThread;
+static std::unique_ptr<rtc::Thread> m_signalingThread;
+static int peerConnectionCount = 0;
+
 WebRtcManager::WebRtcManager()
 {
     STARFISH_LOG_INFO("%s\n", __func__);
-    initPeerConnection();
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -46,12 +53,14 @@ WebRtcManager::WebRtcManager()
 
 WebRtcManager::~WebRtcManager()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    WEBRTC_LOGI("%s\n", __func__);
+    dispose();
 }
 
-void WebRtcManager::initPeerConnection()
+void WebRtcManager::initPeerConnectionFactory()
 {
     if (m_peerConnectionFactory == nullptr) {
+        WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
         m_networkThread = rtc::Thread::CreateWithSocketServer();
         m_networkThread->Start();
         m_workerThread = rtc::Thread::Create();
@@ -71,15 +80,58 @@ void WebRtcManager::initPeerConnection()
             webrtc::CreateBuiltinVideoEncoderFactory(),
             webrtc::CreateBuiltinVideoDecoderFactory(),
             nullptr /* audio_mixer */, nullptr /* audio_processing */);
+        WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
     }
 
     STARFISH_ASSERT(m_peerConnectionFactory);
 }
 
+void WebRtcManager::deletePeerConnectionFactory()
+{
+    if (peerConnectionCount == 0) {
+        WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
+        m_peerConnectionFactory = nullptr;
+        m_networkThread.reset();
+        m_workerThread.reset();
+        m_signalingThread.reset();
+        WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
+    }
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+WebRtcManager::peerConnectionFactory()
+{
+    initPeerConnectionFactory();
+    return m_peerConnectionFactory;
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionInterface>
+WebRtcManager::createPeerConnection(
+    const webrtc::PeerConnectionInterface::RTCConfiguration& configuration,
+    webrtc::PeerConnectionDependencies dependencies)
+{
+    rtc::scoped_refptr<webrtc::PeerConnectionInterface> pc =
+        peerConnectionFactory()->CreatePeerConnection(configuration,
+                                                      std::move(dependencies));
+    peerConnectionCount++;
+    return pc;
+}
+
+void WebRtcManager::deletePeerConnection()
+{
+    WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
+    peerConnectionCount--;
+    WEBRTC_LOGI("  peerConnectionCount: %d\n", peerConnectionCount);
+    deletePeerConnectionFactory();
+    WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
+}
+
 void WebRtcManager::dispose()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    WEBRTC_LOGI("WebRtcManager::%s\n", __func__);
+    WEBRTC_LOGI("  peerConnectionCount: %d\n", peerConnectionCount);
     m_peerConnectionFactory = nullptr;
+    WEBRTC_LOGI("/WebRtcManager::%s\n", __func__);
 }
 } // namespace Starfish
 

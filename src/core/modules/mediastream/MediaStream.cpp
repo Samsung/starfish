@@ -177,6 +177,7 @@ void MediaStream::VideoFrameObserver::stop()
 {
     if (m_videoTrack) {
         m_videoTrack->RemoveSink(this);
+        m_image.reset();
     }
 }
 

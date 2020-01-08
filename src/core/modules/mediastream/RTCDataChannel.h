@@ -52,8 +52,12 @@ struct RTCDataChannelInit {
 };
 
 class RTCDataChannelObserver : public gc, public webrtc::DataChannelObserver {
+    friend class RTCDataChannel;
+    friend class RTCPeerConnection;
+
 public:
     RTCDataChannelObserver(RTCDataChannel* dataChannel);
+    virtual ~RTCDataChannelObserver();
     void OnStateChange() override;
     void OnMessage(const webrtc::DataBuffer& buffer) override;
     void OnBufferedAmountChange(uint64_t sent_data_size) override{};
@@ -63,9 +67,13 @@ private:
 };
 
 class RTCDataChannel : public EventTarget {
+    friend class RTCDataChannelObserver;
+    friend class RTCPeerConnection;
+
 public:
     RTCDataChannel(
-        ExecutionContext* executionContext, RTCDataChannelInit init,
+        ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
+        RTCDataChannelInit init,
         rtc::scoped_refptr<webrtc::DataChannelInterface> rpcSctpTransport);
     virtual ~RTCDataChannel();
 
@@ -105,6 +113,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    RTCPeerConnection* m_peerConnection{ nullptr };
     RTCDataChannelObserver* m_observer{ nullptr };
 
     String* m_protocol{ String::emptyString };
