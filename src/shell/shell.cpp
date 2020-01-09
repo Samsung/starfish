@@ -286,6 +286,7 @@ int main(int argc, char* argv[])
     bool enableSecurity = true;
     bool crashTest = false;
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
+    bool needsDownloadWebFontsEarly = false;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -354,6 +355,9 @@ int main(int argc, char* argv[])
             crashTest = true;
         } else if (strstr(argv[i], "--debug-worker=") == argv[i]) {
             setenv("DEBUG_WORKER", argv[i] + strlen("--debug-worker="), 1);
+        } else if (strstr(argv[i], "--needs-download-webfont-early") ==
+                   argv[i]) {
+            needsDownloadWebFontsEarly = true;
         }
     }
 
@@ -509,6 +513,10 @@ int main(int argc, char* argv[])
 
         if (!enableSecurity) {
             settings.SetWebSecurityMode(LWE::WebSecurityMode::Disable);
+        }
+
+        if (needsDownloadWebFontsEarly) {
+            settings.SetNeedsDownloadWebFontsEarly(true);
         }
         settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);

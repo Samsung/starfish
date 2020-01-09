@@ -444,6 +444,18 @@ void BrowsingContext::resolveStyleIfNeeds()
                     WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
                                     fontFamily, style, weight, res);
                     document()->m_webFontList.push_back(webFont);
+
+                    if (webView()->needsDownloadWebFontsEarly() &&
+                        !webFont.fontResource()->isRequested()) {
+                        RequestData* reqData = new RequestData();
+                        reqData->m_url = webFont.fontResource()->url();
+                        reqData->m_referrer =
+                            new ReferrerURL(document()->documentURI());
+                        reqData->m_destination = RequestDestination::Font;
+                        reqData->m_syncLevel =
+                            RequestSyncLevel::SyncIfAlreadyLoaded;
+                        webFont.fontResource()->request(reqData, true);
+                    }
                 } else {
                     WebFont webFont(isFontStyleSpecified, isFontWeightSpecified,
                                     fontFamily, style, weight,

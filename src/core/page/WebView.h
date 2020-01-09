@@ -394,6 +394,16 @@ public:
         return m_baseBackgroundColor;
     }
 
+    void setNeedsDownloadWebFontsEarly(bool b)
+    {
+        m_needsDownloadWebFontsEarly = b;
+    }
+
+    bool needsDownloadWebFontsEarly()
+    {
+        return m_needsDownloadWebFontsEarly;
+    }
+
     void setBaseForegroundColor(Unit::Color color)
     {
         m_baseForegroundColor = color;
@@ -559,6 +569,7 @@ private:
         m_idleModeJob; // default value is IdleModeJob::IdleModeFull
     uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
     size_t m_idleCheckTimerID;
+    bool m_needsDownloadWebFontsEarly;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };

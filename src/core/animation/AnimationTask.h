@@ -628,6 +628,7 @@ public:
                               timingFunctions, durationInms, delayInms,
                               iterationCount, playState, fillMode)
     {
+        m_isEveryAnimiatedValueResolved = true;
         STARFISH_ASSERT(target != nullptr);
     }
 

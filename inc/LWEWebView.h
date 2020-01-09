@@ -68,6 +68,7 @@ public:
                                 unsigned char& b, unsigned char& a) const;
     void GetBaseForegroundColor(unsigned char& r, unsigned char& g,
                                 unsigned char& b, unsigned char& a) const;
+    bool NeedsDownloadWebFontsEarly() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -80,6 +81,7 @@ public:
     void SetWebSecurityMode(WebSecurityMode value);
     void SetIdleModeJob(IdleModeJob j);
     void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS);
+    void SetNeedsDownloadWebFontsEarly(bool b);
 
 private:
     std::string m_defaultUserAgent;
@@ -93,6 +95,7 @@ private:
     WebSecurityMode m_webSecurityMode;
     IdleModeJob m_idleModeJob; // default value is IdleModeJob::IdleModeFull
     uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
+    bool m_needsDownloadWebFontsEarly;
 };
 
 class LWE_EXPORT ResourceError {

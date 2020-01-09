@@ -7855,6 +7855,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         if (iter->first->m_element != element) {
             continue;
         }
+
         String* name = iter->first->m_name;
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
@@ -7996,7 +7997,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     }
 
     // apply animation
-    if (element->style() && elementHasAnimation == true) {
+    if (elementHasAnimation) {
         for (auto iter = executor->activeAnimations().begin();
              iter != executor->activeAnimations().end(); iter++) {
             if (iter->first->m_element != element) {
@@ -8023,7 +8024,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
             isRunningOpacityAnimationAfter, isRunningTransformAnimationAfter);
     }
 
-    if (needsToCheckActiveExecutorInWebView == true) {
+    if (needsToCheckActiveExecutorInWebView) {
         executor->checkActiveExecutorInWebView();
     }
 }
