@@ -939,10 +939,6 @@ public:
     String* concat(const char* str, size_t srcLen);
     String* concat(String* str);
     String* trim();
-
-    icu::UnicodeString toUnicodeString() const;
-    icu::UnicodeString toUnicodeString(size_t start, size_t end) const;
-
     UTF32String toUTF32String();
     UTF8String toUTF8String();
 

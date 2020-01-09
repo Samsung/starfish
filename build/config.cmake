@@ -66,10 +66,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
-SET (LWE_DEFINES_DEFAULT
-    -DESCARGOT_ENABLE_TYPEDARRAY=1
-    -DESCARGOT_ENABLE_PROMISE=1
-)
+SET (LWE_DEFINES_DEFAULT)
 
 IF (${ARCH} STREQUAL "x64")
     SET (LWE_DEFINES_ARCH
@@ -216,15 +213,6 @@ IF (${WEBRTC} STREQUAL "1")
     )
 ENDIF()
 
-SET (LWE_DEFINITIONS
-    ${LWE_DEFINES_DEFAULT}
-    ${LWE_DEFINES_ARCH}
-    ${LWE_DEFINES_HOST}
-    ${LWE_DEFINES_CUSTOM}
-    ${LWE_DEFINES_MODE}
-    ${LWE_DEFINES_BACKEND}
-)
-
 #######################################################
 # CXXFLAGS & LDFLAGS
 #######################################################
@@ -287,31 +275,36 @@ SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST} ${LWE_LDFLAGS_LTO} $
 # PACKAGES
 #######################################################
 find_package (PkgConfig REQUIRED)
-pkg_check_modules (STARFISH_THIRD_PARTY_LIBS REQUIRED icu-uc icu-i18n)
 
+IF (${RUNTIME_ICU} STREQUAL "0")
+    pkg_check_modules (STARFISH_THIRD_PARTY_LIBS REQUIRED icu-uc icu-i18n)
+    SET (LWE_DEFINES_ICU)
+ELSE()
+    SET (LWE_DEFINES_ICU -DSTARFISH_ENABLE_RUNTIME_ICU_BINDER)
+ENDIF()
 
 IF (${BACKEND} STREQUAL "efl" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "efl" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf-evas efl-extension libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf-evas efl-extension libwebsockets)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "efl_headless" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf libwebsockets)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz elementary ecore)
 ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz )
 ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 libwebsockets)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 libwebsockets)
     pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
@@ -469,6 +462,18 @@ IF (${HOST} STREQUAL "tizen")
         /usr/include/location
     )
 ENDIF()
+
+SET (LWE_DEFINITIONS
+    ${LWE_DEFINES_DEFAULT}
+    ${LWE_DEFINES_ARCH}
+    ${LWE_DEFINES_HOST}
+    ${LWE_DEFINES_ICU}
+    ${LWE_DEFINES_CUSTOM}
+    ${LWE_DEFINES_MODE}
+    ${LWE_DEFINES_BACKEND}
+)
+
+
 
 SET (STARFISH_INCLUDE_ADDITIONAL_DIRS
     ${STARFISH_DALI_ADDITIONAL_INCLUDE_DIRS}

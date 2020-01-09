@@ -280,20 +280,13 @@ static SerializedTypedData* serializeInternal(
         } else if (obj->isFunctionObject() || obj->isErrorObject() ||
                    obj->isGlobalObject()) {
             return nullptr;
-        }
-#if ESCARGOT_ENABLE_PROMISE
-        else if (obj->isPromiseObject()) {
+        } else if (obj->isPromiseObject()) {
             return nullptr;
-        }
-#endif
-#ifdef ESCARGOT_ENABLE_TYPEDARRAY
-        else if (obj->isArrayBufferObject()) {
+        } else if (obj->isArrayBufferObject()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         } else if (obj->isArrayBufferView()) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        }
-#endif
-        else {
+        } else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
             deep = true;
@@ -338,13 +331,10 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
             STARFISH_ASSERT(sw->isTransferable());
             sw->toTransferable()->transferReceive(data);
             result = sw->scriptValue();
-        }
-#if ESCARGOT_ENABLE_TYPEDARRAY
-        else if (transfered->isArrayBuffer()) {
+        } else if (transfered->isArrayBuffer()) {
             // TODO Handle SharedArrayBuffer case (ECMAScript2018)
             STARFISH_ASSERT_NOT_REACHED();
         }
-#endif
     } else if (value->isUndefined()) {
         result = ValueRef::createUndefined();
     } else if (value->isNull()) {
@@ -516,13 +506,10 @@ void Serializer::serializeWithTransfer(ExecutionContext* executionContext,
                     result.m_serializedTransfer.push_back(placeHolder);
                     continue;
                 }
-            }
-#if ESCARGOT_ENABLE_TYPEDARRAY
-            else if (item->asObject()->isArrayBufferObject()) {
+            } else if (item->asObject()->isArrayBufferObject()) {
                 // TODO Handle SharedArrayBuffer case (ECMAScript2018)
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
-#endif
         }
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);
     }
@@ -541,13 +528,10 @@ void Serializer::serializeWithTransfer(ExecutionContext* executionContext,
             TransferedData* dataHolder = tf->transfer();
             tf->setDetached();
             placeHolder->setPlatformObjectData(dataHolder);
-        }
-#if ESCARGOT_ENABLE_TYPEDARRAY
-        else if (placeHolder->isArrayBuffer()) {
+        } else if (placeHolder->isArrayBuffer()) {
             // TODO Handle SharedArrayBuffer case (ECMAScript2018)
             STARFISH_ASSERT_NOT_REACHED();
         }
-#endif
     }
     result.m_serialized = serialized;
 }

@@ -589,35 +589,6 @@ String* String::stripAndCollapseASCIIwhitespace()
     return sb.finalize();
 }
 
-icu::UnicodeString String::toUnicodeString() const
-{
-    auto data = bufferAccessData();
-    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return icu::UnicodeString((const char*)data.buffer, data.length,
-                                  US_INV);
-    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-        return icu::UnicodeString((const UChar*)data.buffer, data.length);
-    } else {
-        return icu::UnicodeString::fromUTF32((const UChar32*)data.buffer,
-                                             data.length);
-    }
-}
-
-icu::UnicodeString String::toUnicodeString(size_t start, size_t end) const
-{
-    auto data = bufferAccessData();
-    size_t len = end - start;
-    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        return icu::UnicodeString((const char*)data.buffer + start, len,
-                                  US_INV);
-    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-        return icu::UnicodeString((const UChar*)data.buffer + start, len);
-    } else {
-        return icu::UnicodeString::fromUTF32(
-            (const UChar32*)data.buffer + start, len);
-    }
-}
-
 size_t String::hashValueSlowCase() const
 {
     auto data = bufferAccessData();
@@ -927,7 +898,12 @@ String* String::toUpper()
         for (size_t i = 0; i < data.length; i++) {
             if (u_islower(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
+#if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+                auto fn = [](UChar32 c) -> UChar32 { return u_toupper(c); };
+                std::transform(str.begin(), str.end(), str.begin(), fn);
+#else
                 std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+#endif
                 return new StringDataBMP(std::move(str));
             }
         }
@@ -936,7 +912,12 @@ String* String::toUpper()
         for (size_t i = 0; i < data.length; i++) {
             if (u_islower(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
+#if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+                auto fn = [](UChar32 c) -> UChar32 { return u_toupper(c); };
+                std::transform(str.begin(), str.end(), str.begin(), fn);
+#else
                 std::transform(str.begin(), str.end(), str.begin(), u_toupper);
+#endif
                 return new StringDataUTF32(std::move(str));
             }
         }
@@ -993,7 +974,12 @@ String* String::toLower()
         for (size_t i = 0; i < data.length; i++) {
             if (u_isupper(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
+#if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+                auto fn = [](UChar32 c) -> UChar32 { return u_tolower(c); };
+                std::transform(str.begin(), str.end(), str.begin(), fn);
+#else
                 std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+#endif
                 return new StringDataBMP(std::move(str));
             }
         }
@@ -1002,7 +988,12 @@ String* String::toLower()
         for (size_t i = 0; i < data.length; i++) {
             if (u_isupper(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
+#if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+                auto fn = [](UChar32 c) -> UChar32 { return u_tolower(c); };
+                std::transform(str.begin(), str.end(), str.begin(), fn);
+#else
                 std::transform(str.begin(), str.end(), str.begin(), u_tolower);
+#endif
                 return new StringDataUTF32(std::move(str));
             }
         }

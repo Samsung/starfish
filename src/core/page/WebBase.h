@@ -140,7 +140,7 @@ public:
         return m_console;
     }
 
-    const icu::Locale& locale()
+    const std::string& locale()
     {
         return m_locale;
     }
@@ -222,7 +222,7 @@ protected:
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
 
     // options
-    icu::Locale m_locale;
+    std::string m_locale;
     String* m_timezoneID;
     String* m_customUserAgentString;
     std::string m_proxyURL;

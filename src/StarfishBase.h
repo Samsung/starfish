@@ -218,6 +218,7 @@ typedef unsigned int uint;
 #include <future>
 #include <type_traits>
 #include <random>
+#include <cfloat>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil
@@ -225,6 +226,10 @@ typedef unsigned int uint;
 #include <GCUtil.h>
 #undef ESCARGOT
 
+#if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+#include <RuntimeICUBinder.h>
+#include <ICUPolyfill.h>
+#else
 #include <unicode/locid.h>
 #include <unicode/brkiter.h>
 #include <unicode/ubidi.h>
@@ -233,6 +238,15 @@ typedef unsigned int uint;
 #include <unicode/ucsdet.h>
 #include <unicode/uscript.h>
 #include <unicode/rbbi.h>
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 #include <pthread.h>
 #include <semaphore.h>

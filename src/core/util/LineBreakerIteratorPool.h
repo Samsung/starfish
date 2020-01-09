@@ -33,20 +33,19 @@ enum LineBreakIteratorMode {
 };
 
 struct BreakIteratorInfo {
-    icu::Locale m_locale;
+    std::string m_locale;
     LineBreakIteratorMode m_mode;
 
-    BreakIteratorInfo(icu::Locale locale, LineBreakIteratorMode mode)
+    BreakIteratorInfo(std::string locale, LineBreakIteratorMode mode)
         : m_locale(locale)
         , m_mode(mode)
     {
     }
 };
 
-icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
-                                          LineBreakIteratorMode mode,
-                                          bool isCJK);
-void closeLineBreakIterator(icu::BreakIterator*& iter);
+UBreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
+                                      LineBreakIteratorMode mode, bool isCJK);
+void closeLineBreakIterator(UBreakIterator* iter);
 
 class LineBreakIteratorPool : public gc {
 public:
@@ -62,12 +61,12 @@ public:
         }
     }
 
-    icu::BreakIterator* get(const icu::Locale& locale,
-                            LineBreakIteratorMode mode, bool isCJK)
+    UBreakIterator* get(const std::string& locale, LineBreakIteratorMode mode,
+                        bool isCJK)
     {
         BreakIteratorInfo info(locale, mode);
 
-        icu::BreakIterator* iterator = 0;
+        UBreakIterator* iterator = 0;
         for (size_t i = 0; i < m_pool.size(); ++i) {
             BreakIteratorInfo info2 = m_pool[i].first;
             if (info.m_locale == info2.m_locale &&
@@ -89,7 +88,7 @@ public:
         return iterator;
     }
 
-    void put(BreakIteratorInfo& info, icu::BreakIterator* iterator)
+    void put(BreakIteratorInfo& info, UBreakIterator* iterator)
     {
         if (m_pool.size() == m_capacity) {
             closeLineBreakIterator((*m_pool.begin()).second);
@@ -101,7 +100,7 @@ public:
 
 private:
     size_t m_capacity;
-    std::vector<std::pair<BreakIteratorInfo, icu::BreakIterator*>> m_pool;
+    std::vector<std::pair<BreakIteratorInfo, UBreakIterator*>> m_pool;
 };
 }
 

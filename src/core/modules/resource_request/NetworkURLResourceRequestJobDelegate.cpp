@@ -514,7 +514,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
 
     if (!hasAcceptLanguage) {
         std::string value;
-        value = m_orgProxy->webBase()->locale().getName();
+        value = m_orgProxy->webBase()->locale();
         std::replace(value.begin(), value.end(), '_', '-');
         value = value + " , en-US , en";
         headers.headerMap()[HTTPHeaderMap::kAcceptLanguage] = value;

@@ -29,7 +29,6 @@
 
 #include <hb.h>
 #include <hb-ot.h>
-#include <hb-icu.h>
 #include "core/modules/canvas/font/Font.h"
 #include "FontImplSkia.h"
 #include "core/page/WebView.h"

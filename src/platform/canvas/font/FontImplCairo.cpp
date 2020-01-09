@@ -34,7 +34,6 @@
 #include <fontconfig/fontconfig.h>
 #include <hb.h>
 #include <hb-ft.h>
-#include <hb-icu.h>
 #include "core/modules/canvas/font/Font.h"
 #include "FontImplCairo.h"
 #include "core/style/UnitHelper.h"
