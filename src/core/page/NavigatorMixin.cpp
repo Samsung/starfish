@@ -68,8 +68,7 @@ String* NavigatorMixin::platform()
 
 String* NavigatorMixin::language()
 {
-    const char* name = executionContext()->webBase()->locale().getName();
-    STARFISH_ASSERT(name != nullptr);
-    return String::fromUTF8(name, strlen(name));
+    return String::fromUTF8(executionContext()->webBase()->locale().data(),
+                            executionContext()->webBase()->locale().size());
 }
 }

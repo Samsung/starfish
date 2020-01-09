@@ -26,7 +26,7 @@
 #include "SkPaint.h"
 
 #include <hb.h>
-#include <hb-icu.h>
+#include "platform/canvas/font/hb-icu/HarfBuzzICU.h"
 
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"

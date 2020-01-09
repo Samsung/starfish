@@ -33,7 +33,6 @@ namespace Starfish {
 WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* customUserAgentString)
     : StarfishHoldable(starfish)
-    , m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID, strlen(timezoneID)))
     , m_customUserAgentString(customUserAgentString)
     , m_messageLoop(new MessageLoop())
@@ -43,6 +42,18 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
 {
     STARFISH_ASSERT(starfish != nullptr && locale != nullptr &&
                     timezoneID != nullptr && customUserAgentString != nullptr);
+    UErrorCode err = U_ZERO_ERROR;
+    char buf[512];
+    auto len = uloc_getName(locale, buf, sizeof(buf), &err);
+    if (U_FAILURE(err)) {
+        STARFISH_LOG_ERROR(
+            "there is an error whild parsing locale %s. use default instead\n",
+            locale);
+        m_locale = uloc_getDefault();
+    } else {
+        buf[len] = 0;
+        m_locale = buf;
+    }
 
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6

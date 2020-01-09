@@ -612,7 +612,7 @@ void WebView::createScriptEngineInstance()
         };
 */
         m_scriptEngineInstance = new ScriptEngineInstance(
-            locale().getName(), timezoneID()->toUTF8NonGCString().data(), this);
+            locale().data(), timezoneID()->toUTF8NonGCString().data(), this);
     }
 }
 

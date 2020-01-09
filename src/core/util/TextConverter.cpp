@@ -182,7 +182,7 @@ String* TextConverter::convert(const char* bytes, size_t len,
             UChar* targetEnd = &target[512];
             const char* input = m_bufferToConvert.data();
             ucnv_toUnicode(m_converter, &target, targetEnd, &input,
-                           input + m_bufferToConvert.size(), NULL,
+                           input + m_bufferToConvert.size(), nullptr,
                            isEndOfStream, &err);
 
             size_t length = (size_t)target - (size_t)targetOrg;

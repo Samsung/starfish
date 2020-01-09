@@ -31,19 +31,8 @@ static const char* uax14Prologue =
     "!!lookAheadHardBreak;";
 
 static const char* uax14AssignmentsBefore =
-    // explicitly enumerate $CJ since ICU versions prior to 49 don't support
-    // :LineBreak=Conditional_Japanese_Starter:
     "$CJ = ["
-#if (U_ICU_VERSION_MAJOR_NUM >= 4) && (U_ICU_VERSION_MINOR_NUM >= 9)
     ":LineBreak=Conditional_Japanese_Starter:"
-#else
-    "\\u3041\\u3043\\u3045\\u3047\\u3049\\u3063\\u3083\\u3085\\u3087\\u308E\\u3"
-    "095\\u3096\\u30A1\\u30A3\\u30A5\\u30A7"
-    "\\u30A9\\u30C3\\u30E3\\u30E5\\u30E7\\u30EE\\u30F5\\u30F6\\u30FC"
-    "\\u31F0\\u31F1\\u31F2\\u31F3\\u31F4\\u31F5\\u31F6\\u31F7\\u31F8\\u31F9\\u3"
-    "1FA\\u31FB\\u31FC\\u31FD\\u31FE\\u31FF"
-    "\\uFF67\\uFF68\\uFF69\\uFF6A\\uFF6B\\uFF6C\\uFF6D\\uFF6E\\uFF6F\\uFF70"
-#endif
     "];";
 
 static const char* uax14AssignmentsCustomLooseCJK =
@@ -127,11 +116,7 @@ static const char* uax14AssignmentsAfter =
     "$CR = [:LineBreak = Carriage_Return:];"
     "$EX = [[:LineBreak = Exclamation:] - $EX_SUB];"
     "$GL = [:LineBreak = Glue:];"
-#if (U_ICU_VERSION_MAJOR_NUM >= 4) && (U_ICU_VERSION_MINOR_NUM >= 9)
     "$HL = [:LineBreak = Hebrew_Letter:];"
-#else
-    "$HL = [[:Hebrew:] & [:Letter:]];"
-#endif
     "$HY = [:LineBreak = Hyphen:];"
     "$H2 = [:LineBreak = H2:];"
     "$H3 = [:LineBreak = H3:];"
@@ -497,7 +482,17 @@ static String* makeRule(LineBreakIteratorMode mode, bool isCJK)
 static String* makeLocaleWithBreakKeyword(BreakIteratorInfo& info)
 {
     StringBuilder builder;
-    stringAppendHelper(builder, info.m_locale.getBaseName());
+    UErrorCode err = U_ZERO_ERROR;
+    uint32_t len = uloc_getBaseName(info.m_locale.data(), nullptr, 0, &err);
+    STARFISH_ASSERT(err == U_BUFFER_OVERFLOW_ERROR || !U_FAILURE(err));
+
+    err = U_ZERO_ERROR;
+    char* baseName = (char*)alloca(sizeof(char) * (len + 1));
+    uloc_getBaseName(info.m_locale.data(), baseName, len, &err);
+    baseName[len] = 0;
+    STARFISH_ASSERT(!U_FAILURE(err));
+
+    stringAppendHelper(builder, baseName);
     builder.appendString("@break=");
     switch (info.m_mode) {
     case LineBreakIteratorModeUAX14:
@@ -516,28 +511,28 @@ static String* makeLocaleWithBreakKeyword(BreakIteratorInfo& info)
     return builder.finalize();
 }
 
-icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
-                                          LineBreakIteratorMode mode,
-                                          bool isCJK)
+UBreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
+                                      LineBreakIteratorMode mode, bool isCJK)
 {
-    icu::BreakIterator* brkIter;
+    UBreakIterator* brkIter;
     UErrorCode openStatus = U_ZERO_ERROR;
     if (mode == LineBreakIteratorModeUAX14) {
         auto utf8Data = makeLocaleWithBreakKeyword(info)->toUTF8NonGCString();
-        brkIter = icu::BreakIterator::createLineInstance(
-            icu::Locale::createCanonical(utf8Data.data()), openStatus);
+        brkIter = ubrk_open(UBreakIteratorType::UBRK_LINE, utf8Data.data(),
+                            nullptr, 0, &openStatus);
     } else {
         UParseError parseError;
         auto rules = makeRule(mode, isCJK);
-        brkIter = new icu::RuleBasedBreakIterator(rules->toUnicodeString(),
-                                                  parseError, openStatus);
+        auto u16Rules = rules->toUTF16NonGCString();
+        brkIter = ubrk_openRules((const UChar*)u16Rules.data(), u16Rules.size(),
+                                 nullptr, 0, &parseError, &openStatus);
     }
     // locale comes from a web page and it can be invalid, leading ICU
     // to fail, in which case we fall back to the default locale.
     if (U_FAILURE(openStatus)) {
         openStatus = U_ZERO_ERROR;
-        brkIter =
-            icu::BreakIterator::createLineInstance(info.m_locale, openStatus);
+        brkIter = ubrk_open(UBreakIteratorType::UBRK_LINE, info.m_locale.data(),
+                            nullptr, 0, &openStatus);
     }
 
     if (U_FAILURE(openStatus)) {
@@ -550,9 +545,8 @@ icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
     return brkIter;
 }
 
-void closeLineBreakIterator(icu::BreakIterator*& iter)
+void closeLineBreakIterator(UBreakIterator* iter)
 {
-    delete iter;
-    iter = nullptr;
+    ubrk_close(iter);
 }
 }

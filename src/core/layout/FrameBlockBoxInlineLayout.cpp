@@ -3055,47 +3055,61 @@ static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
     bool collapseNewline = f->shouldIgnoreNewlineChar();
 
     auto breaker = starfish->lineBreakIteratorPool()->get(
-        icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
+        "en-US", LineBreakIteratorModeUAX14, false);
     std::vector<int32_t> locs;
 
-    icu::UnicodeString str = txt->toUnicodeString();
-    breaker->setText(str);
+    struct Data {
+        String* txt;
+        UBreakIterator* breaker;
+        std::vector<int32_t>* locs;
+    } d;
+    d.txt = txt;
+    d.breaker = breaker;
+    d.locs = &locs;
+
+    txt->peekUTF16Buffer([](const char16_t* str, size_t length, void* callbackData) -> size_t {
+        Data* d = (Data*)callbackData;
+
+        UErrorCode err = U_ZERO_ERROR;
+        ubrk_setText(d->breaker, (const UChar*)str, length, &err);
+
+        int32_t cur = 0;
+        int32_t next = 0;
+
+        StringBufferAccessData data = d->txt->bufferAccessData();
+        if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                d->locs->push_back(next);
+            }
+        } else {
+            int32_t len = length;
+            int32_t prev = 0;
+            int32_t offset = 0;
+            const UChar* buffer = (const UChar*)str;
+            // printf("diff : %d\n", (int)(txt->length() - len));
+
+            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                if (next == len) {
+                    d->locs->push_back(d->txt->length());
+                } else {
+                    while (prev < next) {
+                        char32_t t;
+                        size_t required =
+                            utf16ToUtf32(buffer + prev, buffer + len, t);
+                        offset -= (required - 1);
+                        prev += required;
+                    }
+                    d->locs->push_back(next + offset);
+                    // printf("loc : %d\n", (int)d->locs->back());
+                    STARFISH_ASSERT(prev == next);
+                }
+            }
+        }
+        return 0;
+    }, &d);
 
     int32_t cur = 0;
     int32_t next = 0;
-
-    StringBufferAccessData data = txt->bufferAccessData();
-    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
-            locs.push_back(next);
-        }
-    } else {
-        int32_t len = str.length();
-        int32_t prev = 0;
-        int32_t offset = 0;
-        const UChar* buffer = str.getBuffer();
-        // printf("diff : %d\n", (int)(txt->length() - len));
-
-        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
-            if (next == len) {
-                locs.push_back(txt->length());
-            } else {
-                while (prev < next) {
-                    char32_t t;
-                    size_t required =
-                        utf16ToUtf32(buffer + prev, buffer + len, t);
-                    offset -= (required - 1);
-                    prev += required;
-                }
-                locs.push_back(next + offset);
-                // printf("loc : %d\n", (int)locs.back());
-                STARFISH_ASSERT(prev == next);
-            }
-        }
-    }
-
-    cur = 0;
-    next = 0;
 
     auto iter = locs.begin();
     WordType type = WordType::CollapsibleWhiteSpace;
@@ -3228,47 +3242,62 @@ void FrameText::transformText(String* text)
 String* FrameText::makeCapitalized(String* txt, char32_t prev)
 {
     auto breaker = node()->starfish()->lineBreakIteratorPool()->get(
-        icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
+        "en-US", LineBreakIteratorModeUAX14, false);
     std::vector<int32_t> locs;
 
-    icu::UnicodeString str = txt->toUnicodeString();
-    breaker->setText(str);
+    struct Data {
+        String* txt;
+        UBreakIterator* breaker;
+        std::vector<int32_t>* locs;
+    } d;
+    d.txt = txt;
+    d.breaker = breaker;
+    d.locs = &locs;
+
+    txt->peekUTF16Buffer([](const char16_t* str, size_t length, void* callbackData) -> size_t {
+        Data* d = (Data*)callbackData;
+
+        UErrorCode err = U_ZERO_ERROR;
+        ubrk_setText(d->breaker, (const UChar*)str, length, &err);
+
+        int32_t cur = 0;
+        int32_t next = 0;
+
+        StringBufferAccessData data = d->txt->bufferAccessData();
+        if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                d->locs->push_back(next);
+            }
+        } else {
+            int32_t len = length;
+            int32_t prev = 0;
+            int32_t offset = 0;
+            const UChar* buffer = (const UChar*)str;
+            // printf("diff : %d\n", (int)(txt->length() - len));
+
+            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                if (next == len) {
+                    d->locs->push_back(d->txt->length());
+                } else {
+                    while (prev < next) {
+                        char32_t t;
+                        size_t required =
+                            utf16ToUtf32(buffer + prev, buffer + len, t);
+                        offset -= (required - 1);
+                        prev += required;
+                    }
+                    d->locs->push_back(next + offset);
+                    // printf("loc : %d\n", (int)locs.back());
+                    STARFISH_ASSERT(prev == next);
+                }
+            }
+        }
+
+        return 0;
+    }, &d);
 
     int32_t cur = 0;
     int32_t next = 0;
-
-    StringBufferAccessData data = txt->bufferAccessData();
-    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
-            locs.push_back(next);
-        }
-    } else {
-        int32_t len = str.length();
-        int32_t prev = 0;
-        int32_t offset = 0;
-        const UChar* buffer = str.getBuffer();
-        // printf("diff : %d\n", (int)(txt->length() - len));
-
-        while ((next = breaker->next()) != icu::BreakIterator::DONE) {
-            if (next == len) {
-                locs.push_back(txt->length());
-            } else {
-                while (prev < next) {
-                    char32_t t;
-                    size_t required =
-                        utf16ToUtf32(buffer + prev, buffer + len, t);
-                    offset -= (required - 1);
-                    prev += required;
-                }
-                locs.push_back(next + offset);
-                // printf("loc : %d\n", (int)locs.back());
-                STARFISH_ASSERT(prev == next);
-            }
-        }
-    }
-
-    cur = 0;
-    next = 0;
     auto iter = locs.begin();
 
     StringBuilder sb;
@@ -3489,12 +3518,12 @@ static void textBidiResolver(FrameText* frameText,
 {
     UBiDi* bidi = ubidi_open();
     UTF16StringDataNonGCStd str = frameText->text()->toUTF16NonGCString();
-    UErrorCode err = (UErrorCode)0;
-    ubidi_setPara(bidi, (const UChar*)str.data(), str.length(),
+    UErrorCode err = U_ZERO_ERROR;
+    ubidi_setPara(bidi, (const UChar*)str.data(), (int32_t)str.length(),
                   directionValue == DirectionValue::LtrDirectionValue
                       ? UBIDI_DEFAULT_LTR
                       : UBIDI_DEFAULT_RTL,
-                  NULL, &err);
+                  nullptr, &err);
     STARFISH_ASSERT(U_SUCCESS(err));
     size_t total = ubidi_countRuns(bidi, &err);
     STARFISH_ASSERT(U_SUCCESS(err));
@@ -3509,7 +3538,7 @@ static void textBidiResolver(FrameText* frameText,
         int32_t end;
         size_t utf32Pos = 0;
         for (size_t i = 0; i < total; i++) {
-            ubidi_getLogicalRun(bidi, start, &end, NULL);
+            ubidi_getLogicalRun(bidi, start, &end, nullptr);
             UBiDiDirection dir = ubidi_getBaseDirection(
                 (const UChar*)str.data() + start, end - start);
             size_t utf32Len = 0;

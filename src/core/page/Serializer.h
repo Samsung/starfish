@@ -398,7 +398,6 @@ public:
     {
         return m_type == RegExp;
     }
-#if ESCARGOT_ENABLE_TYPEDARRAY
     bool isSharedArrayBuffer() const
     {
         return m_type == SharedArrayBuffer;
@@ -413,7 +412,6 @@ public:
     {
         return m_type == ArrayBufferView;
     }
-#endif
     bool isMap() const
     {
         return m_type == Map;
@@ -463,11 +461,9 @@ public:
         String,
         Date,
         RegExp,
-#if ESCARGOT_ENABLE_TYPEDARRAY
         SharedArrayBuffer,
         ArrayBuffer,
         ArrayBufferView,
-#endif
         Map,
         Set,
         Array,
