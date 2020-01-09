@@ -371,6 +371,7 @@ ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
                           timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
 {
+    m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
 }
 
@@ -603,6 +604,7 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
                           iterationCount, playState, fillMode)
     , m_originalTransformValue(nullptr)
 {
+    m_isEveryAnimiatedValueResolved = false;
     STARFISH_ASSERT(target != nullptr);
 }
 
@@ -881,6 +883,7 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
                           iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
+    m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
 }
 
@@ -1356,6 +1359,7 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
                           iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
+    m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
 }
 

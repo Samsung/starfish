@@ -118,6 +118,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_webSecurityMode(WebSecurityMode::Enable)
     , m_idleModeJob(IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS)
+    , m_needsDownloadWebFontsEarly(false)
 {
 }
 
@@ -139,6 +140,11 @@ std::string Settings::GetProxyURL() const
 TTSMode Settings::GetTTSMode() const
 {
     return m_ttsMode;
+}
+
+bool Settings::NeedsDownloadWebFontsEarly() const
+{
+    return m_needsDownloadWebFontsEarly;
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
@@ -229,6 +235,11 @@ uint32_t Settings::GetIdleModeCheckIntervalInMS() const
 void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 {
     m_idleModeCheckIntervalInMS = intervalInMS;
+}
+
+void Settings::SetNeedsDownloadWebFontsEarly(bool b)
+{
+    m_needsDownloadWebFontsEarly = b;
 }
 
 ResourceError::ResourceError(int code, const std::string& description,
@@ -680,6 +691,8 @@ Settings WebContainer::GetSettings()
     result.SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
     result.SetIdleModeCheckIntervalInMS(
         TO_WEBVIEW(m_impl)->idleModeCheckIntervalInMS());
+    result.SetNeedsDownloadWebFontsEarly(
+        TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -927,6 +940,8 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setIdleModeJob(settings.GetIdleModeJob());
     TO_WEBVIEW(m_impl)
         ->setIdleModeCheckIntervalInMS(settings.GetIdleModeCheckIntervalInMS());
+    TO_WEBVIEW(m_impl)
+        ->setNeedsDownloadWebFontsEarly(settings.NeedsDownloadWebFontsEarly());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
