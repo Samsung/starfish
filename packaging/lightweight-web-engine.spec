@@ -128,7 +128,6 @@ BuildRequires: pkgconfig(vconf-internal-keys-tv)
 %endif
 
 BuildRequires: pkgconfig(bundle)
-#BuildRequires: pkgconfig(libwebsockets)
 
 # Supporting multiprofiles
 # Use profile_mobile as default, as it is both minimal and
@@ -379,7 +378,7 @@ mkdir -p %{buildroot}%{_bindir}
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
-cp -fr out_tizen/unified_tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/unified_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "tv"
@@ -388,7 +387,7 @@ cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bi
 
 %if "%{rpm}" == "prod_tv"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
-cp -fr out_tizen/prod_tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "prod_tv"
@@ -397,7 +396,7 @@ cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindi
 
 %if "%{rpm}" == "headless" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/headless
-cp -fr out_tizen/headless/release/lib/*.so %{buildroot}%{_libdir}/lwe/headless
+cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
 %endif
 %if "%{rpm}" == "headless"
@@ -406,7 +405,7 @@ cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
-cp -fr out_tizen/unified_mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile"
@@ -415,7 +414,7 @@ cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroo
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
-cp -fr out_tizen/unified_wearable/release/lib/*.so %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/unified_wearable/release/lib/*.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable"
@@ -455,7 +454,7 @@ popd
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %post profile_tv
 pushd %{_libdir}/lwe
-for FILE in `ls tv/*.so | grep -v 'tv.so'`; do
+for FILE in `ls tv/*.so* | grep -v 'tv.so'`; do
     ln -sf "$FILE" .
 done
 %if "%{rpm}" == "tv"
