@@ -111,6 +111,7 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: libasound-devel
+BuildRequires: pkgconfig(openssl)
 BuildRequires: pkgconfig(libpulse)
 BuildRequires: giflib-devel
 
