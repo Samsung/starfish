@@ -2108,27 +2108,29 @@ BorderRadiusData Frame::frameBorderRadius()
     return data;
 }
 
-void Frame::markNeedsLayout()
+void Frame::markNeedsLayout(bool shouldSetItsLayoutParent)
 {
     m_flags.m_needsLayout = true;
     willLayout();
-    if (isFlexItem()) {
-        Frame* p = layoutParent();
-        while (p) {
-            if (p->isFrameFlexibleBox()) {
-                p->markNeedsLayout();
-                break;
+    if (shouldSetItsLayoutParent) {
+        if (isFlexItem()) {
+            Frame* p = layoutParent();
+            while (p) {
+                if (p->isFrameFlexibleBox()) {
+                    p->markNeedsLayout();
+                    break;
+                }
+                p = p->layoutParent();
             }
-            p = p->layoutParent();
-        }
-    } else if (isGridItem()) {
-        Frame* p = layoutParent();
-        while (p) {
-            if (p->isFrameGridBox()) {
-                p->markNeedsLayout();
-                break;
+        } else if (isGridItem()) {
+            Frame* p = layoutParent();
+            while (p) {
+                if (p->isFrameGridBox()) {
+                    p->markNeedsLayout();
+                    break;
+                }
+                p = p->layoutParent();
             }
-            p = p->layoutParent();
         }
     }
 }

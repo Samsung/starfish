@@ -1780,7 +1780,7 @@ public:
                     break;
                 }
 
-                f->markNeedsLayout();
+                f->markNeedsLayout(false);
             }
         }
     }
@@ -1788,7 +1788,7 @@ public:
     virtual void willLayout()
     {
     }
-    void markNeedsLayout();
+    void markNeedsLayout(bool shouldSetItsLayoutParent = true);
     void clearNeedsLayout()
     {
         m_flags.m_needsLayout = false;
