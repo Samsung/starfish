@@ -95,8 +95,8 @@ public:
     }
 
 private:
-    TextAnchor m_textAnchor;
-    AlignmentBaseline m_alignmentBaseline;
+    TextAnchor m_textAnchor{ TextAnchor::START };
+    AlignmentBaseline m_alignmentBaseline{ AlignmentBaseline::AUTO };
 };
 }
 
