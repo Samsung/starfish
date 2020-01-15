@@ -47,6 +47,7 @@ public:
 
     static VideoCapturer* create(size_t width, size_t height, size_t targetFps,
                                  size_t captureDeviceIndex);
+    void destroy();
 
     // Impl rtc::VideoSourceInterface
     void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
@@ -60,7 +61,6 @@ private:
     VideoCapturer();
     bool init(size_t width, size_t height, size_t targetFps,
               size_t captureDeviceIndex);
-    void destroy();
     rtc::VideoSinkWants sinkWants();
     void updateVideoAdapter();
 

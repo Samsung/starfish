@@ -25,6 +25,10 @@
 
 namespace Starfish {
 class RTCPeerConnection;
+class MediaStream;
+class AudioStreamTrack;
+class VideoStreamTrack;
+class PeerConnectionObserver;
 
 class WebRtcManager : public gc {
 public:
@@ -36,14 +40,30 @@ public:
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
     peerConnectionFactory();
 
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+    createPeerConnectionFactory();
+
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> createPeerConnection(
         const webrtc::PeerConnectionInterface::RTCConfiguration& configuration,
         webrtc::PeerConnectionDependencies dependencies);
-    void deletePeerConnection();
+    void deletePeerConnection(RTCPeerConnection* peerConnection);
+
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> createAudioTrack(
+        String* label);
+
+    void addPeerConnection(RTCPeerConnection* peerConnection);
+    void addMediaStream(MediaStream* mediaStream);
+    void addAudioStreamTrack(AudioStreamTrack* audioStreamTrack);
+    void addVideoStreamTrack(VideoStreamTrack* videoStreamTrack);
 
 private:
     void initPeerConnectionFactory();
-    void deletePeerConnectionFactory();
+    void deletePeerConnectionFactory(bool force = false);
+
+    GCUnorderedSet<RTCPeerConnection*> m_peerConnections;
+    GCVector<MediaStream*> m_mediaStreams;
+    GCVector<AudioStreamTrack*> m_audioStreamTracks;
+    GCVector<VideoStreamTrack*> m_videoStreamTracks;
 };
 } // namespace Starfish
 

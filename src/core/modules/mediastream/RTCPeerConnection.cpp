@@ -46,6 +46,8 @@
 #include "core/modules/mediastream/RTCError.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/Locker.h"
+#include "core/modules/threading/Mutex.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 
@@ -68,6 +70,12 @@ PeerConnectionObserver::PeerConnectionObserver(
     RTCPeerConnection* peerConnection)
     : m_peerConnection(peerConnection)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s/>: %p : %p\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
+    m_webRtcManager =
+        executionContext()->document()->window()->navigator()->webRtcManager();
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
@@ -78,24 +86,30 @@ PeerConnectionObserver::PeerConnectionObserver(
 
 PeerConnectionObserver::~PeerConnectionObserver()
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s>: %p : %p\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
                 (void*)this, (void*)m_peerConnection);
-    if (m_peerConnection) {
-        m_peerConnection->m_backend->Close();
-        m_peerConnection->m_peerConnectionObserver = nullptr;
+
+    if (m_webRtcManager->peerConnectionFactory()) {
+        if (m_peerConnection) {
+            m_peerConnection->dispose();
+        }
     }
     m_peerConnection = nullptr;
-    WEBRTC_LOGI("</PeerConnectionObserver::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
 }
 
 void PeerConnectionObserver::OnSignalingChange(
     webrtc::PeerConnectionInterface::SignalingState newState)
 {
-    if (!m_peerConnection || m_peerConnection->isClosed()) {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
+    if (newState == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
         return;
     }
 
-    if (newState == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
+    if (!m_peerConnection || m_peerConnection->isClosed()) {
         return;
     }
 
@@ -106,7 +120,6 @@ void PeerConnectionObserver::OnSignalingChange(
 
     Params* p = new Params{ this, newState };
 
-    WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__, (void*)this);
     executionContext()
         ->webBase()
         ->messageLoop()
@@ -119,7 +132,8 @@ void PeerConnectionObserver::OnSignalingChange(
                 if (!self->m_peerConnection ||
                     self->m_peerConnection->isClosed()) {
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver_1::OnSignalingChange : %p>\n",
+                        "</PeerConnectionObserver::OnSignalingChange1 "
+                        "self=%p>\n",
                         (void*)p->self);
                     return;
                 }
@@ -132,7 +146,7 @@ void PeerConnectionObserver::OnSignalingChange(
                 self->m_peerConnection->dispatchEventByUA(e);
                 delete p;
                 WEBRTC_LOGI(
-                    "</PeerConnectionObserver::OnSignalingChange : %p>\n",
+                    "</PeerConnectionObserver::OnSignalingChange2 self=%p>\n",
                     (void*)p->self);
             },
             p);
@@ -163,6 +177,9 @@ public:
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
             return;
@@ -175,8 +192,6 @@ void PeerConnectionObserver::OnTrack(
 
         Params* p = new Params{ this, transceiver };
 
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__,
-                    (void*)this);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -192,7 +207,7 @@ void PeerConnectionObserver::OnTrack(
 
                     p->self->OnTrack(p->transceiver);
                     delete p;
-                    WEBRTC_LOGI("</PeerConnectionObserver::OnTrack : %p>\n",
+                    WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>\n",
                                 (void*)p->self);
                 },
                 p);
@@ -233,6 +248,9 @@ void PeerConnectionObserver::OnTrack(
 void PeerConnectionObserver::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> channel)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
             return;
@@ -245,8 +263,6 @@ void PeerConnectionObserver::OnDataChannel(
 
         Params* p = new Params{ this, channel };
 
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__,
-                    (void*)this);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -263,7 +279,7 @@ void PeerConnectionObserver::OnDataChannel(
                     p->self->OnDataChannel(p->channel);
                     delete p;
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnDataChannel : %p>\n",
+                        "</PeerConnectionObserver::OnDataChannel self=%p>\n",
                         (void*)p->self);
                 },
                 p);
@@ -287,13 +303,17 @@ void PeerConnectionObserver::OnDataChannel(
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
 void PeerConnectionObserver::OnRenegotiationNeeded()
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
+        if (!m_peerConnection || m_peerConnection->isDisposed() ||
+            m_peerConnection->isClosed()) {
+            WEBRTC_LOGI("</PeerConnectionObserver::%s1 self=%p pc=%p>\n",
+                        __func__, (void*)this, (void*)m_peerConnection);
             return;
         }
 
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p, pc:%p>\n", __func__,
-                    (void*)this, (void*)m_peerConnection);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -304,17 +324,18 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                         (PeerConnectionObserver*)data;
 
                     if (!self->m_peerConnection ||
+                        self->m_peerConnection->isDisposed() ||
                         self->m_peerConnection->isClosed()) {
+                        WEBRTC_LOGI(
+                            "<PeerConnectionObserver::OnRenegotiationNeeded2 "
+                            "pc=%p>\n",
+                            (void*)self->m_peerConnection);
                         return;
                     }
-
                     self->OnRenegotiationNeeded();
-                    WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnRenegotiationNeeded : "
-                        "%p>\n",
-                        (void*)self);
                 },
                 this);
+        return;
     }
 
     String* eventType = executionContext()
@@ -323,19 +344,32 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                             ->m_negotiationneeded.localName();
     Event* e = new Event(executionContext(), eventType);
     m_peerConnection->dispatchEventByUA(e);
+    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc:%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
     return;
 }
 
 void PeerConnectionObserver::OnIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState newState)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (newState == webrtc::PeerConnectionInterface::IceConnectionState::
-                        kIceConnectionClosed) {
+                        kIceConnectionClosed ||
+        newState ==
+            webrtc::PeerConnectionInterface::kIceConnectionDisconnected) {
+        WEBRTC_LOGI(
+            "</PeerConnectionObserver::OnIceConnectionChange1 self=%p>\n",
+            (void*)this);
         return;
     }
 
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
+            WEBRTC_LOGI(
+                "</PeerConnectionObserver::OnIceConnectionChange2 self=%p>\n",
+                (void*)this);
             return;
         }
 
@@ -346,8 +380,6 @@ void PeerConnectionObserver::OnIceConnectionChange(
 
         Params* p = new Params{ this, newState };
 
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__,
-                    (void*)this);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -358,13 +390,17 @@ void PeerConnectionObserver::OnIceConnectionChange(
 
                     if (!p->self->m_peerConnection ||
                         p->self->m_peerConnection->isClosed()) {
+                        WEBRTC_LOGI(
+                            "</PeerConnectionObserver::OnIceConnectionChange3 "
+                            "self=%p>\n",
+                            (void*)p->self);
                         return;
                     }
 
                     p->self->OnIceConnectionChange(p->newState);
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnIceConnectionChange : "
-                        "%p>\n",
+                        "</PeerConnectionObserver::OnIceConnectionChange "
+                        "self=%p>\n",
                         (void*)p->self);
                     delete p;
                 },
@@ -383,6 +419,9 @@ void PeerConnectionObserver::OnIceConnectionChange(
 void PeerConnectionObserver::OnConnectionChange(
     webrtc::PeerConnectionInterface::PeerConnectionState newState)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (newState ==
         webrtc::PeerConnectionInterface::PeerConnectionState::kClosed) {
         return;
@@ -399,8 +438,6 @@ void PeerConnectionObserver::OnConnectionChange(
         };
 
         Params* p = new Params{ this, newState };
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__,
-                    (void*)this);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -417,7 +454,8 @@ void PeerConnectionObserver::OnConnectionChange(
                     p->self->OnConnectionChange(p->newState);
                     delete p;
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnConnectionChange : %p>\n",
+                        "</PeerConnectionObserver::OnConnectionChange "
+                        "self=%p>\n",
                         (void*)p->self);
                 },
                 p);
@@ -435,6 +473,9 @@ void PeerConnectionObserver::OnConnectionChange(
 void PeerConnectionObserver::OnIceGatheringChange(
     webrtc::PeerConnectionInterface::IceGatheringState newState)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (newState == webrtc::PeerConnectionInterface::IceGatheringState::
                         kIceGatheringComplete) {
         return;
@@ -452,8 +493,6 @@ void PeerConnectionObserver::OnIceGatheringChange(
 
         Params* p = new Params{ this, newState };
 
-        WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__,
-                    (void*)this);
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -470,8 +509,8 @@ void PeerConnectionObserver::OnIceGatheringChange(
                     p->self->OnIceGatheringChange(p->newState);
                     delete p;
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnIceGatheringChange : "
-                        "%p>\n",
+                        "</PeerConnectionObserver::OnIceGatheringChange "
+                        "self=%p>\n",
                         (void*)p->self);
                 },
                 p);
@@ -489,6 +528,9 @@ void PeerConnectionObserver::OnIceGatheringChange(
 void PeerConnectionObserver::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate)
 {
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+                (void*)this, (void*)m_peerConnection);
+
     if (!m_peerConnection || m_peerConnection->isClosed()) {
         return;
     }
@@ -510,7 +552,6 @@ void PeerConnectionObserver::OnIceCandidate(
     p->sdpMlineIndex = candidate->sdp_mline_index();
     p->sdp = std::move(sdp);
 
-    WEBRTC_LOGI("<PeerConnectionObserver::%s : %p>\n", __func__, (void*)this);
     executionContext()
         ->webBase()
         ->messageLoop()
@@ -544,8 +585,9 @@ void PeerConnectionObserver::OnIceCandidate(
                     self->executionContext(), eventType, init);
                 self->m_peerConnection->dispatchEventByUA(e);
                 delete p;
-                WEBRTC_LOGI("</PeerConnectionObserver::OnIceCandidate : %p>\n",
-                            (void*)p->self);
+                WEBRTC_LOGI(
+                    "</PeerConnectionObserver::OnIceCandidate self=%p>\n",
+                    (void*)p->self);
             },
             p);
 }
@@ -765,6 +807,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
     : EventTarget()
     , m_executionContext(executionContext)
+    , m_disposeLock(new Mutex())
 {
     WEBRTC_LOGI("<RTCPeerConnection::%s> %p\n", __func__, (void*)this);
 
@@ -775,21 +818,24 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
 
     setConfiguration(configuration, false);
 
+    m_webRtcManager = this->executionContext()
+                          ->document()
+                          ->window()
+                          ->navigator()
+                          ->webRtcManager();
+
     if (!initializePeerConnection(configuration)) {
         m_peerConnectionObserver->m_peerConnection = nullptr;
         m_peerConnectionObserver = nullptr;
-        WebRtcManager* webRtcManager = this->executionContext()
-                                           ->document()
-                                           ->window()
-                                           ->navigator()
-                                           ->webRtcManager();
-
-        webRtcManager->deletePeerConnection();
+        m_webRtcManager->deletePeerConnection(nullptr);
+        m_backend = nullptr;
         STARFISH_LOG_ERROR("%s: PeerConnection: failed\n", __func__);
         WEBRTC_LOGI("</RTCPeerConnection::%s> %p\n", __func__, (void*)this);
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
                                "Invalid Configuration");
     }
+
+    m_webRtcManager->addPeerConnection(this);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj,
@@ -808,13 +854,7 @@ bool RTCPeerConnection::initializePeerConnection(
     RTCConfiguration& configuration)
 {
     m_peerConnectionObserver = new PeerConnectionObserver(this);
-    WebRtcManager* webRtcManager = this->executionContext()
-                                       ->document()
-                                       ->window()
-                                       ->navigator()
-                                       ->webRtcManager();
-
-    STARFISH_ASSERT(webRtcManager->peerConnectionFactory());
+    STARFISH_ASSERT(m_webRtcManager->createPeerConnectionFactory());
 
     webrtc::PeerConnectionInterface::RTCConfiguration config =
         configuration.genBackend();
@@ -822,7 +862,7 @@ bool RTCPeerConnection::initializePeerConnection(
 
     webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
     m_backend =
-        webRtcManager->createPeerConnection(config, std::move(dependencies));
+        m_webRtcManager->createPeerConnection(config, std::move(dependencies));
 
     m_createOfferObserver = new PcObserver<CreateOfferObserver>(this);
     m_createAnswerObserver = new PcObserver<CreateAnswerObserver>(this);
@@ -838,22 +878,35 @@ RTCPeerConnection::~RTCPeerConnection()
 {
     WEBRTC_LOGI("<RTCPeerConnection::%s>: %p : %p\n", __func__, (void*)this,
                 (void*)m_peerConnectionObserver);
-    WebRtcManager* webRtcManager = this->executionContext()
-                                       ->document()
-                                       ->window()
-                                       ->navigator()
-                                       ->webRtcManager();
+    dispose();
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+}
 
+void RTCPeerConnection::dispose()
+{
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+
+    if (isDisposed()) {
+        return;
+    }
+
+    if (!m_webRtcManager->peerConnectionFactory()) {
+        WEBRTC_LOGI("    factory: %p\n",
+                    (void*)m_webRtcManager->peerConnectionFactory().get());
+        m_backend.release();
+        m_peerConnectionObserver = nullptr;
+        WEBRTC_LOGI("</RTCPeerConnection::%s_1>: %p\n", __func__, (void*)this);
+        return;
+    }
+
+    m_peerConnectionObserver->m_peerConnection = nullptr;
     m_createOfferObserver->m_observer->m_peerConnection = nullptr;
     m_createAnswerObserver->m_observer->m_peerConnection = nullptr;
     m_setLocalDescriptionObserver->m_observer->m_peerConnection = nullptr;
     m_setRemoteDescriptionObserver->m_observer->m_peerConnection = nullptr;
 
-    if (m_peerConnectionObserver) {
-        m_peerConnectionObserver->m_peerConnection = nullptr;
-    }
-
     for (auto dataChannel : m_dataChannels) {
+        dataChannel->dispose();
         dataChannel->m_peerConnection = nullptr;
         if (dataChannel->m_observer) {
             dataChannel->m_observer->m_dataChannel = nullptr;
@@ -862,10 +915,15 @@ RTCPeerConnection::~RTCPeerConnection()
     }
     m_dataChannels.clear();
 
-    close();
-    deletePeerConnection();
-    webRtcManager->deletePeerConnection();
+    for (auto transceiver : m_transceivers) {
+        transceiver->dispose();
+    }
+    m_transceivers.clear();
+
+    m_backend = nullptr;
     m_peerConnectionObserver = nullptr;
+    m_webRtcManager->deletePeerConnection(this);
+    m_webRtcManager = nullptr;
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
 }
 
@@ -1671,7 +1729,9 @@ void RTCPeerConnection::close()
 
     m_closed = true;
     WEBRTC_LOGI("  <RTCPeerConnection::m_backend->close()>\n");
-    m_backend->Close();
+    if (m_backend) {
+        m_backend->Close();
+    }
     WEBRTC_LOGI("  </RTCPeerConnection::m_backend->close()>\n");
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
 }
@@ -1709,7 +1769,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
     // 1-4
     if (isClosed()) {
         STARFISH_LOG_ERROR("%s: connection closed\n", __func__);
-        cleanup();
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "connection closed");
@@ -1717,7 +1776,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
     // 5-15
     if ((label->length() > 65535)) {
         STARFISH_LOG_ERROR("%s: label.length() > 65535\n", __func__);
-        cleanup();
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "label.length() > 65535");
@@ -1725,7 +1783,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
     if (!dataChannelDict.negotiated() &&
         (dataChannelDict.protocol()->length() > 65535)) {
         STARFISH_LOG_ERROR("%s: protocol.length() > 65535\n", __func__);
-        cleanup();
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "protocol.length() > 65535");
@@ -1747,7 +1804,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
     }
     if (dataChannelDict.negotiated() && !dataChannelDict.hasId()) {
         STARFISH_LOG_ERROR("%s: negotiated=true but id=null\n", __func__);
-        cleanup();
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "negotiated=true but id=null");
@@ -1757,7 +1813,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
         STARFISH_LOG_ERROR(
             "%s: both maxPacketLifeTime=true and maxRetransmits=true\n",
             __func__);
-        cleanup();
         throw new DOMException(
             executionContext(), DOMException::SCRIPT_TYPE_ERR,
             "both maxPacketLifeTime=true and maxRetransmits=true");
@@ -1773,7 +1828,6 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
 
     if (!dataChannel) {
         STARFISH_LOG_ERROR("%s: Invalid configuration\n", __func__);
-        cleanup();
         throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                                "Invalid configuration");
     }
@@ -1936,8 +1990,6 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
         STARFISH_ASSERT(senderToReturn);
     }
 
-    m_mediaTracks.insert(senderToReturn->track());
-
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
     return senderToReturn;
 }
@@ -1984,7 +2036,6 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
         return;
     }
 
-    m_mediaTracks.erase(sender->track());
     m_backend->RemoveTrackNew(sender->backend());
     aliveSender->setTrack(nullptr);
 
@@ -2096,18 +2147,6 @@ bool RTCPeerConnection::isClosed()
         return true;
     }
     return false;
-}
-
-void RTCPeerConnection::deletePeerConnection()
-{
-    m_backend = nullptr;
-}
-
-void RTCPeerConnection::cleanup()
-{
-    m_peerConnectionObserver->m_peerConnection = nullptr;
-    m_backend->Close();
-    m_peerConnectionObserver = nullptr;
 }
 
 Nullable<RTCSdpType> RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)

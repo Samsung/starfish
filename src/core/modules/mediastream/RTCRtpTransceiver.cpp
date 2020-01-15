@@ -25,8 +25,12 @@
 #include "core/modules/mediastream/RTCRtpTransceiver.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/Document.h"
 #include "core/modules/mediastream/RTCRtpSender.h"
 #include "core/modules/mediastream/RTCRtpReceiver.h"
+#include "core/modules/mediastream/WebRtcManager.h"
+#include "core/page/Navigator.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -63,6 +67,32 @@ RTCRtpTransceiver::RTCRtpTransceiver(
 
 RTCRtpTransceiver::~RTCRtpTransceiver()
 {
+    dispose();
+}
+
+void RTCRtpTransceiver::dispose()
+{
+    WebRtcManager* webRtcManager = this->m_executionContext->document()
+                                       ->window()
+                                       ->navigator()
+                                       ->webRtcManager();
+    if (m_sender) {
+        m_sender->dispose();
+    }
+    m_sender = nullptr;
+
+    if (m_receiver) {
+        m_receiver->dispose();
+    }
+    m_receiver = nullptr;
+
+    if (webRtcManager->peerConnectionFactory()) {
+        m_backend = nullptr;
+    } else {
+        m_backend.release();
+    }
+
+    m_peerConnection = nullptr;
 }
 
 ScriptBindingInstance* RTCRtpTransceiver::scriptBindingInstance()

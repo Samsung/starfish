@@ -29,6 +29,7 @@
 
 namespace Starfish {
 class RTCDataChannel;
+class WebRtcManager;
 
 struct RTCDataChannelInit {
     DEFINE_GETTER_SETTER(bool, ordered, Ordered)
@@ -76,6 +77,7 @@ public:
         RTCDataChannelInit init,
         rtc::scoped_refptr<webrtc::DataChannelInterface> rpcSctpTransport);
     virtual ~RTCDataChannel();
+    void dispose();
 
     virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDataChannel)
@@ -113,6 +115,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    WebRtcManager* m_webRtcManager{ nullptr };
     RTCPeerConnection* m_peerConnection{ nullptr };
     RTCDataChannelObserver* m_observer{ nullptr };
 

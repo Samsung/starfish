@@ -65,6 +65,8 @@ class ExecutionContext;
 class Event;
 class RTCRtpSender;
 class RTCPeerConnection;
+class WebRtcManager;
+class Mutex;
 
 // FIXME: The binding generator does not generate the following code, so they
 // are manually included here. They are used in RTCPeerConnectionBinding.cpp
@@ -173,6 +175,7 @@ public:
 private:
     RTCPeerConnection* m_peerConnection{ nullptr };
     ExecutionContext* executionContext() const;
+    WebRtcManager* m_webRtcManager{ nullptr };
 };
 
 class CreateOfferAnswerObserver
@@ -318,6 +321,7 @@ public:
     RTCPeerConnection(ExecutionContext* executionContext,
                       RTCConfiguration configuration = RTCConfiguration());
     virtual ~RTCPeerConnection();
+    void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCPeerConnection)
     virtual ExecutionContext* executionContext() const override;
@@ -398,6 +402,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
+    WebRtcManager* m_webRtcManager{ nullptr };
 
     RTCConfiguration m_configuration;
     PeerConnectionObserver* m_peerConnectionObserver{ nullptr };
@@ -412,15 +417,18 @@ private:
     std::string m_lastCreatedAnswer;
 
     GCVector<RTCRtpTransceiver*> m_transceivers;
-    GCUnorderedSet<MediaStreamTrack*> m_mediaTracks; // for rooting
     GCVector<RTCDataChannel*> m_dataChannels;
+
+    Mutex* m_disposeLock{ nullptr };
 
     bool m_closed{ false };
 
     bool m_wait{ false };
 
-    void deletePeerConnection();
-    void cleanup();
+    bool isDisposed()
+    {
+        return m_peerConnectionObserver == nullptr;
+    }
 
     bool isValidRemoteState(RTCSdpType type);
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,

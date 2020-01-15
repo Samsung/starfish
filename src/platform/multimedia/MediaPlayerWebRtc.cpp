@@ -31,6 +31,10 @@ namespace Starfish {
 MediaPlayerWebRtc::MediaPlayerWebRtc(HTMLMediaElement* element)
     : MediaPlayer(element)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this, [](void* obj,
+                 void* cd) { ((MediaPlayerWebRtc*)obj)->~MediaPlayerWebRtc(); },
+        NULL, NULL, NULL);
 }
 } // namespace Starfish
 

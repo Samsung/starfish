@@ -36,6 +36,7 @@ public:
         ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
         rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
     virtual ~RTCRtpReceiver();
+    void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpReceiver)
 

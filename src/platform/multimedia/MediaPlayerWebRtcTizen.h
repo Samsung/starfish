@@ -44,7 +44,7 @@ public:
 
     void destroy() override;
     void play() override;
-    void pause() override{};
+    void pause() override;
     void seek(double time) override{};
 
     void prepare(MediaProvider* mediaProvider) override;

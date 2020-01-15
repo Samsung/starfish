@@ -30,11 +30,13 @@
 #include "platform/webrtc/VideoCapturer.h"
 
 #include "core/modules/mediastream/MediaStreamTrack.h"
+#include "core/modules/mediastream/RTCPeerConnection.h"
 
 namespace Starfish {
 class ExecutionContext;
 class MediaPlayerWebRtc;
 class Mutex;
+class WebRtcManager;
 
 class MediaStream : public EventTarget, public MediaStreamTrackObserver {
 public:
@@ -147,6 +149,7 @@ public:
     MediaStream(ExecutionContext* executionContext,
                 GCVector<MediaStreamTrack*>& tracks);
     virtual ~MediaStream();
+    void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStream)
     virtual ExecutionContext* executionContext() const override;
@@ -181,6 +184,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
+    WebRtcManager* m_webRtcManager{ nullptr };
     rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
     GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
     GCUnorderedSet<VideoStreamTrack*> m_videoTracks;

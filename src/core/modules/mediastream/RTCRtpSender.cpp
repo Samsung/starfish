@@ -32,6 +32,8 @@
 #include "core/modules/mediastream/RTCRtpTransceiver.h"
 #include "core/modules/mediastream/RTCPeerConnection.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/mediastream/WebRtcManager.h"
+#include "core/page/Navigator.h"
 #include "core/page/Window.h"
 #include "core/page/WebBase.h"
 
@@ -55,6 +57,22 @@ RTCRtpSender::RTCRtpSender(
 
 RTCRtpSender::~RTCRtpSender()
 {
+    dispose();
+}
+
+void RTCRtpSender::dispose()
+{
+    WebRtcManager* webRtcManager = this->m_executionContext->document()
+                                       ->window()
+                                       ->navigator()
+                                       ->webRtcManager();
+    if (webRtcManager->peerConnectionFactory()) {
+        m_backend = nullptr;
+    } else {
+        m_backend.release();
+    }
+    m_track = nullptr;
+    m_transceiver = nullptr;
 }
 
 ScriptBindingInstance* RTCRtpSender::scriptBindingInstance()

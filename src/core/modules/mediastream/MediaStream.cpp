@@ -71,6 +71,8 @@ MediaStream::AudioTrackObserver::AudioTrackObserver(
 MediaStream::AudioTrackObserver::~AudioTrackObserver()
 {
     stop();
+    m_mediaStream = nullptr;
+    m_audioTrack = nullptr;
 }
 
 void MediaStream::AudioTrackObserver::setSize(int size)
@@ -108,6 +110,13 @@ void MediaStream::AudioTrackObserver::stop()
     if (m_audioTrack) {
         m_audioTrack->RemoveSink(this);
     }
+    m_audioTrack = nullptr;
+
+    if (m_mediaStream &&
+        !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
+        m_audioTrack.release();
+        return;
+    }
 }
 
 MediaStream::VideoFrameObserver::VideoFrameObserver(
@@ -131,6 +140,8 @@ MediaStream::VideoFrameObserver::VideoFrameObserver(
 MediaStream::VideoFrameObserver::~VideoFrameObserver()
 {
     stop();
+    m_mediaStream = nullptr;
+    m_videoTrack = nullptr;
 }
 
 void MediaStream::VideoFrameObserver::setSize(int width, int height)
@@ -179,6 +190,12 @@ void MediaStream::VideoFrameObserver::stop()
         m_videoTrack->RemoveSink(this);
         m_image.reset();
     }
+    m_videoTrack = nullptr;
+
+    if (m_mediaStream &&
+        !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
+        m_videoTrack.release();
+    }
 }
 
 #if defined(STARFISH_WEBRTC_DEBUG)
@@ -212,12 +229,7 @@ MediaStream::MediaStream(ExecutionContext* executionContext)
     : MediaStream(executionContext, nullptr)
 {
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        peerConnectionFactory = this->executionContext()
-                                    ->document()
-                                    ->window()
-                                    ->navigator()
-                                    ->webRtcManager()
-                                    ->peerConnectionFactory();
+        peerConnectionFactory = m_webRtcManager->createPeerConnectionFactory();
     STARFISH_ASSERT(peerConnectionFactory);
 
     char streamId[100];
@@ -233,13 +245,23 @@ MediaStream::MediaStream(
     , m_executionContext(executionContext)
     , m_backend(backend)
 {
+    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+
     if (backend) {
         syncTracks();
     }
 
+    m_webRtcManager = this->executionContext()
+                          ->document()
+                          ->window()
+                          ->navigator()
+                          ->webRtcManager();
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
+
+    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,
@@ -256,7 +278,15 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    STARFISH_LOG_INFO("MediaStream::%s\n", __func__);
+    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+    dispose();
+    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
+}
+
+void MediaStream::dispose()
+{
+    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+
     stopAudioTrack();
     stopVideoTrack();
     if (m_audioTrackObserver) {
@@ -268,9 +298,23 @@ MediaStream::~MediaStream()
         m_videoFrameObserver = nullptr;
     }
     m_mediaPlayer = nullptr;
-    m_backend = nullptr;
+
+    if (m_webRtcManager->peerConnectionFactory()) {
+        m_backend = nullptr;
+    } else {
+        m_backend.release();
+    }
+
+    for (auto audioTrack : m_audioTracks) {
+        audioTrack->dispose();
+    }
     m_audioTracks.clear();
+
+    for (auto videoTrack : m_videoTracks) {
+        videoTrack->dispose();
+    }
     m_videoTracks.clear();
+    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
 }
 
 ScriptBindingInstance* MediaStream::scriptBindingInstance()
@@ -406,8 +450,6 @@ void MediaStream::stopAudioTrack()
     if (m_audioTrackObserver) {
         m_audioTrackObserver->stop();
     }
-
-    m_audioTrackObserver = nullptr;
 }
 
 void MediaStream::stopVideoTrack()
@@ -415,8 +457,6 @@ void MediaStream::stopVideoTrack()
     if (m_videoFrameObserver) {
         m_videoFrameObserver->stop();
     }
-
-    m_videoFrameObserver = nullptr;
 }
 
 void MediaStream::syncTracks()
