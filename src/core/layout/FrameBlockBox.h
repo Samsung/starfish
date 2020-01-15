@@ -341,6 +341,7 @@ public:
     void removeDanglingSpace(LineFormattingContext* ctx);
     bool containOnlyEmptyInlineNonReplacedBoxes(LineFormattingContext* ctx);
     bool isAbsolutePositionedBoxLayoutParent(LineFormattingContext* ctx);
+    bool hasNonFrameTextBoxes(LineFormattingContext* ctx);
 
     void insertInlineBox(FrameBox* box)
     {

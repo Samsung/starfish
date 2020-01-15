@@ -1410,6 +1410,23 @@ bool InlineBoxLayoutParentBox::isAbsolutePositionedBoxLayoutParent(
     return false;
 }
 
+bool InlineBoxLayoutParentBox::hasNonFrameTextBoxes(LineFormattingContext* ctx)
+{
+    auto iter = m_boxes.begin();
+    while (iter != m_boxes.end()) {
+        FrameBox* box = *iter;
+        if (box->isInlineNonReplacedBox()) {
+            if (box->asInlineNonReplacedBox()->hasNonFrameTextBoxes(ctx)) {
+                return true;
+            }
+        } else if (!box->isInlineTextBox() && (box->width() || box->height())) {
+            return true;
+        }
+        iter++;
+    }
+    return false;
+}
+
 bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
     LineFormattingContext* ctx)
 {
@@ -1427,7 +1444,8 @@ bool InlineBoxLayoutParentBox::containOnlyEmptyInlineNonReplacedBoxes(
                 inrb->marginRight() == 0 && inrb->paddingLeft() == 0 &&
                 inrb->paddingRight() == 0 && inrb->borderLeft() == 0 &&
                 inrb->borderRight() == 0 &&
-                inrb->isAbsolutePositionedBoxLayoutParent(ctx)) {
+                inrb->isAbsolutePositionedBoxLayoutParent(ctx) &&
+                !inrb->hasNonFrameTextBoxes(ctx)) {
                 iter++;
                 continue;
             }
@@ -3067,46 +3085,48 @@ static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
     d.breaker = breaker;
     d.locs = &locs;
 
-    txt->peekUTF16Buffer([](const char16_t* str, size_t length, void* callbackData) -> size_t {
-        Data* d = (Data*)callbackData;
+    txt->peekUTF16Buffer(
+        [](const char16_t* str, size_t length, void* callbackData) -> size_t {
+            Data* d = (Data*)callbackData;
 
-        UErrorCode err = U_ZERO_ERROR;
-        ubrk_setText(d->breaker, (const UChar*)str, length, &err);
+            UErrorCode err = U_ZERO_ERROR;
+            ubrk_setText(d->breaker, (const UChar*)str, length, &err);
 
-        int32_t cur = 0;
-        int32_t next = 0;
+            int32_t cur = 0;
+            int32_t next = 0;
 
-        StringBufferAccessData data = d->txt->bufferAccessData();
-        if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
-                d->locs->push_back(next);
-            }
-        } else {
-            int32_t len = length;
-            int32_t prev = 0;
-            int32_t offset = 0;
-            const UChar* buffer = (const UChar*)str;
-            // printf("diff : %d\n", (int)(txt->length() - len));
+            StringBufferAccessData data = d->txt->bufferAccessData();
+            if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+                while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                    d->locs->push_back(next);
+                }
+            } else {
+                int32_t len = length;
+                int32_t prev = 0;
+                int32_t offset = 0;
+                const UChar* buffer = (const UChar*)str;
+                // printf("diff : %d\n", (int)(txt->length() - len));
 
-            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
-                if (next == len) {
-                    d->locs->push_back(d->txt->length());
-                } else {
-                    while (prev < next) {
-                        char32_t t;
-                        size_t required =
-                            utf16ToUtf32(buffer + prev, buffer + len, t);
-                        offset -= (required - 1);
-                        prev += required;
+                while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                    if (next == len) {
+                        d->locs->push_back(d->txt->length());
+                    } else {
+                        while (prev < next) {
+                            char32_t t;
+                            size_t required =
+                                utf16ToUtf32(buffer + prev, buffer + len, t);
+                            offset -= (required - 1);
+                            prev += required;
+                        }
+                        d->locs->push_back(next + offset);
+                        // printf("loc : %d\n", (int)d->locs->back());
+                        STARFISH_ASSERT(prev == next);
                     }
-                    d->locs->push_back(next + offset);
-                    // printf("loc : %d\n", (int)d->locs->back());
-                    STARFISH_ASSERT(prev == next);
                 }
             }
-        }
-        return 0;
-    }, &d);
+            return 0;
+        },
+        &d);
 
     int32_t cur = 0;
     int32_t next = 0;
@@ -3254,47 +3274,49 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
     d.breaker = breaker;
     d.locs = &locs;
 
-    txt->peekUTF16Buffer([](const char16_t* str, size_t length, void* callbackData) -> size_t {
-        Data* d = (Data*)callbackData;
+    txt->peekUTF16Buffer(
+        [](const char16_t* str, size_t length, void* callbackData) -> size_t {
+            Data* d = (Data*)callbackData;
 
-        UErrorCode err = U_ZERO_ERROR;
-        ubrk_setText(d->breaker, (const UChar*)str, length, &err);
+            UErrorCode err = U_ZERO_ERROR;
+            ubrk_setText(d->breaker, (const UChar*)str, length, &err);
 
-        int32_t cur = 0;
-        int32_t next = 0;
+            int32_t cur = 0;
+            int32_t next = 0;
 
-        StringBufferAccessData data = d->txt->bufferAccessData();
-        if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
-                d->locs->push_back(next);
-            }
-        } else {
-            int32_t len = length;
-            int32_t prev = 0;
-            int32_t offset = 0;
-            const UChar* buffer = (const UChar*)str;
-            // printf("diff : %d\n", (int)(txt->length() - len));
+            StringBufferAccessData data = d->txt->bufferAccessData();
+            if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+                while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                    d->locs->push_back(next);
+                }
+            } else {
+                int32_t len = length;
+                int32_t prev = 0;
+                int32_t offset = 0;
+                const UChar* buffer = (const UChar*)str;
+                // printf("diff : %d\n", (int)(txt->length() - len));
 
-            while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
-                if (next == len) {
-                    d->locs->push_back(d->txt->length());
-                } else {
-                    while (prev < next) {
-                        char32_t t;
-                        size_t required =
-                            utf16ToUtf32(buffer + prev, buffer + len, t);
-                        offset -= (required - 1);
-                        prev += required;
+                while ((next = ubrk_next(d->breaker)) != UBRK_DONE) {
+                    if (next == len) {
+                        d->locs->push_back(d->txt->length());
+                    } else {
+                        while (prev < next) {
+                            char32_t t;
+                            size_t required =
+                                utf16ToUtf32(buffer + prev, buffer + len, t);
+                            offset -= (required - 1);
+                            prev += required;
+                        }
+                        d->locs->push_back(next + offset);
+                        // printf("loc : %d\n", (int)locs.back());
+                        STARFISH_ASSERT(prev == next);
                     }
-                    d->locs->push_back(next + offset);
-                    // printf("loc : %d\n", (int)locs.back());
-                    STARFISH_ASSERT(prev == next);
                 }
             }
-        }
 
-        return 0;
-    }, &d);
+            return 0;
+        },
+        &d);
 
     int32_t cur = 0;
     int32_t next = 0;
