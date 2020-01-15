@@ -79,7 +79,7 @@ public:
     virtual void pause() = 0;
     virtual void seek(double time) = 0;
 
-    bool alive()
+    virtual bool alive()
     {
         return m_alive && !m_foundError;
     }

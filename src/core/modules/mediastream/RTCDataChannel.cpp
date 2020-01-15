@@ -25,12 +25,16 @@
 #include "core/modules/mediastream/RTCDataChannel.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/MessageEvent.h"
 #include "core/modules/mediastream/RTCPeerConnection.h"
+#include "core/modules/mediastream/WebRtcManager.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
+#include "core/page/Navigator.h"
 #include "core/page/WebBase.h"
+#include "core/page/Window.h"
 #include "core/page/GlobalScope.h"
 
 namespace Starfish {
@@ -38,7 +42,7 @@ namespace Starfish {
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s> %p : %p\n", __func__,
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>\n", __func__,
                 (void*)this, (void*)m_dataChannel);
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -46,20 +50,21 @@ RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
             ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
         },
         NULL, NULL, NULL);
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s> %p : %p\n", __func__,
-                (void*)this, (void*)m_dataChannel);
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>\n",
+                __func__, (void*)this, (void*)m_dataChannel);
 }
 
 RTCDataChannelObserver::~RTCDataChannelObserver()
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s> %p : %p\n", __func__,
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>\n", __func__,
                 (void*)this, (void*)m_dataChannel);
     if (m_dataChannel) {
-        m_dataChannel->m_observer = nullptr;
-        m_dataChannel = nullptr;
+        m_dataChannel->dispose();
     }
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s> %p : %p\n", __func__,
-                (void*)this, (void*)m_dataChannel);
+    m_dataChannel = nullptr;
+
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>\n",
+                __func__, (void*)this, (void*)m_dataChannel);
 }
 
 void RTCDataChannelObserver::OnStateChange()
@@ -146,23 +151,43 @@ RTCDataChannel::RTCDataChannel(
     , m_peerConnection(peerConnection)
     , m_backend(dataChannel)
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s>: %p, pc:%p\n", __func__, (void*)this,
+    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
                 (void*)m_peerConnection);
     m_protocol = init.m_protocol;
     m_observer = new RTCDataChannelObserver(this);
     m_backend->RegisterObserver(m_observer);
 
+    m_webRtcManager =
+        m_executionContext->document()->window()->navigator()->webRtcManager();
+
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) { ((RTCDataChannel*)obj)->~RTCDataChannel(); },
         NULL, NULL, NULL);
-    WEBRTC_LOGI("</RTCDataChannel::%s>: %p\n", __func__, (void*)this);
+
+    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+                (void*)m_peerConnection);
 }
 
 RTCDataChannel::~RTCDataChannel()
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s>: %p, %p, pc:%p\n", __func__, (void*)this,
-                (void*)m_observer, (void*)m_peerConnection);
+    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+                (void*)m_peerConnection);
+    if (m_observer) {
+        dispose();
+    }
+    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+                (void*)m_peerConnection);
+}
+
+void RTCDataChannel::dispose()
+{
+    if (!m_webRtcManager->peerConnectionFactory()) {
+        m_backend.release();
+        m_observer = nullptr;
+        return;
+    }
+
     if (!m_peerConnection) {
         return;
     }
@@ -178,7 +203,6 @@ RTCDataChannel::~RTCDataChannel()
 
     m_peerConnection = nullptr;
     m_backend = nullptr;
-    WEBRTC_LOGI("</RTCDataChannel::%s>: %p\n", __func__, (void*)this);
 }
 
 ExecutionContext* RTCDataChannel::executionContext() const

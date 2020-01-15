@@ -30,8 +30,10 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/page/Navigator.h"
 #include "core/page/WebBase.h"
+#include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/mediastream/MediaStream.h"
+#include "core/modules/mediastream/WebRtcManager.h"
 
 namespace Starfish {
 
@@ -133,6 +135,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
                 STARFISH_LOG_INFO("%s: video successful\n", __func__);
                 mediaStream->addTrack(videoTrack);
             }
+
             promise->fulfill(mediaStream->scriptValue());
         },
         promise, p);

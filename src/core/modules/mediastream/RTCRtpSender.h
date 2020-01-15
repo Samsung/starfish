@@ -45,6 +45,7 @@ public:
                  RTCRtpTransceiver* transceiver,
                  rtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender);
     virtual ~RTCRtpSender();
+    void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpSender)
 

@@ -35,16 +35,18 @@ class AudioStreamTrack;
 class VideoStreamTrack;
 class WebCamStreamTrack;
 class MediaPlayerWebRtc;
+class WebRtcManager;
 
 class MediaStreamTrack : public EventTarget {
 public:
-    const std::string m_audioTrackLabel = "AudioTrack";
+    String* m_audioTrackLabel = String::createASCIIString("AudioTrack");
     const std::string m_videoTrackLabel = "VideoTrack";
 
     enum class Kind { Audio, Video, None };
 
     MediaStreamTrack(ExecutionContext* executionContext);
     virtual ~MediaStreamTrack();
+    virtual void dispose() = 0;
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStreamTrack)
     virtual ExecutionContext* executionContext() const override;
@@ -89,6 +91,7 @@ public:
 
 protected:
     ExecutionContext* m_executionContext{ nullptr };
+    WebRtcManager* m_webRtcManager{ nullptr };
     Kind m_kind{ Kind::None };
     GCUnorderedSet<MediaStream*> m_attachedMediaStreams;
 };
@@ -99,6 +102,7 @@ public:
     AudioStreamTrack(ExecutionContext* executionContext,
                      rtc::scoped_refptr<webrtc::AudioTrackInterface> backend);
     virtual ~AudioStreamTrack();
+    void dispose() override;
 
     std::string id() override
     {
@@ -138,6 +142,7 @@ public:
                      rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
 
     virtual ~VideoStreamTrack();
+    void dispose() override;
 
     std::string id() override
     {
@@ -171,6 +176,8 @@ public:
         static const size_t kFps = 30;
 
         static rtc::scoped_refptr<WebCamStreamTrackCapturer> create();
+        void destroy();
+        void resetVideoCapturer();
 
     protected:
         explicit WebCamStreamTrackCapturer(
@@ -185,6 +192,7 @@ public:
     WebCamStreamTrack(ExecutionContext* executionContext,
                       rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
     virtual ~WebCamStreamTrack();
+    void dispose() override;
 
     bool isWebCamStreamTrack() override
     {
@@ -192,6 +200,7 @@ public:
     }
 
 private:
+    rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices;
 };
 
 class MediaStreamTrackObserver {

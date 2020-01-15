@@ -303,6 +303,13 @@ void HTMLMediaElement::closeMediaPlayer()
     if (m_mediaPlayer) {
         m_mediaPlayer->destroy();
         m_mediaPlayer = nullptr;
+
+#if defined(STARFISH_ENABLE_WEBRTC)
+        if (m_mediaProvider) {
+            m_mediaProvider->dispose();
+            m_mediaProvider = nullptr;
+        }
+#endif
     }
 }
 
@@ -514,10 +521,6 @@ String* HTMLMediaElement::src()
 void HTMLMediaElement::setSrcObject(MediaProvider* provider)
 {
     m_mediaProvider = provider;
-#if defined(STARFISH_ENABLE_WEBRTC)
-    m_mediaPlayer = MediaPlayerWebRtc::create(this);
-    load();
-#endif
 }
 
 MediaProvider* HTMLMediaElement::srcObject()

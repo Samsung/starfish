@@ -32,8 +32,10 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/modules/threading/Thread.h"
 
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
@@ -58,24 +60,46 @@ MediaPlayerWebRtcLinux::MediaPlayerWebRtcLinux(HTMLMediaElement* element)
 
 MediaPlayerWebRtcLinux::~MediaPlayerWebRtcLinux()
 {
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
+                (void*)this);
     destroy();
+    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
+                (void*)this);
 }
 
 void MediaPlayerWebRtcLinux::destroy()
 {
-    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s>\n", __func__);
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
+                (void*)this);
+    m_alive = false;
+    pause();
     if (m_mediaProvider) {
         m_mediaProvider->stopAudioTrack();
         m_mediaProvider->stopVideoTrack();
         m_mediaProvider->setMediaPlayer(nullptr);
     }
-    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s>\n", __func__);
+    m_mediaProvider = nullptr;
+
+    if (m_container) {
+        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
+            HTMLMediaElement::HAVE_NOTHING);
+    }
+    m_container = nullptr;
+
+    if (m_canvasSurface != nullptr) {
+        m_canvasSurface->detachNativeBuffer();
+        m_canvasSurface = nullptr;
+    }
+
+    m_seekState = SEEKSTATE_NO_SEEK;
+    m_playbackState = PLAYBACK_STATE_NONE;
+    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
+                (void*)this);
 }
 
 void MediaPlayerWebRtcLinux::play()
 {
     PLAYER_LOGI("%s\n", __func__);
-
     // TODO: Impl resource selection algorithm
     // TODO: The spec assumes there is one video track
     // TODO: Plays the first audio track.
@@ -86,6 +110,16 @@ void MediaPlayerWebRtcLinux::play()
     GCVector<MediaStreamTrack*> audioTracks = m_mediaProvider->getAudioTracks();
     if (!audioTracks.empty()) {
         m_mediaProvider->playAudioTrack(audioTracks[0]);
+    }
+}
+
+void MediaPlayerWebRtcLinux::pause()
+{
+    if (m_playbackState == PLAYBACK_STATE_PLAYING) {
+        m_playbackState = PLAYBACK_STATE_PAUSED;
+        m_container->executionContext()->removePointerFromRootSet(this);
+        window()->clearInterval(m_currentTimeUpdateTimer);
+        m_currentTimeUpdateTimer = TimerInvalidID;
     }
 }
 

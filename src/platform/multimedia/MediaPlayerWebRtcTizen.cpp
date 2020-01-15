@@ -34,6 +34,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
@@ -60,13 +61,6 @@ MediaPlayerWebRtcTizen::MediaPlayerWebRtcTizen(HTMLMediaElement* element)
             CanvasSurface::create(m_container->webView()->platformWindow(),
                                   elem->width(), elem->height());
     }
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((MediaPlayerWebRtcTizen*)obj)->~MediaPlayerWebRtcTizen();
-        },
-        NULL, NULL, NULL);
 }
 
 MediaPlayerWebRtcTizen::~MediaPlayerWebRtcTizen()
@@ -94,9 +88,23 @@ void MediaPlayerWebRtcTizen::destroy()
                                "mediaFormatUnref");
     }
 
+    m_alive = false;
+    pause();
     if (m_mediaProvider) {
+        m_mediaProvider->stopAudioTrack();
+        m_mediaProvider->stopVideoTrack();
         m_mediaProvider->setMediaPlayer(nullptr);
     }
+    m_mediaProvider = nullptr;
+
+    if (m_container) {
+        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
+            HTMLMediaElement::HAVE_NOTHING);
+    }
+    m_container = nullptr;
+
+    m_seekState = SEEKSTATE_NO_SEEK;
+    m_playbackState = PLAYBACK_STATE_NONE;
 }
 
 void MediaPlayerWebRtcTizen::play()
@@ -121,6 +129,16 @@ void MediaPlayerWebRtcTizen::play()
         checkStatusPlayer(player_start(m_player), "playerStart");
         STARFISH_LOG_INFO("%s: </playerStart>\n", __func__);
         m_mediaProvider->playAudioTrack(audioTracks[0]);
+    }
+}
+
+void MediaPlayerWebRtcTizen::pause()
+{
+    if (m_playbackState == PLAYBACK_STATE_PLAYING) {
+        m_playbackState = PLAYBACK_STATE_PAUSED;
+        m_container->executionContext()->removePointerFromRootSet(this);
+        window()->clearInterval(m_currentTimeUpdateTimer);
+        m_currentTimeUpdateTimer = TimerInvalidID;
     }
 }
 
