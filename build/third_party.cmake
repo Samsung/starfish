@@ -129,8 +129,8 @@ IF (${ARCH} STREQUAL "x64" OR ${HOST} STREQUAL "tizen")
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.so)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.so)
 IF (${WEBRTC} STREQUAL "1")
-    SET(OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${THIRD_PARTY_ROOT}/openssl/libssl.so;${THIRD_PARTY_ROOT}/openssl/libcrypto.so\"")
-    SET(LIBWEBSOCKETS_BUILD_OPTION -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DOPENSSL_ROOT_DIR=${THIRD_PARTY_ROOT}/openssl -DLWS_OPENSSL_INCLUDE_DIRS=${THIRD_PARTY_ROOT}/openssl/include)
+    SET(OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
+    SET(LIBWEBSOCKETS_BUILD_OPTION -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DOPENSSL_ROOT_DIR=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE} -DLWS_OPENSSL_INCLUDE_DIRS=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include)
     ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
                         DEPENDS openssl
                         WORKING_DIRECTORY ${LIBWEBSOCKETS_DIR}
@@ -278,22 +278,26 @@ ADD_SUBDIRECTORY (third_party/escargot)
 # Currently, Ubuntu 16.04 and prod_tv do not have openssl 1.1.
 IF (${WEBRTC} STREQUAL "1")
     SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
-    SET (OPENSSL_LOCAL_TARGET ${OPENSSL_DIR}/libssl.so)
+    SET (OPENSSL_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
+    SET (OPENSSL_LOCAL_TARGET ${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/libssl.so)
     SET (OPENSSL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         COMMENT "BUILDING OPENSSL"
                         COMMAND echo "BUILDING OPENSSL"
-                        COMMAND ./config
+                        COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
+                        COMMAND cd ${OPENSSL_BUILD_PATH}
+                        COMMAND ../../../../config
                         COMMAND make -j
+                        COMMAND cp -r ../../../../include .
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         DEPENDS ${OPENSSL_LOCAL_TARGET}
                         COMMENT "COPYING OPENSSL"
-                        COMMAND cp -P ${OPENSSL_DIR}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMAND cp -P ${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (openssl
@@ -312,12 +316,12 @@ IF (${WEBRTC} STREQUAL "1")
     IF (${HOST} STREQUAL "linux")
         SET (WEBRTC_BUILD_ARGS
             "target_cpu=\\\"x64\\\""
-            "rtc_ssl_root=\\\"${THIRD_PARTY_ROOT}/openssl/include\\\""
+            "rtc_ssl_root=\\\"${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/include\\\""
         )
     ELSEIF (${HOST} STREQUAL "tizen")
         SET (WEBRTC_BUILD_ARGS
             "target_cpu=\\\"arm\\\""
-            "rtc_ssl_root=\\\"${THIRD_PARTY_ROOT}/openssl/include\\\""
+            "rtc_ssl_root=\\\"${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/include\\\""
             # TODO: Use the platform include path for Tizen 5.5
         )
     ENDIF()
@@ -371,7 +375,7 @@ IF (${WEBRTC} STREQUAL "1")
                             COMMENT "BUILD WEBRTC"
                             COMMAND echo "BUILD WEBRTC"
                             COMMAND buildtools/armv7l/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
-                            COMMAND third_party/depot_tools/ninja -C ${WEBRTC_BUILD_PATH} webrtc
+                            COMMAND ninja -C ${WEBRTC_BUILD_PATH} webrtc
                             # NOTE: for Tizen 5.5, use: -lssl -lcrypto
                             COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm -ljpeg
         )

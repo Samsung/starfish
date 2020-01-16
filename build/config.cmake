@@ -208,6 +208,8 @@ ENDIF()
 IF (${WEBRTC} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
+        -DSTARFISH_ENABLE_MULTIMEDIA
+        -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
         -DWEBRTC_POSIX
         -DWEBRTC_LINUX
     )
@@ -448,7 +450,7 @@ IF (${WEBRTC} STREQUAL "1")
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/abseil-cpp
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/jsoncpp/source/include
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/libyuv/include
-        ${THIRD_PARTY_ROOT}/openssl/include
+        ${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include
     )
 ENDIF()
 
