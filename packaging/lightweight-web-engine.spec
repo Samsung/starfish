@@ -111,7 +111,13 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: libasound-devel
+
+%if 0%{?tizen_version_major} >= 6
+BuildRequires: pkgconfig(openssl1.1)
+%else
 BuildRequires: pkgconfig(openssl)
+%endif
+
 BuildRequires: pkgconfig(libpulse)
 BuildRequires: giflib-devel
 
