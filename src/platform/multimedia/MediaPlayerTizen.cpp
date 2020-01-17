@@ -1393,12 +1393,15 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
     }
     media_format_h format = stream->mediaFormat();
 
-#define RETURN_WHEN_MEDIA_PACKET_ERROR(...)  \
-    if (ret != MEDIA_PACKET_ERROR_NONE) {    \
-        DEBUG_STREAMBUFFER_LOG(__VA_ARGS__); \
-        printMediaPacketError(ret);          \
-        handlePlayerError();                 \
-        return;                              \
+#define RETURN_WHEN_MEDIA_PACKET_ERROR(...)               \
+    if (ret != MEDIA_PACKET_ERROR_NONE || !mediaPacket) { \
+        DEBUG_STREAMBUFFER_LOG(__VA_ARGS__);              \
+        printMediaPacketError(ret);                       \
+        if (mediaPacket) {                                \
+            media_packet_destroy(mediaPacket);            \
+        }                                                 \
+        handlePlayerError();                              \
+        return;                                           \
     }
 
     SourceBuffer* sb = activeSourceBuffer(stream->type());
@@ -1431,8 +1434,13 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
             DEBUG_STREAMBUFFER_LOG("fillBuffer try to detect end -> %d %d\n",
                                    (int)endTime, (int)lastDTS);
             uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
-            uint64_t elapsedTime = endTime - lastBufferedTime;
-            elapsedTime = elapsedTime < 0 ? elapsedTime * -1 : elapsedTime;
+            uint64_t elapsedTime = 0;
+            if (endTime < lastBufferedTime) {
+                elapsedTime = lastBufferedTime - endTime;
+            } else {
+                elapsedTime = endTime - lastBufferedTime;
+            }
+
             if ((endTime - lastDTS) < 10 ||
                 ((lastDTS == lastBufferedTime) && (elapsedTime < 1000))) {
                 stream->setBufferState(

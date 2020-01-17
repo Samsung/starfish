@@ -698,7 +698,6 @@ public:
     }
     static String* fromUTF8(const char* src, size_t len);
     static String* fromUTF16(const char16_t* src, size_t len);
-    static String* fromStringView(StringView view);
     static String* fromStringView(String* view);
     static String* createASCIIString(const char c);
     template <size_t N>
