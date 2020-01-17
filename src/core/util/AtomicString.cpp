@@ -46,8 +46,7 @@ AtomicString AtomicString::createAtomicString(Starfish* starfish, String* str)
 AtomicString AtomicString::createAtomicString(Starfish* starfish,
                                               StringView str)
 {
-    return AtomicString::createAtomicString(starfish,
-                                            dynamic_cast<String*>(&str));
+    return AtomicString::createAtomicString(starfish, &str);
 }
 
 AtomicString AtomicString::createAtomicString(Starfish* starfish,

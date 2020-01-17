@@ -306,6 +306,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_idleModeJob(LWE::IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(0)
     , m_idleCheckTimerID(TimerInvalidID)
+    , m_needsDownloadWebFontsEarly(false)
 {
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);
