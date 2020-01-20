@@ -622,7 +622,7 @@ static ImageDecoder::DecodeResult decodeGIF(
             case EXTENSION_RECORD_TYPE: {
                 GifByteType* extension = nullptr;
                 DGifGetExtension(gifFile, &extCode, &extension);
-                while (extension != nullptr) {
+                while (extension != nullptr && readData.pos < readData.size) {
                     if (extension[0] == 4) {
                         const int flags = extension[1];
                         if ((flags & 0x01)) {
@@ -637,7 +637,8 @@ static ImageDecoder::DecodeResult decodeGIF(
             default:
                 break;
             }
-        } while (recordType != TERMINATE_RECORD_TYPE);
+        } while (recordType != TERMINATE_RECORD_TYPE &&
+                 readData.pos < readData.size);
 
         if (imageNum > 1) {
             result.m_isAnimatedGIF = true;
@@ -718,68 +719,8 @@ ImageDecoder::DecodeResult ImageDecoder::decode()
 
 bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
 {
-    bool result = false;
-    int errorCode = 0;
-    if (isGIFFormat(inputBuffer)) {
-        int errorCode = 0;
-        unsigned int imageNum = 0;
-        int ext_code = 0;
-        GifByteType* extension = nullptr;
-
-        GifRecordType recordType = UNDEFINED_RECORD_TYPE;
-        GifFileType* gifFile = nullptr;
-
-        ImageDecoder::GifReadData readData;
-
-        readData.mem = (void*)inputBuffer.data();
-        readData.pos = 0;
-        readData.size = inputBuffer.size();
-#ifdef GIF_LIB_VERSION
-        gifFile = DGifOpen(&readData, gifRead);
-#else
-        gifFile = DGifOpen(&readData, gifRead, &errorCode);
-#endif
-        if (!gifFile) {
-            return false;
-        }
-        do {
-            DGifGetRecordType(gifFile, &recordType);
-            switch (recordType) {
-            case IMAGE_DESC_RECORD_TYPE:
-                DGifGetImageDesc(gifFile);
-                imageNum++;
-                break;
-            case EXTENSION_RECORD_TYPE:
-                if (DGifGetExtension(gifFile, &ext_code, &extension) ==
-                    GIF_ERROR) {
-                    break;
-                }
-                while (extension != NULL && readData.pos < readData.size) {
-                    if (DGifGetExtensionNext(gifFile, &extension) == GIF_OK) {
-                        continue;
-                    }
-                }
-                break;
-            case TERMINATE_RECORD_TYPE:
-                break;
-            default:
-                break;
-            }
-            if (imageNum > 1) {
-                result = true;
-                break;
-            }
-        } while (recordType != TERMINATE_RECORD_TYPE &&
-                 readData.pos < readData.size);
-#ifdef GIF_LIB_VERSION
-        DGifCloseFile(gifFile);
-#elif GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1
-        DGifCloseFile(gifFile, &errorCode);
-#else
-        DGifCloseFile(gifFile);
-#endif
-    }
-    return result;
+    ImageDecoder::DecodeResult result = decodeGIF(inputBuffer, true);
+    return result.m_isAnimatedGIF;
 }
 
 bool ImageDecoder::prepareAnimatedGIF()
