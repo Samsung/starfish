@@ -817,17 +817,14 @@ bool ImageDecoder::prepareAnimatedGIF()
             memcpy(gifBuffer[i], gifBuffer[0], size);
         }
 
-        m_decodedBuffer =
-            (uint8_t*)malloc(gifFile->SWidth * gifFile->SHeight * 4);
-        STARFISH_RELEASE_ASSERT(m_decodedBuffer != nullptr);
-
         m_gifFile = gifFile;
         m_gifBuffer = gifBuffer;
     }
     return true;
 }
 
-ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
+ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
+    uint8_t* targetBuffer)
 {
     bool isNewFrame = false;
     size_t row = 0, col = 0;
@@ -846,7 +843,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
     result.m_width = gifFile->SWidth;
     result.m_height = gifFile->SHeight;
     result.m_stride = result.m_width * 4;
-    result.m_buffer = m_decodedBuffer;
+    result.m_buffer = targetBuffer;
 
     colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
                                         : gifFile->SColorMap);
@@ -1037,7 +1034,8 @@ bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
     return false;
 }
 
-ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF()
+ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
+    uint8_t* targetBuffer)
 {
     return ImageDecoder::DecodeResult();
 }
