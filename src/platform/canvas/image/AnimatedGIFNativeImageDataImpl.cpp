@@ -85,12 +85,18 @@ public:
     {
         if (m_width != 0 && m_height != 0 && m_imageDecoder) {
             STARFISH_ASSERT(m_imageDecoder != nullptr);
-            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF();
+
+            if (!m_image) {
+                STARFISH_ASSERT(m_stride == m_width * 4);
+                m_image = (uint8_t*)malloc(m_width * m_height * 4);
+                STARFISH_RELEASE_ASSERT(m_image != nullptr);
+            }
+
+            auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF(m_image);
             m_delay = idResult.delay;
             if (m_delay <= MinimumDelay) {
                 m_delay = MinimumDelay;
             }
-            m_image = idResult.m_buffer;
             return true;
         }
         return false;
@@ -189,7 +195,7 @@ private:
 #endif
 
 protected:
-    void* m_image;
+    uint8_t* m_image;
     size_t m_width;
     size_t m_stride;
     size_t m_height;

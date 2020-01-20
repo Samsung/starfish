@@ -28,7 +28,6 @@ public:
         : m_inputBuffer(inputBuffer)
         , m_gifFile(nullptr)
         , m_gifBuffer(nullptr)
-        , m_decodedBuffer(nullptr)
     {
     }
     ~ImageDecoder();
@@ -62,7 +61,7 @@ public:
 
     DecodeResult decodeJustImageSize();
     DecodeResult decode();
-    DecodeResult nextFrameOfAnimatedGIF();
+    DecodeResult nextFrameOfAnimatedGIF(uint8_t* targetBuffer);
 
     static bool isAnimatedGIF(const std::vector<char>& inputBuffer);
 
@@ -74,7 +73,6 @@ private:
     void* m_gifFile;
     void* m_gifBuffer;
     GifReadData m_gifReadData;
-    uint8_t* m_decodedBuffer;
 };
 } // namespace Starfish
 
