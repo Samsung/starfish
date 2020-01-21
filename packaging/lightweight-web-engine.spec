@@ -492,7 +492,7 @@ exit 0
 %if "%{rpm}" == "headless" || "%{rpm}" == "all"
 %post profile_headless
 pushd %{_libdir}/lwe
-for FILE in `ls headless/*.so | grep -v 'headless.so'`; do
+for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
@@ -510,7 +510,7 @@ exit 0
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %post profile_mobile
 pushd %{_libdir}/lwe
-for FILE in `ls mobile/*.so | grep -v 'mobile.so'`; do
+for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
@@ -529,7 +529,7 @@ exit 0
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %post profile_wearable
 pushd %{_libdir}/lwe
-for FILE in `ls wearable/*.so | grep -v 'wearable.so'`; do
+for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
     ln -sf "$FILE" .
 done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
