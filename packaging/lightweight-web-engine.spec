@@ -356,8 +356,8 @@ ninja starfish.executable
 
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-#CFLAGS+=' -Os '
-#CXXFLAGS+=' -Os '
+CFLAGS+=' -Os '
+CXXFLAGS+=' -Os '
 
 # For Dali
 rm -f CMakeCache.txt
@@ -366,7 +366,7 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_wearable -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.wearable -G Ninja
+cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.wearable -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
