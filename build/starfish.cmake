@@ -97,10 +97,12 @@ ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_L
 SET (STARFISH_DEPENDENCIES_COMMON
     escargot
     clipper
-    libwebsockets
 )
 IF (NOT ${CUSTOM} MATCHES "wearable")
     SET (STARFISH_DEPENDENCIES_CUSTOM mp4parse webm)
+ENDIF()
+IF (${CUSTOM} STREQUAL "prod_tv")
+    SET (STARFISH_DEPENDENCIES_CUSTOM libwebsockets)
 ENDIF()
 IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
     SET (STARFISH_DEPENDENCIES_BACKEND skia_matrix)
