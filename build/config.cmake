@@ -340,7 +340,6 @@ SET (STARFISH_LIBRARIES_DEFAULT
     curl
     ssl
     crypto
-    websockets
     # -lasan # for -fsanitize=address
 )
 
@@ -379,6 +378,10 @@ IF (${HOST} STREQUAL "tizen")
     ELSEIF (${BACKEND} STREQUAL "dali")
         SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
     ENDIF()
+ENDIF()
+
+IF (${CUSTOM} STREQUAL "prod_tv")
+    SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets)
 ENDIF()
 
 IF (${TOUCH_UI} STREQUAL "1")

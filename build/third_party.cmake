@@ -123,7 +123,7 @@ ENDIF()
 #######################################################
 # LIBWEBSOCKETS
 #######################################################
-IF (${ARCH} STREQUAL "x64" OR ${HOST} STREQUAL "tizen")
+IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv")
     SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
     SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build)
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.so)
