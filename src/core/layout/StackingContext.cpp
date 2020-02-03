@@ -1290,8 +1290,8 @@ void StackingContext::applyStackingContextProperties(
         iter++;
     }
 
-    bool inAnimation =
-        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
+    bool inAnimation = m_owner->node()->isRunningOpacityAnimation() ||
+                       m_owner->node()->isRunningTransformAnimation();
     auto& prevDrawnMap =
         m_owner->node()->webView()->prevDrawnStackingContextInfo();
     bool compositedBefore = false;
