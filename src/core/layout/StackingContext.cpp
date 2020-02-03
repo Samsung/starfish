@@ -997,9 +997,9 @@ void StackingContext::computeStackingContextProperties(
     auto selfExtent = compositingState.screenExtentPerLayer(this);
     m_screenExtent = selfExtent;
 
-    bool compositedBySelf = selfNeedsGraphicsBuffer ||
-                            m_owner->isRunningOpacityAnimation() ||
-                            m_owner->isRunningTransformAnimation();
+    bool compositedBySelf =
+        selfNeedsGraphicsBuffer ||
+        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
 
 #if !defined(STARFISH_ENABLE_TEST)
     if (m_owner->isRootElement()) {
@@ -1290,8 +1290,8 @@ void StackingContext::applyStackingContextProperties(
         iter++;
     }
 
-    bool inAnimation = m_owner->node()->isRunningOpacityAnimation() ||
-                       m_owner->node()->isRunningTransformAnimation();
+    bool inAnimation =
+        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
     auto& prevDrawnMap =
         m_owner->node()->webView()->prevDrawnStackingContextInfo();
     bool compositedBefore = false;
