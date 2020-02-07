@@ -508,10 +508,10 @@ bool DemuxerMP4::findStreamInfo(DemuxerSource* source, String* formatHint)
 }
 
 struct SegmentParsingInfo {
-    uint64_t m_DTS;
-    size_t m_streamIndex;
-    size_t m_defaultSampleSize;
-    size_t m_defaultSampleDuration;
+    uint64_t m_DTS{ 0 };
+    size_t m_streamIndex{ 0 };
+    size_t m_defaultSampleSize{ 0 };
+    size_t m_defaultSampleDuration{ 0 };
     bool m_hasDefaultSampleSize : 1;
     bool m_hasDefaultSampleDuration : 1;
     bool m_hasSampleSize : 1;
@@ -522,7 +522,12 @@ struct SegmentParsingInfo {
     bool m_seenTRUN : 1;
     std::vector<MP4::TRUN::Sample> m_samples;
     SegmentParsingInfo()
-        : m_seenTFHD(false)
+        : m_hasDefaultSampleSize(false)
+        , m_hasDefaultSampleDuration(false)
+        , m_hasSampleSize(false)
+        , m_hasSampleDuration(false)
+        , m_hasSampleCTSOffset(false)
+        , m_seenTFHD(false)
         , m_seenTFDT(false)
         , m_seenTRUN(false)
     {
