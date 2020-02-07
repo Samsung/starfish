@@ -625,10 +625,10 @@ protected:
         return m_state[m_state.size() - 1];
     }
     CanvasRenderTargetInfo m_renderTargetInfo;
-    WebView* m_webView;
+    WebView* m_webView{ nullptr };
     GCVector<CanvasState*> m_state{};
     GCVector<CanvasState*> m_stateMemoryPool{};
-    bool m_shouldApplyCanvasFillStrokeSource;
+    bool m_shouldApplyCanvasFillStrokeSource{ false };
 };
 }
 

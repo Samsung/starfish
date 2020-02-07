@@ -112,7 +112,7 @@ bool QualifiedName::validateQualifiedName(String* str)
 
     bool startName = true;
     bool sawColon = false;
-    unsigned colonPosition;
+    unsigned colonPosition = 0;
     for (unsigned i = 0; i < length; ++i) {
         if (str->charAt(i) == ':') {
             if (sawColon) {
