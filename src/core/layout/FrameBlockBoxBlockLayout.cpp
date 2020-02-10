@@ -141,7 +141,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
     // m_lineBoxes must be initialized, because frame is reusable and it can be
     // either a block-flow or an inline-flow
-    m_lineBoxes.clear();
+    clearLineBoxes(ctx);
 
     MarginInfo* marginInfo = ctx.marginInfo(this);
 

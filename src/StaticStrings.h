@@ -614,6 +614,8 @@ public:
     QualifiedName m_closing;
 #endif
 
+    String* m_overflowString;
+
 protected:
 };
 }

@@ -914,6 +914,12 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
+void LayoutContext::pushIntoLineBoxPool(LineBox* b)
+{
+    memset(b, 0, sizeof(LineBox));
+    m_lineBoxPool.push_back(b);
+}
+
 void LayoutContext::pushIntoInlineTextBoxPool(InlineTextBox* b)
 {
     memset(b, 0, sizeof(InlineTextBox));
@@ -966,32 +972,50 @@ void LayoutContext::
 }
 
 Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
-    Frame* flexItem, LayoutUnit cbSize, const Length& inputLength)
+    Frame* flexItem, LayoutUnit availableMainCrossSize,
+    bool shouldRespectPercentageWidthOnComputingBasisSize)
 {
     auto iter = m_basisSizeCache.find(flexItem);
     if (iter != m_basisSizeCache.end()) {
         LayoutContext::CachedBasisSizeVector& v = iter->second;
         for (size_t i = 0; i < v.size(); i++) {
-            if (std::get<0>(v[i]) == cbSize &&
-                std::get<1>(v[i]) == inputLength) {
-                return std::get<2>(v[i]);
+            if (std::get<0>(v[i]) == availableMainCrossSize) {
+                if (!(std::get<1>(v[i]).m_seenPercentageWidth)) {
+                    return std::get<2>(v[i]);
+                }
+                if (std::get<1>(v[i])
+                        .m_shouldRespectPercentageWidthOnComputingBasisSize ==
+                    shouldRespectPercentageWidthOnComputingBasisSize) {
+                    return std::get<2>(v[i]);
+                }
             }
         }
     }
     return Nullable<LayoutUnit>();
 }
 
-void LayoutContext::registerToBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
-                                             const Length& inputLength,
-                                             LayoutUnit basisSize)
+void LayoutContext::registerToBasisSizeCache(
+    Frame* flexItem, LayoutUnit availableMainCrossSize,
+    bool seenPercentageWidth,
+    bool shouldRespectPercentageWidthOnComputingBasisSize, LayoutUnit basisSize)
 {
     auto iter = m_basisSizeCache.find(flexItem);
     if (iter != m_basisSizeCache.end()) {
         LayoutContext::CachedBasisSizeVector& v = iter->second;
-        v.push_back(std::make_tuple(cbSize, inputLength, basisSize));
+        v.push_back(std::make_tuple(
+            availableMainCrossSize,
+            CachedBasisSizeFlags(
+                seenPercentageWidth,
+                shouldRespectPercentageWidthOnComputingBasisSize),
+            basisSize));
     } else {
         LayoutContext::CachedBasisSizeVector v;
-        v.push_back(std::make_tuple(cbSize, inputLength, basisSize));
+        v.push_back(std::make_tuple(
+            availableMainCrossSize,
+            CachedBasisSizeFlags(
+                seenPercentageWidth,
+                shouldRespectPercentageWidthOnComputingBasisSize),
+            basisSize));
         m_basisSizeCache.insert(std::make_pair(flexItem, std::move(v)));
     }
 }
@@ -1698,7 +1722,6 @@ void Frame::markFlexItem()
             style()->isSpecifiedZIndex();
         m_flags.m_needToEstablishBlockFormattingContext = true;
         m_flags.m_needsLayout = true;
-        willLayout();
     }
 }
 
@@ -1710,8 +1733,7 @@ void Frame::markGridItem()
 
     if (GridFormattingContext::doesParticipateInGridFormattingContext(this)) {
         m_flags.m_isGridItem = true;
-        m_flags.m_needsLayout = true;
-        willLayout();
+        markNeedsLayout();
     }
 }
 
@@ -2012,15 +2034,6 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
             }
         }
 
-        if (isFlexItem()) {
-            if (!layoutParent()
-                     ->asFrameFlexibleBox()
-                     ->isMainAxisInInlineAxis() &&
-                appliedOverflowY() == VisibleOverflow) {
-                return true;
-            }
-        }
-
         damager.m_canPercentDamage = containerWidthMayBeChanged;
         if (isLayoutDamaged(damager, style->textIndent())) {
             return true;
@@ -2106,32 +2119,5 @@ BorderRadiusData Frame::frameBorderRadius()
         data.m_bottomRightVertical = Length(Length::Fixed, 0);
     }
     return data;
-}
-
-void Frame::markNeedsLayout(bool shouldSetItsLayoutParent)
-{
-    m_flags.m_needsLayout = true;
-    willLayout();
-    if (shouldSetItsLayoutParent) {
-        if (isFlexItem()) {
-            Frame* p = layoutParent();
-            while (p) {
-                if (p->isFrameFlexibleBox()) {
-                    p->markNeedsLayout();
-                    break;
-                }
-                p = p->layoutParent();
-            }
-        } else if (isGridItem()) {
-            Frame* p = layoutParent();
-            while (p) {
-                if (p->isFrameGridBox()) {
-                    p->markNeedsLayout();
-                    break;
-                }
-                p = p->layoutParent();
-            }
-        }
-    }
 }
 }

@@ -2390,6 +2390,25 @@ FrameGridBox::FrameGridBox(Node* node, ComputedStyle* style)
 {
 }
 
+bool FrameGridBox::shouldLayout(LayoutContext& ctx,
+                                LayoutWantToResolve resolveWhat,
+                                FrameBox* containingBox)
+{
+    if (FrameBlockBox::shouldLayout(ctx, resolveWhat, containingBox)) {
+        return true;
+    }
+
+    Frame* child = firstChild();
+    while (child) {
+        if (child->isGridItem() && child->needsLayout()) {
+            return true;
+        }
+        child = child->next();
+    }
+
+    return false;
+}
+
 void FrameGridBox::layoutGrid(LayoutContext& ctx)
 {
     GridFormattingContext gridFormattingContext(ctx, this, contentWidth());

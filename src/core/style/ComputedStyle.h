@@ -2538,6 +2538,7 @@ public:
         Nullable<BorderData*> border;
         Nullable<LengthData*> padding;
 
+        int count = 0;
         auto it = m_rareComputedStyleData.m_styles.begin();
         auto end = m_rareComputedStyleData.m_styles.end();
         while (end != it) {
@@ -2545,12 +2546,24 @@ public:
             switch (kk) {
             case RareComputedStyleData::Margin:
                 margin = it->m_value.m_lengthData;
+                count++;
+                if (count == 3) {
+                    break;
+                }
                 break;
             case RareComputedStyleData::Border:
                 border = it->m_value.m_borderData;
+                count++;
+                if (count == 3) {
+                    break;
+                }
                 break;
             case RareComputedStyleData::Padding:
                 padding = it->m_value.m_lengthData;
+                count++;
+                if (count == 3) {
+                    break;
+                }
                 break;
             default:
                 break;

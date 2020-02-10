@@ -500,7 +500,7 @@ void FrameReplaced::layout(LayoutContext& ctx,
             }
         }
 
-        clearNeedsLayout();
+        clearNeedsLayout(ctx);
     }
 }
 

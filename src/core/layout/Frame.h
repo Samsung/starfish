@@ -278,6 +278,7 @@ public:
         , m_viewportWidthDamaged(false)
         , m_viewportHeightDamaged(false)
         , m_isQuickLayout(false)
+        , m_inComputingBasisSize(false)
     {
         establishBlockFormattingContext(true, true);
     }
@@ -517,6 +518,20 @@ public:
     void registerContentHeight(FrameBox* box, LayoutUnit contentHeight);
     LayoutUnit contentHeight(FrameBox* box);
 
+    void pushIntoLineBoxPool(LineBox* b);
+
+    bool hasItemInLineBoxPool()
+    {
+        return m_lineBoxPool.size();
+    }
+
+    void* takeFromLineBoxPool()
+    {
+        void* ret = m_lineBoxPool.back();
+        m_lineBoxPool.pop_back();
+        return ret;
+    }
+
     void pushIntoInlineTextBoxPool(InlineTextBox* b);
 
     bool hasItemInInlineTextBoxPool()
@@ -575,6 +590,16 @@ public:
         m_isQuickLayout = b;
     }
 
+    bool inComputingBasisSize()
+    {
+        return m_inComputingBasisSize;
+    }
+
+    void setInComputingBasisSize(bool b)
+    {
+        m_inComputingBasisSize = b;
+    }
+
     bool didResetTable(FrameTableBox* table)
     {
         auto it = m_didResetTables.find(table);
@@ -589,11 +614,14 @@ public:
     void applyInvertOffsetBeforeApplyingRelativePositionInQuickLayout(
         FrameBox* fb);
 
-    Nullable<LayoutUnit> testBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
-                                            const Length& inputLength);
-    void registerToBasisSizeCache(Frame* flexItem, LayoutUnit cbSize,
-                                  const Length& inputLength,
-                                  LayoutUnit basisSize);
+    Nullable<LayoutUnit> testBasisSizeCache(
+        Frame* flexItem, LayoutUnit availableMainCrossSize,
+        bool shouldRespectPercentageWidthOnComputingBasisSize);
+    void registerToBasisSizeCache(
+        Frame* flexItem, LayoutUnit availableMainCrossSize,
+        bool seenPercentageWidth,
+        bool shouldRespectPercentageWidthOnComputingBasisSize,
+        LayoutUnit basisSize);
 
     Nullable<LayoutUnit> testGridItemPreferredWidthCache(
         Frame* gridItem, LayoutUnit availableWidth);
@@ -669,11 +697,26 @@ private:
     std::unordered_map<FrameBox*, MarginCollapseResult> m_marginCollapseResult;
     std::unordered_map<FrameBlockBox*, MarginInfo*> m_marginInfo;
     std::unordered_map<FrameTableBox*, bool> m_didResetTables;
+    GCVector<LineBox*> m_lineBoxPool;
     GCVector<InlineTextBox*> m_inlineTextBoxPool;
     GCVector<InlineNonReplacedBox*> m_inlineNonReplacedBoxPool;
 
-    // <container box {width, height}, Length input, computed {width, height}>
-    typedef std::vector<std::tuple<LayoutUnit, Length, LayoutUnit>>
+    struct CachedBasisSizeFlags {
+        bool m_seenPercentageWidth : 1;
+        bool m_shouldRespectPercentageWidthOnComputingBasisSize : 1;
+
+        CachedBasisSizeFlags(
+            bool seenPercentageWidth,
+            bool shouldRespectPercentageWidthOnComputingBasisSize)
+            : m_seenPercentageWidth(seenPercentageWidth)
+            , m_shouldRespectPercentageWidthOnComputingBasisSize(
+                  shouldRespectPercentageWidthOnComputingBasisSize)
+        {
+        }
+    };
+    // <availableMainCrossSize, CachedBasisSizeFlags, basisSize>
+    typedef std::vector<
+        std::tuple<LayoutUnit, CachedBasisSizeFlags, LayoutUnit>>
         CachedBasisSizeVector;
     std::unordered_map<Frame*, CachedBasisSizeVector> m_basisSizeCache;
 
@@ -686,6 +729,7 @@ private:
     bool m_viewportWidthDamaged : 1;
     bool m_viewportHeightDamaged : 1;
     bool m_isQuickLayout : 1;
+    bool m_inComputingBasisSize : 1;
 
     void applyRelativePosition(FrameBox* box);
     void applyRelativePositionInlineCase(Frame* refF, FrameBox* box);
@@ -757,6 +801,26 @@ public:
 
 private:
     bool m_oldQuickLayoutState;
+    LayoutContext& m_layoutContext;
+};
+
+class LayoutContextComputingBasisSizeStateMaker {
+public:
+    LayoutContextComputingBasisSizeStateMaker(LayoutContext& ctx,
+                                              bool inComputingBasisSize)
+        : m_oldInComputingBasisSize(ctx.inComputingBasisSize())
+        , m_layoutContext(ctx)
+    {
+        m_layoutContext.setInComputingBasisSize(inComputingBasisSize);
+    }
+
+    ~LayoutContextComputingBasisSizeStateMaker()
+    {
+        m_layoutContext.setInComputingBasisSize(m_oldInComputingBasisSize);
+    }
+
+private:
+    bool m_oldInComputingBasisSize;
     LayoutContext& m_layoutContext;
 };
 
@@ -1780,17 +1844,20 @@ public:
                     break;
                 }
 
-                f->markNeedsLayout(false);
+                f->markNeedsLayout();
             }
         }
     }
 
-    virtual void willLayout()
+    void markNeedsLayout()
     {
+        m_flags.m_needsLayout = true;
     }
-    void markNeedsLayout(bool shouldSetItsLayoutParent = true);
-    void clearNeedsLayout()
+    void clearNeedsLayout(LayoutContext& ctx)
     {
+        if (ctx.inComputingBasisSize()) {
+            return;
+        }
         m_flags.m_needsLayout = false;
     }
 
@@ -1814,8 +1881,9 @@ public:
         m_flags.m_needsPainting = false;
     }
 
-    bool shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
-                      FrameBox* containingBoxs);
+    virtual bool shouldLayout(LayoutContext& ctx,
+                              LayoutWantToResolve resolveWhat,
+                              FrameBox* containingBox);
 
     void markContentWidthDamaged()
     {

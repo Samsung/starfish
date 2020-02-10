@@ -169,10 +169,13 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
             setPaddingBottom(0);
         }
     } else {
-        setPaddingLeft(0);
-        setPaddingTop(0);
-        setPaddingRight(0);
-        setPaddingBottom(0);
+        if (hasRareData()) {
+            auto& p = frameBoxRareData()->m_padding;
+            p.setTop(0);
+            p.setRight(0);
+            p.setBottom(0);
+            p.setLeft(0);
+        }
     }
 
     if (oldPaddingWidth != paddingWidth()) {
@@ -217,10 +220,13 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
             setBorderBottom(0);
         }
     } else {
-        setBorderLeft(0);
-        setBorderTop(0);
-        setBorderRight(0);
-        setBorderBottom(0);
+        if (hasRareData()) {
+            auto& p = frameBoxRareData()->m_border;
+            p.setTop(0);
+            p.setRight(0);
+            p.setBottom(0);
+            p.setLeft(0);
+        }
     }
 
     // margin
@@ -251,10 +257,13 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
             setMarginBottom(0);
         }
     } else {
-        setMarginLeft(0);
-        setMarginTop(0);
-        setMarginRight(0);
-        setMarginBottom(0);
+        if (hasRareData()) {
+            auto& p = frameBoxRareData()->m_margin;
+            p.setTop(0);
+            p.setRight(0);
+            p.setBottom(0);
+            p.setLeft(0);
+        }
     }
 }
 

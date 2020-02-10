@@ -2162,7 +2162,7 @@ void Node::setNeedsStyleRecalcForAnimation()
 
 void Node::setNeedsStyleRecalc(StyleChangeReason reason)
 {
-    if (!document()->doesParticipateInRendering()) {
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
     }
 
@@ -2252,7 +2252,7 @@ void Node::setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason)
 
 void Node::setNeedsLayout()
 {
-    if (!document()->doesParticipateInRendering()) {
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
     }
 
@@ -2265,7 +2265,7 @@ void Node::setNeedsLayout()
 
 void Node::setNeedsPainting()
 {
-    if (!document()->doesParticipateInRendering()) {
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
     }
 
@@ -2279,7 +2279,7 @@ void Node::setNeedsPainting()
 
 void Node::setNeedsComposite()
 {
-    if (!document()->doesParticipateInRendering()) {
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         return;
     }
 

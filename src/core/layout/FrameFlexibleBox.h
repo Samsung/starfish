@@ -105,7 +105,6 @@ private:
     size_t m_currentLineIdx;
 
     std::vector<FlexLine> m_flexLines;
-    std::unordered_map<FrameBox*, LayoutUnit> m_basisSizes;
     std::unordered_map<FrameBox*, LayoutUnit> m_firstLineBoxYPositions;
 };
 
@@ -128,9 +127,15 @@ public:
         return true;
     }
 
-    LayoutUnit basisSize(LayoutContext& ctx, LayoutUnit availableMainSize,
-                         LayoutUnit availableCrossSize, FrameBox* flexItem,
-                         bool shouldRespectPercentageWidthOnComputingBasisSize);
+    virtual bool shouldLayout(LayoutContext& ctx,
+                              LayoutWantToResolve resolveWhat,
+                              FrameBox* containingBox) override;
+
+    // <basisSize, seenPercentageWidth>
+    std::pair<LayoutUnit, bool> basisSize(
+        LayoutContext& ctx, LayoutUnit availableMainSize,
+        LayoutUnit availableCrossSize, FrameBox* flexItem,
+        bool shouldRespectPercentageWidthOnComputingBasisSize);
     bool isMainAxisInInlineAxis();
     bool isSingleLine();
     bool isLtrDirection();
