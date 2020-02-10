@@ -892,6 +892,7 @@ bool Element::handleDefaultEvent(Event* event)
             String* altText = tah.getComputedTextAlternative(this);
             if (altText->length()) {
                 wv->tts()->speech(this, altText);
+                return true;
             }
         }
     }
