@@ -311,6 +311,10 @@ public:
         return true;
     }
 
+    virtual bool shouldLayout(LayoutContext& ctx,
+                              LayoutWantToResolve resolveWhat,
+                              FrameBox* containingBox) override;
+
     void layoutGrid(LayoutContext& ctx);
     void computePreferredWidth(PreferredWidthContext& ctx) override;
 

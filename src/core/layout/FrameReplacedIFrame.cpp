@@ -71,7 +71,7 @@ void FrameReplacedIFrame::layout(LayoutContext& ctx,
             }
         }
 
-        clearNeedsLayout();
+        clearNeedsLayout(ctx);
     }
 }
 

@@ -24,6 +24,7 @@
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/Scrolling.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBlockBoxInlineLayout.h"
 #include "core/layout/FrameDocument.h"
@@ -43,15 +44,17 @@ namespace Starfish {
 
 LayoutUnit Frame::lineHeight()
 {
-    LayoutUnit fontSize = style()->font()->metrics().m_ascender -
-                          style()->font()->metrics().m_descender;
+    ComputedStyle* cs = style();
+    auto font = cs->font();
+    auto metrics = font->metrics();
+    LayoutUnit fontSize = metrics.m_ascender - metrics.m_descender;
 
-    if (!style()->hasNormalLineHeight()) {
-        Length lineHeight = style()->lineHeight();
+    if (!cs->hasNormalLineHeight()) {
+        Length lineHeight = cs->lineHeight();
         if (lineHeight.isSpecified()) {
             return lineHeight.specifiedValue(fontSize, this);
         } else if (lineHeight.isInheritableNumber()) {
-            return style()->font()->size() * lineHeight.inheritableNumber();
+            return font->size() * lineHeight.inheritableNumber();
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -1182,23 +1185,6 @@ static void removeBoxFromLine(FrameBox* box)
     }
 }
 
-static void collectUselessInlineBoxes(LayoutContext& ctx, FrameBox* f)
-{
-    auto& boxes = f->asInlineBoxLayoutParentBox()->boxes();
-    for (size_t i = 0; i < boxes.size(); i++) {
-        if (boxes[i]->isInlineTextBox()) {
-            ctx.pushIntoInlineTextBoxPool(boxes[i]->asInlineTextBox());
-        } else if (boxes[i]->isInlineBoxLayoutParentBox()) {
-            collectUselessInlineBoxes(ctx, boxes[i]);
-        }
-    }
-
-    if (f->isInlineNonReplacedBox()) {
-        f->asInlineNonReplacedBox()->boxes().clear();
-        ctx.pushIntoInlineNonReplacedBoxPool(f->asInlineNonReplacedBox());
-    }
-}
-
 LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
                                              LayoutContext& ctx, bool forQuick)
     : m_leftBoundary(0)
@@ -1235,12 +1221,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     m_rightBoundary = m_leftBoundary + block->contentWidth();
     m_lineBoxY = block->paddingTop() + block->borderTop();
 
-    for (size_t i = 0; i < m_block->m_lineBoxes.size(); i++) {
-        collectUselessInlineBoxes(ctx, m_block->m_lineBoxes[i]);
-    }
-
-    m_block->m_lineBoxes.clear();
-    // m_block.m_lineBoxes.shrink_to_fit();
+    m_block->clearLineBoxes(m_layoutContext);
     resetLineBox();
     if (!block->isAnonymous() || ctx.checkIfThisIsFirstLineCandidate(block)) {
         m_isFirstLineCandidate = true;
@@ -2253,7 +2234,12 @@ void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
 
 void LineFormattingContext::resetLineBox()
 {
-    LineBox* lineBox = new LineBox(m_block);
+    LineBox* lineBox;
+    if (m_layoutContext.hasItemInLineBoxPool()) {
+        lineBox = new (m_layoutContext.takeFromLineBoxPool()) LineBox(m_block);
+    } else {
+        lineBox = new LineBox(m_block);
+    }
     m_block->m_lineBoxes.push_back(lineBox);
     m_floatingBoxLayoutContexts.clear();
     layoutLineBox(0, 0);
@@ -4053,11 +4039,12 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         if (needsTestingTextOverflow) {
             String* overflowString;
             if (textOverflowData.hasEllipsisValue()) {
-#if defined(OS_WINDOWS)
-                overflowString = String::fromUTF8("...");
-#else
-                overflowString = String::fromUTF8("\u2026");
-#endif
+                overflowString = ctx.frameDocument()
+                                     ->node()
+                                     ->webView()
+                                     ->starfish()
+                                     ->staticStrings()
+                                     ->m_overflowString;
             } else {
                 overflowString = textOverflowData.stringValue();
             }
@@ -4823,6 +4810,10 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
         gridPreferredMinWidth = gridPreferredWidth;
         ctx.updatePreferredWidth(gridPreferredWidth);
         ctx.updatePreferredMinWidth(gridPreferredMinWidth);
+
+        // FIXME
+        // Implement own logic without calling layout like flex
+        markNeedsLayout();
     }
 }
 

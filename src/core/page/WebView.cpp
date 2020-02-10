@@ -574,44 +574,6 @@ void WebView::destroy()
 void WebView::createScriptEngineInstance()
 {
     if (!m_scriptEngineInstance) {
-        /*
-        PromiseJobListener listener = [](ExecutionStateRef* state,
-                                         JobRef* job) {
-            STARFISH_ASSERT(state != nullptr);
-            STARFISH_ASSERT(job != nullptr);
-
-            // web view on loop
-            Window* window =
-                (Window*)state->context()->globalObject()->extraData();
-
-            window->webView()->messageLoop()->addIdler(
-                window,
-                [](size_t, void* data, void* data2) {
-                    STARFISH_ASSERT(data != nullptr);
-                    STARFISH_ASSERT(data2 != nullptr);
-
-                    Window* window = (Window*)data;
-
-                    if (!window->webView()->isActive()) {
-                        return;
-                    }
-
-                    JobRef* job = (JobRef*)data2;
-                    auto sbresult = job->run();
-
-                    if (sbresult.error.hasValue()) {
-                        STARFISH_LOG_ERROR(
-                            "Uncaught %s\n",
-                            toBrowserString(
-                                window->scriptBindingInstance(),
-                                ValueRef::create(sbresult.error.getValue()))
-                                ->toUTF8NonGCString()
-                                .data());
-                    }
-                },
-                window, job);
-        };
-*/
         m_scriptEngineInstance = new ScriptEngineInstance(
             locale().data(), timezoneID()->toUTF8NonGCString().data(), this);
     }

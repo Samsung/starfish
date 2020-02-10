@@ -692,6 +692,10 @@ public:
     }
 
     void* operator new(size_t size);
+    void* operator new(size_t /* size */, void* p)
+    {
+        return p;
+    }
     void* operator new[](size_t size) = delete;
 
 protected:
@@ -807,11 +811,6 @@ public:
     bool heightComputed() const
     {
         return m_flags.m_heightComputed;
-    }
-
-    virtual void willLayout() override
-    {
-        m_lineBoxes.clear();
     }
 
     virtual void layout(LayoutContext& ctx,
@@ -976,6 +975,7 @@ protected:
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBox, m_lineBoxes));
     }
 
+    void clearLineBoxes(LayoutContext& ctx);
     virtual void paintInlineContentBlock(Canvas* canvas);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);

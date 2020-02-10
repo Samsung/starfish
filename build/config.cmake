@@ -443,7 +443,7 @@ SET (STARFISH_INCLUDE_DIRS_CUSTOM
 )
 
 SET (STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS
-    ${THIRD_PARTY_ROOT}/libwebsockets/build/include
+    ${THIRD_PARTY_ROOT}/libwebsockets/build/${HOST}/${ARCH}/${MODE}/include
 )
 
 IF (${WEBRTC} STREQUAL "1")

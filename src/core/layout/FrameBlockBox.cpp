@@ -439,6 +439,35 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll(
     return visibleRect;
 }
 
+static void collectUselessInlineBoxes(LayoutContext& ctx, FrameBox* f)
+{
+    auto& boxes = f->asInlineBoxLayoutParentBox()->boxes();
+    for (size_t i = 0; i < boxes.size(); i++) {
+        if (boxes[i]->isInlineTextBox()) {
+            ctx.pushIntoInlineTextBoxPool(boxes[i]->asInlineTextBox());
+        } else if (boxes[i]->isInlineBoxLayoutParentBox()) {
+            collectUselessInlineBoxes(ctx, boxes[i]);
+        } else {
+            boxes[i]->setLayoutParent(boxes[i]->parent());
+        }
+    }
+
+    if (f->isInlineNonReplacedBox()) {
+        f->asInlineNonReplacedBox()->boxes().clear();
+        ctx.pushIntoInlineNonReplacedBoxPool(f->asInlineNonReplacedBox());
+    }
+}
+
+void FrameBlockBox::clearLineBoxes(LayoutContext& ctx)
+{
+    for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+        collectUselessInlineBoxes(ctx, m_lineBoxes[i]);
+        ctx.pushIntoLineBoxPool(m_lineBoxes[i]);
+    }
+
+    m_lineBoxes.clear();
+}
+
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
     if (!needToEstablishKindsOfFormattingContext()) {
@@ -684,7 +713,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     m_flags.m_needsToComputeScrollVisbleRect = true;
 
-    clearNeedsLayout();
+    clearNeedsLayout(ctx);
 }
 
 void FrameBlockBox::computeScrollRectIfNeeded()

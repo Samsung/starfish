@@ -689,5 +689,11 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_closing =
         QualifiedName(AtomicString::createAtomicString(starfish, "closing"));
 #endif
+
+#if defined(OS_WINDOWS)
+    m_overflowString = String::fromUTF8("...");
+#else
+    m_overflowString = String::fromUTF8("\u2026");
+#endif
 }
 }

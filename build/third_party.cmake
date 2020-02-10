@@ -125,7 +125,7 @@ ENDIF()
 #######################################################
 IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv")
     SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
-    SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build)
+    SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build/${HOST}/${ARCH}/${MODE})
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.so)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.so)
 IF (${WEBRTC} STREQUAL "1")
@@ -138,7 +138,7 @@ IF (${WEBRTC} STREQUAL "1")
                         COMMAND echo "BUILD LIBWEBSOCKETS"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
                         COMMAND cd ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -G Ninja .. ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
+                        COMMAND ${CMAKE_COMMAND} -G Ninja ../../../../ ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
                         COMMAND ninja
     )
 ELSE()
@@ -149,7 +149,7 @@ ELSE()
                         COMMAND echo "BUILD LIBWEBSOCKETS"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
                         COMMAND cd ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -G Ninja .. ${LIBWEBSOCKETS_BUILD_OPTION}
+                        COMMAND ${CMAKE_COMMAND} -G Ninja ../../../../ ${LIBWEBSOCKETS_BUILD_OPTION}
                         COMMAND ninja
     )
 ENDIF()
@@ -269,6 +269,10 @@ IF (${HOST} STREQUAL "linux")
 ELSE()
     SET (ESCARGOT_HOST tizen_obs)
 ENDIF()
+
+# ESCARGOT INTERNAL COMPILE OPTION
+add_compile_options("-DSCRIPT_FUNCTION_OBJECT_BYTECODE_SIZE_MAX=1048576")
+
 ADD_SUBDIRECTORY (third_party/escargot)
 
 #######################################################
