@@ -112,8 +112,12 @@ BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: libasound-devel
 
-%if 0%{?tizen_version_major} >= 6
+%%if (0%{?tizen_version_major} >= 6) || ((0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5))
+  %if "%{rpm}" == "prod_tv"
+BuildRequires: pkgconfig(openssl)
+  %else
 BuildRequires: pkgconfig(openssl1.1)
+  %endif
 %else
 BuildRequires: pkgconfig(openssl)
 %endif
