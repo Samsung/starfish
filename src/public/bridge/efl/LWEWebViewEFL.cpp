@@ -658,6 +658,15 @@ public:
                 wv);
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
+
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+            auto buf =
+                evas_object_image_data_get(wv->m_graphicsAdapter, EINA_TRUE);
+            evas_object_image_data_set(wv->m_graphicsAdapter, buf);
+            wv->FetchWebContainer()->UpdateBuffer(
+                buf, w, h, evas_object_image_stride_get(wv->m_graphicsAdapter));
+#endif
+
 #endif
             wv->FetchWebContainer()->ResizeTo(w, h);
         };
@@ -965,6 +974,14 @@ public:
             this);
 
 #else
+
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+        auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
+        evas_object_image_data_set(m_graphicsAdapter, buf);
+        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::Create(
+            buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
+            devicePixelRatio, defaultFontName, locale, timezoneID);
+#else // Tizen >= 5.5
         ::LWE::WebContainer* webContainer =
             ::LWE::WebContainer::Create(width, height, devicePixelRatio,
                                         defaultFontName, locale, timezoneID);
@@ -982,8 +999,9 @@ public:
                     evas_object_image_stride_get(m_graphicsAdapter);
 
                 return result;
-
             });
+#endif
+
         webContainer->RegisterOnRenderedHandler([this](
             ::LWE::WebContainer* c, ::LWE::WebContainer::RenderResult r) {
             evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
