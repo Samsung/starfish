@@ -791,6 +791,7 @@ public:
     }
 
     bool equals(const char32_t* str, size_t strLen) const;
+    int compare(String* other) const;
 
     size_t indexOf(char32_t ch) const;
     size_t lastIndexOf(char32_t ch) const;
