@@ -489,6 +489,28 @@ bool String::equals(const char32_t* str, size_t strLen) const
     return true;
 }
 
+int String::compare(String* other) const
+{
+    size_t len = std::min(length(), other->length());
+    auto thisStr = bufferAccessData();
+    auto otherStr = other->bufferAccessData();
+    for (size_t i = 0; i < len; i++) {
+        if (thisStr.charAt(i) < otherStr.charAt(i)) {
+            return -1;
+        } else if (thisStr.charAt(i) > otherStr.charAt(i)) {
+            return 1;
+        }
+    }
+
+    if (length() < other->length()) {
+        return -1;
+    } else if (length() > other->length()) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 bool String::containsWhitespace(size_t start, size_t end)
 {
     auto data = bufferAccessData();
