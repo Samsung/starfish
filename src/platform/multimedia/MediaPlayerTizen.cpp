@@ -1448,6 +1448,7 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaPlayerSourceStream* stream)
                 media_packet_create(format, NULL, NULL, &mediaPacket);
                 media_packet_set_flags(mediaPacket, MEDIA_PACKET_END_OF_STREAM);
                 player_push_media_stream(m_nativePlayer, mediaPacket);
+                media_packet_destroy(mediaPacket);
                 DEBUG_STREAMBUFFER_LOG("fillBuffer detect EOS\n");
                 break;
             }
