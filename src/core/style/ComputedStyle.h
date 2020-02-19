@@ -2548,21 +2548,21 @@ public:
                 margin = it->m_value.m_lengthData;
                 count++;
                 if (count == 3) {
-                    break;
+                    return std::make_tuple(margin, border, padding);
                 }
                 break;
             case RareComputedStyleData::Border:
                 border = it->m_value.m_borderData;
                 count++;
                 if (count == 3) {
-                    break;
+                    return std::make_tuple(margin, border, padding);
                 }
                 break;
             case RareComputedStyleData::Padding:
                 padding = it->m_value.m_lengthData;
                 count++;
                 if (count == 3) {
-                    break;
+                    return std::make_tuple(margin, border, padding);
                 }
                 break;
             default:
