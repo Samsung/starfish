@@ -337,6 +337,8 @@ public:
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
         m_glGlapi = evas_gl_api_get(m_glEvasgl);
         m_isEvasGLOnDirectMode = false;
+        m_isRenderedOnce = false;
+        m_immediatelyClearScreenAnimator = nullptr;
         // Set a surface config
         m_glCfg = evas_gl_config_new();
         m_glCfg->color_format = EVAS_GL_RGBA_8888;
@@ -383,20 +385,7 @@ public:
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
             STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL\n");
-
-            evas_object_image_pixels_dirty_set(wv->m_graphicsAdapter,
-                                               EINA_TRUE);
-            evas_object_image_pixels_get_callback_set(
-                wv->m_graphicsAdapter,
-                [](void* data, Evas_Object* o) {
-                    WebViewEFL* wv = (WebViewEFL*)data;
-                    evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc,
-                                         wv->m_glCtx);
-                    wv->m_glGlapi->glClearColor(0, 0, 0, 0);
-                    wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
-                    wv->m_glGlapi->glFlush();
-                },
-                wv);
+            wv->immediatelyClearScreen();
         };
         evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
                                        m_windowShownHandler, this);
@@ -624,7 +613,8 @@ public:
             evas_object_geometry_get(wv->m_mainBox, NULL, NULL, &w, &h);
             if (w == 0 || h == 0) {
                 STARFISH_LOG_WARN("the main box has a zero size\n");
-                return;
+                w = 1;
+                h = 1;
             }
             evas_object_resize(wv->m_graphicsAdapter, w, h);
 
@@ -639,23 +629,12 @@ public:
                 evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
             evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
+            wv->m_isRenderedOnce = false;
 
             STARFISH_LOG_INFO("WebViewEFL::resizeCallback::clearEvasGL %d %d\n",
                               w, h);
 
-            evas_object_image_pixels_dirty_set(wv->m_graphicsAdapter,
-                                               EINA_TRUE);
-            evas_object_image_pixels_get_callback_set(
-                wv->m_graphicsAdapter,
-                [](void* data, Evas_Object* o) {
-                    WebViewEFL* wv = (WebViewEFL*)data;
-                    evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc,
-                                         wv->m_glCtx);
-                    wv->m_glGlapi->glClearColor(0, 0, 0, 0);
-                    wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
-                    wv->m_glGlapi->glFlush();
-                },
-                wv);
+            wv->immediatelyClearScreen();
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
 
@@ -672,6 +651,16 @@ public:
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
                                        m_resizeHandler, this);
+
+        m_shownHandler = [](void* data, Evas* e, Evas_Object* obj,
+                            void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            STARFISH_LOG_INFO("WebViewEFL::shownCallback\n");
+            wv->immediatelyClearScreen();
+        };
+
+        evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_SHOW,
+                                       m_shownHandler, this);
 
         evas_object_event_callback_add(
             m_mainBox, EVAS_CALLBACK_MOVE,
@@ -944,35 +933,26 @@ public:
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
+        m_pixelDirtyCallback = [](void* data, Evas_Object* o) {
+            // We need to draw every time for preventing screen blinking
+            WebViewEFL* s = (WebViewEFL*)data;
+            if (s->m_lastDoRenderingFunction && !s->m_isDestroyed) {
+                s->m_isRenderedOnce = true;
+                s->m_lastDoRenderingFunction();
+            }
+        };
+
         webContainer->RegisterSetNeedsRenderingCallback([this](
             ::LWE::WebContainer* wc,
             const std::function<void()>& doRenderingFunction) {
             evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
             evas_object_image_pixels_get_callback_set(
-                m_graphicsAdapter,
-                [](void* data, Evas_Object* o) {
-                    // We need to draw every time for preventing screen blinking
-                    WebViewEFL* s = (WebViewEFL*)data;
-                    if (s->m_lastDoRenderingFunction && !s->m_isDestroyed) {
-                        s->m_lastDoRenderingFunction();
-                    }
-                },
-                this);
-
+                m_graphicsAdapter, m_pixelDirtyCallback, this);
             m_lastDoRenderingFunction = doRenderingFunction;
         });
 
-        evas_object_image_pixels_get_callback_set(
-            m_graphicsAdapter,
-            [](void* data, Evas_Object* o) {
-                // We need to draw every time for preventing screen blinking
-                WebViewEFL* s = (WebViewEFL*)data;
-                if (s->m_lastDoRenderingFunction && !s->m_isDestroyed) {
-                    s->m_lastDoRenderingFunction();
-                }
-            },
-            this);
-
+        evas_object_image_pixels_get_callback_set(m_graphicsAdapter,
+                                                  m_pixelDirtyCallback, this);
 #else
 
 #if defined(STARFISH_TIZEN_VERSION_5_0)
@@ -1050,6 +1030,11 @@ public:
 
         evas_object_hide(m_graphicsAdapter);
 #if defined(PORT_WINDOW_BACKEND_GL)
+        if (m_immediatelyClearScreenAnimator) {
+            ecore_animator_freeze(m_immediatelyClearScreenAnimator);
+            ecore_animator_del(m_immediatelyClearScreenAnimator);
+            m_immediatelyClearScreenAnimator = nullptr;
+        }
         if (m_glSync) {
             g_evasGLAPI->evasglDestroySync(m_glEvasgl, m_glSync);
         }
@@ -1063,6 +1048,11 @@ public:
         if (m_resizeHandler) {
             evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_RESIZE,
                                            m_resizeHandler);
+        }
+
+        if (m_shownHandler) {
+            evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_SHOW,
+                                           m_shownHandler);
         }
 
         evas_object_event_callback_del(m_graphicsAdapter,
@@ -1176,6 +1166,8 @@ protected:
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
                             void* event_info);
+    void (*m_shownHandler)(void* data, Evas* evas, Evas_Object* obj,
+                           void* event_info);
     void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                     void* event_info);
     void (*m_mouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj,
@@ -1204,6 +1196,46 @@ protected:
     Evas_GL_API* m_glGlapi;
     EvasGLSync m_glSync;
     bool m_isEvasGLOnDirectMode;
+    bool m_isRenderedOnce;
+    void (*m_pixelDirtyCallback)(void* data, Evas_Object* o);
+    Ecore_Animator* m_immediatelyClearScreenAnimator;
+    void immediatelyClearScreen()
+    {
+        evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
+        if (!m_isRenderedOnce) {
+            evas_object_image_pixels_get_callback_set(
+                m_graphicsAdapter,
+                [](void* data, Evas_Object* o) {
+                    WebViewEFL* wv = (WebViewEFL*)data;
+                    evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc,
+                                         wv->m_glCtx);
+                    wv->m_glGlapi->glClearColor(0, 0, 0, 0);
+                    wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT);
+                    wv->m_glGlapi->glFlush();
+
+                    evas_object_image_pixels_get_callback_set(
+                        wv->m_graphicsAdapter, wv->m_pixelDirtyCallback, wv);
+                    if (!wv->m_immediatelyClearScreenAnimator) {
+                        wv->m_immediatelyClearScreenAnimator =
+                            ecore_animator_add(
+                                [](void* data) -> Eina_Bool {
+                                    WebViewEFL* wv = (WebViewEFL*)data;
+                                    evas_object_image_pixels_dirty_set(
+                                        wv->m_graphicsAdapter, EINA_TRUE);
+                                    ecore_animator_freeze(
+                                        wv->m_immediatelyClearScreenAnimator);
+                                    ecore_animator_del(
+                                        wv->m_immediatelyClearScreenAnimator);
+                                    wv->m_immediatelyClearScreenAnimator =
+                                        nullptr;
+                                    return ECORE_CALLBACK_CANCEL;
+                                },
+                                wv);
+                    }
+                },
+                this);
+        }
+    }
 #endif
 
     Ecore_IMF_Context* m_imfContext;
