@@ -38,8 +38,6 @@
 #include "FontImplCairo.h"
 #include "core/style/UnitHelper.h"
 
-#define MIN_ENABLE_KERNING_SIZE 48
-
 namespace Starfish {
 
 std::unordered_map<UTF8StringDataNonGCStd, std::pair<FT_Face, hb_font_t*>>
@@ -206,6 +204,7 @@ FontImplCairo::loadGlyph(char32_t ch)
     }
 
     face->loadGlyph(intSize, ch, glyphResult);
+
     return std::make_pair(std::make_pair(face, SIZE_MAX), glyphResult.second);
 }
 
@@ -337,7 +336,9 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 float yOffset = glyphPositions[k].y_offset / 64.f *
                                 (float)intSize / (float)ftSize;
 
-                if (hasKerning && font->size() >= MIN_ENABLE_KERNING_SIZE &&
+                if (hasKerning &&
+                    font->size() >=
+                        STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE &&
                     k > 0) {
                     FT_Vector kerning;
                     FT_Get_Kerning(run.m_ftFace, lastGlyph, glyph,
@@ -451,7 +452,7 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     if (f->fontKerning() == FontKerningAutoValue) {
         if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
                 ->m_supportsKerning) {
-            if (f->size() >= MIN_ENABLE_KERNING_SIZE) {
+            if (f->size() >= STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE) {
                 return false;
             }
         }

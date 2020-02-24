@@ -2012,7 +2012,31 @@ private:
         auto oldScaledFont = cairo_get_scaled_font(canvas);
         cairo_scaled_font_reference(oldScaledFont);
         cairo_set_scaled_font(canvas, scaledFontFace);
-        cairo_show_glyphs(canvas, glyphs, glyphCount);
+
+        bool needsToDrawWithPath = false;
+#if !defined(STARFISH_ENABLE_TEST)
+        if (glyphCount && m_state.back()->m_font->size() >= 24) {
+            cairo_matrix_t m;
+            cairo_get_matrix(m_canvas, &m);
+
+            double x = glyphs[0].x;
+            double y = glyphs[0].y;
+
+            cairo_matrix_transform_point(&m, &x, &y);
+
+            if ((x - (int)x) != 0 || (y - (int)y) != 0) {
+                needsToDrawWithPath = true;
+            }
+        }
+#endif
+
+        if (needsToDrawWithPath) {
+            cairo_glyph_path(canvas, glyphs, glyphCount);
+            cairo_fill(canvas);
+        } else {
+            cairo_show_glyphs(canvas, glyphs, glyphCount);
+        }
+
         cairo_set_scaled_font(canvas, oldScaledFont);
         cairo_scaled_font_destroy(oldScaledFont);
         cairo_scaled_font_destroy(scaledFontFace);

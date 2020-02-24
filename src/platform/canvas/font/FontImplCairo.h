@@ -39,6 +39,8 @@
 #include "core/page/WebView.h"
 #include "core/modules/canvas/font/Font.h"
 
+#define STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE 48
+
 namespace Starfish {
 
 extern FT_Library g_freeTypeInstance;
@@ -161,9 +163,18 @@ public:
         auto iter = m_glyphIndexCache.find(ch);
         if (iter != m_glyphIndexCache.end()) {
             if (iter->second.first) {
-                LayoutUnit width =
-                    LayoutUnit((int)(iter->second.second * intSize)) /
-                    LayoutUnit((int)(m_unitsPerEM));
+                LayoutUnit width;
+                if (intSize < STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE
+#if defined(STARFISH_ENABLE_TEST)
+                    && false
+#endif
+                    ) {
+                    width = roundf(((float)iter->second.second * intSize) /
+                                   m_unitsPerEM);
+                } else {
+                    width = LayoutUnit((int)(iter->second.second * intSize)) /
+                            LayoutUnit((int)(m_unitsPerEM));
+                }
                 result = std::make_pair(
                     this, std::make_pair(iter->second.first, width));
                 return true;
@@ -177,10 +188,20 @@ public:
                 std::make_pair(glyphIndex, face->glyph->metrics.horiAdvance)));
 
             if (glyphIndex) {
-                LayoutUnit width =
-                    LayoutUnit(
-                        (int)(face->glyph->metrics.horiAdvance * intSize)) /
-                    LayoutUnit((int)(m_unitsPerEM));
+                LayoutUnit width;
+
+                if (intSize < STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE
+#if defined(STARFISH_ENABLE_TEST)
+                    && false
+#endif
+                    ) {
+                    width = roundf((float)face->glyph->metrics.horiAdvance *
+                                   intSize / m_unitsPerEM);
+                } else {
+                    width = LayoutUnit((int)(face->glyph->metrics.horiAdvance *
+                                             intSize)) /
+                            LayoutUnit((int)(m_unitsPerEM));
+                }
                 result =
                     std::make_pair(this, std::make_pair(glyphIndex, width));
                 return true;

@@ -211,6 +211,31 @@ ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_
     )
 ENDIF()
 
+#######################################################
+# LIBCAIRO
+#######################################################
+IF (${BUILD_CAIRO} STREQUAL "1")
+    SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/cairo)
+    SET (CAIRO_TARGET ${CAIRO_DIR}/out/${HOST}/${ARCH}/${MODE}/lib/libcairo.a)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
+                        WORKING_DIRECTORY ${CAIRO_DIR}
+                        COMMENT "BUILD CAIRO"
+                        COMMAND mkdir -p out/${HOST}/${ARCH}/${MODE}/
+                        COMMAND NOCONFIGURE=1 ./autogen.sh
+                        COMMAND ./configure --prefix=${CAIRO_DIR}/out/${HOST}/${ARCH}/${MODE}/ --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+                        COMMAND make -j${NPROCS} V=1
+                        COMMAND make install
+                        COMMAND make distclean
+                        COMMAND rm -f build/gtk-doc.m4
+                        COMMAND rm -f configure gtk-doc.make aclocal.m4
+    )
+
+    ADD_CUSTOM_TARGET (own_cairo
+                       DEPENDS ${CAIRO_TARGET}
+                       COMMAND echo "CAIRO TARGET"
+    )
+ENDIF()
 
 #######################################################
 # LIBSKIA
@@ -403,6 +428,10 @@ ENDIF()
 #######################################################
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${GC_TARGET} clipper escargot)
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse webm)
+
+IF (${BUILD_CAIRO} STREQUAL "1")
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${CAIRO_TARGET} -lpixman-1)
+ENDIF()
 
 IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} skia_matrix)
