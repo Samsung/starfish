@@ -29,8 +29,87 @@ class FrameBox;
 class FrameGridBox;
 class LineBox;
 
+class GridLineValue : public gc {
+public:
+    bool isDefinite()
+    {
+        if (m_value.hasValue() && !m_hasSpan) {
+            return true;
+        }
+        return false;
+    }
+
+    bool isAuto()
+    {
+        if (m_value.hasValue()) {
+            return false;
+        }
+
+        if (m_hasSpan) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool hasValue()
+    {
+        return m_value.hasValue();
+    }
+
+    size_t value()
+    {
+        if (m_value.hasValue()) {
+            return m_value.value();
+        } else {
+            return 0;
+        }
+    }
+
+    void setValue(size_t v)
+    {
+        m_value = v;
+    }
+
+    bool hasSpan()
+    {
+        return m_hasSpan;
+    }
+
+    void setHasSpan(bool v)
+    {
+        m_hasSpan = v;
+    }
+
+    bool hasCustomIdent()
+    {
+        return !m_customIdent->equals(String::emptyString);
+    }
+
+    String* customIdent()
+    {
+        return m_customIdent;
+    }
+
+    void setCustomIdent(String* v)
+    {
+        m_customIdent = v;
+    }
+
+private:
+    bool m_hasSpan{ false };
+    Nullable<size_t> m_value;
+    String* m_customIdent{ String::emptyString };
+};
+
 class GridArea : public gc {
 public:
+    GridArea(FrameBox* box, size_t id)
+        : m_box(box)
+        , m_index(id)
+    {
+    }
+
     GridArea(FrameBox* box, size_t idx, size_t rowStart, size_t rowEnd,
              size_t columnStart, size_t columnEnd)
         : m_box(box)
@@ -41,12 +120,88 @@ public:
         , m_columnEnd(columnEnd)
     {
     }
+
+    bool isDefinite()
+    {
+        if ((m_gridRowStart->isDefinite() || m_gridRowEnd->isDefinite()) &&
+            (m_gridColumnStart->isDefinite() ||
+             m_gridColumnEnd->isDefinite())) {
+            return true;
+        }
+        return false;
+    }
+
+    DEFINE_GETTER(FrameBox*, box);
+    DEFINE_GETTER(size_t, index);
+
+    size_t rowStart() const
+    {
+        if (m_rowStart.hasValue()) {
+            return m_rowStart.value();
+        } else {
+            return 0;
+        }
+    }
+
+    size_t rowEnd() const
+    {
+        if (m_rowEnd.hasValue()) {
+            return m_rowEnd.value();
+        } else {
+            return 0;
+        }
+    }
+
+    size_t columnStart() const
+    {
+        if (m_columnStart.hasValue()) {
+            return m_columnStart.value();
+        } else {
+            return 0;
+        }
+    }
+
+    size_t columnEnd() const
+    {
+        if (m_columnEnd.hasValue()) {
+            return m_columnEnd.value();
+        } else {
+            return 0;
+        }
+    }
+
+    DEFINE_SETTER(size_t, rowStart, RowStart);
+    DEFINE_SETTER(size_t, rowEnd, RowEnd);
+    DEFINE_SETTER(size_t, columnStart, ColumnStart);
+    DEFINE_SETTER(size_t, columnEnd, ColumnEnd);
+
+    DEFINE_GETTER_SETTER(GridLineValue*, gridRowStart, GridRowStart);
+    DEFINE_GETTER_SETTER(GridLineValue*, gridRowEnd, GridRowEnd);
+    DEFINE_GETTER_SETTER(GridLineValue*, gridColumnStart, GridColumnStart);
+    DEFINE_GETTER_SETTER(GridLineValue*, gridColumnEnd, GridColumnEnd);
+
+    bool hasRowAndColumnValues()
+    {
+        if (m_rowStart.hasValue() && m_rowEnd.hasValue() &&
+            m_columnStart.hasValue() && m_columnEnd.hasValue()) {
+            return true;
+        }
+        return false;
+    }
+
+private:
     FrameBox* m_box;
-    size_t m_index;
-    size_t m_rowStart;
-    size_t m_rowEnd;
-    size_t m_columnStart;
-    size_t m_columnEnd;
+    size_t m_index{ 0 };
+
+    Nullable<size_t> m_rowStart;
+    Nullable<size_t> m_rowEnd;
+    Nullable<size_t> m_columnStart;
+    Nullable<size_t> m_columnEnd;
+
+    GridLineValue* m_gridRowStart{ nullptr };
+    GridLineValue* m_gridRowEnd{ nullptr };
+    GridLineValue* m_gridColumnStart{ nullptr };
+    GridLineValue* m_gridColumnEnd{ nullptr };
 };
 
 class GridLine : public gc {
@@ -244,6 +399,8 @@ public:
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
     void parsingGridTemplateAreasAndStoreInformation();
     void buildGridAreaAndOrdering();
+    void placeGridItemsIntoCells();
+
     size_t convertToRealLine(String*, size_t, ConvertType);
     void convertToStartEndForRow(ComputedStyle*, size_t&, size_t&);
     void convertToStartEndForColumn(ComputedStyle*, size_t&, size_t&);
@@ -290,6 +447,19 @@ private:
     LayoutUnit m_columnGap;
     // FIXME(#1286): This checker is poor.
     bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
+
+    void parseGridRowAndColumnValues(GridArea* gridArea);
+    void resolveDefinitePositionValues(GridArea* gridArea);
+    GridLineValue* parseGridLineValue(String* gridLineValue);
+    void placeGridAreasWithDefinitePositions(
+        GCVector<GridArea*>& gridAreaDefinite);
+    bool expandGridLineRows(GridArea* gridArea);
+    bool expandGridLineColumns(GridArea* gridArea);
+
+    void placeGridAreasLockedToRows(GCVector<GridArea*>& gridAreasAuto);
+    void placeRemainingGridAreas(GCVector<GridArea*>& gridAreasAuto);
+    bool hasAvailableGridCells(GridArea* gridArea, size_t row, size_t col);
+    void placeGridArea(GridArea* gridArea);
 };
 
 class FrameGridBox final : public FrameBlockBox {

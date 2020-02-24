@@ -11792,8 +11792,7 @@ bool CSSStyleValuePair::updateValueGridRow(Document* document,
                                                             parts[0].size()));
                 multiValue()->emplace_back(rs.valueKind(), rs.value());
                 re.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
-                re.setStringValue(String::createASCIIString(parts[0].c_str(),
-                                                            parts[0].size()));
+                re.setStringValue(String::createASCIIString("auto"));
                 multiValue()->emplace_back(re.valueKind(), re.value());
             }
         }
