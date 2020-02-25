@@ -935,6 +935,9 @@ void GridFormattingContext::resolveDefinitePositionValues(GridArea* gridArea)
         if (gridRowStart->isDefinite() && gridRowEnd->isDefinite()) {
             gridArea->setRowStart(gridRowStart->value());
             gridArea->setRowEnd(gridRowEnd->value());
+            if (gridArea->rowStart() >= gridArea->rowEnd()) {
+                gridArea->setRowEnd(gridArea->rowStart() + 1);
+            }
         } else if (gridRowStart->isDefinite()) {
             gridArea->setRowStart(gridRowStart->value());
 
@@ -966,6 +969,9 @@ void GridFormattingContext::resolveDefinitePositionValues(GridArea* gridArea)
         if (gridColumnStart->isDefinite() && gridColumnEnd->isDefinite()) {
             gridArea->setColumnStart(gridColumnStart->value());
             gridArea->setColumnEnd(gridColumnEnd->value());
+            if (gridArea->columnStart() >= gridArea->columnEnd()) {
+                gridArea->setColumnEnd(gridArea->columnStart() + 1);
+            }
         } else if (gridColumnStart->isDefinite()) {
             gridArea->setColumnStart(gridColumnStart->value());
             if (gridColumnEnd->isAuto()) {
