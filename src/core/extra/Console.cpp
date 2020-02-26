@@ -37,7 +37,11 @@ void Console::log(String* m)
         m_webBase->inspector()->sendInfoMessage(m);
     }
 #endif
+#ifdef STARFISH_TIZEN
+    STARFISH_LOG_ERROR("console.log: %s\n", m->toUTF8NonGCString().c_str());
+#else
     STARFISH_LOG_INFO("console.log: %s\n", m->toUTF8NonGCString().c_str());
+#endif
 }
 
 void Console::info(String* m)
@@ -47,7 +51,11 @@ void Console::info(String* m)
         m_webBase->inspector()->sendInfoMessage(m);
     }
 #endif
+#ifdef STARFISH_TIZEN
+    STARFISH_LOG_ERROR("console.info: %s\n", m->toUTF8NonGCString().c_str());
+#else
     STARFISH_LOG_INFO("console.info: %s\n", m->toUTF8NonGCString().c_str());
+#endif
 }
 
 void Console::error(String* m)
