@@ -135,3 +135,5 @@ test/cairo/reftest/vendor/blink/fast/media/mq-append-delete.html
 test/cairo/reftest/vendor/blink/fast/media/media-query-list-syntax.html
 test/cairo/reftest/vendor/blink/fast/media/mq-color-index-02.html
 test/cairo/reftest/vendor/blink/fast/media/mq-resolution.html
+# Focus
+test/cairo/reftest/vendor/blink/fast/dom/HTMLDocument/active-element-frames.html

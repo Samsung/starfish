@@ -306,4 +306,3 @@ test/cairo/reftest/vendor/webkit_original/fast/block/float/floats-and-text-inden
 test/cairo/reftest/vendor/webkit_original/fast/block/float/floats-and-text-indent-rl.html
 #test/cairo/reftest/vendor/webkit_original/fast/block/float/022.html
 test/cairo/reftest/vendor/webkit_original/fast/box-decoration-break/box-decoration-break-rendering.html
-#test/cairo/reftest/vendor/webkit_original/fast/dom/HTMLDocument/active-element-frames.html

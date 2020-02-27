@@ -937,6 +937,12 @@ void BrowsingContext::didFocusEvent()
 #endif
 }
 
+static void releaseFocusFN(BrowsingContext* ctx)
+{
+    ctx->releaseFocusedNode(nullptr, true);
+    ctx->iterateChildContext(releaseFocusFN);
+}
+
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
 void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
 {
@@ -953,18 +959,14 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     }
 
     {
+        BrowsingContext* topBC = this;
         if (!isTopLevelBrowsingContext()) {
-            BrowsingContext* bc = parentBrowsingContext();
-            while (!bc->isTopLevelBrowsingContext()) {
-                bc = bc->parentBrowsingContext();
-                bc->iterateChildContext([](BrowsingContext* ctx) {
-                    STARFISH_ASSERT(ctx);
-                    ctx->releaseFocusedNode(nullptr, true);
-                });
+            topBC = parentBrowsingContext();
+            while (!topBC->isTopLevelBrowsingContext()) {
+                topBC = topBC->parentBrowsingContext();
             }
-        } else {
-            releaseFocusedNode(nullptr, true);
         }
+        topBC->iterateChildContext(releaseFocusFN);
 
         //    3. If new focus target is a browsing context container with
         //    non-null
