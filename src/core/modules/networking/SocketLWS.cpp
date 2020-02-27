@@ -236,7 +236,10 @@ void SocketLWS::finalize()
 {
     m_alive = false;
     if (m_lwsContext != nullptr) {
-        lws_context_destroy(m_lwsContext);
+        parent()->executionContext()->webBase()->messageLoop()->addIdler(
+            parent()->executionContext()->document()->window(),
+            [](size_t, void* data) { lws_context_destroy((lws_context*)data); },
+            m_lwsContext);
         m_lwsContext = nullptr;
         m_lwsClient = nullptr;
     }
