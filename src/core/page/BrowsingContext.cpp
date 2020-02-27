@@ -940,10 +940,48 @@ void BrowsingContext::didFocusEvent()
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
 void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
 {
+    // The focusing steps for an object new focus target that is either a
+    // focusable area, or an element that is not a focusable area, or a browsing
+    // context, are as follows. They can optionally be run with a fallback
+    // target
+    // and a string focus trigger.
+
     didFocusEvent();
 
     if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
         return;
+    }
+
+    {
+        if (!isTopLevelBrowsingContext()) {
+            BrowsingContext* bc = parentBrowsingContext();
+            while (!bc->isTopLevelBrowsingContext()) {
+                bc = bc->parentBrowsingContext();
+                bc->iterateChildContext([](BrowsingContext* ctx) {
+                    STARFISH_ASSERT(ctx);
+                    ctx->releaseFocusedNode(nullptr, true);
+                });
+            }
+        } else {
+            releaseFocusedNode(nullptr, true);
+        }
+
+        //    3. If new focus target is a browsing context container with
+        //    non-null
+        //    nested browsing context, then set new focus target to the nested
+        //    browsing context's active document, and redo this step.
+        if (!isTopLevelBrowsingContext()) {
+            BrowsingContext* bc = parentBrowsingContext();
+            HTMLIFrameElement* focusTarget = sourceElement();
+            while (bc && focusTarget) {
+                bc->setFocusedNode(focusTarget->asNode(), false);
+                bc = bc->parentBrowsingContext();
+                focusTarget = nullptr;
+                if (bc && !bc->isTopLevelBrowsingContext()) {
+                    focusTarget = bc->sourceElement();
+                }
+            }
+        }
     }
 
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
@@ -976,7 +1014,6 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
         releaseFocusedNode(nullptr);
         return;
     }
-
     // Set the related target for the focus/fucusin events.
     Node* relatedTarget = m_focusedNode && m_focusedNode->isHTMLIFrameElement()
                               ? nullptr

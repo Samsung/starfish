@@ -311,3 +311,4 @@ test/cairo/reftest/vendor/blink/fast/box-shadow/spread.html
 test/cairo/reftest/vendor/blink/fast/box-shadow/spread-multiple-inset.html
 test/cairo/reftest/vendor/blink/fast/box-shadow/spread-multiple-normal.html
 test/cairo/reftest/vendor/blink/fast/box-shadow/transform-fringing.html
+#test/cairo/reftest/vendor/blink_original/fast/dom/HTMLDocument/active-element-frames.html
