@@ -260,7 +260,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
                                   RequestErrorType::TimeoutError);
     } else {
         auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("failed to open %s\n", s.data());
+        STARFISH_LOG_INFO("failed to open[%d] %s\n",
+                          nwd->httpTransaction->res(), s.data());
         RequestErrorType errorType;
         switch (nwd->httpTransaction->res()) {
         case CURLE_COULDNT_RESOLVE_HOST:
