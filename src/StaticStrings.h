@@ -410,6 +410,7 @@ public:
     QualifiedName m_bottommargin;
     QualifiedName m_marginwidth;
     QualifiedName m_marginheight;
+    QualifiedName m_dialog;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

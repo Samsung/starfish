@@ -27,6 +27,7 @@
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLButtonElement.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLFieldSetElement.h"
@@ -213,6 +214,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLAreaElement(document, qname);
     } else if (name == str->m_outputTagName.localNameAtomic()) {
         return new HTMLOutputElement(document, qname);
+    } else if (name == str->m_dialogTagName.localNameAtomic()) {
+        return new HTMLDialogElement(document, qname);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                             \
     else if (name == str->m_##tagName##TagName.localNameAtomic()) \

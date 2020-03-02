@@ -309,6 +309,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "marginwidth"));
     m_marginheight = QualifiedName(
         AtomicString::createAtomicString(starfish, "marginheight"));
+    m_dialog =
+        QualifiedName(AtomicString::createAtomicString(starfish, "dialog"));
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =
