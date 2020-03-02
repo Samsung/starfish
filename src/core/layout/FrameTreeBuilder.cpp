@@ -816,11 +816,6 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     } else if (current->isSVGSVGElement()) {
         return FrameTreeBuilder::buildSVGFrameTree(
             current->asSVGSVGElement(), current->parentElement()->frame());
-    } else if (current->isHTMLButtonElement()) {
-        return new FrameButtonBox(current, nullptr);
-    } else if (current->isHTMLInputElement() ||
-               current->isHTMLTextAreaElement()) {
-        return FrameInputBox::buildFrameTree(current, ctx, force);
     } else if (current->isHTMLSelectElement()) {
         return new FrameSelectBox(current, nullptr);
     } else if (current->isHTMLOptGroupElement()) {
@@ -849,6 +844,11 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameTableColBox(current, nullptr);
     } else if (display == DisplayValue::TableCellDisplayValue) {
         return new FrameTableCellBox(current, nullptr);
+    } else if (current->isHTMLButtonElement()) {
+        return new FrameButtonBox(current, nullptr);
+    } else if (current->isHTMLInputElement() ||
+               current->isHTMLTextAreaElement()) {
+        return FrameInputBox::buildFrameTree(current, ctx, force);
     } else {
         if (display == DisplayValue::BlockDisplayValue ||
             display == DisplayValue::InlineBlockDisplayValue ||
