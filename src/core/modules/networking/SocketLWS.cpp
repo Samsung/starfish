@@ -199,7 +199,15 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
     m_lwsContextCreationInfo.protocols = protocols;
-    m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    m_lwsContextCreationInfo.options = 0;
+
+    static bool sslInited = false;
+    if (!sslInited && useSSL) {
+        m_lwsContextCreationInfo.options |=
+            LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+        m_lwsContextCreationInfo.options |= LWS_SERVER_OPTION_UNIX_SOCK;
+        sslInited = true;
+    }
 
     if (useSSL) {
         m_lwsContextCreationInfo.client_ssl_ca_filepath =
@@ -236,10 +244,16 @@ void SocketLWS::finalize()
 {
     m_alive = false;
     if (m_lwsContext != nullptr) {
-        parent()->executionContext()->webBase()->messageLoop()->addIdler(
-            parent()->executionContext()->document()->window(),
-            [](size_t, void* data) { lws_context_destroy((lws_context*)data); },
-            m_lwsContext);
+        parent()
+            ->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                parent()->executionContext()->document()->window(),
+                [](size_t, void* data) {
+                    lws_context_destroy((lws_context*)data);
+                },
+                m_lwsContext);
         m_lwsContext = nullptr;
         m_lwsClient = nullptr;
     }
