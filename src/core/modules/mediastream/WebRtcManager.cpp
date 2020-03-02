@@ -73,11 +73,13 @@ void WebRtcManager::initPeerConnectionFactory()
         m_networkThread.get() /* network_thread */,
         m_workerThread.get() /* worker_thread */,
         m_signalingThread.get() /* signaling_thread */,
-
-        // TODO: Setup AudioDeviceModule for docker and real machine
-        // nullptr, // default_adm: nullptr
+// Setup AudioDeviceModule
+#if defined(STARFISH_DOCKER)
         rtc::scoped_refptr<webrtc::AudioDeviceModule>(
             new webrtc::FakeAudioDeviceModule()),
+#else
+        nullptr, // default_adm: nullptr
+#endif
         webrtc::CreateBuiltinAudioEncoderFactory(),
         webrtc::CreateBuiltinAudioDecoderFactory(),
         webrtc::CreateBuiltinVideoEncoderFactory(),
