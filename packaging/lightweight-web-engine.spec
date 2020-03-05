@@ -66,6 +66,9 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
+%if 0%{?sec_product_feature_profile_wearable} == 1
+%define rpm wearable
+%endif
 
 %if 0%{?tizen_version_major} >= 5
 %define using_lto 1
@@ -170,7 +173,7 @@ Lightweight Web Engine for tv
 %endif
 
 
-%if "%{rpm}" == "headless" || "%{rpm}" == "all"
+%if "%{rpm}" == "headless"
 %package profile_headless
 Summary:     Lightweight Web Engine for headless
 Provides:    %{name}-compat = %{version}-%{release}
@@ -332,7 +335,7 @@ ninja starfish.shared_library
 ninja starfish.executable
 %endif # "%{rpm}" == "prod_tv"
 
-%if "%{rpm}" == "headless" || "%{rpm}" == "all"
+%if "%{rpm}" == "headless"
 # For Dali
 #rm -f CMakeCache.txt
 #cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=headless -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.headless -G Ninja
@@ -409,7 +412,7 @@ cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %endif
 
-%if "%{rpm}" == "headless" || "%{rpm}" == "all"
+%if "%{rpm}" == "headless"
 mkdir -p %{buildroot}/%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.so* %{buildroot}%{_libdir}/lwe/headless
 cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
@@ -497,7 +500,7 @@ exit 0
 %endif
 
 #############################################
-%if "%{rpm}" == "headless" || "%{rpm}" == "all"
+%if "%{rpm}" == "headless"
 %post profile_headless
 pushd %{_libdir}/lwe
 for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
@@ -573,7 +576,7 @@ exit 0
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA
 %endif
 
-%if "%{rpm}" == "headless" || "%{rpm}" == "all"
+%if "%{rpm}" == "headless"
 %files profile_headless
 %manifest %{name}.manifest
 %{_libdir}/*.so
