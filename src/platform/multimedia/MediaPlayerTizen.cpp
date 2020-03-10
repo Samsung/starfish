@@ -1213,7 +1213,9 @@ void MediaPlayerTizen::prepareMediaSource()
     } else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
         if (m_playerDeadFlag == NULL) {
-            RETURN_WHEN_PLAYER_ERROR("ERROR: prepareMediaSource\n");
+            PLAYER_LOGE("ERROR: prepareMediaSource\n");
+            handlePlayerError();
+            return;
         }
 
         *m_playerDeadFlag = false;
