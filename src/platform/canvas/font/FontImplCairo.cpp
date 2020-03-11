@@ -218,6 +218,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
     for (size_t i = 0; i < length;) {
         size_t pos = 0;
         size_t faceIndex = SIZE_MAX;
+        int lastUnicodeBlock = 0;
         FT_Face lastFace = nullptr;
         hb_font_t* hbFace = nullptr;
         UScriptCode lastUnicodeScript = USCRIPT_COMMON;
@@ -231,6 +232,8 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
             if (!U_SUCCESS(errorCode)) {
                 return result;
             }
+
+            int unicodeBlock = u_getIntPropertyValue(ch, UCHAR_BLOCK);
 
             std::pair<std::pair<FontFaceImplCairo*, size_t>,
                       std::pair<unsigned, LayoutUnit>>
@@ -247,9 +250,11 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 lastFace = glyphData.first.first->freetypeFace();
                 hbFace = glyphData.first.first->harfbuzzFace();
                 lastUnicodeScript = unicodeScript;
+                lastUnicodeBlock = unicodeBlock;
             } else {
                 if (failedToFindFont ||
                     lastFace != glyphData.first.first->freetypeFace() ||
+                    lastUnicodeBlock != unicodeBlock ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
                      (!uscript_hasScript(ch, lastUnicodeScript)))) {
@@ -272,6 +277,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         run.m_faceIndex = faceIndex;
         run.m_ftFace = lastFace;
         run.m_hbFont = hbFace;
+        run.m_unicodeBlock = lastUnicodeBlock;
         run.m_text = StringView((String*)text, startPos, endPos);
         result.push_back(run);
     }
@@ -355,6 +361,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                     LayoutLocation(xOffset + totalAdvance, yOffset));
 
                 FT_Load_Glyph(run.m_ftFace, glyph, FT_LOAD_NO_SCALE);
+
                 LayoutUnit width =
                     LayoutUnit((int)(run.m_ftFace->glyph->metrics.horiAdvance *
                                      intSize)) /
@@ -447,6 +454,10 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
             (property == U_RIGHT_TO_LEFT_OVERRIDE)) {
             return false;
         }
+
+        if (charMayContainsGraphicSymbol(ch)) {
+            return false;
+        }
     }
 
     if (f->fontKerning() == FontKerningAutoValue) {
@@ -464,6 +475,40 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
         STARFISH_ASSERT(f->fontKerning() == FontKerningNoneValue);
         return true;
     }
+}
+
+bool unicodeBlockContainsGraphicSymbol(int unicodeBlock)
+{
+    switch (unicodeBlock) {
+    case UBLOCK_LETTERLIKE_SYMBOLS:
+    case UBLOCK_MISCELLANEOUS_SYMBOLS:
+    case UBLOCK_MISCELLANEOUS_SYMBOLS_AND_ARROWS:
+    case UBLOCK_MISCELLANEOUS_SYMBOLS_AND_PICTOGRAPHS:
+    case UBLOCK_EMOTICONS:
+    case UBLOCK_TRANSPORT_AND_MAP_SYMBOLS:
+    case UBLOCK_SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS:
+#ifndef UBLOCK_SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS // defined in ICU 64
+#define UBLOCK_SUPPLEMENTAL_SYMBOLS_AND_PICTOGRAPHS 298
+#endif
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool charMayContainsGraphicSymbol(char32_t ch)
+{
+    // first symbol
+    // U+2100..U+214F  Letterlike Symbols
+    if (ch < 0x2100) {
+        return false;
+    }
+
+    // cairo_glyph_path cannot process colored glyhs
+    // but some symbol has color(like emoji)
+    int ublock = u_getIntPropertyValue(ch, UCHAR_BLOCK);
+    return unicodeBlockContainsGraphicSymbol(ublock);
 }
 
 FontSelector* FontSelector::create(Document* document,
