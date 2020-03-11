@@ -1998,7 +1998,7 @@ private:
     void drawGlyphs(cairo_t* canvas, const FT_Face& ftFace,
                     const cairo_matrix_t& sizeMatrix,
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
-                    size_t glyphCount)
+                    size_t glyphCount, bool canUsePath = true)
     {
         STARFISH_ASSERT(canvas != nullptr);
         STARFISH_ASSERT(glyphs != nullptr);
@@ -2015,7 +2015,7 @@ private:
 
         bool needsToDrawWithPath = false;
 #if !defined(STARFISH_ENABLE_TEST)
-        if (glyphCount && m_state.back()->m_font->size() >= 24) {
+        if (glyphCount && canUsePath && m_state.back()->m_font->size() >= 24) {
             cairo_matrix_t m;
             cairo_get_matrix(m_canvas, &m);
 
@@ -2165,9 +2165,23 @@ private:
                     xBias += f->spaceWidth() + letterSpacing;
                 }
             }
+
+            if (glyphCount != 0) {
+                if (isStroke == true) {
+                    drawStrokeGlyphs(canvas, lastFontFace, sizeMatrix,
+                                     identityMatrix, glyphs, glyphCount,
+                                     lineWidth());
+                } else {
+                    drawGlyphs(canvas, lastFontFace, sizeMatrix, identityMatrix,
+                               glyphs, glyphCount);
+                }
+
+                glyphCount = 0;
+            }
         } else {
             auto runs = generateFontCairoTextRuns(&sv, f);
 
+            int lastUnicodeBlock = 0;
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
                 const FontCairoTextRun& run = runs[i];
@@ -2197,7 +2211,8 @@ private:
                         f->seenUnresolvedWebFontIndex() <= run.m_faceIndex &&
                         shouldSkipUnresolvedWebFont) {
                     } else {
-                        if (run.m_ftFace != lastFontFace) {
+                        if (run.m_ftFace != lastFontFace ||
+                            lastUnicodeBlock != run.m_unicodeBlock) {
                             if (glyphCount != 0) {
                                 if (isStroke == true) {
                                     drawStrokeGlyphs(canvas, lastFontFace,
@@ -2205,13 +2220,16 @@ private:
                                                      glyphs, glyphCount,
                                                      lineWidth());
                                 } else {
-                                    drawGlyphs(canvas, lastFontFace, sizeMatrix,
-                                               identityMatrix, glyphs,
-                                               glyphCount);
+                                    drawGlyphs(
+                                        canvas, lastFontFace, sizeMatrix,
+                                        identityMatrix, glyphs, glyphCount,
+                                        !unicodeBlockContainsGraphicSymbol(
+                                            lastUnicodeBlock));
                                 }
                                 glyphCount = 0;
                             }
                             lastFontFace = run.m_ftFace;
+                            lastUnicodeBlock = run.m_unicodeBlock;
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -2228,19 +2246,22 @@ private:
 
                 xBias += (run.m_runWidth + letterSpacingValueSoFar);
             }
-        }
 
-        if (glyphCount != 0) {
-            if (isStroke == true) {
-                drawStrokeGlyphs(canvas, lastFontFace, sizeMatrix,
-                                 identityMatrix, glyphs, glyphCount,
-                                 lineWidth());
-            } else {
-                drawGlyphs(canvas, lastFontFace, sizeMatrix, identityMatrix,
-                           glyphs, glyphCount);
+            if (glyphCount != 0) {
+                if (isStroke == true) {
+                    drawStrokeGlyphs(canvas, lastFontFace, sizeMatrix,
+                                     identityMatrix, glyphs, glyphCount,
+                                     lineWidth());
+                } else {
+                    drawGlyphs(
+                        canvas, lastFontFace, sizeMatrix, identityMatrix,
+                        glyphs, glyphCount,
+                        !unicodeBlockContainsGraphicSymbol(lastUnicodeBlock));
+                }
+
+                glyphCount = 0;
             }
-
-            glyphCount = 0;
+            STARFISH_ASSERT(glyphCount == 0);
         }
 
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);

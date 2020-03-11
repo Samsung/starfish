@@ -270,6 +270,7 @@ public:
     FT_Face m_ftFace;
     hb_font_t* m_hbFont;
     hb_script_t m_script;
+    int m_unicodeBlock;
     std::vector<unsigned> m_glyphs;
     std::vector<LayoutLocation> m_glyphPositions;
     LayoutUnit m_runWidth;
@@ -483,6 +484,8 @@ cairoBackendInternalLoadGlyph(Font* f, char32_t ch);
 std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                                                         FontImplCairo* font);
 bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv);
+bool unicodeBlockContainsGraphicSymbol(int unicodeBlock);
+bool charMayContainsGraphicSymbol(char32_t c);
 };
 
 #endif
