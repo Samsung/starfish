@@ -48,6 +48,7 @@
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLTitleElement.h"
 #include "core/dom/HTMLAnchorElement.h"
+#include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
@@ -110,6 +111,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_domContentLoadedFired(false)
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
+    , m_isDialogsInShowModalCacheValid(false)
     , m_executionContext(new ExecutionContext(window, scriptBindingInstance,
                                               uri, charSet, this, true))
     , m_window(window)
@@ -1448,6 +1450,7 @@ void Document::updateDOMVersion()
 {
     m_domVersion++;
     invalidFocusRingCacheIfNeeded();
+    clearDialogsInShowModalCache();
 }
 
 void Document::attachNodeIterator(NodeIterator* ni)
@@ -1533,6 +1536,7 @@ ScriptWrappable* Document::defaultNamedGetter(String* name)
 
 void Document::invalidFocusRingCacheIfNeeded()
 {
+    m_focusRingCache.clear();
     m_isFocusRingCacheValid = false;
 }
 
@@ -1603,6 +1607,10 @@ const GCAtomicVector<Element*>& Document::focusRing()
                             return false;
                         }
                     }
+                    if (e->document()->isInertNode(e)) {
+                        return false;
+                    }
+
                     coll.push_back(
                         FocusRingItem(nodeIndex++, e->tabIndex(), e));
                     return false;
@@ -1618,9 +1626,50 @@ const GCAtomicVector<Element*>& Document::focusRing()
         for (size_t i = 0; i < coll.size(); i++) {
             m_focusRingCache.push_back(coll[i].m_element);
         }
+        m_isFocusRingCacheValid = true;
     }
 
     return m_focusRingCache;
+}
+
+void Document::clearDialogsInShowModalCache()
+{
+    m_dialogsInShowModal.clear();
+    m_isDialogsInShowModalCacheValid = false;
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#inert
+bool Document::isInertNode(Node* node)
+{
+    if (!m_isDialogsInShowModalCacheValid) {
+        m_dialogsInShowModal.clear();
+        GCVector<Element*> dialogsInShowModal;
+        Traverse::collectDescendants(
+            dialogsInShowModal, document()->rootElement(),
+            [](Element* e) -> bool {
+                if (e->isHTMLDialogElement() &&
+                    e->asHTMLDialogElement()->isInShowModal()) {
+                    return true;
+                }
+                return false;
+            },
+            false);
+        m_dialogsInShowModal.insert(m_dialogsInShowModal.end(),
+                                    dialogsInShowModal.begin(),
+                                    dialogsInShowModal.end());
+        m_isDialogsInShowModalCacheValid = true;
+    }
+
+    if (m_dialogsInShowModal.size() > 0) {
+        for (auto dialog : m_dialogsInShowModal) {
+            if (node->isDescendantOf(dialog)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
 }
 
 void Document::invalidNamedAccessCacheIfNeeded(String* name,

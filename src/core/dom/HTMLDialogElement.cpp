@@ -42,6 +42,20 @@ void* HTMLDialogElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+bool HTMLDialogElement::open()
+{
+    return hasAttribute(starfish()->staticStrings()->m_open.toString());
+}
+
+void HTMLDialogElement::setOpen(bool open)
+{
+    if (open) {
+        setAttribute(starfish()->staticStrings()->m_open, String::emptyString);
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_open);
+    }
+}
+
 void HTMLDialogElement::show()
 {
     if (hasAttribute(starfish()->staticStrings()->m_open) != SIZE_MAX) {
@@ -59,6 +73,13 @@ void HTMLDialogElement::showModal()
                                "InvalidStateError");
     }
 
+    if (!isConnected()) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    m_isInShowModal = true;
     setAttribute(starfish()->staticStrings()->m_open, String::emptyString);
 }
 
@@ -68,6 +89,7 @@ void HTMLDialogElement::close(String* returnValue)
         return;
     }
 
+    m_isInShowModal = false;
     removeAttribute(starfish()->staticStrings()->m_open);
 
     if (returnValue->equals(String::emptyString)) {
@@ -78,5 +100,19 @@ void HTMLDialogElement::close(String* returnValue)
         executionContext()->starfish()->staticStrings()->m_close.localName();
     Event* e = new Event(executionContext(), eventType);
     dispatchEventByUA(e);
+}
+
+void HTMLDialogElement::didAttributeChanged(QualifiedName name, String* old,
+                                            String* value,
+                                            bool attributeCreated,
+                                            bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
+                                     attributeRemoved);
+    StaticStrings* ss = starfish()->staticStrings();
+    if (name == ss->m_open) {
+        document()->clearDialogsInShowModalCache();
+        document()->invalidFocusRingCacheIfNeeded();
+    }
 }
 } // namespace Starfish

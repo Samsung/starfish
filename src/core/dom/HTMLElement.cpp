@@ -171,6 +171,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_input, value, this);
     } else if (name == ss->m_oninvalid) {
         setAttributeEventListener(ss->m_invalid, value, this);
+    } else if (name == ss->m_open) {
+        setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
 }
 

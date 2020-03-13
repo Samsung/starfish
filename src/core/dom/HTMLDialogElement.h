@@ -38,16 +38,26 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLDialogElement() const override;
 
-    DEFINE_GETTER_SETTER(bool, open, Open);
+    bool open();
+    void setOpen(bool open);
     DEFINE_GETTER_SETTER(String*, returnValue, ReturnValue);
 
     void show();
     void showModal();
     void close(String* returnValue = String::emptyString);
 
+    bool isInShowModal()
+    {
+        return m_isInShowModal;
+    }
+
+    void didAttributeChanged(QualifiedName name, String* old, String* value,
+                             bool attributeCreated,
+                             bool attributeRemoved) override;
+
 private:
-    bool m_open{ false };
     String* m_returnValue{ String::emptyString };
+    bool m_isInShowModal{ false };
 };
 }
 #endif

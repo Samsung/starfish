@@ -36,6 +36,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
+#include "core/dom/HTMLDialogElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
@@ -955,6 +956,10 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     didFocusEvent();
 
     if (!n->isInDocumentScope() || !n->document()->browsingContext()) {
+        return;
+    }
+
+    if (document()->isInertNode(n)) {
         return;
     }
 
