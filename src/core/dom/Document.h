@@ -430,6 +430,9 @@ public:
 
     const GCAtomicVector<Element*>& focusRing();
 
+    bool isInertNode(Node* node);
+    void clearDialogsInShowModalCache();
+
     Element* elementFromPoint(float x, float y);
 
     StyleSheetList* styleSheets();
@@ -738,6 +741,7 @@ protected:
     bool m_domContentLoadedFired : 1;
     bool m_onLoadFired : 1;
     bool m_isFocusRingCacheValid : 1;
+    bool m_isDialogsInShowModalCacheValid : 1;
 
     ExecutionContext* m_executionContext;
     Window* m_window;
@@ -760,6 +764,7 @@ protected:
     GCVector<Element*> m_currentScripts;
     GCAtomicVector<Element*>
         m_focusRingCache; // using atomic vector is not accident
+    GCVector<Element*> m_dialogsInShowModal;
     GCVector<Range*> m_ranges;
     GCVector<NodeIterator*> m_nodeIterators;
     // each element has strong reference by DOM tree already

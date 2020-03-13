@@ -620,6 +620,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
             m_tabIndexWasSetExplicitly = false;
         }
         document()->invalidFocusRingCacheIfNeeded();
+        document()->clearDialogsInShowModalCache();
     }
 
     if (document()->styleResolver().mayHaveAttrSelectorWithName(
