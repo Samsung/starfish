@@ -11115,6 +11115,14 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
             GridTrackSize g;
             v->push_back(g);
             continue;
+        } else if (ss == "min-content") {
+            v->push_back(
+                GridTrackSize(GridTrackSize::GridTrackType::MinContentType));
+            continue;
+        } else if (ss == "max-content") {
+            v->push_back(
+                GridTrackSize(GridTrackSize::GridTrackType::MaxContentType));
+            continue;
         }
 
         CSSPropertyParser parser((char*)ss.data(), ss.length());
