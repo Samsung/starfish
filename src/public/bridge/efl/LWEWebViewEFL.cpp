@@ -288,6 +288,7 @@ public:
                const char* timezoneID)
         : WebView(nullptr)
         , m_resizeHandler(nullptr)
+        , m_shownHandler(nullptr)
         , m_keyDownEventHandler(nullptr)
         , m_keyUpEventHandler(nullptr)
 #if defined(PORT_WINDOW_BACKEND_GL)
