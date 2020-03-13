@@ -134,6 +134,8 @@ public:
         LengthType,
         FrType,
         MinMaxType,
+        MinContentType,
+        MaxContentType,
     };
 
     GridTrackSize()
@@ -158,6 +160,13 @@ public:
     {
     }
 
+    GridTrackSize(GridTrackType type)
+        : m_data1(Length())
+        , m_data2(Length())
+        , m_type(type)
+    {
+    }
+
     bool isLength() const
     {
         return m_type == LengthType;
@@ -171,6 +180,16 @@ public:
     bool isMinMax() const
     {
         return m_type == MinMaxType;
+    }
+
+    bool isMinContent() const
+    {
+        return m_type == MinContentType;
+    }
+
+    bool isMaxContent() const
+    {
+        return m_type == MaxContentType;
     }
 
     const Length& length() const
@@ -239,6 +258,10 @@ public:
             builder.appendString(", ");
             builder.appendString(m_data2.toString());
             builder.appendString(")");
+        } else if (m_type == MinContentType) {
+            builder.appendString("min-content");
+        } else if (m_type == MaxContentType) {
+            builder.appendString("max-content");
         }
         return builder.finalize();
     }

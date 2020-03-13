@@ -133,6 +133,9 @@ public:
 
     DEFINE_GETTER(FrameBox*, box);
     DEFINE_GETTER(size_t, index);
+    DEFINE_GETTER_SETTER(LayoutUnit, preferredWidth, PreferredWidth);
+    DEFINE_GETTER_SETTER(LayoutUnit, preferredMinWidth, PreferredMinWidth);
+    DEFINE_GETTER_SETTER(LayoutUnit, contentHeight, ContentHeight);
 
     size_t rowStart() const
     {
@@ -192,6 +195,9 @@ public:
 private:
     FrameBox* m_box;
     size_t m_index{ 0 };
+    LayoutUnit m_preferredWidth;
+    LayoutUnit m_preferredMinWidth;
+    LayoutUnit m_contentHeight;
 
     Nullable<size_t> m_rowStart;
     Nullable<size_t> m_rowEnd;
@@ -204,8 +210,16 @@ private:
     GridLineValue* m_gridColumnEnd{ nullptr };
 };
 
-class GridLine : public gc {
+class GridTrack : public gc {
 public:
+    enum GridLineType {
+        Length,
+        Fr,
+        MinMax,
+        MinContent,
+        MaxContent,
+    };
+
     LayoutUnit offset() const
     {
         return m_offset;
@@ -303,12 +317,22 @@ public:
         return m_isAuto;
     }
 
+    bool isMinContent()
+    {
+        return m_type == GridLineType::MinContent;
+    }
+
+    bool isMaxContent()
+    {
+        return m_type == GridLineType::MaxContent;
+    }
+
     bool isContaining()
     {
         return m_containing;
     }
 
-    GridLine(LayoutUnit offset)
+    GridTrack(LayoutUnit offset)
         : m_offset(offset)
         , m_fr(0)
         , m_min(GridLength())
@@ -323,7 +347,7 @@ public:
     }
 
     // The 'computed' is for the 'fr' unit.
-    GridLine(LayoutUnit fr, bool computed)
+    GridTrack(LayoutUnit fr, bool computed)
         : m_offset(0)
         , m_fr(fr)
         , m_min(GridLength())
@@ -337,7 +361,7 @@ public:
     {
     }
 
-    GridLine(GridLength min, GridLength max)
+    GridTrack(GridLength min, GridLength max)
         : m_fr(0)
         , m_min(min)
         , m_max(max)
@@ -355,22 +379,22 @@ public:
         }
     }
 
+    GridTrack(GridLineType type)
+        : m_type(type)
+    {
+    }
+
 private:
-    LayoutUnit m_offset;
+    LayoutUnit m_offset; // width
     LayoutUnit m_fr;
     GridLength m_min;
     GridLength m_max;
-    bool m_computed;
-    bool m_isAuto;
-    bool m_fixed;
-    bool m_newLine;
-    enum GridLineType {
-        Length,
-        Fr,
-        MinMax,
-    };
+    bool m_computed{ false };
+    bool m_isAuto{ false };
+    bool m_fixed{ true };
+    bool m_newLine{ false };
     GridLineType m_type;
-    bool m_containing;
+    bool m_containing{ false };
 };
 
 #define GRID_MAX_TRACK 50
@@ -389,6 +413,9 @@ public:
     void alignGridLinesForColumns(GridArea&, LayoutUnit&, LayoutUnit&, bool);
     void alignGridLinesForRows(GridArea&);
     void assumeGridItemWidths();
+    void resolveIntrinsicTrackSizes();
+    void stretchAutoTracks();
+    void applyAlignItems();
     void layoutGridLinesWithGridAreas();
     void relayoutGridLinesWithGridAreasIfNeeded();
 
@@ -397,7 +424,7 @@ public:
 
     bool fixGridAreaWithDefine(GridArea*, size_t);
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
-    void parsingGridTemplateAreasAndStoreInformation();
+    void parseGridTemplateAreas();
     void buildGridAreaAndOrdering();
     void placeGridItemsIntoCells();
 
@@ -411,14 +438,14 @@ public:
 
     LayoutUnit preferredWidth();
 
-    GCVector<GridLine>& gridLineColumns()
+    GCVector<GridTrack>& gridTemplateColumns()
     {
-        return m_gridLineColumns;
+        return m_gridTemplateColumns;
     }
 
-    GCVector<GridLine>& gridLineRows()
+    GCVector<GridTrack>& gridTemplateRows()
     {
-        return m_gridLineRows;
+        return m_gridTemplateRows;
     }
 
     LayoutContext& layoutContext()
@@ -437,8 +464,8 @@ private:
     LayoutContext& m_layoutContext;
     FrameGridBox* m_container;
     LayoutUnit m_availableWidth;
-    GCVector<GridLine> m_gridLineColumns;
-    GCVector<GridLine> m_gridLineRows;
+    GCVector<GridTrack> m_gridTemplateColumns;
+    GCVector<GridTrack> m_gridTemplateRows;
     GCVector<FrameBox*> m_orderedGridItems;
     GCVector<GridArea> m_orderedGridArea;
     GCUnorderedMultiMap<std::string, GridArea> m_namedAreaMap;
@@ -460,6 +487,10 @@ private:
     void placeRemainingGridAreas(GCVector<GridArea*>& gridAreasAuto);
     bool hasAvailableGridCells(GridArea* gridArea, size_t row, size_t col);
     void placeGridArea(GridArea* gridArea);
+
+    void applyImplicitTrackSizing();
+    void resolveMinMaxContentSize(size_t gridTrackIndex);
+    void applyAlignItemsCenter();
 };
 
 class FrameGridBox final : public FrameBlockBox {
