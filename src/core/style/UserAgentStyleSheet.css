@@ -280,9 +280,14 @@
 "   border-image: initial;"
 "}"
 "*:focus {"
+#ifndef STARFISH_TIZEN
 "outline: rgba(229, 151, 0, 255) auto 5px;"
+#endif
 "}"
 "input:focus, textarea:focus, select:focus {"
+#ifdef STARFISH_TIZEN
+"    outline: rgba(229, 151, 0, 255) auto 5px;"
+#endif
 "    outline-offset: -2px;"
 "}"
 "html:focus {"
