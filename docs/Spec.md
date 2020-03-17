@@ -1830,7 +1830,7 @@ The following describes Web Speech APIs supported by lightweight web engine. Ple
 
 ## WebRTC
 The following describes WebRTC APIs supported by lightweight web engine. Please, see [WebRTC Spec](https://w3c.github.io/webrtc-pc/) for more information.
-The WebRTC support is in the early alpha stage.
+The WebRTC support is in an early stage.
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
@@ -1855,11 +1855,44 @@ The WebRTC support is in the early alpha stage.
 | | method | RTCRtpSender addTrack(MediaStreamTrack track, MediaStream... streams) | Adds a new track to the RTCPeerConnection, and indicates that it is contained in the specified MediaStreams. | |
 | | method | void removeTrack(RTCRtpSender sender) | Stops sending media from sender. | |
 | [RTCConfiguration](https://w3c.github.io/webrtc-pc/#rtcconfiguration-dictionary) | dictionary | RTCConfiguration | The RTCConfiguration defines a set of parameters to configure how the peer-to-peer communication established via RTCPeerConnection is established or re-established. | |
+| | attribute | iceServers (of type sequence\<RTCIceServer\>)| An array of objects describing servers available to be used by ICE, such as STUN and TURN servers. | |
 | | attribute | iceTransportPolicy (of type RTCIceTransportPolicy) | Indicates which candidates the ICE Agent is allowed to use. | |
 | | attribute | bundlePolicy (of type RTCBundlePolicy. | Indicates which media-bundling policy to use when gathering ICE candidates. | |
 | | attribute | rtcpMuxPolicy (of type RTCRtcpMuxPolicy) | Indicates which rtcp-mux policy to use when gathering ICE candidates. | |
 | | attribute | peerIdentity (of type DOMString) | Sets the target peer identity for the RTCPeerConnection. | |
+| | attribute | sequence\<RTCCertificate\> certificates | A set of certificates that the RTCPeerConnection uses to authenticate. |
 | | attribute | iceCandidatePoolSize (of type octet, defaulting to 0) | Size of the prefetched ICE pool as defined in [JSEP] (section 3.5.4. and section 4.1.1.). | |
+| [RTCDataChannelState](https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate) | enum | | |
+| | value | "connecting " | The user agent is attempting to establish the underlying data transport |
+| | value | "open" | The underlying data transport is established and communication is possible. |
+| | value | "closing" | The procedure to close down the underlying data transport has started. |
+| | value | "closed" | The underlying data transport has been closed or could not be established. |
+| [RTCDataChannelInit](https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelinit) | dictionary | | |
+| | value | boolean ordered = true | If set to false, data is allowed to be delivered out of order. |
+| | value | unsigned short maxPacketLifeTime | Limits the time (in milliseconds) during which the channel will transmit or retransmit data if not acknowledged. |
+| | value | unsigned short maxRetransmits | Limits the number of times a channel will retransmit data if not successfully delivered. |
+| | value | USVString protocol = "" | Subprotocol name used for this channel. |
+| | value | boolean negotiated = false; | The default value of false tells the user agent to announce the channel in-band and instruct the other peer to dispatch a corresponding RTCDataChannel object. |
+| | value | unsigned short id | Sets the channel ID when negotiated is true. |
+| [RTCDataChannel](https://w3c.github.io/webrtc-pc/#dom-rtcdatachannel) | interface | | |
+| | readonly attribute | USVString label | The label attribute represents a label that can be used to distinguish this RTCDataChannel object from other RTCDataChannel objects. |
+| | readonly attribute | boolean ordered | The ordered attribute returns true if the RTCDataChannel is ordered, and false if out of order delivery is allowed. |
+| | readonly attribute | unsigned short? maxPacketLifeTime | The maxPacketLifeTime attribute returns the length of the time window (in milliseconds) during which transmissions and retransmissions may occur in unreliable mode |
+| | readonly attribute | unsigned short? maxRetransmits | The maxRetransmits attribute returns the maximum number of retransmissions that are attempted in unreliable mode. |
+| | readonly attribute | USVString protocol | The protocol attribute returns the name of the sub-protocol used with this RTCDataChannel. |
+| | readonly attribute | boolean negotiated | The negotiated attribute returns true if this RTCDataChannel was negotiated by the application, or false otherwise. |
+| | readonly attribute | unsigned short? id | The id attribute returns the ID for this RTCDataChannel. |
+| | readonly attribute | RTCDataChannelState readyState | The readyState attribute represents the state of the RTCDataChannel object. |
+| | attribute | EventHandler onopen | The event type of this event handler is open. |
+| | attribute | EventHandler onbufferedamountlow | The event type of this event handler is bufferedamountlow. |
+| | attribute | EventHandler onerror | The event type of this event handler is RTCErrorEvent. errorDetail contains "sctp-failure", sctpCauseCode contains the SCTP Cause Code value, and message contains the SCTP Cause-Specific-Information, possibly with additional text. |
+| | attribute | EventHandler onclosing | The event type of this event handler is Event. |
+| | attribute | EventHandler onclose | The event type of this event handler is Event. |
+| | attribute | EventHandler onmessage | The event type of this event handler is message. |
+| | attribute | DOMString binaryType | The binaryType attribute MUST, on getting, return the value to which it was last set. |
+| | method | void send(USVString data) | Run the steps described by the send() algorithm with argument type string object. |
+| [RTCDataChannelEvent](https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelevent)| interface | | |
+| | readonly attribute | RTCDataChannel channel | The channel attribute represents the RTCDataChannel object associated with the event. |
 | [RTCIceTransportPolicy](https://w3c.github.io/webrtc-pc/#dom-rtcicetransportpolicy) | enum | RTCIceTransportPolicy | | |
 | | value | relay | The ICE Agent uses only media relay candidates such as candidates passing through a TURN server. | |
 | | value | all | The ICE Agent can use any type of candidate when this value is specified. | |
