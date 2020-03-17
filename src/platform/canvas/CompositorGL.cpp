@@ -478,12 +478,11 @@ static size_t g_maxTextureSize;
 
 static void checkError()
 {
-#ifndef NDEBUG
     volatile auto error = glGetError();
     if (error != 0) {
+        STARFISH_LOG_ERROR("OpenGL error.. 0x%04x\n", error);
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
-#endif
 }
 
 static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
