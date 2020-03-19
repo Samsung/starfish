@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
+#include "core/dom/HTMLDialogElement.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
 #include "core/layout/FrameBlockBox.h"
@@ -530,6 +531,18 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     FrameBox* cb = containingBlock(this);
     LayoutUnit parentContentWidth = cb->contentWidth();
 
+    // https://html.spec.whatwg.org/multipage/interactive-elements.html#dom-dialog-showmodal
+    // https://html.spec.whatwg.org/multipage/interactive-elements.html#centered-alignment
+    // When the dialog is center-aligned, assume that its parent is
+    // frameDocument
+    bool isDialogInShowModal = false;
+    if (node() && node()->isHTMLDialogElement() &&
+        node()->asHTMLDialogElement()->isInShowModal()) {
+        cb = ctx.frameDocument();
+        parentContentWidth = cb->contentWidth();
+        isDialogInShowModal = true;
+    }
+
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         clearContentWidthDamaged();
@@ -542,6 +555,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         LayoutUnit oldContentWidth = contentWidth();
 
         computeBorderMarginPadding(ctx, parentContentWidth);
+
+        if (isDialogInShowModal && style()->width().isAuto()) {
+            PreferredWidthContext p(ctx, nullptr, this, this,
+                                    parentContentWidth - mbpWidth());
+            p.computePreferredWidth();
+            style()->setWidth(Length(Length::Fixed, p.preferredWidth()));
+        }
 
         if (isAbsolutePositioned()) {
             // 10.3.7 Absolutely positioned, non-replaced elements
@@ -673,6 +693,13 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         LengthData offset = style()->offset();
         Length top = offset.top();
         Length bottom = offset.bottom();
+
+        if (isDialogInShowModal) {
+            // Split the vertical space equally to top and bottom in the next
+            // step
+            top = Length(Length::Fixed, 0);
+            bottom = Length(Length::Fixed, 0);
+        }
 
         // 10.6.4 Absolutely positioned, non-replaced elements
         if (top.isAuto() && bottom.isAuto()) {
