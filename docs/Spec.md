@@ -1988,3 +1988,29 @@ The WebAudio support is in the early alpha stage.
 | | constructor | constructor (BaseAudioContext context, optional AudioBufferSourceOptions options = {}); | | |
 | | method | void start (optional double when = 0, optional double offset, optional double duration); | Schedules a sound to playback at an exact time. | Only when = 0 is supported at the moment. |
 | [AudioDestinationNode](https://webaudio.github.io/web-audio-api/#AudioDestinationNode) | interface | AudioDestinationNode | | |
+
+## WebSocket
+The following describes WebSocket APIs supported by lightweight web engine. Please, see [WebSocket Spec](https://html.spec.whatwg.org/multipage/web-sockets.html/) for more information.
+The Websocket is limitedly supported.
+
+| Interface | Type | Name | Description | Note |
+|-----------|------|------|-------------|------|
+| [WebSocket](https://html.spec.whatwg.org/multipage/web-sockets.html) | interface | WebSocket | | |
+| | constructor | constructor (USVString url, optional (DOMString or sequence<DOMString>) protocols = []); | | |
+| | attribute | readonly USVString url | Returns the URL that was used to establish the WebSocket connection. | |
+| | value | "CONNECTING " | The connection has not yet been established. |
+| | value | "OPEN " | The WebSocket connection is established and communication is possible. |
+| | value | "CLOSING" | The connection is going through the closing handshake, or the close() method has been invoked. |
+| | value | "CLOSED" | The connection has been closed or could not be opened. |
+| | attribute | unsigned short readyState | Returns the state of the WebSocket object's connection. It can have the values described below. | |
+| | attribute | readonly unsigned long long bufferedAmount | Returns the number of bytes of application data (UTF-8 text and binary data) that have been queued using send() but not yet been transmitted to the network. | |
+| | attribute | EventHandler onopen | Fired at networking-related objects when a connection is established. | |
+| | attribute | EventHandler onerror | Fired when unexpected errors occur. | |
+| | attribute | EventHandler onclose | Fired when WebSocket elements when the connection is terminated. | |
+| | method | void close(optional [Clamp] unsigned short code, optional USVString reason); | Closes the WebSocket connection. | |
+| | attribute | EventHandler onmessage | Fired at an object when it receives a message. | |
+| | attribute | BinaryType binaryType | Returns a string that indicates how binary data from the WebSocket object is exposed to scripts. | |
+| | method | send(USVString data); | Transmits string data using the WebSocket connection. | |
+| | method | send(Blob data); | Transmits Blob data using the WebSocket connection. | |
+| | method | send(ArrayBuffer data); | Transmits ArrayBuffer data using the WebSocket connection. | |
+| | method | send(ArrayBufferView data); | Transmits ArrayBufferView data using the WebSocket connection. | | |
