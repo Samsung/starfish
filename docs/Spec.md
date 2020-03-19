@@ -1369,17 +1369,17 @@ section are supported.
 | | align-items | flex-start &#124; flex-end &#124; center &#124; baseline &#124; stretch | Aligns flex items along the cross axis of the current line of the flex container. | |
 | | align-self | flex-start &#124; flex-end &#124; center &#124; baseline &#124; stretch | Does the same as align-itmes, but it overwrites align-items when specified on flex-item. | |
 | | align-content | flex-start &#124; flex-end &#124; center &#124; space-between &#124; space-around &#124; stretch | Aligns a flex container’s lines within the flex container when there is extra space in the cross-axis, similar to how justify-content aligns individual items within the main-axis. | |
-| [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid columns. | Do not support '%' unit, the line name, repeat and minmax function. |
-| | grid-template-rows | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid rows. | Do not support '%' unit, the line name, repeat and minmax function. |
-| | grid-column-gap | &lt;number&gt; | This property sets the size of the gap between an element's columns. | Do not support '%' unit. |
-| | grid-row-gap | &lt;number&gt; | This property sets the size of the gap between an element's rows. | Do not support '%' unit. |
-| | grid-gap | &lt;number&gt; | This property specifies the gaps between rows and columns. It is a shorthand for row-gap and column-gap. | Do not support '%' unit. |
-| | grid-column-start | &lt;number&gt; | This property specifies a grid item's start position within the grid column. Negative numbers are invalid. | Do not support negative numbers and the named line. |
-| | grid-column-end | &lt;number&gt; | This property specifies a grid item's end position within the grid column. Negative numbers are invalid. | Do not support negative numbers and the named line. |
-| | grid-row-start | &lt;number&gt; | This property specifies a grid item's start position within the grid row. Negative numbers are invalid. | Do not support negative numbers and the named line. |
-| | grid-row-end | &lt;number&gt; | This property specifies a grid item's end position within the grid row. Negative numbers are invalid. | Do not support negative numbers and the named line. |
-| | grid-row | &lt;number&gt; | This property is a shorthand property for grid-row-start and grid-row-end. Negative numbers are invalid. | Do not support negative numbers and the named line. |
-| | grid-column | &lt;number&gt; | This property is a shorthand property for grid-column-start and grid-column-end. Negative numbers are invalid. | Do not support negative numbers and the named line. |
+| [Grid](https://www.w3.org/TR/css-grid-1/) | grid-template-columns | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid columns. | '%' unit, line names, and minmax functions are not supported. |
+| | grid-template-rows | &lt;number&gt; &#124; &lt;fr&gt; unit | This property defines the track sizing of the grid rows. | '%' unit, line names, and minmax functions are not supported. |
+| | grid-column-gap | &lt;number&gt; | This property sets the size of the gap between an element's columns. | '%' unit is not supported. |
+| | grid-row-gap | &lt;number&gt; | This property sets the size of the gap between an element's rows. | '%' unit is not supported. |
+| | grid-gap | &lt;number&gt; | This property specifies the gaps between rows and columns. It is a shorthand for row-gap and column-gap. | '%' unit is not supported. |
+| | grid-column-start | &lt;number&gt; | This property specifies a grid item's start position within the grid column. | A negative number and a line name are not supported. |
+| | grid-column-end | &lt;number&gt; | This property specifies a grid item's end position within the grid column.| A negative number and a line name are not supported. |
+| | grid-row-start | &lt;number&gt; | This property specifies a grid item's start position within the grid row. | A negative number and a line name are not supported. |
+| | grid-row-end | &lt;number&gt; | This property specifies a grid item's end position within the grid row. | A negative number and a line name are not supported. |
+| | grid-row | &lt;number&gt; | This property is a shorthand property for grid-row-start and grid-row-end. | Negative numbers and line names are not supported. |
+| | grid-column | &lt;number&gt; | This property is a shorthand property for grid-column-start and grid-column-end. | Negative numbers and line names are not supported. |
 | | grid-template-areas | &lt;string&gt;+ | This property specifies named grid areas. | |
 | [Layered presentation](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#layers) | z-index | auto &#124; &lt;integer&gt; | Specifies the stack order of an element. | |
 | [Text direction](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#direction) | direction | ltr | Specifies the text direction/writing direction. | Development status: experimental |
@@ -1944,7 +1944,7 @@ The WebRTC support is in an early stage.
 
 ## WebAudio
 The following describes WebAudio APIs supported by lightweight web engine. Please, see [WebAudio Spec](https://webaudio.github.io/web-audio-api/) for more information.
-The WebAudio support is in the early alpha stage.
+The WebAudio support is in an early stage.
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|
