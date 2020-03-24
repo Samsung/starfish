@@ -7915,30 +7915,34 @@ void computeAnimation(StyleResolver& resolver, Element* element,
 
                 // animation property gone || other properties changed
                 if (shouldRemove == false) {
-                    if (animationTasks[i]->isCSSAnimationTask() &&
-                        element->style()->animation()) {
-                        bool found = false;
-                        auto animation = element->style()->animation();
-                        for (size_t n = 0; n < animation->keyframesSize();
-                             n++) {
-                            if (!name->equals(animation->animationName(n))) {
-                                continue;
-                            }
-                            auto keyframes = animation->keyframes(n);
-                            if (keyframes.keyframeListSize() > 0) {
-                                auto keyframe = keyframes.keyframe(0);
-                                for (auto& keyKind : keyframe->keyKinds()) {
-                                    if (animationTasks[i]
-                                            ->isKindOfTransitionProperty(
-                                                keyKind) == true) {
-                                        found = true;
-                                        break;
+                    if (animationTasks[i]->isCSSAnimationTask()) {
+                        if (element->style()->animation()) {
+                            bool found = false;
+                            auto animation = element->style()->animation();
+                            for (size_t n = 0; n < animation->keyframesSize();
+                                 n++) {
+                                if (!name->equals(
+                                        animation->animationName(n))) {
+                                    continue;
+                                }
+                                auto keyframes = animation->keyframes(n);
+                                if (keyframes.keyframeListSize() > 0) {
+                                    auto keyframe = keyframes.keyframe(0);
+                                    for (auto& keyKind : keyframe->keyKinds()) {
+                                        if (animationTasks[i]
+                                                ->isKindOfTransitionProperty(
+                                                    keyKind) == true) {
+                                            found = true;
+                                            break;
+                                        }
                                     }
                                 }
+                                if (found == false) {
+                                    shouldRemove = true;
+                                }
                             }
-                            if (found == false) {
-                                shouldRemove = true;
-                            }
+                        } else {
+                            shouldRemove = true;
                         }
                     }
                 }

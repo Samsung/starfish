@@ -27,6 +27,7 @@
 #include "core/animation/TimingFunction.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/AnimationEvent.h"
 #include "core/dom/TransitionEvent.h"
 #include "core/layout/Frame.h"
@@ -241,12 +242,6 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
         execute(computeProgress(f), style);
 
-        if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
-            m_fillMode ==
-                AnimationFillModeValue::AnimationFillModeForwardsValue) {
-            return;
-        }
-
         if (f >= 1.0 && m_isForward == true) {
             m_frameIdx++;
             if (m_frameIdx == m_frameSize - 1) {
@@ -263,6 +258,12 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
                 m_delayMs = 0;
                 m_isInDelayedTime = false;
             }
+        }
+
+        if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
+            m_fillMode ==
+                AnimationFillModeValue::AnimationFillModeForwardsValue) {
+            return;
         }
 
     } else {
@@ -2783,6 +2784,23 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
     return nullptr;
 }
 
+static void resolveLengthAnimatedValueIfNeeded(AnimatedValue* value, Font* font,
+                                               const Length& curFontSize,
+                                               const Length& rootFontSize,
+                                               HTMLHtmlElement* root,
+                                               const LayoutSize& windowSize)
+{
+    if (value->isLength()) {
+        if (!value->getLength().isFixed()) {
+            auto v = value->getLength();
+            v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                    windowSize.width(), windowSize.height(),
+                                    nullptr);
+            value->setLength(v);
+        }
+    }
+}
+
 bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                            bool isCSSAnimationTask)
 {
@@ -2796,6 +2814,19 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
     if (style->animation() == nullptr) {
         return false;
     }
+
+    Font* font = style->font();
+    Length curFontSize = style->fontSize();
+    Length rootFontSize = Length(
+        Length::Fixed, element->document()->webView()->defaultFontSize());
+    HTMLHtmlElement* root = element->document()->rootElement();
+    if (root && root->style()) {
+        rootFontSize = root->style()->fontSize();
+    }
+
+    Window* w = element->window();
+    LayoutSize windowSize(w->innerWidth(), w->innerHeight());
+
     StyleAnimationData* animation = style->animation();
     size_t keyframesSize = animation->keyframesSize();
     for (size_t s = 0; s < keyframesSize; s++) {
@@ -2853,6 +2884,9 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     isAvailable = false;
                     break;
                 }
+
+                resolveLengthAnimatedValueIfNeeded(
+                    value, font, curFontSize, rootFontSize, root, windowSize);
                 values[l].push_back(value);
             }
             if (isAvailable == false) {
@@ -2893,6 +2927,10 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                         isAvailable = false;
                         break;
                     }
+
+                    resolveLengthAnimatedValueIfNeeded(value, font, curFontSize,
+                                                       rootFontSize, root,
+                                                       windowSize);
                     values[l].push_back(value);
                 }
                 if (isAvailable == false) {

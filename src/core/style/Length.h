@@ -88,7 +88,8 @@ public:
 
     void changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutUnit viewportWidth,
-                               LayoutUnit viewportHeight, ComputedStyle* cs);
+                               LayoutUnit viewportHeight,
+                               Nullable<ComputedStyle*> cs);
 
     void roundBorderWidth()
     {

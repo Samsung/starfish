@@ -1226,15 +1226,12 @@ static bool parseAnimationShorthand(
     for (size_t i = 0; i < len; i++) {
         CSSStyleValuePair temp;
         const CSSTokenValue& tok = tokens[i];
-        if (!foundName && temp.updateValueUnitAnimationName(tok)) {
-            foundName = true;
-            *name = temp;
-            continue;
-        }
-        // TODO: Handle animation-name using 'var'.
 
+        // delay can be negative
+        int timeParsingOption =
+            foundDuration ? CSSPropertyParser::AllowNegative : 0;
         if ((!foundDuration || !foundDelay) &&
-            temp.updateValueUnitTimeOrCalc(tok, 0)) {
+            temp.updateValueUnitTimeOrCalc(tok, timeParsingOption)) {
             if (!foundDuration) {
                 foundDuration = true;
                 *duration = temp;
@@ -1292,6 +1289,13 @@ static bool parseAnimationShorthand(
             continue;
         }
         // TODO: Handle animation-fill-mode using 'var'.
+
+        if (!foundName && temp.updateValueUnitAnimationName(tok)) {
+            foundName = true;
+            *name = temp;
+            continue;
+        }
+        // TODO: Handle animation-name using 'var'.
 
         return false;
     }
