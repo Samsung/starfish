@@ -30,7 +30,8 @@
 namespace Starfish {
 void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                    Font* font, LayoutUnit viewportWidth,
-                                   LayoutUnit viewportHeight, ComputedStyle* cs)
+                                   LayoutUnit viewportHeight,
+                                   Nullable<ComputedStyle*> cs)
 {
     if (isFontPercent()) {
         if (m_type == Rem && !rootFontSize.isFixed()) {
@@ -54,7 +55,9 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
     } else if (isViewportPercent()) {
         m_data = viewportPercentValue(viewportWidth, viewportHeight);
         m_type = Fixed;
-        cs->m_seenViewPortUnitInStyle = true;
+        if (cs) {
+            cs->m_seenViewPortUnitInStyle = true;
+        }
     } else if (isCalc()) {
         GCVector<CalcTerm*>& data = calcData()->terms();
         auto iter = data.begin();

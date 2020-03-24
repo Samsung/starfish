@@ -152,6 +152,12 @@ public:
         return m_data.m_length;
     }
 
+    void setLength(const Length& l)
+    {
+        STARFISH_ASSERT(m_type == LENGTH);
+        m_data.m_length = l;
+    }
+
     LengthSize* getLengthSize() const
     {
         STARFISH_ASSERT(m_type == LENGTH_SIZE);
