@@ -1060,7 +1060,9 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
         if (m_focusedNode->isHTMLIFrameElement()) {
             auto childBrowsingContext =
                 m_focusedNode->asHTMLIFrameElement()->browsingContext();
-            childBrowsingContext->releaseFocusedNode(nullptr, false);
+            if (childBrowsingContext) {
+                childBrowsingContext->releaseFocusedNode(nullptr, false);
+            }
             m_focusedNode = nullptr;
             // active element
             if (resetActiveElement) {
