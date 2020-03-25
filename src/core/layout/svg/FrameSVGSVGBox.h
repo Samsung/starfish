@@ -72,6 +72,11 @@ public:
         m_isInnerSVG = v;
     }
 
+    void setContainerViewport(Nullable<Unit::Rect> containerViewport)
+    {
+        m_containerViewport = containerViewport;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -83,6 +88,7 @@ protected:
     float m_svgScale;
     NativeImageData* m_surface;
     bool m_isInnerSVG;
+    Nullable<Unit::Rect> m_containerViewport;
 };
 }
 

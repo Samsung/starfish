@@ -362,6 +362,11 @@ test/cairo/internal-test/css/stackingcontext/iframe_border_with_composite.html
 test/cairo/internal-test/css/flex/flex-webkit-prefix.html
 test/cairo/internal-test/css/flex/layout-both-side-every-flex-item.html
 test/cairo/internal-test/css/flex/respect-under-compute-preferred-width-value.html
+test/cairo/internal-test/css/flex/flex_svg_maxHeight_01.html
+test/cairo/internal-test/css/flex/flex_svg_maxHeight_02.html
+test/cairo/internal-test/css/flex/flex_svg_maxHeight_03.html
+test/cairo/internal-test/svg/svg_01.html
+test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
