@@ -24,6 +24,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
@@ -210,6 +211,12 @@ void HTMLIFrameElement::loadSrc()
 void HTMLIFrameElement::unloadSrc()
 {
     if (m_browsingContext) {
+        if (document()->doesParticipateInRendering() &&
+            m_browsingContext->document()->doesParticipateInRendering()) {
+            // we need to rebuild StackingContext tree for removing rendered
+            // result
+            webView()->setNeedsEstablishesStackingContext();
+        }
         m_browsingContext->dispose();
         m_browsingContext = nullptr;
     }
