@@ -36,10 +36,17 @@ public:
         return true;
     }
 
+    FrameSVGSVGBox* frameBox()
+    {
+        return m_frameBox;
+    }
+
 protected:
     SVGNativeImageData()
     {
     }
+
+    FrameSVGSVGBox* m_frameBox{ nullptr };
 };
 } // namespace Starfish
 

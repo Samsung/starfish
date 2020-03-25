@@ -22,6 +22,7 @@
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/Document.h"
+#include "core/dom/svg/SVGSVGElement.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
 
@@ -71,8 +72,11 @@ public:
         canvas->save();
         canvas->clip(dst);
         canvas->translate(dst.x(), dst.y());
-        canvas->scale(dst.width() / width(), dst.height() / height());
+
+        m_frameBox->setContainerViewport(dst);
         m_frameBox->paintReplaced(canvas);
+        m_frameBox->setContainerViewport(Nullable<Unit::Rect>());
+
         canvas->restore();
     }
 
@@ -129,7 +133,6 @@ public:
 protected:
     StorePositiveIntergerAsOdd m_width;
     StorePositiveIntergerAsOdd m_height;
-    FrameSVGSVGBox* m_frameBox;
 };
 
 NativeImageData* SVGNativeImageData::create(size_t width, size_t height,

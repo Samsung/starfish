@@ -46,6 +46,7 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     IntrinsicSize result;
     result.m_isContentExists = true;
     result.m_hasAspectRatio = false;
+    result.m_hasViewport = false;
 
     LayoutUnit width = STARFISH_DEFAULT_SVG_WIDTH;
     LayoutUnit height = STARFISH_DEFAULT_SVG_HEIGHT;
@@ -54,20 +55,23 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
         width = style()->width().fixed();
         height = style()->height().fixed();
         result.m_hasAspectRatio = true;
+        result.m_hasViewport = true;
     } else if (style()->width().isFixed()) {
         width = style()->width().fixed();
         height = style()->width().fixed();
         result.m_hasAspectRatio = true;
+        result.m_hasViewport = true;
     } else if (style()->height().isFixed()) {
         width = style()->height().fixed();
         height = style()->height().fixed();
         result.m_hasAspectRatio = true;
+        result.m_hasViewport = true;
     } else {
         if (node()->asSVGSVGElement()->hasViewBox()) {
-            width = STARFISH_DEFAULT_SVG_WIDTH;
-            height = STARFISH_DEFAULT_SVG_WIDTH *
-                     node()->asSVGSVGElement()->viewBox().height() /
-                     node()->asSVGSVGElement()->viewBox().width();
+            Unit::Rect viewBox = node()->asSVGSVGElement()->viewBox();
+            height = STARFISH_DEFAULT_SVG_HEIGHT;
+            width = STARFISH_DEFAULT_SVG_HEIGHT * viewBox.width() /
+                    viewBox.height();
             result.m_hasAspectRatio = true;
         }
     }
@@ -146,51 +150,85 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
     canvas->setNeedsGoodQualityAntialias();
     canvas->save();
+
+    LayoutUnit svgWidth = contentWidth();
+    LayoutUnit svgHeight = contentHeight();
+    IntrinsicSize intrinsicSizeInfo = intrinsicSize();
+
+    Unit::Rect viewport;
+    if (m_containerViewport.hasValue()) {
+        viewport = m_containerViewport.value();
+        svgWidth = intrinsicSizeInfo.m_intrinsicContentSize.width();
+        svgHeight = intrinsicSizeInfo.m_intrinsicContentSize.height();
+    } else {
+        viewport.setWidth(contentWidth());
+        viewport.setHeight(contentHeight());
+    }
+
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
-    canvas->clip(Unit::Rect(0, 0, contentWidth(), contentHeight()));
+    canvas->clip(Unit::Rect(0, 0, viewport.width(), viewport.height()));
 
-    if (node()->asSVGSVGElement()->hasViewBox()) {
-        Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
-        float sx = contentWidth() / rt.width();
-        float sy = contentHeight() / rt.height();
-        float s = 1;
+    double sxToViewport = viewport.width() / svgWidth;
+    double syToViewport = viewport.height() / svgHeight;
+    double sToViewport = 1;
+    if (sxToViewport == 0 || syToViewport == 0 ||
+        std::isnan(sxToViewport == 0) || std::isnan(syToViewport == 0)) {
+        canvas->restore();
+        return;
+    }
 
-        auto size = intrinsicSize().m_intrinsicContentSize;
-
-        if (size.width() < rt.width() && size.height() < rt.height()) {
-            s = std::max(sx, sy);
-        } else {
-            s = std::min(sx, sy);
+    bool hasViewBox = node()->asSVGSVGElement()->hasViewBox();
+    if (hasViewBox) {
+        sToViewport = std::min(sxToViewport, syToViewport);
+        canvas->scale(sToViewport, sToViewport);
+    } else {
+        if (intrinsicSizeInfo.m_hasViewport) {
+            canvas->scale(sxToViewport, syToViewport);
         }
+    }
 
-        if (s == 0 || std::isnan(s)) {
+    if (hasViewBox) {
+        Unit::Rect viewBox = node()->asSVGSVGElement()->viewBox();
+        double sx = svgWidth / viewBox.width();
+        double sy = svgHeight / viewBox.height();
+        double sToContentSize = std::min(sx, sy);
+
+        if (sToContentSize == 0 || std::isnan(sToContentSize)) {
             canvas->restore();
             return;
         }
-        float tx = rt.x();
-        float ty = rt.y();
+
+        canvas->scale(sToContentSize, sToContentSize);
+
+        double tx = viewBox.x();
+        double ty = viewBox.y();
         if (std::isnan(tx) || std::isnan(ty)) {
             canvas->restore();
             return;
         }
-        canvas->scale(s, s);
+
         canvas->translate(-tx, -ty);
 
-        tx = contentWidth() - s * rt.width();
-        if (tx > 0) {
-            tx = contentWidth() / 2 - (s * rt.width()) / 2;
+        double dx = 0;
+        double dy = 0;
+        if (intrinsicSizeInfo.m_hasViewport) {
+            dx = (svgWidth - viewBox.width() * sToContentSize) / 2;
+            dy = (svgHeight - viewBox.height() * sToContentSize) / 2;
         } else {
-            tx = 0;
+            // scale to viewport directly
+            dx = (viewport.width() - svgWidth * sToViewport) / 2;
+            dy = (viewport.height() - svgHeight * sToViewport) / 2;
         }
 
-        ty = contentHeight() - s * rt.height();
-        if (ty > 0) {
-            ty = contentHeight() / 2 - (s * rt.height()) / 2;
-        } else {
-            ty = 0;
+        if (dx < 0) {
+            dx = 0;
+        }
+        if (dy < 0) {
+            dy = 0;
         }
 
-        canvas->translate(tx / s, ty / s);
+        canvas->translate(dx / (sToContentSize * sToViewport),
+                          dy / (sToContentSize * sToViewport));
     }
 
     PaintingContext ctx(canvas);

@@ -23,9 +23,12 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
+#include "core/style/ComputedStyle.h"
 #include "core/modules/canvas/Canvas.h"
 
 namespace Starfish {
@@ -360,6 +363,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
         w = width.specifiedValue(parentContentWidth, this);
         w = contentWidthAfterApplyingBoxSizing(w);
+
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightAfterApplyingBoxSizing(h);
@@ -518,8 +522,21 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
 
     if (a.first.isAuto() || parentContentWidth == intMaxForLayoutUnit) {
         if (a.second.isAuto()) {
-            intrinsicWidth = s.m_intrinsicContentSize.width();
-            intrinsicHeight = s.m_intrinsicContentSize.height();
+            NativeImageData* imageData = nullptr;
+            if (isFrameReplacedImage()) {
+                imageData = node()->asHTMLImageElement()->imageData();
+            }
+
+            if (imageData && imageData->isSVGNativeImageData()) {
+                FrameSVGSVGBox* svg =
+                    imageData->asSVGNativeImageData()->frameBox();
+                IntrinsicSize defaultSize = svg->intrinsicSize();
+                intrinsicWidth = defaultSize.m_intrinsicContentSize.width();
+                intrinsicHeight = defaultSize.m_intrinsicContentSize.height();
+            } else {
+                intrinsicWidth = s.m_intrinsicContentSize.width();
+                intrinsicHeight = s.m_intrinsicContentSize.height();
+            }
         } else if (a.second.isDefinite(false) && !a.first.isDefinite(false)) {
             LayoutUnit unused;
             intrinsicHeight = a.second.specifiedValue(unused, this);

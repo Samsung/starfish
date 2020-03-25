@@ -636,30 +636,49 @@ struct MainSizeFixer {
         , m_isMainAxisInInlineAxis(isMainAxisInInlineAxis)
     {
         if (m_isMainAxisInInlineAxis) {
-            m_oldMainSizeLength = flexItem->style()->width();
-            m_oldMainSize = flexItem->width();
-            flexItem->style()->setWidth(Length(Length::Fixed, m_oldMainSize));
+            FrameBox* cb = containingBlock(flexItem);
+
+            m_maxHeightBackup = flexItem->style()->maxHeight();
+            if (cb->style()->flexWrap() == FlexWrapValue::NoWrapFlexWrapValue) {
+                Length maxHeight = cb->style()->maxHeight();
+                if (maxHeight.isFixed()) {
+                    if (m_maxHeightBackup.isAuto() ||
+                        (m_maxHeightBackup.isFixed() &&
+                         maxHeight.fixed() < m_maxHeightBackup.fixed())) {
+                        flexItem->style()->setMaxHeight(
+                            cb->style()->maxHeight());
+                    }
+                }
+            }
+
+            m_mainSizeBackup = flexItem->style()->width();
+            m_mainSizeLayoutBackup = flexItem->width();
+            flexItem->style()->setWidth(
+                Length(Length::Fixed, m_mainSizeLayoutBackup));
         } else {
-            m_oldMainSizeLength = flexItem->style()->height();
-            m_oldMainSize = flexItem->height();
-            flexItem->style()->setHeight(Length(Length::Fixed, m_oldMainSize));
+            m_mainSizeBackup = flexItem->style()->height();
+            m_mainSizeLayoutBackup = flexItem->height();
+            flexItem->style()->setHeight(
+                Length(Length::Fixed, m_mainSizeLayoutBackup));
         }
     }
 
     ~MainSizeFixer()
     {
         if (m_isMainAxisInInlineAxis) {
-            m_flexItem->style()->setWidth(m_oldMainSizeLength);
-            m_flexItem->setWidth(m_oldMainSize);
+            m_flexItem->style()->setWidth(m_mainSizeBackup);
+            m_flexItem->setWidth(m_mainSizeLayoutBackup);
+            m_flexItem->style()->setMaxHeight(m_maxHeightBackup);
         } else {
-            m_flexItem->style()->setHeight(m_oldMainSizeLength);
-            m_flexItem->setHeight(m_oldMainSize);
+            m_flexItem->style()->setHeight(m_mainSizeBackup);
+            m_flexItem->setHeight(m_mainSizeLayoutBackup);
         }
     }
 
     FrameBox* m_flexItem;
-    Length m_oldMainSizeLength;
-    LayoutUnit m_oldMainSize;
+    Length m_mainSizeBackup;
+    LayoutUnit m_mainSizeLayoutBackup;
+    Length m_maxHeightBackup;
     bool m_isMainAxisInInlineAxis;
 };
 
