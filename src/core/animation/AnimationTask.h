@@ -252,7 +252,7 @@ public:
     ActiveAnimationTask(Element* target,
                         CSSStyleValuePair::KeyKind targetProperty,
                         const AnimatedValue& from, const AnimatedValue& to,
-                        uint64_t durationInms, uint64_t delayInms,
+                        uint64_t durationInms, int64_t delayInms,
                         TimingFunction* timingFunction);
 
     ActiveAnimationTask(Element* target,
@@ -260,7 +260,7 @@ public:
                         const GCVector<AnimatedValue*>& animatedValues,
                         const GCAtomicVector<double>& keyframeNames,
                         const GCVector<TimingFunction*>& timingFunctions,
-                        uint64_t durationInms, uint64_t delayInms,
+                        uint64_t durationInms, int64_t delayInms,
                         float iterationCount, AnimationPlayStateValue playState,
                         AnimationFillModeValue fillMode);
 
@@ -458,6 +458,20 @@ public:
         m_fillMode = v;
     }
 
+    size_t currentAnimatedFromFrameIndex()
+    {
+        return m_frameIdx;
+    }
+
+    size_t currentAnimatedToFrameIndex()
+    {
+        if (m_isForward) {
+            return m_frameIdx + 1;
+        } else {
+            return m_frameIdx - 1;
+        }
+    }
+
     AnimatedValue* currentAnimatedFromValue();
     AnimatedValue* currentAnimatedToValue();
     TimingFunction* currentTimingFunction();
@@ -486,8 +500,8 @@ protected:
 
     uint64_t m_startTimeMs;
     uint64_t m_durationMs;
-    uint64_t m_startDelayMs;
-    uint64_t m_delayMs;
+    int64_t m_startDelayMs;
+    int64_t m_delayMs; // delays can be negative
     AnimationPlayStateValue m_playState;
     AnimationFillModeValue m_fillMode;
     uint64_t m_gapTimeMs;
@@ -513,7 +527,7 @@ public:
                                CSSStyleValuePair::KeyKind targetProperty,
                                const AnimatedValue& from,
                                const AnimatedValue& to, uint64_t durationInms,
-                               uint64_t delayInms,
+                               int64_t delayInms,
                                TimingFunction* timingFunction)
         : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                               delayInms, timingFunction)
@@ -527,7 +541,7 @@ public:
                                const GCVector<AnimatedValue*>& values,
                                const GCAtomicVector<double>& offsets,
                                const GCVector<TimingFunction*>& timingFunctions,
-                               uint64_t durationInms, uint64_t delayInms,
+                               uint64_t durationInms, int64_t delayInms,
                                float iterationCount,
                                AnimationPlayStateValue playState,
                                AnimationFillModeValue fillMode);
@@ -570,7 +584,7 @@ public:
                                  CSSStyleValuePair::KeyKind targetProperty,
                                  const AnimatedValue& from,
                                  const AnimatedValue& to, uint64_t durationInms,
-                                 uint64_t delayInms,
+                                 int64_t delayInms,
                                  TimingFunction* timingFunction,
                                  StyleTransformDataGroup* orgTransformValue);
 
@@ -579,7 +593,7 @@ public:
         const GCVector<AnimatedValue*>& values,
         const GCAtomicVector<double>& offsets,
         const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        uint64_t delayInms, float iterationCount,
+        int64_t delayInms, float iterationCount,
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode);
 
     virtual void resolveUnresolvedAnimatedValues() override;
@@ -592,19 +606,35 @@ public:
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        STARFISH_ASSERT(desc != nullptr);
         ActiveAnimationTask::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(ActiveTransformAnimationTask,
                                         m_originalTransformValue));
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveTransformAnimationTask,
+                                        m_fromTransformValue));
+        GC_set_bit(desc, GC_WORD_OFFSET(ActiveTransformAnimationTask,
+                                        m_toTransformValue));
     }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
 protected:
+    bool needsDecompositing(StyleTransformDataGroup* from,
+                            StyleTransformDataGroup* to);
+    void resolveTransformValues();
+    void removePercentValuesFromTransform();
+
+    // https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
+    // Two transform functions with the same name and the same number of
+    // arguments are interpolated numerically
+    // without a former conversion
+    bool m_shouldUseDecompositing;
+
     StyleTransformDataGroup* m_originalTransformValue;
     MatrixDecomposed2D m_decomposedFrom;
     MatrixDecomposed2D m_decomposedTo;
+    StyleTransformDataGroup* m_fromTransformValue;
+    StyleTransformDataGroup* m_toTransformValue;
 };
 
 class ActiveColorAnimationTask : public ActiveAnimationTask {
@@ -612,7 +642,7 @@ public:
     ActiveColorAnimationTask(Element* target,
                              CSSStyleValuePair::KeyKind targetProperty,
                              const AnimatedValue& from, const AnimatedValue& to,
-                             uint64_t durationInms, uint64_t delayInms,
+                             uint64_t durationInms, int64_t delayInms,
                              TimingFunction* timingFunction)
         : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                               delayInms, timingFunction)
@@ -626,7 +656,7 @@ public:
                              const GCVector<AnimatedValue*>& values,
                              const GCAtomicVector<double>& offsets,
                              const GCVector<TimingFunction*>& timingFunctions,
-                             uint64_t durationInms, uint64_t delayInms,
+                             uint64_t durationInms, int64_t delayInms,
                              float iterationCount,
                              AnimationPlayStateValue playState,
                              AnimationFillModeValue fillMode)
@@ -648,8 +678,7 @@ public:
                               CSSStyleValuePair::KeyKind targetProperty,
                               const AnimatedValue& from,
                               const AnimatedValue& to, uint64_t durationInms,
-                              uint64_t delayInms,
-                              TimingFunction* timingFunction,
+                              int64_t delayInms, TimingFunction* timingFunction,
                               Length originalToValue,
                               size_t indexForBgLayer = 0);
 
@@ -658,7 +687,7 @@ public:
                               const GCVector<AnimatedValue*>& values,
                               const GCAtomicVector<double>& offsets,
                               const GCVector<TimingFunction*>& timingFunctions,
-                              uint64_t durationInms, uint64_t delayInms,
+                              uint64_t durationInms, int64_t delayInms,
                               float iterationCount,
                               AnimationPlayStateValue playState,
                               AnimationFillModeValue fillMode,
@@ -698,7 +727,7 @@ public:
                                   CSSStyleValuePair::KeyKind targetProperty,
                                   const AnimatedValue& from,
                                   const AnimatedValue& to,
-                                  uint64_t durationInms, uint64_t delayInms,
+                                  uint64_t durationInms, int64_t delayInms,
                                   TimingFunction* timingFunction,
                                   LengthSize originalToValue,
                                   size_t indexForBgLayer = 0);
@@ -707,7 +736,7 @@ public:
         const GCVector<AnimatedValue*>& values,
         const GCAtomicVector<double>& offsets,
         const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-        uint64_t delayInms, float iterationCount,
+        int64_t delayInms, float iterationCount,
         AnimationPlayStateValue playState, AnimationFillModeValue fillMode,
         size_t indexForBgLayer = 0);
 

@@ -142,7 +142,7 @@ void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
 ActiveAnimationTask::ActiveAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, TimingFunction* timingFunction)
+    int64_t delayInms, TimingFunction* timingFunction)
     : m_isEveryAnimiatedValueResolved(true)
     , m_type(TRANSITION_TYPE)
     , m_property(targetProperty)
@@ -177,7 +177,7 @@ ActiveAnimationTask::ActiveAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
     : m_isEveryAnimiatedValueResolved(false)
     , m_type(ANIMATION_TYPE)
@@ -242,6 +242,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
         execute(computeProgress(f), style);
 
+        auto frameIdxBefore = m_frameIdx;
         if (f >= 1.0 && m_isForward == true) {
             m_frameIdx++;
             if (m_frameIdx == m_frameSize - 1) {
@@ -258,6 +259,9 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
                 m_delayMs = 0;
                 m_isInDelayedTime = false;
             }
+        }
+        if (frameIdxBefore != m_frameIdx) {
+            didAnimationFrameChanged();
         }
 
         if (!std::isinf(m_iterationCount) && m_gapTimeMs == 0 &&
@@ -366,7 +370,7 @@ ActiveOpacityAnimationTask::ActiveOpacityAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
                           timingFunctions, durationInms, delayInms,
@@ -569,11 +573,14 @@ static SkMatrix recomposing2DMatrix(
 ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, TimingFunction* timingFunction,
+    int64_t delayInms, TimingFunction* timingFunction,
     StyleTransformDataGroup* orgTransformValue)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
+    , m_shouldUseDecompositing(false)
     , m_originalTransformValue(nullptr)
+    , m_fromTransformValue(nullptr)
+    , m_toTransformValue(nullptr)
 {
     STARFISH_ASSERT(target != nullptr);
     STARFISH_ASSERT(timingFunction != nullptr);
@@ -587,10 +594,8 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
         m_originalTransformValue = newOrgData;
     }
 
-    m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
-    m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
-
-    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+    removePercentValuesFromTransform();
+    resolveTransformValues();
 }
 
 ActiveTransformAnimationTask::ActiveTransformAnimationTask(
@@ -598,60 +603,132 @@ ActiveTransformAnimationTask::ActiveTransformAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
                           timingFunctions, durationInms, delayInms,
                           iterationCount, playState, fillMode)
+    , m_shouldUseDecompositing(false)
     , m_originalTransformValue(nullptr)
+    , m_fromTransformValue(nullptr)
+    , m_toTransformValue(nullptr)
 {
     m_isEveryAnimiatedValueResolved = false;
     STARFISH_ASSERT(target != nullptr);
 }
 
+bool ActiveTransformAnimationTask::needsDecompositing(
+    StyleTransformDataGroup* from, StyleTransformDataGroup* to)
+{
+    if (!m_targetElement->frame()->isTransformable()) {
+        return true;
+    }
+
+    if (from->size() == 0 || to->size() == 0) {
+        return false;
+    }
+
+    if (from->size() != to->size()) {
+        return true;
+    }
+
+    size_t size = from->size();
+
+    for (size_t i = 0; i < size; i++) {
+        if (from->at(i).type() != to->at(i).type()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void ActiveTransformAnimationTask::didAnimationFrameChanged()
 {
     ActiveAnimationTask::didAnimationFrameChanged();
+    resolveTransformValues();
+}
 
-    m_decomposedFrom =
-        decomposing2DMatrix(currentAnimatedFromValue()->getMatrix());
-    m_decomposedTo = decomposing2DMatrix(currentAnimatedToValue()->getMatrix());
+void ActiveTransformAnimationTask::removePercentValuesFromTransform()
+{
+    Frame* frm = m_targetElement->frame();
+    if (frm->isTransformable()) {
+        for (size_t i = 0; i < m_values.size(); i++) {
+            STARFISH_ASSERT(m_values[i]->isTransformData());
+            auto newTransformData = m_values[i]->getTransformData()->clone();
 
-    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+            // remove percent values from transform
+            for (size_t j = 0; j < newTransformData->size(); j++) {
+                auto s = newTransformData->at(j);
+                if (s.type() == StyleTransformData::Translate) {
+                    Length w(Length::Fixed,
+                             s.translate()->tx().specifiedValue(
+                                 frm->asFrameBox()->width(), m_targetElement));
+                    Length h(Length::Fixed,
+                             s.translate()->ty().specifiedValue(
+                                 frm->asFrameBox()->height(), m_targetElement));
+                    s.setTranslate(w, h);
+                }
+            }
+
+            new (m_values[i]) AnimatedValue(newTransformData);
+        }
+    }
+}
+
+void ActiveTransformAnimationTask::resolveTransformValues()
+{
+    m_shouldUseDecompositing =
+        needsDecompositing(currentAnimatedFromValue()->getTransformData(),
+                           currentAnimatedToValue()->getTransformData());
+
+    Frame* frm = m_targetElement->frame();
+
+    StyleTransformDataGroup* fromTransfromStyle =
+        currentAnimatedFromValue()->getTransformData();
+    StyleTransformDataGroup* toTransfromStyle =
+        currentAnimatedToValue()->getTransformData();
+
+    if (m_shouldUseDecompositing) {
+        if (frm->isTransformable()) {
+            m_decomposedFrom =
+                decomposing2DMatrix(ComputedStyle::transformToMatrix(
+                    fromTransfromStyle, frm->asFrameBox()->width(),
+                    frm->asFrameBox()->height(), frm));
+            m_decomposedTo =
+                decomposing2DMatrix(ComputedStyle::transformToMatrix(
+                    toTransfromStyle, frm->asFrameBox()->width(),
+                    frm->asFrameBox()->height(), frm));
+        } else {
+            m_decomposedFrom = m_decomposedTo =
+                decomposing2DMatrix(SkMatrix::I());
+        }
+        matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+    } else {
+        STARFISH_ASSERT(frm->isTransformable());
+
+        // we need to clone transform values for keeping original values
+        if (fromTransfromStyle->size() != 0 && toTransfromStyle->size() == 0) {
+            toTransfromStyle =
+                fromTransfromStyle->extractTransformFunctionsWithZeroValues();
+        } else if (fromTransfromStyle->size() == 0 &&
+                   toTransfromStyle->size() != 0) {
+            fromTransfromStyle =
+                toTransfromStyle->extractTransformFunctionsWithZeroValues();
+        }
+
+        STARFISH_ASSERT(fromTransfromStyle->size() == toTransfromStyle->size());
+
+        m_fromTransformValue = fromTransfromStyle;
+        m_toTransformValue = toTransfromStyle;
+    }
 }
 
 void ActiveTransformAnimationTask::resolveUnresolvedAnimatedValues()
 {
-    if (m_isEveryAnimiatedValueResolved == false) {
-        Frame* frm = m_targetElement->frame();
-
-        if (frm->isTransformable() == true) {
-            for (size_t i = 0; i < m_values.size(); i++) {
-                STARFISH_ASSERT(m_values[i]->isTransformData() == true);
-                new (m_values[i])
-                    AnimatedValue(ComputedStyle::transformToMatrix(
-                        m_values[i]->getTransformData(),
-                        frm->asFrameBox()->width(), frm->asFrameBox()->height(),
-                        frm));
-            }
-        } else {
-            for (size_t i = 0; i < m_values.size(); i++) {
-                STARFISH_ASSERT(m_values[i]->isTransformData() == true);
-                new (m_values[i]) AnimatedValue(SkMatrix::I());
-            }
-        }
-
-        if (m_isForward == true) {
-            m_decomposedFrom = decomposing2DMatrix(m_values[0]->getMatrix());
-            m_decomposedTo = decomposing2DMatrix(m_values[1]->getMatrix());
-        } else {
-            m_decomposedFrom =
-                decomposing2DMatrix(m_values[m_values.size() - 1]->getMatrix());
-            m_decomposedTo =
-                decomposing2DMatrix(m_values[m_values.size() - 2]->getMatrix());
-        }
-
-        matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+    if (!m_isEveryAnimiatedValueResolved) {
+        removePercentValuesFromTransform();
+        resolveTransformValues();
     }
 
     ActiveAnimationTask::resolveUnresolvedAnimatedValues();
@@ -676,14 +753,11 @@ void* ActiveTransformAnimationTask::operator new(size_t size)
 
 void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 {
-    STARFISH_ASSERT(style != nullptr);
     Element* current = targetElement();
     auto transforms = style->rareComputedStyleData()->transforms();
 
-    didAnimationFrameChanged();
-
-    MatrixDecomposed2D now;
-    if (m_isForward == true) {
+    if (m_shouldUseDecompositing) {
+        MatrixDecomposed2D now;
         now.angle = m_decomposedFrom.angle * (1 - progress) +
                     m_decomposedTo.angle * progress;
         now.matrixM11 = m_decomposedFrom.matrixM11 * (1 - progress) +
@@ -702,48 +776,83 @@ void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
                          m_decomposedTo.translateX * progress;
         now.translateY = m_decomposedFrom.translateY * (1 - progress) +
                          m_decomposedTo.translateY * progress;
+
+        auto transform = new StyleTransformDataGroup();
+        SkMatrix newMatrix = recomposing2DMatrix(now);
+
+        StyleTransformData m(StyleTransformData::OperationType::Matrix);
+        m.setMatrix(newMatrix[0], newMatrix[3], newMatrix[1], newMatrix[4],
+                    newMatrix[2], newMatrix[5]);
+
+        transform->append(m);
+        style->setTransform(transform);
     } else {
-        now.angle = m_decomposedFrom.angle * progress +
-                    m_decomposedTo.angle * (1 - progress);
-        now.matrixM11 = m_decomposedFrom.matrixM11 * progress +
-                        m_decomposedTo.matrixM11 * (1 - progress);
-        now.matrixM12 = m_decomposedFrom.matrixM12 * progress +
-                        m_decomposedTo.matrixM12 * (1 - progress);
-        now.matrixM21 = m_decomposedFrom.matrixM21 * progress +
-                        m_decomposedTo.matrixM21 * (1 - progress);
-        now.matrixM22 = m_decomposedFrom.matrixM22 * progress +
-                        m_decomposedTo.matrixM22 * (1 - progress);
-        now.scaleX = m_decomposedFrom.scaleX * progress +
-                     m_decomposedTo.scaleX * (1 - progress);
-        now.scaleY = m_decomposedFrom.scaleY * progress +
-                     m_decomposedTo.scaleY * (1 - progress);
-        now.translateX = m_decomposedFrom.translateX * progress +
-                         m_decomposedTo.translateX * (1 - progress);
-        now.translateY = m_decomposedFrom.translateY * progress +
-                         m_decomposedTo.translateY * (1 - progress);
+        auto newTransform = new StyleTransformDataGroup();
+        StyleTransformDataGroup* a = m_fromTransformValue;
+        StyleTransformDataGroup* b = m_toTransformValue;
+
+        for (size_t i = 0; i < a->size(); i++) {
+            auto newData = a->at(i).clone();
+            auto aData = a->at(i);
+            auto bData = b->at(i);
+            if (aData.type() == StyleTransformData::Matrix) {
+                newData.setMatrix(aData.matrix()->a() * (1 - progress) +
+                                      bData.matrix()->a() * progress,
+                                  aData.matrix()->b() * (1 - progress) +
+                                      bData.matrix()->b() * progress,
+                                  aData.matrix()->c() * (1 - progress) +
+                                      bData.matrix()->c() * progress,
+                                  aData.matrix()->d() * (1 - progress) +
+                                      bData.matrix()->d() * progress,
+                                  aData.matrix()->e() * (1 - progress) +
+                                      bData.matrix()->e() * progress,
+                                  aData.matrix()->f() * (1 - progress) +
+                                      bData.matrix()->f() * progress);
+            } else if (aData.type() == StyleTransformData::Translate) {
+                newData.setTranslate(
+                    Length(Length::Fixed,
+                           aData.translate()->tx().fixed() * (1 - progress) +
+                               bData.translate()->tx().fixed() * progress),
+                    Length(Length::Fixed,
+                           aData.translate()->ty().fixed() * (1 - progress) +
+                               bData.translate()->ty().fixed() * progress));
+            } else if (aData.type() == StyleTransformData::Rotate) {
+                newData.setRotate(aData.rotate()->angle() * (1 - progress) +
+                                  bData.rotate()->angle() * progress);
+            } else if (aData.type() == StyleTransformData::Scale) {
+                newData.setScale(aData.scale()->x() * (1 - progress) +
+                                     bData.scale()->x() * progress,
+                                 aData.scale()->y() * (1 - progress) +
+                                     bData.scale()->y() * progress);
+            } else if (aData.type() == StyleTransformData::Skew) {
+                newData.setSkew(aData.skew()->angleX() * (1 - progress) +
+                                    bData.skew()->angleX() * progress,
+                                aData.skew()->angleY() * (1 - progress) +
+                                    bData.skew()->angleY() * progress);
+            } else {
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+
+            newTransform->append(newData);
+        }
+
+        style->setTransform(newTransform);
     }
-    auto transform = new StyleTransformDataGroup();
-    SkMatrix newMatrix = recomposing2DMatrix(now);
-
-    StyleTransformData m(StyleTransformData::OperationType::Matrix);
-    m.setMatrix(newMatrix[0], newMatrix[3], newMatrix[1], newMatrix[4],
-                newMatrix[2], newMatrix[5]);
-
-    transform->append(m);
-    style->setTransform(transform);
 }
 
 bool ActiveTransformAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
     STARFISH_ASSERT(newStyle != nullptr);
     if (newStyle->transforms() == nullptr) {
-        if (m_originalTransformValue == nullptr) {
+        if (m_originalTransformValue == nullptr ||
+            m_originalTransformValue->size() == 0) {
             return true;
         }
         return false;
     }
     if (m_originalTransformValue == nullptr) {
-        if (newStyle->transforms() == nullptr) {
+        if (newStyle->transforms() == nullptr ||
+            newStyle->transforms()->size() == 0) {
             return true;
         }
         return false;
@@ -861,7 +970,7 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, TimingFunction* timingFunction, Length originalToValue,
+    int64_t delayInms, TimingFunction* timingFunction, Length originalToValue,
     size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
@@ -877,7 +986,7 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
                           timingFunctions, durationInms, delayInms,
@@ -1337,7 +1446,7 @@ bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     Element* target, CSSStyleValuePair::KeyKind targetProperty,
     const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
-    uint64_t delayInms, TimingFunction* timingFunction,
+    int64_t delayInms, TimingFunction* timingFunction,
     LengthSize originalToValue, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
                           delayInms, timingFunction)
@@ -1353,7 +1462,7 @@ ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
     const GCVector<AnimatedValue*>& values,
     const GCAtomicVector<double>& offsets,
     const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
-    uint64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
+    int64_t delayInms, float iterationCount, AnimationPlayStateValue playState,
     AnimationFillModeValue fillMode, size_t indexForBgLayer)
     : ActiveAnimationTask(target, targetProperty, values, offsets,
                           timingFunctions, durationInms, delayInms,
@@ -1558,18 +1667,14 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::Transform);
             if (found == false && oldFrame->isTransformable() == true) {
-                FrameBox* box = oldFrame->asFrameBox();
-                SkMatrix matrixFrom = oldStyle->transformsToMatrix(
-                    box->width(), box->height(), box, true);
-
-                box = oldFrame->asFrameBox();
-                SkMatrix matrixTo = newStyle->transformsToMatrix(
-                    box->width(), box->height(), box, true);
-
+                auto newTransform =
+                    newStyle->rareComputedStyleData()->ensureTransforms();
                 auto task = new ActiveTransformAnimationTask(
                     element, CSSStyleValuePair::Transform,
-                    AnimatedValue(matrixFrom), AnimatedValue(matrixTo),
-                    duration, delay, timingFunction, newStyle->transforms());
+                    AnimatedValue(
+                        oldStyle->rareComputedStyleData()->ensureTransforms()),
+                    AnimatedValue(newTransform), duration, delay,
+                    timingFunction, newTransform);
                 executor->registerTransition(task, newStyle);
                 gotTransition = true;
             }
