@@ -59,6 +59,44 @@ public:
     {
     }
 
+    StyleTransformData clone()
+    {
+        StyleTransformData newData;
+
+        if (m_type == Matrix) {
+            newData.setType(Matrix);
+            if (m_value.m_matrix) {
+                newData.setMatrix(m_value.m_matrix->a(), m_value.m_matrix->b(),
+                                  m_value.m_matrix->c(), m_value.m_matrix->d(),
+                                  m_value.m_matrix->e(), m_value.m_matrix->f());
+            }
+        } else if (m_type == Scale) {
+            newData.setType(Scale);
+            if (m_value.m_scale) {
+                newData.setScale(m_value.m_scale->x(), m_value.m_scale->y());
+            }
+        } else if (m_type == Rotate) {
+            newData.setType(Rotate);
+            if (m_value.m_rotate) {
+                newData.setRotate(m_value.m_rotate->angle());
+            }
+        } else if (m_type == Skew) {
+            newData.setType(Skew);
+            if (m_value.m_skew) {
+                newData.setScale(m_value.m_skew->angleX(),
+                                 m_value.m_skew->angleY());
+            }
+        } else if (m_type == Translate) {
+            newData.setType(Translate);
+            if (m_value.m_translate) {
+                newData.setTranslate(m_value.m_translate->tx(),
+                                     m_value.m_translate->ty());
+            }
+        }
+
+        return newData;
+    }
+
     void setType(OperationType type)
     {
         m_type = type;
@@ -291,6 +329,48 @@ public:
 
     ~StyleTransformDataGroup()
     {
+    }
+
+    StyleTransformDataGroup* clone()
+    {
+        StyleTransformDataGroup* c = new StyleTransformDataGroup();
+        c->m_group.resize(m_group.size());
+        for (size_t i = 0; i < m_group.size(); i++) {
+            c->m_group[i] = m_group[i].clone();
+        }
+        c->m_has3DTransform = m_has3DTransform;
+        c->m_hasComplexTransform = m_hasComplexTransform;
+        return c;
+    }
+
+    StyleTransformDataGroup* extractTransformFunctionsWithZeroValues()
+    {
+        auto ret = clone();
+        for (size_t i = 0; i < size(); i++) {
+            switch (ret->at(i).type()) {
+            case StyleTransformData::OperationType::Matrix:
+                ret->at(i).setMatrix(1, 0, 0, 1, 0, 0);
+                break;
+            case StyleTransformData::OperationType::Scale:
+                ret->at(i).setScale(1, 1);
+                break;
+            case StyleTransformData::OperationType::Translate:
+                ret->at(i).setTranslate(Length(Length::Fixed, 0),
+                                        Length(Length::Fixed, 0));
+                break;
+            case StyleTransformData::OperationType::Rotate:
+                ret->at(i).setRotate(0);
+                break;
+            case StyleTransformData::OperationType::Skew:
+                ret->at(i).setSkew(0, 0);
+                break;
+            case StyleTransformData::OperationType::None:
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        }
+        return ret;
     }
 
     void clear()
