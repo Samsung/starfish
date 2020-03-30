@@ -133,7 +133,6 @@ bool GridFormattingContext::existRowTemplate()
 void GridFormattingContext::computeColumnsAndRows()
 {
     Frame* child = m_container->firstChild();
-
     while (child) {
         if (child->isGridItem()) {
             m_orderedGridItems.push_back(child->asFrameBox());
@@ -217,7 +216,7 @@ void GridFormattingContext::applyImplicitTrackSizing()
         return;
     }
 
-    if (m_container->style()->height().isFixed()) {
+    if (m_container->hasFixedStyleHeight()) {
         double height = m_container->style()->height().fixed();
         double eachRowHeight = height / (m_gridTemplateRows.size() - 1);
         for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
@@ -315,7 +314,7 @@ void GridFormattingContext::applyFrUnitsWithRows()
 
     LayoutUnit availableHeight = maxGrid->offset();
 
-    if (m_container->style()->height().isFixed()) {
+    if (m_container->hasFixedStyleHeight()) {
         availableHeight = m_container->style()->height().fixed();
         availableHeight -= sumOfFixedHeight;
         if (availableHeight <= 0) {
@@ -2994,9 +2993,18 @@ bool GridFormattingContext::doesParticipateInGridFormattingContext(
     return true;
 }
 
-FrameGridBox::FrameGridBox(Node* node, ComputedStyle* style)
-    : FrameBlockBox(node, style)
+FrameGridBox::FrameGridBox(Node* node, ComputedStyle* style1)
+    : FrameBlockBox(node, style1)
 {
+    m_hasFixedStyleWidth = style()->width().isFixed();
+    m_hasFixedStyleHeight = style()->height().isFixed();
+}
+
+void FrameGridBox::computeStyleFlags()
+{
+    FrameBlockBox::computeStyleFlags();
+    m_hasFixedStyleWidth = style()->width().isFixed();
+    m_hasFixedStyleHeight = style()->height().isFixed();
 }
 
 bool FrameGridBox::shouldLayout(LayoutContext& ctx,

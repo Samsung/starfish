@@ -268,6 +268,7 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-6.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-7.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-8.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-9.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-10.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-11.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-12.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-14.html
@@ -285,6 +286,7 @@ test/cairo/internal-test/css/grid/gridbox_auto_01.html
 test/cairo/internal-test/css/grid/gridbox_auto_02.html
 test/cairo/internal-test/css/grid/gridbox_auto_03.html
 test/cairo/internal-test/css/grid/gridbox_auto_04.html
+test/cairo/internal-test/css/grid/gridbox_example_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_02.html
 test/cairo/internal-test/css/dialog/dialog_modal_03.html

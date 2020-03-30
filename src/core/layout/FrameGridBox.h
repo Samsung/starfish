@@ -512,6 +512,18 @@ public:
         return true;
     }
 
+    virtual void computeStyleFlags() override;
+
+    bool hasFixedStyleWidth()
+    {
+        return m_hasFixedStyleWidth;
+    }
+
+    bool hasFixedStyleHeight()
+    {
+        return m_hasFixedStyleHeight;
+    }
+
     virtual bool shouldLayout(LayoutContext& ctx,
                               LayoutWantToResolve resolveWhat,
                               FrameBox* containingBox) override;
@@ -541,6 +553,9 @@ protected:
     {
         FrameBlockBox::fillGCDescriptor(desc);
     }
+
+    bool m_hasFixedStyleWidth{ false };
+    bool m_hasFixedStyleHeight{ false };
 };
 
 template <typename dataType>
