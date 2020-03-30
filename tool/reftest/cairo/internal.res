@@ -286,6 +286,8 @@ test/cairo/internal-test/css/grid/gridbox_auto_01.html
 test/cairo/internal-test/css/grid/gridbox_auto_02.html
 test/cairo/internal-test/css/grid/gridbox_auto_03.html
 test/cairo/internal-test/css/grid/gridbox_auto_04.html
+test/cairo/internal-test/css/grid/gridbox_auto_05.html
+test/cairo/internal-test/css/grid/gridbox_auto_06.html
 test/cairo/internal-test/css/grid/gridbox_example_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_02.html
