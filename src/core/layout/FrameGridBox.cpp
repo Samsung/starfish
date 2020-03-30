@@ -2622,17 +2622,22 @@ void GridFormattingContext::applyAlignItemsCenter()
     for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
         yOffsetsForRows.push_back(yOffsetForRowsSoFar);
         GridTrack& track = m_gridTemplateRows[i];
-        yOffsetForRowsSoFar += track.offset() + m_rowGap;
+        yOffsetForRowsSoFar += m_rowGap + track.offset();
     }
 
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.rowStart() < yOffsetsForRows.size());
         area.box()->setHeight(area.contentHeight());
         LayoutUnit yOffset = yOffsetsForRows[area.rowStart()];
-        GridTrack track = m_gridTemplateRows[area.rowStart()];
+
+        LayoutUnit trackSize;
+        for (size_t i = area.rowStart(); i < area.rowEnd(); i++) {
+            trackSize += m_gridTemplateRows[i].offset();
+        }
+        trackSize += (area.rowEnd() - area.rowStart() - 1) * m_rowGap;
 
         LayoutUnit yPos =
-            yOffset + (track.offset() / 2) - (area.box()->height() / 2);
+            yOffset + (trackSize / 2) - (area.box()->height() / 2);
         area.box()->setY(yPos);
     }
 }
@@ -2891,13 +2896,8 @@ void GridFormattingContext::relayoutGridLinesWithGridAreasIfNeeded()
         if (!style->height().isFixed()) {
             LayoutUnit height;
 
-            AlignItemValue alignItem = m_container->style()->alignItems();
-            if (alignItem == AlignItemValue::CenterAlignItemValue) {
-                height = area.contentHeight();
-            } else {
-                for (size_t i = area.rowStart(); i < area.rowEnd(); i++) {
-                    height += m_gridTemplateRows[i].offset();
-                }
+            for (size_t i = area.rowStart(); i < area.rowEnd(); i++) {
+                height += m_gridTemplateRows[i].offset();
             }
 
             height += ((area.rowEnd() - area.rowStart() - 1) * m_rowGap);
