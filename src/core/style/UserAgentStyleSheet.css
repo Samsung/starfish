@@ -197,6 +197,11 @@
 "    flex-direction: column;"
 "    overflow-y: auto;"
 "}"
+"button {"
+"    text-align: center;"
+"    padding: 1px 6px;"
+"    border-width: 2px;"
+"}"
 "button, input[type='button' i] { "
 "    background: rgb(221, 221, 221);"
 "} "
@@ -352,6 +357,10 @@
 "    bottom: 0;"
 "    left: 0;"
 "    background: rgba(0,0,0,0.1);"
+"}"
+"menu {"
+"    display: block;"
+"    list-style-type: disc;"
 "}"
 #if !defined(STARFISH_ENABLE_TEST)
 // old test expect images are doesn't consider this rule
