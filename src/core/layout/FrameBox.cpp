@@ -592,11 +592,12 @@ void FrameBox::computeBorderRadiusProperties(
 }
 
 template <typename T>
-void FrameBox::applyBorderRadius(T canvas, const LayoutRect& rect,
+void FrameBox::applyBorderRadius(T canvas, const LayoutRect& inputRect,
                                  float spreadDistance, bool inset)
 {
     // apply clip if border-radius exists
     if (hasFrameBorderRadius()) {
+        LayoutRect rect = inputRect.snapSizeToPixel();
         BorderRadiusData br = frameBorderRadius();
         BorderRadiusFixedData fixed(br, rect.width(), rect.height(), this);
 
@@ -1818,8 +1819,13 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                   imageRenderingValue);
             } else if (type.isGradient()) {
                 ImageValue* imageValue = style->backgroundImage(idx);
-                Unit::Rect rect =
-                    Unit::Rect(x, y, imgW, imgH).snapSizeToPixel();
+                Unit::Rect rect(x, y, imgW, imgH);
+
+#if defined(STARFISH_ENABLE_TEST)
+                // to match with expected images
+                rect = rect.snapSizeToPixel();
+#endif
+
                 auto info =
                     imageValue->gradientValue()->makeGradientDrawingInfo(rect,
                                                                          box);

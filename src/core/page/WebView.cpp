@@ -1094,6 +1094,7 @@ static void saveCurrentPaintingState(StackingContext* ctx)
 
     if (info.needsGraphicsBuffer) {
         info.graphicsBufferVisibleRect = ctx->visibleRect();
+        info.additionalPixelRatio = ctx->additionalPixelRatio();
         info.graphicsBufferHolder = ctx->graphicsBufferHolder();
     } else {
         StackingContext* owner = ctx->parent();

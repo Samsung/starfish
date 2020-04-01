@@ -28,6 +28,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/Scrolling.h"
+#include "core/animation/AnimationTask.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -177,6 +178,7 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     , m_tileDataHeight(bufferHeight)
     , m_horizontalTileCount(1)
     , m_verticalTileCount(1)
+    , m_additionalPixelRatio(sc->additionalPixelRatio())
 {
     STARFISH_ASSERT(m_bufferWidth);
     STARFISH_ASSERT(m_bufferHeight);
@@ -272,6 +274,7 @@ void* GraphicsBufferHolder::operator new(size_t size)
 
 StackingContextRareData::StackingContextRareData()
     : m_visibleRect(0, 0, 0, 0)
+    , m_additionalPixelRatio(1)
     , m_graphicsBufferHolder(nullptr)
     , m_matrix(SkMatrix::I())
 {
@@ -525,6 +528,7 @@ public:
 
         canvas->resetMatrixAndClip();
         canvas->resetTextDecorationData();
+
         if (!ctx.willCompositing) {
             canvas->pixelSnappedClip(ctx.screenClipRect);
         }
@@ -897,22 +901,38 @@ void StackingContext::computeTransformMatrix()
     }
 }
 
-static void gatherGraphicsBufferOwners(StackingContext* ctx,
-                                       GCVector<StackingContext*>& v)
+static void extractMaxScaleFactorFromAnimation(AnimatedValue* v,
+                                               float& transformScaleMaxValue)
 {
-    if (ctx->needsComposite()) {
-        v.push_back(ctx);
-    }
-
-    auto iter = ctx->childContexts().begin();
-    while (iter != ctx->childContexts().end()) {
-        StackingContextChild* child = *iter;
-        auto iter2 = child->begin();
-        while (iter2 != child->end()) {
-            gatherGraphicsBufferOwners(*iter2, v);
-            iter2++;
+    if (v->isTransformData()) {
+        auto transformData = v->getTransformData();
+        for (size_t i = 0; i < transformData->size(); i++) {
+            if (transformData->at(i).type() == StyleTransformData::Scale) {
+                transformScaleMaxValue =
+                    std::max(transformScaleMaxValue,
+                             (float)transformData->at(i).scale()->x());
+                transformScaleMaxValue =
+                    std::max(transformScaleMaxValue,
+                             (float)transformData->at(i).scale()->y());
+            }
         }
-        iter++;
+    } else {
+        auto m = v->getMatrix();
+        transformScaleMaxValue =
+            std::max(transformScaleMaxValue, m.getScaleX());
+        transformScaleMaxValue =
+            std::max(transformScaleMaxValue, m.getScaleY());
+    }
+}
+
+static void findAnimationTaskRelatedWithTransformScale(
+    ActiveAnimationTask* task, float& transformScaleMaxValue)
+{
+    if (task->property() == CSSStyleValuePair::Transform) {
+        const auto& v = task->values();
+        for (size_t i = 0; i < v.size(); i++) {
+            extractMaxScaleFactorFromAnimation(v.at(i), transformScaleMaxValue);
+        }
     }
 }
 
@@ -932,15 +952,14 @@ void StackingContext::computeStackingContextProperties()
     }
     applyStackingContextProperties(ctx);
 
-    GCVector<StackingContext*> stackingContextsNeedsGraphicsBuffer;
-
-    gatherGraphicsBufferOwners(this, stackingContextsNeedsGraphicsBuffer);
+    ApplyPropertiesPostProcessingContext postCtx;
+    applyStackingContextPropertiesPostProcessing(postCtx);
 
     m_owner->node()
         ->window()
         ->webView()
         ->m_stackingContextsNeedsGraphicsBuffer =
-        std::move(stackingContextsNeedsGraphicsBuffer);
+        std::move(postCtx.stackingContextsNeedsGraphicsBuffer);
 }
 
 void StackingContext::computeStackingContextProperties(
@@ -1391,6 +1410,7 @@ void StackingContext::applyStackingContextProperties(
             !m_owner->isRootElement() && !inAnimation) {
             willBeComposited = false;
         }
+
         m_isVisibleRectComputedForNonGraphicsLayer = true;
     } else {
         m_isVisibleRectComputedForNonGraphicsLayer = false;
@@ -1436,6 +1456,111 @@ void StackingContext::applyStackingContextProperties(
     if (isRootContext() && willBeComposited) {
         m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
     }
+}
+
+void StackingContext::applyStackingContextPropertiesPostProcessing(
+    ApplyPropertiesPostProcessingContext& ctx)
+{
+    uint32_t orgBaseAdditionalPixelRatio = ctx.baseAdditionalPixelRatio;
+
+    if (needsComposite()) {
+        ctx.stackingContextsNeedsGraphicsBuffer.push_back(this);
+        if (!m_owner->hasOwnGraphicsBufferMethod()) {
+            STARFISH_ASSERT(m_rareData);
+            uint32_t oldAdditionalPixelRatio =
+                m_rareData->m_additionalPixelRatio;
+            m_rareData->m_additionalPixelRatio = ctx.baseAdditionalPixelRatio;
+
+            const float minScale = 1;
+            const float maxScale = 4;
+
+            if (m_owner->node() &&
+                m_owner->node()->isRunningTransformAnimation()) {
+                float transformScaleMaxValue = 1;
+
+                auto& transitions = m_owner->node()
+                                        ->document()
+                                        ->animationExecutor()
+                                        ->activeTransitions();
+                auto iter = transitions.begin();
+                while (iter != transitions.end()) {
+                    findAnimationTaskRelatedWithTransformScale(
+                        *iter, transformScaleMaxValue);
+                    iter++;
+                }
+
+                auto& animations = m_owner->node()
+                                       ->document()
+                                       ->animationExecutor()
+                                       ->activeAnimations();
+                auto iter2 = animations.begin();
+                while (iter2 != animations.end()) {
+                    if (iter2->first->m_element == m_owner->node()) {
+                        auto& v = iter2->second;
+                        auto iter3 = v.begin();
+                        while (iter3 != v.end()) {
+                            findAnimationTaskRelatedWithTransformScale(
+                                *iter3, transformScaleMaxValue);
+                            iter3++;
+                        }
+                    }
+                    iter2++;
+                }
+
+                if (transformScaleMaxValue < minScale) {
+                    transformScaleMaxValue = minScale;
+                } else if (transformScaleMaxValue > maxScale) {
+                    transformScaleMaxValue = maxScale;
+                }
+                m_rareData->m_additionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio,
+                             (uint32_t)transformScaleMaxValue);
+                ctx.baseAdditionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio,
+                             m_rareData->m_additionalPixelRatio);
+            } else {
+                auto matrix = m_owner->style()->transformsToMatrix(
+                    m_owner->width(), m_owner->height(), m_owner,
+                    m_owner->isTransformable());
+                float scale = std::max(matrix.getScaleX(), matrix.getScaleY());
+
+                if (scale < minScale) {
+                    scale = minScale;
+                } else if (scale > maxScale) {
+                    scale = maxScale;
+                }
+
+                m_rareData->m_additionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio, (uint32_t)scale);
+                ctx.baseAdditionalPixelRatio =
+                    std::max(ctx.baseAdditionalPixelRatio,
+                             m_rareData->m_additionalPixelRatio);
+            }
+
+            if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
+                m_owner->node()
+                    ->webView()
+                    ->markNeedsPaintingConsiderInRendering();
+            }
+        }
+    } else {
+        if (m_rareData) {
+            m_rareData->m_additionalPixelRatio = 1;
+        }
+    }
+
+    auto iter = childContexts().begin();
+    while (iter != childContexts().end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->begin();
+        while (iter2 != child->end()) {
+            (*iter2)->applyStackingContextPropertiesPostProcessing(ctx);
+            iter2++;
+        }
+        iter++;
+    }
+
+    ctx.baseAdditionalPixelRatio = orgBaseAdditionalPixelRatio;
 }
 
 class FilterContext : public gc {
@@ -1806,6 +1931,11 @@ LayoutRect StackingContext::visibleRect()
     return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
 }
 
+uint32_t StackingContext::additionalPixelRatio()
+{
+    return m_rareData ? m_rareData->m_additionalPixelRatio : 1;
+}
+
 static LayoutRect computeScreenRect(StackingContext* ctx)
 {
     LayoutRect screenRect(0, 0, ctx->owner()
@@ -2046,6 +2176,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                             ->webView()
                                             ->platformWindow(),
                                         tileDataWidth, tileDataHeight,
+                                        additionalPixelRatio(),
                                         m_hasFilterEffect
                                             ? CanvasSurface::
                                                   ElementHasFilterEffect
@@ -2169,7 +2300,9 @@ bool StackingContext::fillGraphicsBufferContents(
 
     if (m_rareData->m_graphicsBufferHolder == nullptr ||
         m_rareData->m_graphicsBufferHolder->bufferWidth() != bufferWidth ||
-        m_rareData->m_graphicsBufferHolder->bufferHeight() != bufferHeight) {
+        m_rareData->m_graphicsBufferHolder->bufferHeight() != bufferHeight ||
+        m_rareData->m_graphicsBufferHolder->additionalPixelRatio() !=
+            additionalPixelRatio()) {
         if (m_owner->hasOwnGraphicsBufferMethod()) {
             CanvasSurface* s = nullptr;
             m_owner->createGraphicsBuffer(&s, bufferWidth, bufferHeight);
@@ -2186,7 +2319,9 @@ bool StackingContext::fillGraphicsBufferContents(
                     iter->second.graphicsBufferHolder->bufferWidth() ==
                         bufferWidth &&
                     iter->second.graphicsBufferHolder->bufferHeight() ==
-                        bufferHeight) {
+                        bufferHeight &&
+                    iter->second.graphicsBufferHolder->additionalPixelRatio() ==
+                        additionalPixelRatio()) {
                     reuse = true;
                     m_rareData->m_graphicsBufferHolder =
                         iter->second.graphicsBufferHolder;
@@ -2281,6 +2416,7 @@ bool StackingContext::fillGraphicsBufferContents(
                         CanvasSurface::create(
                             m_owner->document()->webView()->platformWindow(),
                             tileDataWidth, tileDataHeight,
+                            additionalPixelRatio(),
                             m_hasFilterEffect
                                 ? CanvasSurface::ElementHasFilterEffect
                                 : CanvasSurface::PlainElement);
@@ -2305,10 +2441,6 @@ bool StackingContext::fillGraphicsBufferContents(
                     ctx.layerBaseX = tileDataX;
                     ctx.layerBaseY = tileDataY;
 
-                    float dpr = m_owner->node()
-                                    ->webView()
-                                    ->screenInfo()
-                                    .devicePixelRatio;
                     bool needsInitialClip = false;
                     ctx.layerClipRect = LayoutRect(0, 0, canvasSurface->width(),
                                                    canvasSurface->height());
@@ -2513,6 +2645,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         if (needsGraphicsBuffer()) {
             canvas->save();
             canvas->resetMatrixAndClip();
+
             m_owner->node()
                 ->document()
                 ->browsingContext()
@@ -2775,7 +2908,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
                     CanvasSurface* backgroundSurface = CanvasSurface::create(
                         m_owner->document()->webView()->platformWindow(),
-                        bufferWidth, bufferHeight,
+                        bufferWidth, bufferHeight, 1,
                         CanvasSurface::CanvasElement);
                     Canvas* canvas = Canvas::create(m_owner->node()->webView(),
                                                     backgroundSurface);

@@ -451,6 +451,7 @@ public:
         m_shouldDestroySurface = true;
         m_shouldApplyCanvasFillStrokeSource = false;
         m_flag = flag;
+        m_targetSurface = data;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -678,14 +679,21 @@ public:
 
     virtual void unsetDevicePixelRatio() override
     {
-        scale(1 / m_webView->screenInfo().devicePixelRatio,
-              1 / m_webView->screenInfo().devicePixelRatio);
+        float dpr = m_webView->screenInfo().devicePixelRatio;
+        if (m_targetSurface) {
+            dpr *= m_targetSurface->additionalPixelRatio();
+        }
+
+        scale(1 / dpr, 1 / dpr);
     }
 
     void applyDevicePixelRatio()
     {
-        scale(m_webView->screenInfo().devicePixelRatio,
-              m_webView->screenInfo().devicePixelRatio);
+        float dpr = m_webView->screenInfo().devicePixelRatio;
+        if (m_targetSurface) {
+            dpr *= m_targetSurface->additionalPixelRatio();
+        }
+        scale(dpr, dpr);
     }
 
     virtual void setFillColor(const Unit::Color& clr) override

@@ -451,7 +451,8 @@ bool GridFormattingContext::fixGridAreaWithDefine(GridArea* area, size_t row)
         return false;
     }
 
-    if (m_gridTemplateColumns.size() >= GRID_MAX_TRACK || row >= GRID_MAX_TRACK) {
+    if (m_gridTemplateColumns.size() >= GRID_MAX_TRACK ||
+        row >= GRID_MAX_TRACK) {
         return true;
     }
 
@@ -1107,7 +1108,8 @@ bool GridFormattingContext::expandGridLineColumns(GridArea* gridArea)
         }
     }
 
-    size_t numOfLinesToAdd = gridArea->columnEnd() - m_gridTemplateColumns.size();
+    size_t numOfLinesToAdd =
+        gridArea->columnEnd() - m_gridTemplateColumns.size();
     for (size_t i = 0; i < numOfLinesToAdd; i++) {
         GridTrack line = GridTrack(0);
         line.setFixed(false);
@@ -1256,8 +1258,8 @@ bool GridFormattingContext::hasAvailableGridCells(GridArea* gridArea,
     }
 
     size_t availableCells = 0;
-    for (size_t r = row; r < std::min(row + height, m_gridTemplateRows.size() - 1);
-         r++) {
+    for (size_t r = row;
+         r < std::min(row + height, m_gridTemplateRows.size() - 1); r++) {
         for (size_t c = col;
              c < std::min(col + width, m_gridTemplateColumns.size() - 1); c++) {
             if (m_areaChecker[r][c]) {
@@ -1303,8 +1305,9 @@ void GridFormattingContext::buildGridAreaAndOrdering()
 
         adaptStartAndEndValueForRow(*this, gridItem, m_gridTemplateRows.size(),
                                     rowStart, rowEnd);
-        adaptStartAndEndValueForColumn(
-            *this, gridItem, m_gridTemplateColumns.size(), columnStart, columnEnd);
+        adaptStartAndEndValueForColumn(*this, gridItem,
+                                       m_gridTemplateColumns.size(),
+                                       columnStart, columnEnd);
 
         if (rowStart && rowEnd) {
             GridArea area(gridItem, idx, rowStart, rowEnd, columnStart,
@@ -1852,8 +1855,9 @@ static GridArea* getSameAreaWithColumn(GCVector<GridArea>& list,
 
 // WHAT: get the largest GridArea that includes the given grid area
 static GridArea* getBiggestAreaWithRow(GCVector<GridArea>& list,
-                                       size_t columnStart, size_t start, // rowStart
-                                       size_t end) // rowEnd
+                                       size_t columnStart,
+                                       size_t start, // rowStart
+                                       size_t end)   // rowEnd
 {
     GridArea* target = nullptr;
     std::vector<GridArea*> areas;
@@ -2173,9 +2177,9 @@ void GridFormattingContext::alignGridLinesForColumns(GridArea& area,
 void GridFormattingContext::alignGridLinesForRows(GridArea& area)
 {
     FrameBox* gridItem = area.box();
-    LayoutUnit sumHeight(0); // sumOfRowHeights
+    LayoutUnit sumHeight(0);        // sumOfRowHeights
     size_t start = area.rowStart(); // rowStart
-    size_t end = area.rowEnd(); // rowEnd
+    size_t end = area.rowEnd();     // rowEnd
     LayoutUnit contentHeight =
         gridItem->height() +
         gridItem->style()->margin().top().specifiedValue(0, m_container) +

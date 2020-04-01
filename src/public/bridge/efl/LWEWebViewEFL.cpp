@@ -1237,6 +1237,10 @@ protected:
                 this);
         }
     }
+#else
+    void immediatelyClearScreen()
+    {
+    }
 #endif
 
     Ecore_IMF_Context* m_imfContext;

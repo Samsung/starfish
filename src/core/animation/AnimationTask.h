@@ -476,6 +476,11 @@ public:
     AnimatedValue* currentAnimatedToValue();
     TimingFunction* currentTimingFunction();
 
+    const GCVector<AnimatedValue*>& values() const
+    {
+        return m_values;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
