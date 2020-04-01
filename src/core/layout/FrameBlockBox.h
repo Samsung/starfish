@@ -892,7 +892,7 @@ public:
         }
     }
 
-    virtual void optionalInlineLayout(LayoutContext& ctx)
+    virtual void doAdditionalLayout(LayoutContext& ctx)
     {
     }
 

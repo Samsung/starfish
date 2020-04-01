@@ -41,7 +41,7 @@ public:
         return true;
     }
 
-    virtual void optionalInlineLayout(LayoutContext& ctx) override;
+    virtual void doAdditionalLayout(LayoutContext& ctx) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

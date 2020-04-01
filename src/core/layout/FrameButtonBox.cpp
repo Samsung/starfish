@@ -47,8 +47,24 @@ FrameButtonBox::FrameButtonBox(Node* node, ComputedStyle* style)
 {
 }
 
-void FrameButtonBox::optionalInlineLayout(LayoutContext& ctx)
+void FrameButtonBox::doAdditionalLayout(LayoutContext& ctx)
 {
-    layoutLineBoxesVerticallyCenter();
+    if (hasBlockFlow()) {
+        LayoutUnit contentHeight = ctx.contentHeight(this);
+        LayoutUnit yOffset =
+            (height() - (contentHeight + paddingTop() + paddingBottom())) / 2;
+
+        if (yOffset <= 0) {
+            return;
+        }
+
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameBlockBox()) {
+                c->asFrameBlockBox()->moveY(yOffset);
+            }
+        }
+   } else {
+        layoutLineBoxesVerticallyCenter();
+   }
 }
 }
