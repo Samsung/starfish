@@ -48,7 +48,9 @@ size_t CanvasSurface::g_canvasSurfaceTileSize =
 #if !defined(PORT_COMPOSITOR_BACKEND_GL)
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
-    CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h)
+    CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h,
+                        float additionalPixelRatio)
+        : CanvasSurface(additionalPixelRatio)
     {
         m_window = wnd;
         m_width = w;
@@ -89,13 +91,13 @@ public:
             m_width = w;
             m_height = h;
 
-            float windowDevicePixelRatio =
-                m_window->webView()->screenInfo().devicePixelRatio;
+            float devicePixelRatio =
+                m_window->webView()->screenInfo().devicePixelRatio *
+                additionalPixelRatio();
 
-            m_bufferWidth =
-                std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+            m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
             m_bufferHeight =
-                std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+                std::max((size_t)1, (size_t)(h * devicePixelRatio));
 
             m_bufferStride = m_bufferWidth * 4;
             m_buffer = (unsigned char*)calloc(
@@ -159,9 +161,10 @@ protected:
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
+                                     float additionalPixelRatio,
                                      CanvasSurfaceFlag flag)
 {
-    return new CanvasSurfaceSimple(wnd, w, h);
+    return new CanvasSurfaceSimple(wnd, w, h, additionalPixelRatio);
 }
 #endif
 
@@ -170,6 +173,7 @@ class CanvasSurfaceCanvasTarget : public CanvasSurface {
 public:
     CanvasSurfaceCanvasTarget(uint8_t* buffer, size_t w, size_t h,
                               size_t stride)
+        : CanvasSurface(1)
     {
         m_width = w;
         m_height = h;

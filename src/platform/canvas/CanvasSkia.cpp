@@ -234,8 +234,11 @@ class CanvasSkia : public Canvas {
 
     void applyDevicePixelRatio(SkCanvas* canvas)
     {
-        canvas->scale(m_webView->screenInfo().devicePixelRatio,
-                      m_webView->screenInfo().devicePixelRatio);
+        float dpr = m_webView->screenInfo().devicePixelRatio;
+        if (m_targetSurface) {
+            dpr *= m_targetSurface->additionalPixelRatio();
+        }
+        canvas->scale(dpr, dpr);
     }
 
 public:
@@ -271,6 +274,7 @@ public:
         m_surface = nullptr;
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
+        m_targetSurface = data;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -485,8 +489,12 @@ public:
 
     virtual void unsetDevicePixelRatio()
     {
-        m_canvas->scale(1 / m_webView->screenInfo().devicePixelRatio,
-                        1 / m_webView->screenInfo().devicePixelRatio);
+        float dpr = m_webView->screenInfo().devicePixelRatio;
+        if (m_targetSurface) {
+            dpr *= m_targetSurface->additionalPixelRatio();
+        }
+
+        m_canvas->scale(1 / dpr, 1 / dpr);
     }
 
     virtual void setFillColor(const Unit::Color& clr)

@@ -381,7 +381,7 @@ void CanvasRenderingContext2DMixIn::initialize()
     STARFISH_ASSERT(h != 0);
 
     m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->platformWindow(), w, h,
+        m_ownerHTMLCanvasElement->webView()->platformWindow(), w, h, 1,
         CanvasSurface::CanvasElement);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,

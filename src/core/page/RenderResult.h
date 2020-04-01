@@ -48,6 +48,7 @@ struct PrevDrawnStackingContextInfo {
         graphicsLayerOwner = nullptr;
         opacity = 1;
         transformMatrix = SkMatrix::I();
+        additionalPixelRatio = 1;
     }
 
     // flags for RepaintRegionTracker
@@ -64,6 +65,7 @@ struct PrevDrawnStackingContextInfo {
     float opacity;
     GraphicsBufferHolder* graphicsBufferHolder;
     LayoutRect graphicsBufferVisibleRect;
+    uint32_t additionalPixelRatio;
 };
 
 typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>

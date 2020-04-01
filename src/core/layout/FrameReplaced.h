@@ -32,8 +32,8 @@ class FrameReplacedIFrame;
 
 struct IntrinsicSize {
     bool m_isContentExists;
-    bool m_hasAspectRatio { false };
-    bool m_hasViewport { false };
+    bool m_hasAspectRatio{ false };
+    bool m_hasViewport{ false };
     LayoutSize m_intrinsicContentSize;
 };
 

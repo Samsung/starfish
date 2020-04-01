@@ -165,11 +165,6 @@ protected:
 };
 
 class CanvasSurface : public gc {
-protected:
-    CanvasSurface()
-    {
-    }
-
 public:
     virtual ~CanvasSurface()
     {
@@ -181,6 +176,7 @@ public:
         CanvasElement = 1 << 1
     };
     static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h,
+                                 float additionalPixelRatio = 1,
                                  CanvasSurfaceFlag flag = PlainElement);
     static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
                                              size_t h, size_t stride);
@@ -238,8 +234,21 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
+    float additionalPixelRatio()
+    {
+        return m_additionalPixelRatio;
+    }
+
     static size_t g_totalAllocatedCanvasSurfaceSize;
     static size_t g_canvasSurfaceTileSize;
+
+protected:
+    CanvasSurface(float additionalPixelRatio)
+        : m_additionalPixelRatio(additionalPixelRatio)
+    {
+    }
+
+    float m_additionalPixelRatio;
 };
 
 struct DrawImageInfo {
@@ -626,6 +635,7 @@ protected:
     }
     CanvasRenderTargetInfo m_renderTargetInfo;
     WebView* m_webView{ nullptr };
+    Nullable<CanvasSurface*> m_targetSurface;
     GCVector<CanvasState*> m_state{};
     GCVector<CanvasState*> m_stateMemoryPool{};
     bool m_shouldApplyCanvasFillStrokeSource{ false };

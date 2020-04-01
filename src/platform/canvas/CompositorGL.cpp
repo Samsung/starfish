@@ -1406,7 +1406,8 @@ size_t Compositor::maximumTextureSize()
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h,
-                    CanvasSurfaceFlag flag)
+                    float additionalPixelRatio, CanvasSurfaceFlag flag)
+        : CanvasSurface(additionalPixelRatio)
     {
         m_window = (PlatformWindow*)wnd;
         m_width = w;
@@ -1531,14 +1532,15 @@ public:
             m_height = h;
             m_flag = flag;
 
-            float windowDevicePixelRatio =
-                m_window->webView()->screenInfo().devicePixelRatio;
+            float devicePixelRatio =
+                m_window->webView()->screenInfo().devicePixelRatio *
+                additionalPixelRatio();
 
             if (!(m_flag & CanvasSurfaceFlag::CanvasElement)) {
                 m_bufferWidth =
-                    std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+                    std::max((size_t)1, (size_t)(w * devicePixelRatio));
                 m_bufferHeight =
-                    std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+                    std::max((size_t)1, (size_t)(h * devicePixelRatio));
             } else {
                 m_bufferWidth = w;
                 m_bufferHeight = h;
@@ -2053,13 +2055,12 @@ public:
         m_width = w;
         m_height = h;
 
-        float windowDevicePixelRatio =
-            m_window->webView()->screenInfo().devicePixelRatio;
+        float devicePixelRatio =
+            m_window->webView()->screenInfo().devicePixelRatio *
+            additionalPixelRatio();
 
-        m_bufferWidth =
-            std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
-        m_bufferHeight =
-            std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+        m_bufferWidth = std::max((size_t)1, (size_t)(w * devicePixelRatio));
+        m_bufferHeight = std::max((size_t)1, (size_t)(h * devicePixelRatio));
 
         ensureGenerateTexture();
     }
@@ -2095,9 +2096,10 @@ protected:
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
+                                     float additionalPixelRatio,
                                      CanvasSurfaceFlag flag)
 {
-    return new CanvasSurfaceGL(wnd, w, h, flag);
+    return new CanvasSurfaceGL(wnd, w, h, additionalPixelRatio, flag);
 }
 
 struct CompositorImplGLState {

@@ -337,7 +337,9 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                        compositedBefore == willBeComposited) {
                 if (iter != m_prevDrawnStackingContextInfoMap.end()) {
                     if (iter->second.graphicsBufferVisibleRect !=
-                        sc->visibleRect()) {
+                            sc->visibleRect() ||
+                        iter->second.additionalPixelRatio !=
+                            sc->additionalPixelRatio()) {
                         // visible rect changed
                         needsRepainting = true;
                     }
