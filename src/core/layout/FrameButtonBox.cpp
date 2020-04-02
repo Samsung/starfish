@@ -63,8 +63,8 @@ void FrameButtonBox::doAdditionalLayout(LayoutContext& ctx)
                 c->asFrameBlockBox()->moveY(yOffset);
             }
         }
-   } else {
+    } else {
         layoutLineBoxesVerticallyCenter();
-   }
+    }
 }
 }

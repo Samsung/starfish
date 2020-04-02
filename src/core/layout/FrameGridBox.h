@@ -220,9 +220,9 @@ public:
         MaxContent,
     };
 
-    LayoutUnit offset() const
+    LayoutUnit size() const
     {
-        return m_offset;
+        return m_size;
     }
 
     LayoutUnit fr()
@@ -240,10 +240,10 @@ public:
         return m_max;
     }
 
-    void setOffset(LayoutUnit offset, bool computed)
+    void setSize(LayoutUnit size, bool computed)
     {
         m_computed = computed;
-        m_offset = offset;
+        m_size = size;
     }
 
     void setFixed(bool fixed)
@@ -333,7 +333,7 @@ public:
     }
 
     GridTrack(LayoutUnit offset)
-        : m_offset(offset)
+        : m_size(offset)
         , m_fr(0)
         , m_min(GridLength())
         , m_max(GridLength())
@@ -348,7 +348,7 @@ public:
 
     // The 'computed' is for the 'fr' unit.
     GridTrack(LayoutUnit fr, bool computed)
-        : m_offset(0)
+        : m_size(0)
         , m_fr(fr)
         , m_min(GridLength())
         , m_max(GridLength())
@@ -373,9 +373,9 @@ public:
         , m_containing(false)
     {
         if (min.isLength() && min.length().isFixed()) {
-            m_offset = min.length().numberData();
+            m_size = min.length().numberData();
         } else if (min.isAuto()) {
-            m_offset = 0;
+            m_size = 0;
         }
     }
 
@@ -385,7 +385,7 @@ public:
     }
 
 private:
-    LayoutUnit m_offset; // width
+    LayoutUnit m_size;
     LayoutUnit m_fr;
     GridLength m_min;
     GridLength m_max;
@@ -412,7 +412,7 @@ public:
     void layoutGridItems();
     void alignGridLinesForColumns(GridArea&, LayoutUnit&, LayoutUnit&, bool);
     void alignGridLinesForRows(GridArea&);
-    void assumeGridItemWidths();
+    void initializeColumnTrackSizes();
     void resolveIntrinsicTrackSizes();
     void stretchAutoTracks();
     void applyAlignItems();
@@ -453,8 +453,8 @@ public:
         return m_layoutContext;
     }
 
-    bool existColumnTemplate();
-    bool existRowTemplate();
+    bool hasColumnTemplate();
+    bool hasRowTemplate();
 
     GridArea* getNamedGridArea(String* name);
 
@@ -473,7 +473,8 @@ private:
     LayoutUnit m_rowGap;
     LayoutUnit m_columnGap;
     // FIXME(#1286): This checker is poor.
-    bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
+    // 1 for a dummy track at [0]
+    bool m_isCellAvailable[GRID_MAX_TRACK + 1][GRID_MAX_TRACK + 1];
 
     void parseGridRowAndColumnValues(GridArea* gridArea);
     void resolveDefinitePositionValues(GridArea* gridArea);
