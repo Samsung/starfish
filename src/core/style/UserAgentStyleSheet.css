@@ -201,6 +201,8 @@
 "    text-align: center;"
 "    padding: 1px 6px;"
 "    border-width: 2px;"
+"    box-sizing: border-box;"
+"    font: 400 13.3333px Arial;"
 "}"
 "button, input[type='button' i] { "
 "    background: rgb(221, 221, 221);"
