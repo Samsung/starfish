@@ -35,7 +35,7 @@ interface KeyboardEvent : UIEvent {
   // The following support legacy user agents
   readonly attribute unsigned long charCode;
   readonly attribute unsigned long keyCode;
-  [Unimplemented] readonly attribute unsigned long which;
+  readonly attribute unsigned long which;
 };
 
 // https://w3c.github.io/uievents/#idl-keyboardeventinit
@@ -50,5 +50,5 @@ dictionary KeyboardEventInit : EventModifierInit {
   // The following support legacy user agents
   unsigned long charCode = 0;
   unsigned long keyCode = 0;
-  [Unimplemented] unsigned long which = 0;
+  unsigned long which = 0;
 };

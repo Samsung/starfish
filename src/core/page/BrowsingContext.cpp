@@ -1682,12 +1682,12 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                        e->keyValue() == KeyValue::SpaceKey) {
                 String* eventType =
                     starfish()->staticStrings()->m_click.localName();
-                Node* t = webView()->focusedNode();
+                Node* t = target;
                 if (t) {
                     t = t->nearestParentElement();
-                    t->dispatchEventByUA(
-                        new Event(t->document()->executionContext(), eventType,
-                                  EventInit(true, true)));
+                    document()->window()->dispatchEventByUA(
+                        t, new Event(document()->executionContext(), eventType,
+                                     EventInit(true, true)));
                     e->defaultPrevented();
                 }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&

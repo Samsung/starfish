@@ -45,6 +45,7 @@ public:
         , m_isComposing(false)
         , m_keyCode(keyValueToKeyCode(value))
         , m_charCode(keyValueToCharCode(value))
+        , m_which(keyValueToKeyCode(value))
         , m_virtualKeyCode(keyValueToKeyCode(value, true))
     {
     }
@@ -124,6 +125,16 @@ public:
         m_charCode = charCode;
     }
 
+    uint32_t which() const
+    {
+        return m_which;
+    }
+
+    void setWhich(uint32_t which)
+    {
+        m_which = which;
+    }
+
     uint32_t virtualKeyCode() const
     {
         return m_virtualKeyCode;
@@ -138,6 +149,7 @@ private:
     bool m_isComposing;
     uint32_t m_keyCode;
     uint32_t m_charCode;
+    uint32_t m_which;
     uint32_t m_virtualKeyCode;
 };
 
@@ -230,6 +242,16 @@ public:
         m_keyboardEventData.setCharCode(charCode);
     }
 
+    uint32_t which() const
+    {
+        return m_keyboardEventData.which();
+    }
+
+    void setWhich(uint32_t which)
+    {
+        m_keyboardEventData.setWhich(which);
+    }
+
     // Belows are not in IDL.
     uint32_t virtualKeyCode() const
     {
@@ -316,6 +338,11 @@ public:
     uint32_t charCode() const
     {
         return m_keyboardEventData.charCode();
+    }
+
+    uint32_t which() const
+    {
+        return m_keyboardEventData.which();
     }
 
     // Not in IDL.
