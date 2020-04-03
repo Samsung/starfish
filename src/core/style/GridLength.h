@@ -128,6 +128,7 @@ private:
     GridLengthType m_type;
 };
 
+// from parsing css properties
 class GridTrackSize : public gc {
 public:
     enum GridTrackType {
