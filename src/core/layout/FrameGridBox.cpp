@@ -92,16 +92,14 @@ GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
 
 LayoutUnit GridFormattingContext::preferredWidth()
 {
-    LayoutUnit sumOfWidths(0);
+    LayoutUnit sumOfWidths = 0;
     for (size_t col = 1; col < m_gridTemplateColumns.size(); col++) {
         if (m_gridTemplateColumns[col].isComputed()) {
             sumOfWidths += m_gridTemplateColumns[col].size();
         }
     }
 
-    for (size_t i = 1; i < m_gridTemplateColumns.size() - 1; i++) {
-        sumOfWidths += m_columnGap;
-    }
+    sumOfWidths += m_columnGap * (m_gridTemplateColumns.size() - 2);
 
     return sumOfWidths;
 }
@@ -153,53 +151,42 @@ void GridFormattingContext::layoutGridItems()
 {
     for (auto area : m_orderedGridArea) {
         FrameBox* gridItem = area.box();
-        LayoutUnit offsetX, offsetY;
 
-        LayoutUnit sumOfHeights(0);
-        for (size_t i = 1; i < area.rowStart(); i++) {
-            sumOfHeights += m_gridTemplateRows[i].size();
-        }
-
-        for (size_t i = 1; i < area.rowStart(); i++) {
-            sumOfHeights += m_rowGap;
-        }
-
-        LayoutUnit sumOfWidths(0);
-        for (size_t i = 1; i < area.columnStart(); i++) {
-            sumOfWidths += m_gridTemplateColumns[i].size();
-        }
+        LayoutUnit xPosSoFar =
+            m_container->borderLeft() + m_container->paddingLeft();
 
         for (size_t i = 1; i < area.columnStart(); i++) {
-            sumOfWidths += m_columnGap;
-        }
-        offsetY =
-            sumOfHeights + m_container->borderTop() + m_container->paddingTop();
-
-        if (gridItem->marginTop()) {
-            offsetY += gridItem->marginTop();
+            xPosSoFar += m_gridTemplateColumns[i].size();
         }
 
-        offsetX = sumOfWidths + m_container->borderLeft() +
-                  m_container->paddingLeft();
+        xPosSoFar += m_columnGap * (area.columnStart() - 1);
 
         if (gridItem->marginLeft()) {
             if (gridItem->width() > gridItem->mbpWidth()) {
-                offsetX += gridItem->marginLeft();
+                xPosSoFar += gridItem->marginLeft();
             }
         }
 
-        gridItem->setX(offsetX);
-        gridItem->setY(offsetY);
+        LayoutUnit yPosSoFar =
+            m_container->borderTop() + m_container->paddingTop();
+
+        for (size_t i = 1; i < area.rowStart(); i++) {
+            yPosSoFar += m_gridTemplateRows[i].size();
+        }
+
+        yPosSoFar += m_rowGap * (area.rowStart() - 1);
+        yPosSoFar += gridItem->marginTop();
+
+        gridItem->setX(xPosSoFar);
+        gridItem->setY(yPosSoFar);
     }
 
-    LayoutUnit sumOfHeights(0);
+    LayoutUnit sumOfHeights = 0;
     for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
         sumOfHeights += m_gridTemplateRows[i].size();
     }
 
-    for (size_t i = 1; i < m_gridTemplateRows.size() - 1; i++) {
-        sumOfHeights += m_rowGap;
-    }
+    sumOfHeights += m_rowGap * (m_gridTemplateRows.size() - 2);
 
     m_container->computeContentHeight(m_layoutContext, sumOfHeights);
     applyAlignItems();
@@ -355,17 +342,15 @@ void GridFormattingContext::placeGridItemsIntoCells()
     GCVector<GridArea*> gridAreasAuto;
     size_t documentOrder = 0;
     for (auto gridItem : m_orderedGridItems) {
-        ComputedStyle* style = gridItem->style();
-
-        if (style->position() == AbsolutePositionValue) {
+        if (gridItem->style()->position() == AbsolutePositionValue) {
             continue;
         }
 
         GridArea* gridArea = new GridArea(gridItem, documentOrder);
-        parseGridRowAndColumnValues(gridArea);
-        resolveDefinitePositionValues(gridArea);
-        bool rowOk = expandGridLineRows(gridArea);
-        bool colOk = expandGridLineColumns(gridArea);
+        gridArea->parseGridRowAndColumnValues(*this);
+        gridArea->resolveDefinitePositionValues();
+        bool rowOk = addImplicitGridLineRows(gridArea);
+        bool colOk = addImplicitGridLineColumns(gridArea);
 
         if (rowOk && colOk) {
             if (gridArea->isDefinite()) {
@@ -382,8 +367,6 @@ void GridFormattingContext::placeGridItemsIntoCells()
 
     // 2. Process the items locked to a given row.
     placeGridAreasLockedToRows(gridAreasAuto);
-
-    // 3. Determine the columns in the implicit grid.
 
     // 4. Position the remaining grid items.
     placeRemainingGridAreas(gridAreasAuto);
@@ -402,126 +385,109 @@ void GridFormattingContext::placeGridItemsIntoCells()
                      });
 }
 
-void GridFormattingContext::parseGridRowAndColumnValues(GridArea* gridArea)
+void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
 {
     {
-        String* gridRowStart = gridArea->box()->style()->gridRowStart();
-        String* gridRowEnd = gridArea->box()->style()->gridRowEnd();
+        String* gridRowStart = box()->style()->gridRowStart();
+        String* gridRowEnd = box()->style()->gridRowEnd();
 
-        GridLineValue* gridRowStartValue = parseGridLineValue(gridRowStart);
-        GridLineValue* gridRowEndValue = parseGridLineValue(gridRowEnd);
+        m_rowStartLine = parseGridLine(gridRowStart);
+        m_rowEndLine = parseGridLine(gridRowEnd);
 
-        gridArea->setGridRowStart(gridRowStartValue);
-        gridArea->setGridRowEnd(gridRowEndValue);
-
-        if (gridRowStartValue->hasSpan()) {
-            if (gridRowStartValue->hasValue()) {
-                if (gridRowStartValue->value() <= 0) {
+        if (m_rowStartLine->hasSpan()) {
+            if (m_rowStartLine->hasValue()) {
+                if (m_rowStartLine->value() <= 0) {
                     STARFISH_LOG_WARN("invalid value given");
                 }
             } else {
-                gridRowStartValue->setValue(1);
+                m_rowStartLine->setValue(1);
             }
-        } else if (gridRowStartValue->hasCustomIdent()) {
+        } else if (m_rowStartLine->hasCustomIdent()) {
             GridArea* namedArea =
-                getNamedGridArea(gridRowStartValue->customIdent());
+                ctx.getNamedGridArea(m_rowStartLine->customIdent());
             if (namedArea) {
-                gridRowStartValue->setValue(namedArea->rowStart());
+                m_rowStartLine->setValue(namedArea->rowStart());
             }
         }
 
-        if (gridRowEndValue->hasSpan()) {
-            if (gridRowEndValue->hasValue()) {
-                if (gridRowEndValue->value() <= 0) {
+        if (m_rowEndLine->hasSpan()) {
+            if (m_rowEndLine->hasValue()) {
+                if (m_rowEndLine->value() <= 0) {
                     STARFISH_LOG_WARN("invalid value given");
                 }
             } else {
-                gridRowEndValue->setValue(1);
+                m_rowEndLine->setValue(1);
             }
-        } else if (gridRowEndValue->hasCustomIdent()) {
+        } else if (m_rowEndLine->hasCustomIdent()) {
             GridArea* namedArea =
-                getNamedGridArea(gridRowEndValue->customIdent());
+                ctx.getNamedGridArea(m_rowEndLine->customIdent());
             if (namedArea) {
-                gridRowEndValue->setValue(namedArea->rowEnd());
+                m_rowEndLine->setValue(namedArea->rowEnd());
             }
         }
     }
 
     {
-        String* gridColumnStart = gridArea->box()->style()->gridColumnStart();
-        String* gridColumnEnd = gridArea->box()->style()->gridColumnEnd();
+        String* gridColumnStart = box()->style()->gridColumnStart();
+        String* gridColumnEnd = box()->style()->gridColumnEnd();
 
-        GridLineValue* gridColumnStartValue =
-            parseGridLineValue(gridColumnStart);
-        GridLineValue* gridColumnEndValue = parseGridLineValue(gridColumnEnd);
+        m_columnStartLine = parseGridLine(gridColumnStart);
+        m_columnEndLine = parseGridLine(gridColumnEnd);
 
-        gridArea->setGridColumnStart(gridColumnStartValue);
-        gridArea->setGridColumnEnd(gridColumnEndValue);
-
-        if (gridColumnStartValue->hasSpan()) {
-            if (gridColumnStartValue->hasValue()) {
-                if (gridColumnStartValue->value() <= 0) {
+        if (m_columnStartLine->hasSpan()) {
+            if (m_columnStartLine->hasValue()) {
+                if (m_columnStartLine->value() <= 0) {
                     STARFISH_LOG_WARN("invalid value given");
                 }
             } else {
-                gridColumnStartValue->setValue(1);
+                m_columnStartLine->setValue(1);
             }
-        } else if (gridColumnStartValue->hasCustomIdent()) {
+        } else if (m_columnStartLine->hasCustomIdent()) {
             GridArea* namedArea =
-                getNamedGridArea(gridColumnStartValue->customIdent());
+                ctx.getNamedGridArea(m_columnStartLine->customIdent());
             if (namedArea) {
-                gridColumnStartValue->setValue(namedArea->columnStart());
+                m_columnStartLine->setValue(namedArea->columnStart());
             }
         }
 
-        if (gridColumnEndValue->hasSpan()) {
-            if (gridColumnEndValue->hasValue()) {
-                if (gridColumnEndValue->value() <= 0) {
+        if (m_columnEndLine->hasSpan()) {
+            if (m_columnEndLine->hasValue()) {
+                if (m_columnEndLine->value() <= 0) {
                     STARFISH_LOG_WARN("invalid value given");
                 }
             } else {
-                gridColumnEndValue->setValue(1);
+                m_columnEndLine->setValue(1);
             }
-        } else if (gridColumnEndValue->hasCustomIdent()) {
+        } else if (m_columnEndLine->hasCustomIdent()) {
             GridArea* namedArea =
-                getNamedGridArea(gridColumnEndValue->customIdent());
+                ctx.getNamedGridArea(m_columnEndLine->customIdent());
             if (namedArea) {
-                gridColumnEndValue->setValue(namedArea->columnEnd());
+                m_columnEndLine->setValue(namedArea->columnEnd());
             }
         }
     }
 }
 
-void GridFormattingContext::resolveDefinitePositionValues(GridArea* gridArea)
+void GridArea::resolveDefinitePositionValues()
 {
     {
-        GridLineValue* gridRowStart = gridArea->gridRowStart();
-        GridLineValue* gridRowEnd = gridArea->gridRowEnd();
-
-        if (gridRowStart->isDefinite() && gridRowEnd->isDefinite()) {
-            gridArea->setRowStart(gridRowStart->value());
-            gridArea->setRowEnd(gridRowEnd->value());
-            if (gridArea->rowStart() >= gridArea->rowEnd()) {
-                gridArea->setRowEnd(gridArea->rowStart() + 1);
+        if (m_rowStartLine->isDefinite() && m_rowEndLine->isDefinite()) {
+            if (rowStart() >= rowEnd()) {
+                setRowEnd(rowStart() + 1);
             }
-        } else if (gridRowStart->isDefinite()) {
-            gridArea->setRowStart(gridRowStart->value());
-
-            if (gridRowEnd->isAuto()) {
-                gridArea->setRowEnd(gridArea->rowStart() + 1);
-            } else if (gridRowEnd->hasSpan()) {
-                gridArea->setRowEnd(gridArea->rowStart() + gridRowEnd->value());
+        } else if (m_rowStartLine->isDefinite()) {
+            if (m_rowEndLine->isAuto()) {
+                setRowEnd(rowStart() + 1);
+            } else if (m_rowEndLine->hasSpan()) {
+                setRowEnd(rowStart() + m_rowEndLine->value());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
-        } else if (gridRowEnd->isDefinite()) {
-            gridArea->setRowEnd(gridRowEnd->value());
-
-            if (gridRowStart->isAuto()) {
-                gridArea->setRowStart(gridArea->rowEnd() - 1);
-            } else if (gridRowStart->hasSpan()) {
-                gridArea->setRowStart(gridArea->rowEnd() -
-                                      gridRowStart->value());
+        } else if (m_rowEndLine->isDefinite()) {
+            if (m_rowStartLine->isAuto()) {
+                setRowStart(rowEnd() - 1);
+            } else if (m_rowStartLine->hasSpan()) {
+                setRowStart(rowEnd() - m_rowStartLine->value());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
@@ -529,32 +495,23 @@ void GridFormattingContext::resolveDefinitePositionValues(GridArea* gridArea)
     }
 
     {
-        GridLineValue* gridColumnStart = gridArea->gridColumnStart();
-        GridLineValue* gridColumnEnd = gridArea->gridColumnEnd();
-
-        if (gridColumnStart->isDefinite() && gridColumnEnd->isDefinite()) {
-            gridArea->setColumnStart(gridColumnStart->value());
-            gridArea->setColumnEnd(gridColumnEnd->value());
-            if (gridArea->columnStart() >= gridArea->columnEnd()) {
-                gridArea->setColumnEnd(gridArea->columnStart() + 1);
+        if (m_columnStartLine->isDefinite() && m_columnEndLine->isDefinite()) {
+            if (columnStart() >= columnEnd()) {
+                setColumnEnd(columnStart() + 1);
             }
-        } else if (gridColumnStart->isDefinite()) {
-            gridArea->setColumnStart(gridColumnStart->value());
-            if (gridColumnEnd->isAuto()) {
-                gridArea->setColumnEnd(gridArea->columnStart() + 1);
-            } else if (gridColumnEnd->hasSpan()) {
-                gridArea->setColumnEnd(gridArea->columnStart() +
-                                       gridColumnEnd->value());
+        } else if (m_columnStartLine->isDefinite()) {
+            if (m_columnEndLine->isAuto()) {
+                setColumnEnd(columnStart() + 1);
+            } else if (m_columnEndLine->hasSpan()) {
+                setColumnEnd(columnStart() + m_columnEndLine->value());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
-        } else if (gridColumnEnd->isDefinite()) {
-            gridArea->setColumnEnd(gridColumnEnd->value());
-            if (gridColumnStart->isAuto()) {
-                gridArea->setColumnStart(gridArea->columnEnd() - 1);
-            } else if (gridColumnStart->hasSpan()) {
-                gridArea->setColumnStart(gridArea->columnEnd() -
-                                         gridColumnStart->value());
+        } else if (m_columnEndLine->isDefinite()) {
+            if (m_columnStartLine->isAuto()) {
+                setColumnStart(columnEnd() - 1);
+            } else if (m_columnStartLine->hasSpan()) {
+                setColumnStart(columnEnd() - m_columnStartLine->value());
             } else {
                 STARFISH_LOG_WARN("missing values");
             }
@@ -562,29 +519,29 @@ void GridFormattingContext::resolveDefinitePositionValues(GridArea* gridArea)
     }
 }
 
-GridLineValue* GridFormattingContext::parseGridLineValue(String* gridLineValue)
+GridLine* GridArea::parseGridLine(String* gridLineValue)
 {
     auto val = gridLineValue->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, val.data(), val.length());
 
-    GridLineValue* lineValue = new GridLineValue();
+    GridLine* gridLine = new GridLine();
     for (auto token : tokens) {
         if (token.equals("auto")) {
         } else if (token.equals("span")) {
-            lineValue->setHasSpan(true);
+            gridLine->setHasSpan(true);
         } else {
             String* tokenStr = String::fromUTF8(token.data(), token.length());
 
             if (String::validDouble(tokenStr)) {
-                lineValue->setValue(String::parseDouble(tokenStr));
+                gridLine->setValue(String::parseDouble(tokenStr));
             } else {
-                lineValue->setCustomIdent(tokenStr);
+                gridLine->setCustomIdent(tokenStr);
             }
         }
     }
 
-    return lineValue;
+    return gridLine;
 }
 
 void GridFormattingContext::placeGridAreasWithDefinitePositions(
@@ -595,7 +552,7 @@ void GridFormattingContext::placeGridAreasWithDefinitePositions(
     }
 }
 
-bool GridFormattingContext::expandGridLineRows(GridArea* gridArea)
+bool GridFormattingContext::addImplicitGridLineRows(GridArea* gridArea)
 {
     if (GRID_MAX_TRACK < gridArea->rowStart() ||
         GRID_MAX_TRACK < gridArea->rowEnd()) {
@@ -607,25 +564,21 @@ bool GridFormattingContext::expandGridLineRows(GridArea* gridArea)
         return true;
     }
 
-    size_t numOfRowLines = m_gridTemplateRows.size();
-    if (gridArea->rowStart() < numOfRowLines &&
-        gridArea->rowEnd() <= numOfRowLines) {
+    size_t numOfRows = m_gridTemplateRows.size();
+    if (gridArea->rowStart() < numOfRows && gridArea->rowEnd() <= numOfRows) {
         return true;
     }
 
-    size_t numOfLinesToAdd = gridArea->rowEnd() - m_gridTemplateRows.size();
-    for (size_t i = 0; i < numOfLinesToAdd; i++) {
-        GridTrack line = GridTrack(0);
-        line.setFixed(false);
-        line.setNewLine(true);
-        line.setComputed(false);
-        m_gridTemplateRows.push_back(line);
+    size_t numOfTracksToAdd = gridArea->rowEnd() - m_gridTemplateRows.size();
+    for (size_t i = 0; i < numOfTracksToAdd; i++) {
+        GridTrack track = GridTrack();
+        m_gridTemplateRows.push_back(track);
     }
 
     return true;
 }
 
-bool GridFormattingContext::expandGridLineColumns(GridArea* gridArea)
+bool GridFormattingContext::addImplicitGridLineColumns(GridArea* gridArea)
 {
     if (GRID_MAX_TRACK < gridArea->columnStart() ||
         GRID_MAX_TRACK < gridArea->columnEnd()) {
@@ -637,36 +590,16 @@ bool GridFormattingContext::expandGridLineColumns(GridArea* gridArea)
         return true;
     }
 
-    size_t numOfColumnLines = m_gridTemplateColumns.size();
-    if (gridArea->columnStart() < numOfColumnLines &&
-        gridArea->columnEnd() <= numOfColumnLines) {
+    size_t numOfColumns = m_gridTemplateColumns.size();
+    if (gridArea->columnStart() < numOfColumns &&
+        gridArea->columnEnd() <= numOfColumns) {
         return true;
     }
 
-    bool hasFr = false;
-    if (hasColumnTemplate()) {
-        for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
-            if (m_gridTemplateColumns[i].isFr() &&
-                !m_gridTemplateColumns[i].isNewLine()) {
-                hasFr = true;
-                break;
-            }
-        }
-    }
-
-    size_t numOfLinesToAdd =
+    size_t numOfTracksToAdd =
         gridArea->columnEnd() - m_gridTemplateColumns.size();
-    for (size_t i = 0; i < numOfLinesToAdd; i++) {
-        GridTrack line = GridTrack(0);
-        line.setFixed(false);
-        line.setNewLine(true);
-        if (hasFr) {
-            line.setComputed(false);
-        } else {
-            line.setAuto(true);
-        }
-
-        m_gridTemplateColumns.push_back(line);
+    for (size_t i = 0; i < numOfTracksToAdd; i++) {
+        m_gridTemplateColumns.push_back(GridTrack());
     }
 
     return true;
@@ -712,7 +645,7 @@ void GridFormattingContext::placeGridAreasLockedToRows(
             if (hasColumnTemplate()) {
                 for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
                     if (m_gridTemplateColumns[i].isFr() &&
-                        !m_gridTemplateColumns[i].isNewLine()) {
+                        !m_gridTemplateColumns[i].isImplicitLine()) {
                         hasFr = true;
                         break;
                     }
@@ -721,7 +654,7 @@ void GridFormattingContext::placeGridAreasLockedToRows(
 
             GridTrack line = GridTrack(0);
             line.setFixed(false);
-            line.setNewLine(true);
+            line.setImplicitLine(true);
             if (hasFr) {
                 line.setComputed(false);
             } else {
@@ -737,13 +670,26 @@ void GridFormattingContext::placeGridAreasLockedToRows(
 void GridFormattingContext::placeRemainingGridAreas(
     GCVector<GridArea*>& gridAreasAuto)
 {
+    size_t firstImplicitRow = 1;
+    size_t firstImplicitColumn = 1;
+    for (size_t r = 1; r < m_gridTemplateRows.size(); r++) {
+        for (size_t c = 1; c < m_gridTemplateColumns.size(); c++) {
+            if (m_gridTemplateRows[r].isImplicitLine() &&
+                m_gridTemplateColumns[c].isImplicitLine()) {
+                firstImplicitRow = r;
+                firstImplicitColumn = c;
+                break;
+            }
+        }
+    }
+
+    size_t curRow = firstImplicitRow;
+    size_t curCol = firstImplicitColumn;
     for (auto gridArea : gridAreasAuto) {
         if (gridArea->hasRowAndColumnValues()) {
             continue;
         }
 
-        size_t curRow = 1;
-        size_t curCol = 1;
         bool found = false;
         for (size_t r = curRow; r < m_gridTemplateRows.size(); r++) {
             for (size_t c = curCol; c < m_gridTemplateColumns.size(); c++) {
@@ -757,34 +703,23 @@ void GridFormattingContext::placeRemainingGridAreas(
             if (found) {
                 break;
             }
+            curCol = 1;
         }
 
-        if (found) {
-            gridArea->setRowStart(curRow);
-            gridArea->setRowEnd(gridArea->rowStart() + 1);
+        if (!found) {
+            m_gridTemplateRows.push_back(GridTrack());
+            curCol = 1;
+            curRow = m_gridTemplateRows.size() - 1;
+        }
 
-            if (gridArea->columnStart() == 0) {
-                gridArea->setColumnStart(curCol);
-            }
-            if (gridArea->columnEnd() == 0) {
-                gridArea->setColumnEnd(gridArea->columnStart() + 1);
-            }
-        } else {
-            GridTrack line = GridTrack(0);
-            line.setFixed(false);
-            line.setNewLine(true);
-            line.setComputed(false);
-            m_gridTemplateRows.push_back(line);
+        gridArea->setRowStart(curRow);
+        gridArea->setRowEnd(gridArea->rowStart() + 1);
 
-            gridArea->setRowStart(m_gridTemplateRows.size() - 1);
-            gridArea->setRowEnd(gridArea->rowStart() + 1);
-
-            if (gridArea->columnStart() == 0) {
-                gridArea->setColumnStart(1);
-            }
-            if (gridArea->columnEnd() == 0) {
-                gridArea->setColumnEnd(gridArea->columnStart() + 1);
-            }
+        if (gridArea->columnStart() == 0) {
+            gridArea->setColumnStart(curCol);
+        }
+        if (gridArea->columnEnd() == 0) {
+            gridArea->setColumnEnd(gridArea->columnStart() + 1);
         }
 
         placeGridArea(gridArea);
@@ -1190,36 +1125,26 @@ void GridFormattingContext::applyMinMaxGridLineColumns()
 
 void GridFormattingContext::buildGridLineTemplate()
 {
-    // FIXME: Split the concept of GridLine into GridLine and GridTrack
     // FIXME: Combine GridTrackSize and GridTrack
-    m_gridTemplateColumns.push_back(GridTrack(0));
+    GridTrack dummyPlaceholder = GridTrack(0);
+    m_gridTemplateColumns.push_back(dummyPlaceholder);
     const GCVector<GridTrackSize>* columns =
         m_container->style()->gridTemplateColumns();
     if (columns) {
         initializeGridLineColumns(columns);
     } else {
-        GridTrack line = GridTrack(0);
-        line.setAuto(true);
-        line.setFixed(false);
-        m_gridTemplateColumns.push_back(line);
+        m_gridTemplateColumns.push_back(GridTrack());
     }
 
-    m_gridTemplateRows.push_back(GridTrack(0));
+    m_gridTemplateRows.push_back(dummyPlaceholder);
     const GCVector<GridTrackSize>* rows =
         m_container->style()->gridTemplateRows();
     if (rows) {
         initializeGridLineRows(rows);
     }
 
-    // parse grid template areas and store this information.
     parseGridTemplateAreas();
-
-    // add implicit grid lines, make grid areas, and order the areas.
-    // buildGridAreaAndOrdering();
     placeGridItemsIntoCells();
-
-    // WHAT: calculate grid track size for each column using only either
-    // a content width or grid-template-column
     initializeColumnTrackSizes();
 
     {

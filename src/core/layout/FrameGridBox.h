@@ -28,8 +28,9 @@ class ComputedStyle;
 class FrameBox;
 class FrameGridBox;
 class LineBox;
+class GridFormattingContext;
 
-class GridLineValue : public gc {
+class GridLine : public gc {
 public:
     bool isDefinite()
     {
@@ -114,18 +115,18 @@ public:
              size_t columnStart, size_t columnEnd)
         : m_box(box)
         , m_index(idx)
-        , m_rowStart(rowStart)
-        , m_rowEnd(rowEnd)
-        , m_columnStart(columnStart)
-        , m_columnEnd(columnEnd)
     {
+        m_rowStartLine->setValue(rowStart);
+        m_rowEndLine->setValue(rowEnd);
+        m_columnStartLine->setValue(columnStart);
+        m_columnEndLine->setValue(columnEnd);
     }
 
     bool isDefinite()
     {
-        if ((m_gridRowStart->isDefinite() || m_gridRowEnd->isDefinite()) &&
-            (m_gridColumnStart->isDefinite() ||
-             m_gridColumnEnd->isDefinite())) {
+        if ((m_rowStartLine->isDefinite() || m_rowEndLine->isDefinite()) &&
+            (m_columnStartLine->isDefinite() ||
+             m_columnEndLine->isDefinite())) {
             return true;
         }
         return false;
@@ -139,58 +140,56 @@ public:
 
     size_t rowStart() const
     {
-        if (m_rowStart.hasValue()) {
-            return m_rowStart.value();
-        } else {
-            return 0;
-        }
+        return m_rowStartLine->value();
+    }
+
+    void setRowStart(size_t v) const
+    {
+        m_rowStartLine->setValue(v);
     }
 
     size_t rowEnd() const
     {
-        if (m_rowEnd.hasValue()) {
-            return m_rowEnd.value();
-        } else {
-            return 0;
-        }
+        return m_rowEndLine->value();
+    }
+
+    void setRowEnd(size_t v) const
+    {
+        m_rowEndLine->setValue(v);
     }
 
     size_t columnStart() const
     {
-        if (m_columnStart.hasValue()) {
-            return m_columnStart.value();
-        } else {
-            return 0;
-        }
+        return m_columnStartLine->value();
+    }
+
+    void setColumnStart(size_t v) const
+    {
+        m_columnStartLine->setValue(v);
     }
 
     size_t columnEnd() const
     {
-        if (m_columnEnd.hasValue()) {
-            return m_columnEnd.value();
-        } else {
-            return 0;
-        }
+        return m_columnEndLine->value();
     }
 
-    DEFINE_SETTER(size_t, rowStart, RowStart);
-    DEFINE_SETTER(size_t, rowEnd, RowEnd);
-    DEFINE_SETTER(size_t, columnStart, ColumnStart);
-    DEFINE_SETTER(size_t, columnEnd, ColumnEnd);
-
-    DEFINE_GETTER_SETTER(GridLineValue*, gridRowStart, GridRowStart);
-    DEFINE_GETTER_SETTER(GridLineValue*, gridRowEnd, GridRowEnd);
-    DEFINE_GETTER_SETTER(GridLineValue*, gridColumnStart, GridColumnStart);
-    DEFINE_GETTER_SETTER(GridLineValue*, gridColumnEnd, GridColumnEnd);
+    void setColumnEnd(size_t v) const
+    {
+        m_columnEndLine->setValue(v);
+    }
 
     bool hasRowAndColumnValues()
     {
-        if (m_rowStart.hasValue() && m_rowEnd.hasValue() &&
-            m_columnStart.hasValue() && m_columnEnd.hasValue()) {
+        if (m_rowStartLine->hasValue() && m_rowEndLine->hasValue() &&
+            m_columnStartLine->hasValue() && m_columnEndLine->hasValue()) {
             return true;
         }
         return false;
     }
+
+    void parseGridRowAndColumnValues(GridFormattingContext& ctx);
+    GridLine* parseGridLine(String* gridLineValue);
+    void resolveDefinitePositionValues();
 
 private:
     FrameBox* m_box;
@@ -199,20 +198,15 @@ private:
     LayoutUnit m_preferredMinWidth;
     LayoutUnit m_contentHeight;
 
-    Nullable<size_t> m_rowStart;
-    Nullable<size_t> m_rowEnd;
-    Nullable<size_t> m_columnStart;
-    Nullable<size_t> m_columnEnd;
-
-    GridLineValue* m_gridRowStart{ nullptr };
-    GridLineValue* m_gridRowEnd{ nullptr };
-    GridLineValue* m_gridColumnStart{ nullptr };
-    GridLineValue* m_gridColumnEnd{ nullptr };
+    GridLine* m_rowStartLine = new GridLine();
+    GridLine* m_rowEndLine = new GridLine();
+    GridLine* m_columnStartLine = new GridLine();
+    GridLine* m_columnEndLine = new GridLine();
 };
 
 class GridTrack : public gc {
 public:
-    enum GridLineType {
+    enum GridTrackType {
         Length,
         Fr,
         MinMax,
@@ -251,11 +245,6 @@ public:
         m_fixed = fixed;
     }
 
-    void setFr(LayoutUnit fr)
-    {
-        m_fr = fr;
-    }
-
     void setMinMax(GridLength min, GridLength max)
     {
         m_min = min;
@@ -267,9 +256,9 @@ public:
         m_computed = computed;
     }
 
-    void setNewLine(bool newLine)
+    void setImplicitLine(bool newLine)
     {
-        m_newLine = newLine;
+        m_implicitLine = newLine;
     }
 
     void setContaining(bool contain)
@@ -287,9 +276,9 @@ public:
         return m_fixed;
     }
 
-    bool isNewLine()
+    bool isImplicitLine()
     {
-        return m_newLine;
+        return m_implicitLine;
     }
 
     bool isComputed()
@@ -299,17 +288,17 @@ public:
 
     bool isLength()
     {
-        return m_type == GridLineType::Length;
+        return m_type == GridTrackType::Length;
     }
 
     bool isFr()
     {
-        return m_type == GridLineType::Fr;
+        return m_type == GridTrackType::Fr;
     }
 
     bool isMinMax()
     {
-        return m_type == GridLineType::MinMax;
+        return m_type == GridTrackType::MinMax;
     }
 
     bool isAuto()
@@ -319,12 +308,12 @@ public:
 
     bool isMinContent()
     {
-        return m_type == GridLineType::MinContent;
+        return m_type == GridTrackType::MinContent;
     }
 
     bool isMaxContent()
     {
-        return m_type == GridLineType::MaxContent;
+        return m_type == GridTrackType::MaxContent;
     }
 
     bool isContaining()
@@ -332,45 +321,34 @@ public:
         return m_containing;
     }
 
+    GridTrack()
+        : m_isAuto(true)
+        , m_implicitLine(true)
+    {
+    }
+
     GridTrack(LayoutUnit offset)
         : m_size(offset)
-        , m_fr(0)
-        , m_min(GridLength())
-        , m_max(GridLength())
         , m_computed(true)
-        , m_isAuto(false)
         , m_fixed(true)
-        , m_newLine(false)
-        , m_type(GridLineType::Length)
-        , m_containing(false)
+        , m_type(GridTrackType::Length)
     {
     }
 
     // The 'computed' is for the 'fr' unit.
     GridTrack(LayoutUnit fr, bool computed)
-        : m_size(0)
-        , m_fr(fr)
-        , m_min(GridLength())
-        , m_max(GridLength())
+        : m_fr(fr)
         , m_computed(computed)
-        , m_isAuto(false)
         , m_fixed(true)
-        , m_newLine(false)
-        , m_type(GridLineType::Fr)
-        , m_containing(false)
+        , m_type(GridTrackType::Fr)
     {
     }
 
     GridTrack(GridLength min, GridLength max)
-        : m_fr(0)
-        , m_min(min)
+        : m_min(min)
         , m_max(max)
-        , m_computed(false)
-        , m_isAuto(false)
         , m_fixed(true)
-        , m_newLine(false)
-        , m_type(GridLineType::MinMax)
-        , m_containing(false)
+        , m_type(GridTrackType::MinMax)
     {
         if (min.isLength() && min.length().isFixed()) {
             m_size = min.length().numberData();
@@ -379,7 +357,7 @@ public:
         }
     }
 
-    GridTrack(GridLineType type)
+    GridTrack(GridTrackType type)
         : m_type(type)
     {
     }
@@ -391,9 +369,9 @@ private:
     GridLength m_max;
     bool m_computed{ false };
     bool m_isAuto{ false };
-    bool m_fixed{ true };
-    bool m_newLine{ false };
-    GridLineType m_type;
+    bool m_fixed{ false };
+    bool m_implicitLine{ false };
+    GridTrackType m_type{ GridTrackType::Length };
     bool m_containing{ false };
 };
 
@@ -473,16 +451,13 @@ private:
     LayoutUnit m_rowGap;
     LayoutUnit m_columnGap;
     // FIXME(#1286): This checker is poor.
-    // 1 for a dummy track at [0]
+    // +1 for a dummy track at each [0]
     bool m_isCellAvailable[GRID_MAX_TRACK + 1][GRID_MAX_TRACK + 1];
 
-    void parseGridRowAndColumnValues(GridArea* gridArea);
-    void resolveDefinitePositionValues(GridArea* gridArea);
-    GridLineValue* parseGridLineValue(String* gridLineValue);
     void placeGridAreasWithDefinitePositions(
         GCVector<GridArea*>& gridAreaDefinite);
-    bool expandGridLineRows(GridArea* gridArea);
-    bool expandGridLineColumns(GridArea* gridArea);
+    bool addImplicitGridLineRows(GridArea* gridArea);
+    bool addImplicitGridLineColumns(GridArea* gridArea);
 
     void placeGridAreasLockedToRows(GCVector<GridArea*>& gridAreasAuto);
     void placeRemainingGridAreas(GCVector<GridArea*>& gridAreasAuto);
