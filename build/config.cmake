@@ -1,4 +1,5 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+include(CheckLibraryExists)
 
 #######################################################
 # PATH
@@ -389,6 +390,11 @@ SET (STARFISH_LIBRARIES_DEFAULT
     crypto
     # -lasan # for -fsanitize=address
 )
+
+CHECK_LIBRARY_EXISTS(cap cap_set_flag "" STARFISH_HAVE_LIBCAP)
+if (STARFISH_HAVE_LIBCAP)
+	list(APPEND STARFISH_LIBRARIES_DEFAULT cap )
+endif()
 
 IF (${COMPILER} STREQUAL "clang")
     SET (STARFISH_LIBRARIES_COMPILER -stdlib=libc++)
