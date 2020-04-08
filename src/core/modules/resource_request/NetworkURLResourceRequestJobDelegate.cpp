@@ -21,6 +21,7 @@
 #include <curl/curl.h>
 
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fetch/FetchUtils.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
@@ -814,15 +815,19 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
             hasWildCard = true;
         }
     }
-    if ((!hasRequestMethod && !isCorsSafelistedMethod) &&
-        ((request->requestCredentials() == RequestCredentials::Include) ||
-         !hasWildCard)) {
-        STARFISH_LOG_WARN(
-            "Failed to load %s : Request doesn't pass CORS Preflight request, "
-            "please check %s header in reponse\n",
-            nwd->httpTransaction->httpRequest().url().data(),
-            HTTPHeaderMap::kAccessControlAllowMethods);
-        return false;
+    if (request->webBase()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Enable) {
+        if ((!hasRequestMethod && !isCorsSafelistedMethod) &&
+            ((request->requestCredentials() == RequestCredentials::Include) ||
+             !hasWildCard)) {
+            STARFISH_LOG_WARN(
+                "Failed to load %s : Request doesn't pass CORS Preflight "
+                "request, "
+                "please check %s header in reponse\n",
+                nwd->httpTransaction->httpRequest().url().data(),
+                HTTPHeaderMap::kAccessControlAllowMethods);
+            return false;
+        }
     }
 
     auto unsafeNames =
@@ -850,15 +855,19 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
         }
     }
 
-    if (!hasUnsafeName &&
-        ((request->requestCredentials() == RequestCredentials::Include) ||
-         !hasWildCardHeaderValue)) {
-        STARFISH_LOG_WARN(
-            "Failed to load %s : Request doesn't pass CORS Preflight request, "
-            "please check %s header in reponse\n",
-            nwd->httpTransaction->httpRequest().url().data(),
-            HTTPHeaderMap::kAccessControlAllowHeaders);
-        return false;
+    if (request->webBase()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Enable) {
+        if (!hasUnsafeName &&
+            ((request->requestCredentials() == RequestCredentials::Include) ||
+             !hasWildCardHeaderValue)) {
+            STARFISH_LOG_WARN(
+                "Failed to load %s : Request doesn't pass CORS Preflight "
+                "request, "
+                "please check %s header in reponse\n",
+                nwd->httpTransaction->httpRequest().url().data(),
+                HTTPHeaderMap::kAccessControlAllowHeaders);
+            return false;
+        }
     }
 
     return true;
@@ -873,6 +882,11 @@ static bool checkCors(NetworkURLWorkerData* nwd)
         nwd->httpTransaction->httpRequest().headers().headerMap();
     const auto& resHeaders =
         nwd->httpTransaction->httpResponse().headers().headerMap();
+
+    if (request->webBase()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Disable) {
+        return true;
+    }
 
     auto origin = resHeaders.find(HTTPHeaderMap::kAccessControlAllowOrigin);
     if (origin == resHeaders.end()) {
