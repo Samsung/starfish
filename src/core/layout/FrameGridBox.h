@@ -386,53 +386,20 @@ public:
     void computeColumnsAndRows();
     void applyFrUnitsWithColumns();
     void applyFrUnitsWithRows();
-    void buildGridLineTemplate();
-    void layoutGridItems();
-    void alignGridLinesForColumns(GridArea&, LayoutUnit&, LayoutUnit&, bool);
-    void alignGridLinesForRows(GridArea&);
-    void initializeColumnTrackSizes();
-    void resolveIntrinsicTrackSizes();
-    void stretchAutoTracks();
-    void applyAlignItems();
     void layoutGridLinesWithGridAreas();
     void relayoutGridLinesWithGridAreasIfNeeded();
 
     bool needsGridItemLayout(FrameBox* gridItem, ComputedStyle* style,
                              bool testWidthOnly);
 
-    bool fixGridAreaWithDefine(GridArea*, size_t);
-    bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);
-    void parseGridTemplateAreas();
-    void buildGridAreaAndOrdering();
-    void placeGridItemsIntoCells();
-
-    size_t convertToRealLine(String*, size_t, ConvertType);
-    void convertToStartEndForRow(ComputedStyle*, size_t&, size_t&);
-    void convertToStartEndForColumn(ComputedStyle*, size_t&, size_t&);
-
-    void initializeGridLineColumns(const GCVector<GridTrackSize>* columns);
-    void initializeGridLineRows(const GCVector<GridTrackSize>* rows);
     void applyMinMaxGridLineColumns();
 
     LayoutUnit preferredWidth();
-
-    GCVector<GridTrack>& gridTemplateColumns()
-    {
-        return m_gridTemplateColumns;
-    }
-
-    GCVector<GridTrack>& gridTemplateRows()
-    {
-        return m_gridTemplateRows;
-    }
 
     LayoutContext& layoutContext()
     {
         return m_layoutContext;
     }
-
-    bool hasColumnTemplate();
-    bool hasRowTemplate();
 
     GridArea* getNamedGridArea(String* name);
 
@@ -454,6 +421,15 @@ private:
     // +1 for a dummy track at each [0]
     bool m_isCellAvailable[GRID_MAX_TRACK + 1][GRID_MAX_TRACK + 1];
 
+    void buildGridLineTemplate();
+    void layoutGridItems();
+
+    void parseGridTemplateAreas();
+
+    void initializeGridLineColumns(const GCVector<GridTrackSize>* columns);
+    void initializeGridLineRows(const GCVector<GridTrackSize>* rows);
+
+    void placeGridItemsIntoCells();
     void placeGridAreasWithDefinitePositions(
         GCVector<GridArea*>& gridAreaDefinite);
     bool addImplicitGridLineRows(GridArea* gridArea);
@@ -463,6 +439,13 @@ private:
     void placeRemainingGridAreas(GCVector<GridArea*>& gridAreasAuto);
     bool hasAvailableGridCells(GridArea* gridArea, size_t row, size_t col);
     void placeGridArea(GridArea* gridArea);
+
+    void initializeColumnTrackSizes();
+    void updateGridTemplateColumnWidths(GridArea& gridArea);
+    void updateGridTemplateRowHeights(GridArea& gridArea);
+    void resolveIntrinsicTrackSizes();
+    void stretchAutoTracks();
+    void applyAlignItems();
 
     void applyImplicitTrackSizing();
     void resolveMinMaxContentSize(size_t gridTrackIndex);
