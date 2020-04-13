@@ -275,10 +275,10 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-14.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-15.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-16.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-17.html
-#test/cairo/internal-test/css/grid/gridbox_simple-box-18.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-18.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-19.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-20.html
-#test/cairo/internal-test/css/grid/gridbox_simple-box-21.html
+test/cairo/internal-test/css/grid/gridbox_simple-box-21.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-22.html
 test/cairo/internal-test/css/grid/grid-incremantal-layout.html
 test/cairo/internal-test/css/grid/grid-percentage-padding-top.html
@@ -288,7 +288,10 @@ test/cairo/internal-test/css/grid/gridbox_auto_03.html
 test/cairo/internal-test/css/grid/gridbox_auto_04.html
 test/cairo/internal-test/css/grid/gridbox_auto_05.html
 test/cairo/internal-test/css/grid/gridbox_auto_06.html
+test/cairo/internal-test/css/grid/gridbox_auto_07.html
+test/cairo/internal-test/css/grid/gridbox_auto_08.html
 test/cairo/internal-test/css/grid/gridbox_example_01.html
+test/cairo/internal-test/css/grid/gridbox_span_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_02.html
 test/cairo/internal-test/css/dialog/dialog_modal_03.html
