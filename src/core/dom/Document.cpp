@@ -315,7 +315,7 @@ void Document::init(ReferrerURL* referrerURL)
     m_documentBuilder->build(documentURI(), referrerURL);
 }
 
-Window* Document::open(String* url, String* name, String* features)
+WindowProxy* Document::open(String* url, String* name, String* features)
 {
     // TODO If this Document object is not an active document, then throw an
     // "InvalidStateError" DOMException exception.

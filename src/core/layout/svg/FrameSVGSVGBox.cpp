@@ -156,7 +156,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     IntrinsicSize intrinsicSizeInfo = intrinsicSize();
 
     Unit::Rect viewport;
-    if (m_containerViewport.hasValue()) {
+    if (m_containerViewport.hasValue() && !m_containerViewport.value().isEmpty()) {
         viewport = m_containerViewport.value();
         svgWidth = intrinsicSizeInfo.m_intrinsicContentSize.width();
         svgHeight = intrinsicSizeInfo.m_intrinsicContentSize.height();

@@ -25,6 +25,7 @@
 #include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/page/Window.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
@@ -47,6 +48,7 @@ HTMLIFrameElement::HTMLIFrameElement(Document* document,
                                      const QualifiedName& qname)
     : HTMLElement(document, qname)
     , m_browsingContext(nullptr)
+    , m_contentWindowProxy(nullptr)
     , m_historyManager(nullptr)
     , m_isContentDocumentDisabled(false)
 {
@@ -240,7 +242,7 @@ void HTMLIFrameElement::loadSrcDoc()
     }
 }
 
-Document* HTMLIFrameElement::contentDocument() const
+Document* HTMLIFrameElement::contentDocument()
 {
     if (m_browsingContext && !m_isContentDocumentDisabled) {
         return m_browsingContext->document();
@@ -248,10 +250,10 @@ Document* HTMLIFrameElement::contentDocument() const
     return nullptr;
 }
 
-Window* HTMLIFrameElement::contentWindow() const
+WindowProxy* HTMLIFrameElement::contentWindow()
 {
     if (m_browsingContext) {
-        return m_browsingContext->window();
+        return m_contentWindowProxy;
     }
     return nullptr;
 }
@@ -306,9 +308,14 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
         if (m_browsingContext) {
             m_browsingContext->dispose();
         }
+
         m_browsingContext = BrowsingContext::create(this);
         m_browsingContext->setName(name);
         m_browsingContext->open(url, type, referrerURL);
+
+        if (!m_contentWindowProxy) {
+            m_contentWindowProxy = m_browsingContext->window()->window();
+        }
     }
 }
 

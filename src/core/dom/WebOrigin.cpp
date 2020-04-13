@@ -27,7 +27,7 @@ WebOrigin::WebOrigin()
 {
 }
 
-WebOrigin::WebOrigin(NULLABLE ResourceURL* url, bool isOpaque)
+WebOrigin::WebOrigin(ResourceURL* url, bool isOpaque)
     : m_originalURL(url)
     , m_isOpaque(isOpaque)
 {
@@ -35,30 +35,30 @@ WebOrigin::WebOrigin(NULLABLE ResourceURL* url, bool isOpaque)
 
 WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 {
-    if (url != nullptr && url->isHTTPFamilyURL() == true) {
+    if (url && url->isHTTPFamilyURL()) {
         return new WebOrigin(url, false);
     }
-    return new WebOrigin();
+    return new WebOrigin(url, true);
 }
 
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
 String* WebOrigin::serialize() const
 {
-    if (isOpaque() == true) {
+    if (isOpaque()) {
         return String::createASCIIString("null");
     }
     // m_originalURL should not be null unless isOpaque is true
-    STARFISH_ASSERT(m_originalURL != nullptr);
+    STARFISH_ASSERT(m_originalURL);
     return m_originalURL->origin();
 }
 
 Nullable<String*> WebOrigin::domain() const
 {
-    if (isOpaque() == true) {
+    if (isOpaque()) {
         return nullptr;
     }
     // m_originalURL should not be null unless isOpaque is true
-    STARFISH_ASSERT(m_originalURL != nullptr);
+    STARFISH_ASSERT(m_originalURL);
 
     String* domain = m_originalURL->domain();
 
@@ -79,11 +79,11 @@ bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
         return true;
     }
 
-    if ((isOpaque() == true) && (otherWebOrigin->isOpaque() == true)) {
+    if ((isOpaque()) && (otherWebOrigin->isOpaque())) {
         return true;
     }
 
-    if ((isOpaque() == true) || (otherWebOrigin->isOpaque() == true)) {
+    if ((isOpaque()) || (otherWebOrigin->isOpaque())) {
         return false;
     }
 
@@ -92,7 +92,7 @@ bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
     STARFISH_ASSERT(otherWebOrigin->m_originalURL);
 
     if ((m_originalURL->protocol()->equals(
-             otherWebOrigin->m_originalURL->protocol()) == true) &&
+            otherWebOrigin->m_originalURL->protocol())) &&
         (m_originalURL->host()->equals(otherWebOrigin->m_originalURL->host()) ==
          true) &&
         (m_originalURL->port()->equals(otherWebOrigin->m_originalURL->port()) ==
@@ -110,11 +110,11 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
         return true;
     }
 
-    if ((isOpaque() == true) && (otherWebOrigin->isOpaque() == true)) {
+    if ((isOpaque()) && (otherWebOrigin->isOpaque())) {
         return true;
     }
 
-    if (isOpaque() == true || otherWebOrigin->isOpaque() == true) {
+    if (isOpaque() || otherWebOrigin->isOpaque()) {
         return false;
     }
 
@@ -123,15 +123,13 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
     STARFISH_ASSERT(otherWebOrigin->m_originalURL);
 
     if ((m_originalURL->protocol()->equals(
-             otherWebOrigin->m_originalURL->protocol()) == true) &&
-        (domain().hasValue() == true) &&
-        (otherWebOrigin->domain().hasValue() == true) &&
+            otherWebOrigin->m_originalURL->protocol())) &&
+        (domain().hasValue()) && (otherWebOrigin->domain().hasValue()) &&
         (domain().getValue()->equals(otherWebOrigin->domain().getValue()) ==
          true)) {
         return true;
-    } else if ((isSameOrigin(otherWebOrigin) == true) &&
-               (domain().hasValue() == false) &&
-               (otherWebOrigin->domain().hasValue() == false)) {
+    } else if ((isSameOrigin(otherWebOrigin)) && (!domain().hasValue()) &&
+               (!otherWebOrigin->domain().hasValue())) {
         return true;
     }
 

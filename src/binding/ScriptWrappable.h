@@ -69,6 +69,7 @@ class WorkerGlobalScope;
 class Window;
 #endif /* defined(STARFISH_WEBWORKER_HOST) */
 
+class ScriptWrapple;
 class Document;
 class Element;
 class Serializable;
@@ -271,11 +272,20 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
     type* originalObj = (type*)(thisValue->asObject()->extraData());
 
 #define GENERATE_WINDOW()                                                    \
-    if (!(thisValue->isUndefinedOrNull() ||                                  \
-          thisValue->toObject(state) == state->context()->globalObject())) { \
-        THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
-    }                                                                        \
-    Window* window = (Window*)state->context()->globalObject()->extraData();
+    Window* window = nullptr;                                                \
+    if (thisValue->isUndefinedOrNull()) {                                    \
+        window =                                                             \
+            (Window*)state->resolveCallerLexicalGlobalObject()->extraData(); \
+    } else {                                                                 \
+        ObjectRef* mayBeWindowObject = nullptr;                              \
+        if (!((ScriptWrappable*)(mayBeWindowObject =                         \
+                                     thisValue->toObject(state))             \
+                  ->extraData())                                             \
+                 ->isWindow()) {                                             \
+            THROW_EXCEPTION(ILLEGAL_INVOKE);                                 \
+        }                                                                    \
+        window = (Window*)mayBeWindowObject->extraData();                    \
+    }
 
 #define GENERATE_WORKERGLOBALSCOPE()                                         \
     if (!(thisValue->isUndefinedOrNull() == true ||                          \

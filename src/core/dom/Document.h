@@ -24,6 +24,7 @@
 #include "core/util/BloomFilter.h"
 #include "core/style/WebFont.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
+#include "binding/WindowProxy.h"
 
 #define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1024 * 1024 * 4
 
@@ -399,7 +400,7 @@ public:
     void dispose();
 
     Document* open(Document* responsibleDoc, String* type, String* replace);
-    Window* open(String* url, String* name, String* features);
+    WindowProxy* open(String* url, String* name, String* features);
     bool openFunctionExplicitCalled()
     {
         return m_openFunctionExplicitCalled;

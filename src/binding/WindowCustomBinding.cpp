@@ -776,5 +776,7 @@ void Window::postInit(ScriptBindingInstance* instance)
 
                        },
                        this);
+
+    m_object = window()->scriptObject();
 }
 }

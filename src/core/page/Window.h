@@ -19,6 +19,7 @@
 #if !defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWindow__)
 #define __StarfishWindow__
 
+#include "binding/WindowProxy.h"
 #include "core/dom/EventTarget.h"
 #include "core/fetch/Fetch.h"
 #include "core/modules/tts/SpeechSynthesis.h"
@@ -227,8 +228,8 @@ public:
     WebView* webView() const;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-    Window* parent();
-    Window* top();
+    WindowProxy* parent();
+    WindowProxy* top();
 
     Element* frameElement();
 
@@ -364,13 +365,13 @@ public:
     Window* defaultIndexedGetter(uint32_t idx);
     uint32_t length();
     void invalidateFramesIfNeeded();
-    Window* frames()
+    WindowProxy* frames()
     {
-        return this;
+        return window();
     }
-    Window* window()
+    WindowProxy* window()
     {
-        return this;
+        return m_proxy;
     }
     String* name();
     void setName(String* name);
@@ -498,6 +499,7 @@ private:
 
     BrowsingContext* m_browsingContext;
     ScriptBindingInstance* m_scriptBindingInstance;
+    WindowProxy* m_proxy;
     Document* m_document;
     History* m_history;
     Navigator* m_navigator;

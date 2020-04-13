@@ -11,7 +11,7 @@ interface HTMLIFrameElement : HTMLElement {
     [CEReactions] attribute DOMString height;
 
     readonly attribute Document? contentDocument;
-    readonly attribute Window? contentWindow;
+    readonly attribute WindowProxy? contentWindow;
 //    [Unimplemented, RaisesException] Document? getSVGDocument();
     [CEReactions] attribute DOMString referrerPolicy;
     // https://w3c.github.io/webappsec-csp/embedded/#dom-htmliframeelement-csp
