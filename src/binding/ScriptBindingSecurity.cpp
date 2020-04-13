@@ -20,8 +20,9 @@
 
 #include "binding/ScriptBindingSecurity.h"
 #include "PlatformIntegrationData.h"
-#include "core/page/Window.h"
 #include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 #include "core/page/Location.h"
 #include "core/dom/WebOrigin.h"
 #include "core/page/WebView.h"
@@ -30,7 +31,7 @@
 namespace Starfish {
 
 // https://html.spec.whatwg.org/multipage/browsers.html#isplatformobjectsameorigin-(-o-)
-static bool canAccess(Document* source, Document* target)
+bool ScriptBindingSecurity::canAccess(Document* source, Document* target)
 {
     if (source->webView()->getWebSecurityMode() ==
         LWE::WebSecurityMode::Disable) {
@@ -40,6 +41,18 @@ static bool canAccess(Document* source, Document* target)
     if (source->webOrigin()->isSameOriginDomain(target->webOrigin())) {
         return true;
     }
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#security-nav
+    if (source->webOrigin()->isOpaque()) {
+        BrowsingContext* c = source->browsingContext()->parentBrowsingContext();
+        while (c) {
+            if (c->document() == target) {
+                return true;
+            }
+            c = c->parentBrowsingContext();
+        }
+    }
+
     return false;
 }
 

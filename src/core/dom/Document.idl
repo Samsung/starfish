@@ -98,8 +98,7 @@ interface Document : Node {
 
   // dynamic markup insertion
   [RaisesException, CEReactions, CallWith=ResponsibleDocument] Document open(optional DOMString type = "text/html", optional DOMString replace = "");
-  // WindowProxy open(DOMString url, DOMString name, DOMString features);
-  Window open(DOMString url, DOMString name, DOMString features);
+  WindowProxy open(DOMString url, DOMString name, DOMString features);
   [RaisesException, CEReactions] void close();
   [RaisesException, CEReactions, CallWith=ResponsibleDocument] void write(DOMString... text);
   [RaisesException, CEReactions, CallWith=ResponsibleDocument] void writeln(DOMString... text);

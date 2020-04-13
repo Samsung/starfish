@@ -14,8 +14,7 @@ dictionary ScrollToOptions : ScrollOptions {
 [PrimaryGlobal, LegacyUnenumerableNamedProperties, CustomDescriptor, Exposed=Window]
 interface Window : EventTarget {
   // the current browsing context
-  // NOTE WindowProxy -> Window
-  [Unforgeable, CrossOrigin] readonly attribute Window window;
+  [Unforgeable, CrossOrigin] readonly attribute WindowProxy window;
   // `self` is Implemented in virtual id
   // [Replaceable] readonly attribute WindowProxy self;
   [Unforgeable, CrossOrigin] readonly attribute Document document;
@@ -39,15 +38,12 @@ interface Window : EventTarget {
   // [STARFISH_ENABLE_OBSOLETE_SPEC, Replaceable] readonly attribute Event? event;
 
   // other browsing contexts
-  // NOTE WindowProxy -> Window
-  [Replaceable, CrossOrigin=Setter] readonly attribute Window frames;
+  [Replaceable, CrossOrigin=Setter] readonly attribute WindowProxy frames;
   [Replaceable, CrossOrigin=Setter] readonly attribute unsigned long length;
 
-  // NOTE WindowProxy -> Window
-  [Unforgeable, CrossOrigin=Setter] readonly attribute Window? top;
+  [Unforgeable, CrossOrigin=Setter] readonly attribute WindowProxy? top;
   [Unimplemented] attribute any opener;
-  // NOTE WindowProxy -> Window
-  [Replaceable, CrossOrigin=Setter] readonly attribute Window? parent;
+  [Replaceable, CrossOrigin=Setter] readonly attribute WindowProxy? parent;
   readonly attribute Element? frameElement;
   [Unimplemented] WindowProxy? open(optional DOMString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
   [Unimplemented, NotEnumerable] getter object (DOMString name);

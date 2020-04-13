@@ -22,6 +22,7 @@
 
 #include "core/dom/HTMLElement.h"
 #include "browser/history/HistoryManager.h"
+#include "binding/WindowProxy.h"
 
 #define STARFISH_DEFAULT_IFRAME_WIDTH 300
 #define STARFISH_DEFAULT_IFRAME_HEIGHT 150
@@ -66,8 +67,8 @@ public:
     String* scrolling();
     void setScrolling(String* scrolling);
 
-    Document* contentDocument() const;
-    Window* contentWindow() const;
+    Document* contentDocument();
+    WindowProxy* contentWindow();
 
     String* referrerPolicy();
     void setReferrerPolicy(String* policy);
@@ -109,6 +110,8 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLIFrameElement, m_browsingContext));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLIFrameElement, m_contentWindowProxy));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLIFrameElement, m_historyManager));
         HTMLElement::fillGCDescriptor(desc);
     }
@@ -116,6 +119,7 @@ protected:
     virtual void childBrowsingContextLoaded();
 
     BrowsingContext* m_browsingContext;
+    WindowProxy* m_contentWindowProxy;
     HistoryManager* m_historyManager;
     bool m_isContentDocumentDisabled;
 

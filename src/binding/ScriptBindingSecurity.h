@@ -26,11 +26,13 @@ class ExecutionStateRef;
 
 namespace Starfish {
 
+class Document;
 class Window;
 class Location;
 
 class ScriptBindingSecurity {
 public:
+    static bool canAccess(Document* source, Document* target);
     static bool shouldAllowCrossOriginScriptAPIAccessToWindow(
         Escargot::ExecutionStateRef* state, Window* window);
     static bool shouldAllowCrossOriginScriptAPIAccessToLocation(

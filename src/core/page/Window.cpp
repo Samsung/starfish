@@ -79,6 +79,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     : EventTarget()
     , GlobalScope(browsingContext->webView())
     , m_browsingContext(browsingContext)
+    , m_proxy(nullptr)
     , m_document(nullptr)
     , m_history(nullptr)
     , m_navigator(nullptr)
@@ -101,6 +102,18 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     */
     m_scriptBindingInstance = new ScriptBindingWindowInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
+
+    if (!browsingContext->isTopLevelBrowsingContext()) {
+        // if there is already created window proxy..
+        if (browsingContext->sourceElement()->contentWindow()) {
+            m_proxy = browsingContext->sourceElement()->contentWindow();
+            m_proxy->updateSource(this);
+        } else {
+            m_proxy = new WindowProxy(this);
+        }
+    } else {
+        m_proxy = new WindowProxy(this);
+    }
 
     // TODO: use location to open a new document
     m_document = new HTMLDocument(this, m_scriptBindingInstance, url,
@@ -169,31 +182,31 @@ ExecutionContext* Window::executionContext() const
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-Window* Window::parent()
+WindowProxy* Window::parent()
 {
     if (browsingContext()->isTopLevelBrowsingContext()) {
-        return this;
+        return window();
     }
 
     if (browsingContext()->parentBrowsingContext()) {
-        return browsingContext()->parentBrowsingContext()->window();
+        return browsingContext()->parentBrowsingContext()->window()->window();
     }
 
     return nullptr;
 }
 
-Window* Window::top()
+WindowProxy* Window::top()
 {
     if (browsingContext()->isTopLevelBrowsingContext()) {
-        return this;
+        return window();
     }
 
     Window* current = this;
     while (current != nullptr &&
            !current->browsingContext()->isTopLevelBrowsingContext()) {
-        current = current->parent();
+        current = current->parent()->window();
     }
-    return current;
+    return current->window();
 }
 
 // https://w3c.github.io/html/browsers.html#dom-window-frameelement
@@ -818,7 +831,7 @@ Window* Window::defaultIndexedGetter(uint32_t idx)
     if (item) {
         if (item->isHTMLIFrameElement()) {
             STARFISH_ASSERT(item->asHTMLIFrameElement()->contentWindow());
-            return item->asHTMLIFrameElement()->contentWindow();
+            return item->asHTMLIFrameElement()->contentWindow()->window();
         } else {
             STARFISH_ASSERT_NOT_REACHED();
         }

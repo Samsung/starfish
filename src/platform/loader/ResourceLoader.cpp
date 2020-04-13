@@ -595,7 +595,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                     Window* window = static_cast<Window*>(data);
                                     g_fireOnloadEvent = true;
                                     window->document()->setNeedsPainting();
-                                    window->window()->testStart();
+                                    window->testStart();
                                 },
                                 250, doc->window());
                         }

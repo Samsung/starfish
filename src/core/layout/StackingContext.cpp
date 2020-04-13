@@ -163,6 +163,7 @@ GraphicsBufferHolder::GraphicsBufferHolder(CanvasSurface* s)
     , m_tileDataHeight(m_bufferHeight)
     , m_horizontalTileCount(1)
     , m_verticalTileCount(1)
+    , m_additionalPixelRatio(1)
 {
     m_surfaces.push_back(s);
 }

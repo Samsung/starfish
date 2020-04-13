@@ -27,12 +27,16 @@ class ResourceURL;
 class WebOrigin : public gc {
 protected:
     WebOrigin();
-    WebOrigin(NULLABLE ResourceURL* url, bool isOpaque);
+    WebOrigin(ResourceURL* url, bool isOpaque);
 
 public:
     static WebOrigin* createDocumentOrigin(ResourceURL* url);
     String* serialize() const;
     Nullable<String*> domain() const;
+    Nullable<ResourceURL*> url() const
+    {
+        return m_originalURL;
+    }
     bool isOpaque() const
     {
         return m_isOpaque;
@@ -42,7 +46,7 @@ public:
     bool isSameOriginDomain(const WebOrigin* otherWebOrigin) const;
 
 protected:
-    NULLABLE ResourceURL* m_originalURL;
+    Nullable<ResourceURL*> m_originalURL;
     bool m_isOpaque;
 };
 
