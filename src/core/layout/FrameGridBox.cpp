@@ -94,9 +94,7 @@ LayoutUnit GridFormattingContext::preferredWidth()
 {
     LayoutUnit sumOfWidths = 0;
     for (size_t col = 1; col < m_gridTemplateColumns.size(); col++) {
-        if (m_gridTemplateColumns[col].isComputed()) {
-            sumOfWidths += m_gridTemplateColumns[col].size();
-        }
+        sumOfWidths += m_gridTemplateColumns[col].size();
     }
 
     sumOfWidths += m_columnGap * (m_gridTemplateColumns.size() - 2);
@@ -106,19 +104,6 @@ LayoutUnit GridFormattingContext::preferredWidth()
 
 void GridFormattingContext::computeColumnsAndRows()
 {
-    for (Frame* c = m_container->firstChild(); c; c = c->next()) {
-        if (c->isGridItem()) {
-            m_orderedGridItems.push_back(c->asFrameBox());
-        }
-    }
-
-    std::stable_sort(m_orderedGridItems.begin(), m_orderedGridItems.end(),
-                     [](FrameBox* a, FrameBox* b) {
-                         STARFISH_ASSERT(a != nullptr);
-                         STARFISH_ASSERT(b != nullptr);
-                         return a->style()->order() < b->style()->order();
-                     });
-
     buildGridLineTemplate();
     layoutGridItems();
 }
@@ -182,72 +167,7 @@ void GridFormattingContext::applyImplicitTrackSizing()
         double eachRowHeight = height / (m_gridTemplateRows.size() - 1);
         for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
             GridTrack& track = m_gridTemplateRows[i];
-            track.setSize(LayoutUnit(eachRowHeight), true);
-        }
-    }
-}
-
-void GridFormattingContext::applyFrUnitsWithColumns()
-{
-    LayoutUnit computedSum(0);
-    LayoutUnit sumOfFrs(0);
-    bool hasMinMax = false;
-    bool isMinMaxComputed = false;
-    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
-        GridTrack line = m_gridTemplateColumns[i];
-        // fixed, percentage, auto, fr, minmax, etc.
-        if (line.isLength()) {
-            computedSum += line.size();
-        } else if (line.isFr()) {
-            sumOfFrs += line.fr();
-        } else if (line.isMinMax()) {
-            computedSum += line.size();
-            hasMinMax = true;
-            if (line.isComputed()) {
-                isMinMaxComputed = true;
-            }
-            if (line.max().isFr()) {
-                sumOfFrs += (LayoutUnit)line.max().fr();
-            }
-        }
-    }
-
-    // https://www.w3.org/TR/css-grid-1/#leftover-space
-    // If this value is less than 1, set it to 1 instead.
-    if (sumOfFrs < 1.0f) {
-        sumOfFrs = 1.0f;
-    }
-
-    LayoutUnit gapSpace = m_columnGap * (m_gridTemplateColumns.size() - 2);
-
-    LayoutUnit remainingSpace = (m_availableWidth - gapSpace) - computedSum;
-    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
-        GridTrack& line = m_gridTemplateColumns[i];
-        if (line.isFr()) {
-            if (remainingSpace > 0) {
-                LayoutUnit offset = (line.fr() * remainingSpace) / sumOfFrs;
-                if (offset > line.size()) {
-                    double value = round(offset.toDouble());
-                    line.setSize(value, true);
-                }
-            } else {
-                if (!line.isComputed()) {
-                    line.setSize(0, true);
-                }
-            }
-        } else if (line.isMinMax() && line.max().isFr()) {
-            if (remainingSpace > 0) {
-                LayoutUnit offset =
-                    (line.max().fr() * remainingSpace) / sumOfFrs;
-                if (offset > line.size()) {
-                    double value = round(offset.toDouble());
-                    line.setSize(value, true);
-                }
-            } else {
-                if (!line.isComputed()) {
-                    line.setSize(0, true);
-                }
-            }
+            track.setSize(LayoutUnit(eachRowHeight));
         }
     }
 }
@@ -289,7 +209,7 @@ void GridFormattingContext::applyFrUnitsWithRows()
             LayoutUnit offset = availableHeight * line->fr() / maxGrid->fr();
             double value = round(offset.toDouble());
             offset = std::max(value, line->size().toDouble());
-            line->setSize(offset, true);
+            line->setSize(offset);
         }
     }
 }
@@ -313,11 +233,25 @@ void GridFormattingContext::placeGridItemsIntoCells()
         }
     }
 
+    GCVector<FrameBox*> orderedGridItems;
+    for (Frame* c = m_container->firstChild(); c; c = c->next()) {
+        if (c->isGridItem()) {
+            orderedGridItems.push_back(c->asFrameBox());
+        }
+    }
+
+    std::stable_sort(orderedGridItems.begin(), orderedGridItems.end(),
+                     [](FrameBox* a, FrameBox* b) {
+                         STARFISH_ASSERT(a != nullptr);
+                         STARFISH_ASSERT(b != nullptr);
+                         return a->style()->order() < b->style()->order();
+                     });
+
     // 1. Position anything that’s not auto-positioned.
     GCVector<GridArea*> gridAreasDefinite;
     GCVector<GridArea*> gridAreasAuto;
     size_t documentOrder = 0;
-    for (auto gridItem : m_orderedGridItems) {
+    for (auto gridItem : orderedGridItems) {
         if (gridItem->style()->position() == AbsolutePositionValue) {
             continue;
         }
@@ -401,6 +335,12 @@ void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
                 m_rowEndLine->setValue(namedArea->rowEnd());
             }
         }
+
+        if (m_rowStartLine->value() > 0 && m_rowEndLine->isAuto()) {
+            m_rowEndLine->setValue(m_rowStartLine->value() + 1);
+        } else if (m_rowStartLine->isAuto() && m_rowEndLine->value() > 0) {
+            m_rowStartLine->setValue(m_rowEndLine->value() - 1);
+        }
     }
 
     {
@@ -440,6 +380,13 @@ void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
             if (namedArea) {
                 m_columnEndLine->setValue(namedArea->columnEnd());
             }
+        }
+
+        if (m_columnStartLine->value() > 0 && m_columnEndLine->isAuto()) {
+            m_columnEndLine->setValue(m_columnStartLine->value() + 1);
+        } else if (m_columnStartLine->isAuto() &&
+                   m_columnEndLine->value() > 0) {
+            m_columnStartLine->setValue(m_columnEndLine->value() - 1);
         }
     }
 }
@@ -922,14 +869,12 @@ void GridFormattingContext::parseGridTemplateAreas()
     }
 }
 
-void GridFormattingContext::initializeGridLineColumns(
-    const GCVector<GridTrackSize>* columns)
+void GridFormattingContext::initializeGridTrackColumns(
+    const GCVector<GridTrackSize>* gridTrackColumns)
 {
-    STARFISH_ASSERT(columns);
+    STARFISH_ASSERT(gridTrackColumns);
 
-    size_t colSize = columns->size();
-    for (size_t i = 0; i < colSize; i++) {
-        GridTrackSize trackSize = (*columns)[i];
+    for (auto& trackSize : *gridTrackColumns) {
         GridLength gridLength = trackSize.min();
         LayoutUnit baseSize = intMaxForLayoutUnit;
 
@@ -940,25 +885,18 @@ void GridFormattingContext::initializeGridLineColumns(
                 baseSize = gridLength.length().specifiedValue(m_availableWidth,
                                                               m_container);
                 if (m_availableWidth == 0 && gridLength.length().isPercent()) {
-                    GridTrack line = GridTrack(0);
-                    line.setAuto(true);
-                    line.setFixed(false);
-                    m_gridTemplateColumns.push_back(line);
+                    m_gridTemplateColumns.push_back(GridTrack(GridTrack::Auto));
                 } else {
-                    GridTrack line = GridTrack(baseSize);
-                    m_gridTemplateColumns.push_back(line);
+                    m_gridTemplateColumns.push_back(GridTrack(baseSize));
                 }
             } else if (gridLength.isAuto()) {
-                GridTrack line = GridTrack(0);
-                line.setAuto(true);
-                line.setFixed(false);
-                m_gridTemplateColumns.push_back(line);
+                m_gridTemplateColumns.push_back(GridTrack(GridTrack::Auto));
             }
         } else if (trackSize.isFr()) {
             GridTrack line = GridTrack(gridLength.fr(), false);
             m_gridTemplateColumns.push_back(line);
         } else if (trackSize.isMinMax()) {
-            // TODO: when min or max is fr or auto, we should treat it.
+            // TODO: support values other than fixed
             GridTrack line = GridTrack(trackSize.min(), trackSize.max());
             m_gridTemplateColumns.push_back(line);
         } else if (trackSize.isMinContent()) {
@@ -970,13 +908,11 @@ void GridFormattingContext::initializeGridLineColumns(
 }
 
 void GridFormattingContext::initializeGridLineRows(
-    const GCVector<GridTrackSize>* rows)
+    const GCVector<GridTrackSize>* gridTrackRows)
 {
-    STARFISH_ASSERT(rows);
+    STARFISH_ASSERT(gridTrackRows);
 
-    size_t rowSize = rows->size();
-    for (size_t i = 0; i < rowSize; i++) {
-        GridTrackSize trackSize = (*rows)[i];
+    for (auto& trackSize : *gridTrackRows) {
         GridLength gridLength = trackSize.min();
 
         if (trackSize.isLength()) {
@@ -985,10 +921,7 @@ void GridFormattingContext::initializeGridLineRows(
                 GridTrack line = GridTrack(length.numberData());
                 m_gridTemplateRows.push_back(line);
             } else if (gridLength.isAuto()) {
-                GridTrack line = GridTrack(0);
-                line.setAuto(true);
-                line.setFixed(false);
-                m_gridTemplateRows.push_back(line);
+                m_gridTemplateRows.push_back(GridTrack(GridTrack::Auto));
             }
         } else if (trackSize.isFr()) {
             GridTrack line = GridTrack(gridLength.fr(), false);
@@ -1000,95 +933,14 @@ void GridFormattingContext::initializeGridLineRows(
     }
 }
 
-void GridFormattingContext::applyMinMaxGridLineColumns()
-{
-    // Distribute 'auto' size;
-    LayoutUnit sumOfColumns = 0;
-
-    size_t numberOfMinMax = 0;
-    size_t numberOfFr = 0;
-    std::vector<GridTrack*> minMaxLines;
-    bool hasFrInMinMax = false;
-    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
-        if (m_gridTemplateColumns[i].isMinMax()) {
-            m_gridTemplateColumns[i].setSize(
-                m_gridTemplateColumns[i].min().length().numberData(), true);
-            numberOfMinMax++;
-            minMaxLines.push_back(&m_gridTemplateColumns[i]);
-            if (m_gridTemplateColumns[i].max().isFr()) {
-                numberOfFr++;
-                hasFrInMinMax = true;
-            }
-        } else if (m_gridTemplateColumns[i].isFr()) {
-            numberOfFr++;
-        }
-    }
-
-    if (numberOfMinMax > 0) {
-        for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
-            sumOfColumns += m_gridTemplateColumns[i].size();
-        }
-    }
-
-    sumOfColumns += (m_gridTemplateColumns.size() - 2) * m_columnGap;
-    LayoutUnit availableWidth = m_availableWidth - sumOfColumns;
-    LayoutUnit totalMinMaxGap = 0.0;
-    if (numberOfMinMax && availableWidth > 0) {
-        std::stable_sort(
-            minMaxLines.begin(), minMaxLines.end(),
-            [](const GridTrack* a, const GridTrack* b) {
-                STARFISH_ASSERT(a != nullptr);
-                STARFISH_ASSERT(b != nullptr);
-                float maxA = a->max().isFr() ? a->size().toFloat()
-                                             : a->max().length().numberData();
-                float minA = a->min().isFr() ? a->size().toFloat()
-                                             : a->min().length().numberData();
-                float maxB = b->max().isFr() ? b->size().toFloat()
-                                             : b->max().length().numberData();
-                float minB = b->min().isFr() ? b->size().toFloat()
-                                             : b->min().length().numberData();
-                return (maxA - minA) < (maxB - minB);
-            });
-
-        for (size_t i = 0; i < minMaxLines.size(); i++) {
-            GridTrack* line = (minMaxLines[i]);
-            float maxLine = line->max().isFr()
-                                ? line->size().toFloat()
-                                : line->max().length().numberData();
-            float minLine = line->min().isFr()
-                                ? line->size().toFloat()
-                                : line->min().length().numberData();
-
-            LayoutUnit minmaxGap = maxLine - minLine;
-            LayoutUnit totalMinMaxWidth = minmaxGap * numberOfMinMax;
-
-            if (totalMinMaxWidth <= availableWidth) {
-                line->setSize(line->size() + minmaxGap, true);
-                availableWidth -= minmaxGap;
-                totalMinMaxGap += minmaxGap;
-            } else {
-                LayoutUnit dividedWidth = availableWidth / numberOfMinMax;
-                for (size_t j = i; j < minMaxLines.size(); j++) {
-                    GridTrack* line = (minMaxLines[j]);
-                    line->setSize(line->size() + dividedWidth, true);
-                    totalMinMaxGap += dividedWidth;
-                }
-                break;
-            }
-            numberOfMinMax--;
-        }
-    }
-}
-
 void GridFormattingContext::buildGridLineTemplate()
 {
-    // FIXME: Combine GridTrackSize and GridTrack
     GridTrack dummyPlaceholder = GridTrack(0);
     m_gridTemplateColumns.push_back(dummyPlaceholder);
     const GCVector<GridTrackSize>* columns =
         m_container->style()->gridTemplateColumns();
     if (columns) {
-        initializeGridLineColumns(columns);
+        initializeGridTrackColumns(columns);
     } else {
         m_gridTemplateColumns.push_back(GridTrack());
     }
@@ -1102,67 +954,17 @@ void GridFormattingContext::buildGridLineTemplate()
 
     parseGridTemplateAreas();
     placeGridItemsIntoCells();
-    initializeColumnTrackSizes();
 
-    {
-        resolveIntrinsicTrackSizes();
-        // compute minmax size for grid lines
-        applyMinMaxGridLineColumns();
-        // update offset using flex factor
-        applyFrUnitsWithColumns();
-    }
+    initializePreferredWidths();
+    resolveIntrinsicColumnTrackSizes();
+    maximizeColumnTracks();
+    expandFrColumnTracks();
+    stretchAutoColumnTracks();
 
-    applyImplicitTrackSizing();
-    stretchAutoTracks();
-
-    layoutGridLinesWithGridAreas();
-    applyFrUnitsWithRows();
-
+    applyImplicitTrackSizing();     // height
+    layoutGridLinesWithGridAreas(); // width & height
+    applyFrUnitsWithRows();         // height
     relayoutGridLinesWithGridAreasIfNeeded();
-}
-
-static bool hasBigAreasIncludingCurrentArea(GCVector<GridArea>& list,
-                                            size_t rowStart, size_t start,
-                                            size_t end, size_t& bigAreaStart,
-                                            size_t& bigAreaEnd,
-                                            std::vector<size_t>& bigAreaIds)
-{
-    GridArea* target = nullptr;
-    std::vector<GridArea*> areas;
-    for (size_t i = 0; i < list.size(); i++) {
-        GridArea preArea = list[i];
-
-        if (preArea.rowStart() < rowStart) {
-            if ((preArea.columnStart() <= start &&
-                 preArea.columnEnd() >= end) &&
-                (end - start < preArea.columnEnd() - preArea.columnStart())) {
-                areas.push_back(&list[i]);
-                bigAreaIds.push_back(preArea.index());
-            }
-        }
-    }
-
-    if (areas.size() == 0) {
-        return false;
-    }
-
-    std::stable_sort(areas.begin(), areas.end(),
-                     [](const GridArea* a, const GridArea* b) {
-                         STARFISH_ASSERT(a != nullptr);
-                         STARFISH_ASSERT(b != nullptr);
-                         return a->columnStart() < b->columnStart();
-                     });
-    bigAreaStart = areas[0]->columnStart();
-
-    std::stable_sort(areas.begin(), areas.end(),
-                     [](const GridArea* a, const GridArea* b) {
-                         STARFISH_ASSERT(a != nullptr);
-                         STARFISH_ASSERT(b != nullptr);
-                         return a->columnEnd() > b->columnEnd();
-                     });
-    bigAreaEnd = areas[0]->columnEnd();
-
-    return true;
 }
 
 // WHAT: get the largest GridArea that includes the given grid area
@@ -1207,249 +1009,6 @@ static GridArea* getBiggestAreaWithRow(GCVector<GridArea>& list,
     return target;
 }
 
-void GridFormattingContext::updateGridTemplateColumnWidths(GridArea& gridArea)
-{
-    size_t columnStart = gridArea.columnStart();
-    size_t columnEnd = gridArea.columnEnd();
-    LayoutUnit contentWidth = gridArea.preferredWidth();
-
-    LayoutUnit sumOfAllColumnWidths = 0;
-    for (size_t i = columnStart; i < columnEnd; i++) {
-        sumOfAllColumnWidths += m_gridTemplateColumns[i].size();
-    }
-
-    if (sumOfAllColumnWidths == 0) {
-        LayoutUnit eachColumnWidth = contentWidth / (columnEnd - columnStart);
-        for (size_t i = columnStart; i < columnEnd; i++) {
-            GridTrack& gridTrack = m_gridTemplateColumns[i];
-            gridTrack.setSize(eachColumnWidth, true);
-        }
-
-        return;
-    }
-
-    size_t bigAreaColumnStart;
-    size_t bigAreaColumnEnd;
-    std::vector<size_t> bigAreaIds;
-    bool hasBigAreas = hasBigAreasIncludingCurrentArea(
-        m_orderedGridArea, gridArea.rowStart(), columnStart, columnEnd,
-        bigAreaColumnStart, bigAreaColumnEnd, bigAreaIds);
-
-    GCVector<GridTrack*> gridTracksWithNonFixedWidths;
-    if (hasBigAreas) {
-        // find all other grid areas that contain this girdArea, and
-        // also contained by the 'bigArea'
-        GCVector<GridArea*> innerAreas;
-        for (auto& candidate : m_orderedGridArea) {
-            auto itr = std::find(bigAreaIds.begin(), bigAreaIds.end(),
-                                 candidate.index());
-            if (itr != bigAreaIds.end()) {
-                // skip if the candidate is already in the list
-                continue;
-            }
-
-            if (candidate.index() > gridArea.index()) {
-                break;
-            }
-
-            if (candidate.index() == gridArea.index()) {
-                continue;
-            }
-
-            if (candidate.rowStart() <= gridArea.rowStart()) {
-                if (bigAreaColumnStart <= candidate.columnStart() &&
-                    candidate.columnEnd() <= bigAreaColumnEnd) {
-                    innerAreas.push_back(&candidate);
-                }
-            }
-        }
-
-        SetForGrid<size_t> set;
-        for (auto inner : innerAreas) {
-            for (size_t col = inner->columnStart() + 1;
-                 col <= inner->columnEnd(); col++) {
-                set.insert(col);
-            }
-        }
-
-        for (size_t i = bigAreaColumnStart; i < bigAreaColumnEnd; i++) {
-            if (gridArea.columnStart() <= i && i < gridArea.columnEnd()) {
-                continue;
-            }
-
-            if (!set.find(i + 1) && !m_gridTemplateColumns[i].isFixed()) {
-                gridTracksWithNonFixedWidths.push_back(
-                    &m_gridTemplateColumns[i]);
-            }
-        }
-    }
-
-    if (contentWidth < sumOfAllColumnWidths) {
-        if (hasBigAreas) {
-            if (gridTracksWithNonFixedWidths.size() > 0) {
-                LayoutUnit additionalWidth =
-                    (sumOfAllColumnWidths - contentWidth) /
-                    gridTracksWithNonFixedWidths.size();
-                for (auto gridTrack : gridTracksWithNonFixedWidths) {
-                    gridTrack->setSize(gridTrack->size() + additionalWidth,
-                                       true);
-                }
-
-                LayoutUnit eachColumnWidth =
-                    contentWidth / (columnEnd - columnStart);
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    GridTrack& gridTrack = m_gridTemplateColumns[i];
-                    gridTrack.setSize(eachColumnWidth, true);
-                }
-            } else {
-                GCVector<GridTrack*> noneFixed;
-                LayoutUnit sumOfFixed = 0;
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    if (m_gridTemplateColumns[i].isFixed() &&
-                        !m_gridTemplateColumns[i].isFr()) {
-                        sumOfFixed += m_gridTemplateColumns[i].size();
-                    } else {
-                        noneFixed.push_back(&m_gridTemplateColumns[i]);
-                    }
-                }
-                if (noneFixed.size() > 0) {
-                    LayoutUnit diff = contentWidth / noneFixed.size();
-
-                    for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(diff, true);
-                    }
-
-                    noneFixed.clear();
-                    sumOfFixed = 0;
-
-                    size_t startForTarget = bigAreaColumnStart;
-                    size_t endForTarget = bigAreaColumnEnd;
-                    for (size_t i = startForTarget; i < endForTarget; i++) {
-                        if (m_gridTemplateColumns[i].isFixed() &&
-                            !m_gridTemplateColumns[i].isFr()) {
-                            sumOfFixed += m_gridTemplateColumns[i].size();
-                        } else {
-                            noneFixed.push_back(&m_gridTemplateColumns[i]);
-                        }
-                    }
-
-                    if (noneFixed.size()) {
-                        diff = (sumOfAllColumnWidths - contentWidth) /
-                               noneFixed.size();
-                        for (auto gridTrack : noneFixed) {
-                            gridTrack->setSize(gridTrack->size() + diff, true);
-                        }
-                    }
-                }
-            }
-        }
-    } else if (contentWidth > sumOfAllColumnWidths) {
-        // the current gridarea's width is greater than the width allocated
-        // in the gridtemplatecolumns. In this case, adjust the size of
-        // gridtemplatecolumns so that the gridarea can fit.
-
-        if (hasBigAreas) {
-            if (gridTracksWithNonFixedWidths.size() > 0) {
-                LayoutUnit diff = contentWidth - sumOfAllColumnWidths;
-
-                LayoutUnit sumOfNonFixedWidths = 0;
-                for (auto gridTrack : gridTracksWithNonFixedWidths) {
-                    sumOfNonFixedWidths += gridTrack->size();
-                }
-
-                LayoutUnit remaining = 0;
-                for (auto gridTrack : gridTracksWithNonFixedWidths) {
-                    LayoutUnit offset =
-                        diff * (gridTrack->size() / sumOfNonFixedWidths);
-
-                    if (offset < gridTrack->size()) {
-                        gridTrack->setSize(gridTrack->size() - offset, true);
-                    } else {
-                        remaining += offset - gridTrack->size();
-                        gridTrack->setSize(0, true);
-                    }
-                }
-
-                // FIXME: If remaining is not '0', we have to distribute width.
-
-                LayoutUnit eachColumnWidth =
-                    contentWidth / (columnEnd - columnStart);
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    GridTrack& gridTrack = m_gridTemplateColumns[i];
-                    gridTrack.setSize(eachColumnWidth, true);
-                }
-            } else {
-                GCVector<GridTrack*> noneFixed;
-                LayoutUnit sumOfFixed = 0;
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    if (m_gridTemplateColumns[i].isFixed() &&
-                        !m_gridTemplateColumns[i].isFr()) {
-                        sumOfFixed += m_gridTemplateColumns[i].size();
-                    } else {
-                        noneFixed.push_back(&m_gridTemplateColumns[i]);
-                    }
-                }
-
-                if (noneFixed.size() > 0) {
-                    LayoutUnit dividedWidth =
-                        (contentWidth - (sumOfAllColumnWidths - sumOfFixed)) /
-                        noneFixed.size();
-                    for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(gridTrack->size() + dividedWidth,
-                                           true);
-                    }
-                }
-            }
-        } else {
-            // find any unallocated gridtemplatecolumns, if any, and assign
-            // required widths
-            size_t numOfUnallocatedColumns = 0;
-            for (size_t i = columnStart; i < columnEnd; i++) {
-                if (m_gridTemplateColumns[i].size() == 0) {
-                    numOfUnallocatedColumns++;
-                }
-            }
-
-            if (numOfUnallocatedColumns > 0) {
-                LayoutUnit eachColumnWidth =
-                    (contentWidth - sumOfAllColumnWidths) /
-                    numOfUnallocatedColumns;
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    if (m_gridTemplateColumns[i].size() == 0) {
-                        GridTrack& gridTrack = m_gridTemplateColumns[i];
-                        gridTrack.setSize(eachColumnWidth, true);
-                    }
-                }
-            } else {
-                GCVector<GridTrack*> noneFixed; // fr grid line for column
-                LayoutUnit sumOfFixed(0);
-
-                for (size_t i = columnStart; i < columnEnd; i++) {
-                    if (m_gridTemplateColumns[i].isLength() &&
-                        m_gridTemplateColumns[i].isFixed()) {
-                        sumOfFixed += m_gridTemplateColumns[i].size();
-                    } else if (m_gridTemplateColumns[i].isFr()) {
-                        noneFixed.push_back(&m_gridTemplateColumns[i]);
-                    }
-                }
-
-                // If the grid area has multiple grid lines with fr unit,
-                // each grid line should have a value of (contentWidth -
-                // (gridlines' offset + fixedSum) /n-fr))
-                if (noneFixed.size()) {
-                    LayoutUnit dividedWidth =
-                        (contentWidth - (sumOfAllColumnWidths + sumOfFixed)) /
-                        noneFixed.size();
-                    for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(gridTrack->size() + dividedWidth,
-                                           true);
-                    }
-                }
-            }
-        }
-    }
-}
-
 void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
 {
     FrameBox* gridItem = gridArea.box();
@@ -1471,7 +1030,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
         LayoutUnit eachRowHeight = contentHeight / (rowEnd - rowStart);
         for (size_t i = rowStart; i < rowEnd; i++) {
             GridTrack& gridTrack = m_gridTemplateRows[i];
-            gridTrack.setSize(eachRowHeight, true);
+            gridTrack.setSize(eachRowHeight);
         }
 
         return;
@@ -1530,13 +1089,13 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                 for (size_t i = 0; i < gridTracksWithNonFixedHeights.size();
                      i++) {
                     GridTrack* line = gridTracksWithNonFixedHeights[i];
-                    line->setSize(line->size() + additionalHeight, true);
+                    line->setSize(line->size() + additionalHeight);
                 }
 
                 LayoutUnit eachRowHeight = contentHeight / (rowEnd - rowStart);
                 for (size_t i = rowStart; i < rowEnd; i++) {
                     GridTrack& gridTrack = m_gridTemplateRows[i];
-                    gridTrack.setSize(eachRowHeight, true);
+                    gridTrack.setSize(eachRowHeight);
                 }
             } else {
                 GCVector<GridTrack*> noneFixed;
@@ -1554,7 +1113,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                 if (noneFixed.size() > 0) {
                     LayoutUnit diff = contentHeight / noneFixed.size();
                     for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(diff, true);
+                        gridTrack->setSize(diff);
                     }
 
                     noneFixed.clear();
@@ -1575,7 +1134,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                         diff = (sumOfRowHeights - contentHeight) /
                                noneFixed.size();
                         for (auto gridTrack : noneFixed) {
-                            gridTrack->setSize(gridTrack->size() + diff, true);
+                            gridTrack->setSize(gridTrack->size() + diff);
                         }
                     }
                 }
@@ -1597,10 +1156,10 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                         diff * (gridTrack->size() / sumOfHeights);
 
                     if (gridTrack->size() - offset > 0) {
-                        gridTrack->setSize(gridTrack->size() - offset, true);
+                        gridTrack->setSize(gridTrack->size() - offset);
                     } else {
                         remaining += offset - gridTrack->size();
-                        gridTrack->setSize(0, true);
+                        gridTrack->setSize(0);
                     }
                 }
 
@@ -1609,7 +1168,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                 LayoutUnit eachRowHeight = contentHeight / (rowEnd - rowStart);
                 for (size_t i = rowStart; i < rowEnd; i++) {
                     GridTrack& gridTrack = m_gridTemplateRows[i];
-                    gridTrack.setSize(eachRowHeight, true);
+                    gridTrack.setSize(eachRowHeight);
                 }
             } else {
                 GCVector<GridTrack*> noneFixed;
@@ -1629,8 +1188,8 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                         (contentHeight - (sumOfRowHeights - sumOfFixed)) /
                         noneFixed.size();
                     for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(gridTrack->size() + additionalHeight,
-                                           true);
+                        gridTrack->setSize(gridTrack->size() +
+                                           additionalHeight);
                     }
                 }
             }
@@ -1648,7 +1207,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                 for (size_t i = rowStart; i < rowEnd; i++) {
                     if (!m_gridTemplateRows[i].size()) {
                         GridTrack& gridTrack = m_gridTemplateRows[i];
-                        gridTrack.setSize(eachRowHeight, true);
+                        gridTrack.setSize(eachRowHeight);
                     }
                 }
             } else {
@@ -1668,7 +1227,7 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
                     LayoutUnit eachRowHeight =
                         (contentHeight - sumOfFixed) / noneFixed.size();
                     for (auto gridTrack : noneFixed) {
-                        gridTrack->setSize(eachRowHeight, true);
+                        gridTrack->setSize(eachRowHeight);
                     }
                 }
             }
@@ -1676,8 +1235,8 @@ void GridFormattingContext::updateGridTemplateRowHeights(GridArea& gridArea)
     }
 }
 
-LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
-                                         ComputedStyle* style)
+LayoutSize GridFormattingContext::fetchFixedMarginBorderPadding(
+    FrameGridBox* grid, ComputedStyle* style)
 {
     LayoutSize result;
     // margin
@@ -1739,7 +1298,7 @@ LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
     return result;
 }
 
-void GridFormattingContext::initializeColumnTrackSizes()
+void GridFormattingContext::initializePreferredWidths()
 {
     for (GridArea& gridArea : m_orderedGridArea) {
         FrameBox* gridItemBox = gridArea.box();
@@ -1770,45 +1329,218 @@ void GridFormattingContext::initializeColumnTrackSizes()
         }
         gridArea.setPreferredWidth(contentWidth);
         gridArea.setPreferredMinWidth(preferredMinWidth);
-        // This part relies on calculating 'width'.
-        // grid lines' offset is updated.
-        updateGridTemplateColumnWidths(gridArea);
     }
 }
 
-void GridFormattingContext::resolveIntrinsicTrackSizes()
+void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
 {
+    GCVector<GridArea*> gridAreasWithSpans;
+    // 1-2
+    // Cal widths using only the items with span=1.
+    // Consider widths with min-content, max-content, auto, and fit-content.
+    for (auto& gridArea : m_orderedGridArea) {
+        if (gridArea.columnEnd() - gridArea.columnStart() > 1) {
+            gridAreasWithSpans.push_back(&gridArea);
+            continue;
+        }
+
+        GridTrack& track = m_gridTemplateColumns[gridArea.columnStart()];
+        LayoutUnit maxContent =
+            std::max(track.size(), gridArea.preferredWidth());
+        LayoutUnit minContent =
+            std::max(track.size(), gridArea.preferredMinWidth());
+
+        if (track.isAuto() || track.isImplicitLine()) {
+            track.setSize(minContent);
+            track.setGrowthLimit(maxContent);
+        } else if (track.isMinContent()) {
+            track.setSize(minContent);
+        } else if (track.isMaxContent()) {
+            track.setSize(maxContent);
+        } else if (track.isMinMax()) {
+            // TODO: min- and max-content
+            if (track.min().isFixed()) {
+                track.setSize(track.min().length().fixed());
+            } else if (track.min().isAuto()) {
+                track.setSize(minContent);
+            }
+
+            if (track.max().isFixed()) {
+                track.setGrowthLimit(track.max().length().fixed());
+            }
+        } else if (track.isFr()) {
+            track.setSize(minContent);
+        }
+    }
+
+    std::stable_sort(gridAreasWithSpans.begin(), gridAreasWithSpans.end(),
+                     [](const GridArea* a, const GridArea* b) {
+                         STARFISH_ASSERT(a != nullptr);
+                         STARFISH_ASSERT(b != nullptr);
+
+                         size_t spanLength1 = a->columnEnd() - a->columnStart();
+                         size_t spanLength2 = b->columnEnd() - b->columnStart();
+                         return spanLength1 < spanLength2;
+                     });
+    increaseColumnGridTracksForSpans(gridAreasWithSpans);
+
+    // 4: Cal widths for the items with spans > 1, and with fr
+}
+
+void GridFormattingContext::increaseColumnGridTracksForSpans(
+    GCVector<GridArea*>& gridAreasWithSpans)
+{
+    // 3: Adjust the size of widths considering spans
+    // intrinsic: min-content, max-content, auto, fit-content
+    // no fr and minmax(intrinsic, _);
+    // 3.1, increase basesize of a track with minmax(intrinsic, _)
+    // 3.2, increase basesize of a track with
+    //      minmax(min-content | max-content, _)
+    // 3.3, increase basesize of a track with minmax(auto | max-content, _), if
+    //      the grid container is being sized unera max-content constraint.
+    // 3.4, if growthLimit < baseSize, growthLimit = baseSize
+    // 3.5, increase the growthLimit of a track with minmax(_, intrinsic)
+    // 3.6, increase the growthLimit of a track with minmax(_, max-content)
+
+    for (auto gridArea : gridAreasWithSpans) {
+        if (isFrPartOfTrack(gridArea)) {
+            continue;
+        }
+
+        LayoutUnit sumOfTracks = 0;
+        LayoutUnit numOfAutoTracks = 0;
+        for (size_t i = gridArea->columnStart(); i < gridArea->columnEnd();
+             i++) {
+            GridTrack* track = &m_gridTemplateColumns[i];
+            sumOfTracks += track->size();
+            if (track->isAuto()) {
+                numOfAutoTracks += 1;
+            }
+        }
+
+        if (numOfAutoTracks == 0) {
+            continue;
+        }
+
+        LayoutUnit requiredSpace = gridArea->preferredWidth() - sumOfTracks;
+        LayoutUnit eachColumnSize = requiredSpace.toDouble() / numOfAutoTracks;
+        for (size_t i = gridArea->columnStart(); i < gridArea->columnEnd();
+             i++) {
+            GridTrack* track = &m_gridTemplateColumns[i];
+            if (track->isAuto()) {
+                track->setSize(std::max(track->size(), eachColumnSize));
+                track->setGrowthLimit(track->size());
+            }
+        }
+    }
+}
+
+bool GridFormattingContext::isFrPartOfTrack(GridArea* gridArea)
+{
+    bool hasFr = false;
+    for (size_t i = gridArea->columnStart(); i < gridArea->columnEnd(); i++) {
+        if (m_gridTemplateColumns[i].isFr()) {
+            hasFr = true;
+            break;
+        }
+    }
+    return hasFr;
+}
+
+void GridFormattingContext::maximizeColumnTracks()
+{
+    LayoutUnit sumOfColumnWidths = 0;
+    GCVector<GridTrack*> growableTracks;
+    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
+        GridTrack& track = m_gridTemplateColumns[i];
+        sumOfColumnWidths += track.size();
+        if (track.isAuto()) {
+            growableTracks.push_back(&track);
+        } else if (track.isMinMax()) {
+            if (track.max().isFixed()) {
+                growableTracks.push_back(&track);
+            }
+        }
+    }
+
+    LayoutUnit gapSpace = m_columnGap * (m_gridTemplateColumns.size() - 2);
+    LayoutUnit remainingSpace =
+        m_availableWidth - (sumOfColumnWidths + gapSpace);
+
+    if (remainingSpace <= 0) {
+        return;
+    }
+
+    LayoutUnit availableSpace = remainingSpace;
+    // Iterate until either all remaining space is allocated or tracks
+    // can no longer be extended.
+    while (availableSpace.toInt() > 0 && growableTracks.size() > 0) {
+        LayoutUnit additionalWidth = availableSpace / growableTracks.size();
+
+        GCVector<GridTrack*> remainingGrowableTracks;
+        for (auto track : growableTracks) {
+            LayoutUnit newWidth = track->size() + additionalWidth;
+
+            if (newWidth >= track->growthLimit()) {
+                availableSpace -= track->growthLimit() - track->size();
+                track->setSize(track->growthLimit());
+            } else {
+                availableSpace -= additionalWidth;
+                track->setSize(newWidth);
+                remainingGrowableTracks.push_back(track);
+            }
+        }
+
+        growableTracks.clear();
+        growableTracks.insert(growableTracks.end(),
+                              remainingGrowableTracks.begin(),
+                              remainingGrowableTracks.end());
+    }
+}
+
+void GridFormattingContext::expandFrColumnTracks()
+{
+    LayoutUnit sumOfFrs = 0;
+    LayoutUnit sumOfColumnWidths = 0;
     for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
         GridTrack& track = m_gridTemplateColumns[i];
 
-        if (track.isMaxContent() || track.isMinContent()) {
-            resolveMinMaxContentSize(i);
+        if (track.isFr()) {
+            sumOfFrs += track.fr();
+        } else if (track.isMinMax() && track.max().isFr()) {
+            sumOfFrs += LayoutUnit(track.max().fr());
+        } else {
+            sumOfColumnWidths += m_gridTemplateColumns[i].size();
+        }
+    }
+
+    if (sumOfFrs < 1) {
+        sumOfFrs = 1;
+    }
+
+    LayoutUnit gapSpace = m_columnGap * (m_gridTemplateColumns.size() - 2);
+    LayoutUnit remainingSpace =
+        m_availableWidth - (sumOfColumnWidths + gapSpace);
+
+    if (remainingSpace <= 0) {
+        return;
+    }
+
+    for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
+        GridTrack& track = m_gridTemplateColumns[i];
+
+        if (track.isFr()) {
+            LayoutUnit width =
+                (track.fr().toDouble() / sumOfFrs) * remainingSpace;
+            track.setSize(std::max(track.size(), width));
+        } else if (track.isMinMax() && track.max().isFr()) {
+            LayoutUnit width = (track.max().fr() / sumOfFrs) * remainingSpace;
+            track.setSize(std::max(track.size(), width));
         }
     }
 }
 
-void GridFormattingContext::resolveMinMaxContentSize(size_t gridTrackIndex)
-{
-    // TODO: consider spans
-    LayoutUnit maxWidthSoFar;
-    GridTrack& track = m_gridTemplateColumns[gridTrackIndex];
-    for (auto area : m_orderedGridArea) {
-        if ((area.columnStart() == gridTrackIndex) &&
-            (gridTrackIndex < area.columnEnd())) {
-            LayoutUnit width;
-            if (track.isMinContent()) {
-                width = area.preferredMinWidth();
-            } else if (track.isMaxContent()) {
-                width = area.preferredWidth();
-            }
-
-            maxWidthSoFar = std::max(maxWidthSoFar, width);
-        }
-    }
-    track.setSize(maxWidthSoFar, true);
-}
-
-void GridFormattingContext::stretchAutoTracks()
+void GridFormattingContext::stretchAutoColumnTracks()
 {
     if (m_availableWidth <= 0) {
         return;
@@ -1830,12 +1562,18 @@ void GridFormattingContext::stretchAutoTracks()
 
     LayoutUnit gapSpace = m_columnGap * (m_gridTemplateColumns.size() - 2);
     LayoutUnit remainingSpace =
-        (m_availableWidth - gapSpace) - sumOfAllNonAutoWidths;
-    LayoutUnit additionalAutoTrackSpace = remainingSpace / numOfAutoTracks;
+        m_availableWidth - (sumOfAllNonAutoWidths + gapSpace);
+
+    if (remainingSpace <= 0) {
+        return;
+    }
+
+    LayoutUnit additionalAutoTrackSpace =
+        remainingSpace.toDouble() / numOfAutoTracks;
     for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
         GridTrack& track = m_gridTemplateColumns[i];
         if (track.isAuto() && !track.isMinContent() && !track.isMaxContent()) {
-            track.setSize(track.size() + additionalAutoTrackSpace, true);
+            track.setSize(track.size() + additionalAutoTrackSpace);
         }
     }
 }
@@ -1966,7 +1704,7 @@ void GridFormattingContext::layoutGridLinesWithGridAreas()
         LayoutUnit width;
         LayoutUnit styleWidth;
         LayoutUnit contentWidth;
-        bool isFixed = true;
+        bool isFixed = false;
 
         LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
 
@@ -1978,7 +1716,6 @@ void GridFormattingContext::layoutGridLinesWithGridAreas()
             auto cache = m_layoutContext.testGridItemPreferredWidthCache(
                 gridItem, m_availableWidth);
             contentWidth = cache.getValue() + mbp.width();
-            isFixed = false;
         }
 
         if (!isFixed) {
@@ -2209,17 +1946,14 @@ bool GridFormattingContext::doesParticipateInGridFormattingContext(
 {
     if (gridItem->isFrameBlockBox() && gridItem->isAnonymous()) {
         FrameBlockBox* blockBox = gridItem->asFrameBlockBox();
-        Frame* child = blockBox->firstChild();
-        while (child) {
+        for (Frame* c = blockBox->firstChild(); c; c = c->next()) {
             // If the entire sequence of child text runs contains only white
             // space,
             // it is instead not rendered.
-            if (!(child->isFrameText() &&
-                  child->asFrameText()->text()->containsOnlyWhitespace())) {
+            if (!(c->isFrameText() &&
+                  c->asFrameText()->text()->containsOnlyWhitespace())) {
                 return true;
             }
-
-            child = child->next();
         }
 
         return false;
@@ -2250,12 +1984,10 @@ bool FrameGridBox::shouldLayout(LayoutContext& ctx,
         return true;
     }
 
-    Frame* child = firstChild();
-    while (child) {
-        if (child->isGridItem() && child->needsLayout()) {
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isGridItem() && c->needsLayout()) {
             return true;
         }
-        child = child->next();
     }
 
     return false;

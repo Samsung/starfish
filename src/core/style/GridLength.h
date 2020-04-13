@@ -95,6 +95,11 @@ public:
         return false;
     }
 
+    bool isFixed() const
+    {
+        return m_type == LengthType && m_length.isFixed();
+    }
+
     bool isAuto() const
     {
         return m_type == LengthType && m_length.isAuto();
