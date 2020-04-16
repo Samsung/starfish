@@ -22,6 +22,8 @@
 
 #include "core/layout/FrameBlockBox.h"
 
+#include <bitset>
+
 namespace Starfish {
 
 class ComputedStyle;
@@ -356,7 +358,18 @@ private:
     GridTrackType m_type{ GridTrackType::Auto };
 };
 
-#define GRID_MAX_TRACK 50
+class GridCellTable {
+public:
+    static const int MAX_TRACK = 64;
+
+    GridCellTable();
+    bool hasFreeSlot(size_t row, size_t col);
+    void setOccupied(size_t row, size_t col);
+
+private:
+    std::bitset<MAX_TRACK * MAX_TRACK> m_gridCellTable;
+};
+
 class GridFormattingContext {
 public:
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
@@ -390,9 +403,8 @@ private:
 
     LayoutUnit m_rowGap;
     LayoutUnit m_columnGap;
-    // FIXME(#1286): This checker is poor.
-    // +1 for a dummy track at each [0]
-    bool m_isCellAvailable[GRID_MAX_TRACK + 1][GRID_MAX_TRACK + 1];
+
+    GridCellTable m_gridCellTable;
 
     void buildGridLineTemplate();
     void layoutGridItems();

@@ -227,12 +227,6 @@ GridArea* GridFormattingContext::getNamedGridArea(String* name)
 // https://drafts.csswg.org/css-grid/#grid-item-placement-algorithm
 void GridFormattingContext::placeGridItemsIntoCells()
 {
-    for (size_t r = 0; r < GRID_MAX_TRACK + 1; r++) {
-        for (size_t c = 0; c < GRID_MAX_TRACK + 1; c++) {
-            m_isCellAvailable[r][c] = true;
-        }
-    }
-
     GCVector<FrameBox*> orderedGridItems;
     for (Frame* c = m_container->firstChild(); c; c = c->next()) {
         if (c->isGridItem()) {
@@ -477,8 +471,8 @@ void GridFormattingContext::placeGridAreasWithDefinitePositions(
 
 bool GridFormattingContext::addImplicitGridLineRows(GridArea* gridArea)
 {
-    if (GRID_MAX_TRACK < gridArea->rowStart() ||
-        GRID_MAX_TRACK < gridArea->rowEnd()) {
+    if (GridCellTable::MAX_TRACK < gridArea->rowStart() ||
+        GridCellTable::MAX_TRACK < gridArea->rowEnd()) {
         STARFISH_LOG_WARN("exceeds the max number of rows");
         return false;
     }
@@ -503,8 +497,8 @@ bool GridFormattingContext::addImplicitGridLineRows(GridArea* gridArea)
 
 bool GridFormattingContext::addImplicitGridLineColumns(GridArea* gridArea)
 {
-    if (GRID_MAX_TRACK < gridArea->columnStart() ||
-        GRID_MAX_TRACK < gridArea->columnEnd()) {
+    if (GridCellTable::MAX_TRACK < gridArea->columnStart() ||
+        GridCellTable::MAX_TRACK < gridArea->columnEnd()) {
         STARFISH_LOG_WARN("exceeds the max number of columns");
         return false;
     }
@@ -542,7 +536,7 @@ void GridFormattingContext::placeGridAreasLockedToRows(
             continue;
         }
 
-        if (GRID_MAX_TRACK < gridArea->rowStart()) {
+        if (GridCellTable::MAX_TRACK < gridArea->rowStart()) {
             continue;
         }
 
@@ -647,7 +641,7 @@ bool GridFormattingContext::hasAvailableGridCells(GridArea* gridArea,
          r++) {
         for (size_t c = col;
              c < std::min(col + width, m_gridTemplateColumns.size()); c++) {
-            if (m_isCellAvailable[r][c]) {
+            if (m_gridCellTable.hasFreeSlot(r, c)) {
                 availableCells++;
             }
         }
@@ -661,9 +655,32 @@ void GridFormattingContext::placeGridArea(GridArea* gridArea)
     for (size_t r = gridArea->rowStart(); r < gridArea->rowEnd(); r++) {
         for (size_t c = gridArea->columnStart(); c < gridArea->columnEnd();
              c++) {
-            m_isCellAvailable[r][c] = false;
+            m_gridCellTable.setOccupied(r, c);
         }
     }
+}
+
+GridCellTable::GridCellTable()
+{
+    m_gridCellTable.reset();
+}
+
+bool GridCellTable::hasFreeSlot(size_t row, size_t col)
+{
+    if (GridCellTable::MAX_TRACK <= row || GridCellTable::MAX_TRACK <= col) {
+        return false;
+    }
+
+    return !m_gridCellTable[(row * GridCellTable::MAX_TRACK) + col];
+}
+
+void GridCellTable::setOccupied(size_t row, size_t col)
+{
+    if (GridCellTable::MAX_TRACK <= row || GridCellTable::MAX_TRACK <= col) {
+        return;
+    }
+
+    m_gridCellTable[(row * GridCellTable::MAX_TRACK) + col] = true;
 }
 
 void GridFormattingContext::parseGridTemplateAreas()
