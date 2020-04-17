@@ -252,11 +252,6 @@ public:
         m_size = size;
     }
 
-    void setFixed(bool fixed)
-    {
-        m_fixed = fixed;
-    }
-
     void setMinMax(GridLength min, GridLength max)
     {
         m_min = min;
@@ -266,11 +261,6 @@ public:
     void setImplicitLine(bool newLine)
     {
         m_implicitLine = newLine;
-    }
-
-    bool isFixed()
-    {
-        return m_fixed;
     }
 
     bool isImplicitLine()
@@ -313,10 +303,9 @@ public:
     {
     }
 
-    GridTrack(LayoutUnit offset)
-        : m_size(offset)
-        , m_growthLimit(offset)
-        , m_fixed(true)
+    GridTrack(LayoutUnit size)
+        : m_size(size)
+        , m_growthLimit(size)
         , m_type(GridTrackType::Length)
     {
     }
@@ -324,7 +313,6 @@ public:
     // The 'computed' is for the 'fr' unit.
     GridTrack(LayoutUnit fr, bool computed)
         : m_fr(fr)
-        , m_fixed(true)
         , m_type(GridTrackType::Fr)
     {
     }
@@ -332,7 +320,6 @@ public:
     GridTrack(GridLength min, GridLength max)
         : m_min(min)
         , m_max(max)
-        , m_fixed(true)
         , m_type(GridTrackType::MinMax)
     {
         if (min.isLength() && min.length().isFixed()) {
@@ -353,7 +340,6 @@ private:
     LayoutUnit m_fr;
     GridLength m_min;
     GridLength m_max;
-    bool m_fixed{ false }; // remove it
     bool m_implicitLine{ false };
     GridTrackType m_type{ GridTrackType::Auto };
 };
@@ -376,7 +362,6 @@ public:
                           LayoutUnit availableWidth);
 
     void computeColumnsAndRows();
-    void applyFrUnitsWithRows();
 
     bool needsGridItemLayout(FrameBox* gridItem, ComputedStyle* style,
                              bool testWidthOnly);
@@ -406,13 +391,13 @@ private:
 
     GridCellTable m_gridCellTable;
 
-    void buildGridLineTemplate();
+    void buildGridTrackTemplate();
     void layoutGridItems();
 
     void parseGridTemplateAreas();
 
     void initializeGridTrackColumns(const GCVector<GridTrackSize>* columns);
-    void initializeGridLineRows(const GCVector<GridTrackSize>* rows);
+    void initializeGridTrackRows(const GCVector<GridTrackSize>* rows);
 
     void placeGridItemsIntoCells();
     void placeGridAreasWithDefinitePositions(
@@ -426,24 +411,29 @@ private:
     void placeGridArea(GridArea* gridArea);
 
     void initializePreferredWidths();
-    void updateGridTemplateColumnWidths(GridArea& gridArea);
-    void updateGridTemplateRowHeights(GridArea& gridArea);
     void resolveIntrinsicColumnTrackSizes();
     void increaseColumnGridTracksForSpans(
         GCVector<GridArea*>& gridAreasWithSpans);
     bool isFrPartOfTrack(GridArea* gridArea);
+    bool isFrPartOfRowTrack(GridArea* gridArea);
 
     void maximizeColumnTracks();
     void expandFrColumnTracks();
     void stretchAutoColumnTracks();
     void applyAlignItems();
 
+    void initializeContentHeights();
     void applyImplicitTrackSizing();
+    void resolveIntrinsicRowTrackSizes();
+    void increaseRowGridTracksForSpans(GCVector<GridArea*>& gridAreasWithSpans);
+
+    void expandFrRowTracks();
+    void layoutGridItemFrameBoxes();
+    void layoutGridItemFrameBox(GridArea& gridArea, bool widthOnly);
+
     void resolveMinMaxContentSize(size_t gridTrackIndex);
     void applyAlignItemsCenter();
 
-    void layoutGridLinesWithGridAreas();
-    void relayoutGridLinesWithGridAreasIfNeeded();
     LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
                                              ComputedStyle* style);
 };
