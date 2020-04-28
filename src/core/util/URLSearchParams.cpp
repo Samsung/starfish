@@ -60,26 +60,33 @@ ScriptBindingInstance* URLSearchParams::scriptBindingInstance()
 
 void URLSearchParams::parse(String* str)
 {
-    m_resourceUrl = new ResourceURL(str);
-    if (!m_resourceUrl->isValid()) {
-        STARFISH_LOG_WARN("URLSearchParams::%s: Invalid url\n", __func__);
+    String* search = str;
+    if (search->isEmpty()) {
         return;
     }
 
-    String* search = m_resourceUrl->search();
-    if (search->isEmpty() || !search->startsWith("?", 1)) {
-        return;
+    if (search->startsWith("?", 1)) {
+        search = search->substring(1, search->length() - 1);
     }
 
-    search = search->substring(1, search->length() - 1);
     std::string searchStr = search->toUTF8NonGCString();
     std::vector<std::string> pairs = StringUtils::split(searchStr, '&');
     for (auto pair : pairs) {
         std::vector<std::string> keyAndValue = StringUtils::split(pair, '=');
+        String* key = ResourceURL::createPercentEncodingString(
+            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()),
+            true);
+        URLParam* param;
         if (keyAndValue.size() == 2) {
-            URLParam* param = new URLParam(keyAndValue[0], keyAndValue[1]);
-            m_list.push_back(param);
+            param =
+                new URLParam(key, ResourceURL::createPercentEncodingString(
+                                      String::fromUTF8(keyAndValue[1].data(),
+                                                       keyAndValue[1].length()),
+                                      true));
+        } else {
+            param = new URLParam(key, String::emptyString);
         }
+        m_list.push_back(param);
     }
 }
 

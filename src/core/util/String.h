@@ -972,6 +972,9 @@ public:
     size_t find(String* str, size_t pos = 0);
     size_t find(String* str, size_t pos, bool caseSensitive);
 
+    size_t rfind(String* str, size_t pos);
+    size_t rfind(const char* str, size_t len, size_t pos);
+
     template <size_t N>
     bool contains(const char (&str)[N], bool caseSensitive = true)
     {
