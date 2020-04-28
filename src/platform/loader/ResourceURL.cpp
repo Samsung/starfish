@@ -804,7 +804,8 @@ String* ResourceURL::baseURI() const
     STARFISH_ASSERT(pos != SIZE_MAX);
     size_t pos2 = m_urlString->find("/", 1, pos + 3);
     if (pos2 != SIZE_MAX) {
-        return m_urlString->substring(0, m_urlString->lastIndexOf('/') + 1);
+        return m_urlString->substring(0, m_urlString->rfind("/", 1, m_pathEnd) +
+                                             1);
     } else {
         return m_urlString;
     }

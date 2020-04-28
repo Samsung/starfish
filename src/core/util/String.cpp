@@ -1824,6 +1824,62 @@ size_t String::find(String* str, size_t pos, bool caseSensitive)
     return SIZE_MAX;
 }
 
+size_t String::rfind(String* str, size_t pos)
+{
+    const size_t srcLen = str->length();
+    const size_t dstLen = length();
+    if (srcLen == 0) {
+        return pos <= dstLen ? pos : dstLen;
+    }
+
+    if (srcLen <= dstLen) {
+        do {
+            bool same = true;
+            if (pos >= dstLen) {
+                continue;
+            }
+            for (size_t k = 0; k < srcLen; k++) {
+                if (charAt(pos + k) != str->charAt(k)) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) {
+                return pos;
+            }
+        } while (pos-- > 0);
+    }
+    return SIZE_MAX;
+}
+
+size_t String::rfind(const char* str, size_t len, size_t pos)
+{
+    const size_t srcLen = len;
+    const size_t dstLen = length();
+    if (srcLen == 0) {
+        return pos <= dstLen ? pos : dstLen;
+    }
+
+    if (srcLen <= dstLen) {
+        do {
+            bool same = true;
+            if (pos >= dstLen) {
+                continue;
+            }
+            for (size_t k = 0; k < srcLen; k++) {
+                if (charAt(pos + k) != (char32_t)str[k]) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) {
+                return pos;
+            }
+        } while (pos-- > 0);
+    }
+    return SIZE_MAX;
+}
+
 bool String::contains(const char* str, size_t len, bool caseSensitive)
 {
     StringDataOnStackASCII tmpStr(str, len);
