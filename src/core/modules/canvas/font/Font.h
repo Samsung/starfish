@@ -233,6 +233,11 @@ public:
         return nullptr;
     }
 
+    WebView* webView()
+    {
+        return m_webView;
+    }
+
 protected:
     WebView* m_webView;
 };

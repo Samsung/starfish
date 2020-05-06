@@ -117,17 +117,19 @@ FontImplCairo::loadGlyph(char32_t ch)
 
     // finding fallback font
     FcPattern* pattern = FcPatternCreate();
-
     if (fontStyle == FontStyleItalic) {
         if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC)) {
+            FcPatternDestroy(pattern);
             return result;
         }
     } else if (fontStyle == FontStyleOblique) {
         if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_OBLIQUE)) {
+            FcPatternDestroy(pattern);
             return result;
         }
     } else {
         if (!FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN)) {
+            FcPatternDestroy(pattern);
             return result;
         }
     }
@@ -166,6 +168,7 @@ FontImplCairo::loadGlyph(char32_t ch)
     }
 
     if (!FcPatternAddInteger(pattern, FC_WEIGHT, fcFontWeight)) {
+        FcPatternDestroy(pattern);
         return result;
     }
 
@@ -177,12 +180,39 @@ FontImplCairo::loadGlyph(char32_t ch)
     FcPatternAddCharSet(pattern, FC_CHARSET, fontConfigCharSet);
     FcCharSetDestroy(fontConfigCharSet);
 
-    FcResult fontConfigResult;
-
-    FcPattern* resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
-    if (!resultPattern) {
+    UTF8StringDataNonGCStd defaultFamilyName = m_fontSelector->webView()
+                                                   ->initialFontFamilyDatas()[1]
+                                                   .m_familyName.string()
+                                                   ->toUTF8NonGCString();
+    if (!FcPatternAddString(pattern, FC_FAMILY,
+                            (const FcChar8*)defaultFamilyName.data())) {
+        FcPatternDestroy(pattern);
         return result;
     }
+
+    // The strategy is originally from Skia
+    // (src/ports/SkFontHost_fontconfig.cpp):
+    // Allow Fontconfig to do pre-match substitution. Unless we are
+    // accessing a "fallback"
+    // family like "sans," this is the only time we allow Fontconfig to
+    // substitute one
+    // family name for another (i.e. if the fonts are aliased to each
+    // other).
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+
+    FcResult fontConfigResult;
+    FcPattern* resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
+    if (!resultPattern) {
+        // If a font with the default font name is not found,
+        // try to find a font again without using the given default font name.
+        FcPatternDel(pattern, FC_FAMILY);
+        resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
+        if (!resultPattern) {
+            return result;
+        }
+    }
+
     FcChar8* filePath = NULL;
     if (!(FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
           FcResultMatch)) {

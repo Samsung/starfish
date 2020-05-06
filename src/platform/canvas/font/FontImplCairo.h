@@ -398,6 +398,7 @@ public:
         FcResult fontConfigResult;
         FcPattern* resultPattern =
             FcFontMatch(NULL, pattern, &fontConfigResult);
+
         if (!resultPattern) {
             FcPatternDestroy(resultPattern);
             FcPatternDestroy(pattern);
