@@ -220,6 +220,8 @@ const uint64_t timerInterval = 250;
 
 void MockMediaPlayer::play()
 {
+    MOCKPLAYER_LOG(this, "MockMediaPlayer::%s\n", __func__);
+
     if (m_playbackState != PLAYBACK_STATE_PLAYING) {
         m_playbackState = PLAYBACK_STATE_PLAYING;
         m_container->executionContext()->addPointerInRootSet(this);

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_ENABLE_WEBAUDIO)
+#if !defined(STARFISH_TIZEN)
 
 #ifndef __StarfishMediaPlayerAudioMock__
 #define __StarfishMediaPlayerAudioMock__
@@ -29,11 +29,11 @@ namespace Starfish {
 class HTMLMediaElement;
 class AudioNode;
 
-class MediaPlayerAudioMock : public MediaPlayerAudio {
+class MediaPlayerAudioLinux : public MediaPlayerAudio {
 public:
-    MediaPlayerAudioMock(AudioNode* element);
-    MediaPlayerAudioMock(HTMLMediaElement* element);
-    virtual ~MediaPlayerAudioMock(){};
+    MediaPlayerAudioLinux(AudioNode* element);
+    MediaPlayerAudioLinux(HTMLMediaElement* element);
+    virtual ~MediaPlayerAudioLinux(){};
 
     virtual void destroy() override;
     virtual void play() override;

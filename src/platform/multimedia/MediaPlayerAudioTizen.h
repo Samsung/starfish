@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_ENABLE_WEBAUDIO)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
 #ifndef __StarfishMediaPlayerAudioTizen__
@@ -25,7 +25,7 @@
 
 #include "platform/multimedia/MediaPlayerAudio.h"
 
-#include <media/player.h>
+#include <audio_io.h>
 
 namespace Starfish {
 class HTMLMediaElement;
@@ -33,6 +33,8 @@ class Compositor;
 
 class MediaPlayerAudioTizen : public MediaPlayerAudio {
 public:
+    static const int AUDIO_SAMPLE_RATE = 48000;
+
     MediaPlayerAudioTizen(AudioNode* element);
     MediaPlayerAudioTizen(HTMLMediaElement* element);
     virtual ~MediaPlayerAudioTizen();
@@ -42,8 +44,8 @@ public:
     virtual void pause() override{};
     virtual void seek(double time) override{};
 
-    virtual void setBuffer(uint8_t* buffer, uint32_t length) override;
     virtual void prepare(ResourceURL* url) override;
+    virtual void onAudioDownloadCompleted() override;
 
     virtual double currentTime()
     {
@@ -60,7 +62,7 @@ public:
     virtual void prepareMediaSource() override{};
 
 private:
-    player_h m_player{ nullptr };
+    audio_out_h m_audioOut{ nullptr };
 };
 }
 

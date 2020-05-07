@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_ENABLE_WEBAUDIO)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
 #include "StarfishConfig.h"
@@ -40,98 +40,95 @@ namespace Starfish {
 MediaPlayerAudioTizen::MediaPlayerAudioTizen(AudioNode* element)
     : MediaPlayerAudio(element)
 {
-    PLAYER_LOGI("%s\n", __func__);
-    if (player_create(&m_player) != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to create a player\n");
-    }
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((MediaPlayerAudioTizen*)obj)->~MediaPlayerAudioTizen();
-        },
-        NULL, NULL, NULL);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s(node)\n", __func__);
 }
 
 MediaPlayerAudioTizen::MediaPlayerAudioTizen(HTMLMediaElement* element)
     : MediaPlayerAudio(element)
 {
-    PLAYER_LOGI("%s\n", __func__);
-    if (player_create(&m_player) != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to create a player\n");
-    }
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((MediaPlayerAudioTizen*)obj)->~MediaPlayerAudioTizen();
-        },
-        NULL, NULL, NULL);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s(element)\n", __func__);
 }
 
 MediaPlayerAudioTizen::~MediaPlayerAudioTizen()
 {
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
     destroy();
-}
-
-void MediaPlayerAudioTizen::setBuffer(uint8_t* buffer, uint32_t length)
-{
-    PLAYER_LOGI("%s\n", __func__);
-
-    if (player_set_memory_buffer(m_player, buffer, length) !=
-        PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to set memory buffer\n");
-    }
 }
 
 void MediaPlayerAudioTizen::destroy()
 {
-    PLAYER_LOGI("%s\n", __func__);
-    if (m_player) {
-        player_state_e state;
-        player_get_state(m_player, &state);
-        if (state == PLAYER_STATE_PLAYING) {
-            player_stop(m_player);
-        }
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    MediaPlayerAudio::destroy();
 
-        if (player_unprepare(m_player) != PLAYER_ERROR_NONE) {
-            STARFISH_LOG_ERROR("fail to unprepare player\n");
-        }
-
-        if (player_destroy(m_player) != PLAYER_ERROR_NONE) {
-            STARFISH_LOG_ERROR("fail to destroy player\n");
-        }
+    if (m_audioOut) {
+        audio_out_unprepare(m_audioOut);
+        audio_out_destroy(m_audioOut);
     }
 }
 
 void MediaPlayerAudioTizen::play()
 {
-    PLAYER_LOGI("%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
 
-    if (player_prepare(m_player) != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to prepare the player\n");
-    }
-
-    if (player_start(m_player) != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to start the player\n");
-    }
+    audio_out_write(m_audioOut, m_audioData.data(), m_audioData.size());
 }
 
 void MediaPlayerAudioTizen::prepare(ResourceURL* url)
 {
-    int error = player_prepare(m_player);
-    if (error != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("failed to prepare the player\n");
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+
+    if (m_container == nullptr) {
+        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: container is null\n",
+                          __func__);
+        return;
     }
+
+    if (!url->urlString()->endsWith(".wav", false)) {
+        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: format not supported\n",
+                          __func__);
+        return;
+    }
+
+    downloadAudioData(url);
+}
+
+void MediaPlayerAudioTizen::onAudioDownloadCompleted()
+{
+    audio_out_create_new(AUDIO_SAMPLE_RATE, AUDIO_CHANNEL_STEREO,
+                         AUDIO_SAMPLE_TYPE_S16_LE, &m_audioOut);
+
+    sound_stream_info_h streamInfo = nullptr;
+    sound_manager_create_stream_information(SOUND_STREAM_TYPE_NOTIFICATION,
+                                            nullptr, nullptr, &streamInfo);
+
+    audio_out_set_sound_stream_info(m_audioOut, streamInfo);
+    audio_out_prepare(m_audioOut);
+
+    MessageLoop* msgLoop = m_container->webView()->messageLoop();
+    msgLoop->addIdler(
+        m_container->window(),
+        [](size_t, void* data) {
+            MediaPlayerAudioTizen* self = (MediaPlayerAudioTizen*)data;
+            self->processNextOperationQueueInContainer();
+            self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+                HTMLMediaElement::HAVE_METADATA);
+            self->container()->mediaPlayerNotifyUpdateReadyStateItsContainer(
+                HTMLMediaElement::HAVE_ENOUGH_DATA);
+        },
+        this);
 }
 
 MediaPlayerAudio* MediaPlayerAudio::create(HTMLMediaElement* element)
 {
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+
     return new MediaPlayerAudioTizen(element);
 }
 
 MediaPlayerAudio* MediaPlayerAudio::create(AudioNode* element)
 {
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+
     return new MediaPlayerAudioTizen(element);
 }
 } // namespace Starfish
