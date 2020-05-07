@@ -126,10 +126,19 @@ ELSEIF (${CUSTOM} STREQUAL "unified_tv")
         #-DSTARFISH_ENABLE_BODY_FOCUS_RING
         #-DSTARFISH_ENABLE_VIRTUAL_CURSOR
         #-DUSE_PRODUCT_FEATURE
+        #-DSTARFISH_ENABLE_WEBAUDIO
+        -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
     )
+
+    IF (NOT ${BACKEND} STREQUAL "dali")
+        SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+            -DSTARFISH_ENABLE_MULTIMEDIA
+            -DSTARFISH_ENABLE_WEBAUDIO
+        )
+    ENDIF()
 ELSEIF (${CUSTOM} STREQUAL "prod_tv")
     SET (LWE_DEFINES_CUSTOM
-        -DSTARFISH_ENABLE_MULTIMEDIA
+        #-DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_TIZEN_TV
         -DSTARFISH_TIZEN_PROD_TV
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
@@ -145,14 +154,9 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
         -DSTARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX
         -DUSE_PRODUCT_FEATURE
         -DSTARFISH_ENABLE_WEBSOCKET
-        -DSTARFISH_ENABLE_WEBAUDIO
+        #-DSTARFISH_ENABLE_WEBAUDIO
         -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
     )
-
-    IF (NOT ${BACKEND} STREQUAL "dali")
-        SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_MULTIMEDIA -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY )
-
-    ENDIF()
 ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_TIZEN_WEARABLE_WIDGET
@@ -211,7 +215,7 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
 ENDIF()
 
 IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv")
-#    SET (WEBRTC "1")
+    #SET (WEBRTC "1")
 ENDIF()
 
 IF (${WEBRTC} STREQUAL "1")
@@ -369,7 +373,7 @@ IF (${HOST} STREQUAL "tizen")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager capi-system-info capi-system-device)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
     ELSEIF (${CUSTOM} STREQUAL "unified_tv")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player capi-media-audio-io)
     ELSEIF (${CUSTOM} STREQUAL "headless")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
     ELSEIF (${CUSTOM} STREQUAL "prod_tv")
