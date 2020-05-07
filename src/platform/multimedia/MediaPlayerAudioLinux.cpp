@@ -17,13 +17,13 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-#if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_ENABLE_WEBAUDIO)
+#if !defined(STARFISH_TIZEN)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
-#include "MediaPlayerAudioMock.h"
+#include "MediaPlayerAudioLinux.h"
 
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -34,38 +34,42 @@
 #include "core/modules/webaudio/AudioBufferSourceNode.h"
 
 namespace Starfish {
-MediaPlayerAudioMock::MediaPlayerAudioMock(AudioNode* element)
+MediaPlayerAudioLinux::MediaPlayerAudioLinux(AudioNode* element)
     : MediaPlayerAudio(element)
 {
 }
 
-MediaPlayerAudioMock::MediaPlayerAudioMock(HTMLMediaElement* element)
+MediaPlayerAudioLinux::MediaPlayerAudioLinux(HTMLMediaElement* element)
     : MediaPlayerAudio(element)
 {
 }
 
-void MediaPlayerAudioMock::play()
+void MediaPlayerAudioLinux::play()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    MediaPlayerAudio::play();
 }
 
-void MediaPlayerAudioMock::destroy()
+void MediaPlayerAudioLinux::destroy()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    MediaPlayerAudio::destroy();
 }
 
-void MediaPlayerAudioMock::prepare(ResourceURL* url)
+void MediaPlayerAudioLinux::prepare(ResourceURL* url)
 {
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    MediaPlayerAudio::prepare(url);
 }
 
 MediaPlayerAudio* MediaPlayerAudio::create(HTMLMediaElement* element)
 {
-    return new MediaPlayerAudioMock(element);
+    return new MediaPlayerAudioLinux(element);
 }
 
 MediaPlayerAudio* MediaPlayerAudio::create(AudioNode* element)
 {
-    return new MediaPlayerAudioMock(element);
+    return new MediaPlayerAudioLinux(element);
 }
 } // namespace Starfish
 

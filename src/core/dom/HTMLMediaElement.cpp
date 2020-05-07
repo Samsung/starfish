@@ -42,6 +42,7 @@
 #include "core/util/URL.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayerAudio.h"
 #include "platform/multimedia/MediaPlayerWebRtc.h"
 #include "core/modules/mediastream/MediaStream.h"
 
@@ -317,15 +318,20 @@ void HTMLMediaElement::initMediaPlayer()
 {
     closeMediaPlayer();
 
-    // TODO: MockMediaPlayer is enabled by default on x64
-    // Integrate players as we progress media players
-    switch (m_resourceSelectionContext->m_mode) {
+    if (m_resourceSelectionContext->m_mode ==
+        ResourceSelectionContext::MODE_OBJECT) {
 #if defined(STARFISH_ENABLE_WEBRTC)
-    case ResourceSelectionContext::MODE_OBJECT:
         m_mediaPlayer = MediaPlayerWebRtc::create(this);
-        break;
 #endif
-    default:
+    } else if (m_resourceSelectionContext->m_mode ==
+                   ResourceSelectionContext::MODE_ATTRIBUTE &&
+               isHTMLAudioElement()) {
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        m_mediaPlayer = MediaPlayerAudio::create(this);
+#endif
+    }
+
+    if (m_mediaPlayer == nullptr) {
         m_mediaPlayer = MediaPlayer::create(this);
     }
 

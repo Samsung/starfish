@@ -17,20 +17,25 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBAUDIO)
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && defined(STARFISH_ENABLE_WEBAUDIO)
 
 #ifndef __StarfishMediaPlayerAudio__
 #define __StarfishMediaPlayerAudio__
 
 #include "platform/multimedia/MediaPlayer.h"
 
+#include "core/fetch/stream/ReadableStreamChunk.h"
+#include "platform/loader/ElementResourceClient.h"
+
 namespace Starfish {
 class HTMLMediaElement;
 class AudioNode;
 class Compositor;
+class AudioDownloadClient;
 
-// TODO: Make this class inherit MediaPlayer
-class MediaPlayerAudio {
+class MediaPlayerAudio : public MediaPlayer {
+    friend class AudioDownloadClient;
+
 public:
     MediaPlayerAudio(AudioNode* element);
     MediaPlayerAudio(HTMLMediaElement* element);
@@ -39,13 +44,13 @@ public:
     static MediaPlayerAudio* create(HTMLMediaElement* element);
     static MediaPlayerAudio* create(AudioNode* element);
 
-    virtual void destroy() = 0;
-    virtual void play() = 0;
+    virtual void destroy();
+    virtual void play();
     virtual void pause(){};
     virtual void seek(double time){};
 
-    virtual void setBuffer(uint8_t* buffer, uint32_t length){};
-    virtual void prepare(ResourceURL* url){};
+    virtual void setBuffer(uint8_t* buffer, uint32_t length);
+    virtual void prepare(ResourceURL* url);
 
     virtual double currentTime()
     {
@@ -66,7 +71,12 @@ public:
     virtual void willDrawVideo(Compositor* canvas,
                                const LayoutRect& videoRect){};
 
-private:
+protected:
+    Resource* m_audioResource{ nullptr };
+    ReadableStreamChunk m_audioData;
+
+    virtual void downloadAudioData(ResourceURL* url);
+    virtual void onAudioDownloadCompleted();
 };
 } // namespace Starfish
 

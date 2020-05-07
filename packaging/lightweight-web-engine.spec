@@ -110,6 +110,7 @@ BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 BuildRequires: pkgconfig(capi-media-sound-manager)
+BuildRequires: pkgconfig(capi-media-audio-io)
 BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
