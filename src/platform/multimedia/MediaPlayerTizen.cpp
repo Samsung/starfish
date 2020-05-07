@@ -85,7 +85,7 @@ namespace Starfish {
     F(PLAYER_ERROR_RESOURCE_LIMIT)                  \
     F(PLAYER_ERROR_PERMISSION_DENIED)
 
-#if defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_PROD_TV)
 #define PLAYER_ERROR_LIST(F)                    \
     _PLAYER_ERROR_LIST_COMMON(F)                \
     F(PLAYER_ERROR_STREAMING_PLAYER)            \
