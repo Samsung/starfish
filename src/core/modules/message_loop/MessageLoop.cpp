@@ -38,7 +38,7 @@ size_t MessageLoop::addMicroTask(GlobalScope* globalScope,
     m_microTasks.push_back(m);
 
     if (m_microTaskIdler == MessageLoopInvalidID) {
-        m_microTaskIdler = addIdler(globalScope,
+        m_microTaskIdler = addIdler(nullptr,
                                     [](size_t handle, void* data) {
                                         MessageLoop* self = (MessageLoop*)data;
                                         self->m_microTaskIdler =
