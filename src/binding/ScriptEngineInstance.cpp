@@ -50,24 +50,15 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
             window->webView()->messageLoop()->addMicroTask(
                 window,
                 [](size_t handle, void* data) {
-                    ContextRef* relatedContext = (ContextRef*)data;
-                    Window* window =
-                        (Window*)relatedContext->globalObject()->extraData();
-
-                    if (relatedContext->vmInstance()->hasPendingPromiseJob()) {
-                        auto jobResult = relatedContext->vmInstance()
-                                             ->executePendingPromiseJob();
+                    VMInstanceRef* vm = (VMInstanceRef*)data;
+                    if (vm->hasPendingPromiseJob()) {
+                        auto jobResult = vm->executePendingPromiseJob();
                         if (jobResult.error) {
-                            STARFISH_LOG_ERROR(
-                                "Uncaught %s in Promise job\n",
-                                toBrowserString(window->scriptBindingInstance(),
-                                                jobResult.error.value())
-                                    ->toUTF8NonGCString()
-                                    .data());
+                            STARFISH_LOG_ERROR("Uncaught Error in Promise job\n");
                         }
                     }
                 },
-                relatedContext);
+                relatedContext->vmInstance());
         }
 
         virtual LoadModuleResult onLoadModule(
