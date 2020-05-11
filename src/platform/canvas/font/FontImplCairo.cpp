@@ -469,7 +469,7 @@ cairoBackendInternalLoadGlyph(Font* f, char32_t ch)
 bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
 {
     if (sv.length() == 1) {
-        return true;
+        return !charMayContainsGraphicSymbol(sv.charAt(0));
     }
 
     size_t length = sv.length();
