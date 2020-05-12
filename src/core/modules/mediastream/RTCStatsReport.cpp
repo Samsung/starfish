@@ -27,7 +27,8 @@
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
-
+/*
+// Binding generator cannot genereate code for an empty interface
 RTCStatsReport::RTCStatsReport(ExecutionContext* executionContext)
     : ScriptWrappable(this)
 {
@@ -41,7 +42,7 @@ ExecutionContext* RTCStatsReport::executionContext() const
 {
     return m_executionContext;
 }
-
+*/
 } // namespace Starfish
 
 #endif

@@ -148,6 +148,6 @@ partial interface RTCPeerConnection {
 
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
-  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
+//  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
 //  attribute EventHandler onstatsended;
 };

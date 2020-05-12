@@ -123,12 +123,12 @@ ENDIF()
 #######################################################
 # LIBWEBSOCKETS
 #######################################################
-IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv")
+IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv")
     SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
     SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build/${HOST}/${ARCH}/${MODE})
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.a)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.a)
-IF (${WEBRTC} STREQUAL "1")
+IF (${WEBRTC} STREQUAL "1" AND ${ARCH} STREQUAL "x64")
     SET(OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
     SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DOPENSSL_ROOT_DIR=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE} -DLWS_OPENSSL_INCLUDE_DIRS=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include)
     ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
@@ -305,7 +305,7 @@ ADD_SUBDIRECTORY (third_party/escargot)
 #######################################################
 # Used when a target platform does not have openssl 1.1.
 # Currently, Ubuntu 16.04 and prod_tv do not have openssl 1.1.
-IF (${WEBRTC} STREQUAL "1")
+IF (${WEBRTC} STREQUAL "1" AND ${HOST} STREQUAL "linux")
     SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
     SET (OPENSSL_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
     SET (OPENSSL_LOCAL_TARGET ${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/libssl.so)
@@ -350,8 +350,7 @@ IF (${WEBRTC} STREQUAL "1")
     ELSEIF (${HOST} STREQUAL "tizen")
         SET (WEBRTC_BUILD_ARGS
             "target_cpu=\\\"arm\\\""
-            "rtc_ssl_root=\\\"${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/include\\\""
-            # TODO: Use the platform include path for Tizen 5.5
+            "rtc_ssl_root=\\\"/usr/include/openssl\\\""
         )
     ENDIF()
 
@@ -405,8 +404,8 @@ IF (${WEBRTC} STREQUAL "1")
                             COMMAND echo "BUILD WEBRTC"
                             COMMAND buildtools/armv7l/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
                             COMMAND ninja -C ${WEBRTC_BUILD_PATH} webrtc
-                            # NOTE: for Tizen 5.5, use: -lssl -lcrypto
-                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm -ljpeg
+                            # for custom openssl, use ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so
+                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive -lssl -lcrypto -lpthread -lm -ljpeg
         )
     ENDIF()
 

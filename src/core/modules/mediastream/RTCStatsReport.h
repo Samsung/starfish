@@ -26,7 +26,8 @@
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
-
+/*
+// Binding generator cannot genereate code for an empty interface
 class RTCStatsReport : public ScriptWrappable {
 public:
     RTCStatsReport(ExecutionContext* executionContext);
@@ -38,6 +39,7 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
 };
+*/
 }
 #endif
 #endif
