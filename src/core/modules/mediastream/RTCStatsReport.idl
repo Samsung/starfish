@@ -18,9 +18,10 @@
  */
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcstatsreport
-[ STARFISH_ENABLE_WEBRTC,
-  ConstructorCallWith=ExecutionContext,
-  Exposed=Window ]
-interface RTCStatsReport {
-  //readonly maplike<DOMString, object>;
-};
+// Binding generator cannot genereate code for an empty interface
+// [ STARFISH_ENABLE_WEBRTC,
+//   ConstructorCallWith=ExecutionContext,
+//   Exposed=Window ]
+// interface RTCStatsReport {
+//   //readonly maplike<DOMString, object>;
+// };

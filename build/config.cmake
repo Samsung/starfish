@@ -214,14 +214,21 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     ENDIF()
 ENDIF()
 
-IF (${HOST} STREQUAL "linux" OR ${CUSTOM} STREQUAL "prod_tv")
-    #SET (WEBRTC "1")
+# Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
+IF (${HOST} STREQUAL "linux")
+    # SET (WEBRTC "1")
+ELSEIF (${CUSTOM} STREQUAL "unified_tv")
+    IF (NOT ${BACKEND} STREQUAL "dali")
+        SET (WEBRTC "1")
+    ENDIF()
 ENDIF()
 
 IF (${WEBRTC} STREQUAL "1")
     SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
         -DSTARFISH_ENABLE_WEBRTC
         -DSTARFISH_ENABLE_MULTIMEDIA
+        -DSTARFISH_ENABLE_WEBAUDIO
+        -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY
         -DWEBRTC_POSIX
         -DWEBRTC_LINUX
@@ -437,7 +444,7 @@ IF (${HOST} STREQUAL "tizen")
     ENDIF()
 ENDIF()
 
-IF (${CUSTOM} STREQUAL "prod_tv")
+IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv")
     SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} websockets)
 ENDIF()
 
