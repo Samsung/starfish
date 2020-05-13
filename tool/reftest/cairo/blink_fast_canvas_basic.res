@@ -304,7 +304,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/translate-text.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/arraybuffer-transfer-of-control.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-buffer-view-crash-when-reassigned.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-constructor.html
-test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-get-and-set-method-removal.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-get-and-set-method-removal.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-get-out-of-bounds.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-message-passing.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/webgl/array-override-set.html
