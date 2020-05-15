@@ -16,7 +16,7 @@
 #http://web-platform.test:8000/fetch/api/request/request-cache-force-cache.html
 #http://web-platform.test:8000/fetch/api/request/request-bad-port.html
 #http://web-platform.test:8000/fetch/api/request/request-init-002.html
-http://web-platform.test:8000/fetch/api/request/request-init-002.babel.html
+http://web-platform.test:8000/fetch/api/request/request-init-002.partial.html
 #http://web-platform.test:8000/fetch/api/request/request-cache-only-if-cached.html
 #http://web-platform.test:8000/fetch/api/request/request-consume-empty.html
 #http://web-platform.test:8000/fetch/api/request/url-encoding.html
@@ -26,8 +26,7 @@ http://web-platform.test:8000/fetch/api/request/request-init-002.babel.html
 #http://web-platform.test:8000/fetch/api/request/multi-globals/current/current.html
 #http://web-platform.test:8000/fetch/api/request/multi-globals/incumbent/incumbent.html
 http://web-platform.test:8000/fetch/api/request/request-clone.sub.html
-#http://web-platform.test:8000/fetch/api/request/request-type-attribute-historical.html
-http://web-platform.test:8000/fetch/api/request/request-type-attribute-historical.babel.html
+http://web-platform.test:8000/fetch/api/request/request-type-attribute-historical.html
 #http://web-platform.test:8000/fetch/api/request/request-disturbed.html
 #http://web-platform.test:8000/fetch/api/request/request-reset-attributes.https.html
 #http://web-platform.test:8000/fetch/api/request/request-headers.html
