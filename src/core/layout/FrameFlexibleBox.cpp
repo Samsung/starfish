@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
+
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
@@ -263,6 +265,10 @@ LayoutUnit FlexFormattingContext::sumOfUsedupMainSize(
 
 void FlexFormattingContext::applyFlexFactor()
 {
+    if (m_container->lineClamp()) {
+        return;
+    }
+
     size_t lines = m_currentLineIdx + 1;
     enum Violations {
         None,
@@ -1200,10 +1206,11 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     MinMaxWidthHeightRestorer restorer(flexItem);
     restorer.initValues();
     MBPRestorer restorer2(flexItem);
+    bool applyLineClamp = shouldApplyLineClamp(flexItem);
 
     // A. If the item has a definite used flex basis, that’s the flex
     // base size.
-    if (flexBasis.isWidth()) {
+    if (!applyLineClamp && flexBasis.isWidth()) {
         Length basisWidth = flexBasis.width();
         if (basisWidth.isDefinite(availableMainSize != intMaxForLayoutUnit)) {
             computeBorderMarginPaddingWithinFlexContext(
@@ -1220,7 +1227,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
             }
             return std::make_pair(basisSize, false);
         }
-    } else if (flexBasis.isContent()) {
+    } else if (!applyLineClamp && flexBasis.isContent()) {
         if (flexItem->isFrameReplaced()) {
             // B. If the flex item has an intrinsic aspect ratio, a used
             // flex basis of 'content', and a definite cross size.
@@ -1274,7 +1281,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         containingBlockOfFlexItem->contentWidthDamaged();
     bool seenPercentageWidth = false;
 
-    if (isMainAxisInInlineAxis) {
+    if (!applyLineClamp && isMainAxisInInlineAxis) {
         containingBlockOfFlexItem->setContentWidth(availableMainSize);
         containingBlockOfFlexItem->markContentWidthDamaged();
 
@@ -1332,6 +1339,25 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         flexItem->style()->setHeight(height);
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
         flexItem->style()->setHeight(oldHeight);
+
+        if (applyLineClamp) {
+            LayoutUnit sumofLineBoxHeight;
+            auto lc = lineClamp();
+            flexItem->iterateChildFrameBoxOnCondition([&](FrameBox* box) {
+                if (box->isFrameBlockBox() &&
+                    !box->asFrameBlockBox()->style()->isAbsolutePositioned()) {
+                    auto& lineBoxes = box->asFrameBlockBox()->lineBoxes();
+
+                    for (size_t i = 0; i < lineBoxes.size() && lc; i++) {
+                        sumofLineBoxHeight += lineBoxes[i]->height();
+                        lc--;
+                    }
+                    return lc ? true : false;
+                }
+                return false;
+            });
+            flexItem->setContentHeight(sumofLineBoxHeight);
+        }
         basisSize = flexItem->contentHeight();
     }
 
@@ -1390,6 +1416,22 @@ bool FrameFlexibleBox::isTtbDirection()
     }
 }
 
+uint32_t FrameFlexibleBox::lineClamp()
+{
+    if (style()->flexDirection() == ColumnFlexDirectionValue) {
+        return style()->lineClamp();
+    }
+
+    return 0;
+}
+
+bool FrameFlexibleBox::shouldApplyLineClamp(FrameBox* flexItem)
+{
+    return lineClamp() && flexItem->isFlexItem() &&
+           !flexItem->isFrameReplaced() &&
+           !flexItem->style()->height().isFixed();
+}
+
 void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
 {
     FlexFormattingContext flexFormattingContext(ctx, this, contentWidth());
@@ -1405,12 +1447,85 @@ void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
     } while (0);
 
     Frame* child = firstChild();
+
     while (child) {
         if (!child->isFlexItem()) {
             // to register absolute positioned box
             child->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        } else if (child->isFrameBox()) {
+            if (shouldApplyLineClamp(child->asFrameBox())) {
+                auto lc = lineClamp();
+                child->asFrameBox()->iterateChildFrameBoxOnCondition(
+                    [&](FrameBox* box) {
+                        if (box->isFrameBlockBox() &&
+                            !box->asFrameBlockBox()
+                                 ->style()
+                                 ->isAbsolutePositioned() &&
+                            box->asFrameBlockBox()->style()->direction() !=
+                                DirectionValue::RtlDirectionValue) {
+                            auto& lineBoxes =
+                                box->asFrameBlockBox()->lineBoxes();
+
+                            if (!lineBoxes.size()) {
+                                return lc ? true : false;
+                            }
+
+                            for (size_t i = 0; i < lineBoxes.size() - 1 && lc;
+                                 i++) {
+                                lc--;
+                                if (lc == 0) {
+                                    auto lineBoxContentWidth =
+                                        lineBoxes[i]->contentWidth();
+                                    auto& boxes = lineBoxes[i]->boxes();
+                                    for (size_t j = boxes.size() - 1;
+                                         j != SIZE_MAX; j--) {
+                                        if (boxes[j]->isInlineTextBox()) {
+                                            auto overflowString =
+                                                ctx.starfish()
+                                                    ->staticStrings()
+                                                    ->m_overflowString;
+                                            auto fnt =
+                                                boxes[j]->style()->font();
+                                            auto inlineTextBoxWidth =
+                                                boxes[j]->width();
+
+                                            StringView text =
+                                                boxes[j]
+                                                    ->asInlineTextBox()
+                                                    ->text();
+
+                                            auto overflowStringWidth =
+                                                fnt->measureText(
+                                                    overflowString);
+                                            auto textWidth =
+                                                fnt->measureText(text);
+                                            auto oldTextWidth = textWidth;
+                                            auto sum =
+                                                textWidth + overflowStringWidth;
+
+                                            while (sum > lineBoxContentWidth) {
+                                                text.setEnd(text.end() - 1);
+                                                textWidth =
+                                                    fnt->measureText(text);
+                                                sum = textWidth +
+                                                      overflowStringWidth;
+                                            }
+                                            boxes[j]
+                                                ->asInlineTextBox()
+                                                ->setText(
+                                                    text.substring()->concat(
+                                                        overflowString));
+                                        }
+                                    }
+                                }
+                            }
+                            return lc ? true : false;
+                        }
+                        return false;
+                    });
+            }
         }
         child = child->next();
     }
 }
-}
+} // namespace Starfish

@@ -900,6 +900,18 @@ public:
         }
     }
 
+    void iterateChildFrameBoxOnCondition(const std::function<bool(FrameBox*)>& fn)
+    {
+        if(fn(this)) {
+            auto iter =
+                childFrameBoxIterator(alloca(maxChildFrameBoxIteratorSize));
+            while (iter->hasNext()) {
+                auto box = iter->next();
+                box->iterateChildFrameBox(fn);
+            }
+        }
+    }
+
     virtual void setParent(Frame* f)
     {
         Frame::setParent(f);

@@ -736,7 +736,8 @@ class CSSFilterFunction;
     F(Appearance, appearance, "appearance")                                    \
     F(PointerEvents, pointerEvents, "pointer-events")                          \
     F(Resize, resize, "resize")                                                \
-    F(WillChange, willChange, "will-change")
+    F(WillChange, willChange, "will-change")                                   \
+    F(LineClamp, lineClamp, "line-clamp")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)

@@ -968,8 +968,10 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||       \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX) ||        \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX)
         case '-':
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "-webkit-flex-basis", 18) == 0) {
@@ -982,6 +984,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSITION_PREFIX)
             if (memcmp(data, "-webkit-transition", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::Transition;
+            }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
+            if (memcmp(data, "-webkit-box-orient", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexDirection;
+            }
+#endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX)
+            if (memcmp(data, "-webkit-line-clamp", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::LineClamp;
             }
 #endif
             break;

@@ -367,6 +367,7 @@ test/cairo/internal-test/css/incremental/quicklayout-rel-pos-box-bug-01.html
 test/cairo/internal-test/css/incremental/flex-item-resolve-height-correctly.html
 test/cairo/internal-test/css/stackingcontext/iframe_border_with_composite.html
 test/cairo/internal-test/css/flex/flex-webkit-prefix.html
+test/cairo/internal-test/css/flex/flex-webkit-prefix_with_-webkit-line-clamp.html
 test/cairo/internal-test/css/flex/layout-both-side-every-flex-item.html
 test/cairo/internal-test/css/flex/respect-under-compute-preferred-width-value.html
 test/cairo/internal-test/css/flex/flex_svg_maxHeight_01.html

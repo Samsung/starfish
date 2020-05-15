@@ -3894,8 +3894,10 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         }
     } else if (isFlexItem()) {
         LayoutUnit minHeight = intMaxForLayoutUnit;
+        auto FlexibleBox = layoutParent()->asFrameFlexibleBox();
 
-        if (!layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
+        if (!FlexibleBox->shouldApplyLineClamp(this) &&
+            !FlexibleBox->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
             if (isFrameReplaced()) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

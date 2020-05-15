@@ -4626,6 +4626,15 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::LineClamp:
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::None) {
+                style->setLineClamp(0);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Number) {
+                style->setLineClamp(cssValues[k].numberValue());
+            }
+            break;
 #define ADD_RESOLVE_STYLE_POS(POS, pos)                                   \
     case CSSStyleValuePair::KeyKind::POS:                                 \
         if (cssValues[k].valueKind() ==                                   \
@@ -9161,6 +9170,12 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
     } else if (STRING_VALUE_IS_STRING("-webkit-inline-flex")) {
         m_value.m_display = DisplayValue::InlineFlexDisplayValue;
 #endif
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
+    } else if (STRING_VALUE_IS_STRING("-webkit-box")) {
+        m_value.m_display = DisplayValue::FlexDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("-webkit-inline-box")) {
+        m_value.m_display = DisplayValue::InlineFlexDisplayValue;
+#endif
     } else if (STRING_VALUE_IS_STRING("grid")) {
         m_value.m_display = DisplayValue::GridDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline-grid")) {
@@ -10705,6 +10720,15 @@ bool CSSStyleValuePair::updateValueLineHeight(Document* document,
         return false;
     }
     return updateValueUnitLineHeight(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueLineClamp(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    // https://www.w3.org/TR/css-overflow-3/#propdef-line-clamp
+    // TODO : When the above specifications are confirmed, please complete the
+    // implementation of line-clamp.
+    return updateValueNumber(tokens, 0);
 }
 
 bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
@@ -13099,6 +13123,12 @@ bool CSSStyleValuePair::updateValueUnitFlexDirection(const CSSTokenValue& value)
     } else if (STRING_VALUE_IS_STRING("column-reverse")) {
         m_value.m_flexDirection =
             FlexDirectionValue::ColumnReverseFlexDirectionValue;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
+    } else if (STRING_VALUE_IS_STRING("horizontal")) {
+        m_value.m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
+    } else if (STRING_VALUE_IS_STRING("vertical")) {
+        m_value.m_flexDirection = FlexDirectionValue::ColumnFlexDirectionValue;
+#endif
     } else {
         return false;
     }
