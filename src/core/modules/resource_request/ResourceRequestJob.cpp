@@ -223,7 +223,7 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         path = decodedPath.getValue();
     } else {
         auto s = m_orgProxy->url()->urlString()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("failed to open %s\n", s.data());
+        STARFISH_LOG_WARN("failed to open, %d: %s\n", __LINE__, s.data());
         m_orgProxy->m_responseData->m_status = 0;
         m_orgProxy->handleError(ProgressState::InError,
                                 RequestErrorType::BadURLError);
@@ -262,10 +262,11 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         auto handle = request->webBase()->m_fileOpenCallback(u8Path.data());
         if (!handle) {
             auto s = request->url()->urlString()->toUTF8NonGCString();
-            STARFISH_LOG_INFO("failed to open %s\n", s.data());
+            STARFISH_LOG_WARN("failed to open, %d: %s\n", __LINE__, s.data());
             request->m_responseData->m_status = 0;
             request->handleError(ProgressState::InError,
                                  RequestErrorType::FileError);
+            return;
         }
 
         request->m_responseData->m_status = 200;
@@ -294,7 +295,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->handleResponseEOF();
     } else {
         auto s = request->url()->urlString()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("failed to open %s\n", s.data());
+        STARFISH_LOG_WARN("failed to open, %d: %s\n", __LINE__, s.data());
         request->m_responseData->m_status = 0;
         request->handleError(ProgressState::InError,
                              RequestErrorType::FileError);
