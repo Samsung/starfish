@@ -141,6 +141,9 @@ public:
     bool isLtrDirection();
     bool isTtbDirection();
 
+    uint32_t lineClamp();
+    bool shouldApplyLineClamp(FrameBox* flexItem);
+
     virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
     void layoutFlex(LayoutContext& ctx);
 

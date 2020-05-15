@@ -140,6 +140,7 @@ public:
         CounterReset,
         CounterIncrement,
         Appearance,
+        LineClamp,
 
         // Grid
         GridTemplateColumns,
@@ -462,6 +463,7 @@ public:
     GETTER_VALUE(String*, stringValue, d, D, nullptr);
     GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas,
                  nullptr);
+    GETTER_VALUE(int32_t, int32Value, lineClamp, LineClamp, 0);
 
     GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart, nullptr);
     GETTER_VALUE(String*, stringValue, gridRowEnd, GridRowEnd, nullptr);
@@ -3826,6 +3828,16 @@ public:
     void setLineBreak(LineBreakValue v)
     {
         *m_rareComputedStyleData.ensureLineBreak() = v;
+    }
+
+    void setLineClamp(int32_t v)
+    {
+        *m_rareComputedStyleData.ensureLineClamp() = v;
+    }
+
+    int32_t lineClamp()
+    {
+        return *m_rareComputedStyleData.ensureLineClamp();
     }
 
     WordBreakValue wordBreak()

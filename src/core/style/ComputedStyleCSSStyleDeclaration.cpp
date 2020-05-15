@@ -393,6 +393,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(lh);
     } break;
+    case CSSStyleValuePair::KeyKind::LineClamp: {
+        CSSStyleValuePair lc;
+        lc.setKeyKind(CSSStyleValuePair::KeyKind::LineClamp);
+        lc.setNumberValue(style->lineClamp());
+    } break;
     case CSSStyleValuePair::KeyKind::FontSize: {
         CSSStyleValuePair fs;
         fs.setKeyKind(CSSStyleValuePair::KeyKind::FontSize);
