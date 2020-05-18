@@ -1436,6 +1436,7 @@ void Frame::computeStyleFlags()
     // TODO add condition
     m_flags.m_needToEstablishBlockFormattingContext |= (shouldApplyOverflow());
     m_flags.m_needToEstablishBlockFormattingContext |= isFlexItem();
+    m_flags.m_needToEstablishBlockFormattingContext |= isGridItem();
     m_flags.m_needToEstablishBlockFormattingContext |= isAbsolutePositioned;
     m_flags.m_needToEstablishBlockFormattingContext |= isFloating;
     m_flags.m_needToEstablishBlockFormattingContext |=
@@ -1733,6 +1734,7 @@ void Frame::markGridItem()
 
     if (GridFormattingContext::doesParticipateInGridFormattingContext(this)) {
         m_flags.m_isGridItem = true;
+        m_flags.m_needToEstablishBlockFormattingContext = true;
         markNeedsLayout();
     }
 }
