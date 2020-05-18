@@ -1573,7 +1573,8 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     style->setHeight(Length(Length::Fixed, height));
 
-    if (needsGridItemLayout(gridItem, style, false)) {
+    if (gridItem->needsLayout() ||
+        needsGridItemLayout(gridItem, style, false)) {
         gridItem->markNeedsLayout();
         gridItem->layout(m_layoutContext,
                          Frame::LayoutWantToResolve::ResolveAll);
