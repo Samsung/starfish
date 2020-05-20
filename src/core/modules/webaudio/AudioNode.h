@@ -65,7 +65,7 @@ public:
     String* channelInterpretationStr();
     void setChannelInterpretationStr(String* channelInterpretation);
 
-    virtual bool isAudioDestinationNode()
+    virtual bool isAudioDestinationNode() const
     {
         return false;
     }
