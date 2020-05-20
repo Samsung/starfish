@@ -125,7 +125,9 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         auto matrix =
             style()->transformsToMatrix(cb->width(), cb->height(), this, true);
         if (!matrix.isIdentity()) {
+            ctx.m_canvas->translate(-x(), -y());
             ctx.m_canvas->postMatrix(matrix);
+            ctx.m_canvas->translate(x(), y());
         }
     }
 
