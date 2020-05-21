@@ -221,8 +221,7 @@ ENDIF()
 # Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
 IF (${HOST} STREQUAL "linux")
     # SET (WEBRTC "1")
-ELSEIF (${CUSTOM} STREQUAL "unified_tv" AND
-       (${TIZEN_MAJOR_VERSION} GREATER 6 OR ${TIZEN_MAJOR_VERSION} EQUAL 6))
+ELSEIF (${CUSTOM} STREQUAL "unified_tv")
     IF (NOT ${BACKEND} STREQUAL "dali")
         SET (WEBRTC "1")
     ENDIF()
