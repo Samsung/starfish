@@ -339,9 +339,9 @@ ENDIF()
 # WEBRTC
 #######################################################
 
-SET (WEBRTC_DIR ${THIRD_PARTY_ROOT}/webrtc/src/)
+SET (WEBRTC_DIR ${THIRD_PARTY_ROOT}/webrtc/src)
 
-IF (${WEBRTC} STREQUAL "1" AND ${HOST} STREQUAL "tizen")
+IF (${WEBRTC} STREQUAL "1")
     SET (GN_DIR ${WEBRTC_DIR}/buildtools/gn)
     SET (GN_BUILD_PATH ${GN_DIR}/out/${HOST}/${ARCH})
     SET (GN_TARGET ${GN_DIR}/out/${HOST}/${ARCH}/gn)
@@ -410,6 +410,8 @@ IF (${WEBRTC} STREQUAL "1")
         "use_sysroot=false"
         "build_with_chromium=false"
         "rtc_build_ssl=false"
+        "rtc_build_tools=false"
+        "rtc_build_examples=false"
         "rtc_enable_protobuf=false"
         "rtc_build_json=true"
         "use_system_libjpeg=true"
@@ -426,22 +428,20 @@ IF (${WEBRTC} STREQUAL "1")
         ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
                             WORKING_DIRECTORY ${WEBRTC_DIR}
                             DEPENDS ${OPENSSL_TARGET}
-                            COMMENT "BUILD WEBRTC"
                             COMMAND echo "BUILD WEBRTC"
-                            COMMAND third_party/depot_tools/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
-                            COMMAND third_party/depot_tools/ninja -C ${WEBRTC_BUILD_PATH} webrtc
-                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm -ljpeg
+                            COMMAND ${WEBRTC_DIR}/buildtools/x86_64/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
+                            COMMAND ${WEBRTC_DIR}/buildtools/ninja -C ${WEBRTC_BUILD_PATH} webrtc
+                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm
         )
     ELSE (${HOST} STREQUAL "tizen") # for all gbs builds
         ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
                             WORKING_DIRECTORY ${WEBRTC_DIR}
-                            DEPENDS ${OPENSSL_TARGET} ${GN_TARGET}
-                            COMMENT "BUILD WEBRTC"
+                            DEPENDS ${OPENSSL_TARGET} #${GN_TARGET}
                             COMMAND echo "BUILD WEBRTC"
-                            COMMAND ${GN_TARGET} gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
+                            COMMAND ${WEBRTC_DIR}/buildtools/${ARCH}/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
                             COMMAND ninja -C ${WEBRTC_BUILD_PATH} webrtc
                             # for custom openssl, use ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so
-                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive -lssl -lcrypto -lpthread -lm -ljpeg
+                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive -lssl -lcrypto -lpthread -lm
         )
     ENDIF()
 
