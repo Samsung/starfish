@@ -113,12 +113,13 @@ BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-media-audio-io)
 BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
-BuildRequires: libjpeg-turbo-devel
 BuildRequires: libasound-devel
 
 %%if (0%{?tizen_version_major} >= 6)
 BuildRequires: pkgconfig(openssl1.1)
+BuildRequires: pkgconfig(capi-media-image-util)
 %else
+BuildRequires: libjpeg-turbo-devel
   %if (0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5)
     %if "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
 BuildRequires: pkgconfig(openssl)

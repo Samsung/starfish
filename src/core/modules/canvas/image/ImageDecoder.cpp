@@ -33,7 +33,9 @@
 #include <cairo.h>
 #endif
 
-#include <png.h>
+#if (STARFISH_TIZEN_MAJOR_VERSION >= 6)
+#include <image_util.h>
+#else
 #if defined(OS_WINDOWS)
 #include <Wincodec.h>
 #pragma comment(lib, "Ole32.lib")
@@ -42,6 +44,8 @@
 extern "C" {
 #include <jpeglib.h>
 }
+#endif
+#include <png.h>
 #endif
 
 #include <gif_lib.h>
@@ -91,6 +95,178 @@ typedef struct {
     const unsigned char* mem;
     unsigned long int size;
 } READ_DATA;
+
+#if (STARFISH_TIZEN_MAJOR_VERSION >= 6)
+static ImageDecoder::DecodeResult decodeBuffer2(
+    const std::vector<char>& inputBuffer, bool needsDecoding)
+{
+    READ_DATA readData;
+    ImageDecoder::DecodeResult result;
+
+    image_util_decode_h handle = NULL;
+    image_util_image_h image = NULL;
+
+    image_util_colorspace_e colorspace = IMAGE_UTIL_COLORSPACE_RGBA8888;
+    image_util_type_e image_type = IMAGE_UTIL_PNG;
+
+    unsigned char* buffer = nullptr;
+    unsigned int width = 0, height = 0;
+    size_t size = 0;
+    int ret = 0;
+
+#define RETV_IF(expr, val, fmt, ...)                \
+    do {                                            \
+        if (expr) {                                 \
+            STARFISH_LOG_ERROR(fmt, ##__VA_ARGS__); \
+            if (image) {                            \
+                image_util_destroy_image(image);    \
+                image = nullptr;                    \
+            }                                       \
+            if (handle) {                           \
+                image_util_decode_destroy(handle);  \
+                handle = nullptr;                   \
+            }                                       \
+            return (val);                           \
+        }                                           \
+    } while (0)
+
+    // Create handle
+    ret = image_util_decode_create(&handle);
+    RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
+            "image_util_decode_create failed %d ", ret);
+
+    readData.mem = (unsigned char*)inputBuffer.data();
+    readData.size = inputBuffer.size();
+
+    // Set input buffer
+    ret =
+        image_util_decode_set_input_buffer(handle, readData.mem, readData.size);
+    RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
+            "image_util_decode_set_input_buffer failed %d ", ret);
+
+    if (isPNGFormat(inputBuffer)) {
+        image_type = IMAGE_UTIL_PNG;
+    } else if (isJPGFormat(inputBuffer)) {
+        image_type = IMAGE_UTIL_JPEG;
+    } else if (isGIFFormat(inputBuffer)) {
+        image_type = IMAGE_UTIL_GIF;
+    }
+
+    // Set color space
+    ret = image_util_decode_set_colorspace(handle, colorspace);
+    RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
+            "image_util_decode_set_colorspace failed %d ", ret);
+
+    // Run decoding
+    ret = image_util_decode_run2(handle, &image);
+    RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
+            "image_util_decode_run2 failed %d ", ret);
+
+    if (!needsDecoding) {
+        ret = image_util_get_image(image, &width, &height, &colorspace, nullptr,
+                                   &size);
+    } else {
+        ret = image_util_get_image(image, &width, &height, &colorspace, &buffer,
+                                   &size);
+        result.m_buffer = buffer;
+    }
+    RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
+            "image_util_get_image failed %d ", ret);
+
+    result.m_width = width;
+    result.m_height = height;
+    result.m_stride = (size / result.m_height);
+
+    // We set colorspace to RGBA, but decoding result of gray image return 256
+    // gray colorspace. I think this is an Image-Util's bug.
+    bool isPNGGray = false;
+    if (result.m_stride == width) {
+        result.m_stride = width * 4;
+        isPNGGray = true;
+    }
+
+    image_util_destroy_image(image);
+    image = nullptr;
+    ret = image_util_decode_destroy(handle);
+    handle = nullptr;
+
+    if (needsDecoding) {
+#ifdef NEEDS_PREMULTIPLIED_ALPHA
+#define ARGB_TO_PREMULTIPLY_ALPHA(sr, sg, sb, sa)                              \
+    (unsigned)(((unsigned)((unsigned char)(sr) * ((unsigned char)(sa) + 1)) >> \
+                8) |                                                           \
+               ((unsigned)((unsigned char)(sg) * ((unsigned char)(sa) + 1) >>  \
+                           8)                                                  \
+                << 8) |                                                        \
+               ((unsigned)((unsigned char)(sb) * ((unsigned char)(sa) + 1) >>  \
+                           8)                                                  \
+                << 16) |                                                       \
+               ((unsigned)(unsigned char)(sa) << 24))
+
+        if (image_type == IMAGE_UTIL_PNG) {
+            if (isPNGGray) {
+                result.m_buffer = (uint8_t*)malloc(size * 4);
+                uint8_t* data = (uint8_t*)buffer;
+                for (size_t y = 0; y < height; ++y) {
+                    for (size_t x = 0; x < width; x++) {
+                        size_t from = y * width + x;
+                        size_t to = from * 4;
+                        result.m_buffer[to] = data[from];
+                        result.m_buffer[to + 1] = data[from];
+                        result.m_buffer[to + 2] = data[from];
+                        result.m_buffer[to + 3] = 255;
+                    }
+                }
+                free(data);
+            } else {
+                uint8_t* data = (uint8_t*)result.m_buffer;
+                for (size_t y = 0; y < result.m_height; ++y) {
+                    for (size_t x = 0; x < result.m_stride; x += 4) {
+                        size_t idx = y * result.m_stride + x;
+                        size_t* tmp = (size_t*)(&(data[idx]));
+
+// Convert RGBA to graphic engine's color space
+#ifdef PORT_PIXEL_ORDER_RGBA
+                        *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                            data[idx], data[idx + 1], data[idx + 2],
+                            data[idx + 3]);
+#else
+                        *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                            data[idx + 2], data[idx + 1], data[idx],
+                            data[idx + 3]);
+#endif
+                    }
+                }
+            }
+        } else if (image_type == IMAGE_UTIL_JPEG) {
+            uint8_t* data = (uint8_t*)result.m_buffer;
+            for (size_t y = 0; y < result.m_height; ++y) {
+                for (size_t x = 0; x < result.m_stride; x += 4) {
+                    size_t idx = y * result.m_stride + x;
+                    size_t* tmp = (size_t*)(&(data[idx]));
+
+// Convert RGBA to graphic engine's color space
+#ifdef PORT_PIXEL_ORDER_RGBA
+                    *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx], data[idx + 1],
+                                                     data[idx + 2], 255);
+#else
+                    *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                        data[idx + 2], data[idx + 1], data[idx], 255);
+#endif
+                }
+            }
+        } else if (image_type == IMAGE_UTIL_GIF) {
+        }
+
+#undef ARGB_TO_PREMULTIPLY_ALPHA
+#endif
+    }
+
+    result.m_isSuccessful = true;
+    return result;
+}
+
+#else
 
 static void readPNGFromBufferedInput(png_structp png, png_bytep data,
                                      png_size_t size)
@@ -488,6 +664,8 @@ static ImageDecoder::DecodeResult decodeJPG(
 
 #endif
 
+#endif
+
 static int gifRead(GifFileType* gft, NULLABLE GifByteType* data, int size)
 {
     STARFISH_ASSERT(gft != nullptr);
@@ -697,6 +875,9 @@ static ImageDecoder::DecodeResult decodeGIF(
 static ImageDecoder::DecodeResult decodeBuffer(
     const std::vector<char>& inputBuffer, bool full)
 {
+#if (STARFISH_TIZEN_MAJOR_VERSION >= 6)
+    return decodeBuffer2(inputBuffer, full);
+#else
     if (isPNGFormat(inputBuffer)) {
         return decodePNG(inputBuffer, full);
     } else if (isJPGFormat(inputBuffer)) {
@@ -704,7 +885,9 @@ static ImageDecoder::DecodeResult decodeBuffer(
     } else if (isGIFFormat(inputBuffer)) {
         return decodeGIF(inputBuffer, full);
     }
+
     return ImageDecoder::DecodeResult();
+#endif
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
