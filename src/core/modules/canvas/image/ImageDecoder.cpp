@@ -162,13 +162,12 @@ static ImageDecoder::DecodeResult decodeBuffer2(
     RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
             "image_util_decode_run2 failed %d ", ret);
 
-    if (!needsDecoding) {
-        ret = image_util_get_image(image, &width, &height, &colorspace, nullptr,
-                                   &size);
-    } else {
-        ret = image_util_get_image(image, &width, &height, &colorspace, &buffer,
-                                   &size);
+    ret = image_util_get_image(image, &width, &height, &colorspace, &buffer,
+                               &size);
+    if (needsDecoding) {
         result.m_buffer = buffer;
+    } else {
+        free(buffer);
     }
     RETV_IF(ret != IMAGE_UTIL_ERROR_NONE, ImageDecoder::DecodeResult(),
             "image_util_get_image failed %d ", ret);
