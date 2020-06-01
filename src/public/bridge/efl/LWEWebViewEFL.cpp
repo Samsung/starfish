@@ -289,8 +289,18 @@ public:
         : WebView(nullptr)
         , m_resizeHandler(nullptr)
         , m_shownHandler(nullptr)
+        , m_mouseDownEventHandler(nullptr)
+        , m_mouseMoveEventHandler(nullptr)
+        , m_mouseUpEventHandler(nullptr)
+        , m_mouseWheelEventHandler(nullptr)
         , m_keyDownEventHandler(nullptr)
         , m_keyUpEventHandler(nullptr)
+        , m_buttonForClickClickEventHandler(nullptr)
+        , m_buttonForClickMouseDownEventHandler(nullptr)
+        , m_buttonForClickMouseMoveEventHandler(nullptr)
+        , m_buttonForClickMouseUpEventHandler(nullptr)
+        , m_buttonForClick(nullptr)
+        , m_buttonForClickCipper(nullptr)
 #if defined(PORT_WINDOW_BACKEND_GL)
         , m_glSync(nullptr)
 #endif
@@ -409,6 +419,83 @@ public:
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
 
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
+        m_buttonForClick = elm_button_add(m_windowObject);
+        elm_box_pack_end(m_mainBox, m_buttonForClick);
+        evas_object_show(m_buttonForClick);
+
+        m_buttonForClickCipper =
+            evas_object_rectangle_add(evas_object_evas_get(m_windowObject));
+        evas_object_clip_set(m_buttonForClick, m_buttonForClickCipper);
+        evas_object_color_set(m_buttonForClickCipper, 0, 0, 0, 0);
+        elm_box_pack_end(m_mainBox, m_buttonForClickCipper);
+        evas_object_show(m_buttonForClickCipper);
+
+        m_buttonForClickMouseDownEventHandler = [](void* data, Evas* evas,
+                                                   Evas_Object* obj,
+                                                   void* event_info) -> void {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
+            wv->m_lastMouseX = ev->canvas.x;
+            wv->m_lastMouseY = ev->canvas.y;
+
+            int x, y;
+            evas_object_geometry_get(wv->m_graphicsAdapter, &x, &y, 0, 0);
+            wv->m_lastMouseX -= x;
+            wv->m_lastMouseY -= y;
+
+            wv->FetchWebContainer()->DispatchMouseDownEvent(
+                MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
+                wv->m_lastMouseX, wv->m_lastMouseY);
+            wv->m_isMouseLbuttonDown = true;
+            return;
+        };
+        evas_object_event_callback_add(
+            m_buttonForClick, EVAS_CALLBACK_MOUSE_DOWN,
+            m_buttonForClickMouseDownEventHandler, this);
+
+        m_buttonForClickMouseMoveEventHandler = [](void* data, Evas* evas,
+                                                   Evas_Object* obj,
+                                                   void* event_info) -> void {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
+            wv->m_lastMouseX = ev->cur.canvas.x;
+            wv->m_lastMouseY = ev->cur.canvas.y;
+
+            unsigned char buttons = wv->m_isMouseLbuttonDown
+                                        ? MouseButtonsValue::LeftButtonDown
+                                        : 0;
+            wv->FetchWebContainer()->DispatchMouseMoveEvent(
+                MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
+                wv->m_lastMouseX, wv->m_lastMouseY);
+            return;
+        };
+        evas_object_event_callback_add(
+            m_buttonForClick, EVAS_CALLBACK_MOUSE_MOVE,
+            m_buttonForClickMouseMoveEventHandler, this);
+
+        m_buttonForClickMouseUpEventHandler = [](void* data, Evas* evas,
+                                                 Evas_Object* obj,
+                                                 void* event_info) -> void {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            wv->m_isMouseLbuttonDown = false;
+            return;
+        };
+        evas_object_event_callback_add(m_buttonForClick, EVAS_CALLBACK_MOUSE_UP,
+                                       m_buttonForClickMouseUpEventHandler,
+                                       this);
+
+        m_buttonForClickClickEventHandler = [](void* data, Evas_Object* obj,
+                                               void* event_info) -> void {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            wv->FetchWebContainer()->DispatchMouseUpEvent(
+                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
+                wv->m_lastMouseX, wv->m_lastMouseY);
+            wv->m_isMouseLbuttonDown = false;
+        };
+        evas_object_smart_callback_add(m_buttonForClick, "clicked",
+                                       m_buttonForClickClickEventHandler, this);
+#else
         m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                      void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
@@ -518,7 +605,6 @@ public:
                                        EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler, this);
 
-#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         m_keyDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                    void* event_info) -> void {
             WebViewEFL* webView = (WebViewEFL*)data;
@@ -1056,17 +1142,30 @@ public:
                                            m_shownHandler);
         }
 
-        evas_object_event_callback_del(m_graphicsAdapter,
-                                       EVAS_CALLBACK_MOUSE_DOWN,
-                                       m_mouseDownEventHandler);
-        evas_object_event_callback_del(
-            m_graphicsAdapter, EVAS_CALLBACK_MOUSE_UP, m_mouseUpEventHandler);
-        evas_object_event_callback_del(m_graphicsAdapter,
-                                       EVAS_CALLBACK_MOUSE_WHEEL,
-                                       m_mouseWheelEventHandler);
-        evas_object_event_callback_del(m_graphicsAdapter,
-                                       EVAS_CALLBACK_MOUSE_MOVE,
-                                       m_mouseMoveEventHandler);
+        if (m_mouseDownEventHandler) {
+            evas_object_event_callback_del(m_graphicsAdapter,
+                                           EVAS_CALLBACK_MOUSE_DOWN,
+                                           m_mouseDownEventHandler);
+        }
+
+        if (m_mouseUpEventHandler) {
+            evas_object_event_callback_del(m_graphicsAdapter,
+                                           EVAS_CALLBACK_MOUSE_UP,
+                                           m_mouseUpEventHandler);
+        }
+
+        if (m_mouseWheelEventHandler) {
+            evas_object_event_callback_del(m_graphicsAdapter,
+                                           EVAS_CALLBACK_MOUSE_WHEEL,
+                                           m_mouseWheelEventHandler);
+        }
+
+        if (m_mouseMoveEventHandler) {
+            evas_object_event_callback_del(m_graphicsAdapter,
+                                           EVAS_CALLBACK_MOUSE_MOVE,
+                                           m_mouseMoveEventHandler);
+        }
+
         evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_SHOW,
                                        m_windowShownHandler);
         evas_object_event_callback_del(
@@ -1090,6 +1189,39 @@ public:
         if (m_mainBox) {
             evas_object_del(m_mainBox);
             m_mainBox = nullptr;
+        }
+
+        if (m_buttonForClickCipper) {
+            evas_object_del(m_buttonForClickCipper);
+            m_buttonForClickCipper = nullptr;
+        }
+
+        if (m_buttonForClickClickEventHandler) {
+            evas_object_smart_callback_del(m_buttonForClick, "clicked",
+                                           m_buttonForClickClickEventHandler);
+        }
+
+        if (m_buttonForClickMouseDownEventHandler) {
+            evas_object_event_callback_del(
+                m_buttonForClick, EVAS_CALLBACK_MOUSE_DOWN,
+                m_buttonForClickMouseDownEventHandler);
+        }
+
+        if (m_buttonForClickMouseMoveEventHandler) {
+            evas_object_event_callback_del(
+                m_buttonForClick, EVAS_CALLBACK_MOUSE_MOVE,
+                m_buttonForClickMouseMoveEventHandler);
+        }
+
+        if (m_buttonForClickMouseUpEventHandler) {
+            evas_object_event_callback_del(m_buttonForClick,
+                                           EVAS_CALLBACK_MOUSE_UP,
+                                           m_buttonForClickMouseUpEventHandler);
+        }
+
+        if (m_buttonForClick) {
+            evas_object_del(m_buttonForClick);
+            m_buttonForClick = nullptr;
         }
 
         delete this;
@@ -1185,9 +1317,22 @@ protected:
                                     void* event_info);
     void (*m_windowShownHandler)(void* data, Evas* evas, Evas_Object* obj,
                                  void* event_info);
+    void (*m_buttonForClickClickEventHandler)(void* data, Evas_Object* obj,
+                                              void* event_info);
+    void (*m_buttonForClickMouseDownEventHandler)(void* data, Evas* evas,
+                                                  Evas_Object* obj,
+                                                  void* event_info);
+    void (*m_buttonForClickMouseMoveEventHandler)(void* data, Evas* evas,
+                                                  Evas_Object* obj,
+                                                  void* event_info);
+    void (*m_buttonForClickMouseUpEventHandler)(void* data, Evas* evas,
+                                                Evas_Object* obj,
+                                                void* event_info);
 
     Evas_Object* m_windowObject;
     Evas_Object* m_mainBox;
+    Evas_Object* m_buttonForClick;
+    Evas_Object* m_buttonForClickCipper;
     Evas_Object* m_graphicsAdapter;
 #if defined(PORT_WINDOW_BACKEND_GL)
     Evas_GL_Context* m_glCtx;
