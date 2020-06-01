@@ -46,6 +46,11 @@ Requires(postun): /sbin/ldconfig
 %define rpm all
 %endif
 
+%if 0%{?use_embedded_image_decoder:1}
+%else
+%define use_embedded_image_decoder 0
+%endif
+
 %if 0%{?tizen_version_major:1}
 %else
 %define tizen_version_major 4
@@ -115,11 +120,15 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libasound-devel
 
+%if "%{?use_embedded_image_decoder}" == "1"
+%else
+BuildRequires: giflib-devel
+BuildRequires: libjpeg-turbo-devel
+%endif
+
 %%if (0%{?tizen_version_major} >= 6)
 BuildRequires: pkgconfig(openssl1.1)
-BuildRequires: pkgconfig(capi-media-image-util)
 %else
-BuildRequires: libjpeg-turbo-devel
   %if (0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5)
     %if "%{rpm}" == "prod_tv" || "%{rpm}" == "headless"
 BuildRequires: pkgconfig(openssl)
@@ -132,7 +141,6 @@ BuildRequires: pkgconfig(openssl)
 %endif
 
 BuildRequires: pkgconfig(libpulse)
-BuildRequires: giflib-devel
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
 BuildRequires: pkgconfig(dali-core)
@@ -305,33 +313,72 @@ CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 # For Dali
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.tv -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
 
 
 %if "%{rpm}" == "prod_tv"
+
+# build external image decoder
+%if "%{?use_embedded_image_decoder}" == "1"
+
+# giflib
+cd third_party/giflib
+make libgif.so
+cd -
+
+# libpng
+cd third_party/libpng
+%ifarch %{arm}
+CFLAGS+=" -D_ARCH_ARM_ -mfpu=neon"
+%endif
+%configure \
+    --disable-static \
+%ifarch %arm armv7l armv7el aarch64
+    --enable-arm-neon=check \
+    %{?ubsan: --enable-arm-neon=no}
+%endif
+%__make %{?_smp_mflags}
+cd -
+
+# libjpeg
+cd third_party/libjpeg-turbo
+%if "%{tizen_profile_name}" == "tv"
+echo "tizen_product_tv"
+export CFLAGS="$CFLAGS -D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV"
+%endif
+%cmake . -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=TRUE -DENABLE_STATIC=FALSE \
+%if "%{tizen_profile_name}" == "tv"
+	 -DENABLE_COLOR_PICKER=TRUE \
+%endif
+	-DWITH_JPEG8=TRUE
+%__make %{?jobs:-j%jobs}
+cd -
+
+%endif
+
 # For Dali
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.dali.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.dali.tv -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_wayland2_backend"
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %else
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif # "%{build_option}" == "ecore_wayland2_backend"
 %else # 0%{?build_option:1}
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif
 ninja starfish.shared_library
 ninja starfish.executable

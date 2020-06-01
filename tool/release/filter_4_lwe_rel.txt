@@ -1,0 +1,54 @@
+P /.git
+P /.github
+P /.circleci
+
+- /inspector
+- /build/windows
+- /build/android
+- /third_party/android
+- /third_party/windows
+- /compat
+- /test
+- /tool
+- /out_tizen
+- /third_party/clipper/Documentation
+- /third_party/escargot/build/windows
+- /third_party/escargot/third_party/windows
+- /third_party/escargot/third_party/GCutil/windows
+- /third_party/escargot/test
+- /third_party/escargot/tools
++ /third_party/libwebsockets
+- /third_party/openssl
+- /third_party/webrtc/src/resources
++ /third_party/webrtc/src/test
++ /third_party/webrtc/src/api/test
++ /third_party/webrtc/src/modules/remote_bitrate_estimator/test
++ /third_party/libpng
++ /third_party/libgif
++ /third_party/libjpeg-turbo
+
+- .git
+- .gitignore
+- .gitmodules
+- .gitattributes
+- .gitlab-ci.yml
+- .gbs.conf
+- *.list
+- .clang-format
+- .circleci
+- test
+
+- *debug*.manifest
+- *.tar.gz
+- *.a
+- *.so
+- *.o
+- out/*
+- CMakeCache.txt
+- CMakeFiles
+- build_init.sh
+
+- *.pyc
+- lextab.*
+- parsetab.*
+
