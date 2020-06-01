@@ -108,7 +108,7 @@ def case_runner(tc):
     # Create screen-shot image using Starfish
     starfish_command = ["./Starfish", tc_file, HIDE_WINDOW_OPT,
                         __opts.font_opt, __opts.width, __opts.height,
-                        SCREENSHOT_OPT_PREFIX + tc_result_png]
+                        SCREENSHOT_OPT_PREFIX + tc_result_png, "--disable-console"]
     starfish_output = ""
     starfish_err = ""
     try:

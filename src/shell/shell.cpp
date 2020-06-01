@@ -31,6 +31,9 @@
 #endif
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
 #include <Ecore.h>
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#include <uv.h>
+uv_async_t* idlerThreadAsyncHandle = nullptr;
 #endif
 
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
@@ -284,6 +287,7 @@ int main(int argc, char* argv[])
     int x = 0, y = 0;
     float scaleFactor = 1;
     bool enableSecurity = true;
+    bool disableConsole = false;
     bool crashTest = false;
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
     bool needsDownloadWebFontsEarly = false;
@@ -358,6 +362,8 @@ int main(int argc, char* argv[])
         } else if (strstr(argv[i], "--needs-download-webfont-early") ==
                    argv[i]) {
             needsDownloadWebFontsEarly = true;
+        } else if (strcmp(argv[i], "--disable-console") == 0) {
+            disableConsole = true;
         }
     }
 
@@ -551,45 +557,85 @@ int main(int argc, char* argv[])
                                    focusInHandler, webView);
 #endif
 
+    if (!disableConsole) {
 #if defined(PORT_EVENTLOOP_BACKEND_EFL) && \
     (defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL))
-    pthread_t t;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_create(
-        &t, &attr,
-        [](void* data) -> void* {
-            char buf[1024];
-            sleep(1);
-            while (1) {
-                fgets(buf, 1024, stdin);
-                struct Pass {
-                    LWE::WebView* webView;
-                    char* buf;
-                };
-                char* b = new char[1024];
-                Pass* pass = new Pass;
-                pass->buf = b;
-                pass->webView = (LWE::WebView*)data;
-                memcpy(b, buf, sizeof buf);
-                ecore_thread_main_loop_begin();
-                ecore_animator_add(
-                    [](void* data) -> Eina_Bool {
-                        Pass* p = (Pass*)data;
-                        puts(p->webView->EvaluateJavaScript(p->buf).data());
-                        delete[] p->buf;
-                        delete p;
+        pthread_t t;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(
+            &t, &attr,
+            [](void* data) -> void* {
+                char buf[1024];
+                sleep(1);
+                while (1) {
+                    fgets(buf, 1024, stdin);
+                    struct Pass {
+                        LWE::WebView* webView;
+                        char* buf;
+                    };
+                    char* b = new char[1024];
+                    Pass* pass = new Pass;
+                    pass->buf = b;
+                    pass->webView = (LWE::WebView*)data;
+                    memcpy(b, buf, sizeof buf);
+                    ecore_thread_main_loop_begin();
+                    ecore_animator_add(
+                        [](void* data) -> Eina_Bool {
+                            Pass* p = (Pass*)data;
+                            puts(p->webView->EvaluateJavaScript(p->buf).data());
+                            delete[] p->buf;
+                            delete p;
 
-                        return ECORE_CALLBACK_CANCEL;
-                    },
-                    pass);
-                ecore_thread_main_loop_end();
-            }
-            return NULL;
-        },
-        webView);
+                            return ECORE_CALLBACK_CANCEL;
+                        },
+                        pass);
+                    ecore_thread_main_loop_end();
+                }
+                return NULL;
+            },
+            webView);
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV) && \
+    (defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL))
+        struct Pass {
+            LWE::WebView* webView;
+            char* buf;
+        };
+        idlerThreadAsyncHandle = (uv_async_t*)malloc(sizeof(uv_async_t));
+        uv_async_init(uv_default_loop(), idlerThreadAsyncHandle,
+                      [](uv_async_t* handle) {
+                          Pass* p = (Pass*)handle->data;
+                          puts(p->webView->EvaluateJavaScript(p->buf).data());
+                          delete[] p->buf;
+                          delete p;
+                      });
+        pthread_t t;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(&t, &attr,
+                       [](void* data) -> void* {
+                           char buf[1024] = {
+                               0,
+                           };
+                           sleep(1);
+                           while (1) {
+                               auto ret = fgets(buf, 1024, stdin);
+                               if (ret != nullptr) {
+                                   char* b = new char[1024];
+                                   Pass* pass = new Pass;
+                                   pass->buf = b;
+                                   pass->webView = (LWE::WebView*)data;
+                                   idlerThreadAsyncHandle->data = pass;
+                                   memcpy(b, buf, sizeof buf);
+
+                                   uv_async_send(idlerThreadAsyncHandle);
+                               }
+                           }
+                           return NULL;
+                       },
+                       webView);
 #endif
-
+    }
     if (crashTest) {
         pthread_t t;
         pthread_attr_t attr;
@@ -627,7 +673,13 @@ int main(int argc, char* argv[])
         usleep(100);
     }
 #endif
-
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) && \
+    (defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL))
+    if (!disableConsole && idlerThreadAsyncHandle) {
+        uv_close((uv_handle_t*)idlerThreadAsyncHandle,
+                 [](uv_handle_t* handle) { free(handle); });
+    }
+#endif
     try {
         webView->Destroy();
     } catch (...) {
