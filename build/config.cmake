@@ -335,7 +335,7 @@ ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${ARCH} STREQUAL "x64")
 ELSEIF (${BACKEND} STREQUAL "efl_headless" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} MATCHES "efl_cairo" AND ${HOST} STREQUAL "tizen")
-    IF (${CUSTOM} STREQUAL "prod_tv" AND ${TIZEN_MAJOR_VERSION} GREATER_EQUAL 6)
+    IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
         pkg_check_modules (STARFISH_BACKEND REQUIRED freetype2 fontconfig harfbuzz elementary ecore ecore-imf )
     ELSE()
         pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz elementary ecore ecore-imf )
@@ -392,11 +392,7 @@ IF (${HOST} STREQUAL "tizen")
     ELSEIF (${CUSTOM} STREQUAL "headless")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
     ELSEIF (${CUSTOM} STREQUAL "prod_tv")
-        IF (${TIZEN_MAJOR_VERSION} GREATER_EQUAL 6)
-            pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf-internal-keys-tv capi-network-connection capi-media-player tts capi-media-audio-io capi-media-image-util)
-        ELSE()
-            pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf-internal-keys-tv capi-network-connection capi-media-player tts capi-media-audio-io)
-        ENDIF()
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf-internal-keys-tv capi-network-connection capi-media-player tts capi-media-audio-io)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_VCONF REQUIRED vconf)
     ENDIF()
 ENDIF()
@@ -424,15 +420,17 @@ IF (${COMPILER} STREQUAL "clang")
 ENDIF()
 
 IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali")
-    IF (NOT (${CUSTOM} STREQUAL "prod_tv" AND ${TIZEN_MAJOR_VERSION} GREATER_EQUAL 6))
+    IF (NOT (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1"))
         SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
     ELSE()
-        SET (STARFISH_LIBRARIES_BACKEND gif)
+        SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png)
     ENDIF()
 
     IF (${BACKEND} MATCHES "efl_cairo")
-        IF (NOT (${CUSTOM} STREQUAL "prod_tv" AND ${TIZEN_MAJOR_VERSION} GREATER_EQUAL 6))
+        IF (NOT (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1"))
             SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg)
+        ELSE()
+            SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib turbojpeg)
         ENDIF()
     ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib turbojpeg)
@@ -476,7 +474,6 @@ IF (${HOST} STREQUAL "linux")
 ELSE()
     LINK_DIRECTORIES (${OUTPUT_DIRECTORY}/lib)
 ENDIF()
-
 
 #######################################################
 # INCLUDE DIRS
@@ -550,7 +547,16 @@ IF (${HOST} STREQUAL "tizen")
         /usr/include/dlog
         /usr/include/location
     )
+    IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
+        SET (STARFISH_INCLUDE_DIRS_CUSTOM
+            ${THIRD_PARTY_ROOT}/giflib
+            ${THIRD_PARTY_ROOT}/libjpeg-turbo
+            ${THIRD_PARTY_ROOT}/libpng
+        )
+    ENDIF()
 ENDIF()
+
+
 
 SET (LWE_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}

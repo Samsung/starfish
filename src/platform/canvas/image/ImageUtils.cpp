@@ -25,11 +25,8 @@ namespace Starfish {
 static void PngWriteCallback(png_structp png_ptr, png_bytep data,
                              png_size_t length)
 {
-#if (STARFISH_TIZEN_MAJOR_VERSION >= 6)
-#else
     std::vector<uint8_t>* p = (std::vector<uint8_t>*)png_get_io_ptr(png_ptr);
     p->insert(p->end(), data, data + length);
-#endif
 }
 
 std::vector<uint8_t> ImageUtils::encodePNG(const uint8_t* src, size_t w,
@@ -39,8 +36,6 @@ std::vector<uint8_t> ImageUtils::encodePNG(const uint8_t* src, size_t w,
 
     std::vector<uint8_t> result;
     result.clear();
-#if (STARFISH_TIZEN_MAJOR_VERSION >= 6)
-#else
     png_structp p =
         png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     png_infop info_ptr = png_create_info_struct(p);
@@ -61,7 +56,6 @@ std::vector<uint8_t> ImageUtils::encodePNG(const uint8_t* src, size_t w,
 #endif
 
     png_destroy_write_struct(&p, NULL);
-#endif
 
     return result;
 }

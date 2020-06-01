@@ -127,3 +127,12 @@
 [submodule "third_party/openssl"]
 	path = third_party/openssl
 	url = git@github.sec.samsung.net:lws-submodules/openssl.git
+[submodule "third_party/libjpeg-turbo"]
+	path = third_party/libjpeg-turbo
+	url = git@github.sec.samsung.net:lws-submodules/libjpeg-turbo.git
+[submodule "third_party/giflib"]
+	path = third_party/giflib
+	url = git@github.sec.samsung.net:lws-submodules/giflib.git
+[submodule "third_party/libpng"]
+	path = third_party/libpng
+	url = git@github.sec.samsung.net:lws-submodules/libpng.git

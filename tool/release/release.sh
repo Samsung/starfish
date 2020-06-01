@@ -36,8 +36,11 @@ git submodule update --init third_party
 cd $ROOT
 
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
+if [ "$repo" == "lwe_rel" ]; then
+rsync -av --delete --delete-excluded --filter="merge tool/release/filter_4_lwe_rel.txt" . ../$repo
+else
 rsync -av --delete --delete-excluded --filter="merge tool/release/filter.txt" . ../$repo
-
+fi
 hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-7`
 today=`date +%y%m%d`
 
