@@ -41,7 +41,7 @@ def _timeout(proc, tc_file):
 
 def _run_starfish_reftest(tc_file):
     starfish_command = ["./Starfish", tc_file,
-                        "--ref-test", "--width=800", "--height=600"]
+                        "--ref-test", "--width=800", "--height=600", "--disable-console"]
     outs = ""
     errs = ""
     try:
