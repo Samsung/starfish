@@ -144,10 +144,10 @@ void PeerConnectionObserver::OnSignalingChange(
                                         ->m_signalingstatechange.localName();
                 Event* e = new Event(self->executionContext(), eventType);
                 self->m_peerConnection->dispatchEventByUA(e);
-                delete p;
                 WEBRTC_LOGI(
                     "</PeerConnectionObserver::OnSignalingChange2 self=%p>\n",
                     (void*)p->self);
+                delete p;
             },
             p);
 }
@@ -206,9 +206,9 @@ void PeerConnectionObserver::OnTrack(
                     }
 
                     p->self->OnTrack(p->transceiver);
-                    delete p;
                     WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>\n",
                                 (void*)p->self);
+                    delete p;
                 },
                 p);
         return;
@@ -277,10 +277,10 @@ void PeerConnectionObserver::OnDataChannel(
                     }
 
                     p->self->OnDataChannel(p->channel);
-                    delete p;
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnDataChannel self=%p>\n",
                         (void*)p->self);
+                    delete p;
                 },
                 p);
         return;
@@ -452,11 +452,11 @@ void PeerConnectionObserver::OnConnectionChange(
                     }
 
                     p->self->OnConnectionChange(p->newState);
-                    delete p;
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnConnectionChange "
                         "self=%p>\n",
                         (void*)p->self);
+                    delete p;
                 },
                 p);
         return;
@@ -507,11 +507,11 @@ void PeerConnectionObserver::OnIceGatheringChange(
                     }
 
                     p->self->OnIceGatheringChange(p->newState);
-                    delete p;
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnIceGatheringChange "
                         "self=%p>\n",
                         (void*)p->self);
+                    delete p;
                 },
                 p);
         return;
@@ -584,10 +584,11 @@ void PeerConnectionObserver::OnIceCandidate(
                 RTCPeerConnectionIceEvent* e = new RTCPeerConnectionIceEvent(
                     self->executionContext(), eventType, init);
                 self->m_peerConnection->dispatchEventByUA(e);
-                delete p;
+
                 WEBRTC_LOGI(
                     "</PeerConnectionObserver::OnIceCandidate self=%p>\n",
                     (void*)p->self);
+                delete p;
             },
             p);
 }
@@ -632,7 +633,7 @@ void CreateOfferAnswerObserver::OnSuccess(
                     self->m_peerConnection->createSessionDescriptionInitObject(
                         type, String::createASCIIString(sdpString.c_str(),
                                                         sdpString.size()));
-                Promise* promise;
+                Promise* promise = nullptr;
                 if (self->isCreateOffer()) {
                     promise = self->m_peerConnection->m_createOfferObserver
                                   ->promise();
@@ -648,7 +649,11 @@ void CreateOfferAnswerObserver::OnSuccess(
                     self->m_peerConnection->m_lastCreatedAnswer = sdpString;
                 }
 
-                promise->fulfill(createScriptValue(sd));
+                if (promise) {
+                    promise->fulfill(createScriptValue(sd));
+                } else {
+                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                }
                 delete p;
             },
             p);
@@ -687,7 +692,7 @@ void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
                     self->m_peerConnection->toDomException(std::move(p->error));
                 STARFISH_ASSERT(exception);
 
-                Promise* promise;
+                Promise* promise = nullptr;
                 if (self->isCreateOffer()) {
                     promise = self->m_peerConnection->m_createOfferObserver
                                   ->promise();
@@ -700,7 +705,12 @@ void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
                         nullptr);
                 }
 
-                promise->reject(exception->scriptValue());
+                if (promise) {
+                    promise->reject(exception->scriptValue());
+                } else {
+                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                }
+
                 delete p;
             },
             p);
@@ -733,7 +743,7 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
         return;
     }
 
-    Promise* promise;
+    Promise* promise = nullptr;
     if (isLocalDescription()) {
         promise = m_peerConnection->m_setLocalDescriptionObserver->promise();
         m_peerConnection->m_setLocalDescriptionObserver->setPromise(nullptr);
@@ -742,7 +752,11 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
         m_peerConnection->m_setRemoteDescriptionObserver->setPromise(nullptr);
     }
 
-    promise->fulfill(scriptUndefined());
+    if (promise) {
+        promise->fulfill(scriptUndefined());
+    } else {
+        WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+    }
     WEBRTC_LOGI("</SetLocalRemoteDescriptionObserver::%s>: %p\n", __func__,
                 (void*)this);
 }
@@ -780,7 +794,7 @@ void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
                     self->m_peerConnection->toDomException(std::move(p->error));
                 STARFISH_ASSERT(exception);
 
-                Promise* promise;
+                Promise* promise = nullptr;
                 if (self->isLocalDescription()) {
                     promise = self->m_peerConnection
                                   ->m_setLocalDescriptionObserver->promise();
@@ -793,7 +807,11 @@ void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
                         ->setPromise(nullptr);
                 }
 
-                promise->reject(exception->scriptValue());
+                if (promise) {
+                    promise->reject(exception->scriptValue());
+                } else {
+                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                }
                 delete p;
             },
             p);

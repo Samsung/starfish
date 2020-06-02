@@ -204,6 +204,7 @@ void MediaStream::VideoFrameObserver::writeImageToFile(std::string& filename)
     FILE* imageFile = fopen(filename.data(), "wb");
     if (imageFile == nullptr) {
         STARFISH_LOG_WARN("ERROR: Cannot open output file");
+        return;
     }
 
     fprintf(imageFile, "P3\n");                       // P3 filetype

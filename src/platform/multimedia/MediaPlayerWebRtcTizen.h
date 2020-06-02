@@ -58,7 +58,7 @@ public:
 
 private:
     player_h m_player{ nullptr };
-    media_format_h m_audioFormat;
+    media_format_h m_audioFormat{ nullptr };
 
     tbm_surface_h m_surface{ nullptr };
     tbm_surface_info_s m_surfaceInfo;
