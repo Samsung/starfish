@@ -1428,7 +1428,7 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
 
     bool hasValidSdpMid = false;
     if (init.m_sdpMid.hasValue()) {
-        size_t lineIndex;
+        size_t lineIndex = 0;
         size_t mediaSectionSize = remoteDescription->number_of_mediasections();
         for (size_t i = 0; i < mediaSectionSize; i++) {
             const webrtc::IceCandidateCollection* candidateCollection =
@@ -2057,12 +2057,16 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
     m_backend->RemoveTrackNew(sender->backend());
     aliveSender->setTrack(nullptr);
 
+    if (!existingTransceiver) {
+        STARFISH_LOG_ERROR("%s: Transceiver not exist\n", __func__);
+        return;
+    }
+
     if (existingTransceiver->direction() ==
         RTCRtpTransceiverDirection::Sendrecv) {
         existingTransceiver->setDirection(RTCRtpTransceiverDirection::Recvonly);
-    }
-    if (existingTransceiver->direction() ==
-        RTCRtpTransceiverDirection::Sendonly) {
+    } else if (existingTransceiver->direction() ==
+               RTCRtpTransceiverDirection::Sendonly) {
         existingTransceiver->setDirection(RTCRtpTransceiverDirection::Inactive);
     }
 }
