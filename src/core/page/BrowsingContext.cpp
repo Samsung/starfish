@@ -963,6 +963,12 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
         return;
     }
 
+    Element* e = n->isElement() ? n->asElement() : n->parentElement();
+    if (e == m_focusedNode) {
+        // If the element is already focused.
+        return;
+    }
+
     {
         BrowsingContext* topBC = this;
         if (!isTopLevelBrowsingContext()) {
@@ -991,13 +997,9 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
         }
     }
 
-    Element* e = n->isElement() ? n->asElement() : n->parentElement();
     if (!e) {
         // If document area is selected.
         releaseFocusedNode(nullptr);
-        return;
-    } else if (e == m_focusedNode) {
-        // If the element is already focused.
         return;
     } else if (e->isHTMLIFrameElement()) {
         // When a child browsing context is focused, its browsing context
