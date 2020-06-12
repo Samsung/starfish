@@ -82,7 +82,12 @@ void HTTPTransaction::preprocess(bool useNewHandle)
 #endif
 
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
+    if (m_timeout) {
+        curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS,
+                         10 * 60 * 1000); // default timeout is 10min
+    }
 
     curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);

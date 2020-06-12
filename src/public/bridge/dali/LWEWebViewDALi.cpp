@@ -21,6 +21,7 @@
 #include "LWEWebView.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_DALI)
+#if defined(STARFISH_ENABLE_SHELL)
 #ifdef STARFISH_TIZEN
 #define STARFISH_DALI_TBMSURFACE
 #endif
@@ -1122,5 +1123,18 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                            defaultFontName, locale, timezoneID);
 }
 }
+#else // !defined(STARFISH_ENABLE_SHELL)
+namespace LWE {
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
+{
+    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
+}
+}
+#endif
 
 #endif
