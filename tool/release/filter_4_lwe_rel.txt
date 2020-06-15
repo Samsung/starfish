@@ -24,7 +24,7 @@ P /.circleci
 + /third_party/webrtc/src/api/test
 + /third_party/webrtc/src/modules/remote_bitrate_estimator/test
 + /third_party/libpng
-+ /third_party/libgif
++ /third_party/giflib
 + /third_party/libjpeg-turbo
 
 - .git
