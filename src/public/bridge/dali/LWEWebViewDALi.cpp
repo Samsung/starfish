@@ -816,8 +816,16 @@ void DALiShellController::Create(Application& application)
 
     mIsRunning = true;
     mImageView = Dali::Toolkit::ImageView::New();
+
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 6
+    mImageView.SetProperty(Actor::Property::PARENT_ORIGIN,
+                           ParentOrigin::TOP_LEFT);
+    mImageView.SetProperty(Actor::Property::ANCHOR_POINT,
+                           AnchorPoint::TOP_LEFT);
+#else
     mImageView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
     mImageView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+#endif
 
     Stage::GetCurrent().KeyEventSignal().Connect(
         this, &DALiShellController::onKeyEvent);
