@@ -47,8 +47,13 @@ SocketLWS::Exception::Exception()
 {
 }
 
+#if defined(STARFISH_TIZEN)
+static const char* SocketLWSDefaultCertPath =
+    "/opt/share/cert-svc/ca-certificate.crt";
+#else
 static const char* SocketLWSDefaultCertPath =
     "/etc/ssl/certs/ca-certificates.crt";
+#endif
 
 #define CHECK_ALIVE() \
     if (!m_alive) {   \
