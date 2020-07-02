@@ -152,7 +152,9 @@ public:
 
 #if defined(STARFISH_DALI_TBMSURFACE)
     Dali::NativeImageSourcePtr mNativeImageSrc;
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION <= 5
     Dali::NativeImage mNativeImage;
+#endif
     tbm_surface_h mTbmSurface;
 #else
     Dali::BufferImage mBufferImage;
@@ -902,9 +904,16 @@ void DALiShellController::Create(Application& application)
         tbm_surface_create(mOutputWidth, mOutputHeight, TBM_FORMAT_ABGR8888);
     Dali::Any source(mTbmSurface);
     mNativeImageSrc = Dali::NativeImageSource::New(source);
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION <= 5
     mNativeImage = Dali::NativeImage::New(*mNativeImageSrc);
-    mNativeImageSrc->SetSource(source);
     ((Dali::Toolkit::ImageView)mImageView).SetImage(mNativeImage);
+#endif
+    mNativeImageSrc->SetSource(source);
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 6
+    std::string url = Dali::Toolkit::Image::GenerateUrl(mNativeImageSrc);
+    ((Dali::Toolkit::ImageView)mImageView).SetImage(url);
+#endif
+
 #else
     mBufferImage = Dali::BufferImage::New(mOutputWidth, mOutputHeight,
                                           Dali::Pixel::RGBA8888);

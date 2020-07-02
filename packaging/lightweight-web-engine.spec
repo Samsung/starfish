@@ -143,9 +143,15 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: pkgconfig(libpulse)
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
+%%if (0%{?tizen_version_major} >= 6)
+#BuildRequires: pkgconfig(dali2-core)
+#BuildRequires: pkgconfig(dali2-toolkit)
+#BuildRequires: pkgconfig(dali2-adaptor)
+%else
 BuildRequires: pkgconfig(dali-core)
 BuildRequires: pkgconfig(dali-toolkit)
 BuildRequires: pkgconfig(dali-adaptor)
+%endif
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-device)
 %endif
