@@ -60,8 +60,9 @@ static const char* SocketLWSDefaultCertPath =
         return;       \
     }
 
-static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
-                       void* user, void* in, size_t len)
+int SocketLWS::lwsEventCallback(struct lws* wsi,
+                                enum lws_callback_reasons reason, void* user,
+                                void* in, size_t len)
 {
     SocketLWS* socket = (SocketLWS*)user;
 
@@ -103,23 +104,27 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
             return -1;
         }
 
-        std::vector<SocketLWSData*>* buffer = socket->txData();
-        if (!buffer->empty()) {
-            auto iter = buffer->begin();
-            SocketLWSData* data = (SocketLWSData*)*iter;
-            if (data->type() == SocketLWSData::SocketLWSDataType::TEXT) {
-                lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
-                          data->size(), LWS_WRITE_TEXT);
-            } else {
-                lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
-                          data->size(), LWS_WRITE_BINARY);
+        {
+            Locker<Mutex> l(*socket->m_txMutex);
+            std::vector<SocketLWSData*>* buffer = &socket->m_txBuffer;
+            if (!buffer->empty()) {
+                auto iter = buffer->begin();
+                SocketLWSData* data = (SocketLWSData*)*iter;
+                if (data->type() == SocketLWSData::SocketLWSDataType::TEXT) {
+                    lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
+                              data->size(), LWS_WRITE_TEXT);
+                } else {
+                    lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
+                              data->size(), LWS_WRITE_BINARY);
+                }
+                socket->m_txBufferSize =
+                    (socket->m_txBufferSize - data->size());
+                iter = buffer->erase(iter);
+                delete data;
             }
-            socket->setTxBufferSize(socket->txBufferSize() - data->size());
-            iter = buffer->erase(iter);
-            delete data;
-        }
-        if (!buffer->empty()) {
-            lws_callback_on_writable(wsi);
+            if (!buffer->empty()) {
+                lws_callback_on_writable(wsi);
+            }
         }
         break;
     }
@@ -138,9 +143,9 @@ static int LWSSimpleCB(struct lws* wsi, enum lws_callback_reasons reason,
     return 0;
 }
 
-static struct lws_protocols protocols[] = {
-    { "", LWSSimpleCB, 0, 0, 0, NULL, 0 }, { NULL, NULL, 0, 0, 0, NULL, 0 }
-};
+static struct lws_protocols protocols[] = { { "", SocketLWS::lwsEventCallback,
+                                              0, 0, 0, NULL, 0 },
+                                            { NULL, NULL, 0, 0, 0, NULL, 0 } };
 
 const char* SocketLWS::Exception::what() const throw()
 {
@@ -159,11 +164,13 @@ SocketLWSData::SocketLWSData(const char* buf, size_t size,
 
 SocketLWS::SocketLWS(WebSocket* socket)
     : m_needsToClose(false)
+    , m_workerStarted(false)
     , m_alive(true)
     , m_isReady(false)
     , m_parent(socket)
     , m_lwsContext(nullptr)
     , m_lwsClient(nullptr)
+    , m_txMutex(new Mutex())
     , m_closeReasonStr(std::string())
     , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
     , m_txBufferSize(0)
@@ -223,7 +230,6 @@ SocketLWS::SocketLWS(WebSocket* socket)
     WebBase* webBase = parent()->executionContext()->webBase();
     m_thread = new AdaptedThread(webBase->threadPool());
     m_runnable = new LWSRunnable(webBase->messageLoop(), this);
-    m_thread->start(m_runnable);
     // TODO
     protocols[0].name = m_protocol.data();
 
@@ -240,6 +246,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_lwsClientConnectInfo.pwsi = &m_lwsClient;
 
     lws_client_connect_via_info(&m_lwsClientConnectInfo);
+
+    m_workerStarted = true;
+    m_thread->start(m_runnable);
 }
 SocketLWS::~SocketLWS()
 {
@@ -316,7 +325,11 @@ int SocketLWS::connect(const char* addr)
 int SocketLWS::shutdown(int howto)
 {
     m_alive = false;
-    m_thread->stop();
+    // if there was error on lws_client_connect_via_info, there is no started
+    // runner
+    if (m_workerStarted) {
+        m_thread->stop();
+    }
     return 0;
 }
 
@@ -327,9 +340,14 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
     if (flags != 0) {
         type = SocketLWSData::SocketLWSDataType::BINARY;
     }
-    SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
-    m_txBuffer.push_back(newData);
-    m_txBufferSize += len;
+
+    {
+        Locker<Mutex> l(*m_txMutex);
+        SocketLWSData* newData = new SocketLWSData((char*)buf, len, type);
+        m_txBuffer.push_back(newData);
+        m_txBufferSize += len;
+    }
+
     if (m_lwsClient) {
         parent()->executionContext()->webBase()->messageLoop()->addIdler(
             parent()->executionContext()->document()->window(),
@@ -365,6 +383,12 @@ void SocketLWS::addToRxBuffer(char* param, size_t size)
     m_rxBuffer.insert(m_rxBuffer.end(), param, param + size);
 }
 
+uint64_t SocketLWS::txBufferSize()
+{
+    Locker<Mutex> l(*m_txMutex);
+    return m_txBufferSize;
+}
+
 void SocketLWS::updateState(WebSocket::ReadyState state)
 {
     CHECK_ALIVE()
@@ -385,13 +409,17 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
     }
     case WebSocket::ReadyState::CLOSED: {
         m_isReady = false;
-        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t handle, void* data) {
-                WebSocket* socket = (WebSocket*)data;
-                socket->setReadyState(WebSocket::ReadyState::CLOSED);
-            },
-            parent());
+        // if there was error, the callback is fired by main thread
+        auto fn = [](size_t handle, void* data) {
+            WebSocket* socket = (WebSocket*)data;
+            socket->setReadyState(WebSocket::ReadyState::CLOSED);
+        };
+        if (isMainThread()) {
+            webBase->messageLoop()->addIdler(nullptr, fn, parent());
+        } else {
+            webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr, fn, parent());
+        }
         break;
     }
     default: {
@@ -423,41 +451,49 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             this);
     } break;
     case LwsEvent::ERROR: {
-        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t handle, void* data) {
-                SocketLWS* lws = (SocketLWS*)data;
-                WebSocket* socket = lws->parent();
-                String* eventName = socket->executionContext()
-                                        ->starfish()
-                                        ->staticStrings()
-                                        ->m_error.localName();
-                Event* e = new Event(socket->executionContext(), eventName);
-                socket->EventTarget::dispatchEventByUA(socket, e);
-            },
-            this);
+        // if address is wrong, the callback is fired by main thread
+        auto fn = [](size_t handle, void* data) {
+            SocketLWS* lws = (SocketLWS*)data;
+            WebSocket* socket = lws->parent();
+            String* eventName = socket->executionContext()
+                                    ->starfish()
+                                    ->staticStrings()
+                                    ->m_error.localName();
+            Event* e = new Event(socket->executionContext(), eventName);
+            socket->EventTarget::dispatchEventByUA(socket, e);
+        };
+        if (isMainThread()) {
+            webBase->messageLoop()->addIdler(nullptr, fn, this);
+        } else {
+            webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr, fn, this);
+        }
     } break;
     case LwsEvent::CLOSE: {
-        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t handle, void* data) {
-                SocketLWS* lws = (SocketLWS*)data;
-                WebSocket* socket = lws->parent();
-                String* eventName = socket->executionContext()
-                                        ->starfish()
-                                        ->staticStrings()
-                                        ->m_close.localName();
-                CloseEvent* e =
-                    new CloseEvent(socket->executionContext(), eventName);
-                if (lws->closeCode() == WebSocket::CloseCode::NormalClosure) {
-                    e->setWasClean(true);
-                }
-                e->setCode(lws->closeCode());
-                e->setReason(String::createASCIIString(
-                    lws->closeReason().c_str(), lws->closeReason().length()));
-                socket->EventTarget::dispatchEventByUA(socket, e);
-            },
-            this);
+        // if there was error, the callback is fired by main thread
+        auto fn = [](size_t handle, void* data) {
+            SocketLWS* lws = (SocketLWS*)data;
+            WebSocket* socket = lws->parent();
+            String* eventName = socket->executionContext()
+                                    ->starfish()
+                                    ->staticStrings()
+                                    ->m_close.localName();
+            CloseEvent* e =
+                new CloseEvent(socket->executionContext(), eventName);
+            if (lws->closeCode() == WebSocket::CloseCode::NormalClosure) {
+                e->setWasClean(true);
+            }
+            e->setCode(lws->closeCode());
+            e->setReason(String::createASCIIString(
+                lws->closeReason().c_str(), lws->closeReason().length()));
+            socket->EventTarget::dispatchEventByUA(socket, e);
+        };
+        if (isMainThread()) {
+            webBase->messageLoop()->addIdler(nullptr, fn, this);
+        } else {
+            webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr, fn, this);
+        }
     } break;
     case LwsEvent::ONMESSAGE: {
         if (isBinary) {

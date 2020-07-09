@@ -29,6 +29,8 @@ class IThread;
 class IRunnable;
 class WebBase;
 class LWSRunnable;
+class Mutex;
+
 class SocketLWSData {
 public:
     enum SocketLWSDataType { TEXT, BINARY };
@@ -87,16 +89,6 @@ public:
     void addToRxBuffer(char* param, size_t size);
     void updateState(WebSocket::ReadyState state);
 
-    std::vector<SocketLWSData*>* txData()
-    {
-        return &m_txBuffer;
-    }
-
-    std::vector<char>* rxData()
-    {
-        return &m_rxBuffer;
-    }
-
     WebSocket* parent()
     {
         return m_parent;
@@ -122,18 +114,15 @@ public:
         return m_closeReasonCode;
     }
 
-    void setTxBufferSize(uint64_t size)
-    {
-        m_txBufferSize = size;
-    }
+    uint64_t txBufferSize();
 
-    uint64_t txBufferSize()
-    {
-        return m_txBufferSize;
-    }
+    static int lwsEventCallback(struct lws* wsi,
+                                enum lws_callback_reasons reason, void* user,
+                                void* in, size_t len);
 
 private:
     bool m_needsToClose;
+    bool m_workerStarted;
     bool m_alive;
     bool m_isReady;
     IThread* m_thread{ nullptr };
@@ -147,6 +136,8 @@ private:
     lws_client_connect_info m_lwsClientConnectInfo;
     lws_context* m_lwsContext;
     lws* m_lwsClient;
+
+    Mutex* m_txMutex;
 
     std::vector<SocketLWSData*> m_txBuffer;
     std::vector<char> m_rxBuffer;
