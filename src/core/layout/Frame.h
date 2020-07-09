@@ -2120,6 +2120,10 @@ public:
             return false;
         }
 
+        if (this == child) {
+            return false;
+        }
+
         return (child->style()->position() != FixedPositionValue &&
                 isPositioned()) ||
                style()->hasTransforms(this);

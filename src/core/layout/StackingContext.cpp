@@ -512,9 +512,16 @@ public:
                         canScroll = status.m_child->style()->position() !=
                                     FixedPositionValue;
                     } else {
-                        insertIntoCanApplyOverflowOrScrolls(
-                            f, std::make_pair(false, canScroll && f &&
-                                                         f->isFrameBlockBox()));
+                        if (status.m_seenAbsBlock &&
+                            !status.m_seenContainingBlockForAbsBlock) {
+                            insertIntoCanApplyOverflowOrScrolls(
+                                f, std::make_pair(false, false));
+                        } else {
+                            insertIntoCanApplyOverflowOrScrolls(
+                                f, std::make_pair(false,
+                                                  canScroll && f &&
+                                                      f->isFrameBlockBox()));
+                        }
                     }
                 }
 
@@ -737,9 +744,15 @@ public:
                     canScroll = status.m_child->style()->position() !=
                                 FixedPositionValue;
                 } else {
-                    insertIntoCanApplyOverflowOrScrolls(
-                        f, std::make_pair(false, canScroll && f &&
-                                                     f->isFrameBlockBox()));
+                    if (status.m_seenAbsBlock &&
+                        !status.m_seenContainingBlockForAbsBlock) {
+                        insertIntoCanApplyOverflowOrScrolls(
+                            f, std::make_pair(false, false));
+                    } else {
+                        insertIntoCanApplyOverflowOrScrolls(
+                            f, std::make_pair(false, canScroll && f &&
+                                                         f->isFrameBlockBox()));
+                    }
                 }
 
                 if (canScroll) {
