@@ -12,7 +12,7 @@ jobs:
             - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
       - run:
           name: Set proxy enviroment
-          command: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+          command: curl -sL https://art.sec.samsung.net/artifactory/tools/CircleCI/scripts/set_proxy_setting.sh | sh
       - run:
           name: Update cmake
           command: (while sleep 3; do echo "y"; done) | /opt/android/sdk/tools/bin/sdkmanager "cmake;3.10.2.4988404" --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
@@ -61,7 +61,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
-      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run: curl -sL https://art.sec.samsung.net/artifactory/tools/CircleCI/scripts/set_proxy_setting.sh | sh
       - run:
             name: Restart network
             command: /etc/init.d/networking restart
@@ -89,7 +89,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
-      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run: curl -sL https://art.sec.samsung.net/artifactory/tools/CircleCI/scripts/set_proxy_setting.sh | sh
       - checkout
       - run:
             name : Run build script
@@ -105,7 +105,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
-      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run: curl -sL https://art.sec.samsung.net/artifactory/tools/CircleCI/scripts/set_proxy_setting.sh | sh
       - checkout
       - run:
             name : Run build script
