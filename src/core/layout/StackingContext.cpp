@@ -512,8 +512,7 @@ public:
                         canScroll = status.m_child->style()->position() !=
                                     FixedPositionValue;
                     } else {
-                        if (status.m_seenAbsBlock &&
-                            !status.m_seenContainingBlockForAbsBlock) {
+                        if (status.m_seenAbsBlock) {
                             insertIntoCanApplyOverflowOrScrolls(
                                 f, std::make_pair(false, false));
                         } else {
