@@ -299,6 +299,13 @@ CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 %endif
 %endif
 
+##############################################
+# Asan with lto leads internal compiler error
+##############################################
+%if 0%{?asan} == 1
+CFLAGS+=' -fno-lto '
+CXXFLAGS+=' -fno-lto '
+%endif
 
 ##############################################
 ## Build rules for each profile
