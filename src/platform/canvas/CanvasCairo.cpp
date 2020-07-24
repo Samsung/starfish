@@ -73,6 +73,40 @@ namespace Starfish {
 
 extern bool g_enablePixelTest;
 
+class FontFaceReferenceHolder {
+public:
+    FontFaceReferenceHolder(FontFaceImplCairo* fontFace)
+        : storage(fontFace)
+    {
+    }
+
+    bool addToCairoFontFace(cairo_font_face_t* cairofontFace)
+    {
+        static cairo_user_data_key_t g_key;
+
+        cairo_status_t status = cairo_font_face_set_user_data(
+            cairofontFace, &g_key, this,
+            (cairo_destroy_func_t)removeFontFaceReference);
+
+        return status == CAIRO_STATUS_SUCCESS;
+    }
+
+    FontFaceImplCairo* storage{ nullptr };
+    uint64_t id{ g_id++ };
+
+private:
+    // cairo_font_face_set_user_data callback;
+    static void removeFontFaceReference(void* data)
+    {
+        FontFaceReferenceHolder* holder = (FontFaceReferenceHolder*)data;
+        GC_FREE(holder);
+    }
+
+    static uint64_t g_id;
+};
+
+uint64_t FontFaceReferenceHolder::g_id = 0;
+
 class NativeGradientCairo : public NativeGradient {
 public:
     NativeGradientCairo(GradientDrawingInfo* info)
@@ -2003,19 +2037,28 @@ private:
     }
 #endif
 
-    void drawGlyphs(cairo_t* canvas, const FT_Face& ftFace,
+    void drawGlyphs(cairo_t* canvas, FontFaceImplCairo* fontFace,
                     const cairo_matrix_t& sizeMatrix,
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
                     size_t glyphCount, bool canUsePath = true)
     {
         STARFISH_ASSERT(canvas != nullptr);
         STARFISH_ASSERT(glyphs != nullptr);
+        cairo_font_face_t* cairofontFace =
+            cairo_ft_font_face_create_for_ft_face(fontFace->freetypeFace(), 0);
 
-        cairo_font_face_t* fontFace =
-            cairo_ft_font_face_create_for_ft_face(ftFace, 0);
+        FontFaceReferenceHolder* holder =
+            new (NoGC) FontFaceReferenceHolder(fontFace);
+        if (!holder->addToCairoFontFace(cairofontFace)) {
+            STARFISH_LOG_ERROR(
+                "Failed to add FontFaceHolder to cairo_font_face");
+            GC_FREE(holder);
+            cairo_font_face_destroy(cairofontFace);
+            return;
+        }
         cairo_font_options_t* fontOptions = cairo_font_options_create();
         cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
-            fontFace, &sizeMatrix, &identityMatrix, fontOptions);
+            cairofontFace, &sizeMatrix, &identityMatrix, fontOptions);
         cairo_font_options_destroy(fontOptions);
         auto oldScaledFont = cairo_get_scaled_font(canvas);
         cairo_scaled_font_reference(oldScaledFont);
@@ -2048,10 +2091,10 @@ private:
         cairo_set_scaled_font(canvas, oldScaledFont);
         cairo_scaled_font_destroy(oldScaledFont);
         cairo_scaled_font_destroy(scaledFontFace);
-        cairo_font_face_destroy(fontFace);
+        cairo_font_face_destroy(cairofontFace);
     }
 
-    void drawStrokeGlyphs(cairo_t* canvas, const FT_Face& ftFace,
+    void drawStrokeGlyphs(cairo_t* canvas, FontFaceImplCairo* fontFace,
                           const cairo_matrix_t& sizeMatrix,
                           const cairo_matrix_t& identityMatrix,
                           cairo_glyph_t* glyphs, size_t glyphCount,
@@ -2060,11 +2103,22 @@ private:
         STARFISH_ASSERT(canvas != nullptr);
         STARFISH_ASSERT(glyphs != nullptr);
 
-        cairo_font_face_t* fontFace =
-            cairo_ft_font_face_create_for_ft_face(ftFace, 0);
+        cairo_font_face_t* cairofontFace =
+            cairo_ft_font_face_create_for_ft_face(fontFace->freetypeFace(), 0);
+
+        FontFaceReferenceHolder* holder =
+            new (NoGC) FontFaceReferenceHolder(fontFace);
+        if (!holder->addToCairoFontFace(cairofontFace)) {
+            STARFISH_LOG_ERROR(
+                "Failed to add FontFaceHolder to cairo_font_face");
+            GC_FREE(holder);
+            cairo_font_face_destroy(cairofontFace);
+            return;
+        }
+
         cairo_font_options_t* fontOptions = cairo_font_options_create();
         cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
-            fontFace, &sizeMatrix, &identityMatrix, fontOptions);
+            cairofontFace, &sizeMatrix, &identityMatrix, fontOptions);
         cairo_font_options_destroy(fontOptions);
         auto oldScaledFont = cairo_get_scaled_font(canvas);
         cairo_set_line_width(canvas, strokeWidth);
@@ -2075,7 +2129,7 @@ private:
         cairo_set_scaled_font(canvas, oldScaledFont);
         cairo_scaled_font_destroy(oldScaledFont);
         cairo_scaled_font_destroy(scaledFontFace);
-        cairo_font_face_destroy(fontFace);
+        cairo_font_face_destroy(cairofontFace);
     }
 
     void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
@@ -2086,7 +2140,7 @@ private:
 
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
-        FT_Face lastFontFace = nullptr;
+        FontFaceImplCairo* lastFontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState()->m_font;
         int size = f->size();
         auto stringAccessData = sv.bufferAccessData();
@@ -2132,7 +2186,7 @@ private:
                             continue;
                         }
                     }
-                    if (lastFontFace != g.first.first->freetypeFace()) {
+                    if (lastFontFace != g.first.first) {
                         if (glyphCount != 0) {
                             if (isStroke == true) {
                                 drawStrokeGlyphs(canvas, lastFontFace,
@@ -2145,7 +2199,7 @@ private:
                             }
                             glyphCount = 0;
                         }
-                        lastFontFace = g.first.first->freetypeFace();
+                        lastFontFace = g.first.first;
                     }
                     glyphs[glyphCount].index = g.second.first;
                     glyphs[glyphCount].x = xBias + letterSpacingValueSoFar;
@@ -2195,7 +2249,7 @@ private:
                 const FontCairoTextRun& run = runs[i];
 
                 LayoutUnit letterSpacingValueSoFar;
-                if (run.m_ftFace == nullptr) {
+                if (run.m_fontFace == nullptr) {
                     if (/* skip webfont enabled*/ f
                                 ->seenUnresolvedWebFontIndex() != SIZE_MAX &&
                         shouldSkipUnresolvedWebFont) {
@@ -2219,7 +2273,7 @@ private:
                         f->seenUnresolvedWebFontIndex() <= run.m_faceIndex &&
                         shouldSkipUnresolvedWebFont) {
                     } else {
-                        if (run.m_ftFace != lastFontFace ||
+                        if (run.m_fontFace != lastFontFace ||
                             lastUnicodeBlock != run.m_unicodeBlock) {
                             if (glyphCount != 0) {
                                 if (isStroke == true) {
@@ -2236,7 +2290,7 @@ private:
                                 }
                                 glyphCount = 0;
                             }
-                            lastFontFace = run.m_ftFace;
+                            lastFontFace = run.m_fontFace;
                             lastUnicodeBlock = run.m_unicodeBlock;
                         }
 
@@ -2480,6 +2534,6 @@ NativeImageData* NativeImageData::attach(Canvas* canvas)
 {
     return new CanvasAttachableNativeImageCairo(castTo<CanvasCairo*>(canvas));
 }
-}
+} // namespace Starfish
 
 #endif
