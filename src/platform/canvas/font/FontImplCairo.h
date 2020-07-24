@@ -49,10 +49,6 @@ extern FT_Library g_freeTypeInstance;
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE(); \
     }
 
-extern std::unordered_map<UTF8StringDataNonGCStd,
-                          std::pair<FT_Face, hb_font_t*>>
-    g_systemFontPathToFace;
-
 class FontSelectorImplCairo : public FontSelector {
 public:
     FontSelectorImplCairo(Document* document,
@@ -109,10 +105,11 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
+                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]",
+                                  m, m->m_dataBuffer);
+                hb_font_destroy(m->m_hbFace);
+                FT_Done_Face(m->m_face);
                 if (m->m_dataBuffer) {
-                    // only web font should be deleted
-                    hb_font_destroy(m->m_hbFace);
-                    FT_Done_Face(m->m_face);
                     delete[] m->m_dataBuffer;
                 }
                 GlyphIndexCache().swap(m->m_glyphIndexCache);
@@ -267,8 +264,7 @@ class FontCairoTextRun {
 public:
     StringView m_text;
     size_t m_faceIndex;
-    FT_Face m_ftFace;
-    hb_font_t* m_hbFont;
+    FontFaceImplCairo* m_fontFace;
     hb_script_t m_script;
     int m_unicodeBlock;
     std::vector<unsigned> m_glyphs;
@@ -447,23 +443,14 @@ public:
 
         FT_Face face;
         hb_font_t* hbFace;
-        auto siter = g_systemFontPathToFace.find(path);
-        if (siter == g_systemFontPathToFace.end()) {
-            FT_Error error;
-            error =
-                FT_New_Face(g_freeTypeInstance, (char*)path.data(), 0, &face);
-            CHECK_ERROR;
-            FT_Set_Pixel_Sizes(face, 0, 16);
-            hbFace = hb_ft_font_create(face, [](void* userData) {});
-            g_systemFontPathToFace.insert(
-                std::make_pair(path, std::make_pair(face, hbFace)));
 
-            STARFISH_LOG_ERROR("load system font %s %p %p\n", path.data(), face,
-                               hbFace);
-        } else {
-            face = siter->second.first;
-            hbFace = siter->second.second;
-        }
+        FT_Error error;
+        error = FT_New_Face(g_freeTypeInstance, (char*)path.data(), 0, &face);
+        CHECK_ERROR;
+        FT_Set_Pixel_Sizes(face, 0, 16);
+        hbFace = hb_ft_font_create(face, [](void* userData) {});
+        STARFISH_LOG_ERROR("load system font %s %p %p\n", path.data(), face,
+                           hbFace);
 
         auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);
         m_fontPathToFace.insert(std::make_pair(path, impl));

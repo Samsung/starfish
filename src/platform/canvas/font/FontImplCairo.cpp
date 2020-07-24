@@ -40,8 +40,6 @@
 
 namespace Starfish {
 
-std::unordered_map<UTF8StringDataNonGCStd, std::pair<FT_Face, hb_font_t*>>
-    g_systemFontPathToFace;
 FT_Library g_freeTypeInstance;
 
 PlatformFontSelector* PlatformFontSelector::create(WebView* webView)
@@ -249,8 +247,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         size_t pos = 0;
         size_t faceIndex = SIZE_MAX;
         int lastUnicodeBlock = 0;
-        FT_Face lastFace = nullptr;
-        hb_font_t* hbFace = nullptr;
+        FontFaceImplCairo* lastFace = nullptr;
         UScriptCode lastUnicodeScript = USCRIPT_COMMON;
         bool failedToFindFont = false;
         while (i + pos < length) {
@@ -277,13 +274,11 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
             faceIndex = glyphData.first.second;
 
             if (pos == 0) {
-                lastFace = glyphData.first.first->freetypeFace();
-                hbFace = glyphData.first.first->harfbuzzFace();
+                lastFace = glyphData.first.first;
                 lastUnicodeScript = unicodeScript;
                 lastUnicodeBlock = unicodeBlock;
             } else {
-                if (failedToFindFont ||
-                    lastFace != glyphData.first.first->freetypeFace() ||
+                if (failedToFindFont || lastFace != glyphData.first.first ||
                     lastUnicodeBlock != unicodeBlock ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
@@ -305,8 +300,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         FontCairoTextRun run;
         run.m_script = hb_icu_script_to_script(lastUnicodeScript);
         run.m_faceIndex = faceIndex;
-        run.m_ftFace = lastFace;
-        run.m_hbFont = hbFace;
+        run.m_fontFace = lastFace;
         run.m_unicodeBlock = lastUnicodeBlock;
         run.m_text = StringView((String*)text, startPos, endPos);
         result.push_back(run);
@@ -342,10 +336,11 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
         hb_buffer_guess_segment_properties(hbBuffer);
         hb_buffer_set_flags(hbBuffer, HB_BUFFER_FLAG_DEFAULT);
 
-        if (run.m_ftFace) {
-            bool hasKerning = FT_HAS_KERNING(run.m_ftFace);
-            int ftSize = run.m_ftFace->size->metrics.y_ppem;
-            hb_font_t* hbfont = run.m_hbFont;
+        if (run.m_fontFace) {
+            FT_Face ftFontFace = run.m_fontFace->freetypeFace();
+            bool hasKerning = FT_HAS_KERNING(ftFontFace);
+            int ftSize = ftFontFace->size->metrics.y_ppem;
+            hb_font_t* hbfont = run.m_fontFace->harfbuzzFace();
 
             hb_shape_full(hbfont, hbBuffer, &hbFeature, 1, NULL);
 
@@ -377,12 +372,12 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                         STARFISH_FONT_CAIRO_MIN_ENABLE_KERNING_SIZE &&
                     k > 0) {
                     FT_Vector kerning;
-                    FT_Get_Kerning(run.m_ftFace, lastGlyph, glyph,
+                    FT_Get_Kerning(ftFontFace, lastGlyph, glyph,
                                    FT_KERNING_UNSCALED, &kerning);
                     LayoutUnit kerningAdvance =
                         LayoutUnit((int)(kerning.x * intSize)) /
                         LayoutUnit((int)(FontFaceImplCairo::unitsPerEMFromFT(
-                            run.m_ftFace)));
+                            ftFontFace)));
                     totalAdvance += kerningAdvance;
                 }
 
@@ -390,13 +385,13 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 run.m_glyphPositions.push_back(
                     LayoutLocation(xOffset + totalAdvance, yOffset));
 
-                FT_Load_Glyph(run.m_ftFace, glyph, FT_LOAD_NO_SCALE);
+                FT_Load_Glyph(ftFontFace, glyph, FT_LOAD_NO_SCALE);
 
                 LayoutUnit width =
-                    LayoutUnit((int)(run.m_ftFace->glyph->metrics.horiAdvance *
+                    LayoutUnit((int)(ftFontFace->glyph->metrics.horiAdvance *
                                      intSize)) /
-                    LayoutUnit((int)(FontFaceImplCairo::unitsPerEMFromFT(
-                        run.m_ftFace)));
+                    LayoutUnit(
+                        (int)(FontFaceImplCairo::unitsPerEMFromFT(ftFontFace)));
                 totalAdvance += width;
 
                 lastGlyph = glyph;
