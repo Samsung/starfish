@@ -1394,7 +1394,7 @@ void Document::processBaseElement()
     Element* baseElement = nextBaseElement(this, this);
     String* href = nullptr;
     String* target = nullptr;
-    while (baseElement && (!href || target->isEmpty())) {
+    while (baseElement && (!href || (target && target->isEmpty()))) {
         if (!href &&
             baseElement->hasAttribute(starfish()->staticStrings()->m_href) !=
                 SIZE_MAX) {
