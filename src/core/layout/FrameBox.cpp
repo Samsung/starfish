@@ -4051,10 +4051,17 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     FrameBox* turnOffScrollUntilMeet = nullptr;
     FrameBox* graphicsLayerHolder = nullptr;
 
+    FrameBox* nearestAbsolutePositionedBox = nullptr;
+    FrameBox* ancestorPositionedBox = nullptr;
+    bool isSelfAbsolutePositionedBox =
+        self->style()->position() == AbsolutePositionValue;
+    if (isSelfAbsolutePositionedBox) {
+        nearestAbsolutePositionedBox = self;
+    }
+
     VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>> frameList;
 
     Frame* f = self;
-
     if (forWhat == ComputeMatrixFor::GraphicsLayerOnGraphicsLayer) {
         forWhat = GraphicsLayer;
         frameList.push_back(f->asFrameBox());
@@ -4073,6 +4080,16 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             if (!seenFixedPositionedLayer) {
                 seenFixedPositionedLayer = true;
                 turnOffScrollUntilMeet = f->asFrameBox();
+            }
+        }
+
+        if (self != f) {
+            if (!nearestAbsolutePositionedBox && f->isAbsolutePositioned()) {
+                nearestAbsolutePositionedBox = f->asFrameBox();
+            } else if (nearestAbsolutePositionedBox && !ancestorPositionedBox) {
+                if (f->isPositioned() || f->isFrameDocument()) {
+                    ancestorPositionedBox = f->asFrameBox();
+                }
             }
         }
 
@@ -4123,6 +4140,36 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
 
             lastParentBox = fBox;
             iter++;
+        }
+    } else if (nearestAbsolutePositionedBox && ancestorPositionedBox) {
+        FrameBox* top = *frameList.rbegin();
+        if (top->isFrameBlockBox()) {
+            m.preTranslate(top->asFrameBlockBox()->scrollLeft(),
+                           top->asFrameBlockBox()->scrollTop());
+        }
+
+        FrameBox* lastParentBox = top;
+        if (forWhat == ComputeMatrixFor::GraphicsLayer && graphicsLayerHolder) {
+            lastParentBox = graphicsLayerHolder;
+        }
+
+        bool canScroll = true;
+        for (auto itr = frameList.rbegin(); itr != frameList.rend(); ++itr) {
+            FrameBox* fBox = *itr;
+            LayoutLocation pos;
+            if (canScroll) {
+                pos = fBox->absolutePointIncludingScroll(lastParentBox);
+                if (fBox == ancestorPositionedBox) {
+                    canScroll = false;
+                }
+            } else {
+                pos = fBox->absolutePoint(lastParentBox);
+            }
+            m.preTranslate((float)pos.x(), (float)pos.y());
+
+            applyTransformIfNeeded(fBox, m, inRendering);
+
+            lastParentBox = fBox;
         }
     } else {
         auto iter = frameList.rbegin();
