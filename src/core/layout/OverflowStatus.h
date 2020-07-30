@@ -31,7 +31,7 @@ struct OverflowStatus {
     Frame* m_child;
     FrameBox* m_absChild;
     bool m_seenContainingBlockForAbsBlock;
-    bool m_seenAbsBlock;
+    bool m_seenAbsBlock; // FIXME: dup with m_absChild
     bool m_seenFixedBlock;
     OverflowStatus(Frame* child)
     {
@@ -57,6 +57,7 @@ struct OverflowStatus {
         if (!m_seenAbsBlock && parent->isAbsolutePositioned()) {
             m_seenAbsBlock = true;
             m_absChild = parent->asFrameBox();
+            return parent->shouldApplyOverflow();
         }
 
         if (m_seenAbsBlock) {
