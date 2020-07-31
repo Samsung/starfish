@@ -23,7 +23,7 @@ import sys
 from argparse import ArgumentParser
 from difflib import unified_diff
 from os.path import join, relpath, splitext
-
+from distutils import spawn
 
 TERM_RED = '\033[1;31m'
 TERM_GREEN = '\033[1;32m'
@@ -62,7 +62,16 @@ def is_checked_by_clang(file):
     return ext in clang_format_exts and file not in skip_files
 
 
-def check_tidy(src_dir, update, clang_format, stats):
+def check_tidy(src_dir, update, base, stats):
+    clang_format = spawn.find_executable(base)
+    if not clang_format:
+        clang_format = spawn.find_executable("clang-format-3.9")
+        if clang_format:
+            print("Using %s instead of %s" % (clang_format, base))
+        else:
+            print("No %s found, skipping checks!" % base)
+
+
     print('%sprocessing directory: %s%s' % (TERM_PURPLE, src_dir, TERM_EMPTY))
 
     for dirpath, _, filenames in os.walk(src_dir):

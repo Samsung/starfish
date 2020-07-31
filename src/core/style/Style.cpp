@@ -10822,9 +10822,13 @@ bool CSSStyleValuePair::updateValueWidth(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
+    uint8_t options =
+        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowAuto;
+    if (document->inQuirksMode()) {
+        options |= CSSPropertyParser::AllowWithoutUnit;
+    }
     return updateValueWidthHeightKeyword(tokens) ||
-           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
-                                         CSSPropertyParser::AllowAuto);
+           updateValueLength(tokens, options);
 }
 
 bool CSSStyleValuePair::updateValueMaxWidth(Document* document,
@@ -10852,9 +10856,13 @@ bool CSSStyleValuePair::updateValueHeight(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
+    uint8_t options =
+        CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowAuto;
+    if (document->inQuirksMode()) {
+        options |= CSSPropertyParser::AllowWithoutUnit;
+    }
     return updateValueWidthHeightKeyword(tokens) ||
-           updateValueLength(tokens, CSSPropertyParser::AllowPercent |
-                                         CSSPropertyParser::AllowAuto);
+           updateValueLength(tokens, options);
 }
 
 bool CSSStyleValuePair::updateValueMaxHeight(Document* document,

@@ -255,7 +255,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         }
     }
 
-    if (readyState != m_readyState) {
+    if (readyState != m_readyState || readyState == ReadyState::Loading) {
         m_readyState = readyState;
         for (size_t i = 0; i < m_clients.size(); i++) {
             m_clients[i]->onReadyStateChange(this, isExplicitAction);
