@@ -130,7 +130,8 @@ public:
                 if (checkContentSecurityPolicy(request) == false) {
                     request->requestAbortOnRequestClient();
                 }
-            } else if (request->readyState() == ReadyState::Done) {
+            } else if (request->readyState() == ReadyState::Loading ||
+                       request->readyState() == ReadyState::Done) {
                 if (!request->isError()) {
                     auto mimeType =
                         MimeType::parseFromString(request->responseMimeType());
@@ -177,8 +178,11 @@ public:
                         if (!m_xhr->m_responseXML->isXMLDocument()) {
                             m_xhr->m_responseXML = nullptr;
                         }
-                        m_xhr->m_resourceRequest->response().clear();
-                        m_xhr->m_resourceRequest->response().shrink_to_fit();
+                        if (request->readyState() == ReadyState::Done) {
+                            m_xhr->m_resourceRequest->response().clear();
+                            m_xhr->m_resourceRequest->response()
+                                .shrink_to_fit();
+                        }
                     } else if (m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Empty ||
                                m_xhr->m_responseType ==
@@ -190,7 +194,11 @@ public:
                         m_xhr->m_responseText = textConverter.convert(
                             m_xhr->m_resourceRequest->response().data(),
                             m_xhr->m_resourceRequest->response().size(), true);
-                        m_xhr->m_resourceRequest->response().clear();
+                        if (request->readyState() == ReadyState::Done) {
+                            m_xhr->m_resourceRequest->response().clear();
+                            m_xhr->m_resourceRequest->response()
+                                .shrink_to_fit();
+                        }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Json) {
                         TextConverter cvt(
@@ -214,8 +222,11 @@ public:
                             m_xhr->executionContext(),
                             m_xhr->m_resourceRequest->response().size(),
                             mimeString, buffer, false, false);
-                        m_xhr->m_resourceRequest->response().clear();
-                        m_xhr->m_resourceRequest->response().shrink_to_fit();
+                        if (request->readyState() == ReadyState::Done) {
+                            m_xhr->m_resourceRequest->response().clear();
+                            m_xhr->m_resourceRequest->response()
+                                .shrink_to_fit();
+                        }
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::ArrayBuffer) {
                         void* buffer =
@@ -229,8 +240,11 @@ public:
                             m_xhr->m_resourceRequest->response().size());
                         m_xhr->m_responseArrayBuffer =
                             createScriptValue(scriptArrayBuffer);
-                        m_xhr->m_resourceRequest->response().clear();
-                        m_xhr->m_resourceRequest->response().shrink_to_fit();
+                        if (request->readyState() == ReadyState::Done) {
+                            m_xhr->m_resourceRequest->response().clear();
+                            m_xhr->m_resourceRequest->response()
+                                .shrink_to_fit();
+                        }
                     } else {
                         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }

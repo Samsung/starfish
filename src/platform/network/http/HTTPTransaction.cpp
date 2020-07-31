@@ -81,6 +81,7 @@ void HTTPTransaction::preprocess(bool useNewHandle)
     }
 #endif
 
+    curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     if (m_timeout) {
         curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
