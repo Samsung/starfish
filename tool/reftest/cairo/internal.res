@@ -402,6 +402,7 @@ test/cairo/internal-test/css/overflow/scroll-test-7.html
 test/cairo/internal-test/css/overflow/scroll-test-8.html
 test/cairo/internal-test/css/overflow/scroll-test-9-issue578.html
 test/cairo/internal-test/css/overflow/scroll-test-10-issue585.html
+test/cairo/internal-test/css/overflow/scroll-test-11-issue578.html
 test/cairo/internal-test/css/overflow/overflowhittest.html
 test/cairo/internal-test/css/overflow/fixed-positioned-parent-box-and-fixed-positioned-child-box.html
 test/cairo/internal-test/css/overflow/fixed-positioned-parent-box-and-transform-child-box.html
