@@ -91,6 +91,25 @@ struct OverflowStatus {
         return parent->shouldApplyOverflow();
     }
 
+    static bool isScrollableFrame(Frame* f)
+    {
+        bool isScrollable = f->style()->position() != FixedPositionValue;
+        if (!isScrollable) {
+            return false;
+        }
+        if (f->isInlineLevel()) {
+            return false;
+        }
+
+        OverflowStatus status(f);
+        status.canApplyOverflow(f->parent());
+        if (status.m_seenAbsBlock && !status.m_seenContainingBlockForAbsBlock) {
+            isScrollable = false;
+        }
+
+        return isScrollable;
+    }
+
     void reset(Frame* f)
     {
         m_child = f;

@@ -488,8 +488,7 @@ public:
         {
             Frame* f = self;
             OverflowStatus status(f);
-            bool canScroll =
-                status.m_child->style()->position() != FixedPositionValue;
+            bool canScroll = OverflowStatus::isScrollableFrame(f);
 
             while (f) {
                 frameList.push_back(f->asFrameBox());
@@ -711,9 +710,6 @@ public:
         : m_compositor(compositor)
         , m_opacity(1)
     {
-        // TODO CanvasStateRestorer, CompositorStateRestorer,
-        // Frame::ComputeVisibleRectContext::uniteRect have same source
-
         compositor->save();
 
         if (!owner) {
@@ -721,6 +717,9 @@ public:
         }
 
         FrameBox* self = sCtx->owner();
+        // TODO CanvasStateRestorer, CompositorStateRestorer,
+        // Frame::ComputeVisibleRectContext::uniteRect have same source
+
         VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
             frameList;
 
@@ -728,9 +727,9 @@ public:
 
         {
             Frame* f = self;
+
             OverflowStatus status(f);
-            bool canScroll =
-                status.m_child->style()->position() != FixedPositionValue;
+            bool canScroll = OverflowStatus::isScrollableFrame(f);
 
             while (f) {
                 frameList.push_back(f->asFrameBox());
