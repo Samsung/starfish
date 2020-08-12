@@ -300,13 +300,21 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
 
     if (ctx.frameDocument()->node()->asDocument()->inQuirksMode()) {
         if (node() && node()->isHTMLBodyElement() && height.isAuto()) {
-            parentHeight = ctx.frameDocument()
-                               ->node()
-                               ->asDocument()
-                               ->window()
-                               ->innerHeight();
-            contentHeight = parentHeight - paddingHeight() - borderHeight() -
-                            marginHeight();
+            LayoutUnit contentHeightForQuirks = ctx.frameDocument()
+                                                   ->node()
+                                                   ->asDocument()
+                                                   ->window()
+                                                   ->innerHeight() -
+                                               paddingHeight() -
+                                               borderHeight() - marginHeight();
+            if (contentHeightForQuirks > contentHeight) {
+                parentHeight = ctx.frameDocument()
+                                   ->node()
+                                   ->asDocument()
+                                   ->window()
+                                   ->innerHeight();
+                contentHeight = contentHeightForQuirks;
+            }
         }
         if (!parentHasFixedHeight && height.isPercent()) {
             parentHasFixedHeight = true;
