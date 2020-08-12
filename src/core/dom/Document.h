@@ -108,10 +108,14 @@ public:
     enum CompatibilityMode ENSURE_ENUM_UNSIGNED {
         QuirksMode,
         LimitedQuirksMode,
-        NoQuirksMode
+        NoQuirksMode,
+        NoQuirksModeForce
     };
     void setCompatibilityMode(CompatibilityMode m)
     {
+        if (m_compatibilityMode == NoQuirksModeForce && m < NoQuirksMode) {
+            return;
+        }
         m_compatibilityMode = m;
     }
 
@@ -121,6 +125,9 @@ public:
 
     CompatibilityMode compatibilityMode() const
     {
+        if (m_compatibilityMode == NoQuirksModeForce) {
+            return NoQuirksMode;
+        }
         return m_compatibilityMode;
     }
     bool inQuirksMode() const
@@ -133,7 +140,8 @@ public:
     }
     bool inNoQuirksMode() const
     {
-        return m_compatibilityMode == NoQuirksMode;
+        return m_compatibilityMode == NoQuirksMode ||
+               m_compatibilityMode == NoQuirksModeForce;
     }
     bool doesParticipateInRendering()
     {

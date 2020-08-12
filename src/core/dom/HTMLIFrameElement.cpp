@@ -171,6 +171,10 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
             if (value->length() && document()->doesParticipateInRendering()) {
                 loadSrcDoc();
             }
+            if (m_browsingContext && m_browsingContext->document()) {
+                m_browsingContext->document()->setCompatibilityMode(
+                    Document::CompatibilityMode::NoQuirksModeForce);
+            }
         }
     }
 }
