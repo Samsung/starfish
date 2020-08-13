@@ -15,6 +15,7 @@ P /.circleci
 - /third_party/escargot/build/windows
 - /third_party/escargot/third_party/windows
 - /third_party/escargot/third_party/GCutil/windows
+- /third_party/escargot/third_party/googletest
 - /third_party/escargot/test
 - /third_party/escargot/tools
 + /third_party/libwebsockets
