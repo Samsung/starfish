@@ -1136,50 +1136,48 @@ void StackingContext::computeStackingContextProperties(
         if (canConveredByParentCompositedLayer) {
             auto& cv = compositingState.compositedLayers;
             for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
-                if (cv[i]->owner()->document() == owner()->document()) {
-                    auto extent =
-                        compositingState.clippedScreenExtentPerLayer(cv[i]);
-                    if (extent.intersects(selfExtent)) {
-                        isCollapsedWithSilbingLayer = true;
-                        reason = NeedsGraphicsLayerReason::
-                            NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
-                        break;
+                auto extent =
+                    compositingState.clippedScreenExtentPerLayer(cv[i]);
+                if (extent.intersects(selfExtent)) {
+                    isCollapsedWithSilbingLayer = true;
+                    reason = NeedsGraphicsLayerReason::
+                        NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
+                    break;
+                }
+
+                if (cv[i]->owner()->isRunningTransformAnimation()) {
+                    // find never collapsed case by overflow: hidden;
+                    Frame* f = cv[i]->owner();
+                    bool foundOverflow = false;
+                    LayoutRect clippedExtentRect;
+                    while (f != nullptr) {
+                        if (f->isAncestorOf(owner())) {
+                            break;
+                        }
+                        if (f->shouldApplyOverflow()) {
+                            foundOverflow = true;
+                            clippedExtentRect =
+                                compositingState
+                                    .clippedScreenExtentPerLayer(cv[i]);
+                            break;
+                        }
+                        f = f->layoutParent();
                     }
 
-                    if (cv[i]->owner()->isRunningTransformAnimation()) {
-                        // find never collapsed case by overflow: hidden;
-                        Frame* f = cv[i]->owner();
-                        bool foundOverflow = false;
-                        LayoutRect clippedExtentRect;
-                        while (f != nullptr) {
-                            if (f->isAncestorOf(owner())) {
-                                break;
-                            }
-                            if (f->shouldApplyOverflow()) {
-                                foundOverflow = true;
-                                clippedExtentRect =
-                                    compositingState
-                                        .clippedScreenExtentPerLayer(cv[i]);
-                                break;
-                            }
-                            f = f->layoutParent();
-                        }
-
-                        if (foundOverflow) {
-                            if (clippedExtentRect.intersects(selfExtent)) {
-                                isCollapsedWithSilbingLayer = true;
-                                reason = NeedsGraphicsLayerReason::
-                                    NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
-                            }
-                        } else {
+                    if (foundOverflow) {
+                        if (clippedExtentRect.intersects(selfExtent)) {
                             isCollapsedWithSilbingLayer = true;
                             reason = NeedsGraphicsLayerReason::
                                 NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
                         }
+                    } else {
+                        isCollapsedWithSilbingLayer = true;
+                        reason = NeedsGraphicsLayerReason::
+                            NeedsGraphicsLayerReasonSiblingLayerNeedsAnimation;
+                    }
 
-                        if (isCollapsedWithSilbingLayer) {
-                            break;
-                        }
+                    if (isCollapsedWithSilbingLayer) {
+                        break;
                     }
                 }
             }
