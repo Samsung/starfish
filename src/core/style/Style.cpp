@@ -7774,21 +7774,25 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
         }
 
         // add 0% and 100% KEYFRAMEs if absent.
-        AnimationKeyframe* start = new AnimationKeyframe();
-        start->setTimingFunction(timing);
-        if (keyframeList.empty() == true) {
-            keyframeList.push_back(start);
+        AnimationKeyframe* defaultKeyframe = new AnimationKeyframe();
+        defaultKeyframe->setTimingFunction(timing);
+        for (auto keyKind : keyframeList.front()->keyKinds()) {
+            defaultKeyframe->setProperty(keyKind, CSSStyleValuePair());
+        }
+
+        if (keyframeList.empty()) {
+            AnimationKeyframe* emptyKeyframe = new AnimationKeyframe();
+            emptyKeyframe->setTimingFunction(timing);
+            keyframeList.push_back(emptyKeyframe);
         } else if (keyframeList.front()->keyframeName() != 0.0) {
-            for (auto keyKind : keyframeList.front()->keyKinds()) {
-                start->setProperty(keyKind, CSSStyleValuePair());
-            }
+            AnimationKeyframe* start =
+                new AnimationKeyframe(*defaultKeyframe, true);
             keyframeList.insert(keyframeList.begin(), start);
         }
+
         if (keyframeList.back()->keyframeName() != 1.0) {
-            AnimationKeyframe* end =
-                new AnimationKeyframe(*keyframeList.back(), true);
+            AnimationKeyframe* end = defaultKeyframe;
             end->setKeyframeName(1.0);
-            end->setTimingFunction(timing);
             keyframeList.push_back(end);
         }
 
