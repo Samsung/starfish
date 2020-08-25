@@ -97,14 +97,14 @@ struct OverflowStatus {
         if (!isScrollable) {
             return false;
         }
-        if (f->isInlineLevel()) {
-            return false;
-        }
 
-        OverflowStatus status(f);
-        status.canApplyOverflow(f->parent());
-        if (status.m_seenAbsBlock && !status.m_seenContainingBlockForAbsBlock) {
-            isScrollable = false;
+        if (!f->isInlineLevel()) {
+            OverflowStatus status(f);
+            status.canApplyOverflow(f->parent());
+            if (status.m_seenAbsBlock &&
+                !status.m_seenContainingBlockForAbsBlock) {
+                isScrollable = false;
+            }
         }
 
         return isScrollable;
