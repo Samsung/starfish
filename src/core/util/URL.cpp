@@ -23,6 +23,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/util/URL.h"
+#include "core/util/URLSearchParams.h"
 #include "core/page/WebBase.h"
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
@@ -190,9 +191,12 @@ String* URL::search()
     return m_resourceURL->search();
 }
 
-void URL::setSearch(String* newSearch)
+void URL::setSearch(String* newSearch, bool needsToUpdateSearchParams)
 {
     m_resourceURL = m_resourceURL->setSearch(newSearch);
+    if (needsToUpdateSearchParams && m_searchParams) {
+        m_searchParams->parse(newSearch);
+    }
 }
 
 String* URL::hash()
@@ -203,5 +207,14 @@ String* URL::hash()
 void URL::setHash(String* newHash)
 {
     m_resourceURL = m_resourceURL->setHash(newHash);
+}
+
+URLSearchParams* URL::searchParams()
+{
+    if (!m_searchParams) {
+        m_searchParams = new URLSearchParams(m_executionContext, this);
+    }
+
+    return m_searchParams.value();
 }
 }

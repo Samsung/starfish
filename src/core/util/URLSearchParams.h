@@ -25,6 +25,8 @@
 
 namespace Starfish {
 
+class URL;
+
 struct URLParam : public gc {
     URLParam()
     {
@@ -47,9 +49,12 @@ struct URLParam : public gc {
 };
 
 class URLSearchParams : public ScriptWrappable {
+    friend URL;
+
 public:
     URLSearchParams(ExecutionContext* executionContext,
                     String* init = String::emptyString);
+    URLSearchParams(ExecutionContext* executionContext, URL* sourceURL);
     URLSearchParams(ExecutionContext* executionContext,
                     GCVector<GCVector<String*>> init);
 
@@ -71,11 +76,11 @@ public:
         ExecutionStateRef* state);
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
-    ResourceURL* m_resourceUrl{ nullptr };
-    GCVector<URLParam*> m_list;
-
     void parse(String* str);
+    void updateSourceUrlIfNeeds();
+    ExecutionContext* m_executionContext{ nullptr };
+    Nullable<URL*> m_sourceUrl;
+    GCVector<URLParam*> m_list;
 };
 } // namespace Starfish
 

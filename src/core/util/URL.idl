@@ -15,7 +15,7 @@ interface URL {
   attribute DOMString port;
   attribute DOMString pathname;
   attribute DOMString search;
-  [Unimplemented, SameObject] readonly attribute URLSearchParams searchParams;
+  [SameObject] readonly attribute URLSearchParams searchParams;
   attribute DOMString hash;
   [Unimplemented] DOMString toJSON();
 

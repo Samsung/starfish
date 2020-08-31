@@ -26,6 +26,7 @@ namespace Starfish {
 
 class Blob;
 class MediaSource;
+class URLSearchParams;
 
 class URL : public ScriptWrappable {
 public:
@@ -59,13 +60,16 @@ public:
     String* pathname();
     void setPathname(String* newPath, bool needRemovingDots = true);
     String* search();
-    void setSearch(String* newSearch);
+    void setSearch(String* newSearch, bool needsToUpdateSearchParams = true);
     String* hash();
     void setHash(String* newHash);
+
+    URLSearchParams* searchParams();
 
 protected:
     ExecutionContext* m_executionContext;
     ResourceURL* m_resourceURL;
+    Nullable<URLSearchParams*> m_searchParams;
 };
 }
 
