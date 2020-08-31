@@ -48,7 +48,7 @@ public:
     };
 
     static String* createPercentEncodingString(String* src, bool forForm);
-    static String* createPercentDecodingString(String* src);
+    static String* createPercentDecodingString(String* src, bool fromForm);
 
     ResourceURL(const char* url, size_t len)
         : ResourceURL(String::fromUTF8(url, len))

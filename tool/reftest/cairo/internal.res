@@ -417,3 +417,4 @@ test/cairo/internal-test/css/pseudo/pseudo-before-display-changing.html
 test/cairo/internal-test/compatibility/quirks-height-percent.html
 test/cairo/internal-test/compatibility/quirks-empty-body.html
 test/cairo/internal-test/window/execution-order.html
+test/cairo/internal-test/url/URLsearchParams.html

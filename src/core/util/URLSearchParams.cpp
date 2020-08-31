@@ -86,12 +86,15 @@ void URLSearchParams::parse(String* str)
     for (auto pair : pairs) {
         std::vector<std::string> keyAndValue = StringUtils::split(pair, '=');
         String* key = ResourceURL::createPercentDecodingString(
-            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()));
+            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()),
+            true);
         URLParam* param;
         if (keyAndValue.size() == 2) {
-            param = new URLParam(
-                key, ResourceURL::createPercentDecodingString(String::fromUTF8(
-                         keyAndValue[1].data(), keyAndValue[1].length())));
+            param =
+                new URLParam(key, ResourceURL::createPercentDecodingString(
+                                      String::fromUTF8(keyAndValue[1].data(),
+                                                       keyAndValue[1].length()),
+                                      true));
         } else {
             param = new URLParam(key, String::emptyString);
         }

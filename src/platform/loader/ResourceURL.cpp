@@ -193,7 +193,7 @@ inline static bool codeUnitToHex(String* str, size_t start, unsigned char* res)
     return succeed && (*res & 0xC0) == 0x80;
 }
 
-String* ResourceURL::createPercentDecodingString(String* src)
+String* ResourceURL::createPercentDecodingString(String* src, bool fromForm)
 {
     STARFISH_ASSERT(src != nullptr);
 
@@ -202,7 +202,11 @@ String* ResourceURL::createPercentDecodingString(String* src)
     for (size_t i = 0; i < src->length(); i++) {
         char32_t ch32 = src->charAt(i);
         if (ch32 != '%') {
-            decoded.appendChar(ch32);
+            if (fromForm && ch32 == '+') {
+                decoded.appendChar(' ');
+            } else {
+                decoded.appendChar(ch32);
+            }
         } else {
             size_t start = i;
             if (i + 2 >= src->length()) {
