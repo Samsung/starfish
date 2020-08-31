@@ -21,6 +21,7 @@
 #include "Starfish.h"
 
 #include "URLSearchParams.h"
+#include "URL.h"
 
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
@@ -33,6 +34,15 @@ URLSearchParams::URLSearchParams(ExecutionContext* executionContext,
     , m_executionContext(executionContext)
 {
     parse(init);
+}
+
+URLSearchParams::URLSearchParams(ExecutionContext* executionContext,
+                                 URL* sourceURL)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+    , m_sourceUrl(sourceURL)
+{
+    parse(sourceURL->search());
 }
 
 URLSearchParams::URLSearchParams(ExecutionContext* executionContext,
@@ -60,6 +70,8 @@ ScriptBindingInstance* URLSearchParams::scriptBindingInstance()
 
 void URLSearchParams::parse(String* str)
 {
+    m_list.clear();
+
     String* search = str;
     if (search->isEmpty()) {
         return;
@@ -73,16 +85,13 @@ void URLSearchParams::parse(String* str)
     std::vector<std::string> pairs = StringUtils::split(searchStr, '&');
     for (auto pair : pairs) {
         std::vector<std::string> keyAndValue = StringUtils::split(pair, '=');
-        String* key = ResourceURL::createPercentEncodingString(
-            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()),
-            true);
+        String* key = ResourceURL::createPercentDecodingString(
+            String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()));
         URLParam* param;
         if (keyAndValue.size() == 2) {
-            param =
-                new URLParam(key, ResourceURL::createPercentEncodingString(
-                                      String::fromUTF8(keyAndValue[1].data(),
-                                                       keyAndValue[1].length()),
-                                      true));
+            param = new URLParam(
+                key, ResourceURL::createPercentDecodingString(String::fromUTF8(
+                         keyAndValue[1].data(), keyAndValue[1].length())));
         } else {
             param = new URLParam(key, String::emptyString);
         }
@@ -90,9 +99,18 @@ void URLSearchParams::parse(String* str)
     }
 }
 
+void URLSearchParams::updateSourceUrlIfNeeds()
+{
+    if (m_sourceUrl) {
+        m_sourceUrl->setSearch(toString(), false);
+    }
+}
+
 void URLSearchParams::append(String* name, String* value)
 {
     m_list.push_back(new URLParam(name, value));
+
+    updateSourceUrlIfNeeds();
 }
 
 void URLSearchParams::deleteParams(String* name)
@@ -102,6 +120,8 @@ void URLSearchParams::deleteParams(String* name)
                                     return item->key->equals(name);
                                 }),
                  m_list.end());
+
+    updateSourceUrlIfNeeds();
 }
 
 Nullable<String*> URLSearchParams::get(String* name)
@@ -154,6 +174,8 @@ void URLSearchParams::set(String* name, String* value)
     } else {
         append(name, value);
     }
+
+    updateSourceUrlIfNeeds();
 }
 
 void URLSearchParams::sort()
@@ -161,6 +183,8 @@ void URLSearchParams::sort()
     std::stable_sort(
         m_list.begin(), m_list.end(),
         [](URLParam* a, URLParam* b) { return a->key->compare(b->key) < 0; });
+
+    updateSourceUrlIfNeeds();
 }
 
 size_t URLSearchParams::length()
@@ -181,9 +205,11 @@ String* URLSearchParams::toString()
     StringBuilder b;
     for (size_t i = 0; i < m_list.size(); i++) {
         URLParam* param = m_list[i];
-        b.appendString(param->key);
+        b.appendString(
+            ResourceURL::createPercentEncodingString(param->key, true));
         b.appendString("=");
-        b.appendString(param->value);
+        b.appendString(
+            ResourceURL::createPercentEncodingString(param->value, true));
         if (i < m_list.size() - 1) {
             b.appendString("&");
         }

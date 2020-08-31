@@ -105,7 +105,7 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]",
+                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]\n",
                                   m, m->m_dataBuffer);
                 hb_font_destroy(m->m_hbFace);
                 FT_Done_Face(m->m_face);
