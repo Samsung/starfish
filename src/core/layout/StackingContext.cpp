@@ -505,12 +505,12 @@ public:
                 if (shareWithStackingBuffer) {
                     bool applyOverflow = status.canApplyOverflow(f);
                     if (applyOverflow) {
-                        insertIntoCanApplyOverflowOrScrolls(
-                            f, std::make_pair(true, canScroll && f &&
-                                                        f->isFrameBlockBox()));
                         status.reset(f);
                         canScroll = status.m_child->style()->position() !=
                                     FixedPositionValue;
+                        insertIntoCanApplyOverflowOrScrolls(
+                            f, std::make_pair(true, canScroll && f &&
+                                                        f->isFrameBlockBox()));
                     } else {
                         if (status.m_seenAbsBlock &&
                             !status.m_seenContainingBlockForAbsBlock) {
@@ -736,12 +736,12 @@ public:
 
                 bool applyOverflow = status.canApplyOverflow(f);
                 if (applyOverflow) {
-                    insertIntoCanApplyOverflowOrScrolls(
-                        f, std::make_pair(true, canScroll && f &&
-                                                    f->isFrameBlockBox()));
                     status.reset(f);
                     canScroll = status.m_child->style()->position() !=
                                 FixedPositionValue;
+                    insertIntoCanApplyOverflowOrScrolls(
+                        f, std::make_pair(true, canScroll && f &&
+                                                    f->isFrameBlockBox()));
                 } else {
                     if (status.m_seenAbsBlock &&
                         !status.m_seenContainingBlockForAbsBlock) {
@@ -1157,8 +1157,8 @@ void StackingContext::computeStackingContextProperties(
                         if (f->shouldApplyOverflow()) {
                             foundOverflow = true;
                             clippedExtentRect =
-                                compositingState
-                                    .clippedScreenExtentPerLayer(cv[i]);
+                                compositingState.clippedScreenExtentPerLayer(
+                                    cv[i]);
                             break;
                         }
                         f = f->layoutParent();

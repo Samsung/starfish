@@ -900,9 +900,10 @@ public:
         }
     }
 
-    void iterateChildFrameBoxOnCondition(const std::function<bool(FrameBox*)>& fn)
+    void iterateChildFrameBoxOnCondition(
+        const std::function<bool(FrameBox*)>& fn)
     {
-        if(fn(this)) {
+        if (fn(this)) {
             auto iter =
                 childFrameBoxIterator(alloca(maxChildFrameBoxIteratorSize));
             while (iter->hasNext()) {
