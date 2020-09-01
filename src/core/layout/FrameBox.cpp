@@ -30,6 +30,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/OverflowStatus.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
@@ -4054,12 +4055,17 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     FrameBox* nearestAbsolutePositionedBox = nullptr;
     FrameBox* ancestorPositionedBox = nullptr;
 
-    VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>> frameList;
+    VectorWithInlineStorage<32, std::pair<FrameBox*, bool>,
+                            std::allocator<std::pair<FrameBox*, bool>>>
+        frameList;
 
     Frame* f = self;
+    OverflowStatus status(f);
+    bool canScroll = OverflowStatus::isScrollableFrame(f);
+
     if (forWhat == ComputeMatrixFor::GraphicsLayerOnGraphicsLayer) {
         forWhat = GraphicsLayer;
-        frameList.push_back(f->asFrameBox());
+        frameList.push_back(std::make_pair(f->asFrameBox(), canScroll));
         f = f->layoutParent();
     }
 
@@ -4071,10 +4077,25 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             break;
         }
 
-        if (f->style() && f->isAbsolutePositioned()) {
-            if (!seenFixedPositionedLayer) {
-                seenFixedPositionedLayer = true;
-                turnOffScrollUntilMeet = f->asFrameBox();
+        bool applyOverflow = status.canApplyOverflow(f);
+        bool canScrollNow = false;
+        if (applyOverflow) {
+            status.reset(f);
+            canScroll =
+                status.m_child->style()->position() != FixedPositionValue;
+            canScrollNow = canScroll && f && f->isFrameBlockBox();
+        } else {
+            if (status.m_seenAbsBlock &&
+                !status.m_seenContainingBlockForAbsBlock) {
+                canScroll = false;
+            }
+            canScrollNow = canScroll && f && f->isFrameBlockBox();
+        }
+
+        if (canScroll) {
+            if (f && f->style() &&
+                f->style()->position() == FixedPositionValue) {
+                canScroll = false;
             }
         }
 
@@ -4082,7 +4103,7 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             break;
         }
 
-        frameList.push_back(f->asFrameBox());
+        frameList.push_back(std::make_pair(f->asFrameBox(), canScrollNow));
 
         f = f->layoutParent();
     }
@@ -4093,79 +4114,42 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
         return m;
     }
 
-    if (seenFixedPositionedLayer) {
-        FrameBox* top = *frameList.rbegin();
-        if (top->isFrameBlockBox()) {
-            m.preTranslate(top->asFrameBlockBox()->scrollLeft(),
-                           top->asFrameBlockBox()->scrollTop());
-        }
+    auto iter = frameList.rbegin();
+    FrameBox* lastParentBox = nullptr;
 
-        auto iter = frameList.rbegin();
-        FrameBox* lastParentBox = nullptr;
+    if (forWhat == ComputeMatrixFor::GraphicsLayer) {
+        lastParentBox = graphicsLayerHolder;
+    }
 
-        if (forWhat == ComputeMatrixFor::GraphicsLayer) {
-            lastParentBox = graphicsLayerHolder;
-        }
-
-        bool canScroll = false;
-        while (iter != frameList.rend()) {
-            FrameBox* fBox = *iter;
-            LayoutLocation pos;
-            if (canScroll) {
-                pos = fBox->absolutePointIncludingScroll(lastParentBox);
-            } else {
-                pos = fBox->absolutePoint(lastParentBox);
-                if (fBox == turnOffScrollUntilMeet) {
-                    canScroll = true;
-                }
-            }
-            m.preTranslate((float)pos.x(), (float)pos.y());
-
-            applyTransformIfNeeded(fBox, m, inRendering);
-
-            lastParentBox = fBox;
-            iter++;
-        }
-    } else {
-        auto iter = frameList.rbegin();
-        FrameBox* lastParentBox = nullptr;
-
-        if (forWhat == ComputeMatrixFor::GraphicsLayer) {
-            lastParentBox = graphicsLayerHolder;
-        }
-
-        while (iter != frameList.rend()) {
-            FrameBox* fBox = *iter;
-            LayoutLocation pos;
-            if (fBox == self) {
-                pos = fBox->absolutePoint(lastParentBox);
-            } else if (fBox->isFrameDocument()) {
-                pos = fBox->absolutePoint(lastParentBox);
-                pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
-                pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
-            } else {
-                pos = fBox->absolutePoint(lastParentBox);
-                if (fBox->isFrameBlockBox()) {
-                    Node* nd = fBox->node();
-                    if (nd) {
-                        if (nd->asElement()->hasRareMembers()) {
-                            pos.setX(
-                                pos.x() -
-                                nd->asElement()->rareMembers()->m_scrollLeft);
-                            pos.setY(
-                                pos.y() -
-                                nd->asElement()->rareMembers()->m_scrollTop);
-                        }
+    while (iter != frameList.rend()) {
+        FrameBox* fBox = iter->first;
+        LayoutLocation pos;
+        if (fBox == self) {
+            pos = fBox->absolutePoint(lastParentBox);
+        } else if (fBox->isFrameDocument()) {
+            pos = fBox->absolutePoint(lastParentBox);
+            pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
+            pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
+        } else {
+            pos = fBox->absolutePoint(lastParentBox);
+            if (fBox->isFrameBlockBox() && iter->second) {
+                Node* nd = fBox->node();
+                if (nd) {
+                    if (nd->asElement()->hasRareMembers()) {
+                        pos.setX(pos.x() -
+                                 nd->asElement()->rareMembers()->m_scrollLeft);
+                        pos.setY(pos.y() -
+                                 nd->asElement()->rareMembers()->m_scrollTop);
                     }
                 }
             }
-            m.preTranslate((float)pos.x(), (float)pos.y());
-
-            applyTransformIfNeeded(fBox, m, inRendering);
-
-            lastParentBox = fBox;
-            iter++;
         }
+        m.preTranslate((float)pos.x(), (float)pos.y());
+
+        applyTransformIfNeeded(fBox, m, inRendering);
+
+        lastParentBox = fBox;
+        iter++;
     }
 
     if (forWhat == GraphicsLayer && graphicsLayerHolder) {

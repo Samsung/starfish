@@ -301,12 +301,12 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     if (ctx.frameDocument()->node()->asDocument()->inQuirksMode()) {
         if (node() && node()->isHTMLBodyElement() && height.isAuto()) {
             LayoutUnit contentHeightForQuirks = ctx.frameDocument()
-                                                   ->node()
-                                                   ->asDocument()
-                                                   ->window()
-                                                   ->innerHeight() -
-                                               paddingHeight() -
-                                               borderHeight() - marginHeight();
+                                                    ->node()
+                                                    ->asDocument()
+                                                    ->window()
+                                                    ->innerHeight() -
+                                                paddingHeight() -
+                                                borderHeight() - marginHeight();
             if (contentHeightForQuirks > contentHeight) {
                 parentHeight = ctx.frameDocument()
                                    ->node()
