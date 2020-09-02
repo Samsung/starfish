@@ -118,6 +118,7 @@ BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-media-audio-io)
 BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
+BuildRequires: pkgconfig(python)
 BuildRequires: libasound-devel
 
 %if "%{?use_embedded_image_decoder}" == "1"
