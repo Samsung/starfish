@@ -27,7 +27,7 @@
 #include <nanomsg/pubsub.h>
 #include <nanomsg/reqrep.h>
 
-#include "core/modules/networking/SocketNN.h"
+#include "core/modules/serviceworker/SocketNN.h"
 
 namespace Starfish {
 

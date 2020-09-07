@@ -26,7 +26,7 @@
 
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/networking/SocketNN.h"
+#include "core/modules/serviceworker/SocketNN.h"
 #include "core/modules/serviceworker/IORunnable.h"
 
 namespace Starfish {
