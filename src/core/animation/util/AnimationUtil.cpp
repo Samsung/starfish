@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/animation/AnimationTask.h"
-#include "core/animation/AnimationUtil.h"
+#include "core/animation/util/AnimationUtil.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
