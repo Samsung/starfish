@@ -23,7 +23,7 @@
 #include "Starfish.h"
 
 #include "core/animation/AnimationTask.h"
-#include "core/animation/AnimationUtil.h"
+#include "core/animation/util/AnimationUtil.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 #include "core/dom/Node.h"

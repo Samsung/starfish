@@ -23,7 +23,7 @@
 #include <SkMatrix.h>
 
 #include "core/animation/AnimationTask.h"
-#include "core/animation/AnimationUtil.h"
+#include "core/animation/util/AnimationUtil.h"
 #include "core/animation/TimingFunction.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
