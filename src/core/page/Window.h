@@ -25,6 +25,7 @@
 #include "core/modules/tts/SpeechSynthesis.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WindowOrWorkerGlobalScope.h"
+#include "core/extra/Performance.h"
 
 namespace Starfish {
 
@@ -382,6 +383,8 @@ public:
 
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
+
+    Performance* performance();
 
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* event();

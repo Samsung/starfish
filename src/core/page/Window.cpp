@@ -734,6 +734,11 @@ Promise* Window::fetch(RequestInfo& input, RequestInit& init)
     return Fetch::fetch(executionContext(), input, init);
 }
 
+Performance* Window::performance()
+{
+    return Performance::create(executionContext());
+}
+
 DEFINE_EVENT_LISTENER(Window, abort);
 DEFINE_EVENT_LISTENER(Window, blur);
 DEFINE_EVENT_LISTENER(Window, click);

@@ -218,6 +218,7 @@ http://web-platform.test:8000/html/semantics/text-level-semantics/the-a-element/
 http://web-platform.test:8000/html/semantics/text-level-semantics/the-a-element/a.rel-setter-01.html
 http://web-platform.test:8000/html/semantics/text-level-semantics/the-a-element/a.rel-getter-01.html
 http://web-platform.test:8000/html/semantics/text-level-semantics/historical.html
+http://web-platform.test:8000/html/semantics/text-level-semantics/the-data-element/data.value-001.html
 #http://web-platform.test:8000/html/semantics/tabular-data/the-tr-element/sectionRowIndex.html
 http://web-platform.test:8000/html/semantics/tabular-data/the-tr-element/rowIndex.html
 #http://web-platform.test:8000/html/semantics/tabular-data/the-tr-element/insertCell.html

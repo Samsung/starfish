@@ -1,0 +1,21 @@
+// https://www.w3.org/TR/hr-time-2/#dom-performance
+typedef double DOMHighResTimeStamp;
+
+[Exposed=(Window,Worker)]
+interface Performance : EventTarget {
+    DOMHighResTimeStamp now();
+    // readonly attribute DOMHighResTimeStamp timeOrigin;
+    // [Default] object toJSON();
+};
+
+// partial interface mixin WindowOrWorkerGlobalScope {
+//   [Replaceable] readonly attribute Performance performance;
+// };
+
+partial interface Window {
+  [NewObject] readonly attribute Performance performance;
+};
+
+partial interface WorkerGlobalScope {
+  [NewObject] readonly attribute Performance performance;
+};

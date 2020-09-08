@@ -59,6 +59,7 @@ private:
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc, GC_WORD_OFFSET(Fetch, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(Fetch, m_request));
         GC_set_bit(desc, GC_WORD_OFFSET(Fetch, m_response));
         GC_set_bit(desc, GC_WORD_OFFSET(Fetch, m_resourceRequest));

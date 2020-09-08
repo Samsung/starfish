@@ -28,7 +28,7 @@ interface Range {
     [RaisesException] short compareBoundaryPoints(unsigned short how, Range sourceRange);
 
     [Unimplemented,RaisesException, CEReactions] void deleteContents();
-    [Unimplemented,NewObject, RaisesException, CEReactions] DocumentFragment extractContents();
+    [NewObject, CEReactions] DocumentFragment extractContents();
     [Unimplemented,NewObject, RaisesException, CEReactions] DocumentFragment cloneContents();
     [RaisesException, CEReactions] void insertNode(Node node);
     [Unimplemented,RaisesException, CEReactions] void surroundContents(Node newParent);
@@ -46,7 +46,7 @@ interface Range {
     // CSSOM View Module
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-range-interface
     [Unimplemented,Measure] DOMRectList getClientRects();
-    [Unimplemented,Measure] DOMRect getBoundingClientRect();
+    [NewObject] DOMRect getBoundingClientRect();
 
     // DOM Parsing and Serialization
     // https://w3c.github.io/DOM-Parsing/#extensions-to-the-range-interface
