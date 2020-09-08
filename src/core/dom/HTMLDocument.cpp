@@ -30,6 +30,7 @@
 #include "core/dom/HTMLDialogElement.h"
 #include "core/dom/HTMLDivElement.h"
 #include "core/dom/HTMLDocument.h"
+#include "core/dom/HTMLDataElement.h"
 #include "core/dom/HTMLFieldSetElement.h"
 #include "core/dom/HTMLFontElement.h"
 #include "core/dom/HTMLFormElement.h"
@@ -216,6 +217,8 @@ Element* HTMLDocument::createHTMLElement(Document* document,
         return new HTMLOutputElement(document, qname);
     } else if (name == str->m_dialogTagName.localNameAtomic()) {
         return new HTMLDialogElement(document, qname);
+    } else if (name == str->m_dataTagName.localNameAtomic()) {
+        return new HTMLDataElement(document, qname);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                             \
     else if (name == str->m_##tagName##TagName.localNameAtomic()) \

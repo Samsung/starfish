@@ -24,6 +24,7 @@
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/CharacterData.h"
+#include "core/dom/DOMRect.h"
 
 namespace Starfish {
 
@@ -510,5 +511,17 @@ short Range::compareBoundaryPoints(const BoundaryPoint& bp1,
 Node* Range::root()
 {
     return Traverse::root(startContainer());
+}
+
+DocumentFragment* Range::extractContents()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+DOMRect* Range::getBoundingClientRect()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
 }
 }

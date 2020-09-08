@@ -52,6 +52,7 @@ namespace Starfish {
     F(colgroup)                         \
     F(command)                          \
     F(content)                          \
+    F(data)                             \
     F(datalist)                         \
     F(dd)                               \
     F(del)                              \

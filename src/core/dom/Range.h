@@ -119,6 +119,9 @@ public:
 
     String* toString();
 
+    DocumentFragment* extractContents();
+    DOMRect* getBoundingClientRect();
+
 private:
     bool isValidOffset(Node* node, unsigned offset);
     bool compareRoots(const BoundaryPoint& bpA, const BoundaryPoint& bpB);

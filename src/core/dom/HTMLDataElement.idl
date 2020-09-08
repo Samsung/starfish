@@ -1,0 +1,6 @@
+// https://html.spec.whatwg.org/#the-data-element
+[Exposed=Window]
+interface HTMLDataElement : HTMLElement {
+  [HTMLConstructor] constructor();
+  [CEReactions] attribute DOMString value;
+};
