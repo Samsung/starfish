@@ -53,7 +53,7 @@ jobs:
           command: ./gradlew :app:assembleRelease
   build_x64_glfw_debug:
     docker:
-      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
+      - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
     resource_class: xlarge
@@ -81,7 +81,7 @@ jobs:
             command: /root/workspace/run_test.sh
   build_x64_glfw_release:
     docker:
-      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
+      - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
     resource_class: xlarge
@@ -97,7 +97,7 @@ jobs:
             command: /root/workspace/build.sh x64_glfw_release
   build_x64_efl_headless_debug:
     docker:
-      - image: docker.sec.samsung.net/ci-docker/lws/starfish:latest
+      - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
     working_directory: ~/starfish-workflows
     environment:
     resource_class: xlarge
