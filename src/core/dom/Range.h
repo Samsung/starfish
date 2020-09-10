@@ -102,9 +102,13 @@ public:
 
     void insertNode(Node* node);
 
+    DOMRectList* getClientRects();
+    DOMRect* getBoundingClientRect(bool layoutIfNeeds = true);
+
+    DocumentFragment* extractContents();
+
     /*
     void deleteContents();
-    DocumentFragment extractContents();
     DocumentFragment cloneContents();
     void surroundContents(Node newParent);
     */
@@ -119,8 +123,8 @@ public:
 
     String* toString();
 
-    DocumentFragment* extractContents();
-    DOMRect* getBoundingClientRect();
+    Node* firstNode();
+    Node* pastLastNode();
 
 private:
     bool isValidOffset(Node* node, unsigned offset);
@@ -128,6 +132,8 @@ private:
     short compareBoundaryPoints(const BoundaryPoint& bpA,
                                 const BoundaryPoint& bpB);
     Node* root();
+    void borderAndTextQuads(GCVector<DOMQuad*>& quads,
+                            bool layoutIfNeeds = true);
 
     Document* m_document;
     BoundaryPoint m_start;

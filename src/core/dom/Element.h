@@ -410,6 +410,7 @@ public:
                        KeyframeAnimationOptions& options);
     Animation* animate(ExecutionContext* executionContext,
                        Nullable<GCVector<ScriptValue>>& keyframes);
+    void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
 
 protected:
     void setFocused(bool flag)
@@ -420,8 +421,6 @@ protected:
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
     LayoutRect clientRect();
-
-    void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
 
     // DO NOT MODIFY ATTRIBUTES.
     const GCVector<Attribute>* getAttributes()
