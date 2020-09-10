@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/extra/Performance.h"
 
@@ -29,23 +30,8 @@ Performance::Performance(ExecutionContext* executionContext)
 {
 }
 
-void* Performance::operator new(size_t size)
-{
-    STARFISH_ASSERT(size == sizeof(Performance));
-    static bool typeInited = false;
-    static GC_descr descr;
-    if (!typeInited) {
-        GC_word desc[GC_BITMAP_SIZE(Performance)] = { 0 };
-        Performance::fillGCDescriptor(desc);
-        descr = GC_make_descriptor(desc, GC_WORD_LEN(Performance));
-        typeInited = true;
-    }
-    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
 double Performance::now()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return 0;
+    return (longTickCount() - m_executionContext->createdTick()) / 1000.0;
 }
 }

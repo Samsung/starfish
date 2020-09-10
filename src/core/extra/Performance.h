@@ -28,7 +28,7 @@ class Performance : public EventTarget {
     Performance(ExecutionContext* executionContext);
 
 public:
-    static double now();
+    double now();
     static Performance* create(ExecutionContext* executionContext)
     {
         return new Performance(executionContext);
@@ -44,12 +44,6 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-    static inline void fillGCDescriptor(GC_word* desc)
-    {
-        GC_set_bit(desc, GC_WORD_OFFSET(Performance, m_executionContext));
-    }
 };
 }
 
