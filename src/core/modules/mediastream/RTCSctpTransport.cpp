@@ -106,13 +106,13 @@ String* RTCSctpTransport::stateStr()
         return String::createASCIIString("closed");
     }
 
-    webrtc::SctpTransportInformation info = m_backend->Information();
-    switch (info.state()) {
-    case webrtc::SctpTransportState::kConnecting:
+    RTCSctpTransportState info = state();
+    switch (info) {
+    case RTCSctpTransportState::Connecting:
         return String::createASCIIString("connecting");
-    case webrtc::SctpTransportState::kConnected:
+    case RTCSctpTransportState::Connected:
         return String::createASCIIString("connected");
-    case webrtc::SctpTransportState::kClosed:
+    case RTCSctpTransportState::Closed:
         return String::createASCIIString("closed");
     default:
         // WebRTC has more internal states

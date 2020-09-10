@@ -101,6 +101,7 @@ void RTCDataChannelObserver::OnStateChange()
 
 void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
 {
+#if 0
     if (!m_dataChannel) {
         return;
     }
@@ -140,6 +141,7 @@ void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
                                            eventType, init);
         m_dataChannel->dispatchEventByUA(e);
     }
+#endif
 }
 
 RTCDataChannel::RTCDataChannel(

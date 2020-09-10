@@ -386,7 +386,7 @@ public:
         DOMStringOrMediaStreamTrack trackOrKind,
         RTCRtpTransceiverInit init = RTCRtpTransceiverInit());
 
-    Promise* getStats(MediaStreamTrack* selector = nullptr);
+    // Promise* getStats(MediaStreamTrack* selector = nullptr);
 
     rtc::scoped_refptr<webrtc::PeerConnectionInterface> backend();
     bool initializePeerConnection();

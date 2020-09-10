@@ -62,6 +62,7 @@ ExecutionContext* RTCIceTransport::executionContext() const
     return m_executionContext;
 }
 
+#if 0 // Disable function in progress
 String* RTCIceTransport::state()
 {
     // TODO: libwebrtc requires to access to internal data
@@ -86,6 +87,7 @@ String* RTCIceTransport::state()
 
     return String::emptyString;
 }
+#endif
 
 GCVector<RTCIceCandidate*> RTCIceTransport::getRemoteCandidates()
 {

@@ -50,7 +50,7 @@ public:
 
     RTCIceTransport* iceTransport();
     String* stateStr();
-    GCVector<ScriptArrayBuffer> getRemoteCertificates();
+// GCVector<ScriptArrayBuffer> getRemoteCertificates();
 
 #define VIRTUAL
 #define OVERRIDE

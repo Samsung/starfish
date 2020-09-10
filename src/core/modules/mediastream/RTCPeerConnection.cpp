@@ -2121,6 +2121,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
 }
 
 // https://w3c.github.io/webrtc-pc/#widl-RTCPeerConnection-getStats-Promise-RTCStatsReport--MediaStreamTrack-selector
+#if 0 // Chrome specific?
 Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
 {
     Promise* promise = new Promise(scriptBindingInstance());
@@ -2148,6 +2149,7 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
     promise->fulfill(scriptUndefined());
     return promise;
 }
+#endif
 
 rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()
 {
