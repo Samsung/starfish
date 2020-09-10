@@ -19,12 +19,23 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
+#include "core/dom/DOMPoint.h"
+#include "core/dom/DOMQuad.h"
+#include "core/dom/DOMRect.h"
+#include "core/dom/DOMRectList.h"
 #include "core/dom/Range.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/CharacterData.h"
-#include "core/dom/DOMRect.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
+#include "core/layout/FrameBlockBox.h"
+#include "core/dom/Text.h"
+#include "core/dom/DocumentFragment.h"
 
 namespace Starfish {
 
@@ -304,6 +315,107 @@ void Range::insertNode(Node* node)
     }
 }
 
+DOMRectList* Range::getClientRects()
+{
+    GCVector<DOMQuad*> quads;
+    borderAndTextQuads(quads);
+    if (quads.empty()) {
+        return DOMRectList::create(m_document->executionContext());
+    }
+    return DOMRectList::create(m_document->executionContext(), quads);
+}
+
+DOMRect* Range::getBoundingClientRect(bool layoutIfNeeds /* = true */)
+{
+    GCVector<DOMQuad*> quads;
+    borderAndTextQuads(quads, layoutIfNeeds);
+    if (quads.empty()) {
+        return new DOMRect(m_document->executionContext());
+    }
+
+    DOMRect* rect = quads[0]->getBounds();
+
+    for (size_t i = 1; i < quads.size(); ++i) {
+        rect->unite(quads[i]->getBounds());
+    }
+
+    return rect;
+}
+
+void Range::borderAndTextQuads(GCVector<DOMQuad*>& quads,
+                               bool layoutIfNeeds /* = true */)
+{
+    if (layoutIfNeeds) {
+        m_document->window()->webView()->layoutIfNeeded(false);
+    }
+
+    GCUnorderedSet<Node*> selectedElements;
+    Node* stop = pastLastNode();
+    for (Node* n = firstNode(); n != stop; n = Traverse::next(n, nullptr)) {
+        if (n->isElement()) {
+            if ((selectedElements.find(n) == selectedElements.end()) ||
+                (!n->contains(startContainer()) &&
+                 !n->contains(endContainer()))) {
+                selectedElements.insert(n);
+            }
+        }
+    }
+    GCUnorderedSet<Frame*> checkedFrameBlockBox;
+    for (Node* n = firstNode(); n != stop; n = Traverse::next(n, nullptr)) {
+        if (n->isElement()) {
+            if (selectedElements.find(n) == selectedElements.end() ||
+                selectedElements.find(n->parentNode()) !=
+                    selectedElements.end()) {
+                continue;
+            }
+            n->asElement()->getClientQuads(quads, layoutIfNeeds);
+        } else if (n->isText()) {
+            Frame* f = n->frame();
+            if (f->isFrameText()) {
+                Frame* nearestFrameBlockBox = f->parent();
+                while (nearestFrameBlockBox &&
+                       !nearestFrameBlockBox->isFrameBlockBox()) {
+                    nearestFrameBlockBox = nearestFrameBlockBox->parent();
+                }
+                if (nearestFrameBlockBox &&
+                    selectedElements.find(n) == selectedElements.end() &&
+                    checkedFrameBlockBox.find(nearestFrameBlockBox) ==
+                        checkedFrameBlockBox.end()) {
+                    checkedFrameBlockBox.insert(nearestFrameBlockBox);
+
+                    auto blockBox = nearestFrameBlockBox->asFrameBlockBox();
+                    blockBox->iterateChildFrameBox([&](FrameBox* childBox) {
+                        if (childBox->node() &&
+                            isPointInRange(childBox->node(), 0)) {
+                            SkMatrix m =
+                                childBox->asFrameBox()->computeScreenMatrix();
+                            LayoutRect rect;
+                            rect.setWidth(childBox->asFrameBox()->width());
+                            rect.setHeight(childBox->asFrameBox()->height());
+                            rect = computeBoxExtent(rect, m);
+
+                            DOMQuad* q = new DOMQuad(
+                                m_document->executionContext(),
+                                DOMPointInit(rect.location().x(),
+                                             rect.location().y()),
+                                DOMPointInit(rect.location().x() +
+                                                 rect.size().width(),
+                                             rect.location().y()),
+                                DOMPointInit(
+                                    rect.location().x() + rect.size().width(),
+                                    rect.location().y() + rect.size().height()),
+                                DOMPointInit(rect.location().x(),
+                                             rect.location().y() +
+                                                 rect.size().height()));
+                            quads.push_back(q);
+                        }
+                    });
+                }
+            }
+        }
+    }
+}
+
 Range* Range::cloneRange()
 {
     return Range::create(m_document, startContainer(), startOffset(),
@@ -441,6 +553,33 @@ String* Range::toString()
     return sb.finalize();
 }
 
+Node* Range::firstNode()
+{
+    Node* node = startContainer();
+    if (node->isCharacterData()) {
+        return node;
+    }
+    if (Node* child = Traverse::childAt(node, m_start.m_offset)) {
+        return child;
+    }
+    if (!m_start.m_offset) {
+        return node;
+    }
+    return Traverse::nextSkippingChildren(node, nullptr);
+}
+
+Node* Range::pastLastNode()
+{
+    Node* node = endContainer();
+    if (node->isCharacterData()) {
+        return Traverse::nextSkippingChildren(node, nullptr);
+    }
+    if (Node* child = Traverse::childAt(node, m_end.m_offset)) {
+        return child;
+    }
+    return Traverse::nextSkippingChildren(node, nullptr);
+}
+
 bool Range::isValidOffset(Node* node, unsigned offset)
 {
     if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
@@ -516,12 +655,7 @@ Node* Range::root()
 DocumentFragment* Range::extractContents()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    return new DocumentFragment(m_document);
 }
 
-DOMRect* Range::getBoundingClientRect()
-{
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
-}
-}
+} // namespace Starfish

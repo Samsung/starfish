@@ -324,6 +324,7 @@ test/cairo/internal-test/dom/Range10.html
 test/cairo/internal-test/dom/Range11.html
 test/cairo/internal-test/dom/Range12.html
 test/cairo/internal-test/dom/Range13.html
+test/cairo/internal-test/dom/Range14.html
 test/cairo/internal-test/dom/HTMLScriptElement01.html
 test/cairo/internal-test/dom/HTMLScriptElement02.html
 test/cairo/internal-test/dom/HTMLScriptElement03.html

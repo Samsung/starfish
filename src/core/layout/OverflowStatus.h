@@ -93,7 +93,7 @@ struct OverflowStatus {
 
     static bool isScrollableFrame(Frame* f)
     {
-        bool isScrollable = f->style()->position() != FixedPositionValue;
+        bool isScrollable =  f->style() && f->style()->position() != FixedPositionValue;
         if (!isScrollable) {
             return false;
         }
