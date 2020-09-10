@@ -6,7 +6,7 @@
 # manual animation tc
 ./Starfish 'test/cairo/internal-test/animation/a1.html'
 ./Starfish 'test/cairo/internal-test/animation/a2.html'
-./Starfish 'test/cairo/internal-test/animation/a3.html'
+#./Starfish 'test/cairo/internal-test/animation/a3.html'
 ./Starfish 'test/cairo/internal-test/animation/a4.html'
 ./Starfish 'test/cairo/internal-test/animation/a5.html'
 ./Starfish 'test/cairo/internal-test/animation/a6.html'
@@ -33,7 +33,7 @@
 ./Starfish 'test/cairo/internal-test/animation/a28.html'
 ./Starfish 'test/cairo/internal-test/animation/a29.html'
 ./Starfish 'test/cairo/internal-test/animation/a30.html'
-./Starfish 'test/cairo/internal-test/animation/a31.html'
+#./Starfish 'test/cairo/internal-test/animation/a31.html'
 ./Starfish 'test/cairo/internal-test/animation/a32.html'
 ./Starfish 'test/cairo/internal-test/animation/a33.html'
 
