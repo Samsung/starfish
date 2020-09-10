@@ -120,6 +120,7 @@ bool RTCRtpSender::setTrack(MediaStreamTrack* track)
     return r;
 }
 
+#if 0 // Disable functions in progress
 RTCDtlsTransport* RTCRtpSender::transport()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -138,6 +139,7 @@ RTCRtpSendParameters RTCRtpSender::getParameters()
     RTCRtpSendParameters result;
     return result;
 }
+#endif
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-replacetrack
 Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)

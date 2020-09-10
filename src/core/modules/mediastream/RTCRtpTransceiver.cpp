@@ -195,6 +195,7 @@ String* RTCRtpTransceiver::directionStr()
 
 void RTCRtpTransceiver::setDirectionStr(String* direction)
 {
+#if 0 // Disable function in progress
     if (!m_backend) {
         return;
     }
@@ -208,6 +209,7 @@ void RTCRtpTransceiver::setDirectionStr(String* direction)
     } else if (direction->equals("inactive")) {
         setDirection(RTCRtpTransceiverDirection::Inactive);
     }
+#endif
 }
 
 Nullable<String*> RTCRtpTransceiver::currentDirection()

@@ -104,12 +104,14 @@ String* RTCDtlsTransport::stateStr()
     }
 }
 
+#if 0
 GCVector<ScriptArrayBuffer> RTCDtlsTransport::getRemoteCertificates()
 {
     GCVector<ScriptArrayBuffer> buffer;
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return buffer;
 }
+#endif
 
 DEFINE_EVENT_LISTENER(RTCDtlsTransport, statechange);
 DEFINE_EVENT_LISTENER(RTCDtlsTransport, error);

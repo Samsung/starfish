@@ -53,7 +53,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceTransport)
     virtual ExecutionContext* executionContext() const override;
 
-    String* state();
+    // String* state();
     GCVector<RTCIceCandidate*> getRemoteCandidates();
     Nullable<RTCIceCandidatePair> getSelectedCandidatePair();
 

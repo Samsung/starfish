@@ -198,7 +198,7 @@ void MediaStream::VideoFrameObserver::stop()
     }
 }
 
-#if defined(STARFISH_WEBRTC_DEBUG)
+#if 0 && defined(STARFISH_WEBRTC_DEBUG)
 void MediaStream::VideoFrameObserver::writeImageToFile(std::string& filename)
 {
     FILE* imageFile = fopen(filename.data(), "wb");
