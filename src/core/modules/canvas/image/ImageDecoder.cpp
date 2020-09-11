@@ -720,6 +720,10 @@ ImageDecoder::DecodeResult ImageDecoder::decode()
 bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
 {
     ImageDecoder::DecodeResult result = decodeGIF(inputBuffer, true);
+    if (result.m_buffer) {
+        free(result.m_buffer);
+    }
+
     return result.m_isAnimatedGIF;
 }
 
