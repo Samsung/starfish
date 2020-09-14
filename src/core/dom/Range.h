@@ -106,6 +106,7 @@ public:
     DOMRect* getBoundingClientRect(bool layoutIfNeeds = true);
 
     DocumentFragment* extractContents();
+    DocumentFragment* cloneContents();
 
     /*
     void deleteContents();
@@ -126,6 +127,9 @@ public:
     Node* firstNode();
     Node* pastLastNode();
 
+    enum ProcessingType { Extract, Clone, Delete };
+    enum ContentsProcessDirection { ProcessForward, ProcessBackward };
+
 private:
     bool isValidOffset(Node* node, unsigned offset);
     bool compareRoots(const BoundaryPoint& bpA, const BoundaryPoint& bpB);
@@ -134,6 +138,8 @@ private:
     Node* root();
     void borderAndTextQuads(GCVector<DOMQuad*>& quads,
                             bool layoutIfNeeds = true);
+
+    DocumentFragment* processContents(ProcessingType type);
 
     Document* m_document;
     BoundaryPoint m_start;
