@@ -654,8 +654,296 @@ Node* Range::root()
 
 DocumentFragment* Range::extractContents()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return new DocumentFragment(m_document);
+    return processContents(Extract);
+}
+
+DocumentFragment* Range::cloneContents()
+{
+    return processContents(Clone);
+}
+
+// The part of below is taken from Webkit Project.
+// (Source/WebCore/dom/Range.cpp)
+
+static inline Node* highestAncestorUnderCommonRoot(Node* node, Node* rootNode)
+{
+    if (node == rootNode)
+        return nullptr;
+    while (node->parentNode() != rootNode)
+        node = node->parentNode();
+    return node;
+}
+
+static inline void removeCharacterData(CharacterData& data,
+                                       unsigned startOffset, unsigned endOffset)
+{
+    if (data.length() - endOffset) {
+        data.deleteData(endOffset, data.length() - endOffset);
+    }
+    if (startOffset) {
+        data.deleteData(0, startOffset);
+    }
+}
+
+static void processNodes(Range::ProcessingType type, GCVector<Node*>& nodes,
+                         Node* oldContainer, Node* newContainer)
+{
+    for (auto& node : nodes) {
+        switch (type) {
+        case Range::Delete: {
+            oldContainer->removeChild(node);
+            break;
+        }
+        case Range::Extract: {
+            newContainer->appendChild(node);
+            break;
+        }
+        case Range::Clone: {
+            newContainer->appendChild(node->cloneNode(true));
+            break;
+        }
+        }
+    }
+}
+
+static Node* processContentsBetweenOffsets(Range::ProcessingType type,
+                                           DocumentFragment* documentFragment,
+                                           Node* container,
+                                           unsigned startOffset,
+                                           unsigned endOffset)
+{
+    Node* result = nullptr;
+    switch (container->nodeType()) {
+    case Node::TEXT_NODE:
+    case Node::CDATA_SECTION_NODE:
+    case Node::COMMENT_NODE: {
+        endOffset = std::min(endOffset, ((CharacterData*)container)->length());
+        startOffset = std::min(startOffset, endOffset);
+        if (type == Range::Extract || type == Range::Clone) {
+            CharacterData* characters =
+                (CharacterData*)(container->cloneNode(true));
+            removeCharacterData(*characters, startOffset, endOffset);
+            if (documentFragment) {
+                result = documentFragment;
+                result->appendChild(characters);
+            } else
+                result = std::move(characters);
+        }
+        if (type == Range::Extract || type == Range::Delete) {
+            ((CharacterData*)container)
+                ->deleteData(startOffset, endOffset - startOffset);
+        }
+        break;
+    }
+    case Node::PROCESSING_INSTRUCTION_NODE:
+        break;
+    case Node::ELEMENT_NODE:
+    case Node::ATTRIBUTE_NODE:
+    case Node::DOCUMENT_NODE:
+    case Node::DOCUMENT_TYPE_NODE:
+    case Node::DOCUMENT_FRAGMENT_NODE: {
+        if (type == Range::Extract || type == Range::Clone) {
+            if (documentFragment)
+                result = documentFragment;
+            else
+                result = container->cloneNode(false);
+        }
+        GCVector<Node*> nodes;
+        Node* n = container->firstChild();
+        for (unsigned i = startOffset; n && i; i--)
+            n = n->nextSibling();
+        for (unsigned i = startOffset; n && i < endOffset;
+             i++, n = n->nextSibling()) {
+            if (type != Range::Delete && n->isDocumentType()) {
+                return nullptr;
+            }
+            nodes.push_back(n);
+        }
+        processNodes(type, nodes, container, result);
+        break;
+    }
+    default:
+        break;
+    }
+    return result;
+}
+
+static Node* processAncestorsAndTheirSiblings(
+    Range::ProcessingType type, Node* container,
+    Range::ContentsProcessDirection direction, Node* passedContainer,
+    Node* rootNode)
+{
+    Node* copyedContainer = passedContainer;
+
+    GCVector<Node*> ancestors;
+    for (Node* ancestor = container->parentNode();
+         ancestor && ancestor != rootNode; ancestor = ancestor->parentNode())
+        ancestors.push_back(ancestor);
+
+    Node* firstChildInAncestorToProcess = direction == Range::ProcessForward
+                                              ? container->nextSibling()
+                                              : container->previousSibling();
+    for (auto& ancestor : ancestors) {
+        if (type == Range::Extract || type == Range::Clone) {
+            auto copyedAncestor = ancestor->cloneNode(false);
+            if (copyedContainer) {
+                copyedAncestor->appendChild(copyedContainer);
+            }
+            copyedContainer = std::move(copyedAncestor);
+        }
+
+        GCVector<Node*> nodes;
+        for (Node* child = firstChildInAncestorToProcess; child;
+             child = (direction == Range::ProcessForward)
+                         ? child->nextSibling()
+                         : child->previousSibling())
+            nodes.push_back(child);
+
+        for (auto& child : nodes) {
+            switch (type) {
+            case Range::Delete: {
+                ancestor->removeChild(child);
+                break;
+            }
+            case Range::Extract:
+                if (direction == Range::ProcessForward) {
+                    copyedContainer->appendChild(child);
+                } else {
+                    copyedContainer->insertBefore(
+                        child, copyedContainer->firstChild());
+                }
+                break;
+            case Range::Clone:
+                if (direction == Range::ProcessForward) {
+                    copyedContainer->appendChild(child->cloneNode(true));
+                } else {
+                    copyedContainer->insertBefore(
+                        child->cloneNode(true), copyedContainer->firstChild());
+                }
+                break;
+            }
+        }
+        firstChildInAncestorToProcess = direction == Range::ProcessForward
+                                            ? ancestor->nextSibling()
+                                            : ancestor->previousSibling();
+    }
+    return copyedContainer;
+}
+
+static inline unsigned lengthOfContentsInNode(Node* node)
+{
+    switch (node->nodeType()) {
+    case Node::DOCUMENT_TYPE_NODE:
+    case Node::ATTRIBUTE_NODE:
+        return 0;
+    case Node::TEXT_NODE:
+    case Node::CDATA_SECTION_NODE:
+    case Node::COMMENT_NODE:
+    case Node::PROCESSING_INSTRUCTION_NODE:
+        return ((CharacterData*)(node))->length();
+    case Node::ELEMENT_NODE:
+    case Node::DOCUMENT_NODE:
+    case Node::DOCUMENT_FRAGMENT_NODE:
+        return node->nodeLength();
+    default:
+        break;
+    }
+    STARFISH_ASSERT_NOT_REACHED();
+    return 0;
+}
+
+static inline Node* childOfCommonRootBeforeOffset(Node* container,
+                                                  unsigned offset,
+                                                  Node* rootNode)
+{
+    if (!rootNode->contains(container))
+        return 0;
+
+    if (container == rootNode) {
+        container = container->firstChild();
+        for (unsigned i = 0; container && i < offset; i++)
+            container = container->nextSibling();
+    } else {
+        while (container->parentNode() != rootNode)
+            container = container->parentNode();
+    }
+    return container;
+}
+
+static unsigned computeNodeIdx(Node* node)
+{
+    unsigned count = 0;
+    for (Node* sibling = node->previousSibling(); sibling;
+         sibling = sibling->previousSibling())
+        ++count;
+    return count;
+}
+
+DocumentFragment* Range::processContents(ProcessingType type)
+{
+    DocumentFragment* fragment;
+    if (type == Extract || type == Clone)
+        fragment = m_document->createDocumentFragment();
+
+    if (collapsed())
+        return fragment;
+
+    Node* rootNode = Traverse::commonAncestor(startContainer(), endContainer());
+    Node* partialStart =
+        highestAncestorUnderCommonRoot(m_start.m_node, rootNode);
+    Node* partialEnd = highestAncestorUnderCommonRoot(m_end.m_node, rootNode);
+    Node* leftContents = nullptr;
+    if (m_start.m_node != rootNode && rootNode->contains(m_start.m_node)) {
+        auto firstResult = processContentsBetweenOffsets(
+            type, nullptr, m_start.m_node, m_start.m_offset,
+            lengthOfContentsInNode(m_start.m_node));
+        leftContents = processAncestorsAndTheirSiblings(
+            type, m_start.m_node, ProcessForward, std::move(firstResult),
+            rootNode);
+    }
+
+    Node* rightContents = nullptr;
+    if (endContainer() != rootNode && rootNode->contains(m_end.m_node)) {
+        auto firstResult = processContentsBetweenOffsets(
+            type, nullptr, m_end.m_node, 0, m_end.m_offset);
+        rightContents = processAncestorsAndTheirSiblings(
+            type, m_end.m_node, ProcessBackward, std::move(firstResult),
+            rootNode);
+    }
+
+    Node* processStart = childOfCommonRootBeforeOffset(
+        m_start.m_node, m_start.m_offset, rootNode);
+    if (processStart && m_start.m_node != rootNode)
+        processStart = processStart->nextSibling();
+    Node* processEnd =
+        childOfCommonRootBeforeOffset(m_end.m_node, m_end.m_offset, rootNode);
+
+    if (type == Extract || type == Delete) {
+        if (partialStart && rootNode->contains(partialStart)) {
+            setStart(partialStart->parentNode(),
+                     computeNodeIdx(partialStart) + 1);
+        } else if (partialEnd && rootNode->contains(partialEnd)) {
+            setStart(partialEnd->parentNode(), computeNodeIdx(partialEnd));
+        }
+        m_end = m_start;
+    }
+
+    if ((type == Extract || type == Clone) && leftContents) {
+        fragment->appendChild(leftContents);
+    }
+
+    if (processStart) {
+        GCVector<Node*> nodes;
+        for (Node* node = processStart; node && node != processEnd;
+             node = node->nextSibling())
+            nodes.push_back(node);
+        processNodes(type, nodes, rootNode, fragment);
+    }
+
+    if ((type == Extract || type == Clone) && rightContents) {
+        fragment->appendChild(rightContents);
+    }
+    return fragment;
 }
 
 } // namespace Starfish
