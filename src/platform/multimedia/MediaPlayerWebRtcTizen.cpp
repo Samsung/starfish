@@ -65,7 +65,11 @@ MediaPlayerWebRtcTizen::MediaPlayerWebRtcTizen(HTMLMediaElement* element)
 
 MediaPlayerWebRtcTizen::~MediaPlayerWebRtcTizen()
 {
-    destroy();
+    try {
+        destroy();
+    } catch (...) {
+        PLAYER_LOGE("MediaPlayerWebRtcTizen::%s\n", __func__);
+    }
 }
 
 void MediaPlayerWebRtcTizen::destroy()
