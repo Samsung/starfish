@@ -42,9 +42,8 @@ struct WindowGlue {
     jmethodID m_showAlert;
     jmethodID m_showIME;
     jmethodID m_hideIME;
-    jmethodID m_onRendered;
-    jmethodID m_createBuffer;
-    jmethodID m_destoryBuffer;
+    jmethodID m_glMakeCurrent;
+    jmethodID m_glSwapBuffers;
 
     WindowGlue()
     {
@@ -153,12 +152,10 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
         clazz, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
     g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
-    g_WindowGlue.m_onRendered =
-        env->GetMethodID(clazz, "onRendered", "(IIII)V");
-    g_WindowGlue.m_createBuffer =
-        env->GetMethodID(clazz, "createBuffer", "()Landroid/graphics/Bitmap;");
-    g_WindowGlue.m_destoryBuffer =
-        env->GetMethodID(clazz, "destoryBuffer", "()V");
+    g_WindowGlue.m_glMakeCurrent =
+        env->GetMethodID(clazz, "glMakeCurrent", "()V");
+    g_WindowGlue.m_glSwapBuffers =
+        env->GetMethodID(clazz, "glSwapBuffers", "()V");
     env->DeleteLocalRef(clazz);
 
     STARFISH_LOG_INFO(
@@ -491,6 +488,50 @@ void hideIME(void* view)
                         g_WindowGlue.m_hideIME);
 }
 
+void glMakeCurrent(LWE::WebContainer* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+            STARFISH_LOG_ERROR("Failed to attach");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        STARFISH_LOG_ERROR("GetEnv : version not supported");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    if (!env || !g_WindowGlue.m_glMakeCurrent) {
+        STARFISH_LOG_ERROR("glMakeCurrent error");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_glMakeCurrent);
+}
+
+void glSwapBuffers(LWE::WebContainer* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+            STARFISH_LOG_ERROR("Failed to attach");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        STARFISH_LOG_ERROR("GetEnv : version not supported");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    if (!env || !g_WindowGlue.m_glSwapBuffers) {
+        STARFISH_LOG_ERROR("glMakeCurrent error");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_glSwapBuffers);
+}
+
 void registerWebContainerHandler(LWE::WebContainer* webContainer)
 {
     webContainer->RegisterOnReceivedErrorHandler(
@@ -550,93 +591,6 @@ void registerWebContainerHandler(LWE::WebContainer* webContainer)
 
     webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
         [](LWE::WebContainer* wv) -> void { hideIME(wv); });
-
-#if defined(PORT_WINDOW_BACKEND_GB)
-    webContainer->RegisterPreRenderingHandler(
-        [webContainer](void) -> LWE::WebContainer::RenderInfo {
-
-            JNIEnv* env = g_WindowGlue.m_env;
-            int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-            if (getEnvStat == JNI_EDETACHED) {
-                if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
-                    STARFISH_LOG_ERROR("Failed to attach");
-                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-                }
-            } else if (getEnvStat == JNI_OK) {
-            } else if (getEnvStat == JNI_EVERSION) {
-                STARFISH_LOG_ERROR("GetEnv : version not supported");
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-
-            // Call create Buffer method
-            jobject bitmap = env->CallObjectMethod(g_webViews[webContainer],
-                                                   g_WindowGlue.m_createBuffer);
-            int ret = 0;
-            AndroidBitmapInfo info;
-            if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
-                STARFISH_LOG_ERROR("AndroidBitmap_getInfo() failed ! error=%d",
-                                   ret);
-            }
-            if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-                STARFISH_LOG_ERROR("Bitmap format is not RGBA_8888 !");
-            }
-            int stride = info.stride;
-
-            void* pixels;
-            if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
-                STARFISH_LOG_ERROR(
-                    "AndroidBitmap_lockPixels() failed ! error=%d", ret);
-            }
-
-            ::LWE::WebContainer::RenderInfo result;
-            result.updatedBufferAddress = pixels;
-            result.bufferStride = stride;
-            return result;
-        });
-
-    webContainer->RegisterOnRenderedHandler([](
-        LWE::WebContainer* wv, LWE::WebContainer::RenderResult r) {
-
-        jobject java_webview = g_webViews[wv];
-
-        JNIEnv* env = g_WindowGlue.m_env;
-        int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-        if (getEnvStat == JNI_EDETACHED) {
-            if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
-                STARFISH_LOG_ERROR("Failed to attach");
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-        } else if (getEnvStat == JNI_OK) {
-        } else if (getEnvStat == JNI_EVERSION) {
-            STARFISH_LOG_ERROR("GetEnv : version not supported");
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-
-        // Call onRendered method
-        env->CallVoidMethod(g_webViews[wv], g_WindowGlue.m_onRendered,
-                            r.updatedX, r.updatedY, r.updatedWidth,
-                            r.updatedHeight);
-
-        jclass clazz = env->GetObjectClass(g_webViews[wv]);
-        if (clazz != NULL) {
-            jfieldID fid = env->GetFieldID(clazz, "mScreenBuffer",
-                                           "Landroid/graphics/Bitmap;");
-            if (fid != NULL) {
-                jobject bitmap = env->GetObjectField(java_webview, fid);
-                if (bitmap != NULL) {
-                    int ret = 0;
-                    if ((ret = AndroidBitmap_unlockPixels(env, bitmap)) < 0) {
-                        STARFISH_LOG_ERROR(
-                            "AndroidBitmap_unlockPixels() failed ! error=%d",
-                            ret);
-                    }
-                }
-            }
-        }
-        // Call destoryBuffer method
-        env->CallVoidMethod(java_webview, g_WindowGlue.m_destoryBuffer);
-    });
-#endif
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -666,8 +620,10 @@ Java_com_samsung_android_lwe_LweWebViewImpl_create(
                              cachePathString);
     }
 
-    LWE::WebContainer* webContainer = LWE::WebContainer::Create(
-        w, h, devicePixelRatio, "serif", localeString, timezoneIDString);
+    LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
+        w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
+        [](LWE::WebContainer* wc, bool mayNeedsSync) { glSwapBuffers(wc); },
+        devicePixelRatio, "serif", localeString, timezoneIDString);
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);

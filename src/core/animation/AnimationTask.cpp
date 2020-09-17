@@ -993,7 +993,6 @@ ActiveLengthAnimationTask::ActiveLengthAnimationTask(
                           iterationCount, playState, fillMode)
     , m_indexForBgLayer(indexForBgLayer)
 {
-    m_isEveryAnimiatedValueResolved = true;
     STARFISH_ASSERT(target != nullptr);
 }
 
@@ -1014,132 +1013,154 @@ void* ActiveLengthAnimationTask::operator new(size_t size)
 
 void ActiveLengthAnimationTask::resolveUnresolvedAnimatedValues()
 {
-    if (m_isEveryAnimiatedValueResolved == false) {
-        Frame* frm = m_targetElement->frame();
-        FrameBox* cb = containingBlock(frm);
-
-        LayoutUnit parentLength;
-        bool isValueKindDependsOnParentFixedHeight = false;
-        bool hasParentHeightFixedHeight = false;
-
-        if (cb != nullptr) {
-            switch (m_property) {
-            case CSSStyleValuePair::Width:
-            case CSSStyleValuePair::MaxWidth:
-            case CSSStyleValuePair::MinWidth:
-            case CSSStyleValuePair::MarginTop:
-            case CSSStyleValuePair::MarginRight:
-            case CSSStyleValuePair::MarginBottom:
-            case CSSStyleValuePair::MarginLeft:
-            case CSSStyleValuePair::BorderTopWidth:
-            case CSSStyleValuePair::BorderRightWidth:
-            case CSSStyleValuePair::BorderBottomWidth:
-            case CSSStyleValuePair::BorderLeftWidth:
-            case CSSStyleValuePair::PaddingTop:
-            case CSSStyleValuePair::PaddingRight:
-            case CSSStyleValuePair::PaddingBottom:
-            case CSSStyleValuePair::PaddingLeft:
-                parentLength = cb->contentWidth();
+    if (!m_isEveryAnimiatedValueResolved) {
+        bool isEveryValueHasPercent = true;
+        for (size_t i = 0; i < m_values.size(); i++) {
+            if (!m_values[i]->getLength().isPercent()) {
+                isEveryValueHasPercent = false;
                 break;
-            case CSSStyleValuePair::Left:
-            case CSSStyleValuePair::Right:
-                parentLength = cb->contentWidth();
-                break;
-            case CSSStyleValuePair::Top:
-            case CSSStyleValuePair::Bottom:
-                parentLength = cb->contentHeight();
-                break;
-            case CSSStyleValuePair::Height:
-            case CSSStyleValuePair::MaxHeight:
-            case CSSStyleValuePair::MinHeight:
-                isValueKindDependsOnParentFixedHeight = true;
-                hasParentHeightFixedHeight =
-                    LayoutContext::parentHasFixedHeight(frm);
-                parentLength = cb->contentHeight();
-                break;
-            case CSSStyleValuePair::BackgroundPositionX: {
-                Unit::Size posSize, imgSize;
-                AnimationUtil::calculateBackgroundBaseData(
-                    m_targetElement->frame()->asFrameBox(),
-                    m_targetElement->style(), m_indexForBgLayer, posSize,
-                    imgSize);
-                if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
-                    return;
-                }
-                parentLength = posSize.width() - imgSize.width();
-                break;
-            }
-            case CSSStyleValuePair::BackgroundPositionY: {
-                Unit::Size posSize, imgSize;
-                AnimationUtil::calculateBackgroundBaseData(
-                    m_targetElement->frame()->asFrameBox(),
-                    m_targetElement->style(), m_indexForBgLayer, posSize,
-                    imgSize);
-                if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
-                    return;
-                }
-                parentLength = posSize.height() - imgSize.height();
-                break;
-            }
-            case CSSStyleValuePair::FontSize:
-                break;
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-        } else {
-            switch (m_property) {
-            case CSSStyleValuePair::Width:
-            case CSSStyleValuePair::MaxWidth:
-            case CSSStyleValuePair::MinWidth:
-            case CSSStyleValuePair::MarginTop:
-            case CSSStyleValuePair::MarginRight:
-            case CSSStyleValuePair::MarginBottom:
-            case CSSStyleValuePair::MarginLeft:
-            case CSSStyleValuePair::BorderTop:
-            case CSSStyleValuePair::BorderRight:
-            case CSSStyleValuePair::BorderBottom:
-            case CSSStyleValuePair::BorderLeft:
-            case CSSStyleValuePair::PaddingTop:
-            case CSSStyleValuePair::PaddingRight:
-            case CSSStyleValuePair::PaddingBottom:
-            case CSSStyleValuePair::PaddingLeft:
-            case CSSStyleValuePair::Left:
-            case CSSStyleValuePair::Right:
-            case CSSStyleValuePair::Top:
-            case CSSStyleValuePair::Bottom:
-                break;
-            case CSSStyleValuePair::Height:
-            case CSSStyleValuePair::MaxHeight:
-            case CSSStyleValuePair::MinHeight:
-                isValueKindDependsOnParentFixedHeight = true;
-                hasParentHeightFixedHeight = false;
-                break;
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
 
-        // A = height-kind with parent fixed height
-        // B = height-kind without parent fixed height
-        // value    | width-kind       | A                | B
-        // auto     | auto             | auto             | auto
-        // fixed    | fixed            | fixed            | fixed
-        // percent  | convert as fixed | convert as fixed | invalid value
+        if (!isEveryValueHasPercent) {
+            Frame* frm = m_targetElement->frame();
+            FrameBox* cb = containingBlock(frm);
 
-        for (size_t i = 0; i < m_values.size(); i++) {
-            STARFISH_ASSERT(m_values[i]->isLength() == true);
-            if (m_values[i]->getLength().isAuto() == false) {
-                STARFISH_ASSERT(m_values[i]->getLength().isDefinite(true) ==
-                                true);
-                if (m_values[i]->getLength().isDefinite(
-                        isValueKindDependsOnParentFixedHeight == false ||
-                        hasParentHeightFixedHeight == true) == true) {
+            LayoutUnit parentLength;
+            bool canUsePercent = false;
+            bool isValueKindDependsOnParentFixedHeight = false;
+            bool hasParentHeightFixedHeight = false;
+
+            if (cb != nullptr) {
+                switch (m_property) {
+                case CSSStyleValuePair::Width:
+                case CSSStyleValuePair::MaxWidth:
+                case CSSStyleValuePair::MinWidth:
+                case CSSStyleValuePair::MarginTop:
+                case CSSStyleValuePair::MarginRight:
+                case CSSStyleValuePair::MarginBottom:
+                case CSSStyleValuePair::MarginLeft:
+                case CSSStyleValuePair::BorderTopWidth:
+                case CSSStyleValuePair::BorderRightWidth:
+                case CSSStyleValuePair::BorderBottomWidth:
+                case CSSStyleValuePair::BorderLeftWidth:
+                case CSSStyleValuePair::PaddingTop:
+                case CSSStyleValuePair::PaddingRight:
+                case CSSStyleValuePair::PaddingBottom:
+                case CSSStyleValuePair::PaddingLeft:
+                    parentLength = cb->contentWidth();
+                    break;
+                case CSSStyleValuePair::Left:
+                case CSSStyleValuePair::Right:
+                    parentLength = cb->contentWidth();
+                    break;
+                case CSSStyleValuePair::Top:
+                case CSSStyleValuePair::Bottom:
+                    parentLength = cb->contentHeight();
+                    break;
+                case CSSStyleValuePair::Height:
+                case CSSStyleValuePair::MaxHeight:
+                case CSSStyleValuePair::MinHeight:
+                    isValueKindDependsOnParentFixedHeight = true;
+                    hasParentHeightFixedHeight =
+                        LayoutContext::parentHasFixedHeight(frm);
+                    parentLength = cb->contentHeight();
+                    break;
+                case CSSStyleValuePair::BackgroundPositionX: {
+                    Unit::Size posSize, imgSize;
+                    AnimationUtil::calculateBackgroundBaseData(
+                        m_targetElement->frame()->asFrameBox(),
+                        m_targetElement->style(), m_indexForBgLayer, posSize,
+                        imgSize);
+                    if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
+                        return;
+                    }
+                    parentLength = posSize.width() - imgSize.width();
+                    break;
+                }
+                case CSSStyleValuePair::BackgroundPositionY: {
+                    Unit::Size posSize, imgSize;
+                    AnimationUtil::calculateBackgroundBaseData(
+                        m_targetElement->frame()->asFrameBox(),
+                        m_targetElement->style(), m_indexForBgLayer, posSize,
+                        imgSize);
+                    if (imgSize.width() == 0.0 || imgSize.height() == 0.0) {
+                        return;
+                    }
+                    parentLength = posSize.height() - imgSize.height();
+                    break;
+                }
+                case CSSStyleValuePair::FontSize:
+                    break;
+                default:
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                }
+            } else {
+                switch (m_property) {
+                case CSSStyleValuePair::Width:
+                case CSSStyleValuePair::MaxWidth:
+                case CSSStyleValuePair::MinWidth:
+                case CSSStyleValuePair::MarginTop:
+                case CSSStyleValuePair::MarginRight:
+                case CSSStyleValuePair::MarginBottom:
+                case CSSStyleValuePair::MarginLeft:
+                case CSSStyleValuePair::BorderTop:
+                case CSSStyleValuePair::BorderRight:
+                case CSSStyleValuePair::BorderBottom:
+                case CSSStyleValuePair::BorderLeft:
+                case CSSStyleValuePair::PaddingTop:
+                case CSSStyleValuePair::PaddingRight:
+                case CSSStyleValuePair::PaddingBottom:
+                case CSSStyleValuePair::PaddingLeft:
+                case CSSStyleValuePair::Left:
+                case CSSStyleValuePair::Right:
+                case CSSStyleValuePair::Top:
+                case CSSStyleValuePair::Bottom:
+                    break;
+                case CSSStyleValuePair::Height:
+                case CSSStyleValuePair::MaxHeight:
+                case CSSStyleValuePair::MinHeight:
+                    isValueKindDependsOnParentFixedHeight = true;
+                    hasParentHeightFixedHeight = false;
+                    break;
+                default:
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                }
+            }
+
+            // A = height-kind with parent fixed height
+            // B = height-kind without parent fixed height
+            // value    | width-kind       | A                | B
+            // auto     | auto             | auto             | auto
+            // fixed    | fixed            | fixed            | fixed
+            // percent  | convert as fixed | convert as fixed | invalid value
+
+            for (size_t i = 0; i < m_values.size(); i++) {
+                STARFISH_ASSERT(m_values[i]->isLength());
+                if (m_values[i]->getLength().hasPercent()) {
+                    if (isValueKindDependsOnParentFixedHeight) {
+                        if (hasParentHeightFixedHeight) {
+                            new (m_values[i]) AnimatedValue(
+                                Length(Length::Fixed,
+                                       m_values[i]->getLength().specifiedValue(
+                                           parentLength, m_targetElement)));
+                        } else {
+                            new (m_values[i]) AnimatedValue(Length());
+                        }
+                    } else {
+                        new (m_values[i]) AnimatedValue(
+                            Length(Length::Fixed,
+                                   m_values[i]->getLength().specifiedValue(
+                                       parentLength, m_targetElement)));
+                    }
+
+                } else if (!m_values[i]->getLength().isAuto()) {
                     new (m_values[i]) AnimatedValue(Length(
                         Length::Fixed, m_values[i]->getLength().specifiedValue(
                                            parentLength, m_targetElement)));
-                } else {
-                    new (m_values[i]) AnimatedValue();
                 }
+
+                STARFISH_ASSERT(!m_values[i]->getLength().hasPercent());
             }
         }
     }
@@ -1628,7 +1649,6 @@ bool applyTransitionIfNeeds(
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(oldStyle != nullptr);
-    STARFISH_ASSERT(oldFrame != nullptr);
     STARFISH_ASSERT(newStyle != nullptr);
     STARFISH_ASSERT(damagedKeys != nullptr);
     bool ret = false;
@@ -1666,7 +1686,8 @@ bool applyTransitionIfNeeds(
         if (NEED_TRANSITION(CSSStyleValuePair::Transform) == true) {
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::Transform);
-            if (found == false && oldFrame->isTransformable() == true) {
+            if (found == false && oldFrame &&
+                oldFrame->isTransformable() == true) {
                 auto newTransform =
                     newStyle->rareComputedStyleData()->ensureTransforms();
                 auto task = new ActiveTransformAnimationTask(

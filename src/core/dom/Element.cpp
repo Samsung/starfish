@@ -867,7 +867,7 @@ bool Element::handleDefaultEvent(Event* event)
         return true;
     }
 
-    if (frame() && frame()->isFrameBlockBox() &&
+    if (frame() && frame()->isFrameBlockBox() && frame()->style() &&
         frame()->shouldApplyOverflow()) {
         bool isDownEvent =
             (event->isMouseEvent() && event->type()->equals("mousedown")) ||
