@@ -789,6 +789,12 @@ public:
                     if (n != 1) {
                         opacity = opacity * n;
                     }
+
+                    SkMatrix test;
+                    if (!compositor->currentTransformMatrix().invert(&test)) {
+                        compositor->postMatrix(SkMatrix::InvalidMatrix());
+                        return;
+                    }
                 }
 
                 if (overflowOrScroll.first && self != b) {
@@ -2851,6 +2857,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
 
     CompositorStateRestorer r(compositor, this, parentBox);
+
+    // If current matrix is invalid, we could not composite StackckingContext
+    SkMatrix test;
+    if (!r.m_compositor->currentTransformMatrix().invert(&test)) {
+        return;
+    }
 
     if (isIFrameStackingContextOwner()) {
         if (m_childContexts.size()) {

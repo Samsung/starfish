@@ -466,7 +466,6 @@ bool g_isEvasGLOnDirectMode;
 
 namespace Starfish {
 
-static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
@@ -474,7 +473,10 @@ static bool g_isSupportBGRATexture = false;
 static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_useStencilBufferOnFBO = false;
-static size_t g_maxTextureSize;
+#ifndef MIN_MAX_TEXTURE_SIZE
+#define MIN_MAX_TEXTURE_SIZE 2048
+#endif
+static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
 
 static void checkError()
 {
@@ -1293,11 +1295,9 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         checkError();
         g_maxTextureSize = siz;
 
-        g_textureTileSize = CanvasSurface::g_canvasSurfaceTileSize;
-
-        if (g_textureTileSize > g_maxTextureSize) {
-            g_textureTileSize = g_maxTextureSize;
-        }
+        STARFISH_RELEASE_ASSERT(CanvasSurface::g_canvasSurfaceTileSize <=
+                                g_maxTextureSize);
+        STARFISH_RELEASE_ASSERT(MIN_MAX_TEXTURE_SIZE <= siz);
 
         bool isOpenGLES3 = true;
         int major;
@@ -1399,7 +1399,6 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 
 size_t Compositor::maximumTextureSize()
 {
-    STARFISH_RELEASE_ASSERT(!g_needsCheckCompatibility);
     return g_maxTextureSize;
 }
 
@@ -1716,7 +1715,7 @@ public:
             return;
         }
 
-        m_textureTileSize = g_textureTileSize;
+        m_textureTileSize = CanvasSurface::g_canvasSurfaceTileSize;
         m_wTextureCount = ceil((float)m_bufferWidth / m_textureTileSize);
         m_hTextureCount = ceil((float)m_bufferHeight / m_textureTileSize);
 

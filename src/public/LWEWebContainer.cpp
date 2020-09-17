@@ -565,7 +565,6 @@ WebContainer* WebContainer::CreateGL(
                     Starfish::PlatformWindow* wnd, bool mayNeedsSync) {
                     onGLSwapBuffers(newWebContainer, mayNeedsSync);
                 });
-            webView->platformWindow()->checkGLCompatibility();
 
             return (size_t)newWebContainer;
         });
@@ -585,8 +584,6 @@ WebContainer* WebContainer::CreateGL(
                                            bool mayNeedsSync) {
             onGLSwapBuffers(newWebContainer, mayNeedsSync);
         });
-
-    webView->platformWindow()->checkGLCompatibility();
 
     return newWebContainer;
 #endif

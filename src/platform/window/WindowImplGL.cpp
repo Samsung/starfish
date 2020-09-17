@@ -188,13 +188,6 @@ public:
 
     virtual Compositor* prepareCompositor() override;
 
-    virtual void checkGLCompatibility() override
-    {
-        if (!m_compostiorContext) {
-            m_compostiorContext = Compositor::initCompositorContext(this);
-        }
-    }
-
     virtual bool glMakeCurrent() override
     {
         if (m_isDestroyed) {
