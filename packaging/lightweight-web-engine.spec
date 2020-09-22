@@ -62,13 +62,13 @@ Requires(postun): /sbin/ldconfig
 %endif
 
 %if %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
-%if "%{_vd_cfg_product_type}" == "TV" || "%{_vd_cfg_product_type}" == "LFD" || "%{_vd_cfg_product_type}" == "IWB" || "%{_vd_cfg_product_type}" == "WALL"
-%define rpm prod_tv
-%else
-%if "%{_vd_cfg_product_type}" == "AUDIO"
+  %if "%{_vd_cfg_product_type}" == "AUDIO" || "%{rpm}" == "headless"
 %define rpm headless
-%endif
-%endif
+  %else
+    %if "%{_vd_cfg_product_type}" == "TV" || "%{_vd_cfg_product_type}" == "LFD" || "%{_vd_cfg_product_type}" == "IWB" || "%{_vd_cfg_product_type}" == "WALL"
+%define rpm prod_tv
+    %endif
+  %endif
 %endif
 
 %if 0%{?sec_product_feature_profile_wearable} == 1
@@ -144,15 +144,15 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: pkgconfig(libpulse)
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%%if (0%{?tizen_version_major} >= 6)
+  %if (0%{?tizen_version_major} >= 6)
 #BuildRequires: pkgconfig(dali2-core)
 #BuildRequires: pkgconfig(dali2-toolkit)
 #BuildRequires: pkgconfig(dali2-adaptor)
-%else
+  %else
 BuildRequires: pkgconfig(dali-core)
 BuildRequires: pkgconfig(dali-toolkit)
 BuildRequires: pkgconfig(dali-adaptor)
-%endif
+  %endif
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-device)
 %endif
