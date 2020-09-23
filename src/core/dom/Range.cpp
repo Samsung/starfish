@@ -881,12 +881,14 @@ static unsigned computeNodeIdx(Node* node)
 
 DocumentFragment* Range::processContents(ProcessingType type)
 {
-    DocumentFragment* fragment;
-    if (type == Extract || type == Clone)
+    DocumentFragment* fragment = nullptr;
+    if (type == Extract || type == Clone) {
         fragment = m_document->createDocumentFragment();
+    }
 
-    if (collapsed())
+    if (collapsed()) {
         return fragment;
+    }
 
     Node* rootNode = Traverse::commonAncestor(startContainer(), endContainer());
     Node* partialStart =
