@@ -738,8 +738,6 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         m_resourceRequest->isError()) {
         return nullptr;
     }
-    STARFISH_ASSERT(HTTPHeaderMap::kSetCookie != nullptr);
-    STARFISH_ASSERT(HTTPHeaderMap::kSetCookie2 != nullptr);
     if (name->length() == 0 || name->containsOnlyASCIIChars() == false ||
         name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie,
                                strlen(HTTPHeaderMap::kSetCookie)) == true ||

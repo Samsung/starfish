@@ -18,17 +18,14 @@ package com.samsung.android.lwe;
 
 import android.net.Uri;
 
-/**
- * This interface is used to implement a WebResourceRequest for a SemWebViewClient
- *
- * @deprecated This interface was deprecated in API level 29. This interface will be removed in a future Android release, and will not be supported anymore. Do not use this interface.
- */
-public interface SemWebResourceRequest {
-    /**
-     * Gets the URL for which the resource request was made.
-     *
-     * @return The URL for which the resource request was made.
-     * @since Lightweight Web Engine 1.0
-     */
-    Uri getUrl();
+public class SemLweWebResourceRequestImpl implements SemLweWebResourceRequest {
+    String mUrl;
+
+    public SemLweWebResourceRequestImpl(String url) {
+        mUrl = url;
+    }
+
+    public Uri getUrl() {
+        return Uri.parse(mUrl);
+    }
 }

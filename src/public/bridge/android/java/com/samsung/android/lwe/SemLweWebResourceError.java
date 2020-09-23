@@ -16,16 +16,22 @@
 
 package com.samsung.android.lwe;
 
-import android.net.Uri;
 
-public class SemWebResourceRequestImpl implements SemWebResourceRequest {
-    String mUrl;
+public class SemLweWebResourceError {
 
-    public SemWebResourceRequestImpl(String url) {
-        mUrl = url;
+    private int mErrorCode = 0;
+    private CharSequence mErrorDescription = "";
+
+    public SemLweWebResourceError(int code, CharSequence description) {
+        mErrorCode = code;
+        mErrorDescription = description;
     }
 
-    public Uri getUrl() {
-        return Uri.parse(mUrl);
+    public CharSequence getDescription() {
+        return mErrorDescription;
+    }
+
+    public int getErrorCode() {
+        return mErrorCode;
     }
 }

@@ -420,6 +420,13 @@ void PlatformWindow::callHandler(WindowHandlerKind handlerKind, void* param)
         env);
 }
 
+void PlatformWindow::registerCanRenderingCallback(
+    const std::function<bool(PlatformWindow* wnd)>& cb)
+{
+    m_canRenderingCallback = cb;
+    m_webView->m_isActive = cb(this);
+}
+
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 template <typename T>
 void PlatformWindow::paintVirtualCursor(T canvas)

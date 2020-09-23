@@ -207,10 +207,7 @@ public:
     void callHandler(WindowHandlerKind handlerKind, void* param);
 
     void registerCanRenderingCallback(
-        const std::function<bool(PlatformWindow* wnd)>& cb)
-    {
-        m_canRenderingCallback = cb;
-    }
+        const std::function<bool(PlatformWindow* wnd)>& cb);
     bool canRendering()
     {
         if (m_canRenderingCallback) {
