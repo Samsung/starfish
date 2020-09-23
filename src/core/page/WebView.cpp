@@ -278,7 +278,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_needsContinuousRendering(false)
     , m_needsFullPainting(false)
     , m_didCompositeBefore(false)
-    , m_isActive(false)
+    , m_isActive(true)
     , m_inIdleMode(false)
     , m_didFirstRenderingAfterWakeup(true)
     , m_rootStackingContext(nullptr)
@@ -648,7 +648,6 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
 
     m_navigateStartingTime = timestamp();
 
-    m_isActive = false;
     m_browsingContextsNeedsLayout.clear();
     m_browsingContextsDidLayout.clear();
     m_repaintRegionInRendering.clear();
@@ -1711,7 +1710,6 @@ void WebView::initRenderingFlags()
     m_needsPainting = false;
     m_needsComposite = false;
     m_needsFullPainting = true;
-    m_isActive = true;
 }
 
 Node* WebView::focusedNode()
@@ -1809,10 +1807,18 @@ void WebView::resize(uint32_t width, uint32_t height)
 {
     STARFISH_LOG_INFO("WebView::resize\n");
     if (mainBrowsingContext()) {
-        mainBrowsingContext()->window()->resize(
-            width / screenInfo().devicePixelRatio,
-            height / screenInfo().devicePixelRatio);
+        float dpr = screenInfo().devicePixelRatio;
+        LayoutUnit scaledWidth = LayoutUnit(width) / dpr;
+        scaledWidth = scaledWidth.ceil();
+        LayoutUnit scaledHeight = LayoutUnit(height) / dpr;
+        scaledHeight = scaledHeight.ceil();
 
+        m_screenInfo.rect.setWidth(scaledWidth);
+        m_screenInfo.rect.setHeight(scaledHeight);
+        m_screenInfo.availableRect.setWidth(scaledWidth);
+        m_screenInfo.availableRect.setHeight(scaledHeight);
+
+        mainBrowsingContext()->window()->resize(scaledWidth, scaledHeight);
         setNeedsFullRepainting();
     }
 }

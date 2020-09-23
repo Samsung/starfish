@@ -257,7 +257,6 @@ void EventSource::connect()
     }
 
     if (m_parser && !m_parser->lastEventId()->isEmpty()) {
-        STARFISH_ASSERT(HTTPHeaderMap::kLastEventID != nullptr);
         m_resourceRequest->deleteRequestHeader(String::createASCIIString(
             HTTPHeaderMap::kLastEventID, strlen(HTTPHeaderMap::kLastEventID)));
 
@@ -300,20 +299,17 @@ void EventSource::start(String* method)
 
     m_resourceRequest->open(reqData);
 
-    STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
     m_resourceRequest->setRequestHeader(
         String::createASCIIString(HTTPHeaderMap::kAccept,
                                   strlen(HTTPHeaderMap::kAccept)),
         String::createASCIIString("text/event-stream"));
 
-    STARFISH_ASSERT(HTTPHeaderMap::kCacheControl != nullptr);
     m_resourceRequest->setRequestHeader(
         String::createASCIIString(HTTPHeaderMap::kCacheControl,
                                   strlen(HTTPHeaderMap::kCacheControl)),
         String::createASCIIString("no-cache"));
 
     if (m_parser != nullptr && m_parser->lastEventId()->isEmpty() == false) {
-        STARFISH_ASSERT(HTTPHeaderMap::kLastEventID != nullptr);
         m_resourceRequest->setRequestHeader(
             String::createASCIIString(HTTPHeaderMap::kLastEventID,
                                       strlen(HTTPHeaderMap::kLastEventID)),

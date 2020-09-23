@@ -55,13 +55,6 @@ void Resource::request(RequestData* requestData, bool allowCache)
                 FormSubmitData* formSubmitData =
                     url->asDocumentURL()->formSubmitData();
                 if (url->isHTTPFamilyURL() == true) {
-                    STARFISH_ASSERT(HTTPHeaderMap::kAccept != nullptr);
-                    STARFISH_ASSERT(HTTPHeaderMap::kContentType != nullptr);
-                    STARFISH_ASSERT(HTTPHeaderMap::kAcceptCharset != nullptr);
-                    STARFISH_ASSERT(HTTPHeaderMap::kOrigin != nullptr);
-                    STARFISH_ASSERT(HTTPHeaderMap::kPragma != nullptr);
-                    STARFISH_ASSERT(HTTPHeaderMap::kCacheControl != nullptr);
-
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(
                             HTTPHeaderMap::kAccept,

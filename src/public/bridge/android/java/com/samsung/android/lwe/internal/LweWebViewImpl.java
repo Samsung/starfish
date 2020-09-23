@@ -14,54 +14,67 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lwe.internal;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
+import android.icu.util.TimeZone;
+import android.net.Uri;
 import android.os.Handler;
-import android.util.AttributeSet;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
-import android.net.Uri;
+
+import com.samsung.android.lwe.SemLweDownloadListener;
+import com.samsung.android.lwe.SemLweWebResourceError;
+import com.samsung.android.lwe.SemLweWebResourceRequest;
+import com.samsung.android.lwe.SemLweWebSettings;
+import com.samsung.android.lwe.SemLweWebView;
+import com.samsung.android.lwe.SemLweWebViewClient;
+import com.samsung.android.lwe.SemLweWebLweClient;
 
 import java.io.File;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.ArrayList;
+import java.util.Locale;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
 
 public class LweWebViewImpl implements LweWebView {
     private static String sTag = "LweWebViewImpl";
 
     static {
         try {
-            System.loadLibrary("lightweightwebengine.lwe.samsung");
+            System.loadLibrary("crypto");
+            System.loadLibrary("ssl");
+            try {
+                System.loadLibrary("icudata");
+                System.loadLibrary("icuuc");
+                System.loadLibrary("icui18n");
+            } catch(UnsatisfiedLinkError e) {
+                // ignore
+                // runtime icu binding can occur this error
+            }
+            System.loadLibrary("cairo");
+            System.loadLibrary("lwe");
         } catch (Exception e) {
-            Log.e(sTag, "Cannot load: liblightweightwebengine.lwe.samsung.so");
+            Log.e(sTag, "Cannot load: lwe.so");
             e.printStackTrace();
-       }
+        }
     }
 
     public enum ImeComposingStatus {
@@ -70,63 +83,64 @@ public class LweWebViewImpl implements LweWebView {
         COMPOSING_END
     }
 
-    private final static String sLocale = "ko-KR";
-    private final static String sTimezone = "Asia/Seoul";
+    private final static String sLocale = Locale.getDefault().toLanguageTag();
+    private final static String sTimezone = TimeZone.getDefault().getDisplayName();
     private final static String[] allowedMimetypes = {"text/html", "text/plain"};
     private final static String[] allowedEncodings = {"UTF-8", "utf8"};
 
-    private float sDpr = 1;
+    private float mDpr = 1;
     private long mWebViewInternalHandle;
-    private Bitmap mScreenBuffer;
     private int mWindowWidth;
     private int mWindowHeight;
-    private boolean mSurfaceIsReady;
 
-    private SemWebViewClient mWebViewClient = null;
-    private SemWebLweClient mWebLweClient = null;
-    private SemDownloadListener mDownloadListener = null;
-    private SemWebSettings mWebSettings = null;
+    private SemLweWebViewClient mWebViewClient = null;
+    private SemLweWebLweClient mWebLweClient = null;
+    private SemLweDownloadListener mDownloadListener = null;
+    private SemLweWebSettings mWebSettings = null;
 
-    private LweWebViewImpl.ImeComposingStatus mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
+    private ImeComposingStatus mComposingStatus = ImeComposingStatus.NORMAL;
     private String mIMEComposingStr = null;
-    private SemWebView mLWEView = null;
+    private SemLweWebView mLWEView = null;
     private InputMethodManager mIMM = null;
 
-    private ArrayList<Pattern> mWhitelistedUrls = null;
+    private EGL10 mEgl;
+    private EGLDisplay mEglDisplay;
+    private EGLContext mEglContext;
+    private EGLSurface mEglSurface;
 
     static class ErrorConverter {
         public static int covertErrorCode(int lweErrorCode) {
             switch (lweErrorCode) {
                 case 2:
-                    return SemWebViewClient.ERROR_HOST_LOOKUP;
+                    return SemLweWebViewClient.ERROR_HOST_LOOKUP;
                 case 3:
-                    return SemWebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME;
+                    return SemLweWebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME;
                 case 4:
-                    return SemWebViewClient.ERROR_AUTHENTICATION;
+                    return SemLweWebViewClient.ERROR_AUTHENTICATION;
                 case 5:
-                    return SemWebViewClient.ERROR_PROXY_AUTHENTICATION;
+                    return SemLweWebViewClient.ERROR_PROXY_AUTHENTICATION;
                 case 6:
-                    return SemWebViewClient.ERROR_CONNECT;
+                    return SemLweWebViewClient.ERROR_CONNECT;
                 case 7:
-                    return SemWebViewClient.ERROR_IO;
+                    return SemLweWebViewClient.ERROR_IO;
                 case 8:
-                    return SemWebViewClient.ERROR_TIMEOUT;
+                    return SemLweWebViewClient.ERROR_TIMEOUT;
                 case 9:
-                    return SemWebViewClient.ERROR_REDIRECT_LOOP;
+                    return SemLweWebViewClient.ERROR_REDIRECT_LOOP;
                 case 10:
-                    return SemWebViewClient.ERROR_UNSUPPORTED_SCHEME;
+                    return SemLweWebViewClient.ERROR_UNSUPPORTED_SCHEME;
                 case 11:
-                    return SemWebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
+                    return SemLweWebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
                 case 12:
-                    return SemWebViewClient.ERROR_BAD_URL;
+                    return SemLweWebViewClient.ERROR_BAD_URL;
                 case 13:
-                    return SemWebViewClient.ERROR_FILE;
+                    return SemLweWebViewClient.ERROR_FILE;
                 case 14:
-                    return SemWebViewClient.ERROR_FILE_NOT_FOUND;
+                    return SemLweWebViewClient.ERROR_FILE_NOT_FOUND;
                 case 15:
-                    return SemWebViewClient.ERROR_TOO_MANY_REQUESTS;
+                    return SemLweWebViewClient.ERROR_TOO_MANY_REQUESTS;
                 default:
-                    return SemWebViewClient.ERROR_UNKNOWN;
+                    return SemLweWebViewClient.ERROR_UNKNOWN;
             }
         }
 
@@ -166,6 +180,88 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
+    private int findConfigAttrib(EGLConfig config, int attribute, int defaultValue) {
+        int[] value = new int[1];
+        if (mEgl.eglGetConfigAttrib(mEglDisplay, config, attribute, value)) {
+            return value[0];
+        }
+        return defaultValue;
+    }
+
+    private void initGLContext() {
+        if (mEglSurface != null && mEglContext != null) {
+            return;
+        }
+
+        final int RED_SIZE = 8;
+        final int GREEN_SIZE = 8;
+        final int BLUE_SIZE = 8;
+        final int ALPHA_SIZE = 8;
+
+        final int DEPTH_SIZE = 0;
+        final int STENCIL_SIZE = 1;
+        final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+
+        mEgl = (EGL10) EGLContext.getEGL();
+        mEglDisplay = mEgl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+
+        if (mEglDisplay == EGL10.EGL_NO_DISPLAY) {
+            throw new RuntimeException("eglGetDisplay failed");
+        }
+
+        int[] version = new int[2];
+        if (!mEgl.eglInitialize(mEglDisplay, version)) {
+            throw new RuntimeException("eglInitialize failed");
+        }
+
+        int[] configSpec = {
+                EGL10.EGL_RED_SIZE, RED_SIZE, EGL10.EGL_GREEN_SIZE, GREEN_SIZE, EGL10.EGL_BLUE_SIZE, BLUE_SIZE,
+                EGL10.EGL_ALPHA_SIZE, ALPHA_SIZE, EGL10.EGL_DEPTH_SIZE, DEPTH_SIZE, EGL10.EGL_STENCIL_SIZE, STENCIL_SIZE,
+                EGL10.EGL_NONE
+        };
+
+        int[] value = new int[1];
+        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, null, 1, value)) {
+            throw new IllegalArgumentException("eglChooseConfig failed");
+        }
+        EGLConfig[] configs = new EGLConfig[value[0]];
+        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, value[0], value)) {
+            throw new IllegalArgumentException("eglChooseConfig failed");
+        }
+
+        EGLConfig eglConfig = configs[0];
+        for (EGLConfig c : configs) {
+            int depth = findConfigAttrib(c, EGL10.EGL_DEPTH_SIZE, 0);
+            int stencil = findConfigAttrib(c, EGL10.EGL_STENCIL_SIZE, 0);
+
+            if ((depth >= DEPTH_SIZE) && (stencil >= STENCIL_SIZE)) {
+                int r = findConfigAttrib(c, EGL10.EGL_RED_SIZE, 0);
+                int g = findConfigAttrib(c, EGL10.EGL_GREEN_SIZE, 0);
+                int b = findConfigAttrib(c, EGL10.EGL_BLUE_SIZE, 0);
+                int a = findConfigAttrib(c, EGL10.EGL_ALPHA_SIZE, 0);
+                if ((r == RED_SIZE) && (g == GREEN_SIZE)
+                        && (b == BLUE_SIZE) && (a == ALPHA_SIZE)) {
+                    eglConfig = c;
+                    break;
+                }
+            }
+        }
+
+        int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE };
+
+        mEglContext = mEgl.eglCreateContext(mEglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
+        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, eglConfig, mLWEView.getSurfaceTexture(), null);
+    }
+
+    private void destroyGLContext() {
+        mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
+        mEgl.eglDestroyContext(mEglDisplay, mEglContext);
+        mEgl.eglTerminate(mEglDisplay);
+        mEglDisplay = null;
+        mEglContext = null;
+        mEglSurface = null;
+    }
+
     public long getWebViewInternalHandle() {
         return mWebViewInternalHandle;
     }
@@ -195,7 +291,7 @@ public class LweWebViewImpl implements LweWebView {
     public class ImeInputConnection extends BaseInputConnection {
         public ImeInputConnection(View view) {
             super(view, true);
-            mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
+            mComposingStatus = ImeComposingStatus.NORMAL;
         }
 
         @Override
@@ -217,10 +313,10 @@ public class LweWebViewImpl implements LweWebView {
             if (mWebViewInternalHandle != 0) {
                 String newText = text.toString();
                 mIMEComposingStr = newText;
-                if (mComposingStatus == LweWebViewImpl.ImeComposingStatus.NORMAL) {
+                if (mComposingStatus == ImeComposingStatus.NORMAL) {
                     mIMEComposingStr = newText;
                     dispatchCompositionStart(mWebViewInternalHandle, newText);
-                    mComposingStatus = LweWebViewImpl.ImeComposingStatus.COMPOSING_START;
+                    mComposingStatus = ImeComposingStatus.COMPOSING_START;
                 }
                 dispatchCompositionUpdate(mWebViewInternalHandle, newText);
             }
@@ -232,10 +328,10 @@ public class LweWebViewImpl implements LweWebView {
         public boolean finishComposingText() {
             if (mWebViewInternalHandle != 0) {
                 if (mComposingStatus ==
-                        LweWebViewImpl.ImeComposingStatus.COMPOSING_START) {
+                        ImeComposingStatus.COMPOSING_START) {
                     dispatchCompositionEnd(mWebViewInternalHandle,
                             mIMEComposingStr);
-                    mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
+                    mComposingStatus = ImeComposingStatus.NORMAL;
                     mIMEComposingStr = null;
                 }
             }
@@ -258,7 +354,7 @@ public class LweWebViewImpl implements LweWebView {
         if (mWebViewInternalHandle != 0) {
             return getCacheMode(mWebViewInternalHandle);
         }
-        return SemWebSettings.LOAD_DEFAULT;
+        return SemLweWebSettings.LOAD_DEFAULT;
     }
 
     public void setUserAgentString(String userAgent) {
@@ -268,8 +364,8 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void setCacheMode(int mode) {
-        if (mode == SemWebSettings.LOAD_DEFAULT ||
-            mode == SemWebSettings.LOAD_NO_CACHE) {
+        if (mode == SemLweWebSettings.LOAD_DEFAULT ||
+            mode == SemLweWebSettings.LOAD_NO_CACHE) {
             if (mWebViewInternalHandle != 0) {
                 setCacheMode(mWebViewInternalHandle, mode);
             }
@@ -289,26 +385,13 @@ public class LweWebViewImpl implements LweWebView {
         return 0;
     }
 
-    class StateChangeListener implements View.OnAttachStateChangeListener {
-        @Override
-        public void onViewAttachedToWindow(View v) {
-        }
-
-        @Override
-        public void onViewDetachedFromWindow(View v) {
-            if (mWebViewInternalHandle != 0) {
-                destroy(mWebViewInternalHandle);
-            }
-            destoryBuffer();
-            mWebViewInternalHandle = 0;
-            mWebViewClient = null;
-        }
+    static float roundToHalf(float d) {
+        return Math.round(d * 2) / 2.0f;
     }
 
     public void initWebView(final View appView) {
-        mSurfaceIsReady = false;
-        if (appView instanceof SemWebView) {
-            mLWEView = (SemWebView)appView;
+        if (appView instanceof SemLweWebView) {
+            mLWEView = (SemLweWebView)appView;
         } else {
             return;
         }
@@ -319,9 +402,10 @@ public class LweWebViewImpl implements LweWebView {
         mLWEView.setFocusableInTouchMode(true);
 
         mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-        sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
+        mDpr = roundToHalf(appContext.getResources().getDisplayMetrics().xdpi / 150);
         String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
         String cookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
+
         File cachedDir = appContext.getCacheDir();
         String cachePath = "";
         if (cachedDir != null) {
@@ -329,55 +413,56 @@ public class LweWebViewImpl implements LweWebView {
         } else {
             cachePath = "/data/local/tmp/Starfish-cache";
         }
+
         init();
 
         String initialUAString = getDefaultUserAgent();
 
+        try {
+            Os.setenv("HOME", appContext.getDataDir().getAbsolutePath(), false);
+        } catch (ErrnoException e) {
+            e.printStackTrace();
+        }
         mWindowWidth = mWindowHeight = 1;
-        mWebViewInternalHandle =
-                create(mWindowWidth, mWindowHeight, sDpr,
-                        initialUAString, sLocale, sTimezone,
-                        localStoragePath, cookiePath, cachePath);
-        mLWEView.setZOrderOnTop(true);
-        mLWEView.getHolder().addCallback(
-                new SurfaceHolder.Callback() {
-                    @Override
-                    public void surfaceCreated(SurfaceHolder holder) {
-                        mSurfaceIsReady = true;
-                        int width = mLWEView.getWidth();
-                        int height = mLWEView.getHeight();
-                        if (mWebViewInternalHandle != 0) {
-                            if ((mWindowWidth != width || mWindowHeight != height)) {
-                                resizeTo(mWebViewInternalHandle, width, height);
-                            }
-                            mWindowWidth = width;
-                            mWindowHeight = height;
-                            resume(mWebViewInternalHandle);
-                        }
-                    }
+        mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
 
-                    @Override
-                    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                        if (mWebViewInternalHandle != 0) {
-                            if ((mWindowWidth != width || mWindowHeight != height)) {
-                                resizeTo(mWebViewInternalHandle, width, height);
-                                mWindowWidth = width;
-                                mWindowHeight = height;
-                            }
-                            resume(mWebViewInternalHandle);
-                        }
-                    }
-
-                    @Override
-                    public void surfaceDestroyed(SurfaceHolder holder) {
-                        mSurfaceIsReady = false;
-                        if (mWebViewInternalHandle != 0) {
-                            pause(mWebViewInternalHandle);
-                        }
-                        destoryBuffer();
-                    }
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                initGLContext();
+                mWindowWidth = width;
+                mWindowHeight = height;
+                if (mWebViewInternalHandle != 0) {
+                    resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
+                    resume(mWebViewInternalHandle);
                 }
-        );
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+                mWindowWidth = width;
+                mWindowHeight = height;
+                if (mWebViewInternalHandle != 0) {
+                    resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
+                    resume(mWebViewInternalHandle);
+                }
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                if (mWebViewInternalHandle != 0) {
+                    destroy(mWebViewInternalHandle);
+                }
+                mWebViewInternalHandle = 0;
+                mWebViewClient = null;
+                destroyGLContext();
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            }
+        });
+
 
         mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -472,7 +557,11 @@ public class LweWebViewImpl implements LweWebView {
                 return true;
             }
         });
-        mLWEView.addOnAttachStateChangeListener(new StateChangeListener());
+
+        mWebViewInternalHandle =
+                create(mWindowWidth, mWindowHeight, mDpr,
+                        initialUAString, sLocale, sTimezone,
+                        localStoragePath, cookiePath, cachePath);
     }
 
     private void showDropdownMenu(final String[] list, final int checkedPosition) {
@@ -524,7 +613,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private void onReceivedError(int errorCode, String url) {
         if (mWebViewClient != null) {
-            class MyWebResourceRequestImpl implements SemWebResourceRequest {
+            class MyWebResourceRequestImpl implements SemLweWebResourceRequest {
                 String mUrl;
 
                 public MyWebResourceRequestImpl(String url) {
@@ -537,7 +626,7 @@ public class LweWebViewImpl implements LweWebView {
             }
 
             mWebViewClient.onReceivedError(mLWEView, new MyWebResourceRequestImpl(url),
-                    new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode),
+                    new SemLweWebResourceError(ErrorConverter.covertErrorCode(errorCode),
                                             ErrorConverter.covertErrorDescription(errorCode)));
         }
     }
@@ -556,7 +645,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
-            class MyWebResourceRequestImpl implements SemWebResourceRequest {
+            class MyWebResourceRequestImpl implements SemLweWebResourceRequest {
                 String mUrl;
 
                 public MyWebResourceRequestImpl(String url) {
@@ -596,7 +685,7 @@ public class LweWebViewImpl implements LweWebView {
                 mIMM = (InputMethodManager)mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             }
             mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
-            mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
+            mComposingStatus = ImeComposingStatus.NORMAL;
         }
     }
 
@@ -604,7 +693,7 @@ public class LweWebViewImpl implements LweWebView {
         if (mLWEView != null && mIMM != null) {
             mIMM = (InputMethodManager)mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(), 0);
-            mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
+            mComposingStatus = ImeComposingStatus.NORMAL;
         }
     }
 
@@ -612,73 +701,7 @@ public class LweWebViewImpl implements LweWebView {
         if (url == null) {
             return;
         }
-
-        ArrayList<Pattern> whitelistedUrls = whitelistedUrls();
-        if (mWhitelistedUrls == null) {
-            return;
-        }
-
-        boolean loaded = false;
-        for (Pattern p : whitelistedUrls) {
-            if (p.matcher(url).find()) {
-                loadUrl(mWebViewInternalHandle, url);
-                loaded = true;
-            }
-        }
-
-        if (!loaded) {
-            Log.e(sTag, "URL is not permitted. Please contact haesik.jun@samsung.com to whitelist an URL.");
-            onReceivedError(SemWebViewClient.ERROR_BAD_URL, url);
-        }
-    }
-
-    private ArrayList<Pattern> whitelistedUrls() {
-        if (mWhitelistedUrls != null) {
-            return mWhitelistedUrls;
-        }
-
-        mWhitelistedUrls = new ArrayList<Pattern>();
-        BufferedReader reader = null;
-        String line = null;
-        try {
-            Resources res =
-                    mLWEView.getContext().getPackageManager().getResourcesForApplication(SemWebView.PACKAGE_NAME);
-
-            int rid = res.getIdentifier("whitelist", "raw", SemWebView.PACKAGE_NAME);
-            if (rid == 0) {
-                Log.e(sTag, "cannot locate whitelist.txt");
-                return mWhitelistedUrls;
-            }
-
-            reader = new BufferedReader(new InputStreamReader(
-                    res.openRawResource(rid), "UTF-8"));
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-                Pattern p = Pattern.compile(line);
-                mWhitelistedUrls.add(p);
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(sTag, "package not found: " + SemWebView.PACKAGE_NAME);
-            e.printStackTrace();
-        } catch (PatternSyntaxException e) {
-            Log.e(sTag, "invalid regex: " + line);
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.e(sTag, "failed to read whitelist.txt");
-            e.printStackTrace();
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-
-        return mWhitelistedUrls;
+        loadUrl(mWebViewInternalHandle, url);
     }
 
     public String getUrl() {
@@ -786,56 +809,39 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    public SemWebSettings getSettings() {
+    private void glMakeCurrent() {
+        if (canUseGL()) {
+            mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
+        }
+    }
+
+    private void glSwapBuffers() {
+        if (canUseGL()) {
+            mEgl.eglSwapBuffers(mEglDisplay, mEglSurface);
+        }
+    }
+
+    private boolean canUseGL()
+    {
+        return mEgl != null && mEglDisplay != null;
+    }
+
+    public SemLweWebSettings getSettings() {
         if (mWebSettings == null) {
-            mWebSettings = new SemWebSettings(this);
+            mWebSettings = new SemLweWebSettings(this);
         }
         return mWebSettings;
     }
 
-    private Bitmap createBuffer() {
-        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-        return mScreenBuffer;
-    }
-
-    private void destoryBuffer() {
-        if (mScreenBuffer != null) {
-            mScreenBuffer.recycle();
-            mScreenBuffer = null;
-        }
-    }
-
-    private void onRendered(int x, int y, int width, int height) {
-        if (mSurfaceIsReady) {
-            Canvas canvas = null;
-            try {
-                canvas = mLWEView.getHolder().lockCanvas();
-                if (canvas != null) {
-                    Paint paint = new Paint();
-                    paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-                    Rect updateArea = new Rect(x, y, width, height);
-                    canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
-                }
-            } catch (Exception e) {
-                Log.e(sTag, "failed to onRendered");
-                e.printStackTrace();
-            } finally {
-                if (canvas != null) {
-                    mLWEView.getHolder().unlockCanvasAndPost(canvas);
-                }
-            }
-        }
-    }
-
-    public void setWebViewClient(SemWebViewClient client) {
+    public void setWebViewClient(SemLweWebViewClient client) {
         mWebViewClient = client;
     }
 
-    public void setWebLweClient(SemWebLweClient client) {
+    public void setWebLweClient(SemLweWebLweClient client) {
         mWebLweClient = client;
     }
 
-    public void setDownloadListener(SemDownloadListener listener) {
+    public void setDownloadListener(SemLweDownloadListener listener) {
         mDownloadListener = listener;
     }
 

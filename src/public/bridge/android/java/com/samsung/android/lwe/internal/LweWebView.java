@@ -14,17 +14,18 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lwe.internal;
 
 import android.content.Context;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
-/**
- * @hide
- * @deprecated This class was deprecated in API level 29. This class will be removed in a future Android release, and will not be supported anymore. Do not use this class.
- */
+import com.samsung.android.lwe.SemLweDownloadListener;
+import com.samsung.android.lwe.SemLweWebSettings;
+import com.samsung.android.lwe.SemLweWebViewClient;
+import com.samsung.android.lwe.SemLweWebLweClient;
+
 public interface LweWebView {
     void initWebView(View appView);
     String getDefaultUserAgent(Context context);
@@ -52,8 +53,8 @@ public interface LweWebView {
     void evaluateJavascript(final String script,
                             final ValueCallback<String> resultCallback);
     void clearHistory();
-    SemWebSettings getSettings();
-    void setWebViewClient(SemWebViewClient client);
-    void setDownloadListener(SemDownloadListener listener);
-    void setWebLweClient(SemWebLweClient client);
+    SemLweWebSettings getSettings();
+    void setWebViewClient(SemLweWebViewClient client);
+    void setDownloadListener(SemLweDownloadListener listener);
+    void setWebLweClient(SemLweWebLweClient client);
 }
