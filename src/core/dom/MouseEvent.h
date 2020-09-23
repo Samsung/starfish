@@ -36,21 +36,23 @@ class MouseData {
 public:
     MouseData()
         : MouseData(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
-                    0, 0, 0)
+                    0, 0, 0, timestamp())
     {
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, int32_t clickCount,
+              DOMTimeStamp timeStamp = timestamp(),
               EventTarget* relatedTarget = nullptr)
         : MouseData(button, buttons, clientX, clientY, clientX, clientY,
-                    clickCount, relatedTarget)
+                    clickCount, timeStamp, relatedTarget)
     {
     }
 
     MouseData(unsigned char button, unsigned char buttons, double clientX,
               double clientY, double screenX, double screenY,
-              int32_t clickCount, EventTarget* relatedTarget = nullptr)
+              int32_t clickCount, DOMTimeStamp timeStamp = timestamp(),
+              EventTarget* relatedTarget = nullptr)
         : m_isDefaultPrevented(false)
         , m_button(button)
         , m_buttons(buttons)
@@ -59,6 +61,7 @@ public:
         , m_screenX(screenX)
         , m_screenY(screenY)
         , m_clickCount(clickCount)
+        , m_timeStamp(timeStamp)
         , m_relatedTarget(relatedTarget)
     {
     }
@@ -133,6 +136,11 @@ public:
         m_clickCount = clickCount;
     }
 
+    DOMTimeStamp timeStamp() const
+    {
+        return m_timeStamp;
+    }
+
     EventTarget* relatedTarget() const
     {
         return m_relatedTarget;
@@ -164,6 +172,7 @@ protected:
     double m_screenY;
 
     int32_t m_clickCount;
+    DOMTimeStamp m_timeStamp;
     EventTarget* m_relatedTarget;
 };
 
@@ -199,6 +208,7 @@ public:
         : UIEvent(executionContext, eventType)
         , m_mouseData(data)
     {
+        setTimeStamp(data.m_timeStamp);
         setDetail(data.clickCount());
         if (data.isDefaultPrevented()) {
             setDefaultPrevented(true);

@@ -206,9 +206,17 @@ public:
                                  const std::function<void(void*)>& handler);
     void callHandler(WindowHandlerKind handlerKind, void* param);
 
-    virtual bool canRendering()
+    void registerCanRenderingCallback(
+        const std::function<bool(PlatformWindow* wnd)>& cb)
     {
-        return false;
+        m_canRenderingCallback = cb;
+    }
+    bool canRendering()
+    {
+        if (m_canRenderingCallback) {
+            return m_canRenderingCallback(this);
+        }
+        return true;
     }
 
     virtual bool shouldDrawOnEveryRenderingCallback()
@@ -288,6 +296,8 @@ protected:
 
     std::function<void(PlatformWindow* wnd)> m_glMakeCurrentCallback;
     std::function<void(PlatformWindow* wnd, bool)> m_glSwapBufferCallback;
+
+    std::function<bool(PlatformWindow* wnd)> m_canRenderingCallback;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>
         m_handlersToCallbacks;

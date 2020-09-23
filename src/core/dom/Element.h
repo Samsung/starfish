@@ -400,7 +400,7 @@ public:
         return m_attributes;
     }
 
-    virtual void onGlobalPointingEvent(float x, float y,
+    virtual void onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                        GlobalPointingEventKind kind) override;
 
     void makeKeyframesFromObject(ScriptObject object,

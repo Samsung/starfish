@@ -215,6 +215,10 @@ protected:
     {
         m_type = type;
     }
+    void setTimeStamp(DOMTimeStamp timeStamp)
+    {
+        m_timeStamp = timeStamp;
+    }
 
 private:
     ExecutionContext* m_executionContext;

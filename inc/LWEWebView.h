@@ -168,6 +168,8 @@ public:
     size_t AddTimeout(void (*callback)(void*), void* data, size_t timeoutInMS);
     void ClearTimeout(size_t handle);
 
+    void RegisterCanRenderingHandler(const std::function<bool(WebContainer*)>& cb);
+
     Settings GetSettings();
     void LoadURL(const std::string& url);
     std::string GetURL();

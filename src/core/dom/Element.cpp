@@ -855,10 +855,10 @@ uint32_t Element::clientHeight()
     return (float)clientRect().height() + .5f;
 }
 
-void Element::onGlobalPointingEvent(float x, float y,
+void Element::onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                     GlobalPointingEventKind kind)
 {
-    rareMembers()->m_scrolling->onGlobalPointingEvent(x, y, kind);
+    rareMembers()->m_scrolling->onGlobalPointingEvent(x, y, timeStamp, kind);
 }
 
 bool Element::handleDefaultEvent(Event* event)

@@ -473,6 +473,7 @@ static bool g_isSupportBGRATexture = false;
 static bool g_isSupportTextureSwizzle = false;
 static bool g_shouldUseEGLImageOnPlainSurface = true;
 static bool g_useStencilBufferOnFBO = false;
+static bool g_needsRGBShuffle = false;
 #ifndef MIN_MAX_TEXTURE_SIZE
 #define MIN_MAX_TEXTURE_SIZE 2048
 #endif
@@ -790,7 +791,7 @@ public:
                 "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
                 "}";
 
-            GLchar rectFragmentSource[] =
+            const GLchar* rectFragmentSource =
                 "#ifdef GL_ES\n"
                 "  precision mediump float;\n"
                 "#endif\n"
@@ -799,6 +800,21 @@ public:
                 "{\n"
                 "  gl_FragColor = uColor;\n"
                 "}";
+
+            if (g_needsRGBShuffle) {
+                rectFragmentSource =
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform vec4 uColor;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  gl_FragColor.r = uColor[2];\n"
+                    "  gl_FragColor.g = uColor[1];\n"
+                    "  gl_FragColor.b = uColor[0];\n"
+                    "  gl_FragColor.a = uColor[3];\n"
+                    "}";
+            }
 
             m_rectVertexShader = loadShader(GL_VERTEX_SHADER, rectVertexSource);
             checkError();
@@ -855,7 +871,7 @@ public:
     GLuint texShaderProgramEGLImageExternal()
     {
         if (!m_texShaderProgramEGLImageExternal) {
-            GLchar texFragmentSourceEGLImageExternal[] =
+            const GLchar* texFragmentSourceEGLImageExternal =
                 "#extension GL_OES_EGL_image_external : require\n"
                 "#ifdef GL_ES\n"
                 "  precision mediump float;\n"
@@ -867,6 +883,24 @@ public:
                 "{\n"
                 "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
+            if (g_needsRGBShuffle) {
+                texFragmentSourceEGLImageExternal =
+                    "#extension GL_OES_EGL_image_external : require\n"
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform samplerExternalOES uTexture;\n"
+                    "varying vec2 vTexPos;\n"
+                    "uniform float uAlpha;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                    "  gl_FragColor.r = texData[2];\n"
+                    "  gl_FragColor.g = texData[1];\n"
+                    "  gl_FragColor.b = texData[0];\n"
+                    "  gl_FragColor.a = texData[3];\n"
+                    "}";
+            }
 
             m_texFragmentShaderEGLImageExternal = loadShader(
                 GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
@@ -930,7 +964,7 @@ public:
             // We only Support OpenGL ES 2.0+ context
             // but some develoment environment only support desktop context
             // so we add `#ifdef GL_ES` for debug purpose
-            GLchar texFragmentSource[] =
+            const GLchar* texFragmentSource =
                 "#ifdef GL_ES\n"
                 "  precision mediump float;\n"
                 "#endif\n"
@@ -941,6 +975,23 @@ public:
                 "{\n"
                 "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
+            if (g_needsRGBShuffle) {
+                texFragmentSource =
+                    "#ifdef GL_ES\n"
+                    "  precision mediump float;\n"
+                    "#endif\n"
+                    "uniform sampler2D uTexture;\n"
+                    "varying vec2 vTexPos;\n"
+                    "uniform float uAlpha;\n"
+                    "void main(void)\n"
+                    "{\n"
+                    "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                    "  gl_FragColor.r = texData[2];\n"
+                    "  gl_FragColor.g = texData[1];\n"
+                    "  gl_FragColor.b = texData[0];\n"
+                    "  gl_FragColor.a = texData[3];\n"
+                    "}";
+            }
 
             m_texFragmentShader =
                 loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
@@ -1027,6 +1078,9 @@ public:
     static std::string generateBlurEffectFragmentShader(
         bool isEGLImage, bool addColorAlign = false)
     {
+        // don't support when needsRGBShuffle
+        STARFISH_ASSERT(g_needsRGBShuffle);
+
         std::vector<float> gaussianKernel = computeGaussianKernel();
         std::stringstream ss;
 
@@ -1356,10 +1410,7 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 
 #if defined(PORT_PIXEL_ORDER_BGRA)
         if (!g_isSupportTextureSwizzle && !g_isSupportBGRATexture) {
-            STARFISH_LOG_ERROR(
-                "at least one of extension required {GL_ARB_texture_swizzle, "
-                "GL_ARB_texture_swizzle} in BGRA port!\n");
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            g_needsRGBShuffle = true;
         }
 #endif
 
@@ -3492,6 +3543,9 @@ Compositor* Compositor::create2D(WebView* webView, CompositorContext* ctx,
 
 bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
 {
+    if (g_needsRGBShuffle) {
+        return false;
+    }
     if (textureWidth > g_maxTextureSize || textureHeight > g_maxTextureSize) {
         return false;
     }

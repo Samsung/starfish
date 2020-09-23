@@ -207,23 +207,24 @@ void ImageResource::didLoadFinished()
                                     if (d->decodeResult.m_isSuccessful) {
                                         if (d->decodeResult.m_isAnimatedGIF) {
                                             d->imageResource->m_imageData =
-                                                AnimatedGIFNativeImageData::create(
-                                                    buffer,
-                                                    std::move(
+                                                AnimatedGIFNativeImageData::
+                                                    create(
+                                                        buffer,
                                                         d->imageResource->url()
                                                             ->urlString()
-                                                            ->toUTF8NonGCString()),
-                                                    d->decodeResult.m_width,
-                                                    d->decodeResult.m_height,
-                                                    d->decodeResult.m_stride);
+                                                            ->toUTF8NonGCString(),
+                                                        d->decodeResult.m_width,
+                                                        d->decodeResult
+                                                            .m_height,
+                                                        d->decodeResult
+                                                            .m_stride);
                                         } else {
                                             d->imageResource->m_imageData =
                                                 CompressedNativeImageData::create(
                                                     buffer,
-                                                    std::move(
-                                                        d->imageResource->url()
-                                                            ->urlString()
-                                                            ->toUTF8NonGCString()),
+                                                    d->imageResource->url()
+                                                        ->urlString()
+                                                        ->toUTF8NonGCString(),
                                                     d->decodeResult.m_buffer,
                                                     d->decodeResult.m_width,
                                                     d->decodeResult.m_height,

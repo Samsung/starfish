@@ -209,7 +209,7 @@ public:
         GlobalPointingEventKindUp,
         GlobalPointingEventKindMove
     };
-    virtual void onGlobalPointingEvent(float x, float y,
+    virtual void onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                        GlobalPointingEventKind kind)
     {
     }

@@ -524,10 +524,10 @@ bool Window::handleDefaultEvent(Event* event)
     return false;
 }
 
-void Window::onGlobalPointingEvent(float x, float y,
+void Window::onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                    GlobalPointingEventKind kind)
 {
-    m_scrolling->onGlobalPointingEvent(x, y, kind);
+    m_scrolling->onGlobalPointingEvent(x, y, timeStamp, kind);
 }
 
 #ifdef STARFISH_ENABLE_TEST

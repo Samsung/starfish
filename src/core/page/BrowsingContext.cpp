@@ -1269,9 +1269,10 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
             Node* newElement = newTarget->nearestParentElement();
             Node* oldElement =
                 oldTarget ? oldTarget->nearestParentElement() : nullptr;
+            auto ts = timestamp();
 
             if (newElement && newElement->isElement()) {
-                MouseData data(button, buttons, posX, posY, 0, oldElement);
+                MouseData data(button, buttons, posX, posY, 0, ts, oldElement);
                 Element* enterTarget = newElement->asElement();
                 while (enterTarget) {
                     Event* e = createMouseEvent(
@@ -1288,7 +1289,7 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
             {
                 String* name =
                     starfish()->staticStrings()->m_mouseover.localName();
-                MouseData data(button, buttons, posX, posY, 0, oldElement);
+                MouseData data(button, buttons, posX, posY, 0, ts, oldElement);
                 Event* e = createMouseEvent(document(), name, data);
                 document()->window()->dispatchEventByUA(
                     newElement ? newElement : document(), e);
@@ -1297,14 +1298,14 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
             {
                 String* name =
                     starfish()->staticStrings()->m_mouseout.localName();
-                MouseData data(button, buttons, posX, posY, 0, newElement);
+                MouseData data(button, buttons, posX, posY, 0, ts, newElement);
                 Event* e = createMouseEvent(document(), name, data);
                 document()->window()->dispatchEventByUA(
                     oldElement ? oldElement : document(), e);
             }
 
             if (oldElement && oldElement->isElement()) {
-                MouseData data(button, buttons, posX, posY, 0, newElement);
+                MouseData data(button, buttons, posX, posY, 0, ts, newElement);
                 Element* leaveTarget = oldElement->asElement();
                 while (leaveTarget) {
                     Event* e = createMouseEvent(
