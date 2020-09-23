@@ -44,6 +44,7 @@ struct WindowGlue {
     jmethodID m_hideIME;
     jmethodID m_glMakeCurrent;
     jmethodID m_glSwapBuffers;
+    jmethodID m_canUseGL;
 
     WindowGlue()
     {
@@ -156,6 +157,7 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
         env->GetMethodID(clazz, "glMakeCurrent", "()V");
     g_WindowGlue.m_glSwapBuffers =
         env->GetMethodID(clazz, "glSwapBuffers", "()V");
+    g_WindowGlue.m_canUseGL = env->GetMethodID(clazz, "canUseGL", "()Z");
     env->DeleteLocalRef(clazz);
 
     STARFISH_LOG_INFO(
@@ -526,10 +528,32 @@ void glSwapBuffers(LWE::WebContainer* view)
     }
 
     if (!env || !g_WindowGlue.m_glSwapBuffers) {
-        STARFISH_LOG_ERROR("glMakeCurrent error");
+        STARFISH_LOG_ERROR("glSwapBuffers error");
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_glSwapBuffers);
+}
+
+bool canUseGL(LWE::WebContainer* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+            STARFISH_LOG_ERROR("Failed to attach");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        STARFISH_LOG_ERROR("GetEnv : version not supported");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    if (!env || !g_WindowGlue.m_canUseGL) {
+        STARFISH_LOG_ERROR("canUseGL error");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    return env->CallBooleanMethod(g_webViews[view], g_WindowGlue.m_canUseGL);
 }
 
 void registerWebContainerHandler(LWE::WebContainer* webContainer)
@@ -624,6 +648,13 @@ Java_com_samsung_android_lwe_LweWebViewImpl_create(
         w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
         [](LWE::WebContainer* wc, bool mayNeedsSync) { glSwapBuffers(wc); },
         devicePixelRatio, "serif", localeString, timezoneIDString);
+
+    webContainer->RegisterCanRenderingHandler(
+        [](LWE::WebContainer* wc) -> bool { return canUseGL(wc); });
+
+    auto settings = webContainer->GetSettings();
+    settings.SetIdleModeJob(LWE::IdleModeJob::ForceGC);
+    webContainer->SetSettings(settings);
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);

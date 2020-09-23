@@ -46,6 +46,7 @@ public:
         , m_inAnimation(false)
         , m_pointingEventX(0)
         , m_pointingEventY(0)
+        , m_pointingEventTimeStamp(0)
         , m_lastPointingEventX(0)
         , m_lastPointingEventY(0)
         , m_flingStartSpeed(0)
@@ -61,7 +62,7 @@ public:
 
     bool handleDefaultEvent(Event* event, Window* window, FrameBlockBox* frame,
                             OverflowValue ox, OverflowValue oy);
-    void onGlobalPointingEvent(float x, float y,
+    void onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                EventTarget::GlobalPointingEventKind kind);
 
     template <typename T>
@@ -116,6 +117,7 @@ protected:
     bool m_inAnimation : 1;
     float m_pointingEventX;
     float m_pointingEventY;
+    uint64_t m_pointingEventTimeStamp;
     float m_lastPointingEventX;
     float m_lastPointingEventY;
     float m_flingStartSpeed;

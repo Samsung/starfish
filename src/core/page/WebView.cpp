@@ -1861,7 +1861,7 @@ void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
             EventTarget* nd = m_globalPointingEventListener[i];
-            nd->onGlobalPointingEvent(x, y, newKind);
+            nd->onGlobalPointingEvent(x, y, touches[0].timeStamp(), newKind);
             if (std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(),
                           nd) != m_globalPointingEventListener.end()) {
@@ -1909,7 +1909,7 @@ void WebView::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         }
         for (size_t i = 0; i < m_globalPointingEventListener.size();) {
             EventTarget* nd = m_globalPointingEventListener[i];
-            nd->onGlobalPointingEvent(x, y, newKind);
+            nd->onGlobalPointingEvent(x, y, data.timeStamp(), newKind);
             if (std::find(m_globalPointingEventListener.begin(),
                           m_globalPointingEventListener.end(),
                           nd) != m_globalPointingEventListener.end()) {

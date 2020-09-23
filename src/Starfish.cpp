@@ -52,13 +52,11 @@ int g_referenceTestState = 0;
 static bool g_starfishGlobalInit = false;
 static void StarfishGCMemoryLogger(GC_EventType evtType, void* data)
 {
-#if !defined(STARFISH_ANDROID)
     if (GC_EVENT_RECLAIM_END == evtType) {
         STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
                           GC_get_memory_use() / 1024.f / 1024.f,
                           GC_get_heap_size() / 1024.f / 1024.f);
     }
-#endif
 }
 
 Starfish::Starfish(const char* localStorageFilePath,

@@ -36,10 +36,11 @@
 #include "core/modules/message_loop/Timer.h"
 
 #define STARFISH_SCROLL_START_THRESHOLD 10
-#define STARFISH_SCROLL_START_FLING_THRESHOLD 300
-#define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE \
-    (STARFISH_SCROLL_START_FLING_THRESHOLD * 5)
+#define STARFISH_SCROLL_START_FLING_THRESHOLD 75
+#define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE 500
+#define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_RATIO 1500
 #define STARFISH_SCROLL_FLING_BASE_TIME_IN_MS 1000
+#define STARFISH_SCROLL_FLING_SPEED_RATIO 1
 #define STARFISH_SCROLL_ACTIVE_TIME_IN_MS 500
 
 namespace Starfish {
@@ -79,16 +80,19 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
         bool isPointingUpEvent = false;
         bool shouldProcess = false;
         float x, y;
+        DOMTimeStamp timeStamp = 0;
         if (event->isMouseEvent()) {
             if (event->type()->equals("mousedown")) {
                 isPointingDownEvent = true;
                 shouldProcess = true;
                 x = event->asMouseEvent()->screenX();
                 y = event->asMouseEvent()->screenY();
+                timeStamp = event->asMouseEvent()->timeStamp();
             } else if (event->type()->equals("mousemove")) {
                 shouldProcess = true;
                 x = event->asMouseEvent()->screenX();
                 y = event->asMouseEvent()->screenY();
+                timeStamp = event->asMouseEvent()->timeStamp();
             } else if (event->type()->equals("mouseup")) {
                 shouldProcess = true;
                 isPointingUpEvent = true;
@@ -99,10 +103,12 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                 shouldProcess = true;
                 x = event->asTouchEvent()->touches()->at(0)->screenX();
                 y = event->asTouchEvent()->touches()->at(0)->screenY();
+                timeStamp = event->asTouchEvent()->timeStamp();
             } else if (event->type()->equals("touchmove")) {
                 shouldProcess = true;
                 x = event->asTouchEvent()->touches()->at(0)->screenX();
                 y = event->asTouchEvent()->touches()->at(0)->screenY();
+                timeStamp = event->asTouchEvent()->timeStamp();
             } else if (event->type()->equals("touchend")) {
                 shouldProcess = true;
                 isPointingUpEvent = true;
@@ -112,6 +118,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
             if (isPointingDownEvent) {
                 m_pointingEventX = x;
                 m_pointingEventY = y;
+                m_pointingEventTimeStamp = timeStamp;
                 m_gotPointingDownEvent = true;
                 return true;
             } else if (isPointingUpEvent) {
@@ -135,6 +142,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                     m_isScrollTarget = true;
                     m_pointingEventX = m_lastPointingEventX = x;
                     m_pointingEventY = m_lastPointingEventY = y;
+                    m_pointingEventTimeStamp = timeStamp;
                     if (!m_inAnimation) {
                         Window* window = m_target->isWindow()
                                              ? m_target->asWindow()
@@ -166,9 +174,9 @@ void Scrolling::onAnimationFrameHandler(void* data)
         // set repaint or recomposite
         self->giveDamageToTarget(true);
 
-        auto currentTime = longTickCount();
+        auto currentTime = timestamp();
         if (currentTime - self->m_lastActiveTime <
-            STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000) {
+            STARFISH_SCROLL_ACTIVE_TIME_IN_MS) {
             // we can continue
         } else {
             // end animation
@@ -176,23 +184,23 @@ void Scrolling::onAnimationFrameHandler(void* data)
             return;
         }
     } else if (self->m_inHorizontalFling || self->m_inVerticalFling) {
-        auto currentTime = longTickCount();
+        auto currentTime = timestamp();
         uint32_t flingLength = STARFISH_SCROLL_FLING_BASE_TIME_IN_MS;
 
         if (STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE <
             std::abs(self->m_flingStartSpeed)) {
-            flingLength *= std::abs(self->m_flingStartSpeed /
-                                    STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE);
+            flingLength *=
+                std::abs(self->m_flingStartSpeed /
+                         STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_RATIO);
         }
 
-        bool shouldExitFling = (currentTime - self->m_flingStartTime) >
-                               (uint64_t(flingLength) * 1000);
+        bool shouldExitFling =
+            (currentTime - self->m_flingStartTime) > (uint64_t(flingLength));
 
         float progress =
-            shouldExitFling
-                ? 1
-                : ((currentTime - self->m_flingStartTime) / 1000.f) /
-                      flingLength;
+            shouldExitFling ? 1
+                            : (double)((currentTime - self->m_flingStartTime)) /
+                                  flingLength;
         progress = flingInterpolationFunction(progress);
         if (progress >= 0.95) {
             shouldExitFling = true;
@@ -205,8 +213,7 @@ void Scrolling::onAnimationFrameHandler(void* data)
         } else {
             float speed = self->m_flingStartSpeed * (1 - progress);
             float distance =
-                speed * ((currentTime - self->m_flingProcessingTime) /
-                         (1000.f * 1000.f));
+                speed * ((currentTime - self->m_flingProcessingTime) / 1000.f);
 
             bool isScrollEffective = false;
             if (self->m_target->isElement()) {
@@ -246,7 +253,7 @@ void Scrolling::onAnimationFrameHandler(void* data)
         float dx = self->m_lastPointingEventX - self->m_pointingEventX;
         float dy = self->m_lastPointingEventY - self->m_pointingEventY;
 
-        auto currentTime = longTickCount();
+        auto currentTime = timestamp();
         if (self->m_inVerticalScrolling) {
             if (dy > 0) {
                 self->m_inVerticalScrollingDown = true;
@@ -272,8 +279,7 @@ void Scrolling::onAnimationFrameHandler(void* data)
 
         // collect datas within 100ms
         while (self->m_lastScrollingData.size()) {
-            if (currentTime - self->m_lastScrollingData.front().first <
-                1000 * 100) {
+            if (currentTime - self->m_lastScrollingData.front().first < 100) {
                 break;
             } else {
                 self->m_lastScrollingData.erase(
@@ -303,7 +309,6 @@ void Scrolling::onAnimationFrameHandler(void* data)
 
         self->m_lastPointingEventX = self->m_pointingEventX;
         self->m_lastPointingEventY = self->m_pointingEventY;
-
         self->m_lastActiveTime = currentTime;
     }
 
@@ -313,7 +318,7 @@ void Scrolling::onAnimationFrameHandler(void* data)
         window, onAnimationFrameHandler, self);
 }
 
-void Scrolling::onGlobalPointingEvent(float x, float y,
+void Scrolling::onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                       EventTarget::GlobalPointingEventKind kind)
 {
 #if defined(STARFISH_DISABLE_OVERFLOW_SCROLL)
@@ -331,8 +336,7 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
         }
         for (size_t i = 1; i < m_lastScrollingData.size(); i++) {
             auto td = m_lastScrollingData[i].first - t;
-            float speed =
-                m_lastScrollingData[i].second / (td / (1000.f * 1000.f));
+            float speed = m_lastScrollingData[i].second / (td / 1000.f);
             if (speed > 0) {
                 postiveAverage += speed;
             } else {
@@ -343,7 +347,9 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
 
         if (m_lastScrollingData.size() > 1) {
             postiveAverage /= (float)(m_lastScrollingData.size() - 1);
+            postiveAverage *= STARFISH_SCROLL_FLING_SPEED_RATIO;
             negativeAverage /= (float)(m_lastScrollingData.size() - 1);
+            negativeAverage *= STARFISH_SCROLL_FLING_SPEED_RATIO;
         }
 
         if (postiveAverage >= STARFISH_SCROLL_START_FLING_THRESHOLD ||
@@ -354,7 +360,7 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
         if (userWantsFling) {
             m_inHorizontalFling = m_inHorizontalScrolling;
             m_inVerticalFling = m_inVerticalScrolling;
-            m_flingProcessingTime = m_flingStartTime = longTickCount();
+            m_flingProcessingTime = m_flingStartTime = timeStamp;
             m_flingStartSpeed = (postiveAverage > -negativeAverage)
                                     ? postiveAverage
                                     : negativeAverage;
@@ -366,10 +372,12 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
     } else if (kind == EventTarget::GlobalPointingEventKindMove) {
         m_pointingEventX = x;
         m_pointingEventY = y;
+        m_pointingEventTimeStamp = timeStamp;
     } else if (kind == EventTarget::GlobalPointingEventKindDown) {
         if (m_inHorizontalFling || m_inVerticalFling) {
             m_pointingEventX = m_lastPointingEventX = x;
             m_pointingEventY = m_lastPointingEventY = y;
+            m_pointingEventTimeStamp = timeStamp;
             stopFling();
         }
     }
@@ -406,7 +414,7 @@ void Scrolling::markAsActive()
         }
     }
 
-    m_lastActiveTime = longTickCount();
+    m_lastActiveTime = timestamp();
 
     if (!m_inAnimation) {
         Window* window = m_target->isWindow() ? m_target->asWindow()
@@ -498,14 +506,14 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
         bool needsToDrawScrollbar = false;
         float scrollbarOpacity = 0;
         if (hasVerticalScroll || hasHorizontalScroll) {
-            auto currentTime = longTickCount();
+            auto currentTime = timestamp();
             if (currentTime - scrolling->m_lastActiveTime <
-                STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000) {
+                STARFISH_SCROLL_ACTIVE_TIME_IN_MS) {
                 needsToDrawScrollbar = true;
                 scrollbarOpacity =
                     1 -
                     float(currentTime - scrolling->m_lastActiveTime) /
-                        float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS * 1000);
+                        float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS);
             }
         }
 

@@ -202,7 +202,7 @@ public:
                       void* domObjectPointer) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
     virtual bool isWindow() const override;
-    virtual void onGlobalPointingEvent(float x, float y,
+    virtual void onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
 

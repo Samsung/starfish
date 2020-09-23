@@ -36,17 +36,20 @@ public:
     {
     }
 
-    TouchData(double clientX, double clientY)
-        : TouchData(clientX, clientY, clientX, clientY)
+    TouchData(double clientX, double clientY,
+              DOMTimeStamp timeStamp = timestamp())
+        : TouchData(clientX, clientY, clientX, clientY, timeStamp)
     {
     }
 
-    TouchData(double clientX, double clientY, double screenX, double screenY)
+    TouchData(double clientX, double clientY, double screenX, double screenY,
+              DOMTimeStamp timeStamp = timestamp())
         : m_target(nullptr)
         , m_clientX(clientX)
         , m_clientY(clientY)
         , m_screenX(clientX)
         , m_screenY(clientY)
+        , m_timeStamp(timeStamp)
     {
     }
 
@@ -91,12 +94,18 @@ public:
         m_screenY = screenY;
     }
 
+    DOMTimeStamp timeStamp()
+    {
+        return m_timeStamp;
+    }
+
 protected:
     EventTarget* m_target;
     double m_clientX;
     double m_clientY;
     double m_screenX;
     double m_screenY;
+    DOMTimeStamp m_timeStamp;
 };
 
 // Binding interface

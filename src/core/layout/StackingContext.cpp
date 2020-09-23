@@ -208,17 +208,18 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         m_surfaces.resize(1);
         m_surfaces[0] = nullptr;
     } else {
+        size_t tileSize =
+            ceil(CanvasSurface::g_canvasSurfaceTileSize /
+                 sc->owner()->node()->webView()->screenInfo().devicePixelRatio);
         size_t wTextureCount = 1;
-        while (m_bufferWidth / wTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
+        while (m_bufferWidth / wTextureCount > tileSize) {
             wTextureCount++;
         }
         m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
         m_horizontalTileCount = wTextureCount;
 
         size_t hTextureCount = 1;
-        while (m_bufferHeight / hTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
+        while (m_bufferHeight / hTextureCount > tileSize) {
             hTextureCount++;
         }
         m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);

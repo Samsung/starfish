@@ -35,6 +35,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/modules/tts/TTS.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
@@ -367,11 +368,15 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
 
+    Starfish::LayoutUnit scaledWidth = width / devicePixelRatio;
+    scaledWidth = scaledWidth.ceil();
+    Starfish::LayoutUnit scaledHeight = height / devicePixelRatio;
+    scaledHeight = scaledHeight.ceil();
     Starfish::ScreenInfo info;
-    info.rect.setWidth(width);
-    info.rect.setHeight(height);
-    info.availableRect.setWidth(width);
-    info.availableRect.setHeight(height);
+    info.rect.setWidth(scaledWidth);
+    info.rect.setHeight(scaledHeight);
+    info.availableRect.setWidth(scaledWidth);
+    info.availableRect.setHeight(scaledHeight);
     info.devicePixelRatio = devicePixelRatio;
 
     STARFISH_RELEASE_ASSERT(defaultFontName != nullptr);
@@ -664,6 +669,19 @@ void WebContainer::ClearTimeout(size_t handle)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->timer()->removeTimer(handle);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+}
+
+void WebContainer::RegisterCanRenderingHandler(
+    const std::function<bool(WebContainer*)>& cb)
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)
+        ->platformWindow()
+        ->registerCanRenderingCallback(
+            [this, cb](Starfish::PlatformWindow* wnd) -> bool {
+                return cb(this);
+            });
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
 Settings WebContainer::GetSettings()
@@ -1292,7 +1310,8 @@ void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventMove,
-                             ::Starfish::MouseData(button, buttons, x, y, 0));
+                             ::Starfish::MouseData(button, buttons, x, y, 0,
+                                                   Starfish::timestamp()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -1304,7 +1323,8 @@ void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventDown,
-                             ::Starfish::MouseData(button, buttons, x, y, 0));
+                             ::Starfish::MouseData(button, buttons, x, y, 0,
+                                                   Starfish::timestamp()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -1316,7 +1336,8 @@ void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventUp,
-                             ::Starfish::MouseData(button, buttons, x, y, 0));
+                             ::Starfish::MouseData(button, buttons, x, y, 0,
+                                                   Starfish::timestamp()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

@@ -316,12 +316,16 @@ void PlatformWindow::clearResources()
 
 void PlatformWindow::setNeedsRendering()
 {
-    PlatformWindow* wnd = this;
+    if (UNLIKELY(!canRendering())) {
+        return;
+    }
 
     if (m_setNeedsRenderingCallback) {
         m_setNeedsRenderingCallback(this);
         return;
     }
+
+    PlatformWindow* wnd = this;
 
     if (wnd->m_renderingAnimator != TimerInvalidID) {
         return;

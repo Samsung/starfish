@@ -2121,7 +2121,8 @@ Event* Document::createSimulatedMouseClickEvent()
     // if more events are needed.
     auto eventType = starfish()->staticStrings()->m_click.localName();
     MouseData clickData(MouseButtonValue::LeftButton,
-                        MouseButtonsValue::LeftButtonDown, 0, 0, 1);
+                        MouseButtonsValue::LeftButtonDown, 0, 0, 1,
+                        timestamp());
     MouseEvent* event =
         new MouseEvent(executionContext(), eventType, clickData);
     event->setBubbles(true);
