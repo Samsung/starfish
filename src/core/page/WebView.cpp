@@ -377,6 +377,33 @@ void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
     }
 }
 
+void WebView::clearDrawnBuffers()
+{
+    if (m_didCompositeBefore) {
+        LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
+        auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+        while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
+            StackingContext* sc = *iter;
+            iter++;
+            if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
+                auto holder = sc->graphicsBufferHolder();
+                if (holder) {
+                    for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
+                        if (holder->m_surfaces[i]) {
+                            holder->m_surfaces[i]->detachNativeBuffer();
+                            holder->m_surfaces[i] = nullptr;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        m_needsFullPainting = true;
+    }
+
+    platformWindow()->onClearDrawnBuffers();
+}
+
 void WebView::enterIdleMode()
 {
     STARFISH_LOG_INFO("enter idle mode\n");
@@ -387,29 +414,7 @@ void WebView::enterIdleMode()
 
     // drop CanvasSurfaces if possible
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers)) {
-        if (m_didCompositeBefore) {
-            LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
-            auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
-            while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
-                StackingContext* sc = *iter;
-                iter++;
-                if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
-                    auto holder = sc->graphicsBufferHolder();
-                    if (holder) {
-                        for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
-                            if (holder->m_surfaces[i]) {
-                                holder->m_surfaces[i]->detachNativeBuffer();
-                                holder->m_surfaces[i] = nullptr;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            m_needsFullPainting = true;
-        }
-
-        platformWindow()->onClearDrawnBuffers();
+        clearDrawnBuffers();
     }
 
     if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {
@@ -607,17 +612,13 @@ static String* resolvePath(String* filePath)
     String* resolvedPath = filePath;
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
         !filePath->startsWith("data:")) {
-#if defined(OS_WINDOWS)
-        String* prefix = String::fromUTF8("file:///");
-#else
         String* prefix = String::fromUTF8("file://");
-#endif
         Nullable<std::string> result =
             FileUtil::absolutePath(filePath->toUTF8NonGCString());
         if (result.hasValue()) {
             resolvedPath = prefix->concat(String::fromUTF8(
                 result.getValue().data(), result.getValue().length()));
-        } else {
+        } else if (!resolvedPath->startsWith("file://", false)) {
             // Will navigate to about:blank
             resolvedPath = prefix->concat(resolvedPath);
         }

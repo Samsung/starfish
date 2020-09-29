@@ -26,6 +26,8 @@
 #include <jni.h>
 #include <android/log.h>
 #include <android/bitmap.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 struct WindowGlue {
     JNIEnv* m_env;
@@ -629,9 +631,9 @@ Java_com_samsung_android_lwe_internal_LweWebViewImpl_resizeTo(
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_samsung_android_lwe_internal_LweWebViewImpl_create(
-    JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
-    jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
-    jstring cookiePath, jstring cachePath)
+    JNIEnv* env, jobject thiz, jobject assetManager, jint w, jint h,
+    jfloat devicePixelRatio, jstring jua, jstring locale, jstring timezoneID,
+    jstring localstoragePath, jstring cookiePath, jstring cachePath)
 {
     const char* localeString = env->GetStringUTFChars(locale, 0);
     const char* timezoneIDString = env->GetStringUTFChars(timezoneID, 0);
@@ -653,6 +655,54 @@ Java_com_samsung_android_lwe_internal_LweWebViewImpl_create(
     auto settings = webContainer->GetSettings();
     settings.SetIdleModeJob(LWE::IdleModeJob::ForceGC);
     webContainer->SetSettings(settings);
+
+    AAssetManager* am = AAssetManager_fromJava(env, assetManager);
+    webContainer->RegisterCustomFileResourceRequestHandlers(
+        [](const char* path) -> const char* { return path; },
+        [am](const char* path) -> void* {
+            std::string p = path;
+            if (p.find("/android_asset/") == 0) {
+                p = p.substr(sizeof("/android_asset/") - 1);
+                AAsset* as =
+                    AAssetManager_open(am, p.data(), AASSET_MODE_BUFFER);
+                STARFISH_LOG_ERROR("AAssetManager_open %s %p\n", p.data(), as);
+                if (!as) {
+                    return nullptr;
+                }
+                return (void*)((size_t)as + 1);
+            } else {
+                return fopen(path, "rb");
+            }
+        },
+        [](uint8_t* destBuffer, size_t size, void* handle) -> size_t {
+            if (((size_t)handle) & 1) {
+                AAsset* as = (AAsset*)((size_t)handle - 1);
+                return AAsset_read(as, destBuffer, size);
+            }
+            FILE* fp = (FILE*)handle;
+            return fread(destBuffer, size, 1, fp);
+        },
+        [](void* handle) -> long int {
+            if (((size_t)handle) & 1) {
+                AAsset* as = (AAsset*)((size_t)handle - 1);
+                return AAsset_getLength64(as);
+            }
+            FILE* fp = (FILE*)handle;
+            size_t currentPosition = ftell(fp);
+            fseek(fp, 0, SEEK_END);
+            size_t size = ftell(fp);
+            fseek(fp, currentPosition, SEEK_CUR);
+            return size;
+        },
+        [](void* handle) {
+            if (((size_t)handle) & 1) {
+                AAsset* as = (AAsset*)((size_t)handle - 1);
+                AAsset_close(as);
+                return;
+            }
+            FILE* fp = (FILE*)handle;
+            fclose(fp);
+        });
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
@@ -983,6 +1033,26 @@ Java_com_samsung_android_lwe_internal_LweWebViewImpl_getDefaultFontSize(
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     return webContainer->GetDefaultFontSize();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_lwe_internal_LweWebViewImpl_setWebSecurityEnable(
+    JNIEnv* env, jobject thiz, jlong wv, jboolean e)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    auto s = webContainer->GetSettings();
+    s.SetWebSecurityMode(e ? LWE::WebSecurityMode::Enable
+                           : LWE::WebSecurityMode::Disable);
+    webContainer->SetSettings(s);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_samsung_android_lwe_internal_LweWebViewImpl_getWebSecurityEnable(
+    JNIEnv* env, jobject thiz, jlong wv)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    auto s = webContainer->GetSettings();
+    return s.GetWebSecurityMode() != LWE::WebSecurityMode::Disable;
 }
 
 extern "C" JNIEXPORT void JNICALL

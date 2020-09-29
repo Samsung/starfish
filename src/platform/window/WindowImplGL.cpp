@@ -107,6 +107,10 @@ public:
 
     virtual RenderResult rendering() override
     {
+        if (UNLIKELY(!canRendering())) {
+            return RenderResult();
+        }
+
         if (!m_compostiorContext) {
             m_compostiorContext = Compositor::initCompositorContext(this);
         }
@@ -213,6 +217,8 @@ public:
         // release m_glPaintingSurface && m_compostiorContext for reducing
         // memory usage
         glMakeCurrent();
+
+        m_webView->clearDrawnBuffers();
 
         if (m_glPaintingSurface) {
             m_glPaintingSurface->detachNativeBuffer();

@@ -17,6 +17,7 @@
 package com.samsung.android.lwe.internal;
 
 import android.content.Context;
+import android.util.AttributeSet;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
@@ -27,7 +28,7 @@ import com.samsung.android.lwe.SemLweWebViewClient;
 import com.samsung.android.lwe.SemLweWebLweClient;
 
 public interface LweWebView {
-    void initWebView(View appView);
+    void initWebView(View appView, AttributeSet attrs);
     String getDefaultUserAgent(Context context);
     String getUserAgentString();
     void setUserAgentString(String userAgent);
@@ -35,6 +36,8 @@ public interface LweWebView {
     void setCacheMode(int mode);
     int getDefaultFontSize();
     void setDefaultFontSize(int size);
+    void setWebSecurityEnable(boolean enabled);
+    boolean getWebSecurityEnable();
     InputConnection getInputConnectionInstance(View view);
     void onVisibilityChanged(View changedView, int visibility);
 

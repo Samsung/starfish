@@ -233,6 +233,7 @@ public:
     }
 
     void onIdle();
+    void clearDrawnBuffers();
 
     bool hasActiveAnimationExecutor()
     {
