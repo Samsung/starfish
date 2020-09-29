@@ -359,6 +359,10 @@ void PlatformWindow::setNeedsRendering()
 
 RenderResult PlatformWindow::rendering()
 {
+    if (UNLIKELY(!canRendering())) {
+        return RenderResult();
+    }
+
     auto renderResult = webView()->rendering();
     if (renderResult.didPaintingOrCompositing && m_renderingFinishedCallback) {
         m_renderingFinishedCallback(renderResult);

@@ -54,4 +54,6 @@ public class SemLweWebSettings {
     public void setDefaultFontSize(int size) {
         mLWEWebView.setDefaultFontSize(size);
     }
+    public void setWebSecurityEnable(boolean enabled) { mLWEWebView.setWebSecurityEnable(enabled);}
+    public boolean getWebSecurityEnable() { return mLWEWebView.getWebSecurityEnable(); }
 }

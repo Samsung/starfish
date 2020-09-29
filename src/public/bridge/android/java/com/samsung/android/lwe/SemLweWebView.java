@@ -19,7 +19,7 @@ package com.samsung.android.lwe;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.TextureView;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -30,7 +30,7 @@ import com.samsung.android.lwe.internal.LweWebViewImpl;
 
 import dalvik.system.PathClassLoader;
 
-public class SemLweWebView extends TextureView {
+public class SemLweWebView extends SurfaceView {
     private static PathClassLoader pcl = null;
     /**
      * @hide
@@ -107,7 +107,7 @@ public class SemLweWebView extends TextureView {
         super(context, attrs, defStyle);
         mLWEWebView = getLWEWebViewInstance(context, attrs, defStyle);
         if (mLWEWebView != null) {
-            mLWEWebView.initWebView(this);
+            mLWEWebView.initWebView(this, attrs);
         }
     }
 

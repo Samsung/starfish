@@ -155,7 +155,7 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
             uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
             if ((endTime - lastDTS) < 10 ||
                 ((lastDTS == lastBufferedTime) &&
-                 (std::llabs(endTime - lastBufferedTime) < 1000))) {
+                 (endTime - lastBufferedTime) < 1000)) {
                 stream->setBufferState(
                     MockMediaPlayerSourceStream::BUFFERSTATE_EOS);
                 MOCKPLAYER_LOG(this, "fillBuffer detect EOS\n");

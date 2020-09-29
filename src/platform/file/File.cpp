@@ -107,7 +107,7 @@ Nullable<std::string> FileUtil::absolutePath(const std::string& filePath)
 {
     std::string prefix("file://");
     if (filePath.find("file://") == 0) {
-        auto s = sizeof("file://");
+        auto s = sizeof("file://") - 1;
         return absolutePath(filePath.substr(s, filePath.length() - s));
     }
 

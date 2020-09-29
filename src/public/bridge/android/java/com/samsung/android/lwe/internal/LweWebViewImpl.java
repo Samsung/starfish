@@ -19,22 +19,26 @@ package com.samsung.android.lwe.internal;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.SurfaceTexture;
+import android.content.res.AssetManager;
+import android.content.res.TypedArray;
 import android.icu.util.TimeZone;
 import android.net.Uri;
 import android.os.Handler;
 import android.system.ErrnoException;
 import android.system.Os;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.TextureView;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+
+import androidx.annotation.NonNull;
 
 import com.samsung.android.lwe.SemLweDownloadListener;
 import com.samsung.android.lwe.SemLweWebResourceError;
@@ -43,9 +47,15 @@ import com.samsung.android.lwe.SemLweWebSettings;
 import com.samsung.android.lwe.SemLweWebView;
 import com.samsung.android.lwe.SemLweWebViewClient;
 import com.samsung.android.lwe.SemLweWebLweClient;
+import com.samsung.lwe.R;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Locale;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -61,6 +71,8 @@ public class LweWebViewImpl implements LweWebView {
         try {
             System.loadLibrary("crypto");
             System.loadLibrary("ssl");
+            System.loadLibrary("nghttp2");
+            System.loadLibrary("curl");
             try {
                 System.loadLibrary("icudata");
                 System.loadLibrary("icuuc");
@@ -92,6 +104,7 @@ public class LweWebViewImpl implements LweWebView {
     private long mWebViewInternalHandle;
     private int mWindowWidth;
     private int mWindowHeight;
+    private boolean mHasSurface = false;
 
     private SemLweWebViewClient mWebViewClient = null;
     private SemLweWebLweClient mWebLweClient = null;
@@ -242,6 +255,7 @@ public class LweWebViewImpl implements LweWebView {
                 if ((r == RED_SIZE) && (g == GREEN_SIZE)
                         && (b == BLUE_SIZE) && (a == ALPHA_SIZE)) {
                     eglConfig = c;
+                    Log.e(sTag, String.format("egl config choosed r%d g%d b%d a%d depth%d stencil%d", r, g, b, a, depth, stencil));
                     break;
                 }
             }
@@ -250,7 +264,7 @@ public class LweWebViewImpl implements LweWebView {
         int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE };
 
         mEglContext = mEgl.eglCreateContext(mEglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
-        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, eglConfig, mLWEView.getSurfaceTexture(), null);
+        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, eglConfig, mLWEView.getHolder(), null);
     }
 
     private void destroyGLContext() {
@@ -260,6 +274,7 @@ public class LweWebViewImpl implements LweWebView {
         mEglDisplay = null;
         mEglContext = null;
         mEglSurface = null;
+        mEgl = null;
     }
 
     public long getWebViewInternalHandle() {
@@ -385,11 +400,83 @@ public class LweWebViewImpl implements LweWebView {
         return 0;
     }
 
+    public void setWebSecurityEnable(boolean enabled) {
+        if (mWebViewInternalHandle != 0) {
+            setWebSecurityEnable(mWebViewInternalHandle, enabled);
+        }
+    }
+
+    public boolean getWebSecurityEnable() {
+        if (mWebViewInternalHandle != 0) {
+            return getWebSecurityEnable(mWebViewInternalHandle);
+        }
+        return false;
+    }
+
     static float roundToHalf(float d) {
         return Math.round(d * 2) / 2.0f;
     }
 
-    public void initWebView(final View appView) {
+    private String saveCertPemFile(Context context) {
+        String assetFileName = "cacert.pem";
+
+        if (context == null || !FileExistInAssets(assetFileName, context)) {
+            Log.i(sTag, "Context is null or asset file doesnt exist");
+            return null;
+        }
+        //destination path is data/data/packagename
+        String destPath = context.getApplicationInfo().dataDir;
+        String CertFilePath = destPath + "/" + assetFileName;
+        File file = new File(CertFilePath);
+        if (file.exists()) {
+            //delete file
+            file.delete();
+        }
+        //copy to internal storage
+        if (CopyAssets(context, assetFileName, CertFilePath) == 1) return CertFilePath;
+
+        return CertFilePath;
+
+    }
+
+    private int CopyAssets(Context context, String assetFileName, String toPath) {
+        AssetManager assetManager = context.getAssets();
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = assetManager.open(assetFileName);
+            new File(toPath).createNewFile();
+            out = new FileOutputStream(toPath);
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            in = null;
+            out.flush();
+            out.close();
+            out = null;
+            return 1;
+        } catch (Exception e) {
+            Log.e(sTag, "CopyAssets" + e.getMessage());
+
+        }
+        return 0;
+
+    }
+
+    private boolean FileExistInAssets(String fileName, Context context) {
+        try {
+            return Arrays.asList(context.getResources().getAssets().list("")).contains(fileName);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            Log.e(sTag, "FileExistInAssets" + e.getMessage());
+        }
+        return false;
+    }
+
+    public void initWebView(final View appView, AttributeSet attrs) {
         if (appView instanceof SemLweWebView) {
             mLWEView = (SemLweWebView)appView;
         } else {
@@ -403,6 +490,12 @@ public class LweWebViewImpl implements LweWebView {
 
         mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         mDpr = roundToHalf(appContext.getResources().getDisplayMetrics().xdpi / 150);
+
+        if (attrs != null) {
+            TypedArray arr = appContext.getTheme().obtainStyledAttributes(attrs, R.styleable.SemLweWebView, 0, 0);
+            mDpr = arr.getFloat(R.styleable.SemLweWebView_devicePixelRatio, mDpr);
+        }
+
         String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
         String cookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
 
@@ -423,14 +516,23 @@ public class LweWebViewImpl implements LweWebView {
         } catch (ErrnoException e) {
             e.printStackTrace();
         }
+
+        try {
+            saveCertPemFile(appContext);
+            Os.setenv("STARFISH_CURL_CA_BUNDLE", appContext.getDataDir().getAbsolutePath() + "/cacert.pem", false);
+        } catch (ErrnoException e) {
+            e.printStackTrace();
+        }
+
         mWindowWidth = mWindowHeight = 1;
-        mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-
+        mLWEView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+            public void surfaceCreated(@NonNull SurfaceHolder holder) {
+                Log.e(sTag, "surfaceCreated " + mLWEView.getWidth() + " " + mLWEView.getHeight());
+                mHasSurface = true;
                 initGLContext();
-                mWindowWidth = width;
-                mWindowHeight = height;
+                mWindowWidth = mLWEView.getWidth();
+                mWindowHeight = mLWEView.getHeight();
                 if (mWebViewInternalHandle != 0) {
                     resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
                     resume(mWebViewInternalHandle);
@@ -438,31 +540,41 @@ public class LweWebViewImpl implements LweWebView {
             }
 
             @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                mWindowWidth = width;
-                mWindowHeight = height;
+            public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+                Log.e(sTag, "surfaceChanged to " + width + " " + height);
+                mWindowWidth = mLWEView.getWidth();
+                mWindowHeight = mLWEView.getHeight();
                 if (mWebViewInternalHandle != 0) {
                     resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
-                    resume(mWebViewInternalHandle);
                 }
             }
 
             @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+                Log.e(sTag, "surfaceDestroyed");
+                mHasSurface = false;
+                if (mWebViewInternalHandle != 0) {
+                    pause(mWebViewInternalHandle);
+                }
+                destroyGLContext();
+            }
+        });
+
+        mLWEView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
                 if (mWebViewInternalHandle != 0) {
                     destroy(mWebViewInternalHandle);
                 }
                 mWebViewInternalHandle = 0;
                 mWebViewClient = null;
-                destroyGLContext();
-                return true;
-            }
-
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
-
 
         mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -559,7 +671,8 @@ public class LweWebViewImpl implements LweWebView {
         });
 
         mWebViewInternalHandle =
-                create(mWindowWidth, mWindowHeight, mDpr,
+                create(mLWEView.getResources().getAssets(),
+                        mWindowWidth, mWindowHeight, mDpr,
                         initialUAString, sLocale, sTimezone,
                         localStoragePath, cookiePath, cachePath);
     }
@@ -823,7 +936,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private boolean canUseGL()
     {
-        return mEgl != null && mEglDisplay != null;
+        return mHasSurface;
     }
 
     public SemLweWebSettings getSettings() {
@@ -867,7 +980,7 @@ public class LweWebViewImpl implements LweWebView {
     // Following methods are internal use only
     native private void loadUrl(long starfish, String url);
     native private void loadData(long starfish, String data);
-    native private long create(int width, int height,
+    native private long create(AssetManager am, int width, int height,
                                float devicePixelRatio, String userAgentString, String locale,
                                String timezoneID, String localstoragePath, String cookiePath,
                                String cachePath);
@@ -899,6 +1012,8 @@ public class LweWebViewImpl implements LweWebView {
     native public int getCacheMode(long starfish);
     native public void setDefaultFontSize(long starfish, int size);
     native public int getDefaultFontSize(long starfish);
+    native public void setWebSecurityEnable(long starfish, boolean enabled);
+    native public boolean getWebSecurityEnable(long starfish);
 
     static native private void init();
     static native private void resizeTo(long starfish, int width, int height);

@@ -81,6 +81,14 @@ void HTTPTransaction::preprocess(bool useNewHandle)
     }
 #endif
 
+#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+#if defined(STARFISH_ANDROID)
+    STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
+    curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
+#endif
     curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     if (m_timeout) {
@@ -133,6 +141,10 @@ void HTTPTransaction::start()
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+#if defined(STARFISH_ANDROID)
+    STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
+    curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
 #endif
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
