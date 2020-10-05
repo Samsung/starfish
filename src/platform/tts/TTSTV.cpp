@@ -758,12 +758,15 @@ void TTS::resume()
 
 void TTS::cancel()
 {
+    STARFISH_LOG_INFO("[TTS] Cancel speaking!\n");
     int utterId = currentUtterId();
     if (utteranceList().size() == 0) {
+        // whatever we try to stop tts
+        tts_stop(m_handle);
         return;
     }
 
-    // STARFISH_LOG_INFO("[TTS] Cancel speaking! [ID:%d] \n", utterId);
+    STARFISH_LOG_INFO("[TTS] Cancel speaking! [ID:%d] \n", utterId);
     int ret = tts_stop(m_handle);
     if (ret != TTS_ERROR_NONE) {
         dispatchErrorEvent(this, utterId, errorToString(ret),
