@@ -14,24 +14,10 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
+import android.net.Uri;
 
-public class SemLweWebResourceError {
-
-    private int mErrorCode = 0;
-    private CharSequence mErrorDescription = "";
-
-    public SemLweWebResourceError(int code, CharSequence description) {
-        mErrorCode = code;
-        mErrorDescription = description;
-    }
-
-    public CharSequence getDescription() {
-        return mErrorDescription;
-    }
-
-    public int getErrorCode() {
-        return mErrorCode;
-    }
+public interface SemWebResourceRequest {
+    Uri getUrl();
 }

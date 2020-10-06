@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -25,22 +25,22 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
-import com.samsung.android.lwe.internal.LweWebView;
-import com.samsung.android.lwe.internal.LweWebViewImpl;
+import com.samsung.android.lightweightwebengine.internal.LweWebView;
+import com.samsung.android.lightweightwebengine.internal.LweWebViewImpl;
 
 import dalvik.system.PathClassLoader;
 
-public class SemLweWebView extends SurfaceView {
+public class SemWebView extends SurfaceView {
     private static PathClassLoader pcl = null;
     /**
      * @hide
      */
-    public static final String PACKAGE_NAME = "com.samsung.android.lwe";
+    public static final String PACKAGE_NAME = SemWebView.class.getPackage().getName();
 
     /**
      * @hide
      */
-    protected static final String sTag = "SemLweWebView";
+    protected static final String sTag = "SemWebView";
 
     private LweWebView mLWEWebView = null;
 
@@ -97,13 +97,13 @@ public class SemLweWebView extends SurfaceView {
         super.onWindowVisibilityChanged(visibility);
     }
 
-    public SemLweWebView(Context context) {
+    public SemWebView(Context context) {
         this(context, null);
     }
-    public SemLweWebView(Context context, AttributeSet attrs) {
+    public SemWebView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
-    public SemLweWebView(Context context, AttributeSet attrs, int defStyle) {
+    public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         mLWEWebView = getLWEWebViewInstance(context, attrs, defStyle);
         if (mLWEWebView != null) {
@@ -160,16 +160,16 @@ public class SemLweWebView extends SurfaceView {
     public void clearHistory() {
         mLWEWebView.clearHistory();
     }
-    public SemLweWebSettings getSettings() {
+    public SemWebSettings getSettings() {
         return mLWEWebView.getSettings();
     }
-    public void setWebViewClient(SemLweWebViewClient client) {
+    public void setWebViewClient(SemWebViewClient client) {
         mLWEWebView.setWebViewClient(client);
     }
-    public void setWebLweClient(SemLweWebLweClient client) {
+    public void setWebLweClient(SemWebClient client) {
         mLWEWebView.setWebLweClient(client);
     }
-    public void setDownloadListener(SemLweDownloadListener listener) {
+    public void setDownloadListener(SemDownloadListener listener) {
         mLWEWebView.setDownloadListener(listener);
     }
 }

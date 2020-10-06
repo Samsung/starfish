@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe.internal;
+package com.samsung.android.lightweightwebengine.internal;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -22,10 +22,10 @@ import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
-import com.samsung.android.lwe.SemLweDownloadListener;
-import com.samsung.android.lwe.SemLweWebSettings;
-import com.samsung.android.lwe.SemLweWebViewClient;
-import com.samsung.android.lwe.SemLweWebLweClient;
+import com.samsung.android.lightweightwebengine.SemDownloadListener;
+import com.samsung.android.lightweightwebengine.SemWebSettings;
+import com.samsung.android.lightweightwebengine.SemWebViewClient;
+import com.samsung.android.lightweightwebengine.SemWebClient;
 
 public interface LweWebView {
     void initWebView(View appView, AttributeSet attrs);
@@ -56,8 +56,8 @@ public interface LweWebView {
     void evaluateJavascript(final String script,
                             final ValueCallback<String> resultCallback);
     void clearHistory();
-    SemLweWebSettings getSettings();
-    void setWebViewClient(SemLweWebViewClient client);
-    void setDownloadListener(SemLweDownloadListener listener);
-    void setWebLweClient(SemLweWebLweClient client);
+    SemWebSettings getSettings();
+    void setWebViewClient(SemWebViewClient client);
+    void setDownloadListener(SemDownloadListener listener);
+    void setWebLweClient(SemWebClient client);
 }
