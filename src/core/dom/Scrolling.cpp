@@ -36,7 +36,7 @@
 #include "core/modules/message_loop/Timer.h"
 
 #define STARFISH_SCROLL_START_THRESHOLD 10
-#define STARFISH_SCROLL_START_FLING_THRESHOLD 75
+#define STARFISH_SCROLL_START_FLING_THRESHOLD 100
 #define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE 500
 #define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_RATIO 1500
 #define STARFISH_SCROLL_FLING_BASE_TIME_IN_MS 1000
@@ -352,8 +352,14 @@ void Scrolling::onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
             negativeAverage *= STARFISH_SCROLL_FLING_SPEED_RATIO;
         }
 
-        if (postiveAverage >= STARFISH_SCROLL_START_FLING_THRESHOLD ||
-            -negativeAverage >= STARFISH_SCROLL_START_FLING_THRESHOLD) {
+        WebView* webView = m_target->executionContext()
+                               ->document()
+                               ->browsingContext()
+                               ->webView();
+        const float threshold = STARFISH_SCROLL_START_FLING_THRESHOLD /
+                                webView->screenInfo().devicePixelRatio;
+
+        if (postiveAverage >= threshold || -negativeAverage >= threshold) {
             userWantsFling = true;
         }
 

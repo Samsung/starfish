@@ -14,9 +14,18 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
-public interface SemLweDownloadListener {
-    void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype,
-                         long contentLength);
+import android.net.Uri;
+
+public class SemWebResourceRequestImpl implements SemWebResourceRequest {
+    String mUrl;
+
+    public SemWebResourceRequestImpl(String url) {
+        mUrl = url;
+    }
+
+    public Uri getUrl() {
+        return Uri.parse(mUrl);
+    }
 }

@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe.internal;
+package com.samsung.android.lightweightwebengine.internal;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -40,13 +40,13 @@ import android.webkit.ValueCallback;
 
 import androidx.annotation.NonNull;
 
-import com.samsung.android.lwe.SemLweDownloadListener;
-import com.samsung.android.lwe.SemLweWebResourceError;
-import com.samsung.android.lwe.SemLweWebResourceRequest;
-import com.samsung.android.lwe.SemLweWebSettings;
-import com.samsung.android.lwe.SemLweWebView;
-import com.samsung.android.lwe.SemLweWebViewClient;
-import com.samsung.android.lwe.SemLweWebLweClient;
+import com.samsung.android.lightweightwebengine.SemDownloadListener;
+import com.samsung.android.lightweightwebengine.SemWebResourceError;
+import com.samsung.android.lightweightwebengine.SemWebResourceRequest;
+import com.samsung.android.lightweightwebengine.SemWebSettings;
+import com.samsung.android.lightweightwebengine.SemWebView;
+import com.samsung.android.lightweightwebengine.SemWebViewClient;
+import com.samsung.android.lightweightwebengine.SemWebClient;
 import com.samsung.lwe.R;
 
 import java.io.File;
@@ -106,14 +106,14 @@ public class LweWebViewImpl implements LweWebView {
     private int mWindowHeight;
     private boolean mHasSurface = false;
 
-    private SemLweWebViewClient mWebViewClient = null;
-    private SemLweWebLweClient mWebLweClient = null;
-    private SemLweDownloadListener mDownloadListener = null;
-    private SemLweWebSettings mWebSettings = null;
+    private SemWebViewClient mWebViewClient = null;
+    private SemWebClient mWebLweClient = null;
+    private SemDownloadListener mDownloadListener = null;
+    private SemWebSettings mWebSettings = null;
 
     private ImeComposingStatus mComposingStatus = ImeComposingStatus.NORMAL;
     private String mIMEComposingStr = null;
-    private SemLweWebView mLWEView = null;
+    private SemWebView mLWEView = null;
     private InputMethodManager mIMM = null;
 
     private EGL10 mEgl;
@@ -125,35 +125,35 @@ public class LweWebViewImpl implements LweWebView {
         public static int covertErrorCode(int lweErrorCode) {
             switch (lweErrorCode) {
                 case 2:
-                    return SemLweWebViewClient.ERROR_HOST_LOOKUP;
+                    return SemWebViewClient.ERROR_HOST_LOOKUP;
                 case 3:
-                    return SemLweWebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME;
+                    return SemWebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME;
                 case 4:
-                    return SemLweWebViewClient.ERROR_AUTHENTICATION;
+                    return SemWebViewClient.ERROR_AUTHENTICATION;
                 case 5:
-                    return SemLweWebViewClient.ERROR_PROXY_AUTHENTICATION;
+                    return SemWebViewClient.ERROR_PROXY_AUTHENTICATION;
                 case 6:
-                    return SemLweWebViewClient.ERROR_CONNECT;
+                    return SemWebViewClient.ERROR_CONNECT;
                 case 7:
-                    return SemLweWebViewClient.ERROR_IO;
+                    return SemWebViewClient.ERROR_IO;
                 case 8:
-                    return SemLweWebViewClient.ERROR_TIMEOUT;
+                    return SemWebViewClient.ERROR_TIMEOUT;
                 case 9:
-                    return SemLweWebViewClient.ERROR_REDIRECT_LOOP;
+                    return SemWebViewClient.ERROR_REDIRECT_LOOP;
                 case 10:
-                    return SemLweWebViewClient.ERROR_UNSUPPORTED_SCHEME;
+                    return SemWebViewClient.ERROR_UNSUPPORTED_SCHEME;
                 case 11:
-                    return SemLweWebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
+                    return SemWebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
                 case 12:
-                    return SemLweWebViewClient.ERROR_BAD_URL;
+                    return SemWebViewClient.ERROR_BAD_URL;
                 case 13:
-                    return SemLweWebViewClient.ERROR_FILE;
+                    return SemWebViewClient.ERROR_FILE;
                 case 14:
-                    return SemLweWebViewClient.ERROR_FILE_NOT_FOUND;
+                    return SemWebViewClient.ERROR_FILE_NOT_FOUND;
                 case 15:
-                    return SemLweWebViewClient.ERROR_TOO_MANY_REQUESTS;
+                    return SemWebViewClient.ERROR_TOO_MANY_REQUESTS;
                 default:
-                    return SemLweWebViewClient.ERROR_UNKNOWN;
+                    return SemWebViewClient.ERROR_UNKNOWN;
             }
         }
 
@@ -369,7 +369,7 @@ public class LweWebViewImpl implements LweWebView {
         if (mWebViewInternalHandle != 0) {
             return getCacheMode(mWebViewInternalHandle);
         }
-        return SemLweWebSettings.LOAD_DEFAULT;
+        return SemWebSettings.LOAD_DEFAULT;
     }
 
     public void setUserAgentString(String userAgent) {
@@ -379,8 +379,8 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void setCacheMode(int mode) {
-        if (mode == SemLweWebSettings.LOAD_DEFAULT ||
-            mode == SemLweWebSettings.LOAD_NO_CACHE) {
+        if (mode == SemWebSettings.LOAD_DEFAULT ||
+            mode == SemWebSettings.LOAD_NO_CACHE) {
             if (mWebViewInternalHandle != 0) {
                 setCacheMode(mWebViewInternalHandle, mode);
             }
@@ -477,8 +477,8 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void initWebView(final View appView, AttributeSet attrs) {
-        if (appView instanceof SemLweWebView) {
-            mLWEView = (SemLweWebView)appView;
+        if (appView instanceof SemWebView) {
+            mLWEView = (SemWebView)appView;
         } else {
             return;
         }
@@ -492,8 +492,8 @@ public class LweWebViewImpl implements LweWebView {
         mDpr = roundToHalf(appContext.getResources().getDisplayMetrics().xdpi / 150);
 
         if (attrs != null) {
-            TypedArray arr = appContext.getTheme().obtainStyledAttributes(attrs, R.styleable.SemLweWebView, 0, 0);
-            mDpr = arr.getFloat(R.styleable.SemLweWebView_devicePixelRatio, mDpr);
+            TypedArray arr = appContext.getTheme().obtainStyledAttributes(attrs, R.styleable.SemWebView, 0, 0);
+            mDpr = arr.getFloat(R.styleable.SemWebView_devicePixelRatio, mDpr);
         }
 
         String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
@@ -726,7 +726,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private void onReceivedError(int errorCode, String url) {
         if (mWebViewClient != null) {
-            class MyWebResourceRequestImpl implements SemLweWebResourceRequest {
+            class MyWebResourceRequestImpl implements SemWebResourceRequest {
                 String mUrl;
 
                 public MyWebResourceRequestImpl(String url) {
@@ -739,7 +739,7 @@ public class LweWebViewImpl implements LweWebView {
             }
 
             mWebViewClient.onReceivedError(mLWEView, new MyWebResourceRequestImpl(url),
-                    new SemLweWebResourceError(ErrorConverter.covertErrorCode(errorCode),
+                    new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode),
                                             ErrorConverter.covertErrorDescription(errorCode)));
         }
     }
@@ -758,7 +758,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
-            class MyWebResourceRequestImpl implements SemLweWebResourceRequest {
+            class MyWebResourceRequestImpl implements SemWebResourceRequest {
                 String mUrl;
 
                 public MyWebResourceRequestImpl(String url) {
@@ -939,22 +939,22 @@ public class LweWebViewImpl implements LweWebView {
         return mHasSurface;
     }
 
-    public SemLweWebSettings getSettings() {
+    public SemWebSettings getSettings() {
         if (mWebSettings == null) {
-            mWebSettings = new SemLweWebSettings(this);
+            mWebSettings = new SemWebSettings(this);
         }
         return mWebSettings;
     }
 
-    public void setWebViewClient(SemLweWebViewClient client) {
+    public void setWebViewClient(SemWebViewClient client) {
         mWebViewClient = client;
     }
 
-    public void setWebLweClient(SemLweWebLweClient client) {
+    public void setWebLweClient(SemWebClient client) {
         mWebLweClient = client;
     }
 
-    public void setDownloadListener(SemLweDownloadListener listener) {
+    public void setDownloadListener(SemDownloadListener listener) {
         mDownloadListener = listener;
     }
 

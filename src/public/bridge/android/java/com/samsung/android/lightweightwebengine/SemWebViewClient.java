@@ -14,11 +14,11 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
 import android.graphics.Bitmap;
 
-public class SemLweWebViewClient {
+public class SemWebViewClient {
     public static final int ERROR_UNKNOWN = -1;
     public static final int ERROR_HOST_LOOKUP = -2;
     public static final int ERROR_UNSUPPORTED_AUTH_SCHEME = -3;
@@ -35,23 +35,23 @@ public class SemLweWebViewClient {
     public static final int ERROR_FILE_NOT_FOUND = -14;
     public static final int ERROR_TOO_MANY_REQUESTS = -15;
 
-    public SemLweWebViewClient() {
+    public SemWebViewClient() {
     }
 
-    public void onLoadResource(SemLweWebView view, String url) {
+    public void onLoadResource(SemWebView view, String url) {
     }
 
-    public void onReceivedError(SemLweWebView view, SemLweWebResourceRequest request,
-                                SemLweWebResourceError error) {
+    public void onReceivedError(SemWebView view, SemWebResourceRequest request,
+                                SemWebResourceError error) {
     }
 
-    public void onPageFinished(SemLweWebView view, String url) {
+    public void onPageFinished(SemWebView view, String url) {
     }
 
-    public void onPageStarted(SemLweWebView view, String url, Bitmap favicon) {
+    public void onPageStarted(SemWebView view, String url, Bitmap favicon) {
     }
 
-    public boolean shouldOverrideUrlLoading(SemLweWebView view, SemLweWebResourceRequest request) {
+    public boolean shouldOverrideUrlLoading(SemWebView view, SemWebResourceRequest request) {
         return false;
     }
 }

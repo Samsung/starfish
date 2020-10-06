@@ -14,14 +14,13 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
 import android.content.Context;
-import android.webkit.WebView;
 
-import com.samsung.android.lwe.internal.LweWebView;
+import com.samsung.android.lightweightwebengine.internal.LweWebView;
 
-public class SemLweWebSettings {
+public class SemWebSettings {
     public static final int LOAD_DEFAULT = -1;
     // static final int LOAD_NORMAL = 0;
     public static final int LOAD_CACHE_ELSE_NETWORK = 1;
@@ -30,7 +29,7 @@ public class SemLweWebSettings {
 
     private LweWebView mLWEWebView = null;
 
-    public SemLweWebSettings(LweWebView webView) {
+    public SemWebSettings(LweWebView webView) {
         mLWEWebView = webView;
     }
     public String getDefaultUserAgent(Context context) {

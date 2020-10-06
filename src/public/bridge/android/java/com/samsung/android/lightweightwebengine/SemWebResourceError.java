@@ -14,12 +14,24 @@
  *    limitations under the License.
  */
 
-package com.samsung.android.lwe;
+package com.samsung.android.lightweightwebengine;
 
-public class SemLweWebLweClient {
-    public SemLweWebLweClient() {
+
+public class SemWebResourceError {
+
+    private int mErrorCode = 0;
+    private CharSequence mErrorDescription = "";
+
+    public SemWebResourceError(int code, CharSequence description) {
+        mErrorCode = code;
+        mErrorDescription = description;
     }
 
-    public void onProgressChanged(SemLweWebView view, int newProgress) {
+    public CharSequence getDescription() {
+        return mErrorDescription;
+    }
+
+    public int getErrorCode() {
+        return mErrorCode;
     }
 }
