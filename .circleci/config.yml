@@ -71,6 +71,7 @@ jobs:
             command: ./tool/check_tidy.py
       - run:
             name : Run build script
+            no_output_timeout: 20m
             command: /root/workspace/build.sh x64_glfw_debug
       - run:
             name : Install test dep
