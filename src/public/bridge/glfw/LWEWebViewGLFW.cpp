@@ -226,8 +226,21 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
     case GLFW_KEY_UP:
         keyValue = KeyValue::ArrowUpKey;
         break;
+    case GLFW_KEY_LEFT_SHIFT:
+        keyValue = KeyValue::ShiftLeftKey;
+        break;
+    case GLFW_KEY_RIGHT_SHIFT:
+        keyValue = KeyValue::ShiftRightKey;
+        break;
     default:
-        keyValue = KeyValue::UnidentifiedKey;
+        if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+            keyValue = (KeyValue)(KeyValue::LowerAKey + key - GLFW_KEY_A);
+            if (mods & GLFW_MOD_SHIFT)
+                keyValue = (KeyValue)(keyValue + (AKey - LowerAKey));
+        } else if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
+            keyValue = (KeyValue)(KeyValue::Digit0Key + key - GLFW_KEY_0);
+        } else
+            keyValue = KeyValue::UnidentifiedKey;
         break;
     }
 
