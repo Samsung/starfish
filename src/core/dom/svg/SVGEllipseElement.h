@@ -41,6 +41,11 @@ public:
         return false;
     }
 
+    virtual bool isRenderableElement() override
+    {
+        return true;
+    }
+
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
@@ -53,6 +58,6 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
 };
-}
+} // namespace Starfish
 
 #endif

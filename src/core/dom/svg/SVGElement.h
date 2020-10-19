@@ -129,6 +129,12 @@ public:
         return true;
     }
 
+    virtual bool isRenderableElement()
+    {
+        // https://svgwg.org/svg2-draft/render.html#TermRenderableElement
+        return false;
+    }
+
     int tabIndex() override;
 
     virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
@@ -146,6 +152,6 @@ protected:
     NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
     SVGElement* m_clipPathElement;
 };
-}
+} // namespace Starfish
 
 #endif

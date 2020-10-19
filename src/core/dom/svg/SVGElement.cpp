@@ -145,6 +145,13 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 #undef SET_PARV
         }
     }
+
+    if (isRenderableElement()) {
+        if (ss->m_display == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
 }
 
 String* SVGElement::xmlbase()
@@ -326,6 +333,24 @@ void SVGElement::styleForPresentationAttribute(
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
             if (pair.updateValueClipPath(document(), tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
+
+    if (isRenderableElement()) {
+        // The display property only applies to renderable elements.
+        String* displayStr =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_display);
+
+        if (displayStr->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Display);
+
+            auto str = displayStr->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueDisplay(document(), tokens)) {
                 cssValues.push_back(pair);
             }
         }
