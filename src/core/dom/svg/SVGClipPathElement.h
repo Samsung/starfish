@@ -43,6 +43,11 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
+
+    virtual bool isRenderableElement() override
+    {
+        return true;
+    }
 };
 }
 

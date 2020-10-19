@@ -41,7 +41,12 @@ public:
     {
         return false;
     }
+
+    virtual bool isRenderableElement() override
+    {
+        return true;
+    }
 };
-}
+} // namespace Starfish
 
 #endif

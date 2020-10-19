@@ -105,6 +105,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "align"));
     m_disabled =
         QualifiedName(AtomicString::createAtomicString(starfish, "disabled"));
+    m_display =
+        QualifiedName(AtomicString::createAtomicString(starfish, "display"));
     m_color =
         QualifiedName(AtomicString::createAtomicString(starfish, "color"));
     m_face = QualifiedName(AtomicString::createAtomicString(starfish, "face"));

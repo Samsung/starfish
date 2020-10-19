@@ -60,6 +60,11 @@ public:
         return false;
     }
 
+    virtual bool isRenderableElement() override
+    {
+        return true;
+    }
+
     bool hasViewBox() const
     {
         return m_hasViewBox;

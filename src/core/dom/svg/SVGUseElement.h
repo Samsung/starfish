@@ -51,6 +51,11 @@ public:
         return true;
     }
 
+    virtual bool isRenderableElement() override
+    {
+        return true;
+    }
+
     SVGElement* targetElement()
     {
         return m_targetElement;

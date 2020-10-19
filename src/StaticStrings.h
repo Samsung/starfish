@@ -328,6 +328,7 @@ public:
     QualifiedName m_span;
     QualifiedName m_scope;
     QualifiedName m_disabled;
+    QualifiedName m_display;
     QualifiedName m_media;
     QualifiedName m_value;
     QualifiedName m_defaultValue;
