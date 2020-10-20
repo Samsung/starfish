@@ -18,10 +18,10 @@ interface MouseEvent : UIEvent {
   readonly attribute long clientX;
   readonly attribute long clientY;
 
-  [Unimplemented] readonly attribute boolean ctrlKey;
-  [Unimplemented] readonly attribute boolean shiftKey;
-  [Unimplemented] readonly attribute boolean altKey;
-  [Unimplemented] readonly attribute boolean metaKey;
+  readonly attribute boolean ctrlKey;
+  readonly attribute boolean shiftKey;
+  readonly attribute boolean altKey;
+  readonly attribute boolean metaKey;
 
   readonly attribute short button;
   readonly attribute unsigned short buttons;
