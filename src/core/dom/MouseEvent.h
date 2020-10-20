@@ -257,6 +257,26 @@ public:
         return m_mouseData.relatedTarget();
     }
 
+    bool ctrlKey() const
+    {
+        return m_eventModifierData.ctrlKey();
+    }
+
+    bool shiftKey() const
+    {
+        return m_eventModifierData.shiftKey();
+    }
+
+    bool altKey() const
+    {
+        return m_eventModifierData.altKey();
+    }
+
+    bool metaKey() const
+    {
+        return m_eventModifierData.metaKey();
+    }
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
@@ -267,7 +287,6 @@ public:
                         unsigned char button, bool ctrlKey, bool altKey,
                         bool shiftKey, bool metaKey, EventTarget* relatedTarget)
     {
-        // use ctrlKey, altKey, shiftKey, metaKey
         setType(type);
         setBubbles(bubbles);
         setCancelable(cancelable);
@@ -279,9 +298,14 @@ public:
         m_mouseData.setClientY(clientY);
         m_mouseData.setButton(button);
         m_mouseData.setRelatedTarget(relatedTarget);
+        m_eventModifierData.setCtrlKey(ctrlKey);
+        m_eventModifierData.setAltKey(altKey);
+        m_eventModifierData.setShiftKey(shiftKey);
+        m_eventModifierData.setMetaKey(metaKey);
     }
 
 private:
+    EventModifierData m_eventModifierData;
     MouseData m_mouseData;
 };
 }
