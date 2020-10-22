@@ -33,7 +33,7 @@ http://web-platform.test:8000/dom/ranges/Range-commonAncestorContainer-2.html
 #http://web-platform.test:8000/dom/ranges/Range-mutations-appendData.html
 http://web-platform.test:8000/dom/ranges/Range-comparePoint-2.html
 http://web-platform.test:8000/dom/events/Event-dispatch-order.html
-#http://web-platform.test:8000/dom/events/Event-dispatch-multiple-stopPropagation.html
+http://web-platform.test:8000/dom/events/Event-dispatch-multiple-stopPropagation.html
 http://web-platform.test:8000/dom/events/Event-dispatch-throwing.html
 http://web-platform.test:8000/dom/events/Event-dispatch-redispatch.html
 #http://web-platform.test:8000/dom/events/EventListener-incumbent-global-subsubframe.sub.html
@@ -51,7 +51,7 @@ http://web-platform.test:8000/dom/events/Event-dispatch-omitted-capture.html
 #http://web-platform.test:8000/dom/events/AddEventListenerOptions-once.html
 #http://web-platform.test:8000/dom/events/EventListener-incumbent-global-2.sub.html
 #http://web-platform.test:8000/dom/events/Event-defaultPrevented.html
-#http://web-platform.test:8000/dom/events/EventListener-handleEvent.html
+http://web-platform.test:8000/dom/events/EventListener-handleEvent.html
 #http://web-platform.test:8000/dom/events/Event-dispatch-bubbles-false.html
 http://web-platform.test:8000/dom/events/Event-dispatch-propagation-stopped.html
 http://web-platform.test:8000/dom/events/Event-dispatch-target-removed.html
