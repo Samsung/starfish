@@ -89,6 +89,11 @@ public:
         m_target = target;
     }
 
+    EventTarget* srcElement() const
+    {
+        return m_target;
+    }
+
     EventTarget* currentTarget() const
     {
         return m_currentTarget;
@@ -126,6 +131,12 @@ public:
     {
         m_propagationStopped = true;
         m_immediatePropagationStopped = true;
+    }
+
+    void unsetPropagation()
+    {
+        m_propagationStopped = false;
+        m_immediatePropagationStopped = false;
     }
 
     bool bubbles() const

@@ -93,9 +93,9 @@ ScriptValue EventListener::call(Event* event)
                                        event->currentTarget()->scriptValue());
         } else {
             if (!isAttribute()) {
-                value = callHandleEventFunction(
-                    event->scriptBindingInstance(), listenerFunc, argv, argc,
-                    event->currentTarget()->scriptValue());
+                value = callHandleEventFunction(event->scriptBindingInstance(),
+                                                listenerFunc, argv, argc,
+                                                listenerFunc);
             }
         }
 
@@ -472,8 +472,10 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         }
     }
 
-    // 10. Unset event's dispatch flag.
+    // 10. Unset event's dispatch flag, stop propagation flag,
+    //     and stop immediate propagation flag.
     event->setIsDispatched(false);
+    event->unsetPropagation();
 
     // 11. Initialize event's eventPhase attribute to NONE.
     event->setEventPhase(Event::NONE);

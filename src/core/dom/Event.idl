@@ -6,6 +6,7 @@
 interface Event {
   readonly attribute DOMString type;
   readonly attribute EventTarget? target;
+  readonly attribute EventTarget? srcElement; 
   readonly attribute EventTarget? currentTarget;
   [Unimplemented] sequence<EventTarget> composedPath();
 
