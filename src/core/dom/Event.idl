@@ -17,7 +17,7 @@ interface Event {
   readonly attribute unsigned short eventPhase;
 
   void stopPropagation();
-  [Unimplemented] attribute boolean cancelBubble;
+  attribute boolean cancelBubble;
   void stopImmediatePropagation();
 
   readonly attribute boolean bubbles;
