@@ -139,6 +139,16 @@ public:
         m_immediatePropagationStopped = false;
     }
 
+    bool cancelBubble() const
+    {
+        return m_propagationStopped;
+    }
+
+    void setCancelBubble(bool cancelBubble)
+    {
+        m_propagationStopped |= cancelBubble;
+    }
+
     bool bubbles() const
     {
         return m_bubbles;
@@ -214,6 +224,8 @@ public:
         m_bubbles = bubbles;
         m_cancelable = cancelable;
         m_isTrusted = false;
+        m_propagationStopped = false;
+        m_defaultPrevented = false;
     }
 
     virtual ExecutionContext* executionContext()
