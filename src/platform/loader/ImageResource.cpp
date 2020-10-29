@@ -110,6 +110,7 @@ protected:
         } else {
             m_resource->didLoadFailed();
         }
+        m_browsingContext->dispose();
     }
 
     ImageResource* m_resource;
