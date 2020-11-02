@@ -83,6 +83,11 @@ static void collectInlineBoxes(
             r.m_frameRect.setWidth(r.m_frameRect.width() + diff * 2);
             r.m_frameRect.setX(r.m_frameRect.x() - diff);
 
+            auto ydiff = f->style()->font()->maxVerticalGlyphSize();
+            r.m_frameRect.setY(r.m_frameRect.y() - ydiff.first);
+            r.m_frameRect.setHeight(r.m_frameRect.height() + ydiff.first +
+                                    ydiff.second);
+
             // we can store just text start & end
             // because text chaning triggier frametree-rebuild
             // new frames are have needsPainting flag already

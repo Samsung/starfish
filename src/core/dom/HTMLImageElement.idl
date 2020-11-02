@@ -17,7 +17,7 @@ interface HTMLImageElement : HTMLElement {
   [CEReactions] attribute unsigned long height;
   readonly attribute unsigned long naturalWidth;
   readonly attribute unsigned long naturalHeight;
-  [Unimplemented] readonly attribute boolean complete;
+  readonly attribute boolean complete;
   [Unimplemented] readonly attribute DOMString currentSrc;
   [CEReactions] attribute DOMString referrerPolicy;
 

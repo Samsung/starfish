@@ -28,6 +28,7 @@ class NativeImageData;
 class ImageResource;
 class Document;
 class WebOrigin;
+class ElementResourceClient;
 enum class RequestErrorType;
 
 class HTMLImageElement : public HTMLElement {
@@ -69,6 +70,11 @@ public:
     String* nameAttr();
     void setNameAttr(String* name);
 
+    bool complete()
+    {
+        return !!m_imageData;
+    }
+
     NativeImageData* imageData()
     {
         return m_imageData;
@@ -99,6 +105,7 @@ private:
     ResourceURL* origin();
 
     ImageResource* m_imageResource;
+    ElementResourceClient* m_elementResourceClient;
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
 

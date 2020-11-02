@@ -68,6 +68,11 @@ public:
     {
     }
     virtual FontMetrics metrics(float size) = 0;
+    // some fonts uses bigger more space than font-height when painting
+    virtual std::pair<LayoutUnit, LayoutUnit> maxVerticalGlyphSize(float size)
+    {
+        return std::make_pair(0, 0);
+    }
     virtual size_t dataSize()
     {
         return 0;
@@ -160,6 +165,12 @@ public:
     FontMetrics metrics()
     {
         return m_fontFaceList->front()->metrics(m_size);
+    }
+
+    // some fonts uses bigger more space than font-height when painting
+    std::pair<LayoutUnit, LayoutUnit> maxVerticalGlyphSize()
+    {
+        return m_fontFaceList->front()->maxVerticalGlyphSize(m_size);
     }
 
     const FontFaceList& fontFaceList()

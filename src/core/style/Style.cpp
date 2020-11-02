@@ -7984,6 +7984,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                         i--;
                     } else {
                         elementHasAnimation = true;
+                        // if already in fill-mode, we should not fire end event
+                        if (animationTasks[i]->isInForwardsFillMode()) {
+                            needsToFireAnimationEndEvent = false;
+                        }
                         animationTasks[i]->markInForwardsFillMode();
                     }
                     needsToRecomputeStylePropertyDamage = true;

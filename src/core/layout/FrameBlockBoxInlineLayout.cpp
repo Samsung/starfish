@@ -5194,6 +5194,11 @@ void InlineTextBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                 style()->font()->size());
         f.setWidth(f.width() + diff * 2);
         f.setX(f.x() - diff);
+
+        auto ydiff = style()->font()->maxVerticalGlyphSize();
+        f.setY(f.y() - ydiff.first);
+        f.setHeight(f.height() + ydiff.first + ydiff.second);
+
         ctx.uniteRect(f);
     }
 }

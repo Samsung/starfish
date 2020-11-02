@@ -316,7 +316,11 @@ public:
 
     float fraction(uint64_t tickCount) const
     {
-        if (m_isRunning == false) {
+        if (m_isInForwardsFillMode) {
+            return 1.0f;
+        }
+
+        if (!m_isRunning) {
             float result = m_gapTimeMs / ((float)m_durationMs);
             return std::min(result, 1.0f);
         }

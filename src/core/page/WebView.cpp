@@ -856,9 +856,11 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
         }
     }
 
+    bool didStackingContextJob = false;
     if (shouldCareStackingContextNow) {
         if (!m_rootStackingContext || m_needsEstablishesStackingContext) {
             INSTALL_PROFILE_TIMER("establishesStackingContext");
+            didStackingContextJob = true;
             clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
             if (startUpFlag() & StarfishStartUpFlag::enableComputedStyleDump) {
@@ -890,6 +892,7 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
         }
 
         if (m_needsComputeStackingContextProperties) {
+            didStackingContextJob = true;
             {
                 INSTALL_PROFILE_TIMER("computeStackingContextProperties");
                 if (m_topLevelBrowsingContext->document()
@@ -1056,7 +1059,9 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
         }
     }
 
-    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
+    if (didLayout || didStackingContextJob) {
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
+    }
 }
 
 void WebView::setNeedsRendering()
