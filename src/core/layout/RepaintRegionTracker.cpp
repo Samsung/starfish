@@ -165,16 +165,17 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
                                        LayoutRect r)
 {
     LayoutRect tmp = computeBoxExtent(r, currentMatrix);
-
-    for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
-        auto parent = std::get<2>(m_boundMaxExtentDueToOverflow[i]);
-        OverflowStatus status(frame);
+    OverflowStatus status(frame);
+    for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size() &&
+                       frame->shouldApplyOverflow();
+         i++) {
+        size_t idx = m_boundMaxExtentDueToOverflow.size() - 1 - i;
+        auto parent = std::get<2>(m_boundMaxExtentDueToOverflow[idx]);
         if (status.canApplyOverflow(parent)) {
             tmp = LayoutRect::overlappedRect(
-                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
+                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[idx]));
         }
     }
-
     m_repaintRegionPerGraphicsLayer[nullptr].unite(tmp);
 
     if (m_willCompositing) {
