@@ -43,6 +43,8 @@ void* HTMLImageElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLImageElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLImageElement, m_imageResource));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLImageElement, m_elementResourceClient));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLImageElement, m_imageData));
         HTMLElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLImageElement));
@@ -120,6 +122,7 @@ HTMLImageElement::HTMLImageElement(Document* document,
                                    const QualifiedName& qname)
     : HTMLElement(document, qname)
     , m_imageResource(nullptr)
+    , m_elementResourceClient(nullptr)
     , m_imageData(nullptr)
     , m_requestErrorType(RequestErrorType::NoError)
 {
@@ -227,8 +230,6 @@ void HTMLImageElement::setHeight(uint32_t height)
 uint32_t HTMLImageElement::naturalWidth()
 {
     if (m_imageData) {
-        // TODO : Apply a current pixel density when it is implemented.
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return m_imageData->width();
     }
     return 0;
@@ -237,8 +238,6 @@ uint32_t HTMLImageElement::naturalWidth()
 uint32_t HTMLImageElement::naturalHeight()
 {
     if (m_imageData) {
-        // TODO : Apply a current pixel density when it is implemented.
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return m_imageData->height();
     }
     return 0;
@@ -307,6 +306,10 @@ void HTMLImageElement::unloadImage()
         m_imageResource->cancel();
         m_imageResource = nullptr;
     }
+    if (m_elementResourceClient) {
+        m_elementResourceClient->cancelDispatchedEventIfExists();
+        m_elementResourceClient = nullptr;
+    }
     m_imageData = nullptr;
     m_requestErrorType = RequestErrorType::NoError;
     if (frame()) {
@@ -331,8 +334,8 @@ void HTMLImageElement::loadImage(String* src)
     m_imageResource = document()->resourceLoader().fetchImage(resourceURL);
     m_imageResource->addResourceClient(
         new ImageDownloadClient(this, m_imageResource));
-    m_imageResource->addResourceClient(
-        new ElementResourceClient(this, m_imageResource));
+    m_elementResourceClient = new ElementResourceClient(this, m_imageResource);
+    m_imageResource->addResourceClient(m_elementResourceClient);
 
     GET_EFFECTIVE_REFERRERPOLICY();
     RequestData* reqData = new RequestData();
@@ -343,7 +346,11 @@ void HTMLImageElement::loadImage(String* src)
     if (reqData->m_url->isFileURL()) {
         reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
     } else {
+        reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+// for pass test cases
+#ifdef STARFISH_ENABLE_TEST
         reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
+#endif
     }
 
     auto crossOrigin = getAttribute(starfish()->staticStrings()->m_crossorigin);

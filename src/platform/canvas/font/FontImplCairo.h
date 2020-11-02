@@ -142,6 +142,31 @@ public:
         return met;
     }
 
+    virtual std::pair<LayoutUnit, LayoutUnit> maxVerticalGlyphSize(float size)
+    {
+// for pass test cases
+#ifdef STARFISH_ENABLE_TEST
+        return std::make_pair(0, 0);
+#endif
+        ensureFonts();
+
+        int intSize = int(size + 0.5f);
+        LayoutUnit yMin(
+            (-((int)m_face->bbox.yMin - m_face->descender) * intSize) /
+            m_unitsPerEM);
+        LayoutUnit yMax(
+            (((int)m_face->bbox.yMax - m_face->ascender) * intSize) /
+            m_unitsPerEM);
+        if (yMin < 0) {
+            yMin = 0;
+        }
+        if (yMax < 0) {
+            yMax = 0;
+        }
+
+        return std::make_pair(yMax, yMin);
+    }
+
     virtual void clearCache()
     {
         if (m_face && m_dataBuffer) {

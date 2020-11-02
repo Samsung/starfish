@@ -34,7 +34,10 @@ void ElementResourceClient::didLoadFinished()
 {
     ResourceClient::didLoadFinished();
     auto fn = [](size_t handle, void* data) {
-        Element* element = (Element*)data;
+        ElementResourceClient* elementResourceClient =
+            (ElementResourceClient*)data;
+        elementResourceClient->m_dispatchedEventHandler = MessageLoopInvalidID;
+        Element* element = elementResourceClient->m_element;
         String* eventType =
             element->starfish()->staticStrings()->m_load.localName();
         Event* e = new Event(element->executionContext(), eventType,
@@ -42,10 +45,11 @@ void ElementResourceClient::didLoadFinished()
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
-        fn(SIZE_MAX, m_element);
+        fn(SIZE_MAX, this);
     } else {
-        m_element->webView()->messageLoop()->addIdler(m_element->window(), fn,
-                                                      m_element);
+        m_dispatchedEventHandler =
+            m_element->webView()->messageLoop()->addIdler(m_element->window(),
+                                                          fn, this);
     }
 }
 
@@ -53,7 +57,10 @@ void ElementResourceClient::didLoadFailed()
 {
     ResourceClient::didLoadFailed();
     auto fn = [](size_t handle, void* data) {
-        Element* element = (Element*)data;
+        ElementResourceClient* elementResourceClient =
+            (ElementResourceClient*)data;
+        elementResourceClient->m_dispatchedEventHandler = MessageLoopInvalidID;
+        Element* element = elementResourceClient->m_element;
         String* eventType =
             element->starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(element->executionContext(), eventType,
@@ -61,10 +68,20 @@ void ElementResourceClient::didLoadFailed()
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
-        fn(SIZE_MAX, m_element);
+        fn(SIZE_MAX, this);
     } else {
-        m_element->webView()->messageLoop()->addIdler(m_element->window(), fn,
-                                                      m_element);
+        m_dispatchedEventHandler =
+            m_element->webView()->messageLoop()->addIdler(m_element->window(),
+                                                          fn, this);
+    }
+}
+
+void ElementResourceClient::cancelDispatchedEventIfExists()
+{
+    if (m_dispatchedEventHandler != MessageLoopInvalidID) {
+        m_element->webView()->messageLoop()->removeIdler(
+            m_dispatchedEventHandler);
+        m_dispatchedEventHandler = MessageLoopInvalidID;
     }
 }
 }

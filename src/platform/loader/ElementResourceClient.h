@@ -21,6 +21,7 @@
 #define __StarfishElementResourceClient__
 
 #include "platform/loader/ResourceClient.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
@@ -31,14 +32,17 @@ public:
                           bool needsSyncEventDispatch = false)
         : ResourceClient(resource)
         , m_needsSyncEventDispatch(needsSyncEventDispatch)
+        , m_dispatchedEventHandler(MessageLoopInvalidID)
         , m_element(element)
     {
     }
     virtual void didLoadFinished();
     virtual void didLoadFailed();
+    void cancelDispatchedEventIfExists();
 
 protected:
     bool m_needsSyncEventDispatch;
+    size_t m_dispatchedEventHandler;
     Element* m_element;
 };
 }
