@@ -39,28 +39,27 @@ RepaintRegionTracker::ComputeOverflow::ComputeOverflow(
     : tracker(tracker)
     , frame(frame)
 {
-    OverflowStatus status(frame);
-    if (status.canApplyOverflow(frame, false)) {
+    if (frame->shouldApplyOverflow()) {
         if (tracker.m_willCompositing) {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
                 computeBoxExtent(
                     LayoutRect(0, 0, frame->width(), frame->height()),
                     frame->computeMatrixOnGraphicsBuffer()),
                 tracker.findNearestStackingContextOwner(frame)
-                    ->stackingContext()));
+                    ->stackingContext(),
+                frame));
         } else {
             tracker.m_boundMaxExtentDueToOverflow.push_back(std::make_tuple(
                 computeBoxExtent(
                     LayoutRect(0, 0, frame->width(), frame->height()), matrix),
-                nullptr));
+                nullptr, frame));
         }
     }
 }
 
 RepaintRegionTracker::ComputeOverflow::~ComputeOverflow()
 {
-    OverflowStatus status(frame);
-    if (status.canApplyOverflow(frame, false)) {
+    if (frame->shouldApplyOverflow()) {
         tracker.m_boundMaxExtentDueToOverflow.pop_back();
     }
 }
@@ -168,8 +167,12 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
     LayoutRect tmp = computeBoxExtent(r, currentMatrix);
 
     for (size_t i = 0; i < m_boundMaxExtentDueToOverflow.size(); i++) {
-        tmp = LayoutRect::overlappedRect(
-            tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
+        auto parent = std::get<2>(m_boundMaxExtentDueToOverflow[i]);
+        OverflowStatus status(frame);
+        if (status.canApplyOverflow(parent)) {
+            tmp = LayoutRect::overlappedRect(
+                tmp, std::get<0>(m_boundMaxExtentDueToOverflow[i]));
+        }
     }
 
     m_repaintRegionPerGraphicsLayer[nullptr].unite(tmp);
@@ -474,4 +477,4 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
         trackRepaintRegion(box, childMatrix);
     }
 }
-}
+} // namespace Starfish

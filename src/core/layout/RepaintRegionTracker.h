@@ -68,7 +68,7 @@ protected:
     const RepaintRegionTrackerContext& m_oldContext;
     RepaintRegionTrackerContext& m_newContext;
     std::unordered_map<Node*, LayoutRect> m_repaintRegionPerGraphicsLayer;
-    std::vector<std::tuple<LayoutRect, StackingContext*>>
+    std::vector<std::tuple<LayoutRect, StackingContext*, FrameBox*>>
         m_boundMaxExtentDueToOverflow;
     LayoutRect m_screenRect;
     PrevDrawnStackingContextInfoMap& m_prevDrawnStackingContextInfoMap;
