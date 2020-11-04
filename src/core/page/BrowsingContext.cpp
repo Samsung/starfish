@@ -657,7 +657,9 @@ bool BrowsingContext::layoutIfNeeded()
         }
     }
 
-    document()->resourceLoader().cachePruning();
+    if (!webView()->hasActiveAnimationExecutor()) {
+        document()->resourceLoader().cachePruning();
+    }
 
     return ret;
 }

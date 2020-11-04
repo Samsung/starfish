@@ -558,6 +558,35 @@ void LinearGradientData::checkComputed(Length curFontSize, Length rootFontSize,
                                 cs);
 }
 
+bool LinearGradientData::isEffective() const
+{
+    const auto& list = colorStopList();
+    bool everyColorStopColorIsTransparent = true;
+    bool everyColorStopOffsetIsAutoOrZeroPercent = true;
+    bool everyColorStopOffsetIsAuto = true;
+    for (size_t i = 0; i < list.size(); i++) {
+        if (!list[i]->color().isTransparent()) {
+            everyColorStopColorIsTransparent = false;
+        }
+        bool isZeroPercent =
+            list[i]->offset().isPercent() && list[i]->offset().percent() == 0;
+        if (!list[i]->offset().isAuto() && !isZeroPercent) {
+            everyColorStopOffsetIsAutoOrZeroPercent = false;
+        }
+        if (!list[i]->offset().isAuto()) {
+            everyColorStopOffsetIsAuto = false;
+        }
+    }
+    if (everyColorStopOffsetIsAuto) {
+        return !everyColorStopColorIsTransparent;
+    }
+    if (!everyColorStopColorIsTransparent &&
+        !everyColorStopOffsetIsAutoOrZeroPercent) {
+        return true;
+    }
+    return false;
+}
+
 RadialGradientData::RadialGradientData()
     : GradientData(GradientType::RadialGradient)
     , m_shape(RadialGradientShape::None)
@@ -667,6 +696,21 @@ void RadialGradientData::checkComputed(Length curFontSize, Length rootFontSize,
     m_secondRadius.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                          windowSize.width(),
                                          windowSize.height(), cs);
+}
+
+bool RadialGradientData::isEffective() const
+{
+    const auto& list = colorStopList();
+    bool everyColorStopColorIsTransparent = true;
+    for (size_t i = 0; i < list.size(); i++) {
+        if (!list[i]->color().isTransparent()) {
+            everyColorStopColorIsTransparent = false;
+        }
+    }
+    if (!everyColorStopColorIsTransparent) {
+        return true;
+    }
+    return false;
 }
 
 static float resolveRadius(FrameBox* owner, const Length& radius,

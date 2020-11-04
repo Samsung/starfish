@@ -31,6 +31,8 @@ class CompressedNativeImageData;
 class SVGNativeImageData;
 class DrawImageInfo;
 
+constexpr size_t ExtraSmallNativeImageSize{ 16 };
+
 class NativeImageData : public gc {
 public:
     enum PreserveAspectRatioValue ENSURE_ENUM_UNSIGNED {
@@ -78,6 +80,26 @@ public:
     {
         STARFISH_ASSERT(isSVGNativeImageData());
         return (SVGNativeImageData*)this;
+    }
+
+    bool isEmptyImage()
+    {
+        size_t h = height();
+        size_t w = width();
+        size_t s = stride();
+        uint8_t* ptr = data();
+        for (size_t y = 0; y < h; y++) {
+            uint8_t* p = ptr;
+            for (size_t x = 0; x < w; x++) {
+                if (p[3]) {
+                    return false;
+                }
+                p += 4;
+            }
+            ptr += s;
+        }
+
+        return true;
     }
 
     virtual size_t bufferSize()

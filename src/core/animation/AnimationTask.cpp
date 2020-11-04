@@ -1584,6 +1584,39 @@ bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
     return false;
 }
 
+void ActiveVisibilityAnimationTask::execute(float progress,
+                                            ComputedStyle* style)
+{
+    if (currentAnimatedToValue()->getVisibilityValue() ==
+        VisibilityValue::VisibleVisibilityValue) {
+        if (progress) {
+            style->setVisibility(
+                currentAnimatedToValue()->getVisibilityValue());
+        } else {
+            style->setVisibility(
+                currentAnimatedFromValue()->getVisibilityValue());
+        }
+    } else {
+        if (progress == 1) {
+            style->setVisibility(
+                currentAnimatedToValue()->getVisibilityValue());
+        } else {
+            style->setVisibility(
+                currentAnimatedFromValue()->getVisibilityValue());
+        }
+    }
+}
+
+bool ActiveVisibilityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
+{
+    STARFISH_ASSERT(newStyle != nullptr);
+    if (m_property == CSSStyleValuePair::KeyKind::Visibility) {
+        return newStyle->visibility() ==
+               currentAnimatedToValue()->getVisibilityValue();
+    }
+    return false;
+}
+
 static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
                                      CSSStyleValuePair::KeyKind a)
 {
@@ -2493,6 +2526,20 @@ bool applyTransitionIfNeeds(
         }
 
         // <- length series
+
+        if (NEED_TRANSITION(CSSStyleValuePair::Visibility) == true) {
+            bool found = executor->hasActiveTransition(
+                element, CSSStyleValuePair::Visibility);
+            if (found == false) {
+                auto task = new ActiveVisibilityAnimationTask(
+                    element, CSSStyleValuePair::Visibility,
+                    AnimatedValue(oldStyle->visibility()),
+                    AnimatedValue(newStyle->visibility()), duration, delay,
+                    timingFunction);
+                executor->registerTransition(task, newStyle);
+                gotTransition = true;
+            }
+        }
 
         if (gotTransition == true) {
             // TODO reduce animation duration here with
@@ -3479,6 +3526,19 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                     fillMode);
                 executor->removeActiveAnimationTaskIfNeeds(
                     element, CSSStyleValuePair::Transform);
+                executor->registerAnimation(task, style, name, s,
+                                            iterationCount, direction,
+                                            playState, isCSSAnimationTask);
+                gotAnimation = true;
+            }
+
+            if (CHECK_ANIMATION(CSSStyleValuePair::Visibility) == true) {
+                auto task = new ActiveVisibilityAnimationTask(
+                    element, CSSStyleValuePair::Visibility, values[0], offsets,
+                    timingFunctions, duration, delay, iterationCount, playState,
+                    fillMode);
+                executor->removeActiveAnimationTaskIfNeeds(
+                    element, CSSStyleValuePair::Visibility);
                 executor->registerAnimation(task, style, name, s,
                                             iterationCount, direction,
                                             playState, isCSSAnimationTask);

@@ -77,8 +77,10 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
                 "The image argument is a detached ImageBitmap");
         }
         return true;
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
     } else if (image.isHTMLVideoElementValue()) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+#endif
     } else {
         STARFISH_ASSERT(image.isNoneValue());
         return new DOMException(

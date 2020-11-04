@@ -213,6 +213,11 @@ public:
         return m_colorStopList;
     }
 
+    const GCVector<ColorStop*>& colorStopList() const
+    {
+        return m_colorStopList;
+    }
+
     bool isCacheable() const
     {
         return m_isCacheable;
@@ -232,6 +237,8 @@ public:
                                Font* font, LayoutSize windowSize,
                                ComputedStyle* cs);
     virtual bool equals(GradientData* other) const;
+
+    virtual bool isEffective() const = 0;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -278,6 +285,7 @@ public:
                                Font* font, LayoutSize windowSize,
                                ComputedStyle* cs) override;
     virtual bool equals(GradientData* other) const override;
+    virtual bool isEffective() const override;
 
     void* operator new(size_t size)
     {
@@ -378,6 +386,7 @@ public:
                                Font* font, LayoutSize windowSize,
                                ComputedStyle* cs) override;
     virtual bool equals(GradientData* other) const override;
+    virtual bool isEffective() const override;
 
     void* operator new(size_t size)
     {

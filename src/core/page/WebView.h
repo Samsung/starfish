@@ -446,6 +446,8 @@ public:
     void clearActiveImageURLsInRenderingSet();
     void putURLIntoActiveImageURLsInRenderingSet(const std::string& url);
     bool isThereURLInActiveImageURLsInRenderingSet(const std::string& url);
+    bool areThereMoreThanThreeImageURLsInRenderingSet();
+
     void accessActiveImageURLsInRenderingSet(
         void (*callback)(const std::string& url, NULLABLE void* data),
         NULLABLE void* data);
