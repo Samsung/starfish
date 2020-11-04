@@ -72,9 +72,8 @@ public:
         if (!imageData) {
             return;
         }
-        if (m_element->frame()) {
-            m_element->setNeedsPainting();
-        }
+        m_element->setNeedsLayout();
+        m_element->setNeedsPainting();
     }
 
 protected:

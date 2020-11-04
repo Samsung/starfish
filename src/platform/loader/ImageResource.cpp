@@ -164,7 +164,21 @@ void ImageResource::didLoadFinished()
 #if defined(STARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING)
     if (!m_resourceRequest->isSync() &&
         m_resourceRequest->executionContext()->hasDocument()) {
-        if (m_resourceRequest->executionContext()
+        bool insertedToActiveSet = false;
+        if (!m_resourceRequest->executionContext()
+                 ->document()
+                 ->webView()
+                 ->areThereMoreThanThreeImageURLsInRenderingSet()) {
+            m_resourceRequest->executionContext()
+                ->document()
+                ->webView()
+                ->putURLIntoActiveImageURLsInRenderingSet(
+                    url()->urlString()->toUTF8NonGCString());
+            insertedToActiveSet = true;
+        }
+
+        if (insertedToActiveSet ||
+            m_resourceRequest->executionContext()
                 ->document()
                 ->webView()
                 ->isThereURLInActiveImageURLsInRenderingSet(
@@ -230,6 +244,20 @@ void ImageResource::didLoadFinished()
                                                     d->decodeResult.m_width,
                                                     d->decodeResult.m_height,
                                                     d->decodeResult.m_stride);
+                                        }
+                                        d->imageResource
+                                            ->Resource::didLoadFinished();
+                                    } else if (buffer.size()) {
+                                        d->imageResource->m_imageData =
+                                            CompressedNativeImageData::create(
+                                                buffer,
+                                                d->imageResource->url()
+                                                    ->urlString()
+                                                    ->toUTF8NonGCString());
+                                        if (!d->imageResource->m_imageData) {
+                                            d->imageResource
+                                                ->Resource::didLoadFailed();
+                                            return;
                                         }
                                         d->imageResource
                                             ->Resource::didLoadFinished();

@@ -58,6 +58,12 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
                                  attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
 
+    if (name == ss->m_onload) {
+        setAttributeEventListener(ss->m_load, value, this);
+    } else if (name == ss->m_onerror) {
+        setAttributeEventListener(ss->m_error, value, this);
+    }
+
     if (needsGeometryAttributes()) {
         if (ss->m_x == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);

@@ -2028,6 +2028,12 @@ void WebView::clearActiveImageURLsInRenderingSet()
     std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
 }
 
+bool WebView::areThereMoreThanThreeImageURLsInRenderingSet()
+{
+    Locker<Mutex> locker(*m_activeImageURLsInRenderingMutex);
+    return m_activeImageURLsInRendering.size() > 3;
+}
+
 void WebView::accessActiveImageURLsInRenderingSet(
     void (*callback)(const std::string& url, NULLABLE void* data),
     NULLABLE void* data)

@@ -937,6 +937,12 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
 
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             float sd = shadow->spreadDistance();
+            auto shadowColor =
+                shadow->hasColor() ? shadow->color() : s->color();
+
+            if (shadowColor.isTransparent()) {
+                continue;
+            }
 
             if (!shadow->inset()) {
                 Unit::Rect borderRect = makeRect(BoxValue::BorderBoxBoxValue);
@@ -954,9 +960,6 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     // fast path
                     // we can draw just rect only
                     canvas->save();
-
-                    auto shadowColor =
-                        shadow->hasColor() ? shadow->color() : s->color();
                     canvas->setFillColor(shadowColor);
 
                     xx = rx.floor();
@@ -1049,8 +1052,6 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                                                         bufImageSize);
                     Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->unsetDevicePixelRatio();
-                    auto shadowColor =
-                        shadow->hasColor() ? shadow->color() : s->color();
                     cv->setFillColor(shadowColor);
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1625,6 +1626,11 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             width = id->width();
             height = id->height();
         } else if (type.isGradient()) {
+            ImageValue* imageValue = style->backgroundImage(idx);
+            if (!imageValue->gradientValue()->isEffective()) {
+                continue;
+            }
+
             Unit::Rect rect;
             if (rootOrBodyelement != nullptr) {
                 Window* window = rootOrBodyelement->window();
@@ -3577,7 +3583,21 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
     }
 
     if (background && background->sizeOfLayers()) {
-        return true;
+        size_t backgroundLayerSize = background->sizeOfLayers();
+        for (size_t i = 0; i < backgroundLayerSize; i++) {
+            if (background->image(i) == nullptr) {
+                continue;
+            }
+            ImageValue* imageValue = background->image(i);
+            auto type = imageValue->type();
+            if (type.isGradient()) {
+                if (imageValue->gradientValue()->isEffective()) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
     }
 
     if (outline &&
@@ -3587,7 +3607,19 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
     }
 
     if (boxShadow && boxShadow->size()) {
-        return true;
+        size_t s = boxShadow->size();
+        for (size_t i = 0; i < s; i++) {
+            auto bs = boxShadow->at(i);
+            auto shadowColor = bs.hasColor() ? bs.color() : cs->color();
+
+            if (shadowColor.isTransparent()) {
+                continue;
+            }
+            if (!bs.offsetX().isZero() || !bs.offsetY().isZero() ||
+                !bs.radius().isZero() || !bs.spreadDistance().isZero()) {
+                return true;
+            }
+        }
     }
 
     if (filter && filter->size()) {
@@ -3595,7 +3627,12 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
     }
 
     if (border && (border->hasBorderStyle() || !border->image().isNull())) {
-        return true;
+        if (!border->top().width().isZero() ||
+            !border->right().width().isZero() ||
+            !border->bottom().width().isZero() ||
+            !border->left().width().isZero()) {
+            return true;
+        }
     }
 
     return false;
@@ -3727,6 +3764,19 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             } else {
                 boxHasDrawableContents = drawableContentsInStyle;
             }
+        }
+    } else if (isFrameReplaced() && asFrameReplaced()->isFrameReplacedImage()) {
+        NativeImageData* id = node()->asHTMLImageElement()->imageData();
+        if (id) {
+            if (id->width() < ExtraSmallNativeImageSize &&
+                id->height() < ExtraSmallNativeImageSize &&
+                id->isEmptyImage()) {
+                boxHasDrawableContents = drawableContentsInStyle;
+            } else {
+                boxHasDrawableContents = true;
+            }
+        } else {
+            boxHasDrawableContents = drawableContentsInStyle;
         }
     }
 

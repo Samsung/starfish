@@ -60,6 +60,11 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
     }
 
     if (id) {
+        if (id->width() < ExtraSmallNativeImageSize &&
+            id->height() < ExtraSmallNativeImageSize && id->isEmptyImage()) {
+            return;
+        }
+
         if (id->preserveAspectRatioValue() == NativeImageData::None) {
             Unit::Rect frameRect = Unit::Rect(
                 borderLeft() + paddingLeft(), borderTop() + paddingTop(),

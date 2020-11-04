@@ -42,6 +42,7 @@ class AnimatedValue : public gc {
         INT,
         MATRIX,
         TRANSFORM_DATA,
+        VISIBILITY
     };
 
 public:
@@ -98,6 +99,12 @@ public:
 
         m_data.m_transformData = transform;
         m_type = TRANSFORM_DATA;
+    }
+
+    AnimatedValue(VisibilityValue v)
+    {
+        m_data.m_visibilityValue = v;
+        m_type = VISIBILITY;
     }
 
     bool isColor() const
@@ -194,6 +201,12 @@ public:
         return m_data.m_transformData;
     }
 
+    VisibilityValue getVisibilityValue() const
+    {
+        STARFISH_ASSERT(m_type == VISIBILITY);
+        return m_data.m_visibilityValue;
+    }
+
     inline void* operator new(size_t size, void* p)
     {
         STARFISH_ASSERT(p != nullptr);
@@ -230,6 +243,7 @@ protected:
         int m_int;
         SkMatrix m_matrix;
         StyleTransformDataGroup* m_transformData;
+        VisibilityValue m_visibilityValue;
         ValueData()
             : m_int(0)
         {
@@ -770,6 +784,40 @@ protected:
     size_t m_indexForBgLayer;
 };
 
+class ActiveVisibilityAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveVisibilityAnimationTask(Element* target,
+                                  CSSStyleValuePair::KeyKind targetProperty,
+                                  const AnimatedValue& from,
+                                  const AnimatedValue& to,
+                                  uint64_t durationInms, int64_t delayInms,
+                                  TimingFunction* timingFunction)
+        : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                              delayInms, timingFunction)
+    {
+        STARFISH_ASSERT(target != nullptr);
+        STARFISH_ASSERT(timingFunction != nullptr);
+    }
+
+    ActiveVisibilityAnimationTask(
+        Element* target, CSSStyleValuePair::KeyKind targetProperty,
+        const GCVector<AnimatedValue*>& values,
+        const GCAtomicVector<double>& offsets,
+        const GCVector<TimingFunction*>& timingFunctions, uint64_t durationInms,
+        int64_t delayInms, float iterationCount,
+        AnimationPlayStateValue playState, AnimationFillModeValue fillMode)
+        : ActiveAnimationTask(target, targetProperty, values, offsets,
+                              timingFunctions, durationInms, delayInms,
+                              iterationCount, playState, fillMode)
+    {
+        m_isEveryAnimiatedValueResolved = true;
+        STARFISH_ASSERT(target != nullptr);
+    }
+
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+};
+
 struct ActiveElementAnimation : public gc {
     String* m_name;
     Element* m_element;
@@ -892,6 +940,7 @@ public:
     {
         STARFISH_ASSERT(task != nullptr);
         STARFISH_ASSERT(style != nullptr);
+
         m_activeTransitions.push_back(task);
         task->attachToElement(style);
         task->fireTransitionStartEvent();

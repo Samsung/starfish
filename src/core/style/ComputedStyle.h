@@ -2621,6 +2621,11 @@ public:
         return m_inheritedStyles.m_visibility;
     }
 
+    void setVisibility(VisibilityValue v)
+    {
+        m_inheritedStyles.m_visibility = v;
+    }
+
     FontStyleValue fontStyle()
     {
         return m_inheritedStyles.m_fontStyle;
