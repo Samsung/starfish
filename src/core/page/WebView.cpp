@@ -399,6 +399,7 @@ void WebView::clearDrawnBuffers()
         }
     } else {
         m_needsFullPainting = true;
+        m_needsPainting = true;
     }
 
     platformWindow()->onClearDrawnBuffers();
