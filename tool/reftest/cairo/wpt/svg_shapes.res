@@ -1,0 +1,12 @@
+#http://web-platform.test:8000/svg/shapes/line-dasharray-ref.svg
+#http://web-platform.test:8000/svg/shapes/line-dasharray.svg
+#http://web-platform.test:8000/svg/shapes/line-getPointAtLength.svg
+#http://web-platform.test:8000/svg/shapes/line-pathLength.svg
+#http://web-platform.test:8000/svg/shapes/rect-01-ref.html
+#http://web-platform.test:8000/svg/shapes/rect-01.svg
+#http://web-platform.test:8000/svg/shapes/rect-02-ref.html
+#http://web-platform.test:8000/svg/shapes/rect-02.svg
+#http://web-platform.test:8000/svg/shapes/rect-03-ref.html
+#http://web-platform.test:8000/svg/shapes/rect-03.svg
+#http://web-platform.test:8000/svg/shapes/rect-04-ref.html
+#http://web-platform.test:8000/svg/shapes/rect-04.svg

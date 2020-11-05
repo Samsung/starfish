@@ -1,0 +1,13 @@
+#http://web-platform.test:8000/svg/extensibility/foreignObject/containing-block.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/containing-block_expected.txt
+#http://web-platform.test:8000/svg/extensibility/foreignObject/foreign-object-circular-filter-reference-crash.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/foreign-object-paints-before-rect-ref.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/foreign-object-paints-before-rect.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/foreign-object-size-ref.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/foreign-object-size.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/position-svg-root-in-foreign-object-ref.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/position-svg-root-in-foreign-object.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/properties.svg
+#http://web-platform.test:8000/svg/extensibility/foreignObject/stacking-context-ref.html
+#http://web-platform.test:8000/svg/extensibility/foreignObject/stacking-context.html
+#http://web-platform.test:8000/svg/extensibility/interfacesforeignObject-graphics.svg
