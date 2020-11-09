@@ -24,6 +24,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/HTMLImageElement.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
