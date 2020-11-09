@@ -174,8 +174,13 @@ namespace Starfish {
     F(style)                           \
     F(script)                          \
     F(defs)                            \
+    F(linearGradient)                  \
+    F(lineargradient)                  \
+    F(stop)                            \
     F(use)                             \
     F(clippath)
+// FIXME: current parser converts linearGradient to lineargradient
+// Remove F(lineargradient) after fixing this issue
 
 #define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
 
@@ -432,6 +437,9 @@ public:
     QualifiedName m_opacity;
     QualifiedName m_strokeOpacity;
     QualifiedName m_fillOpacity;
+    QualifiedName m_offset;
+    QualifiedName m_stopOpacity;
+    QualifiedName m_stopColor;
     QualifiedName m_stroke;
     QualifiedName m_strokeWidth;
     QualifiedName m_x;

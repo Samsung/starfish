@@ -104,14 +104,15 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
     return result;
 }
 
-static CSSStyleValuePair stylePaintDataToCSSStyleValue(StylePaintData paintData)
+static CSSStyleValuePair stylePaintDataToCSSStyleValue(
+    StylePaintData* paintData)
 {
     CSSStyleValuePair ret;
-    if (paintData.color().isTransparent()) {
+    if (paintData->color().isTransparent()) {
         ret.setValueKind(CSSStyleValuePair::ValueKind::None);
     } else {
         ret.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
-        ret.setColorValue(paintData.color());
+        ret.setColorValue(paintData->color());
     }
     return ret;
 }
@@ -1486,6 +1487,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValue(CSSStyleValuePair::ValueData(style->fillRule()));
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::StopColor: {
+        CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->stopColor());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::StopColor);
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::Stroke: {
         CSSStyleValuePair p = stylePaintDataToCSSStyleValue(style->stroke());
         p.setKeyKind(CSSStyleValuePair::KeyKind::Stroke);
@@ -2015,6 +2021,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(OverflowY, OverflowValueKind, overflowY)
         ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
         ADD_VALUE_PAIR(Opacity, Number, opacity)
+        ADD_VALUE_PAIR(StopOpacity, Number, stopOpacity)
         ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
                        boxDecorationBreak)
         ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)

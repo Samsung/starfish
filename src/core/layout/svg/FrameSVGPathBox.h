@@ -39,6 +39,8 @@ public:
     virtual void paintSVG(PaintingContext& ctx) override;
     virtual Path* path() override;
 
+    GradientDrawingInfo* makeGradientDrawingInfo(String* url);
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

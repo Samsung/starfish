@@ -666,6 +666,8 @@ class CSSFilterFunction;
     F(FillOpacity, fillOpacity, "fill-opacity")                                \
     F(FillRule, fillRule, "fill-rule")                                         \
     F(Filter, filter, "filter")                                                \
+    F(StopColor, stopColor, "stop-color")                                      \
+    F(StopOpacity, stopOpacity, "stop-opacity")                                \
     F(Stroke, stroke, "stroke")                                                \
     F(StrokeWidth, strokeWidth, "stroke-width")                                \
     F(X, x, "x")                                                               \
