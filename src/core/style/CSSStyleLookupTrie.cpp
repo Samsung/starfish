@@ -355,6 +355,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Object-fit
         // Overflow-X
         // Overflow-Y
+        // Stop-Color
         // Visibility
         // Align-Self
         // Line-Break
@@ -430,6 +431,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "overflow-y", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::OverflowY;
+            }
+            break;
+        case 's':
+            if (memcmp(data, "stop-color", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::StopColor;
             }
             break;
         case 'v':
@@ -548,6 +554,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // caption-side
         // Fill-Opacity
         // Stroke-Width
+        // Stop-Opacity
         // Word-Spacing
         // font-kerning
         // Grid-Row-End
@@ -606,6 +613,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 's':
             if (memcmp(data, "stroke-width", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeWidth;
+            }
+            if (memcmp(data, "stop-opacity", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::StopOpacity;
             }
             break;
         case 'w':
@@ -1540,6 +1550,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::OverflowY;
             }
             break;
+        case 's':
+            if (memcmp(data, "stopColor", 9) == 0) {
+                return CSSStyleValuePair::KeyKind::StopColor;
+            }
+            break;
         case 'w':
             if (memcmp(data, "wordBreak", 9) == 0) {
                 return CSSStyleValuePair::KeyKind::WordBreak;
@@ -1703,6 +1718,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 's':
             if (memcmp(data, "strokeWidth", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::StrokeWidth;
+            }
+            if (memcmp(data, "stopOpacity", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::StopOpacity;
             }
             break;
         case 'w':

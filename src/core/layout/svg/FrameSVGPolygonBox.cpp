@@ -50,11 +50,11 @@ void FrameSVGPolygonBox::paintSVG(PaintingContext& ctx)
     if (newPath) {
         FrameBox* cb = layoutParent()->asFrameBox();
         float opacity = style()->opacity();
-        Unit::Color fillColor = style()->fill().color();
+        Unit::Color fillColor = style()->fill()->color();
         ctx.m_canvas->setFillColor(
             Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
                         fillColor.a() * style()->fillOpacity() * opacity));
-        Unit::Color strokeColor = style()->stroke().color();
+        Unit::Color strokeColor = style()->stroke()->color();
         ctx.m_canvas->setStrokeColor(
             Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
                         strokeColor.a() * style()->strokeOpacity() * opacity));

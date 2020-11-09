@@ -148,6 +148,8 @@ public:
     }
     SVGElement* clipPathElement();
 
+    SVGElement* getSVGElementById(String* id);
+
 protected:
     NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
     SVGElement* m_clipPathElement;

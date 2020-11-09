@@ -25,23 +25,35 @@
 namespace Starfish {
 
 class StylePaintData : public gc {
+    friend ComputedStyle;
+
 public:
     StylePaintData(NamedColor::NamedColorValue e)
         : m_hasCurrentColorValue(true)
         , m_color(Unit::Color(0, 0, 0, 0))
+        , m_url(nullptr)
     {
         STARFISH_ASSERT(e == NamedColor::currentColor);
     }
     StylePaintData(Unit::Color clr = Unit::Color(0, 0, 0, 0))
         : m_hasCurrentColorValue(false)
         , m_color(clr)
+        , m_url(nullptr)
+    {
+    }
+
+    StylePaintData(String* url)
+        : m_hasCurrentColorValue(false)
+        , m_color(Unit::Color(0, 0, 0, 0))
+        , m_url(url)
     {
     }
 
     bool operator==(const StylePaintData& o)
     {
         return m_color == o.m_color &&
-               m_hasCurrentColorValue == o.m_hasCurrentColorValue;
+               m_hasCurrentColorValue == o.m_hasCurrentColorValue &&
+               m_url == o.m_url;
     }
 
     bool operator!=(const StylePaintData& o)
@@ -55,6 +67,16 @@ public:
         return m_color;
     }
 
+    bool hasUrl()
+    {
+        return m_url && !m_url->isEmpty();
+    }
+
+    String* url()
+    {
+        return m_url;
+    }
+
     void updateCurrentColorToFixedColorIfNeeds(Unit::Color clr)
     {
         if (m_hasCurrentColorValue) {
@@ -65,8 +87,9 @@ public:
 
 private:
     // TODO add fill functions
-    bool m_hasCurrentColorValue;
+    bool m_hasCurrentColorValue{ false };
     Unit::Color m_color;
+    String* m_url{ nullptr };
 };
 }
 

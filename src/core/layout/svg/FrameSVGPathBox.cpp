@@ -28,6 +28,12 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
+#include "core/dom/svg/SVGLinearGradientElement.h"
+#include "core/style/GradientData.h"
+#include "core/style/CSSGradientValue.h"
+#include "platform/loader/ResourceURL.h"
+#include "core/modules/canvas/NativeGradient.h"
+
 namespace Starfish {
 
 void* FrameSVGPathBox::operator new(size_t size)
@@ -179,17 +185,78 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
     ctx.m_canvas->setLineWidth(
         style()->strokeWidth().specifiedValue(cb->width(), this));
     float opacity = style()->opacity();
-    Unit::Color fillColor = style()->fill().color();
-    ctx.m_canvas->setFillColor(
-        Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                    fillColor.a() * style()->fillOpacity() * opacity));
-    ctx.m_canvas->setFillRule(style()->fillRule());
-    ctx.m_canvas->fillPath(newPath);
-    Unit::Color strokeColor = style()->stroke().color();
-    ctx.m_canvas->setStrokeColor(
-        Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                    strokeColor.a() * style()->strokeOpacity() * opacity));
-    ctx.m_canvas->strokePath(newPath);
+
+    GradientDrawingInfo* info = nullptr;
+    Unit::Color fillColor;
+    if (style()->fill()->hasUrl()) {
+        // TODO: Only support linear gradient
+        info = makeGradientDrawingInfo(style()->fill()->url());
+    } else {
+        fillColor = style()->fill()->color();
+    }
+
+    if (info) {
+        ctx.m_canvas->save();
+        Unit::Rect rect = newPath->boundingRect(true).snapSizeToPixel();
+        std::shared_ptr<NativeGradient> gradient = NativeGradient::create(info);
+        info->rect = rect;
+        ctx.m_canvas->drawLinearGradient(rect, info, gradient.get());
+        ctx.m_canvas->restore();
+    } else {
+        ctx.m_canvas->setFillColor(
+            Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
+                        fillColor.a() * style()->fillOpacity() * opacity));
+        ctx.m_canvas->setFillRule(style()->fillRule());
+        ctx.m_canvas->fillPath(newPath);
+        Unit::Color strokeColor = style()->stroke()->color();
+        ctx.m_canvas->setStrokeColor(
+            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                        strokeColor.a() * style()->strokeOpacity() * opacity));
+        ctx.m_canvas->strokePath(newPath);
+    }
+}
+
+GradientDrawingInfo* FrameSVGPathBox::makeGradientDrawingInfo(String* url)
+{
+    ResourceURL* resourceUrl = new ResourceURL(url);
+    if (!resourceUrl->isValid()) {
+        return nullptr;
+    }
+
+    // NOTE: Consider obtaining a reusable SVG node that is locally available
+    // under the same root SVGElement.
+    String* urlString = resourceUrl->string();
+    if (urlString->startsWith("#")) {
+        if (!node()) {
+            return nullptr;
+        }
+
+        String* id = urlString->substring(1, urlString->length() - 1);
+        SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
+        SVGElement* matchingSvg = owner->getSVGElementById(id);
+        if (!matchingSvg) {
+            return nullptr;
+        }
+
+        LayoutRect fRect = frameRect();
+        Unit::Rect rect = Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
+        GradientDrawingInfo* info = nullptr;
+        if (matchingSvg->isSVGLinearGradientElement()) {
+            info = new GradientDrawingInfo(GradientType::LinearGradient, rect);
+            info->x1 = matchingSvg->style()->x1().percentValue(rect.width());
+            info->y1 = matchingSvg->style()->y1().percentValue(rect.height());
+            info->x2 = matchingSvg->style()->x2().percentValue(rect.maxX());
+            info->y2 = matchingSvg->style()->y2().percentValue(rect.maxY());
+            info->colorStops =
+                matchingSvg->asSVGLinearGradientElement()->colorStops();
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+
+        return info;
+    }
+
+    return nullptr;
 }
 
 Path* FrameSVGPathBox::path()

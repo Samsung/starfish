@@ -115,6 +115,12 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_listStyleData.m_imageResource));
+        GC_set_bit(
+            obj_bitmap,
+            GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData, m_fill));
+        GC_set_bit(
+            obj_bitmap,
+            GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData, m_stroke));
         descr = GC_make_descriptor(
             obj_bitmap, GC_WORD_LEN(ComputedStyle::InheritedStylesRareData));
         typeInited = true;
@@ -671,7 +677,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     if (fill() != InheritedStylesRareData().m_fill) {
         auto s = fill();
-        s.updateCurrentColorToFixedColorIfNeeds(color());
+        s->updateCurrentColorToFixedColorIfNeeds(color());
         setFill(s);
     }
 
@@ -1306,6 +1312,20 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->strokeWidth() != oldStyle->strokeWidth()) {
         damagedKeys[CSSStyleValuePair::KeyKind::StrokeWidth] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->stopColor() != oldStyle->stopColor()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StopColor] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->stopOpacity() != oldStyle->stopOpacity()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::StopOpacity] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);

@@ -141,6 +141,8 @@ public:
         CounterIncrement,
         Appearance,
         LineClamp,
+        StopColor,
+        StopOpacity,
 
         // Grid
         GridTemplateColumns,
@@ -194,6 +196,7 @@ public:
         ValueList* m_textDecorationLine;
         FilterFunctions* m_filter;
         AppearanceValue m_appearance;
+        StylePaintData* m_stopColor; // svg
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -386,6 +389,11 @@ public:
             : m_filter(v)
         {
         }
+
+        RareComputedStyleValue(StylePaintData* v)
+            : m_stopColor(v)
+        {
+        }
     };
 
     struct RareComputedStyleValuePair {
@@ -513,6 +521,8 @@ public:
     GETTER_VALUE(Length, length, cy, CY, 0);
     GETTER_VALUE(Length, length, rx, RX, 0);
     GETTER_VALUE(Length, length, ry, RY, 0);
+    GETTER_VALUE(StylePaintData*, stopColor, stopColor, StopColor, nullptr);
+    GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
     GETTER_VALUE(Length, length, gridRowGap, GridRowGap, 0);
     GETTER_VALUE(Length, length, gridColumnGap, GridColumnGap, 0);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
@@ -695,11 +705,11 @@ class ComputedStyle : public gc {
         Length m_horizontalBorderSpacing; // table
         Length m_verticalBorderSpacing;   // table
 
-        StylePaintData m_fill;   // svg
-        float m_fillOpacity;     // svg
-        StylePaintData m_stroke; // svg
-        float m_strokeOpacity;   // svg
-        Length m_strokeWidth;    // svg
+        StylePaintData* m_fill;   // svg
+        float m_fillOpacity;      // svg
+        StylePaintData* m_stroke; // svg
+        float m_strokeOpacity;    // svg
+        Length m_strokeWidth;     // svg
 
         ShadowDataList m_textShadowDataList;
         ListStyleData m_listStyleData;
@@ -714,11 +724,11 @@ class ComputedStyle : public gc {
             m_horizontalBorderSpacing = Length(Length::Fixed, 0);
             m_verticalBorderSpacing = Length(Length::Fixed, 0);
 
-            m_fill = Unit::Color(0, 0, 0, 0xff);
+            m_fill = new StylePaintData(Unit::Color(0, 0, 0, 0xff));
             m_fillRule = FillRuleNonZero;
             m_fillOpacity = 1;
             m_strokeOpacity = 1;
-            m_stroke = Unit::Color(0, 0, 0, 0);
+            m_stroke = new StylePaintData(Unit::Color(0, 0, 0, 0));
             m_strokeWidth = Length(Length::Fixed, 1);
 
             m_textTransform = NoneTextTransformValue;
@@ -1709,6 +1719,47 @@ public:
     void setOpacity(float opacity)
     {
         *m_rareComputedStyleData.ensureOpacity() = opacity;
+    }
+
+    StylePaintData* stopColor()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return new StylePaintData(Unit::Color(0, 0, 0, 0xff));
+        }
+
+        Nullable<StylePaintData*> stopColor =
+            m_rareComputedStyleData.stopColor();
+        if (stopColor.hasValue()) {
+            return stopColor.getValue();
+        }
+
+        return new StylePaintData(Unit::Color(0, 0, 0, 0xff));
+    }
+
+    void setStopColor(StylePaintData* v)
+    {
+        *m_rareComputedStyleData.ensureStopColor() = v;
+    }
+
+    float stopOpacity()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return 1;
+        }
+
+        Nullable<float> stopOpacity = m_rareComputedStyleData.stopOpacity();
+        if (stopOpacity.hasValue()) {
+            return stopOpacity.getValue();
+        }
+
+        return 1;
+    }
+
+    void setStopOpacity(float stopOpacity)
+    {
+        if (stopOpacity != 1) {
+            *m_rareComputedStyleData.ensureStopOpacity() = stopOpacity;
+        }
     }
 
     int32_t zIndex()
@@ -2866,18 +2917,17 @@ public:
             ensureInheritedRareData()->m_verticalBorderSpacing = v;
     }
 
-    StylePaintData fill()
+    StylePaintData* fill()
     {
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_fill;
         }
-        return Unit::Color(0, 0, 0, 0xff);
+        return new StylePaintData(Unit::Color(0, 0, 0, 0xff));
     }
 
-    void setFill(StylePaintData v)
+    void setFill(StylePaintData* v)
     {
-        if (v != fill())
-            ensureInheritedRareData()->m_fill = v;
+        ensureInheritedRareData()->m_fill = v;
     }
 
     FillRuleValue fillRule()
@@ -2922,18 +2972,17 @@ public:
             ensureInheritedRareData()->m_strokeOpacity = v;
     }
 
-    StylePaintData stroke()
+    StylePaintData* stroke()
     {
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_stroke;
         }
-        return Unit::Color(0, 0, 0, 0);
+        return new StylePaintData(Unit::Color(0, 0, 0, 0));
     }
 
-    void setStroke(StylePaintData v)
+    void setStroke(StylePaintData* v)
     {
-        if (v != stroke())
-            ensureInheritedRareData()->m_stroke = v;
+        ensureInheritedRareData()->m_stroke = v;
     }
 
     Length strokeWidth()

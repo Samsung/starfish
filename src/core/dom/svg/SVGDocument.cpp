@@ -34,6 +34,8 @@
 #include "core/dom/svg/SVGLineElement.h"
 #include "core/dom/svg/SVGUseElement.h"
 #include "core/dom/svg/SVGDefsElement.h"
+#include "core/dom/svg/SVGLinearGradientElement.h"
+#include "core/dom/svg/SVGStopElement.h"
 #include "core/dom/svg/SVGClipPathElement.h"
 
 namespace Starfish {
@@ -71,6 +73,12 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGUseElement(document, qname);
     } else if (str->m_svgdefsTagName == localName) {
         return new SVGDefsElement(document, qname);
+    } else if (str->m_svglinearGradientTagName == localName ||
+               str->m_svglineargradientTagName == localName) {
+        // FIXME: SVG tagnames should be case-sensitive
+        return new SVGLinearGradientElement(document, qname);
+    } else if (str->m_svgstopTagName == localName) {
+        return new SVGStopElement(document, qname);
     } else if (str->m_svgclippathTagName == localName) {
         return new SVGClipPathElement(document, qname);
     } else if (str->m_svgscriptTagName == localName) {

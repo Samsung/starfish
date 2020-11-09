@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2020-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,37 +17,39 @@
  *  USA
  */
 
-#ifndef __StarfishFrameSVGPathBox__
-#define __StarfishFrameSVGPathBox__
+#ifndef __StarfishSVGGradientElement__
+#define __StarfishSVGGradientElement__
 
-#include "core/layout/svg/FrameSVGBox.h"
+#include "core/dom/svg/SVGElement.h"
 
 namespace Starfish {
 
-class FrameSVGPathBox final : public FrameSVGBox {
+class SVGSVGElement;
+
+class SVGGradientElement : public SVGElement {
 public:
-    FrameSVGPathBox(Node* node)
-        : FrameSVGBox(node)
+    SVGGradientElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
-    virtual const char* name() override
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isSVGGradientElement() const override;
+
+    virtual bool needsGeometryAttributes() override
     {
-        return "FrameSVGPathBox";
+        return false;
     }
 
-    virtual void paintSVG(PaintingContext& ctx) override;
-    virtual Path* path() override;
-
-    GradientDrawingInfo* makeGradientDrawingInfo(String* url);
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-protected:
-    static inline void fillGCDescriptor(GC_word* desc)
+    virtual bool needsClipPathAttributes() override
     {
-        FrameSVGBox::fillGCDescriptor(desc);
+        return false;
+    }
+
+    virtual bool needsTransparentAttributes() override
+    {
+        return false;
     }
 };
 }

@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/Traverse.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
@@ -398,4 +399,26 @@ SVGElement* SVGElement::clipPathElement()
     }
     return m_clipPathElement;
 }
+
+SVGElement* SVGElement::getSVGElementById(String* id)
+{
+    Node* descendant = Traverse::findDescendant(this, [this, id](Node* node) {
+        if (!node->isSVGElement()) {
+            return false;
+        }
+
+        String* nodeId = node->asSVGElement()->getAttributeOrEmpty(
+            starfish()->staticStrings()->m_id);
+        if (nodeId->equals(id)) {
+            return true;
+        }
+        return false;
+    });
+
+    if (!descendant) {
+        return nullptr;
+    }
+
+    return descendant->asSVGElement();
 }
+} // namespace Starfish

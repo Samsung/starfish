@@ -114,7 +114,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         ComputedStyle* textStyle = new ComputedStyle(style);
         textStyle->loadResources(svgElement);
         textStyle->arrangeStyleValues(svgElement->style(), svgElement);
-        textStyle->setColor(style->fill().color());
+        textStyle->setColor(style->fill()->color());
         textNode->setStyle(textStyle);
 
         auto ft = new FrameText(textNode, textStyle);

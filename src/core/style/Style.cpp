@@ -5311,7 +5311,7 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::Fill:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->setFill(StylePaintData());
+                style->setFill(new StylePaintData());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Inherit) ||
                        (cssValues[k].valueKind() ==
@@ -5319,19 +5319,25 @@ void StyleResolver::apply(Element* element,
                 style->setFill(parentStyle->fill());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setFill(StylePaintData(Unit::Color(0, 0, 0, 0)));
+                style->setFill(new StylePaintData(Unit::Color(0, 0, 0, 0)));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setFill(StylePaintData(cssValues[k].colorValue()));
+                style->setFill(new StylePaintData(cssValues[k].colorValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
                 if (cssValues[k].namedColorValue() ==
                     NamedColor::currentColor) {
-                    style->setFill(StylePaintData(NamedColor::currentColor));
+                    style->setFill(
+                        new StylePaintData(NamedColor::currentColor));
                 } else {
-                    style->setFill(StylePaintData(NamedColor::namedColorToColor(
-                        cssValues[k].namedColorValue())));
+                    style->setFill(
+                        new StylePaintData(NamedColor::namedColorToColor(
+                            cssValues[k].namedColorValue())));
                 }
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::UrlValueKind) {
+                style->setFill(
+                    new StylePaintData(cssValues[k].urlStringValue()));
             } else {
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
@@ -5368,10 +5374,50 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
+        case CSSStyleValuePair::KeyKind::StopColor:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::None:
+                style->setStopColor(
+                    new StylePaintData(Unit::Color(0, 0, 0, 0xff)));
+                break;
+            case CSSStyleValuePair::ValueKind::ColorValueKind:
+                style->setStopColor(
+                    new StylePaintData(cssValues[k].colorValue()));
+                break;
+            case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+                style->setStopColor(
+                    new StylePaintData(NamedColor::namedColorToColor(
+                        cssValues[k].namedColorValue())));
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::StopOpacity: {
+            CSSStyleValuePair::ValueKind valueKind = cssValues[k].valueKind();
+            if ((valueKind == CSSStyleValuePair::ValueKind::Inherit) ||
+                (valueKind == CSSStyleValuePair::ValueKind::Unset) ||
+                (valueKind == CSSStyleValuePair::ValueKind::Initial)) {
+                style->setStopOpacity(1.0);
+            } else if (valueKind == CSSStyleValuePair::ValueKind::Number) {
+                float rawValue = cssValues[k].numberValue();
+                style->setStopOpacity(
+                    rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
+            } else if (valueKind == CSSStyleValuePair::ValueKind::Percentage) {
+                float rawValue = cssValues[k].percentageValue();
+                style->setStopOpacity(
+                    rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
+            } else {
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        } break;
         case CSSStyleValuePair::KeyKind::Stroke:
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Initial) {
-                style->setStroke(StylePaintData());
+                style->setStroke(new StylePaintData());
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Inherit) ||
                        (cssValues[k].valueKind() ==
@@ -5379,18 +5425,19 @@ void StyleResolver::apply(Element* element,
                 style->setStroke(parentStyle->stroke());
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setStroke(StylePaintData(Unit::Color(0, 0, 0, 0)));
+                style->setStroke(new StylePaintData(Unit::Color(0, 0, 0, 0)));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setStroke(StylePaintData(cssValues[k].colorValue()));
+                style->setStroke(new StylePaintData(cssValues[k].colorValue()));
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
                 if (cssValues[k].namedColorValue() ==
                     NamedColor::currentColor) {
-                    style->setStroke(StylePaintData(NamedColor::currentColor));
+                    style->setStroke(
+                        new StylePaintData(NamedColor::currentColor));
                 } else {
                     style->setStroke(
-                        StylePaintData(NamedColor::namedColorToColor(
+                        new StylePaintData(NamedColor::namedColorToColor(
                             cssValues[k].namedColorValue())));
                 }
             } else {
@@ -13635,7 +13682,12 @@ bool CSSStyleValuePair::updateValueFill(Document* document,
             return true;
         }
     }
-    return updateValueUnitColor(tokens[0]);
+
+    if (CSSPropertyParser::parseUrl(tokens[0].data(), this)) {
+        return true;
+    } else {
+        return updateValueUnitColor(tokens[0]);
+    }
 }
 
 bool CSSStyleValuePair::updateValueFillOpacity(Document* document,
@@ -13644,6 +13696,24 @@ bool CSSStyleValuePair::updateValueFillOpacity(Document* document,
     STARFISH_ASSERT(document != nullptr);
 
     return updateValueOpacity(document, tokens);
+}
+
+bool CSSStyleValuePair::updateValueStopColor(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    return updateValueUnitColor(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueStopOpacity(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+    return updateValueNumber(tokens, CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueStrokeOpacity(Document* document,
