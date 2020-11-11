@@ -1275,7 +1275,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->fill() != oldStyle->fill()) {
+    if (*newStyle->fill() != *oldStyle->fill()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Fill] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
@@ -1296,7 +1296,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->stroke() != oldStyle->stroke()) {
+    if (*newStyle->stroke() != *oldStyle->stroke()) {
         damagedKeys[CSSStyleValuePair::KeyKind::Stroke] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
@@ -1317,7 +1317,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
-    if (newStyle->stopColor() != oldStyle->stopColor()) {
+    if (*newStyle->stopColor() != *oldStyle->stopColor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::StopColor] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageInherited |
