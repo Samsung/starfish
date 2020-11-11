@@ -84,6 +84,9 @@ public:
 
     bool isEmptyImage()
     {
+        if (isSVGNativeImageData())
+            return false;
+
         size_t h = height();
         size_t w = width();
         size_t s = stride();
