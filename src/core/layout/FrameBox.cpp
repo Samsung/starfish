@@ -3658,7 +3658,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
     if (ctx.sourceStackingContext &&
         (this != ctx.sourceStackingContext->owner() && stackingContext() &&
-         stackingContext()->needsGraphicsBuffer())) {
+         (stackingContext()->needsGraphicsBuffer() ||
+          stackingContext()->needsGraphicsBufferReason()))) {
         return false;
     }
 
