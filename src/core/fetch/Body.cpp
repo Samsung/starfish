@@ -39,7 +39,7 @@ Body::Body(ExecutionContext* executionContext)
     , m_contentType(String::emptyString)
     , m_resourceRequest(nullptr)
     , m_readableStream(nullptr)
-    , m_promise(nullptr)
+    , m_promise(new Promise(executionContext->scriptBindingInstance()))
 {
 }
 
@@ -68,7 +68,7 @@ bool Body::bodyUsed()
 
 Promise* Body::arrayBuffer()
 {
-    Promise* promise = new Promise(executionContext()->scriptBindingInstance());
+    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -80,7 +80,6 @@ Promise* Body::arrayBuffer()
     } else {
         if (m_bodyInit.hasValue()) {
             m_readableStream->lock();
-            m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
 
@@ -109,7 +108,7 @@ Promise* Body::arrayBuffer()
 
 Promise* Body::blob()
 {
-    Promise* promise = new Promise(executionContext()->scriptBindingInstance());
+    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -150,7 +149,7 @@ Promise* Body::blob()
 
 Promise* Body::json()
 {
-    Promise* promise = new Promise(executionContext()->scriptBindingInstance());
+    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -202,7 +201,7 @@ struct BodyPromiseHandle : public gc {
 
 Promise* Body::text()
 {
-    Promise* promise = new Promise(executionContext()->scriptBindingInstance());
+    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
