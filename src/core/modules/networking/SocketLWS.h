@@ -144,6 +144,8 @@ private:
     std::string m_closeReasonStr;
     size_t m_closeReasonCode;
     uint64_t m_txBufferSize;
+
+    lws_protocols m_lwsProtocols[2];
 };
 
 } // namespace Starfish
