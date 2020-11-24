@@ -16,7 +16,7 @@
 
 package com.samsung.android.lightweightwebengine;
 
-public interface SemDownloadListener {
+public interface DownloadListener {
     void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype,
                          long contentLength);
 }
