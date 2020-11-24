@@ -22,10 +22,10 @@ import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
-import com.samsung.android.lightweightwebengine.SemDownloadListener;
-import com.samsung.android.lightweightwebengine.SemWebSettings;
-import com.samsung.android.lightweightwebengine.SemWebViewClient;
-import com.samsung.android.lightweightwebengine.SemWebClient;
+import com.samsung.android.lightweightwebengine.DownloadListener;
+import com.samsung.android.lightweightwebengine.WebSettings;
+import com.samsung.android.lightweightwebengine.WebViewClient;
+import com.samsung.android.lightweightwebengine.WebChromeClient;
 
 public interface LweWebView {
     void initWebView(View appView, AttributeSet attrs);
@@ -56,8 +56,8 @@ public interface LweWebView {
     void evaluateJavascript(final String script,
                             final ValueCallback<String> resultCallback);
     void clearHistory();
-    SemWebSettings getSettings();
-    void setWebViewClient(SemWebViewClient client);
-    void setDownloadListener(SemDownloadListener listener);
-    void setWebLweClient(SemWebClient client);
+    WebSettings getSettings();
+    void setWebViewClient(WebViewClient client);
+    void setDownloadListener(DownloadListener listener);
+    void setWebLweClient(WebChromeClient client);
 }

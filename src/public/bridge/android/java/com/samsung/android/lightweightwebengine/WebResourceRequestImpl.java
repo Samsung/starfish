@@ -18,10 +18,10 @@ package com.samsung.android.lightweightwebengine;
 
 import android.net.Uri;
 
-public class SemWebResourceRequestImpl implements SemWebResourceRequest {
+public class WebResourceRequestImpl implements WebResourceRequest {
     String mUrl;
 
-    public SemWebResourceRequestImpl(String url) {
+    public WebResourceRequestImpl(String url) {
         mUrl = url;
     }
 

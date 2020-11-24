@@ -16,8 +16,10 @@
 
 package com.samsung.android.lightweightwebengine;
 
-import android.net.Uri;
+public class WebChromeClient {
+    public WebChromeClient() {
+    }
 
-public interface SemWebResourceRequest {
-    Uri getUrl();
+    public void onProgressChanged(WebView view, int newProgress) {
+    }
 }

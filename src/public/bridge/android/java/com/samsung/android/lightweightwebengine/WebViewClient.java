@@ -17,8 +17,13 @@
 package com.samsung.android.lightweightwebengine;
 
 import android.graphics.Bitmap;
+import android.net.http.SslError;
+import android.view.KeyEvent;
+import android.webkit.HttpAuthHandler;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.SslErrorHandler;
 
-public class SemWebViewClient {
+public class WebViewClient {
     public static final int ERROR_UNKNOWN = -1;
     public static final int ERROR_HOST_LOOKUP = -2;
     public static final int ERROR_UNSUPPORTED_AUTH_SCHEME = -3;
@@ -35,23 +40,43 @@ public class SemWebViewClient {
     public static final int ERROR_FILE_NOT_FOUND = -14;
     public static final int ERROR_TOO_MANY_REQUESTS = -15;
 
-    public SemWebViewClient() {
+    public WebViewClient() {
     }
 
-    public void onLoadResource(SemWebView view, String url) {
+    public void onLoadResource(WebView view, String url) {
     }
 
-    public void onReceivedError(SemWebView view, SemWebResourceRequest request,
-                                SemWebResourceError error) {
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
     }
 
-    public void onPageFinished(SemWebView view, String url) {
+    public void onPageFinished(WebView view, String url) {
     }
 
-    public void onPageStarted(SemWebView view, String url, Bitmap favicon) {
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
     }
 
-    public boolean shouldOverrideUrlLoading(SemWebView view, SemWebResourceRequest request) {
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+        return false;
+    }
+
+    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        return null;
+    }
+
+    public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
+        return false;
+    }
+
+    public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+    }
+
+    public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+    }
+
+    public void onReceivedHttpAuthRequest(WebView view, HttpAuthHandler handler, String host, String realm) {
+    }
+
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
         return false;
     }
 }

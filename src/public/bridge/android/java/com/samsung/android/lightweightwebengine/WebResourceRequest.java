@@ -16,10 +16,8 @@
 
 package com.samsung.android.lightweightwebengine;
 
-public class SemWebClient {
-    public SemWebClient() {
-    }
+import android.net.Uri;
 
-    public void onProgressChanged(SemWebView view, int newProgress) {
-    }
+public interface WebResourceRequest {
+    Uri getUrl();
 }

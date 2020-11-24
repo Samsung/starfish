@@ -16,13 +16,12 @@
 
 package com.samsung.android.lightweightwebengine;
 
-
-public class SemWebResourceError {
+public class WebResourceError {
 
     private int mErrorCode = 0;
     private CharSequence mErrorDescription = "";
 
-    public SemWebResourceError(int code, CharSequence description) {
+    public WebResourceError(int code, CharSequence description) {
         mErrorCode = code;
         mErrorDescription = description;
     }

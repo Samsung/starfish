@@ -30,12 +30,12 @@ import com.samsung.android.lightweightwebengine.internal.LweWebViewImpl;
 
 import dalvik.system.PathClassLoader;
 
-public class SemWebView extends SurfaceView {
+public class WebView extends SurfaceView {
     private static PathClassLoader pcl = null;
     /**
      * @hide
      */
-    public static final String PACKAGE_NAME = SemWebView.class.getPackage().getName();
+    public static final String PACKAGE_NAME = WebView.class.getPackage().getName();
 
     /**
      * @hide
@@ -54,7 +54,8 @@ public class SemWebView extends SurfaceView {
     }
 
     /**
-     * Creates a new InputConnection for an InputMethod to interact with the WebView.
+     * Creates a new InputConnection for an InputMethod to interact with the
+     * WebView.
      *
      * @param outAttrs Fill in with attribute information about the connection.
      * @return InputConnection
@@ -68,10 +69,13 @@ public class SemWebView extends SurfaceView {
     }
 
     /**
-     * Called when the visibility of the view or an ancestor of the view has changed.
+     * Called when the visibility of the view or an ancestor of the view has
+     * changed.
      *
-     * @param changedView The view whose visibility changed. May be this or an ancestor view.
-     * @param visibility The new visibility, one of View.VISIBLE, View.INVISIBLE or View.GONE.
+     * @param changedView The view whose visibility changed. May be this or an
+     *                    ancestor view.
+     * @param visibility  The new visibility, one of View.VISIBLE, View.INVISIBLE or
+     *                    View.GONE.
      * @since Lightweight Web Engine 1.0
      */
     @Override
@@ -84,9 +88,9 @@ public class SemWebView extends SurfaceView {
 
     /**
      * Called when the window containing has change its visibility (between GONE,
-     * INVISIBLE, and VISIBLE). Note that this tells you whether or not your window is
-     * being made visible to the window manager; this does not tell you whether or
-     * not your window is obscured by other windows on the screen, even if it is
+     * INVISIBLE, and VISIBLE). Note that this tells you whether or not your window
+     * is being made visible to the window manager; this does not tell you whether
+     * or not your window is obscured by other windows on the screen, even if it is
      * itself visible.
      *
      * @param visibility The new visibility of the window.
@@ -97,13 +101,15 @@ public class SemWebView extends SurfaceView {
         super.onWindowVisibilityChanged(visibility);
     }
 
-    public SemWebView(Context context) {
+    public WebView(Context context) {
         this(context, null);
     }
-    public SemWebView(Context context, AttributeSet attrs) {
+
+    public WebView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
-    public SemWebView(Context context, AttributeSet attrs, int defStyle) {
+
+    public WebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         mLWEWebView = getLWEWebViewInstance(context, attrs, defStyle);
         if (mLWEWebView != null) {
@@ -114,9 +120,11 @@ public class SemWebView extends SurfaceView {
     public void loadUrl(String url) {
         mLWEWebView.loadUrl(url);
     }
+
     public String getUrl() {
         return mLWEWebView.getUrl();
     }
+
     public void loadData(String data, String mimeType, String encoding) {
         if (mimeType == null) {
             mimeType = "text/html";
@@ -126,50 +134,74 @@ public class SemWebView extends SurfaceView {
         }
         mLWEWebView.loadData(data, mimeType, encoding);
     }
+
     public void reload() {
         mLWEWebView.reload();
     }
+
     public void stopLoading() {
         mLWEWebView.stopLoading();
     }
+
     public void goBack() {
         mLWEWebView.goBack();
     }
+
     public void goForward() {
         mLWEWebView.goForward();
     }
+
     public boolean canGoBack() {
         return mLWEWebView.canGoBack();
     }
+
     public boolean canGoForward() {
         return mLWEWebView.canGoForward();
     }
+
     @SuppressLint("JavascriptInterface")
     public void addJavascriptInterface(Object object, String name) {
         mLWEWebView.addJavascriptInterface(object, name);
     }
+
     public void removeJavascriptInterface(String name) {
         mLWEWebView.removeJavascriptInterface(name);
     }
+
     public void clearCache(boolean includeDiskFiles) {
         mLWEWebView.clearCache(includeDiskFiles);
     }
+
     public void evaluateJavascript(String script, ValueCallback<String> resultCallback) {
         mLWEWebView.evaluateJavascript(script, resultCallback);
     }
+
     public void clearHistory() {
         mLWEWebView.clearHistory();
     }
-    public SemWebSettings getSettings() {
+
+    public WebSettings getSettings() {
         return mLWEWebView.getSettings();
     }
-    public void setWebViewClient(SemWebViewClient client) {
+
+    public void setWebViewClient(WebViewClient client) {
         mLWEWebView.setWebViewClient(client);
     }
-    public void setWebLweClient(SemWebClient client) {
+
+    public void setWebChromeClient(WebChromeClient client) {
         mLWEWebView.setWebLweClient(client);
     }
-    public void setDownloadListener(SemDownloadListener listener) {
+
+    public void setDownloadListener(DownloadListener listener) {
         mLWEWebView.setDownloadListener(listener);
+    }
+
+    public void destroy() {
+    }
+
+    public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
+    }
+
+    public void clearView() {
     }
 }
