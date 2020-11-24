@@ -143,10 +143,6 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
     return 0;
 }
 
-static struct lws_protocols protocols[] = { { "", SocketLWS::lwsEventCallback,
-                                              0, 0, 0, NULL, 0 },
-                                            { NULL, NULL, 0, 0, 0, NULL, 0 } };
-
 const char* SocketLWS::Exception::what() const throw()
 {
     STARFISH_ASSERT_NOT_REACHED();
@@ -175,6 +171,9 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_closeReasonCode(WebSocket::CloseCode::NoStatusReceived)
     , m_txBufferSize(0)
 {
+    m_lwsProtocols[0] = { "", SocketLWS::lwsEventCallback, 0, 0, 0, NULL, 0 };
+    m_lwsProtocols[1] = { nullptr, nullptr, 0, 0, 0, NULL, 0 };
+
     int logs = LLL_USER | LLL_ERR | LLL_WARN | LLL_NOTICE | LLL_INFO |
                LLL_PARSER | LLL_HEADER | LLL_EXT | LLL_CLIENT | LLL_LATENCY |
                LLL_DEBUG | LLL_THREAD;
@@ -210,7 +209,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     }
 
     m_lwsContextCreationInfo.port = CONTEXT_PORT_NO_LISTEN;
-    m_lwsContextCreationInfo.protocols = protocols;
+    m_lwsContextCreationInfo.protocols = m_lwsProtocols;
     m_lwsContextCreationInfo.options = 0;
 
     static bool sslInited = false;
@@ -231,7 +230,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     m_thread = new AdaptedThread(webBase->threadPool());
     m_runnable = new LWSRunnable(webBase->messageLoop(), this);
     // TODO
-    protocols[0].name = m_protocol.data();
+    m_lwsProtocols[0].name = m_protocol.data();
 
     m_lwsClientConnectInfo.context = m_lwsContext;
     m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
