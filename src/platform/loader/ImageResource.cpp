@@ -126,7 +126,11 @@ void ImageResource::didLoadFinished()
     bool isSVG = false;
     auto m = MimeType::parseFromString(m_resourceRequest->responseMimeType());
     isSVG = m.subtype()->contains("svg", false);
-
+    uint32_t needsDownScaleImageResourceLargerThan =
+        m_resourceRequest->executionContext()
+            ->document()
+            ->webView()
+            ->needsDownScaleImageResourceLargerThan();
     if (!isSVG) {
         isSVG = url()->urlString()->endsWith(".svg", false);
     }
@@ -189,6 +193,7 @@ void ImageResource::didLoadFinished()
                 ImageDecoder::DecodeResult decodeResult;
                 MessageLoop* messageLoop;
                 GlobalScope* globalScope;
+                uint32_t needsDownScaleImageResourceLargerThan;
             };
 
             ImageDecodeData* d = new ImageDecodeData();
@@ -197,6 +202,8 @@ void ImageResource::didLoadFinished()
             d->messageLoop = m_resourceRequest->webBase()->messageLoop();
             d->globalScope =
                 m_resourceRequest->executionContext()->globalScope();
+            d->needsDownScaleImageResourceLargerThan =
+                needsDownScaleImageResourceLargerThan;
 
             m_resourceRequest->executionContext()
                 ->document()
@@ -207,7 +214,10 @@ void ImageResource::didLoadFinished()
                     [](void* data) -> void* {
                         STARFISH_ASSERT(data != nullptr);
                         ImageDecodeData* d = (ImageDecodeData*)data;
-                        ImageDecoder id(d->responseData);
+
+                        ImageDecoder id(
+                            d->responseData,
+                            d->needsDownScaleImageResourceLargerThan);
                         d->decodeResult = id.decode();
                         if (d->decodeResult.m_isAnimatedGIF) {
                             free(d->decodeResult.m_buffer);
@@ -228,6 +238,7 @@ void ImageResource::didLoadFinished()
                                                 d->imageResource->url()
                                                     ->urlString()
                                                     ->toUTF8NonGCString(),
+                                                d->needsDownScaleImageResourceLargerThan,
                                                 d->decodeResult.m_width,
                                                 d->decodeResult.m_height,
                                                 d->decodeResult.m_stride);
@@ -238,6 +249,7 @@ void ImageResource::didLoadFinished()
                                                 d->imageResource->url()
                                                     ->urlString()
                                                     ->toUTF8NonGCString(),
+                                                d->needsDownScaleImageResourceLargerThan,
                                                 d->decodeResult.m_buffer,
                                                 d->decodeResult.m_width,
                                                 d->decodeResult.m_height,
@@ -250,7 +262,8 @@ void ImageResource::didLoadFinished()
                                         CompressedNativeImageData::create(
                                             buffer, d->imageResource->url()
                                                         ->urlString()
-                                                        ->toUTF8NonGCString());
+                                                        ->toUTF8NonGCString(),
+                                            d->needsDownScaleImageResourceLargerThan);
                                     if (!d->imageResource->m_imageData) {
                                         d->imageResource
                                             ->Resource::didLoadFailed();
@@ -274,16 +287,19 @@ void ImageResource::didLoadFinished()
 #endif
     if (m_resourceRequest->response().size() != 0) {
         if (ImageDecoder::isAnimatedGIF(m_resourceRequest->response())) {
-            ImageDecoder id(m_resourceRequest->response());
+            ImageDecoder id(m_resourceRequest->response(),
+                            needsDownScaleImageResourceLargerThan);
             auto result = id.decodeJustImageSize();
             m_imageData = AnimatedGIFNativeImageData::create(
                 m_resourceRequest->response(),
-                url()->urlString()->toUTF8NonGCString(), result.m_width,
+                url()->urlString()->toUTF8NonGCString(),
+                needsDownScaleImageResourceLargerThan, result.m_width,
                 result.m_height, result.m_stride);
         } else {
             m_imageData = CompressedNativeImageData::create(
                 m_resourceRequest->response(),
-                url()->urlString()->toUTF8NonGCString());
+                url()->urlString()->toUTF8NonGCString(),
+                needsDownScaleImageResourceLargerThan);
         }
     }
 
@@ -293,4 +309,4 @@ void ImageResource::didLoadFinished()
     }
     Resource::didLoadFinished();
 }
-}
+} // namespace Starfish

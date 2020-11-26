@@ -37,19 +37,23 @@ public:
             BufferedNativeImageData::nativeImageDataGCKind());
     }
 
-    CompressedNativeImageDataImpl(const std::vector<char>& compressedImageData,
-                                  std::string&& imageURL)
+    CompressedNativeImageDataImpl(
+        const std::vector<char>& compressedImageData, std::string&& imageURL,
+        uint32_t needsDownScaleImageResourceLargerThan)
         : m_image(nullptr)
         , m_width(0)
         , m_stride(0)
         , m_height(0)
         , m_imageURL(imageURL)
+        , m_needsDownScaleImageResourceLargerThan(
+              needsDownScaleImageResourceLargerThan)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
     {
         if (compressedImageData.data() && compressedImageData.size() != 0) {
-            ImageDecoder id(compressedImageData);
+            ImageDecoder id(compressedImageData,
+                            m_needsDownScaleImageResourceLargerThan);
             auto idResult = id.decodeJustImageSize();
             if (idResult.m_isSuccessful && idResult.m_width &&
                 idResult.m_height) {
@@ -65,6 +69,7 @@ public:
 
     CompressedNativeImageDataImpl(const std::vector<char>& compressedImageData,
                                   std::string&& imageURL,
+                                  uint needsDownScaleImageResourceLargerThan,
                                   uint8_t* decodedImageBuffer, size_t width,
                                   size_t height, size_t stride)
         : m_image(decodedImageBuffer)
@@ -72,6 +77,8 @@ public:
         , m_stride(stride)
         , m_height(height)
         , m_imageURL(imageURL)
+        , m_needsDownScaleImageResourceLargerThan(
+              needsDownScaleImageResourceLargerThan)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
@@ -111,7 +118,8 @@ public:
     virtual uint8_t* data() override
     {
         if (!m_image && m_inputBuffer.size()) {
-            ImageDecoder id(m_inputBuffer);
+            ImageDecoder id(m_inputBuffer,
+                            m_needsDownScaleImageResourceLargerThan);
             auto idResult = id.decode();
             if (idResult.m_isSuccessful) {
                 m_image = idResult.m_buffer;
@@ -229,16 +237,19 @@ protected:
     size_t m_height;
     std::vector<char> m_inputBuffer;
     std::string m_imageURL;
+    uint32_t m_needsDownScaleImageResourceLargerThan;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
 };
 
 NativeImageData* CompressedNativeImageData::create(
-    const std::vector<char>& compressedImageData, std::string&& imageURL)
+    const std::vector<char>& compressedImageData, std::string&& imageURL,
+    uint32_t needsDownScaleImageResourceLargerThan)
 {
     NativeImageData* imageData = new CompressedNativeImageDataImpl(
-        compressedImageData, std::move(imageURL));
+        compressedImageData, std::move(imageURL),
+        needsDownScaleImageResourceLargerThan);
     if (imageData->width() == 0 || imageData->height() == 0) {
         return NULL;
     }
@@ -247,7 +258,8 @@ NativeImageData* CompressedNativeImageData::create(
 
 NativeImageData* CompressedNativeImageData::create(
     const std::vector<char>& compressedImageData, std::string&& imageURL,
-    uint8_t* decodedImageBuffer, size_t width, size_t height, size_t stride)
+    uint32_t needsDownScaleImageResourceLargerThan, uint8_t* decodedImageBuffer,
+    size_t width, size_t height, size_t stride)
 {
     STARFISH_ASSERT(decodedImageBuffer != nullptr);
     STARFISH_ASSERT(width != 0);
@@ -255,7 +267,8 @@ NativeImageData* CompressedNativeImageData::create(
     STARFISH_ASSERT(compressedImageData.size() != 0);
 
     NativeImageData* imageData = new CompressedNativeImageDataImpl(
-        compressedImageData, std::move(imageURL), decodedImageBuffer, width,
+        compressedImageData, std::move(imageURL),
+        needsDownScaleImageResourceLargerThan, decodedImageBuffer, width,
         height, stride);
     return imageData;
 }

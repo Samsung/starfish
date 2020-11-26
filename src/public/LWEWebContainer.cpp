@@ -120,6 +120,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_idleModeJob(IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS)
     , m_needsDownloadWebFontsEarly(false)
+    , m_needsDownScaleImageResourceLargerThan(0)
 {
 }
 
@@ -146,6 +147,11 @@ TTSMode Settings::GetTTSMode() const
 bool Settings::NeedsDownloadWebFontsEarly() const
 {
     return m_needsDownloadWebFontsEarly;
+}
+
+uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
+{
+    return m_needsDownScaleImageResourceLargerThan;
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
@@ -241,6 +247,11 @@ void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 void Settings::SetNeedsDownloadWebFontsEarly(bool b)
 {
     m_needsDownloadWebFontsEarly = b;
+}
+
+void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
+{
+    m_needsDownScaleImageResourceLargerThan = demention;
 }
 
 ResourceError::ResourceError(int code, const std::string& description,
@@ -708,6 +719,8 @@ Settings WebContainer::GetSettings()
         TO_WEBVIEW(m_impl)->idleModeCheckIntervalInMS());
     result.SetNeedsDownloadWebFontsEarly(
         TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
+    result.SetNeedsDownScaleImageResourceLargerThan(
+        TO_WEBVIEW(m_impl)->needsDownScaleImageResourceLargerThan());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -957,6 +970,9 @@ void WebContainer::SetSettings(const Settings& settings)
         ->setIdleModeCheckIntervalInMS(settings.GetIdleModeCheckIntervalInMS());
     TO_WEBVIEW(m_impl)
         ->setNeedsDownloadWebFontsEarly(settings.NeedsDownloadWebFontsEarly());
+    TO_WEBVIEW(m_impl)
+        ->setNeedsDownScaleImageResourceLargerThan(
+            settings.NeedsDownScaleImageResourceLargerThan());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

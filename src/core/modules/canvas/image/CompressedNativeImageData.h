@@ -26,12 +26,14 @@ namespace Starfish {
 
 class CompressedNativeImageData : public BufferedNativeImageData {
 public:
-    static NativeImageData* create(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL);
-    static NativeImageData* create(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL,
-                                   uint8_t* decodedImageBuffer, size_t width,
-                                   size_t height, size_t stride);
+    static NativeImageData* create(
+        const std::vector<char>& compressedImageData, std::string&& imageURL,
+        uint32_t needsDownScaleImageResourceLargerThan);
+    static NativeImageData* create(
+        const std::vector<char>& compressedImageData, std::string&& imageURL,
+        uint32_t needsDownScaleImageResourceLargerThan,
+        uint8_t* decodedImageBuffer, size_t width, size_t height,
+        size_t stride);
 
     virtual bool isCompressedNativeImageData() const
     {

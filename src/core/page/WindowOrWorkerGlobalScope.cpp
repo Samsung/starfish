@@ -27,6 +27,7 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMExceptionOr.h"
 #include "core/page/WebBase.h"
+#include "core/page/WebView.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
@@ -202,14 +203,15 @@ namespace WindowOrWorkerGlobalScope {
     }
 
     static NativeImageData* createNativeImageDataWithDecoding(
-        const char* buffer, size_t buffer_size)
+        const char* buffer, size_t buffer_size,
+        uint32_t needsDownScaleImageResourceLargerThan)
     {
         NativeImageData* result = nullptr;
         ImageDecoder::DecodeResult decodeResult;
         ResponseBody internalBuffer;
         internalBuffer.insert(internalBuffer.begin(), buffer,
                               buffer + buffer_size);
-        ImageDecoder id(internalBuffer);
+        ImageDecoder id(internalBuffer, needsDownScaleImageResourceLargerThan);
         decodeResult = id.decode();
 
         if (!decodeResult.m_isSuccessful) {
@@ -217,21 +219,23 @@ namespace WindowOrWorkerGlobalScope {
         }
 
         result = CompressedNativeImageData::create(
-            internalBuffer, UTF8StringDataNonGCStd(), decodeResult.m_buffer,
+            internalBuffer, UTF8StringDataNonGCStd(),
+            needsDownScaleImageResourceLargerThan, decodeResult.m_buffer,
             decodeResult.m_width, decodeResult.m_height, decodeResult.m_stride);
         return result;
     }
 
     static NativeImageData* createNativeImageDataWithoutDecoding(
         const char* buffer, size_t buffer_size, size_t width, size_t height,
-        size_t stride)
+        size_t stride, uint32_t needsDownScaleImageResourceLargerThan)
     {
         NativeImageData* result = nullptr;
         ResponseBody internalBuffer;
         internalBuffer.insert(internalBuffer.begin(), buffer,
                               buffer + buffer_size);
         result = CompressedNativeImageData::create(
-            internalBuffer, UTF8StringDataNonGCStd(), (uint8_t*)buffer, width,
+            internalBuffer, UTF8StringDataNonGCStd(),
+            needsDownScaleImageResourceLargerThan, (uint8_t*)buffer, width,
             height, stride);
         return result;
     }
@@ -271,6 +275,10 @@ namespace WindowOrWorkerGlobalScope {
         NativeImageData* destImage = nullptr;
         bool needsToSetOriginCleanFlag = false;
         bool setOriginCleanFlagValue = false;
+        uint32_t needsDownScaleImageResourceLargerThan =
+            executionContext->webBase()
+                ->asWebView()
+                ->needsDownScaleImageResourceLargerThan();
         if (context.m_image
                 .isHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
             auto canvasImageSource =
@@ -306,7 +314,8 @@ namespace WindowOrWorkerGlobalScope {
                     DOMException::Code::INVALID_STATE_ERR);
             }
             NativeImageData* srcImage = createNativeImageDataWithDecoding(
-                (const char*)blob->data(), (size_t)blob->size());
+                (const char*)blob->data(), (size_t)blob->size(),
+                needsDownScaleImageResourceLargerThan);
             NativeImageData* destImage = nullptr;
 
             // 3.If imageData is not in a supported image file format (e.g.,
@@ -362,7 +371,7 @@ namespace WindowOrWorkerGlobalScope {
 #endif
             srcImage = createNativeImageDataWithoutDecoding(
                 (char*)dstPtr, bufferLength, imagaDataWidth, imagaDataHeight,
-                stride);
+                stride, needsDownScaleImageResourceLargerThan);
 
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

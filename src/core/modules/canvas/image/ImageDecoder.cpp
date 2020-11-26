@@ -222,7 +222,8 @@ static ImageDecoder::DecodeResult decodePNG(
 #if !defined(OS_WINDOWS)
 static void decodeJPG(jpeg_decompress_struct* dHandle,
                       ImageDecoder::DecodeResult& result,
-                      const std::vector<char>& inputBuffer, bool needsDecoding)
+                      const std::vector<char>& inputBuffer, bool needsDecoding,
+                      uint32_t needsDownScaleImageResourceLargerThan)
 {
     STARFISH_ASSERT(dHandle != nullptr);
 
@@ -234,6 +235,30 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
         return;
     }
 
+    uint32_t wh = dHandle->image_width * dHandle->image_height;
+    if (needsDownScaleImageResourceLargerThan &&
+        wh >= needsDownScaleImageResourceLargerThan) {
+        if (wh > 7680 * 4320) {
+            dHandle->scale_num = 1;
+            dHandle->scale_denom = 8;
+        } else if (wh > 3840 * 2160) {
+            dHandle->scale_num = 1;
+            dHandle->scale_denom = 4;
+        } else if (wh > 1920 * 1080) {
+            dHandle->scale_num = 1;
+            dHandle->scale_denom = 2;
+        }
+        dHandle->mem->max_memory_to_use = 100 * 1024 * 1024;
+        dHandle->two_pass_quantize = FALSE;
+        dHandle->do_fancy_upsampling = FALSE;
+        dHandle->block_size = 16;
+        dHandle->dct_method = JDCT_IFAST;
+        STARFISH_LOG_INFO(
+            "Try to downscale large size image(width: %u, height: %u, "
+            "scale_num: %u, scale_denom: %u)\n",
+            dHandle->image_width, dHandle->image_height, dHandle->scale_num,
+            dHandle->scale_denom);
+    }
     if (jpeg_start_decompress(dHandle) != 1) {
         return;
     }
@@ -330,6 +355,9 @@ typedef struct custom_error_mgr* custom_error_ptr;
 static void jpeg_error_handle(j_common_ptr cinfo)
 {
     custom_error_ptr c_err = (custom_error_ptr)cinfo->err;
+    STARFISH_LOG_ERROR(
+        "Error in jpeglib : %s \n",
+        c_err->pub.jpeg_message_table[c_err->pub.last_jpeg_message]);
     longjmp(c_err->setjmp_buffer, 1);
 }
 
@@ -342,7 +370,8 @@ static void jpeg_message_handle(j_common_ptr cinfo, int msg_level)
 }
 
 static ImageDecoder::DecodeResult decodeJPG(
-    const std::vector<char>& inputBuffer, bool needsDecoding)
+    const std::vector<char>& inputBuffer, bool needsDecoding,
+    uint32_t needsDownScaleImageResourceLargerThan)
 {
     ImageDecoder::DecodeResult result;
 
@@ -369,14 +398,16 @@ static ImageDecoder::DecodeResult decodeJPG(
 
     jpeg_create_decompress(&dHandle);
 
-    decodeJPG(&dHandle, result, inputBuffer, needsDecoding);
+    decodeJPG(&dHandle, result, inputBuffer, needsDecoding,
+              needsDownScaleImageResourceLargerThan);
     jpeg_destroy_decompress(&dHandle);
     return result;
 }
 #else
 // https://stackoverflow.com/questions/45809347/how-to-decode-jpeg-using-win32
 static ImageDecoder::DecodeResult decodeJPG(
-    const std::vector<char>& inputBuffer, bool needsDecoding)
+    const std::vector<char>& inputBuffer, bool needsDecoding,
+    uint32_t /*needsDownScaleImageResourceLargerThan*/)
 {
     ImageDecoder::DecodeResult result;
     // IWICImagingFactory is a structure containing the function pointers of
@@ -694,12 +725,14 @@ static ImageDecoder::DecodeResult decodeGIF(
 }
 
 static ImageDecoder::DecodeResult decodeBuffer(
-    const std::vector<char>& inputBuffer, bool full)
+    const std::vector<char>& inputBuffer, bool full,
+    uint32_t needsDownScaleImageResourceLargerThan)
 {
     if (isPNGFormat(inputBuffer)) {
         return decodePNG(inputBuffer, full);
     } else if (isJPGFormat(inputBuffer)) {
-        return decodeJPG(inputBuffer, full);
+        return decodeJPG(inputBuffer, full,
+                         needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
         return decodeGIF(inputBuffer, full);
     }
@@ -709,12 +742,14 @@ static ImageDecoder::DecodeResult decodeBuffer(
 
 ImageDecoder::DecodeResult ImageDecoder::decodeJustImageSize()
 {
-    return decodeBuffer(m_inputBuffer, false);
+    return decodeBuffer(m_inputBuffer, false,
+                        m_needsDownScaleImageResourceLargerThan);
 }
 
 ImageDecoder::DecodeResult ImageDecoder::decode()
 {
-    return decodeBuffer(m_inputBuffer, true);
+    return decodeBuffer(m_inputBuffer, true,
+                        m_needsDownScaleImageResourceLargerThan);
 }
 
 bool ImageDecoder::isAnimatedGIF(const std::vector<char>& inputBuffer)
@@ -984,5 +1019,5 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
 {
     return ImageDecoder::DecodeResult();
 }
-}
+} // namespace Starfish
 #endif

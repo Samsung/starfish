@@ -291,6 +291,7 @@ int main(int argc, char* argv[])
     bool crashTest = false;
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
     bool needsDownloadWebFontsEarly = false;
+    uint32_t needsDownScaleImageResourceLargerThan = 0;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -364,6 +365,12 @@ int main(int argc, char* argv[])
             needsDownloadWebFontsEarly = true;
         } else if (strcmp(argv[i], "--disable-console") == 0) {
             disableConsole = true;
+        } else if (strstr(argv[i],
+                          "--needs-downscale-image-resource-larger-than=") ==
+                   argv[i]) {
+            needsDownScaleImageResourceLargerThan = std::atoi(
+                argv[i] +
+                strlen("--needs-downscale-image-resource-larger-than="));
         }
     }
 
@@ -523,6 +530,10 @@ int main(int argc, char* argv[])
 
         if (needsDownloadWebFontsEarly) {
             settings.SetNeedsDownloadWebFontsEarly(true);
+        }
+        if (needsDownScaleImageResourceLargerThan) {
+            settings.SetNeedsDownScaleImageResourceLargerThan(
+                needsDownScaleImageResourceLargerThan);
         }
         settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);
