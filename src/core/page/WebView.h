@@ -405,6 +405,16 @@ public:
         return m_needsDownloadWebFontsEarly;
     }
 
+    void setNeedsDownScaleImageResourceLargerThan(uint32_t demention)
+    {
+        m_needsDownScaleImageResourceLargerThan = demention;
+    }
+
+    uint32_t needsDownScaleImageResourceLargerThan()
+    {
+        return m_needsDownScaleImageResourceLargerThan;
+    }
+
     void setBaseForegroundColor(Unit::Color color)
     {
         m_baseForegroundColor = color;
@@ -573,6 +583,7 @@ private:
     uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
     size_t m_idleCheckTimerID;
     bool m_needsDownloadWebFontsEarly;
+    uint32_t m_needsDownScaleImageResourceLargerThan;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };

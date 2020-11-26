@@ -24,12 +24,16 @@ namespace Starfish {
 
 class ImageDecoder {
 public:
-    ImageDecoder(const std::vector<char>& inputBuffer)
+    ImageDecoder(const std::vector<char>& inputBuffer,
+                 uint32_t needsDownScaleImageResourceLargerThan)
         : m_inputBuffer(inputBuffer)
         , m_gifFile(nullptr)
         , m_gifBuffer(nullptr)
+        , m_needsDownScaleImageResourceLargerThan(
+              needsDownScaleImageResourceLargerThan)
     {
     }
+
     ~ImageDecoder();
     struct DecodeResult {
         bool m_isSuccessful;
@@ -73,6 +77,7 @@ private:
     void* m_gifFile;
     void* m_gifBuffer;
     GifReadData m_gifReadData;
+    uint32_t m_needsDownScaleImageResourceLargerThan;
 };
 } // namespace Starfish
 

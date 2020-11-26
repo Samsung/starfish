@@ -40,14 +40,17 @@ public:
             BufferedNativeImageData::nativeImageDataGCKind());
     }
 
-    AnimatedGIFNativeImageDataImpl(const std::vector<char>& compressedImageData,
-                                   std::string&& imageURL, size_t width,
-                                   size_t height, size_t stride)
+    AnimatedGIFNativeImageDataImpl(
+        const std::vector<char>& compressedImageData, std::string&& imageURL,
+        uint32_t needsDownScaleImageResourceLargerThan, size_t width,
+        size_t height, size_t stride)
         : m_image(nullptr)
         , m_width(width)
         , m_stride(stride)
         , m_height(height)
         , m_imageURL(imageURL)
+        , m_needsDownScaleImageResourceLargerThan(
+              needsDownScaleImageResourceLargerThan)
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         , m_imageSurface(nullptr)
 #endif
@@ -61,7 +64,8 @@ public:
         m_inputBuffer.insert(m_inputBuffer.end(), compressedImageData.begin(),
                              compressedImageData.end());
 
-        m_imageDecoder = new ImageDecoder(m_inputBuffer);
+        m_imageDecoder = new ImageDecoder(
+            m_inputBuffer, m_needsDownScaleImageResourceLargerThan);
     }
 
     virtual ~AnimatedGIFNativeImageDataImpl()
@@ -201,6 +205,7 @@ protected:
     size_t m_height;
     std::vector<char> m_inputBuffer;
     std::string m_imageURL;
+    uint32_t m_needsDownScaleImageResourceLargerThan;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
@@ -210,14 +215,16 @@ protected:
 
 NativeImageData* AnimatedGIFNativeImageData::create(
     const std::vector<char>& compressedImageData, std::string&& imageURL,
-    size_t width, size_t height, size_t stride)
+    uint32_t needsDownScaleImageResourceLargerThan, size_t width, size_t height,
+    size_t stride)
 {
     STARFISH_ASSERT(width != 0);
     STARFISH_ASSERT(height != 0);
     STARFISH_ASSERT(compressedImageData.size() != 0);
 
     NativeImageData* imageData = new AnimatedGIFNativeImageDataImpl(
-        compressedImageData, std::move(imageURL), width, height, stride);
+        compressedImageData, std::move(imageURL),
+        needsDownScaleImageResourceLargerThan, width, height, stride);
     return imageData;
 }
 } // namespace Starfish
