@@ -187,11 +187,16 @@ void ImageResource::didLoadFinished()
                 ResponseBody responseData;
                 ImageResource* imageResource;
                 ImageDecoder::DecodeResult decodeResult;
+                MessageLoop* messageLoop;
+                GlobalScope* globalScope;
             };
 
             ImageDecodeData* d = new ImageDecodeData();
             d->imageResource = this;
             d->responseData = std::move(m_resourceRequest->response());
+            d->messageLoop = m_resourceRequest->webBase()->messageLoop();
+            d->globalScope =
+                m_resourceRequest->executionContext()->globalScope();
 
             m_resourceRequest->executionContext()
                 ->document()
@@ -202,71 +207,62 @@ void ImageResource::didLoadFinished()
                     [](void* data) -> void* {
                         STARFISH_ASSERT(data != nullptr);
                         ImageDecodeData* d = (ImageDecodeData*)data;
-
                         ImageDecoder id(d->responseData);
                         d->decodeResult = id.decode();
                         if (d->decodeResult.m_isAnimatedGIF) {
                             free(d->decodeResult.m_buffer);
                         }
-                        d->imageResource->resourceRequest()
-                            ->webBase()
-                            ->messageLoop()
-                            ->addIdlerWithNoGCRootingInOtherThread(
-                                nullptr,
-                                [](size_t handle, void* data) {
-                                    STARFISH_ASSERT(data != nullptr);
-                                    ImageDecodeData* d = (ImageDecodeData*)data;
-                                    ResponseBody buffer =
-                                        std::move(d->responseData);
+                        d->messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                            d->globalScope,
+                            [](size_t handle, void* data) {
+                                STARFISH_ASSERT(data != nullptr);
+                                ImageDecodeData* d = (ImageDecodeData*)data;
+                                ResponseBody buffer =
+                                    std::move(d->responseData);
 
-                                    if (d->decodeResult.m_isSuccessful) {
-                                        if (d->decodeResult.m_isAnimatedGIF) {
-                                            d->imageResource->m_imageData =
-                                                AnimatedGIFNativeImageData::
-                                                    create(
-                                                        buffer,
-                                                        d->imageResource->url()
-                                                            ->urlString()
-                                                            ->toUTF8NonGCString(),
-                                                        d->decodeResult.m_width,
-                                                        d->decodeResult
-                                                            .m_height,
-                                                        d->decodeResult
-                                                            .m_stride);
-                                        } else {
-                                            d->imageResource->m_imageData =
-                                                CompressedNativeImageData::create(
-                                                    buffer,
-                                                    d->imageResource->url()
-                                                        ->urlString()
-                                                        ->toUTF8NonGCString(),
-                                                    d->decodeResult.m_buffer,
-                                                    d->decodeResult.m_width,
-                                                    d->decodeResult.m_height,
-                                                    d->decodeResult.m_stride);
-                                        }
-                                        d->imageResource
-                                            ->Resource::didLoadFinished();
-                                    } else if (buffer.size()) {
+                                if (d->decodeResult.m_isSuccessful) {
+                                    if (d->decodeResult.m_isAnimatedGIF) {
+                                        d->imageResource->m_imageData =
+                                            AnimatedGIFNativeImageData::create(
+                                                buffer,
+                                                d->imageResource->url()
+                                                    ->urlString()
+                                                    ->toUTF8NonGCString(),
+                                                d->decodeResult.m_width,
+                                                d->decodeResult.m_height,
+                                                d->decodeResult.m_stride);
+                                    } else {
                                         d->imageResource->m_imageData =
                                             CompressedNativeImageData::create(
                                                 buffer,
                                                 d->imageResource->url()
                                                     ->urlString()
-                                                    ->toUTF8NonGCString());
-                                        if (!d->imageResource->m_imageData) {
-                                            d->imageResource
-                                                ->Resource::didLoadFailed();
-                                            return;
-                                        }
-                                        d->imageResource
-                                            ->Resource::didLoadFinished();
-                                    } else {
+                                                    ->toUTF8NonGCString(),
+                                                d->decodeResult.m_buffer,
+                                                d->decodeResult.m_width,
+                                                d->decodeResult.m_height,
+                                                d->decodeResult.m_stride);
+                                    }
+                                    d->imageResource
+                                        ->Resource::didLoadFinished();
+                                } else if (buffer.size()) {
+                                    d->imageResource->m_imageData =
+                                        CompressedNativeImageData::create(
+                                            buffer, d->imageResource->url()
+                                                        ->urlString()
+                                                        ->toUTF8NonGCString());
+                                    if (!d->imageResource->m_imageData) {
                                         d->imageResource
                                             ->Resource::didLoadFailed();
+                                        return;
                                     }
-                                },
-                                d);
+                                    d->imageResource
+                                        ->Resource::didLoadFinished();
+                                } else {
+                                    d->imageResource->Resource::didLoadFailed();
+                                }
+                            },
+                            d);
 
                         return nullptr;
                     },
