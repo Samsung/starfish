@@ -2350,6 +2350,9 @@ static void clearStyle(Element* element)
 
 void Node::didNodeRemovedFromDocumentTree()
 {
+    if (document()->activeElement() == this) {
+        document()->browsingContext()->releaseFocusedNode(this);
+    }
     clearDidPrepareAnimation();
     setState(NodeStateNormal, false);
     setStyle(nullptr);
