@@ -302,7 +302,7 @@ static void invalidateStyleOfMatchedElementWorker(
             AtomicString elementName =
                 child->asElement()->name().localNameAtomic();
             AtomicString elementId = child->asElement()->atomicId();
-            const GCVector<AtomicString>& elementClasses =
+            const GCAtomicTightVector<AtomicString>& elementClasses =
                 child->asElement()->classNames();
             bool canUseAncestorSelectorFilter =
                 filter.canUseAncestorSelectorFilter(child->asElement());

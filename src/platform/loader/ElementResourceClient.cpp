@@ -27,16 +27,17 @@
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/animation/AnimationTask.h"
 
 namespace Starfish {
 
 void ElementResourceClient::didLoadFinished()
 {
     ResourceClient::didLoadFinished();
-    auto fn = [](size_t handle, void* data) {
+    auto fn = [](void* data) {
         ElementResourceClient* elementResourceClient =
             (ElementResourceClient*)data;
-        elementResourceClient->m_dispatchedEventHandler = MessageLoopInvalidID;
+        elementResourceClient->m_dispatchedEventHandler = TimerInvalidID;
         Element* element = elementResourceClient->m_element;
         String* eventType =
             element->starfish()->staticStrings()->m_load.localName();
@@ -45,21 +46,23 @@ void ElementResourceClient::didLoadFinished()
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
-        fn(SIZE_MAX, this);
+        fn(this);
     } else {
-        m_dispatchedEventHandler =
-            m_element->webView()->messageLoop()->addIdler(m_element->window(),
-                                                          fn, this);
+        auto remainTime = m_element->document()
+                              ->animationExecutor()
+                              ->transformOpacityAnimationRemainTime();
+        m_dispatchedEventHandler = m_element->webView()->timer()->addTimer(
+            remainTime, m_element->window(), fn, this, false);
     }
 }
 
 void ElementResourceClient::didLoadFailed()
 {
     ResourceClient::didLoadFailed();
-    auto fn = [](size_t handle, void* data) {
+    auto fn = [](void* data) {
         ElementResourceClient* elementResourceClient =
             (ElementResourceClient*)data;
-        elementResourceClient->m_dispatchedEventHandler = MessageLoopInvalidID;
+        elementResourceClient->m_dispatchedEventHandler = TimerInvalidID;
         Element* element = elementResourceClient->m_element;
         String* eventType =
             element->starfish()->staticStrings()->m_error.localName();
@@ -68,20 +71,21 @@ void ElementResourceClient::didLoadFailed()
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
-        fn(SIZE_MAX, this);
+        fn(this);
     } else {
-        m_dispatchedEventHandler =
-            m_element->webView()->messageLoop()->addIdler(m_element->window(),
-                                                          fn, this);
+        auto remainTime = m_element->document()
+                              ->animationExecutor()
+                              ->transformOpacityAnimationRemainTime();
+        m_dispatchedEventHandler = m_element->webView()->timer()->addTimer(
+            remainTime, m_element->window(), fn, this, false);
     }
 }
 
 void ElementResourceClient::cancelDispatchedEventIfExists()
 {
-    if (m_dispatchedEventHandler != MessageLoopInvalidID) {
-        m_element->webView()->messageLoop()->removeIdler(
-            m_dispatchedEventHandler);
-        m_dispatchedEventHandler = MessageLoopInvalidID;
+    if (m_dispatchedEventHandler != TimerInvalidID) {
+        m_element->webView()->timer()->removeTimer(m_dispatchedEventHandler);
+        m_dispatchedEventHandler = TimerInvalidID;
     }
 }
 }

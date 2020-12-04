@@ -731,6 +731,7 @@ private:
 };
 
 #include "core/util/Vector.h"
+#include "core/util/TightVector.h"
 
 // typedef of GC-aware vector
 template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
@@ -738,6 +739,13 @@ using GCVectorT = Starfish::Vector<T, Allocator>;
 
 template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
 class GCVector : public GCVectorT<T, Allocator>, public gc {
+};
+
+template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
+using GCTightVectorT = Starfish::TightVector<T, Allocator>;
+
+template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
+class GCTightVector : public GCTightVectorT<T, Allocator>, public gc {
 };
 
 // typedef of GC-aware vector with atomic contents
@@ -748,6 +756,16 @@ using GCAtomicVectorT = Starfish::Vector<T, Allocator>;
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
 class GCAtomicVector : public GCAtomicVectorT<T, Allocator>, public gc {
+};
+
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
+using GCAtomicTightVectorT = Starfish::TightVector<T, Allocator>;
+
+template <typename T,
+          typename Allocator = GCUtil::gc_malloc_atomic_allocator<T>>
+class GCAtomicTightVector : public GCAtomicTightVectorT<T, Allocator>,
+                            public gc {
 };
 
 // typedef of GC-aware list

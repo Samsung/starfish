@@ -55,6 +55,48 @@ static float interpolate(const T from, const T to, float progress,
     }
 }
 
+void AnimationExecutor::iterateAnimationTasks(void (*fn)(ActiveAnimationTask*,
+                                                         void*),
+                                              void* data)
+{
+    for (size_t i = 0; i < m_activeTransitions.size(); i++) {
+        fn(m_activeTransitions[i], data);
+    }
+
+    for (auto animations = m_activeAnimations->begin();
+         animations != m_activeAnimations->end(); animations++) {
+        const auto& v = (*animations).second;
+        for (size_t i = 0; i < v.size(); i++) {
+            fn(v[i], data);
+        }
+    }
+}
+
+uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
+{
+    uint64_t result = 0;
+    uint64_t tick = tickCount();
+
+    struct Data {
+        uint64_t* result;
+        uint64_t* tick;
+    } d;
+    d.result = &result;
+    d.tick = &tick;
+
+    iterateAnimationTasks(
+        [](ActiveAnimationTask* task, void* data) {
+            Data* d = (Data*)data;
+            if (task->property() == CSSStyleValuePair::KeyKind::Opacity ||
+                task->property() == CSSStyleValuePair::KeyKind::Transform) {
+                *d->result = std::max(*d->result, task->remainTime(*d->tick));
+            }
+        },
+        &d);
+
+    return result;
+}
+
 void AnimationExecutor::checkActiveExecutorInWebView()
 {
     auto& v = window()->webView()->m_activeAnimationExecutor;

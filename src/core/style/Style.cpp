@@ -6481,7 +6481,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     const GCUnorderedMultiMap<
         AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
     CSSSelector::Type type, Element* element, AtomicString elementName,
-    AtomicString elementId, const GCVector<AtomicString>& elementClasses,
+    AtomicString elementId,
+    const GCAtomicTightVector<AtomicString>& elementClasses,
     MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
@@ -6613,7 +6614,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
-    const GCVector<AtomicString>& elementClasses = element->classNames();
+    const GCAtomicTightVector<AtomicString>& elementClasses =
+        element->classNames();
 
     const size_t matchedRulesInlineStorageSize = 32;
     MatchedStyleRules<matchedRulesInlineStorageSize> matchedRules;
@@ -6734,7 +6736,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
 StyleResolver::Match StyleResolver::matchSelector(
     Element* element, AtomicString elementName, AtomicString elementId,
-    const GCVector<AtomicString>& elementClasses,
+    const GCAtomicTightVector<AtomicString>& elementClasses,
     const CSSSelectorList& selectorList, unsigned idx, MatchResult& result,
     bool isQueryingSelector)
 {
@@ -6766,7 +6768,7 @@ StyleResolver::Match StyleResolver::matchSelector(
 
 StyleResolver::Match StyleResolver::matchForRelation(
     Element* element, AtomicString elementName, AtomicString elementId,
-    const GCVector<AtomicString>& elementClasses,
+    const GCAtomicTightVector<AtomicString>& elementClasses,
     const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
     unsigned idx, MatchResult& result)
 {
@@ -6781,7 +6783,8 @@ StyleResolver::Match StyleResolver::matchForRelation(
         while (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
             AtomicString elementId = parent->atomicId();
-            const GCVector<AtomicString>& elementClasses = parent->classNames();
+            const GCAtomicTightVector<AtomicString>& elementClasses =
+                parent->classNames();
             if (matchSelector(parent, elementName, elementId, elementClasses,
                               selectorList, idx,
                               result) == Match::SelectorMatches) {
@@ -6797,7 +6800,8 @@ StyleResolver::Match StyleResolver::matchForRelation(
         if (parent) {
             AtomicString elementName = parent->name().localNameAtomic();
             AtomicString elementId = parent->atomicId();
-            const GCVector<AtomicString>& elementClasses = parent->classNames();
+            const GCAtomicTightVector<AtomicString>& elementClasses =
+                parent->classNames();
             if (matchSelector(parent, elementName, elementId, elementClasses,
                               selectorList, idx,
                               result) == Match::SelectorMatches) {
@@ -6816,7 +6820,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
             AtomicString elementName =
                 previousSibling->name().localNameAtomic();
             AtomicString elementId = previousSibling->atomicId();
-            const GCVector<AtomicString>& elementClasses =
+            const GCAtomicTightVector<AtomicString>& elementClasses =
                 previousSibling->classNames();
             if (matchSelector(previousSibling, elementName, elementId,
                               elementClasses, selectorList, idx,
@@ -6837,7 +6841,7 @@ StyleResolver::Match StyleResolver::matchForRelation(
             AtomicString elementName =
                 previousSibling->name().localNameAtomic();
             AtomicString elementId = previousSibling->atomicId();
-            const GCVector<AtomicString>& elementClasses =
+            const GCAtomicTightVector<AtomicString>& elementClasses =
                 previousSibling->classNames();
             if (matchSelector(previousSibling, elementName, elementId,
                               elementClasses, selectorList, idx,
@@ -6853,11 +6857,10 @@ StyleResolver::Match StyleResolver::matchForRelation(
     }
 }
 
-bool StyleResolver::checkOne(Element* element, AtomicString elementName,
-                             AtomicString elementId,
-                             const GCVector<AtomicString>& elementClasses,
-                             CSSSelector* selector, MatchResult& result,
-                             bool isQueryingSelector)
+bool StyleResolver::checkOne(
+    Element* element, AtomicString elementName, AtomicString elementId,
+    const GCAtomicTightVector<AtomicString>& elementClasses,
+    CSSSelector* selector, MatchResult& result, bool isQueryingSelector)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(selector != nullptr);
@@ -7237,7 +7240,8 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = StyleDamageFromAll;
         AtomicString elementName = element->name().localNameAtomic();
         AtomicString elementId = element->atomicId();
-        const GCVector<AtomicString>& elementClasses = element->classNames();
+        const GCAtomicTightVector<AtomicString>& elementClasses =
+            element->classNames();
         return !checkOne(element, elementName, elementId, elementClasses,
                          selector->pseudoSelectorList()[0], result);
     }

@@ -336,7 +336,7 @@ public:
     void setClassName(String* className);
 
     // DO NOT MODIFY THIS VECTOR
-    const GCVector<AtomicString>& classNames()
+    const GCAtomicTightVector<AtomicString>& classNames()
     {
         return m_classNames;
     }
@@ -395,7 +395,7 @@ public:
     String* getDir();
     String* getLaunguage();
 
-    const GCVector<Attribute>& attributesVector()
+    const GCTightVector<Attribute>& attributesVector()
     {
         return m_attributes;
     }
@@ -448,8 +448,8 @@ private:
     bool m_didAttributeChangedCorrectlyInvoked;
 #endif
     AtomicString m_id;
-    GCVector<AtomicString> m_classNames;
-    GCVector<Attribute> m_attributes;
+    GCAtomicTightVector<AtomicString> m_classNames;
+    GCTightVector<Attribute> m_attributes;
 };
 
 // For elements other than html, xhtml, and svg elements

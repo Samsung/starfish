@@ -2140,22 +2140,92 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                     }
                 }
 
+                size_t hEarlyPaintingTextureStart = hVisibleTextureStart;
+                size_t hEarlyPaintingTextureEnd = hVisibleTextureEnd;
+                size_t wEarlyPaintingTextureStart = wVisibleTextureStart;
+                size_t wEarlyPaintingTextureEnd = wVisibleTextureEnd;
+
                 if (scrolling) {
                     if (scrolling->inVerticalScrollingDown()) {
-                        hVisibleTextureEnd++;
+                        hEarlyPaintingTextureEnd = hVisibleTextureEnd + 1;
                     }
                     if (hVisibleTextureStart != 0 &&
                         scrolling->inVerticalScrollingUp()) {
-                        hVisibleTextureStart--;
+                        hEarlyPaintingTextureStart = hVisibleTextureStart - 1;
                     }
 
                     if (scrolling->inHorizontalScrollingRight()) {
-                        wVisibleTextureEnd++;
+                        wEarlyPaintingTextureEnd = wVisibleTextureEnd + 1;
                     }
                     if (wVisibleTextureStart != 0 &&
                         scrolling->inHorizontalScrollingLeft()) {
-                        wVisibleTextureStart--;
+                        wEarlyPaintingTextureStart = wVisibleTextureStart - 1;
                     }
+                }
+
+                if (m_owner->node()->isElement() &&
+                    m_owner->node()->isRunningTransformAnimation()) {
+                    struct Data {
+                        Element* element;
+                        size_t* hEarlyPaintingTextureStart;
+                        size_t* hEarlyPaintingTextureEnd;
+                        size_t* wEarlyPaintingTextureStart;
+                        size_t* wEarlyPaintingTextureEnd;
+                    } d;
+                    d.element = m_owner->node()->asElement();
+                    d.hEarlyPaintingTextureStart = &hEarlyPaintingTextureStart;
+                    d.hEarlyPaintingTextureEnd = &hEarlyPaintingTextureEnd;
+                    d.wEarlyPaintingTextureStart = &wEarlyPaintingTextureStart;
+                    d.wEarlyPaintingTextureEnd = &wEarlyPaintingTextureEnd;
+
+                    m_owner->node()
+                        ->document()
+                        ->animationExecutor()
+                        ->iterateAnimationTasks(
+                            [](ActiveAnimationTask* task, void* data) {
+                                Data* d = (Data*)data;
+                                if (task->targetElement() == d->element &&
+                                    task->property() ==
+                                        CSSStyleValuePair::KeyKind::Transform &&
+                                    task->fraction(
+                                        d->element->document()
+                                            ->browsingContext()
+                                            ->styleResolveStartTick())) {
+                                    auto fromValue =
+                                        task->currentAnimatedFromValue();
+                                    auto toValue =
+                                        task->currentAnimatedToValue();
+                                    if (fromValue->getMatrix().getTranslateX() <
+                                        toValue->getMatrix().getTranslateX()) {
+                                        *d->wEarlyPaintingTextureEnd =
+                                            *d->wEarlyPaintingTextureEnd + 1;
+                                    }
+                                    if (fromValue->getMatrix().getTranslateX() >
+                                        toValue->getMatrix().getTranslateX()) {
+                                        if (*d->wEarlyPaintingTextureStart !=
+                                            0) {
+                                            *d->wEarlyPaintingTextureStart =
+                                                *d->wEarlyPaintingTextureStart -
+                                                1;
+                                        }
+                                    }
+                                    if (fromValue->getMatrix().getTranslateY() <
+                                        toValue->getMatrix().getTranslateY()) {
+                                        *d->hEarlyPaintingTextureEnd =
+                                            *d->hEarlyPaintingTextureEnd + 1;
+                                    }
+                                    if (fromValue->getMatrix().getTranslateY() >
+                                        toValue->getMatrix().getTranslateY()) {
+                                        if (*d->hEarlyPaintingTextureStart !=
+                                            0) {
+                                            *d->hEarlyPaintingTextureStart =
+                                                *d->hEarlyPaintingTextureStart -
+                                                1;
+                                        }
+                                    }
+                                }
+                            },
+                            &d);
                 }
 
                 tileIndex = 0;
@@ -2181,12 +2251,35 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                        tileDataWidth, tileDataHeight),
                             screenMatrix);
 
-                        if (hVisibleTextureStart <= y &&
-                            y < hVisibleTextureEnd &&
-                            wVisibleTextureStart <= x &&
-                            x < wVisibleTextureEnd) {
+                        bool isVisible = hVisibleTextureStart <= y &&
+                                         y < hVisibleTextureEnd &&
+                                         wVisibleTextureStart <= x &&
+                                         x < wVisibleTextureEnd;
+                        bool isEarlyPainting =
+                            hEarlyPaintingTextureStart <= y &&
+                            y < hEarlyPaintingTextureEnd &&
+                            wEarlyPaintingTextureStart <= x &&
+                            x < wEarlyPaintingTextureEnd;
+
+                        if (isVisible || isEarlyPainting) {
                             if (m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] == nullptr) {
+                                if (m_owner->document()
+                                        ->webView()
+                                        ->didFirstRenderingAfterWakeup() &&
+                                    !isVisible && isEarlyPainting) {
+                                    auto tick = longTickCount();
+                                    if (tick -
+                                            m_owner->node()
+                                                ->webView()
+                                                ->lastRenderingTick() >
+                                        (uint64_t)WebView::
+                                                g_fillingGraphicsBufferTileFrameTimeLimitInMS *
+                                            1000) {
+                                        continue;
+                                    }
+                                }
+
                                 CanvasSurface* canvasSurface =
                                     CanvasSurface::create(
                                         m_owner->document()
@@ -2238,29 +2331,6 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                                 m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] = canvasSurface;
-
-                                if (m_owner->document()
-                                        ->webView()
-                                        ->didFirstRenderingAfterWakeup() &&
-                                    m_owner->document()
-                                            ->webView()
-                                            ->activeScrollingSet()
-                                            .size() != 0) {
-                                    auto tick = longTickCount();
-                                    if (tick -
-                                            m_owner->node()
-                                                ->webView()
-                                                ->lastRenderingTick() >
-                                        (uint64_t)WebView::
-                                                g_fillingGraphicsBufferTileFrameTimeLimitInMS *
-                                            1000) {
-                                        STARFISH_LOG_INFO(
-                                            "drop filling graphics buffer "
-                                            "contents while scrolling"
-                                            "because time over\n");
-                                        return true;
-                                    }
-                                }
                             }
                         } else {
                             if (m_rareData->m_graphicsBufferHolder

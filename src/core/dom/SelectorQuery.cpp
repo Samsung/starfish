@@ -28,8 +28,8 @@
 
 namespace Starfish {
 
-static ALWAYS_INLINE bool contains(const GCVector<AtomicString>& vector,
-                                   const AtomicString& string)
+static ALWAYS_INLINE bool contains(
+    const GCAtomicTightVector<AtomicString>& vector, const AtomicString& string)
 {
     size_t len = vector.size();
     for (size_t i = 0; i < len; i++) {
@@ -265,7 +265,8 @@ bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element)
     StyleResolver::MatchResult result;
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
-    const GCVector<AtomicString>& elementClasses = element->classNames();
+    const GCAtomicTightVector<AtomicString>& elementClasses =
+        element->classNames();
 
     return resolver.matchSelector(element, elementName, elementId,
                                   elementClasses, selector, 0, result, true) ==

@@ -21,7 +21,7 @@
 #define __StarfishElementResourceClient__
 
 #include "platform/loader/ResourceClient.h"
-#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 
 namespace Starfish {
 
@@ -32,7 +32,7 @@ public:
                           bool needsSyncEventDispatch = false)
         : ResourceClient(resource)
         , m_needsSyncEventDispatch(needsSyncEventDispatch)
-        , m_dispatchedEventHandler(MessageLoopInvalidID)
+        , m_dispatchedEventHandler(TimerInvalidID)
         , m_element(element)
     {
     }

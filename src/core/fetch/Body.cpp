@@ -68,7 +68,6 @@ bool Body::bodyUsed()
 
 Promise* Body::arrayBuffer()
 {
-    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -76,7 +75,7 @@ Promise* Body::arrayBuffer()
             scriptTypeError(executionContext()->scriptBindingInstance(),
                             String::fromUTF8("Body is locked"));
 
-        promise->reject(createScriptValue(error));
+        m_promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
             m_readableStream->lock();
@@ -92,23 +91,22 @@ Promise* Body::arrayBuffer()
                     executionContext()->scriptBindingInstance(), buffer,
                     value->length());
 
-                promise->fulfill(createScriptValue(scriptArrayBuffer));
+                m_promise->fulfill(createScriptValue(scriptArrayBuffer));
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            m_readableStream->resolveData(promise, executionContext(),
+            m_readableStream->resolveData(m_promise, executionContext(),
                                           BodyType::ArrayBuffer);
         }
     }
 
     m_readableStream->close();
-    return promise;
+    return m_promise;
 }
 
 Promise* Body::blob()
 {
-    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -116,11 +114,10 @@ Promise* Body::blob()
             scriptTypeError(executionContext()->scriptBindingInstance(),
                             String::fromUTF8("Body is locked"));
 
-        promise->reject(createScriptValue(error));
+        m_promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
             m_readableStream->lock();
-            m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
 
@@ -133,23 +130,22 @@ Promise* Body::blob()
                 auto blob = new Blob(executionContext(), value->length(),
                                      contentType(), buffer, false, false, true);
 
-                promise->fulfill(blob->scriptValue());
+                m_promise->fulfill(blob->scriptValue());
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            m_readableStream->resolveData(promise, executionContext(),
+            m_readableStream->resolveData(m_promise, executionContext(),
                                           BodyType::Blob);
         }
     }
 
     m_readableStream->close();
-    return promise;
+    return m_promise;
 }
 
 Promise* Body::json()
 {
-    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -157,11 +153,10 @@ Promise* Body::json()
             scriptTypeError(executionContext()->scriptBindingInstance(),
                             String::fromUTF8("Body is locked"));
 
-        promise->reject(createScriptValue(error));
+        m_promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
             m_readableStream->lock();
-            m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
 
@@ -169,18 +164,18 @@ Promise* Body::json()
                 ScriptValue jsonObject =
                     parseJSON(executionContext()->scriptBindingInstance(),
                               body.getUSVStringValue());
-                promise->fulfill(jsonObject);
+                m_promise->fulfill(jsonObject);
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            m_readableStream->resolveData(promise, executionContext(),
+            m_readableStream->resolveData(m_promise, executionContext(),
                                           BodyType::Json);
         }
     }
 
     m_readableStream->close();
-    return promise;
+    return m_promise;
 }
 
 Promise* Body::formData()
@@ -201,7 +196,6 @@ struct BodyPromiseHandle : public gc {
 
 Promise* Body::text()
 {
-    Promise* promise = m_promise;
     createReadableStream();
 
     if (m_readableStream->isDisturbedOrLocked()) {
@@ -209,15 +203,14 @@ Promise* Body::text()
             scriptTypeError(executionContext()->scriptBindingInstance(),
                             String::fromUTF8("Body is locked"));
 
-        promise->reject(createScriptValue(error));
+        m_promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
             m_readableStream->lock();
-            m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
             if (body.isUSVStringValue()) {
-                promise->fulfill(createScriptValue(body.getUSVStringValue()));
+                m_promise->fulfill(createScriptValue(body.getUSVStringValue()));
 
             } else if (body.isArrayBufferViewOrArrayBufferValue()) {
                 auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
@@ -234,7 +227,7 @@ Promise* Body::text()
                     auto size = arrayBufferViewSize(arrayBufferView);
                     text = String::fromUTF8((const char*)buffer, size);
                 }
-                promise->fulfill(createScriptValue(text));
+                m_promise->fulfill(createScriptValue(text));
 
             } else if (body.isBlobValue()) {
                 String* url = URL::createObjectURL(body.getBlobValue());
@@ -253,13 +246,13 @@ Promise* Body::text()
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            m_readableStream->resolveData(promise, executionContext(),
+            m_readableStream->resolveData(m_promise, executionContext(),
                                           BodyType::Text);
         }
     }
 
     m_readableStream->close();
-    return promise;
+    return m_promise;
 }
 
 // NOTE: consider creating `ResourceRequestClient` class for Body
