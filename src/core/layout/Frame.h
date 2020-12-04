@@ -20,6 +20,8 @@
 #ifndef __StarfishFrame__
 #define __StarfishFrame__
 
+#include "core/util/PoolAllocator.h"
+
 namespace Starfish {
 
 class Canvas;
@@ -304,33 +306,54 @@ public:
     void establishBlockFormattingContext(bool isNormalFlow, bool isRoot = false)
     {
         if (!isNormalFlow || isRoot) {
-            std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
-            std::vector<FloatingBoxInfo>* s2 =
-                new std::vector<FloatingBoxInfo>();
+            std::vector<FrameBlockBox*>* s = new (
+                m_poolAllocator.allocate(sizeof(std::vector<FrameBlockBox*>)))
+                std::vector<FrameBlockBox*>();
+            std::vector<FloatingBoxInfo>* s2 = new (
+                m_poolAllocator.allocate(sizeof(std::vector<FloatingBoxInfo>)))
+                std::vector<FloatingBoxInfo>();
             std::unordered_map<FrameBlockBox*, LayoutUnit>* s3 =
-                new std::unordered_map<FrameBlockBox*, LayoutUnit>();
+                new (m_poolAllocator.allocate(
+                    sizeof(std::unordered_map<FrameBlockBox*, LayoutUnit>)))
+                    std::unordered_map<FrameBlockBox*, LayoutUnit>();
             std::unordered_map<Frame*, FrameBlockBox*>* s4 =
-                new std::unordered_map<Frame*, FrameBlockBox*>();
-            std::vector<FrameBlockBox*>* s5 = new std::vector<FrameBlockBox*>();
+                new (m_poolAllocator.allocate(
+                    sizeof(std::unordered_map<Frame*, FrameBlockBox*>)))
+                    std::unordered_map<Frame*, FrameBlockBox*>();
+            std::vector<FrameBlockBox*>* s5 = new (
+                m_poolAllocator.allocate(sizeof(std::vector<FrameBlockBox*>)))
+                std::vector<FrameBlockBox*>();
             std::unordered_map<FrameBlockBox*,
                                std::pair<AscenderInfo, LayoutUnit>>* s6 =
-                new std::unordered_map<FrameBlockBox*,
+                new (m_poolAllocator.allocate(sizeof(
+                    std::unordered_map<FrameBlockBox*,
+                                       std::pair<AscenderInfo, LayoutUnit>>)))
+                    std::unordered_map<FrameBlockBox*,
                                        std::pair<AscenderInfo, LayoutUnit>>();
             std::unordered_map<FrameTableCellBox*,
                                std::pair<AscenderInfo, LayoutUnit>>* s7 =
-                new std::unordered_map<FrameTableCellBox*,
+                new (m_poolAllocator.allocate(sizeof(
+                    std::unordered_map<FrameTableCellBox*,
+                                       std::pair<AscenderInfo, LayoutUnit>>)))
+                    std::unordered_map<FrameTableCellBox*,
                                        std::pair<AscenderInfo, LayoutUnit>>();
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>* s8 =
-                new std::unordered_map<PreferredWidthKey,
+                new (m_poolAllocator.allocate(
+                    sizeof(std::unordered_map<PreferredWidthKey,
+                                              PreferredWidthValue>)))
+                    std::unordered_map<PreferredWidthKey,
                                        PreferredWidthValue>();
             std::unordered_map<FrameBox*, LayoutUnit>* s9 =
-                new std::unordered_map<FrameBox*, LayoutUnit>();
+                new (m_poolAllocator.allocate(
+                    sizeof(std::unordered_map<FrameBox*, LayoutUnit>)))
+                    std::unordered_map<FrameBox*, LayoutUnit>();
             m_blockFormattingContextInfo.emplace_back(
                 isNormalFlow, isRoot, s, s2, s3, s4, s5, s6, s7, s8, s9);
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
-            std::vector<FloatingBoxInfo>* s =
-                new std::vector<FloatingBoxInfo>();
+            std::vector<FloatingBoxInfo>* s = new (
+                m_poolAllocator.allocate(sizeof(std::vector<FloatingBoxInfo>)))
+                std::vector<FloatingBoxInfo>();
             m_blockFormattingContextInfo.emplace_back(
                 isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s,
                 back.m_lineBoxAscenders, back.m_firstLineCandidates,
@@ -344,17 +367,30 @@ public:
     {
         if (m_blockFormattingContextInfo.back().m_isRoot ||
             !m_blockFormattingContextInfo.back().m_isNormalFlow) {
-            delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
-            delete m_blockFormattingContextInfo.back().m_lineBoxAscenders;
-            delete m_blockFormattingContextInfo.back().m_firstLineCandidates;
-            delete m_blockFormattingContextInfo.back()
-                .m_blockBoxAligningAtFirstBaselineStack;
-            delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
-            delete m_blockFormattingContextInfo.back().m_tempAscenders;
-            delete m_blockFormattingContextInfo.back().m_preferredWidthValues;
-            delete m_blockFormattingContextInfo.back().m_contentHeights;
+            std::vector<FrameBlockBox*>().swap(
+                *m_blockFormattingContextInfo.back().m_inlineBlockBoxStack);
+            std::unordered_map<FrameBlockBox*, LayoutUnit>().swap(
+                *m_blockFormattingContextInfo.back().m_lineBoxAscenders);
+            std::unordered_map<Frame*, FrameBlockBox*>().swap(
+                *m_blockFormattingContextInfo.back().m_firstLineCandidates);
+            std::vector<FrameBlockBox*>().swap(
+                *m_blockFormattingContextInfo.back()
+                     .m_blockBoxAligningAtFirstBaselineStack);
+            std::unordered_map<FrameBlockBox*,
+                               std::pair<AscenderInfo, LayoutUnit>>()
+                .swap(
+                    *m_blockFormattingContextInfo.back().m_firstLineAscenders);
+            std::unordered_map<FrameTableCellBox*,
+                               std::pair<AscenderInfo, LayoutUnit>>()
+                .swap(*m_blockFormattingContextInfo.back().m_tempAscenders);
+            std::unordered_map<PreferredWidthKey, PreferredWidthValue>().swap(
+                *m_blockFormattingContextInfo.back().m_preferredWidthValues);
+            std::unordered_map<FrameBox*, LayoutUnit>().swap(
+                *m_blockFormattingContextInfo.back().m_contentHeights);
         }
-        delete m_blockFormattingContextInfo.back().m_floatBoxes;
+
+        std::vector<FloatingBoxInfo>().swap(
+            *m_blockFormattingContextInfo.back().m_floatBoxes);
         m_blockFormattingContextInfo.pop_back();
     }
 
@@ -686,6 +722,8 @@ private:
 
     Starfish* m_starfish;
     FrameDocument* m_frameDocument;
+
+    PoolAllocator m_poolAllocator;
 
     // NOTE. we don't need gc_allocator here. because, FrameTree already has
     // a reference for Frames

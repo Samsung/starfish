@@ -527,46 +527,74 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 
     StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_id) {
+        AtomicString oldName = m_id;
         if (attributeRemoved) {
             m_id = AtomicString::emptyAtomicString();
         } else {
             m_id = AtomicString::createAtomicString(starfish(), value);
         }
-        if (attributeCreated) {
-            if (value->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
+        if (oldName != m_id) {
+            if (attributeCreated) {
+                if (value->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(value, true,
+                                                                false);
+                }
+            } else if (attributeRemoved) {
+                if (old->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(old, false,
+                                                                true);
+                }
+            } else {
+                if (old->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(old, false,
+                                                                true);
+                }
+                if (value->length()) {
+                    document()->invalidNamedAccessCacheIfNeeded(value, true,
+                                                                false);
+                }
             }
-        } else if (attributeRemoved) {
-            if (old->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
-            }
-        } else {
-            if (old->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(old, false, true);
-            }
-            if (value->length()) {
-                document()->invalidNamedAccessCacheIfNeeded(value, true, false);
-            }
+            setNeedsStyleRecalc(StyleChangeReason::IdChange);
         }
-        setNeedsStyleRecalc(StyleChangeReason::IdChange);
     } else if (name == ss->m_class) {
         GCVector<StringView> tokens;
         DOMTokenList::tokenize(value, tokens);
-        m_classNames.clear();
+
+        GCAtomicTightVector<AtomicString> newClassNames;
+        newClassNames.resize(tokens.size());
         for (size_t i = 0; i < tokens.size(); i++) {
-            m_classNames.push_back(
-                AtomicString::createAtomicString(starfish(), tokens[i]));
+            newClassNames[i] =
+                AtomicString::createAtomicString(starfish(), tokens[i]);
         }
 
-        // propagate invalidate nodeList cache(getElementsByClassName) damage to
-        // parent tree
-        Node* parent = parentNode();
-        while (parent) {
-            parent->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
-            parent = parent->parentNode();
+        bool hasSameContent = true;
+
+        if (newClassNames.size() != m_classNames.size()) {
+            hasSameContent = false;
+        } else {
+            for (size_t i = 0; i < newClassNames.size(); i++) {
+                if (newClassNames[i] != m_classNames[i]) {
+                    hasSameContent = false;
+                    break;
+                }
+            }
         }
 
-        setNeedsStyleRecalc(StyleChangeReason::ClassChange);
+        if (!hasSameContent) {
+            m_classNames = std::move(newClassNames);
+
+            // propagate invalidate nodeList cache(getElementsByClassName)
+            // damage to
+            // parent tree
+            Node* parent = parentNode();
+            while (parent) {
+                parent
+                    ->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
+                parent = parent->parentNode();
+            }
+
+            setNeedsStyleRecalc(StyleChangeReason::ClassChange);
+        }
     } else if (name == ss->m_style) {
         if (!value->isEmpty() &&
             !document()->contentSecurityPolicy()->allowInline(

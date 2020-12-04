@@ -3170,7 +3170,7 @@ public:
         PseudoElementType pseudoType = PseudoElementType::PseudoElementNone);
     Match matchSelector(Element* element, AtomicString elementName,
                         AtomicString elementId,
-                        const GCVector<AtomicString>& elementClasses,
+                        const GCAtomicTightVector<AtomicString>& elementClasses,
                         const CSSSelectorList& selectorList, unsigned idx,
                         MatchResult& result, bool isQueryingSelector = false);
     void collectMatchingRulesFromAuthorSheet(
@@ -3180,7 +3180,8 @@ public:
         const GCUnorderedMultiMap<
             AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
         CSSSelector::Type type, Element* element, AtomicString elementName,
-        AtomicString elementId, const GCVector<AtomicString>& elementClasses,
+        AtomicString elementId,
+        const GCAtomicTightVector<AtomicString>& elementClasses,
         MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
         PseudoElementType pseudoElementType);
 
@@ -3221,18 +3222,17 @@ protected:
                           ResourceURL* origin, ComputedStyle*& style,
                           ComputedStyle* parentStyle, bool isImportant = false);
 
-    Match matchForRelation(Element* element, AtomicString elementName,
-                           AtomicString elementId,
-                           const GCVector<AtomicString>& elementClasses,
-                           const CSSSelectorList& selectorList,
-                           CSSSelector::RelationType relation, unsigned idx,
-                           MatchResult& result);
+    Match matchForRelation(
+        Element* element, AtomicString elementName, AtomicString elementId,
+        const GCAtomicTightVector<AtomicString>& elementClasses,
+        const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
+        unsigned idx, MatchResult& result);
 
-    ALWAYS_INLINE bool checkOne(Element* element, AtomicString elementName,
-                                AtomicString elementId,
-                                const GCVector<AtomicString>& elementClasses,
-                                CSSSelector* selector, MatchResult& result,
-                                bool isQueryingSelector = false);
+    ALWAYS_INLINE bool checkOne(
+        Element* element, AtomicString elementName, AtomicString elementId,
+        const GCAtomicTightVector<AtomicString>& elementClasses,
+        CSSSelector* selector, MatchResult& result,
+        bool isQueryingSelector = false);
     bool checkPseudoClass(Element* element, CSSPseudoSelector* selector,
                           MatchResult& result);
     bool checkPseudoElement(Element* element, CSSPseudoSelector* selector,

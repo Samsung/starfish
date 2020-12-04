@@ -348,6 +348,24 @@ public:
         return std::min(result, 1.0f);
     }
 
+    uint64_t remainTime(uint64_t tickCount) const
+    {
+        if (m_isInForwardsFillMode) {
+            return 0;
+        }
+
+        if (!m_isRunning) {
+            return m_durationMs - m_gapTimeMs;
+        }
+
+        if (tickCount < (m_startTimeMs + m_delayMs)) {
+            return m_durationMs;
+        }
+
+        uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
+        return m_durationMs - timeDiff;
+    }
+
     bool isForward()
     {
         return m_isForward;
@@ -910,6 +928,8 @@ public:
         return *m_activeAnimations;
     }
 
+    void iterateAnimationTasks(void (*fn)(ActiveAnimationTask*, void*), void*);
+
     void dispose()
     {
         if (m_activeTransitions.size() > 0) {
@@ -997,6 +1017,8 @@ public:
             iter->second.push_back(task);
         }
     }
+
+    uint64_t transformOpacityAnimationRemainTime();
 
     void checkActiveExecutorInWebView();
 

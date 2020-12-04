@@ -142,9 +142,9 @@ ADD_DEPENDENCIES (${STARFISH_OBJECT_LIBRARY} ${STARFISH_DEPENDENCIES})
 IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET(COPY_IMAGE_DECODER copyImageDecoder)
     ADD_CUSTOM_TARGET(copyImageDecoder
-        COMMAND cp ./third_party/libjpeg-turbo/*.so out_tizen/prod_tv/release/lib/
-        COMMAND cp ./third_party/libpng/.libs/*.so out_tizen/prod_tv/release/lib/
-        COMMAND cp ./third_party/giflib/*.so out_tizen/prod_tv/release/lib/
+        COMMAND cp ${STARFISH_ROOT}/third_party/libjpeg-turbo/*.so ${STARFISH_ROOT}/out_tizen/prod_tv/release/lib/
+        COMMAND cp ${STARFISH_ROOT}/third_party/libpng/.libs/*.so ${STARFISH_ROOT}/out_tizen/prod_tv/release/lib/
+        COMMAND cp ${STARFISH_ROOT}/third_party/giflib/*.so ${STARFISH_ROOT}/out_tizen/prod_tv/release/lib/
     )
     ADD_DEPENDENCIES (${STARFISH_OBJECT_LIBRARY} ${COPY_IMAGE_DECODER})
 ENDIF()

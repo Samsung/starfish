@@ -550,6 +550,7 @@ IF (${HOST} STREQUAL "tizen")
     )
     IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
         SET (STARFISH_INCLUDE_DIRS_CUSTOM
+            ${STARFISH_INCLUDE_DIRS_CUSTOM}
             ${THIRD_PARTY_ROOT}/giflib
             ${THIRD_PARTY_ROOT}/libjpeg-turbo
             ${THIRD_PARTY_ROOT}/libpng

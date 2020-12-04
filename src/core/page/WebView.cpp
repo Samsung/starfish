@@ -230,7 +230,7 @@ static void rtDoTest(Document* document)
 #endif
 
 #ifndef STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT
-#define STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT 25
+#define STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT 10
 #endif
 size_t WebView::g_fillingGraphicsBufferTileFrameTimeLimitInMS =
     STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT;

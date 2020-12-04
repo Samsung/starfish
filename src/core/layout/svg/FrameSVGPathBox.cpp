@@ -239,7 +239,8 @@ GradientDrawingInfo* FrameSVGPathBox::makeGradientDrawingInfo(String* url)
         }
 
         LayoutRect fRect = frameRect();
-        Unit::Rect rect = Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
+        Unit::Rect rect =
+            Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
         GradientDrawingInfo* info = nullptr;
         if (matchingSvg->isSVGLinearGradientElement()) {
             info = new GradientDrawingInfo(GradientType::LinearGradient, rect);
