@@ -731,22 +731,19 @@ void ActiveTransformAnimationTask::resolveTransformValues()
     StyleTransformDataGroup* toTransfromStyle =
         currentAnimatedToValue()->getTransformData();
 
-    if (m_shouldUseDecompositing) {
-        if (frm->isTransformable()) {
-            m_decomposedFrom =
-                decomposing2DMatrix(ComputedStyle::transformToMatrix(
-                    fromTransfromStyle, frm->asFrameBox()->width(),
-                    frm->asFrameBox()->height(), frm));
-            m_decomposedTo =
-                decomposing2DMatrix(ComputedStyle::transformToMatrix(
-                    toTransfromStyle, frm->asFrameBox()->width(),
-                    frm->asFrameBox()->height(), frm));
-        } else {
-            m_decomposedFrom = m_decomposedTo =
-                decomposing2DMatrix(SkMatrix::I());
-        }
-        matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+    if (frm->isTransformable()) {
+        m_decomposedFrom = decomposing2DMatrix(ComputedStyle::transformToMatrix(
+            fromTransfromStyle, frm->asFrameBox()->width(),
+            frm->asFrameBox()->height(), frm));
+        m_decomposedTo = decomposing2DMatrix(ComputedStyle::transformToMatrix(
+            toTransfromStyle, frm->asFrameBox()->width(),
+            frm->asFrameBox()->height(), frm));
     } else {
+        m_decomposedFrom = m_decomposedTo = decomposing2DMatrix(SkMatrix::I());
+    }
+    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
+
+    if (!m_shouldUseDecompositing) {
         STARFISH_ASSERT(frm->isTransformable());
 
         // we need to clone transform values for keeping original values
