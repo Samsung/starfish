@@ -2192,16 +2192,14 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                             ->browsingContext()
                                             ->styleResolveStartTick())) {
                                     auto fromValue =
-                                        task->currentAnimatedFromValue();
+                                        ((ActiveTransformAnimationTask*)task)
+                                            ->decomposedFrom();
                                     auto toValue =
-                                        task->currentAnimatedToValue();
-                                    if (fromValue->getMatrix().getTranslateX() <
-                                        toValue->getMatrix().getTranslateX()) {
-                                        *d->wEarlyPaintingTextureEnd =
-                                            *d->wEarlyPaintingTextureEnd + 1;
-                                    }
-                                    if (fromValue->getMatrix().getTranslateX() >
-                                        toValue->getMatrix().getTranslateX()) {
+                                        ((ActiveTransformAnimationTask*)task)
+                                            ->decomposedTo();
+
+                                    if (fromValue.translateX <
+                                        toValue.translateX) {
                                         if (*d->wEarlyPaintingTextureStart !=
                                             0) {
                                             *d->wEarlyPaintingTextureStart =
@@ -2209,19 +2207,25 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                                 1;
                                         }
                                     }
-                                    if (fromValue->getMatrix().getTranslateY() <
-                                        toValue->getMatrix().getTranslateY()) {
-                                        *d->hEarlyPaintingTextureEnd =
-                                            *d->hEarlyPaintingTextureEnd + 1;
+                                    if (fromValue.translateX >
+                                        toValue.translateX) {
+                                        *d->wEarlyPaintingTextureEnd =
+                                            *d->wEarlyPaintingTextureEnd + 1;
                                     }
-                                    if (fromValue->getMatrix().getTranslateY() >
-                                        toValue->getMatrix().getTranslateY()) {
+
+                                    if (fromValue.translateY <
+                                        toValue.translateY) {
                                         if (*d->hEarlyPaintingTextureStart !=
                                             0) {
                                             *d->hEarlyPaintingTextureStart =
                                                 *d->hEarlyPaintingTextureStart -
                                                 1;
                                         }
+                                    }
+                                    if (fromValue.translateY >
+                                        toValue.translateY) {
+                                        *d->hEarlyPaintingTextureEnd =
+                                            *d->hEarlyPaintingTextureEnd + 1;
                                     }
                                 }
                             },

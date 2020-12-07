@@ -645,6 +645,16 @@ public:
     virtual void attachToElement(ComputedStyle* style) override;
     virtual void detachFromElement(ComputedStyle* style) override;
 
+    const MatrixDecomposed2D& decomposedFrom()
+    {
+        return m_decomposedFrom;
+    }
+
+    const MatrixDecomposed2D& decomposedTo()
+    {
+        return m_decomposedTo;
+    }
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         ActiveAnimationTask::fillGCDescriptor(desc);
