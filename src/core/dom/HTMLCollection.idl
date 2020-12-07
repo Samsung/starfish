@@ -6,4 +6,7 @@ interface HTMLCollection {
   readonly attribute unsigned long length;
   getter Element? item(unsigned long index);
   [NotEnumerable] getter Element? namedItem(DOMString name);
+  // HTMLCollection must be iterable like NodeList
+  // NOTE : This isn't in the standard IDL, but in most web-engines HTMLCollection is iterable.
+  iterable<Node>;
 };
