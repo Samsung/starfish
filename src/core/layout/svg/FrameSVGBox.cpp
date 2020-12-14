@@ -23,6 +23,7 @@
 #include "core/dom/Node.h"
 #include "FrameSVGBox.h"
 #include "FrameSVGClipPathBox.h"
+#include "FrameSVGMaskBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -144,11 +145,20 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
             }
         }
     }
+
+    if (m_hasMask && node()->isSVGElement() &&
+        node()->asSVGElement()->maskElement()) {
+        Frame* maskFrame = node()->asSVGElement()->maskElement()->frame();
+        if (maskFrame && maskFrame->isFrameSVGMaskBox()) {
+            maskFrame->asFrameSVGMaskBox()->applyMask(ctx, x(), y(), width(),
+                                                      height());
+        }
+    }
+
     ctx.m_canvas->save();
     paintSVG(ctx);
     ctx.m_canvas->restore();
     paintChildrenWith(ctx);
-
     ctx.m_canvas->restore();
 }
 

@@ -98,6 +98,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::Clip;
             }
             break;
+        case 'm':
+            if (memcmp(data, "mask", 4) == 0) {
+                return CSSStyleValuePair::KeyKind::Mask;
+            }
+            break;
         }
         break;
     case 5:

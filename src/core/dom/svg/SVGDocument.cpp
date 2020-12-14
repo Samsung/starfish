@@ -37,6 +37,8 @@
 #include "core/dom/svg/SVGLinearGradientElement.h"
 #include "core/dom/svg/SVGStopElement.h"
 #include "core/dom/svg/SVGClipPathElement.h"
+#include "core/dom/svg/SVGMaskElement.h"
+#include "core/dom/svg/SVGTSpanElement.h"
 
 namespace Starfish {
 
@@ -83,6 +85,10 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGClipPathElement(document, qname);
     } else if (str->m_svgscriptTagName == localName) {
         return new SVGScriptElement(document, qname);
+    } else if (str->m_svgmaskTagName == localName) {
+        return new SVGMaskElement(document, qname);
+    } else if (str->m_svgtspanTagName == localName) {
+        return new SVGTSpanElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

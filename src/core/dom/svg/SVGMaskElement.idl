@@ -1,0 +1,10 @@
+// https://drafts.fxtf.org/css-masking-1/#InterfaceSVGMaskElement
+[Exposed=Window]
+interface SVGMaskElement : SVGElement {
+  [Unimplemented] readonly attribute SVGAnimatedEnumeration maskUnits;
+  [Unimplemented] readonly attribute SVGAnimatedEnumeration maskContentUnits;
+  [Unimplemented] readonly attribute SVGAnimatedLength x;
+  [Unimplemented] readonly attribute SVGAnimatedLength y;
+  [Unimplemented] readonly attribute SVGAnimatedLength width;
+  [Unimplemented] readonly attribute SVGAnimatedLength height;
+};

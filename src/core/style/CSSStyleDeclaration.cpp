@@ -1486,6 +1486,12 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
         bool hasSepChar = false;
         if (seperatorCount > 0 && !inParenthesis) {
             hasSepChar = seperatorContains(seperator, seperatorCount, data[i]);
+            // Added to cover the following cases.
+            // "1.37916809e-13 58.2301959 58.2301959 58.2301959 58.2301959 0
+            // 1.37916809e-13 0"
+            if (data[i] == '-' && i >= 1 && data[i - 1] == 'e') {
+                hasSepChar = false;
+            }
         }
 
         if ((!inParenthesis && !inQuotes &&
@@ -3976,6 +3982,19 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
     r7.setValueList(fillModes);
     r7.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::AnimationFillMode, r7);
+}
+
+String* CSSStyleDeclaration::Mask()
+{
+    // Mask is only supported as SVG attribute.
+    return nullptr;
+}
+
+void CSSStyleDeclaration::setMask(const char* value, size_t length,
+                                  bool isImportant)
+{
+    // Mask is only supported as SVG attribute.
+    STARFISH_ASSERT(value != nullptr);
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(

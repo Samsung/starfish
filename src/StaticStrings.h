@@ -178,7 +178,10 @@ namespace Starfish {
     F(lineargradient)                  \
     F(stop)                            \
     F(use)                             \
-    F(clippath)
+    F(clippath)                        \
+    F(mask)                            \
+    F(tspan)
+
 // FIXME: current parser converts linearGradient to lineargradient
 // Remove F(lineargradient) after fixing this issue
 
@@ -608,6 +611,9 @@ public:
     QualifiedName m_xlinkFrom;
     QualifiedName m_xlinkTo;
     QualifiedName m_close;
+    QualifiedName m_mask;
+    QualifiedName m_tspan;
+
 #ifdef STARFISH_ENABLE_WEBRTC
     QualifiedName m_srcObject;
     QualifiedName m_track;

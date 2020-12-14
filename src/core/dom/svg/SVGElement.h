@@ -129,6 +129,11 @@ public:
         return true;
     }
 
+    virtual bool needsMaskAttributes()
+    {
+        return true;
+    }
+
     virtual bool isRenderableElement()
     {
         // https://svgwg.org/svg2-draft/render.html#TermRenderableElement
@@ -144,15 +149,24 @@ public:
 
     bool hasClipPath()
     {
-        return style()->clipPath() != String::emptyString;
+        return !style()->clipPath()->equals(String::emptyString);
     }
+
+    bool hasMask()
+    {
+        return !style()->mask()->equals(String::emptyString);
+    }
+
     SVGElement* clipPathElement();
+
+    SVGElement* maskElement();
 
     SVGElement* getSVGElementById(String* id);
 
 protected:
     NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
     SVGElement* m_clipPathElement;
+    SVGElement* m_maskElement;
 };
 } // namespace Starfish
 

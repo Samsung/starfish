@@ -333,6 +333,7 @@ void Canvas::save()
         state->m_imageSmoothingQuality = lastState->m_imageSmoothingQuality;
         state->m_canvasFontState = lastState->m_canvasFontState;
         state->m_shadowData = lastState->m_shadowData;
+        state->m_maskPattern = nullptr;
     }
     m_state.push_back(state);
 }

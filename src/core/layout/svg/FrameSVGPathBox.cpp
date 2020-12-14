@@ -185,7 +185,6 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
     ctx.m_canvas->setLineWidth(
         style()->strokeWidth().specifiedValue(cb->width(), this));
     float opacity = style()->opacity();
-
     GradientDrawingInfo* info = nullptr;
     Unit::Color fillColor;
     if (style()->fill()->hasUrl()) {

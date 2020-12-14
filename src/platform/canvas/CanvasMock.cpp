@@ -346,6 +346,10 @@ public:
     {
     }
 
+    virtual void maskNativeImage(NativeImageData* data,
+                                 const Unit::Rect& dst) override
+    {
+    }
     virtual void postMatrix(const SkMatrix& matrix)
     {
     }

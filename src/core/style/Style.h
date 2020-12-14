@@ -789,7 +789,8 @@ class CSSFilterFunction;
     F(Animation, animation, "animation")                             \
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")                                            \
-    F(ListStyle, listStyle, "list-style")
+    F(ListStyle, listStyle, "list-style")                            \
+    F(Mask, mask, "mask")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F) \
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)     \
@@ -2508,6 +2509,8 @@ public:
     bool updateValueUnitAnimationDirection(const CSSTokenValue& value);
     bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
     bool updateValueUnitAnimationFillMode(const CSSTokenValue& value);
+
+    bool updateValueMask(Document* document, const CSSTokenVector& tokens);
 
 protected:
     KeyKind m_keyKind : 8;

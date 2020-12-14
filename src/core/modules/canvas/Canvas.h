@@ -151,6 +151,9 @@ public:
     bool m_hasNonInvertableCTM;
     CanvasShadowData m_shadowData;
 
+    void* m_maskPattern;
+    SkMatrix m_maskTM;
+
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
@@ -222,12 +225,6 @@ public:
     virtual size_t bufferWidth() = 0;
     virtual size_t bufferHeight() = 0;
     virtual size_t bufferStride() = 0;
-
-#if defined(STARFISH_ENABLE_TEST)
-    virtual void dump(const char* path)
-    {
-    }
-#endif
 
     virtual void attachPlatformExternalBuffer(void* buffer)
     {
@@ -578,7 +575,16 @@ public:
     {
         return m_renderTargetInfo;
     }
-
+    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+#if defined(STARFISH_ENABLE_TEST)
+    virtual void dump(const char* path)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+#endif
 protected:
     void drawFillRectShadow(float x, float y, float w, float h);
     void drawStrokeRectShadow(float x, float y, float w, float h);

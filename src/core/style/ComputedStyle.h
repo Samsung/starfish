@@ -155,7 +155,7 @@ public:
         GridColumnGap,
         GridTemplateAreas,
 
-        WillChange,
+        WillChange
     };
 
     union RareComputedStyleValue {
@@ -542,7 +542,6 @@ public:
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
-
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -880,6 +879,11 @@ public:
     void setClipPath(String* url)
     {
         *m_rareComputedStyleData.ensureClipPath() = url;
+    }
+
+    void setMask(String* url)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setImage(url);
     }
 
     void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
@@ -3190,6 +3194,26 @@ public:
             return clipPathValue.getValue();
         }
         return String::emptyString;
+    }
+
+    String* mask()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return String::emptyString;
+        }
+
+        PositionedMaskData* positionedMask =
+            m_rareComputedStyleData.positionedMask();
+        if (positionedMask) {
+            return positionedMask->image();
+        }
+
+        return String::emptyString;
+    }
+
+    bool hasMask()
+    {
+        return mask() != String::emptyString;
     }
 
     bool hasZeroClipRect()
