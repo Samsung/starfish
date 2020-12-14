@@ -122,6 +122,7 @@ public:
     String* Flex();
     String* Outline();
     String* ListStyle();
+    String* Mask();
     String* customProperty(String* key);
 #define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_GETTER)
@@ -162,6 +163,7 @@ public:
     void setFlex(const char* value, size_t len, bool isImportant);
     void setOutline(const char* value, size_t len, bool isImportant);
     void setListStyle(const char* value, size_t len, bool isImportant);
+    void setMask(const char* value, size_t len, bool isImportant);
     void setCustomProperty(String* key, String* value);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \

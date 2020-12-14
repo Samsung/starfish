@@ -576,6 +576,25 @@ public:
     virtual void restore() override
     {
         checkError();
+        if (lastState()->m_maskPattern) {
+            cairo_pop_group_to_source(m_canvas);
+
+            cairo_matrix_t matrix;
+            cairo_get_matrix(m_canvas, &matrix);
+
+            {
+                cairo_matrix_t maskMatrix;
+                SkMatrix matrix = lastState()->m_maskTM;
+                cairo_matrix_init(&maskMatrix, matrix.getScaleX(),
+                                  matrix.getSkewY(), matrix.getSkewX(),
+                                  matrix.getScaleY(), matrix.getTranslateX(),
+                                  matrix.getTranslateY());
+                cairo_set_matrix(m_canvas, &maskMatrix);
+            }
+            cairo_mask(m_canvas, (cairo_pattern_t*)lastState()->m_maskPattern);
+            cairo_pattern_destroy((cairo_pattern_t*)lastState()->m_maskPattern);
+            cairo_set_matrix(m_canvas, &matrix);
+        }
         Canvas::restore();
         cairo_restore(m_canvas);
     }
@@ -1329,6 +1348,33 @@ public:
             drawImageShadow(data, dst);
         }
         drawImageInner(data, dst, imageRenderingMode);
+    }
+
+    virtual void maskNativeImage(NativeImageData* data,
+                                 const Unit::Rect& dst) override
+    {
+        cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
+        if (image) {
+            lastState()->m_maskPattern =
+                cairo_pattern_create_for_surface(image);
+            cairo_matrix_t matrix;
+            cairo_get_matrix(m_canvas, &matrix);
+            {
+                SkMatrix m = SkMatrix::I();
+                m.set(0, matrix.xx);
+                m.set(1, matrix.yx);
+                m.set(2, matrix.x0);
+                m.set(3, matrix.xy);
+                m.set(4, matrix.yy);
+                m.set(5, matrix.y0);
+                lastState()->m_maskTM = m;
+            }
+            cairo_matrix_init_translate(&matrix, -dst.x(), -dst.y());
+            cairo_pattern_set_matrix(
+                (cairo_pattern_t*)lastState()->m_maskPattern, &matrix);
+
+            cairo_push_group(m_canvas);
+        }
     }
 
     virtual void drawImageInner(NativeImageData* data, const Unit::Rect& src,

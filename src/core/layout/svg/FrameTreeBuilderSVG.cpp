@@ -40,6 +40,7 @@
 #include "core/layout/svg/FrameSVGClipPathBox.h"
 #include "core/layout/svg/FrameSVGInvisibleBox.h"
 #include "core/layout/svg/FrameSVGUseBox.h"
+#include "core/layout/svg/FrameSVGMaskBox.h"
 #include "core/layout/FrameBlockBox.h"
 
 #include "core/dom/Document.h"
@@ -95,11 +96,6 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         currentFrame = new FrameSVGLineBox(svgElement);
     } else if (svgElement->isSVGTextElement()) {
         shouldContinue = true;
-        auto txt = svgElement->textContent();
-        String* content = String::emptyString;
-        if (txt.hasValue()) {
-            content = txt.getValue();
-        }
         currentFrame = new FrameSVGTextBox(svgElement);
 
         ComputedStyle* style = new ComputedStyle(svgElement->style());
@@ -110,16 +106,27 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         FrameBlockBox* box = new FrameBlockBox(nullptr, style);
         currentFrame->appendChild(box);
 
-        Text* textNode = new Text(svgElement->document(), content);
-        ComputedStyle* textStyle = new ComputedStyle(style);
-        textStyle->loadResources(svgElement);
-        textStyle->arrangeStyleValues(svgElement->style(), svgElement);
-        textStyle->setColor(style->fill()->color());
-        textNode->setStyle(textStyle);
+        String* content = String::emptyString;
+        for (Node* child = svgElement->firstChild(); child != nullptr;
+             child = child->nextSibling()) {
+            if (child->isSVGTSpanElement() && (!child->style()->x().isAuto() ||
+                                               !child->style()->y().isAuto())) {
+                buildSVGFrameTree(child->asSVGElement(), currentFrame);
+            } else if (child->isText() || child->isElement()) {
+                STARFISH_ASSERT(child->textContent().hasValue());
+                content = child->textContent().getValue();
+                Text* textNode = new Text(svgElement->document(), content);
+                ComputedStyle* textStyle = new ComputedStyle(style);
+                textStyle->loadResources(svgElement);
+                textStyle->arrangeStyleValues(svgElement->style(), svgElement);
+                textStyle->setColor(style->fill()->color());
+                textNode->setStyle(textStyle);
 
-        auto ft = new FrameText(textNode, textStyle);
-        textNode->setFrame(ft);
-        box->appendChild(ft);
+                auto ft = new FrameText(textNode, textStyle);
+                textNode->setFrame(ft);
+                box->appendChild(ft);
+            }
+        }
     } else if (svgElement->isSVGDefsElement()) {
         shouldContinue = true;
         shouldVisitChild = true;
@@ -148,6 +155,10 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
                 svgElement->clipPathElement();
                 currentFrame->asFrameSVGBox()->markHasClipPath();
             }
+            if (svgElement->hasMask()) {
+                svgElement->maskElement();
+                currentFrame->asFrameSVGBox()->markHasMask();
+            }
 
             svgElement->clearNeedsFrameTreeBuild();
             svgElement->clearChildNeedsFrameTreeBuild();
@@ -157,11 +168,52 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
         shouldContinue = true;
         shouldVisitChild = true;
         currentFrame = new FrameSVGClipPathBox(svgElement);
+    } else if (svgElement->isSVGMaskElement()) {
+        shouldContinue = true;
+        shouldVisitChild = true;
+        currentFrame = new FrameSVGMaskBox(svgElement);
+    } else if (svgElement->isSVGTSpanElement()) {
+        shouldContinue = true;
+        auto txt = svgElement->textContent();
+        String* content = String::emptyString;
+        if (txt.hasValue()) {
+            content = txt.getValue();
+        }
+        currentFrame = new FrameSVGTextBox(svgElement);
+
+        ComputedStyle* style = new ComputedStyle(svgElement->style());
+        style->setDisplay(DisplayValue::BlockDisplayValue);
+        style->loadResources(svgElement);
+        style->arrangeStyleValues(svgElement->style(), svgElement);
+        style->setWhiteSpace(WhiteSpaceValue::NoWrapWhiteSpaceValue);
+        FrameBlockBox* box = new FrameBlockBox(nullptr, style);
+        currentFrame->appendChild(box);
+
+        Text* textNode = new Text(svgElement->document(), content);
+        ComputedStyle* textStyle = new ComputedStyle(style);
+        textStyle->loadResources(svgElement);
+        textStyle->arrangeStyleValues(svgElement->style(), svgElement);
+        textStyle->setColor(style->fill()->color());
+        textNode->setStyle(textStyle);
+
+        auto ft = new FrameText(textNode, textStyle);
+        textNode->setFrame(ft);
+        box->appendChild(ft);
     }
+
     // update clipPath element
     if (svgElement->hasClipPath()) {
         svgElement->clipPathElement();
-        currentFrame->asFrameSVGBox()->markHasClipPath();
+        if (currentFrame->isFrameSVGBox()) {
+            currentFrame->asFrameSVGBox()->markHasClipPath();
+        }
+    }
+
+    if (svgElement->hasMask()) {
+        svgElement->maskElement();
+        if (currentFrame->isFrameSVGBox()) {
+            currentFrame->asFrameSVGBox()->markHasMask();
+        }
     }
 
     svgElement->clearNeedsFrameTreeBuild();

@@ -3955,6 +3955,28 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
+        case CSSStyleValuePair::KeyKind::Mask:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setMask(String::emptyString);
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+                style->setMask(parentStyle->mask());
+            } else {
+                if (cssValues[k].valueKind() ==
+                    CSSStyleValuePair::ValueKind::None) {
+                    style->setMask(String::emptyString);
+                } else if (cssValues[k].valueKind() ==
+                           CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    style->setMask(cssValues[k].urlStringValue());
+                } else {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                }
+            }
+            break;
         case CSSStyleValuePair::KeyKind::MaskImage:
             if ((cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Initial) ||
@@ -13966,6 +13988,22 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
     setFontFaceSrcData(src);
 
     return true;
+}
+
+bool CSSStyleValuePair::updateValueMask(Document* document,
+                                        const CSSTokenVector& tokens)
+{
+    // none | <image> | <url>
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (updateValueUnitUrlOrNone(value)) {
+        return true;
+    }
+
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueMaskImage(Document* document,

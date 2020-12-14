@@ -671,6 +671,11 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_close =
         QualifiedName(m_xlink, m_xlinkNamespaceURI,
                       AtomicString::createAtomicString(starfish, "close"));
+    m_mask = m_compositionend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "mask"));
+    m_tspan = m_compositionend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "tspan"));
+
 #ifdef STARFISH_ENABLE_WEBRTC
     m_srcObject =
         QualifiedName(AtomicString::createAtomicString(starfish, "srcObject"));

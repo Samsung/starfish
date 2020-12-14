@@ -32,6 +32,7 @@ public:
     FrameSVGBox(Node* node)
         : FrameBox(node, nullptr)
         , m_hasClipPath(false)
+        , m_hasMask(false)
     {
     }
 
@@ -62,6 +63,10 @@ public:
     void markHasClipPath()
     {
         m_hasClipPath = true;
+    }
+    void markHasMask()
+    {
+        m_hasMask = true;
     }
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
@@ -96,6 +101,7 @@ protected:
 
     FrameTreeItemModel m_treeItemModel;
     bool m_hasClipPath;
+    bool m_hasMask;
 };
 }
 

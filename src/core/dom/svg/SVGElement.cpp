@@ -32,6 +32,7 @@ SVGElement::SVGElement(Document* document, const QualifiedName& qname)
     , m_preserveAspectRatioValue(
           NativeImageData::PreserveAspectRatioValue::None)
     , m_clipPathElement(nullptr)
+    , m_maskElement(nullptr)
 {
     STARFISH_ASSERT(namespaceURI().hasValue());
     STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
@@ -155,6 +156,13 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (isRenderableElement()) {
         if (ss->m_display == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsPainting();
+        }
+    }
+
+    if (needsMaskAttributes()) {
+        if (ss->m_mask == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
         }
@@ -362,6 +370,23 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
     }
+
+    if (needsMaskAttributes()) {
+        String* maskStr =
+            getAttributeOrEmpty(starfish()->staticStrings()->m_mask);
+
+        if (maskStr->length()) {
+            pair.setKeyKind(CSSStyleValuePair::Mask);
+
+            auto str = maskStr->toUTF8NonGCString();
+            CSSTokenVector tokens;
+            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
+                                                  str.length());
+            if (pair.updateValueMask(document(), tokens)) {
+                cssValues.push_back(pair);
+            }
+        }
+    }
 }
 
 int SVGElement::tabIndex()
@@ -398,6 +423,34 @@ SVGElement* SVGElement::clipPathElement()
         }
     }
     return m_clipPathElement;
+}
+
+SVGElement* SVGElement::maskElement()
+{
+    if (!hasMask() || !needsMaskAttributes()) {
+        return nullptr;
+    }
+
+    if (!m_maskElement) {
+        String* maskStr = style()->mask();
+        ResourceURL* maskURL;
+        // In case that SVG element is loaded as an image resource through
+        // MockHTMLIFrameElement. At this case, we can find baseURI at its
+        // referrerURL.
+        if (document()->baseURL()->isDataURL()) {
+            maskURL = new ResourceURL(maskStr, document()->referrer());
+        } else {
+            maskURL = new ResourceURL(maskStr, document()->baseURI());
+        }
+        String* id = maskURL->getFragmentIdValue();
+        if (!id->isEmpty()) {
+            Element* maskElement = document()->getElementById(id);
+            if (maskElement) {
+                m_maskElement = (SVGElement*)maskElement;
+            }
+        }
+    }
+    return m_maskElement;
 }
 
 SVGElement* SVGElement::getSVGElementById(String* id)
