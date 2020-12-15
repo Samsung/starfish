@@ -285,6 +285,11 @@ Compositor* WindowImplGL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+    {
+        m_renderingPrepareCallback();
+    }
+#endif
     return Compositor::create3D(webView(), m_compostiorContext);
 }
 

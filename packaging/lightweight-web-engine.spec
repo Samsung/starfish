@@ -445,6 +445,13 @@ ninja starfish.shared_library
 ninja starfish.executable
 %endif
 
+%if "%{rpm}" == "flutter"
+# For Cairo
+rm -f CMakeCache.txt
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=flutter -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.mobile -G Ninja
+ninja starfish.shared_library
+%endif
+
 
 ##############################################
 ## Install

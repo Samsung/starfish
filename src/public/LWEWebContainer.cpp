@@ -501,7 +501,7 @@ void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
 void WebContainer::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB)
+#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
@@ -524,7 +524,7 @@ void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
         cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB)
+#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
