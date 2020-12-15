@@ -2181,9 +2181,13 @@ public:
 
     void scissor(float x, float y, float width, float height)
     {
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+        glScissor(x, y, width, height);
+#else
         glScissor(x,
                   (float)m_webView->platformWindow()->height() - (y + height),
                   width, height);
+#endif
     }
 
     void mapPointsByMatrix(float& x, float& y, const SkMatrix& m)
@@ -2461,6 +2465,15 @@ public:
                     mapLogicalScreenPointsToScreen(maxX, maxY);
 
                     float hw = 2.f / m_webView->platformWindow()->width();
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+                    float hh = 2.f / m_webView->platformWindow()->height();
+                    float position[] = {
+                        minX * hw - 1, minY * hh - 1, // V1
+                        minX * hw - 1, maxY * hh - 1, // V2
+                        maxX * hw - 1, minY * hh - 1, // V3
+                        maxX * hw - 1, maxY * hh - 1, // V4
+                    };
+#else
                     float hh = -2.f / m_webView->platformWindow()->height();
                     float position[] = {
                         minX * hw - 1, minY * hh + 1, // V1
@@ -2468,6 +2481,7 @@ public:
                         maxX * hw - 1, minY * hh + 1, // V3
                         maxX * hw - 1, maxY * hh + 1, // V4
                     };
+#endif
 
                     glVertexAttribPointer(
                         m_compositorContext->m_rectShaderProgramPosition, 2,
@@ -2516,6 +2530,17 @@ public:
                                                        trianglePoints[5]);
 
                         float hw = 2.f / m_webView->platformWindow()->width();
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+                        float hh = 2.f / m_webView->platformWindow()->height();
+                        float position[] = {
+                            trianglePoints[0] * hw - 1,
+                            trianglePoints[1] * hh - 1, // V1
+                            trianglePoints[2] * hw - 1,
+                            trianglePoints[3] * hh - 1, // V2
+                            trianglePoints[4] * hw - 1,
+                            trianglePoints[5] * hh - 1, // V3
+                        };
+#else
                         float hh = -2.f / m_webView->platformWindow()->height();
                         float position[] = {
                             trianglePoints[0] * hw - 1,
@@ -2525,7 +2550,7 @@ public:
                             trianglePoints[4] * hw - 1,
                             trianglePoints[5] * hh + 1, // V3
                         };
-
+#endif
                         glVertexAttribPointer(
                             m_compositorContext->m_rectShaderProgramPosition, 2,
                             GL_FLOAT, false, 0, position);
@@ -2541,20 +2566,30 @@ public:
                 }
             }
         } else {
-            float hw = 2.f / m_webView->platformWindow()->width();
-            float hh = -2.f / m_webView->platformWindow()->height();
-
             mapLogicalScreenPointsToScreen(dest[0][0], dest[0][1]);
             mapLogicalScreenPointsToScreen(dest[1][0], dest[1][1]);
             mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
             mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
 
+            float hw = 2.f / m_webView->platformWindow()->width();
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+            float hh = 2.f / m_webView->platformWindow()->height();
+            float data[] = {
+                dest[0][0] * hw - 1, dest[0][1] * hh - 1, // V1
+                dest[1][0] * hw - 1, dest[1][1] * hh - 1, // V2
+                dest[2][0] * hw - 1, dest[2][1] * hh - 1, // V3
+                dest[3][0] * hw - 1, dest[3][1] * hh - 1  // V4
+            };
+
+#else
+            float hh = -2.f / m_webView->platformWindow()->height();
             float data[] = {
                 dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
                 dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
                 dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
                 dest[3][0] * hw - 1, dest[3][1] * hh + 1  // V4
             };
+#endif
 
             m_compositorContext->rectProgram();
 
@@ -2863,8 +2898,22 @@ public:
         mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
 
         float hw = 2.f / screenWidth;
-        float hh = -2.f / screenHeight;
 
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+        float hh = 2.f / screenHeight;
+        position[0] = dest[0][0] * hw - 1;
+        position[1] = dest[0][1] * hh - 1;
+
+        position[2] = dest[1][0] * hw - 1;
+        position[3] = dest[1][1] * hh - 1;
+
+        position[4] = dest[2][0] * hw - 1;
+        position[5] = dest[2][1] * hh - 1;
+
+        position[6] = dest[3][0] * hw - 1;
+        position[7] = dest[3][1] * hh - 1;
+#else
+        float hh = -2.f / screenHeight;
         position[0] = dest[0][0] * hw - 1;
         position[1] = dest[0][1] * hh + 1;
 
@@ -2876,6 +2925,7 @@ public:
 
         position[6] = dest[3][0] * hw - 1;
         position[7] = dest[3][1] * hh + 1;
+#endif
     }
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst) override
@@ -2967,8 +3017,6 @@ public:
                 if (result.size()) {
                     if (lastState.matrixStaysInRect && result.size() == 1 &&
                         result[0].size() == 4) {
-                        scissorClippingEnabled = true;
-
                         float minX = (float)result[0][0].X,
                               minY = (float)result[0][0].Y,
                               maxX = (float)result[0][0].X,
@@ -2985,6 +3033,7 @@ public:
                             Unit::Rect(minX, minY, maxX - minX, maxY - minY);
                         glEnable(GL_SCISSOR_TEST);
                         scissor(minX, minY, maxX - minX, maxY - minY);
+                        scissorClippingEnabled = true;
                     } else {
                         std::vector<std::vector<Point>> polygon;
                         std::vector<Point> pointPerIndex;
@@ -3041,8 +3090,6 @@ public:
                         std::vector<N> indices = mapbox::earcut<N>(polygon);
 
                         position.reserve((indices.size() / 3) * 6);
-                        float hw = 2.f / screenWidth;
-                        float hh = -2.f / screenHeight;
 
                         for (size_t i = 0; i < indices.size(); i += 3) {
                             float trianglePoints[6] = {
@@ -3067,12 +3114,24 @@ public:
                             mapPointsByMatrix(trianglePoints[4],
                                               trianglePoints[5], screenMatrix);
 
+                            float hw = 2.f / screenWidth;
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+                            float hh = 2.f / screenHeight;
+                            position.push_back(trianglePoints[0] * hw - 1);
+                            position.push_back(trianglePoints[1] * hh - 1);
+                            position.push_back(trianglePoints[2] * hw - 1);
+                            position.push_back(trianglePoints[3] * hh - 1);
+                            position.push_back(trianglePoints[4] * hw - 1);
+                            position.push_back(trianglePoints[5] * hh - 1);
+#else
+                            float hh = -2.f / screenHeight;
                             position.push_back(trianglePoints[0] * hw - 1);
                             position.push_back(trianglePoints[1] * hh + 1);
                             position.push_back(trianglePoints[2] * hw - 1);
                             position.push_back(trianglePoints[3] * hh + 1);
                             position.push_back(trianglePoints[4] * hw - 1);
                             position.push_back(trianglePoints[5] * hh + 1);
+#endif
                         }
 
                         glVertexAttribPointer(
@@ -3232,6 +3291,22 @@ public:
                 mapPointsByMatrix(dest[3][0], dest[3][1], m_screenMatrix);
 
                 float hw = 2.f / m_webView->platformWindow()->width();
+#if defined(PORT_SURFACE_ORIGIN_TOPLEFT)
+                float hh = 2.f / m_webView->platformWindow()->height();
+
+                float position[8];
+                position[0] = dest[0][0] * hw - 1;
+                position[1] = dest[0][1] * hh - 1;
+
+                position[2] = dest[1][0] * hw - 1;
+                position[3] = dest[1][1] * hh - 1;
+
+                position[4] = dest[2][0] * hw - 1;
+                position[5] = dest[2][1] * hh - 1;
+
+                position[6] = dest[3][0] * hw - 1;
+                position[7] = dest[3][1] * hh - 1;
+#else
                 float hh = -2.f / m_webView->platformWindow()->height();
 
                 float position[8];
@@ -3246,7 +3321,7 @@ public:
 
                 position[6] = dest[3][0] * hw - 1;
                 position[7] = dest[3][1] * hh + 1;
-
+#endif
                 glBindTexture(GL_TEXTURE_2D, fboTex);
                 checkError();
 

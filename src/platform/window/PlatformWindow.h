@@ -135,14 +135,14 @@ public:
     }
     virtual void* drawingBufferAddress()
     {
-#if !defined(PORT_WINDOW_BACKEND_GB)
+#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
         return nullptr;
     }
     virtual void updateDrawingBufferAddress(void* buf, uint32_t stride)
     {
-#if !defined(PORT_WINDOW_BACKEND_GB)
+#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     }

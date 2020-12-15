@@ -217,6 +217,10 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     IF (${HOST} STREQUAL "tizen")
         SET (LWE_DEFINES_BACKEND -DSTARFISH_ECORE_WAYLAND2_CAIRO_GL)
     ENDIF()
+ELSEIF (${BACKEND} STREQUAL "flutter")
+    IF (${HOST} STREQUAL "tizen")
+        SET (LWE_DEFINES_BACKEND -DSTARFISH_FLUTTER)
+    ENDIF()
 ENDIF()
 
 # Tmp disable WebRTC on Linux until openssl1.1 is installed on all dev machines
@@ -378,6 +382,12 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tize
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
+ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
+    pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
+    pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
+    pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
+    pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
 ENDIF()
 
 IF (${HOST} STREQUAL "tizen")
@@ -420,7 +430,7 @@ IF (${COMPILER} STREQUAL "clang")
     SET (STARFISH_LIBRARIES_COMPILER -stdlib=libc++)
 ENDIF()
 
-IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali")
+IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter")
     IF (NOT (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1"))
         SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
     ELSE()
@@ -436,6 +446,8 @@ IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BAC
     ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb") AND ${ARCH} STREQUAL "x64")
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib turbojpeg)
     ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tizen")
+        SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib/tizen turbojpeg wayland-egl)
+    ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib/tizen turbojpeg wayland-egl)
     ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "x64" AND ((${TIZEN_MAJOR_VERSION} LESS 5) OR (${TIZEN_MAJOR_VERSION} EQUAL 5)))
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib dali-core dali-adaptor dali-toolkit)
@@ -513,7 +525,7 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tize
         ${THIRD_PARTY_ROOT}/libtuv/include
         ${THIRD_PARTY_ROOT}/libtuv/src
     )
-ELSEIF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl")
+ELSEIF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl" OR ${BACKEND} STREQUAL "flutter")
     SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS
     )
 ENDIF()
