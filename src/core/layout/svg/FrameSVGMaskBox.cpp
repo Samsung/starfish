@@ -27,6 +27,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/page/WebView.h"
 
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 
@@ -76,29 +77,38 @@ void FrameSVGMaskBox::paintContent(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
-void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y,
-                                float width, float height)
+void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
 {
-    // TODO:REMOVE ME!!
-       return;
-    NativeImageData* nativeImageMask =
-        BufferedNativeImageData::create(width, height);
+    FrameBox* svgBox = this;
 
-    Canvas* new_canvas = Canvas::create(node()->webView(), nativeImageMask);
-    new_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+    while (!svgBox->isFrameSVGSVGBox()) {
+        svgBox = svgBox->parent()->asFrameBox();
+    }
 
-    PaintingContext newCtx(new_canvas);
+    size_t svgElementWidth = svgBox->width().toUnsigned();
+    size_t svgElementHeight = svgBox->height().toUnsigned();
+
+    NativeImageData* nativeImageMask = BufferedNativeImageData::create(
+        std::max(svgElementWidth, ctx.m_canvas->renderTargetInfo().m_width),
+        std::max(svgElementHeight, ctx.m_canvas->renderTargetInfo().m_height));
+
+    Canvas* newCanvas = Canvas::create(node()->webView(), nativeImageMask);
+    newCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+
+    PaintingContext newCtx(newCanvas);
     Frame* child = firstChild();
     while (child) {
         if (child && child->isFrameSVGBox()) {
             FrameSVGBox* childBox = child->asFrameSVGBox();
-            new_canvas->save();
-            new_canvas->translate(childBox->x(), childBox->y());
+            newCanvas->save();
+            newCanvas->translate(childBox->x(), childBox->y());
             childBox->paintContent(newCtx);
-            new_canvas->restore();
+            newCanvas->restore();
         }
         child = child->next();
     }
+    delete newCanvas;
+
     makeLuminanceMask(nativeImageMask);
     ctx.m_canvas->maskNativeImage(
         nativeImageMask,

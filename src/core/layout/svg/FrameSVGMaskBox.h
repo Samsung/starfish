@@ -43,8 +43,7 @@ public:
 
     virtual void paintContent(PaintingContext& ctx) override;
 
-    void applyMask(PaintingContext& ctx, float x, float y, float width,
-                   float height);
+    void applyMask(PaintingContext& ctx, float x, float y);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

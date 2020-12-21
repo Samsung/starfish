@@ -150,8 +150,7 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         node()->asSVGElement()->maskElement()) {
         Frame* maskFrame = node()->asSVGElement()->maskElement()->frame();
         if (maskFrame && maskFrame->isFrameSVGMaskBox()) {
-            maskFrame->asFrameSVGMaskBox()->applyMask(ctx, x(), y(), width(),
-                                                      height());
+            maskFrame->asFrameSVGMaskBox()->applyMask(ctx, x(), y());
         }
     }
 
