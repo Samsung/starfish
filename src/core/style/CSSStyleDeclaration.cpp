@@ -3987,7 +3987,8 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
 String* CSSStyleDeclaration::Mask()
 {
     // Mask is only supported as SVG attribute.
-    return nullptr;
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return String::emptyString;
 }
 
 void CSSStyleDeclaration::setMask(const char* value, size_t length,

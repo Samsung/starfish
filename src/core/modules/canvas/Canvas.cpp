@@ -297,6 +297,8 @@ CanvasState::CanvasState()
     , m_visible(true)
     , m_hasNonInvertableCTM(false)
     , m_shadowData()
+    , m_maskPattern(nullptr)
+    , m_maskPatternData(nullptr)
 {
 }
 
@@ -334,6 +336,7 @@ void Canvas::save()
         state->m_canvasFontState = lastState->m_canvasFontState;
         state->m_shadowData = lastState->m_shadowData;
         state->m_maskPattern = nullptr;
+        state->m_maskPatternData = nullptr;
     }
     m_state.push_back(state);
 }

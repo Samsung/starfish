@@ -27,7 +27,7 @@ namespace Starfish {
 class MaskLayer : public gc {
 public:
     MaskLayer()
-        : m_image(nullptr)
+        : m_image(String::emptyString)
         , m_sizeIsLength(true)
     {
     }
