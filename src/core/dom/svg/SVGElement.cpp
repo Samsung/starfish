@@ -165,6 +165,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
         if (ss->m_mask == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsPainting();
+            m_maskElement = nullptr;
         }
     }
 }

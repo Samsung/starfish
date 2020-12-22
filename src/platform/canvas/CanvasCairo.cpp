@@ -1355,6 +1355,7 @@ public:
     {
         cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
         if (image) {
+            lastState()->m_maskPatternData = data;
             lastState()->m_maskPattern =
                 cairo_pattern_create_for_surface(image);
             cairo_matrix_t matrix;

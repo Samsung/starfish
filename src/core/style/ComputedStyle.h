@@ -3213,7 +3213,7 @@ public:
 
     bool hasMask()
     {
-        return mask() != String::emptyString;
+        return mask()->equals(String::emptyString);
     }
 
     bool hasZeroClipRect()

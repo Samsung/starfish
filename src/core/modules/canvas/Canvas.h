@@ -152,6 +152,7 @@ public:
     CanvasShadowData m_shadowData;
 
     void* m_maskPattern;
+    void* m_maskPatternData;
     SkMatrix m_maskTM;
 
 protected:
@@ -164,6 +165,7 @@ protected:
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_font));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(CanvasState, m_canvasFontOrginalStr));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CanvasState, m_maskPatternData));
     }
 };
 
