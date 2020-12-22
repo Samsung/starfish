@@ -594,6 +594,9 @@ public:
             cairo_mask(m_canvas, (cairo_pattern_t*)lastState()->m_maskPattern);
             cairo_pattern_destroy((cairo_pattern_t*)lastState()->m_maskPattern);
             cairo_set_matrix(m_canvas, &matrix);
+            cairo_surface_flush(m_surface);
+
+            delete ((NativeImageData*)lastState()->m_maskPatternData);
         }
         Canvas::restore();
         cairo_restore(m_canvas);
