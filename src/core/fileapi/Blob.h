@@ -26,6 +26,7 @@
 namespace Starfish {
 
 class ExecutionContext;
+class Promise;
 
 class Blob : public ScriptWrappable, public Serializable {
 public:
@@ -126,6 +127,9 @@ public:
     Blob* slice(int64_t start = 0);
     Blob* slice(int64_t start, int64_t end,
                 String* contentType = String::emptyString);
+
+    Promise* text();
+    Promise* arrayBuffer();
 
     ExecutionContext* executionContext()
     {

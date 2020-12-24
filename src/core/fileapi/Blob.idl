@@ -14,4 +14,9 @@ interface Blob {
   Blob slice([Clamp] optional long long start,
             [Clamp] optional long long end,
             optional DOMString contentType);
+
+  // read from the Blob.
+  [Unimplemented, NewObject] ReadableStream stream();
+  [NewObject] Promise<USVString> text();
+  [NewObject] Promise<ArrayBuffer> arrayBuffer();
 };

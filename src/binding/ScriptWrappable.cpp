@@ -525,6 +525,11 @@ StringRef* createScriptString(String* str)
     }
 }
 
+ScriptString createScriptString(const char* utf8Buffer, size_t len)
+{
+    return StringRef::createFromUTF8(utf8Buffer, len);
+}
+
 ScriptValue createScriptValue(ScriptObject object)
 {
     return object;

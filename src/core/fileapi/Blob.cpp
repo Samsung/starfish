@@ -94,4 +94,27 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     return new Blob(executionContext(), span, newType, newStart,
                     m_blobData.m_isClosed, false);
 }
+
+Promise* Blob::text()
+{
+    Promise* promise = new Promise(m_executionContext->scriptBindingInstance());
+    promise->fulfill((ScriptValue)createScriptString(
+        (const char*)m_blobData.m_data, m_blobData.m_size));
+    return promise;
+}
+
+Promise* Blob::arrayBuffer()
+{
+    Promise* promise = new Promise(m_executionContext->scriptBindingInstance());
+    void* newBuffer = malloc(m_blobData.m_size);
+    memcpy(newBuffer, m_blobData.m_data, m_blobData.m_size);
+
+    ScriptArrayBuffer arrayBuffer =
+        createScriptArrayBuffer(m_executionContext->scriptBindingInstance(),
+                                newBuffer, m_blobData.m_size);
+
+    promise->fulfill((ScriptValue)arrayBuffer);
+
+    return promise;
+}
 }
