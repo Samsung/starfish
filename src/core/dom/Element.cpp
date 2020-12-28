@@ -2031,7 +2031,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
     }
 
     if (keyframeRules.size() > 0) {
-        double key = (double)(100 / (keyframeRules.size() - 1));
+        double key = 100.0 / (keyframeRules.size() - 1);
         for (size_t i = 0; i < keyframeRules.size(); i++) {
             keyframeRules[i]->asStyleRuleKeyframe()->setKeyText(
                 document(), String::fromInt(key * i)->concat('%'));
