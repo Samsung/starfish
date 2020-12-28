@@ -83,9 +83,6 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
         return;
     }
 
-    // Track visited nodes
-    m_vistiedNodes.insert(node);
-
     // Rule 1. Skip hidden elements unless the author specifies to use them via
     // an
     // aria-labelledby or aria-describedby being used in the current
@@ -164,6 +161,9 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
     // child node, and is referenced by another IDREF in some descendant node,
     // then that second, or subsequent, reference is not followed. This is done
     // to avoid infinite loops.
+
+    // Track visited nodes
+    m_vistiedNodes.insert(node);
 
     // Starfish doesn't support the "role" attribute, so ignore it
     Node* child = node->firstChild();
