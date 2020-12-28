@@ -164,7 +164,7 @@ void HTMLInputElement::setValue(String* val)
 
     sanitizeValue();
 
-    if (!oldValue->equals(val)) {
+    if (!oldValue->equals(val) || m_shouldDrawCaret) {
         setNeedsFrameTreeBuildWithoutSelf();
     }
 }

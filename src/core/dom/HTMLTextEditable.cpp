@@ -128,7 +128,21 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
     if (event->isKeyboardEvent() && event->type()->equals("keydown")) {
         bool isUseful = false;
         switch (event->asKeyboardEvent()->keyValue()) {
-        case KeyValue::BackspaceKey: {
+        case LWE::KeyValue::ArrowLeftKey: {
+            if (m_currentCaretPosition > 0) {
+                m_currentCaretPosition--;
+            }
+            m_shouldDrawCaret = true;
+            isUseful = true;
+        } break;
+        case LWE::KeyValue::ArrowRightKey: {
+            if (m_currentCaretPosition < value->length()) {
+                m_currentCaretPosition++;
+            }
+            m_shouldDrawCaret = true;
+            isUseful = true;
+        } break;
+        case LWE::KeyValue::BackspaceKey: {
             if (value->length()) {
                 if (m_currentCaretPosition > 0 &&
                     (int32_t)value->length() > minLength()) {
@@ -143,7 +157,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 isUseful = true;
             }
         } break;
-        case KeyValue::DeleteKey: {
+        case LWE::KeyValue::DeleteKey: {
             if (value->length()) {
                 if (m_currentCaretPosition < value->length() &&
                     (int32_t)value->length() > minLength()) {
@@ -157,7 +171,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 isUseful = true;
             }
         } break;
-        case KeyValue::EnterKey: {
+        case LWE::KeyValue::EnterKey: {
             if (!ignoreLineBreaks() &&
                 m_currentCaretPosition < (size_t)maxLength()) {
                 value = value->concat('\n');
@@ -171,7 +185,14 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                     event->asKeyboardEvent()->keyValue()) &&
                 m_currentCaretPosition < (size_t)maxLength()) {
                 char key = (char)event->asKeyboardEvent()->keyValue();
-                value = value->concat(key);
+
+                StringBuilder sb;
+                sb.appendSubString(value, 0, m_currentCaretPosition);
+                sb.appendString(String::createASCIIString(key));
+                sb.appendSubString(value, m_currentCaretPosition,
+                                   value->length());
+                value = sb.finalize();
+
                 m_currentCaretPosition++;
                 m_shouldDrawCaret = true;
                 isUseful = true;
@@ -180,7 +201,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         }
 
         if (isUseful) {
-            if (!value->equals(oldValue)) {
+            if (!value->equals(oldValue) || m_shouldDrawCaret) {
                 setValue(value);
             }
             return true;
