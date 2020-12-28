@@ -1674,9 +1674,13 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
     e->setView(document()->window());
     document()->window()->dispatchEventByUA(target, e);
 
+    bool shouldDispatchInputEvent = true;
+    bool isTextEditable = target->isHTMLTextEditable();
+
     if (!e->defaultPrevented()) {
         if (kind == KeyEventKind::KeyEventDown) {
             if (e->keyValue() == KeyValue::TabKey) {
+                shouldDispatchInputEvent = false;
                 if (e->shiftKey()) {
                     focusNavigation(false);
                 } else {
@@ -1685,49 +1689,60 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 e->defaultPrevented();
             } else if (e->keyValue() == KeyValue::EnterKey ||
                        e->keyValue() == KeyValue::SpaceKey) {
-                String* eventType =
-                    starfish()->staticStrings()->m_click.localName();
-                Node* t = target;
-                if (t) {
-                    t = t->nearestParentElement();
-                    document()->window()->dispatchEventByUA(
-                        t, new Event(document()->executionContext(), eventType,
-                                     EventInit(true, true)));
-                    e->defaultPrevented();
+                if (e->keyValue() == KeyValue::EnterKey) {
+                    shouldDispatchInputEvent = false;
+                }
+                if (target->isHTMLButtonElement() ||
+                    (target->isHTMLInputElement() &&
+                     target->asHTMLInputElement()->hasActivationBehavior())) {
+                    String* eventType =
+                        starfish()->staticStrings()->m_click.localName();
+                    Node* t = target;
+                    if (t) {
+                        t = t->nearestParentElement();
+                        document()->window()->dispatchEventByUA(
+                            t, new Event(document()->executionContext(),
+                                         eventType, EventInit(true, true)));
+                        e->defaultPrevented();
+                    }
                 }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
                        e->keyValue() <= KeyValue::ArrowRightKey) {
+                shouldDispatchInputEvent = false;
+                if (!isTextEditable) {
 #if defined(STARFISH_ANDROID)
-                focusNavigationWithArrow(e);
-                e->defaultPrevented();
+                    focusNavigationWithArrow(e);
+                    e->defaultPrevented();
 #else
-                double sx = window()->scrollX(false);
-                double sy = window()->scrollY(false);
-                OverflowValue ox = document()->appliedOverflowX();
-                OverflowValue oy = document()->appliedOverflowY();
+                    double sx = window()->scrollX(false);
+                    double sy = window()->scrollY(false);
+                    OverflowValue ox = document()->appliedOverflowX();
+                    OverflowValue oy = document()->appliedOverflowY();
 
-                if (e->keyValue() == KeyValue::ArrowDownKey &&
-                    oy >= OverflowValue::AutoOverflow) {
-                    sy += 15;
-                } else if (e->keyValue() == KeyValue::ArrowUpKey &&
-                           oy >= OverflowValue::AutoOverflow) {
-                    sy -= 15;
-                } else if (e->keyValue() == KeyValue::ArrowRightKey &&
-                           ox >= OverflowValue::AutoOverflow) {
-                    sx += 15;
-                } else if (e->keyValue() == KeyValue::ArrowLeftKey &&
-                           ox >= OverflowValue::AutoOverflow) {
-                    sx -= 15;
-                }
+                    if (e->keyValue() == KeyValue::ArrowDownKey &&
+                        oy >= OverflowValue::AutoOverflow) {
+                        sy += 15;
+                    } else if (e->keyValue() == KeyValue::ArrowUpKey &&
+                               oy >= OverflowValue::AutoOverflow) {
+                        sy -= 15;
+                    } else if (e->keyValue() == KeyValue::ArrowRightKey &&
+                               ox >= OverflowValue::AutoOverflow) {
+                        sx += 15;
+                    } else if (e->keyValue() == KeyValue::ArrowLeftKey &&
+                               ox >= OverflowValue::AutoOverflow) {
+                        sx -= 15;
+                    }
 
-                window()->scrollToWithoutLayout(sx, sy);
+                    window()->scrollToWithoutLayout(sx, sy);
 #endif
+                }
             }
         }
     }
 
     // After editing, this 'oninput' event is called.
-    if (target->isHTMLInputElement()) {
+    if (kind == KeyEventKind::KeyEventDown && isTextEditable &&
+        shouldDispatchInputEvent) {
         InputEvent* event = new InputEvent(document()->executionContext(),
                                            String::createASCIIString("input"));
         event->setCancelable(false);
