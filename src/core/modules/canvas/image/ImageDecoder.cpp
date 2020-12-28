@@ -173,6 +173,7 @@ static ImageDecoder::DecodeResult decodePNG(
     result.m_stride = rowbytes;
     if (needsDecoding) {
         rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * result.m_height);
+        STARFISH_RELEASE_ASSERT(rowPointers);
         result.m_buffer = (uint8_t*)malloc(rowbytes * result.m_height);
         STARFISH_RELEASE_ASSERT(result.m_buffer);
         for (png_uint_32 i = 0; i < (unsigned int)result.m_height; ++i) {
@@ -608,6 +609,7 @@ static ImageDecoder::DecodeResult decodeGIF(
 
         size = result.m_width * sizeof(GifPixelType);
         screenBuffer[0] = (GifRowType)calloc(1, size);
+        STARFISH_RELEASE_ASSERT(screenBuffer[0] != nullptr);
 
         for (i = 0; i < (int)(result.m_width); i++) {
             screenBuffer[0][i] = gifFile->SBackGroundColor;
@@ -615,6 +617,8 @@ static ImageDecoder::DecodeResult decodeGIF(
 
         for (i = 1; i < (int)(result.m_height); i++) {
             screenBuffer[i] = (GifRowType)calloc(1, size);
+            STARFISH_RELEASE_ASSERT(screenBuffer[i] != nullptr);
+
             memcpy(screenBuffer[i], screenBuffer[0], size);
         }
 
@@ -780,6 +784,7 @@ bool ImageDecoder::prepareAnimatedGIF()
         gifFile = DGifOpen(&m_gifReadData, gifRead, &errorCode);
 #endif
         if (!gifFile) {
+            STARFISH_LOG_ERROR("Could not open GIF file");
             return false;
         }
         gifBuffer = (GifRowType*)malloc(gifFile->SHeight * sizeof(GifRowType));
@@ -787,6 +792,7 @@ bool ImageDecoder::prepareAnimatedGIF()
 
         size = gifFile->SWidth * sizeof(GifPixelType);
         gifBuffer[0] = (GifRowType)calloc(1, size);
+        STARFISH_RELEASE_ASSERT(gifBuffer[0] != nullptr);
 
         for (int i = 0; i < (int)(gifFile->SWidth); i++) {
             gifBuffer[0][i] = gifFile->SBackGroundColor;
@@ -794,6 +800,8 @@ bool ImageDecoder::prepareAnimatedGIF()
 
         for (int i = 1; i < (int)(gifFile->SHeight); i++) {
             gifBuffer[i] = (GifRowType)calloc(1, size);
+            STARFISH_RELEASE_ASSERT(gifBuffer[i] != nullptr);
+
             memcpy(gifBuffer[i], gifBuffer[0], size);
         }
 
@@ -814,12 +822,14 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     int transparentIndex = -1;
     ColorMapObject* colorMap = nullptr;
     GifRecordType recordType = UNDEFINED_RECORD_TYPE;
+    DecodeResult result;
 
-    prepareAnimatedGIF();
+    if (!prepareAnimatedGIF()) {
+        return result;
+    }
 
     GifFileType* gifFile = (GifFileType*)m_gifFile;
     GifRowType* gifBuffer = (GifRowType*)m_gifBuffer;
-    DecodeResult result;
     result.m_width = gifFile->SWidth;
     result.m_height = gifFile->SHeight;
     result.m_stride = result.m_width * 4;

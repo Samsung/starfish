@@ -97,6 +97,10 @@ public:
             }
 
             auto idResult = m_imageDecoder->nextFrameOfAnimatedGIF(m_image);
+            if (idResult.m_width == 0 && idResult.m_height == 0) {
+                return false;
+            }
+
             m_delay = idResult.delay;
             if (m_delay <= MinimumDelay) {
                 m_delay = MinimumDelay;
