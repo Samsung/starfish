@@ -294,6 +294,7 @@ Path* FrameSVGPathBox::path()
         float x3 = 0, y3 = 0, x4 = 0, y4 = 0;
         float lastX = 0, lastY = 0;
         float lastOfLastX = 0, lastOfLastY = 0;
+        float lastMoveX = 0, lastMoveY = 0;
         char paintMode = ' ';
         char prevMode = ' ';
 #define TO_WAIT_COORDS_MODE(p) \
@@ -398,6 +399,8 @@ Path* FrameSVGPathBox::path()
                     TO_WAIT_COORDS_MODE('M');
                 } else if (token.equals("z") || token.equals("Z")) {
                     path->closePath();
+                    lastX = lastMoveX;
+                    lastY = lastMoveY;
                     continue;
                 } else if (token.equals("l")) {
                     TO_WAIT_COORDS_MODE('l');
@@ -464,6 +467,8 @@ Path* FrameSVGPathBox::path()
                     path->moveTo(lastX + x, lastY + y);
                     lastX += x;
                     lastY += y;
+                    lastMoveX = lastX;
+                    lastMoveY = lastY;
                     REWIND_IF_NEEDED();
                     if (mode == Mode::WaitCoordsX) {
                         paintMode = 'l';
@@ -472,6 +477,8 @@ Path* FrameSVGPathBox::path()
                     path->moveTo(x, y);
                     lastX = x;
                     lastY = y;
+                    lastMoveX = lastX;
+                    lastMoveY = lastY;
                     REWIND_IF_NEEDED();
                     if (mode == Mode::WaitCoordsX) {
                         paintMode = 'L';
