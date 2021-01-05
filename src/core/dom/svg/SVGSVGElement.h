@@ -84,6 +84,8 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
+    SVGLength* createSVGLength();
+
 protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;

@@ -33,7 +33,7 @@ interface SVGSVGElement : SVGElement {
   [Unimplemented] boolean checkEnclosure(SVGElement element, SVGRect rect);
   [Unimplemented] void deselectAll();
   [Unimplemented] SVGNumber createSVGNumber();
-  [Unimplemented] SVGLength createSVGLength();
+  SVGLength createSVGLength();
   [Unimplemented] SVGAngle createSVGAngle();
   [Unimplemented] SVGPoint createSVGPoint();
   [Unimplemented] SVGMatrix createSVGMatrix();
