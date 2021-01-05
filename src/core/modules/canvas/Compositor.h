@@ -35,6 +35,9 @@ public:
     virtual void willRendering() = 0;
     virtual void didRendering() = 0;
     virtual void onIdle() = 0;
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+    virtual void willRenderingExternalSurface(void* externalSurface) = 0;
+#endif
 };
 
 class Compositor : public gc {

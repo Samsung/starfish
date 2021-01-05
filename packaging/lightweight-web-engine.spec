@@ -189,7 +189,6 @@ Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 Lightweight Web Engine for tv
 %endif
 
-
 %if "%{rpm}" == "headless"
 %package profile_headless
 Summary:     Lightweight Web Engine for headless
@@ -221,6 +220,18 @@ Conflicts:   %{name}-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 %description profile_wearable
 Lightweight Web Engine for wearable
+%endif
+
+%if "%{rpm}" == "flutter"
+%package profile_flutter
+Summary:     Lightweight Web Engine for flutter
+Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_headless = %{version}-%{release}
+Conflicts:   %{name}-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-profile_mobile = %{version}-%{release}
+%description profile_flutter
+Lightweight Web Engine for flutter
 %endif
 
 %package devel
@@ -279,6 +290,18 @@ Development files for Lightweight Web Engine for wearable. This package provides
 a standalone executable binary for wearable.
 %endif
 
+%if "%{rpm}" == "flutter"
+%package shell-profile_flutter
+Summary:     Development files for Lightweight Web Engine for flutter
+Requires:    %{name}-profile_flutter
+Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
+%description shell-profile_flutter
+Development files for Lightweight Web Engine for flutter. This package provides
+a standalone executable binary for flutter.
+%endif
 
 ##############################################
 # Prep
@@ -450,8 +473,8 @@ ninja starfish.executable
 rm -f CMakeCache.txt
 cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=flutter -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.mobile -G Ninja
 ninja starfish.shared_library
+ninja starfish.executable
 %endif
-
 
 ##############################################
 ## Install
@@ -507,6 +530,13 @@ cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libd
 %endif
 %if "%{rpm}" == "wearable"
 cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
+%endif
+
+%if "%{rpm}" == "flutter"
+mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
+cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
 %endif
 
 # for devel files
@@ -625,6 +655,24 @@ popd
 exit 0
 %endif
 
+#############################################
+%if "%{rpm}" == "flutter"
+%post profile_flutter
+pushd %{_libdir}/lwe
+for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
+   ln -sf "$FILE" .
+done
+ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
+popd
+%endif
+%if "%{rpm}" == "flutter"
+pushd %{_bindir}
+ln -sf lightweight-web-engine.mobile %{bin}
+popd
+/sbin/ldconfig
+exit 0
+%endif
+
 # Post Uninstall
 %postun
 /sbin/ldconfig
@@ -676,6 +724,16 @@ exit 0
 %license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
 %endif
 
+%if "%{rpm}" == "flutter"
+%files profile_flutter
+%manifest %{name}.manifest
+%{_libdir}/*.so
+%{_libdir}/lwe/*.so*
+%{_libdir}/lwe/flutter/*.so*
+%{_sysconfdir}/ld.so.conf.d/*.conf
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%endif
+
 %files devel
 %manifest %{name}.manifest
 %{_includedir}
@@ -709,4 +767,10 @@ exit 0
 %files shell-profile_wearable
 %manifest %{name}.manifest
 %{_bindir}/lightweight-web-engine.wearable
+%endif
+
+%if "%{rpm}" == "flutter"
+%files shell-profile_flutter
+%manifest %{name}.manifest
+%{_bindir}/lightweight-web-engine.mobile
 %endif
