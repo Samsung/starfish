@@ -13,12 +13,12 @@ interface SVGLength {
   const unsigned short SVG_LENGTHTYPE_PT = 9;
   const unsigned short SVG_LENGTHTYPE_PC = 10;
 
-  [Unimplemented] readonly attribute unsigned short unitType;
+  readonly attribute unsigned short unitType;
   [RaisesException] attribute float value;
-  [Unimplemented, RaisesException] attribute float valueInSpecifiedUnits;
-  [Unimplemented, RaisesException] attribute DOMString valueAsString;
+  [RaisesException] attribute float valueInSpecifiedUnits;
+  [RaisesException] attribute DOMString valueAsString;
 
-  [Unimplemented, RaisesException] void newValueSpecifiedUnits(unsigned short unitType, float valueInSpecifiedUnits);
-  [Unimplemented, RaisesException] void convertToSpecifiedUnits(unsigned short unitType);
+  [RaisesException] void newValueSpecifiedUnits(unsigned short unitType, float valueInSpecifiedUnits);
+  [RaisesException] void convertToSpecifiedUnits(unsigned short unitType);
 };
 

@@ -29,6 +29,20 @@ class SVGElement;
 
 class SVGLength : public ScriptWrappable {
 public:
+    enum UnitType {
+        SVG_LENGTHTYPE_UNKNOWN = 0,
+        SVG_LENGTHTYPE_NUMBER,
+        SVG_LENGTHTYPE_PERCENTAGE,
+        SVG_LENGTHTYPE_EMS,
+        SVG_LENGTHTYPE_EXS,
+        SVG_LENGTHTYPE_PX,
+        SVG_LENGTHTYPE_CM,
+        SVG_LENGTHTYPE_MM,
+        SVG_LENGTHTYPE_IN,
+        SVG_LENGTHTYPE_PT,
+        SVG_LENGTHTYPE_PC
+    };
+
     SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute);
 
     virtual void init(ScriptBindingInstance* instance,
@@ -37,12 +51,23 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     unsigned short unitType();
+    void setUnitType(unsigned short unitType);
     float value();
     void setValue(float v);
+    float valueInSpecifiedUnits();
+    void setValueInSpecifiedUnits(float v);
+    String* valueAsString();
+    void setValueAsString(String* valueAsString);
+
+    void newValueSpecifiedUnits(unsigned short unitType,
+                                float valueInSpecifiedUnits);
+    void convertToSpecifiedUnits(unsigned short unitType);
 
 protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
+
+    unsigned short m_unitType;
 };
 }
 

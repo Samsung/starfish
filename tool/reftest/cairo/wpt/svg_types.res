@@ -27,7 +27,7 @@
 #http://web-platform.test:8000/svg/types/scripted/SVGGeometryElement.getPointAtLength-01.svg
 #http://web-platform.test:8000/svg/types/scripted/SVGLength-px-with-context.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLength-px.html
-#http://web-platform.test:8000/svg/types/scripted/SVGLength.html
+http://web-platform.test:8000/svg/types/scripted/SVGLength.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-appendItem.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-appendItemFromClearedList.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-basics.html

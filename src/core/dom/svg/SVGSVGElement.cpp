@@ -126,4 +126,9 @@ SVGSVGElement::preserveAspectRatioValue()
     }
     return m_preserveAspectRatioValue;
 }
+
+SVGLength* SVGSVGElement::createSVGLength()
+{
+    return new SVGLength(this, m_name);
+}
 }

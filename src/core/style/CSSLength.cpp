@@ -28,7 +28,16 @@ template <typename T>
 static CSSLength::Kind computeLengthUnit(T str)
 {
     size_t len = str->length();
+    if (len == 1) {
+        char32_t c0 = str->operator[](0);
 
+        switch (c0) {
+        case '%':
+            return CSSLength::PERCENT;
+        default:
+            break;
+        }
+    }
     if (len == 2) {
         char32_t c0 = str->operator[](0);
         char32_t c1 = str->operator[](1);

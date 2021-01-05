@@ -35,6 +35,7 @@ SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
+    , m_unitType(SVG_LENGTHTYPE_NUMBER)
 {
 }
 
@@ -45,8 +46,12 @@ ScriptBindingInstance* SVGLength::scriptBindingInstance()
 
 unsigned short SVGLength::unitType()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return 1;
+    return m_unitType;
+}
+
+void SVGLength::setUnitType(unsigned short unitType)
+{
+    m_unitType = unitType;
 }
 
 static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
@@ -130,5 +135,145 @@ void SVGLength::setValue(float v)
     }
 
     m_sourceElement->setAttribute(m_targetAttribute, String::fromFloat(v));
+}
+
+float SVGLength::valueInSpecifiedUnits()
+{
+    // unimplemented PERCENTAGE, EMS, EXS
+    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
+        return value();
+    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+        return value();
+    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+        return value() / UnitHelper::UNIT_PX_PER_CM;
+    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+        return value() / UnitHelper::UNIT_PX_PER_MM;
+    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+        return value() / UnitHelper::UNIT_PX_PER_IN;
+    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+        return value() / UnitHelper::UNIT_PX_PER_PT;
+    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+        return value() / UnitHelper::UNIT_PX_PER_PC;
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    return 0;
+}
+
+void SVGLength::setValueInSpecifiedUnits(float v)
+{
+    // unimplemented PERCENTAGE, EMS, EXS
+    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
+        setValue(v);
+    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+        setValue(v);
+    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+        setValue(UnitHelper::convertFromCmToPx(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+        setValue(UnitHelper::convertFromMmToPx(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+        setValue(UnitHelper::convertFromInToPx(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+        setValue(UnitHelper::convertFromPtToPx(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+        setValue(UnitHelper::convertFromPcToPx(v));
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+}
+
+String* SVGLength::valueAsString()
+{
+    String* str = String::fromFloat(valueInSpecifiedUnits());
+
+    // unimplemented PERCENTAGE, EMS, EXS
+    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
+    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+        str = str->concat("px");
+    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+        str = str->concat("cm");
+    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+        str = str->concat("mm");
+    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+        str = str->concat("in");
+    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+        str = str->concat("pt");
+    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+        str = str->concat("pc");
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    return str;
+}
+
+void SVGLength::setValueAsString(String* valueAsString)
+{
+    valueAsString = valueAsString->toLower();
+
+    if (valueAsString->length()) {
+        auto s = valueAsString->toUTF8NonGCString();
+        CSSStyleValuePair pair;
+        if (CSSPropertyParser::parseLength(
+                s.data(), CSSPropertyParser::AllowPercent |
+                              CSSPropertyParser::AllowWithoutUnit,
+                &pair)) {
+            if (pair.cssLengthValue().kind() == CSSLength::PX) {
+                setUnitType(SVG_LENGTHTYPE_PX);
+            } else if (pair.cssLengthValue().kind() == CSSLength::CM) {
+                setUnitType(SVG_LENGTHTYPE_CM);
+            } else if (pair.cssLengthValue().kind() == CSSLength::MM) {
+                setUnitType(SVG_LENGTHTYPE_MM);
+            } else if (pair.cssLengthValue().kind() == CSSLength::INCH) {
+                setUnitType(SVG_LENGTHTYPE_IN);
+            } else if (pair.cssLengthValue().kind() == CSSLength::PT) {
+                setUnitType(SVG_LENGTHTYPE_PC);
+            } else if (pair.cssLengthValue().kind() == CSSLength::EM) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            } else if (pair.cssLengthValue().kind() == CSSLength::EX) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            } else if (pair.cssLengthValue().kind() == CSSLength::PERCENT) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            } else {
+                throw new DOMException(m_sourceElement->executionContext(),
+                                       DOMException::Code::NOT_SUPPORTED_ERR,
+                                       "Not Supported error");
+            }
+            setValueInSpecifiedUnits(pair.cssLengthValue().value());
+        } else {
+            throw new DOMException(m_sourceElement->executionContext(),
+                                   DOMException::Code::SYNTAX_ERR,
+                                   "SyntaxError");
+        }
+    } else {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::SYNTAX_ERR, "SyntaxError");
+    }
+}
+
+void SVGLength::newValueSpecifiedUnits(unsigned short unitType,
+                                       float valueInSpecifiedUnits)
+{
+    if (std::isnan(valueInSpecifiedUnits) ||
+        std::isinf(valueInSpecifiedUnits)) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The provided float value is non-finite");
+    }
+
+    convertToSpecifiedUnits(unitType);
+    setValueInSpecifiedUnits(valueInSpecifiedUnits);
+}
+
+void SVGLength::convertToSpecifiedUnits(unsigned short unitType)
+{
+    if (unitType < SVG_LENGTHTYPE_NUMBER || unitType > SVG_LENGTHTYPE_PC) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::NOT_SUPPORTED_ERR,
+                               "NotSupportedError");
+    }
+
+    setUnitType(unitType);
 }
 }
