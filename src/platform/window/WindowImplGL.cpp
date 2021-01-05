@@ -116,6 +116,13 @@ public:
         }
 
         m_compostiorContext->willRendering();
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        {
+            RenderInfo renderInfo = m_renderingPrepareCallback();
+            m_compostiorContext->willRenderingExternalSurface(
+                renderInfo.updatedBufferAddress);
+        }
+#endif
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
@@ -285,11 +292,6 @@ Compositor* WindowImplGL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    {
-        m_renderingPrepareCallback();
-    }
-#endif
     return Compositor::create3D(webView(), m_compostiorContext);
 }
 

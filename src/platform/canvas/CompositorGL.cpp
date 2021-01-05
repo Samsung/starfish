@@ -613,6 +613,12 @@ public:
 
     PlatformWindow* m_platformWindow;
 
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+    GLuint m_mainViewTexture;
+    GLuint m_mainViewFBO;
+    EGLImageKHR m_mainViewImage;
+#endif
+
     CompositorContextGL(PlatformWindow* platformWindow)
     {
         STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL\n");
@@ -663,6 +669,11 @@ public:
         m_texBlurShaderProgramHTexPos = 0;
 
         m_lastProgram = 0;
+
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        m_mainViewTexture = 0;
+        m_mainViewFBO = 0;
+#endif
     }
 
     ~CompositorContextGL()
@@ -736,6 +747,12 @@ public:
         }
 
         glDeleteBuffers(1, &m_texTexPosBuffer);
+
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        if (m_mainViewFBO) {
+            glDeleteFramebuffers(1, &m_mainViewFBO);
+        }
+#endif
     }
 
     void cleanUpTextureCache()
@@ -772,9 +789,32 @@ public:
     {
     }
 
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+    virtual void willRenderingExternalSurface(void* externalSurface) override
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
+        EGLDisplay display = eglGetCurrentDisplay();
+        EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+        m_mainViewImage = g_eglCreateImageKHRProc(
+            display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
+            (void*)(intptr_t)externalSurface, attribs);
+        glGenTextures(1, &m_mainViewTexture);
+        glBindTexture(GL_TEXTURE_2D, m_mainViewTexture);
+        g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_2D, m_mainViewImage);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, m_mainViewTexture, 0);
+    }
+#endif
+
     virtual void didRendering() override
     {
         cleanUpTextureCache();
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        EGLDisplay display = eglGetCurrentDisplay();
+        g_eglDestroyImageKHRProc(display, m_mainViewImage);
+        m_mainViewImage = nullptr;
+        glDeleteTextures(1, &m_mainViewTexture);
+#endif
     }
 
     virtual void onIdle() override
@@ -1445,6 +1485,9 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
     glBufferData(GL_ARRAY_BUFFER, sizeof(texPos), texPos, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+    glGenFramebuffers(1, &compositorContext->m_mainViewFBO);
+#endif
     return compositorContext;
 }
 

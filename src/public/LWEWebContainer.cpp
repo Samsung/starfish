@@ -501,7 +501,7 @@ void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
 void WebContainer::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
+#if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
@@ -524,7 +524,7 @@ void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
         cb)
 {
-#if !defined(PORT_WINDOW_BACKEND_GB) && !defined(STARFISH_FLUTTER)
+#if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
@@ -601,6 +601,94 @@ WebContainer* WebContainer::CreateGL(
             onGLSwapBuffers(newWebContainer, mayNeedsSync);
         });
 
+    return newWebContainer;
+#endif
+}
+
+WebContainer* WebContainer::CreateGLWithPlatformImage(
+    unsigned width, unsigned height,
+    const std::function<void(WebContainer*)>& onGLMakeCurrent,
+    const std::function<void(WebContainer*, bool mayNeedsSync)>&
+        onGLSwapBuffers,
+    const std::function<ExternalImageInfo(void)>& prepareImageCb,
+    const std::function<void(WebContainer*)>& renderedCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+#if !defined(PORT_WINDOW_BACKEND_GL)
+    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+#endif
+
+#if defined(PORT_NEEDS_THREADED_PUBLIC_API)
+    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
+        [=]() -> size_t {
+            auto webView =
+                createWebViewInstance(width, height, devicePixelRatio,
+                                      defaultFontName, locale, timezoneID);
+
+            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+
+            webView->platformWindow()->registerGLMakeCurrentCallback(
+                [onGLMakeCurrent,
+                 newWebContainer](Starfish::PlatformWindow* wnd) {
+                    onGLMakeCurrent(newWebContainer);
+                });
+
+            webView->platformWindow()->registerGLSwapBuffersCallback(
+                [onGLSwapBuffers, newWebContainer](
+                    Starfish::PlatformWindow* wnd, bool mayNeedsSync) {
+                    onGLSwapBuffers(newWebContainer, mayNeedsSync);
+                });
+
+            webView->platformWindow()->registerRenderingPrepareCallback(
+                [prepareImageCb](void) -> Starfish::RenderInfo {
+                    WebContainer::ExternalImageInfo tmp = prepareImageCb();
+                    Starfish::RenderInfo result;
+                    result.updatedBufferAddress = tmp.imageAddress;
+                    result.bufferStride = 0;
+                    return result;
+                });
+
+            webView->platformWindow()->registerRenderingFinishedCallback(
+                [newWebContainer,
+                 renderedCb](const Starfish::RenderResult& renderResult) {
+                    renderedCb(newWebContainer);
+                });
+
+            return (size_t)newWebContainer;
+        });
+#else
+    auto webView = createWebViewInstance(width, height, devicePixelRatio,
+                                         defaultFontName, locale, timezoneID);
+
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+
+    webView->platformWindow()->registerGLMakeCurrentCallback(
+        [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
+            onGLMakeCurrent(newWebContainer);
+        });
+
+    webView->platformWindow()->registerGLSwapBuffersCallback(
+        [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd,
+                                           bool mayNeedsSync) {
+            onGLSwapBuffers(newWebContainer, mayNeedsSync);
+        });
+
+    webView->platformWindow()->registerRenderingPrepareCallback(
+        [prepareImageCb](void) -> Starfish::RenderInfo {
+            WebContainer::ExternalImageInfo tmp = prepareImageCb();
+            Starfish::RenderInfo result;
+            result.updatedBufferAddress = tmp.imageAddress;
+            result.bufferStride = 0;
+            return result;
+        });
+
+    webView->platformWindow()->registerRenderingFinishedCallback(
+        [newWebContainer,
+         renderedCb](const Starfish::RenderResult& renderResult) {
+            renderedCb(newWebContainer);
+        });
     return newWebContainer;
 #endif
 }
