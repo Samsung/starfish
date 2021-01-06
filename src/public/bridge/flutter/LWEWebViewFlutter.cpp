@@ -327,6 +327,23 @@ public:
         return (::LWE::WebContainer*)m_impl;
     }
 };
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
+{
+    // This is only for executable build. Flutter doesn't support executable
+    // mode.
+    return new WebViewFlutter(
+        x, y, width, height, devicePixelRatio, defaultFontName, locale,
+        timezoneID,
+        []() -> WebContainer::ExternalImageInfo {
+            WebContainer::ExternalImageInfo result;
+            result.imageAddress = nullptr;
+            return result;
+        },
+        [](WebContainer* c) {});
+}
 } // namespace LWE
 
 extern "C" size_t LWE_EXPORT createWebViewInstance(
