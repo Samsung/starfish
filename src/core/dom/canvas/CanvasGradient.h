@@ -53,6 +53,6 @@ private:
     ExecutionContext* m_executionContext;
     std::shared_ptr<NativeGradient> m_nativeGardient;
 };
-}
+} // namespace Starfish
 
 #endif

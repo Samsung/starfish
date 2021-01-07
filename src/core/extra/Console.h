@@ -43,6 +43,6 @@ public:
 protected:
     WebBase* m_webBase;
 };
-}
+} // namespace Starfish
 
 #endif

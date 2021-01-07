@@ -79,6 +79,6 @@ public:
     virtual ScriptWrappable* createDeserializingInstance(
         ExecutionContext* executionContext) const override;
 };
-}
+} // namespace Starfish
 #endif
 #endif

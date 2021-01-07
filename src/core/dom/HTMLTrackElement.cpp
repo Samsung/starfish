@@ -354,6 +354,6 @@ void HTMLTrackElement::setDefaultAttr(bool value)
         removeAttribute(name);
     }
 }
-}
+} // namespace Starfish
 
 #endif

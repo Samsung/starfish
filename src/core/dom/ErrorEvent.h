@@ -147,6 +147,6 @@ public:
 private:
     ErrorData m_errorData;
 };
-}
+} // namespace Starfish
 
 #endif

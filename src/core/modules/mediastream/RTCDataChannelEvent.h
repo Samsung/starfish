@@ -49,6 +49,6 @@ public:
 private:
     RTCDataChannel* m_channel{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

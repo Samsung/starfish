@@ -93,4 +93,4 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGElement(document, qname);
     }
 }
-}
+} // namespace Starfish

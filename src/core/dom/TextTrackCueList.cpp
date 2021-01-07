@@ -35,5 +35,5 @@ ScriptBindingInstance* TextTrackCueList::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish
 #endif // STARFISH_ENABLE_MULTIMEDIA

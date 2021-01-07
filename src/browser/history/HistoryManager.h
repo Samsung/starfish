@@ -114,6 +114,6 @@ private:
     GCList<HistoryEntry*> m_historyEntries;
     GCList<HistoryEntry*>::iterator m_curEntry;
 };
-}
+} // namespace Starfish
 
 #endif

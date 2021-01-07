@@ -34,6 +34,6 @@ public:
 protected:
     sem_t* m_semaphore;
 };
-}
+} // namespace Starfish
 
 #endif

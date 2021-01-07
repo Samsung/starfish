@@ -45,6 +45,6 @@ inline bool operator!=(const CounterBaseList& a, const CounterBaseList& b)
 {
     return !operator==(a, b);
 }
-}
+} // namespace Starfish
 
 #endif

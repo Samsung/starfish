@@ -154,4 +154,4 @@ void HTMLEntitySearch::advance(char32_t nextCharacter)
     }
     m_mostRecentMatch = m_first;
 }
-}
+} // namespace Starfish

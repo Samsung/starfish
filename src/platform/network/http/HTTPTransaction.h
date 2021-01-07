@@ -155,6 +155,6 @@ private:
     bool m_enableLog;
 #endif
 };
-}
+} // namespace Starfish
 
 #endif

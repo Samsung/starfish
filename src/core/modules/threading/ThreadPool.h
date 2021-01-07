@@ -60,6 +60,6 @@ private:
     std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
     Mutex* m_workerQueueMutex;
 };
-}
+} // namespace Starfish
 
 #endif

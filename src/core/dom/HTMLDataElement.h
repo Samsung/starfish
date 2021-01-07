@@ -40,5 +40,5 @@ public:
     String* value();
     void setValue(String* value);
 };
-}
+} // namespace Starfish
 #endif

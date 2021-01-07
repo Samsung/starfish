@@ -365,4 +365,4 @@ void HTMLIFrameElement::setNameAttr(String* name)
 {
     setAttribute(starfish()->staticStrings()->m_name, name);
 }
-}
+} // namespace Starfish

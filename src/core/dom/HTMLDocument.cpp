@@ -294,7 +294,8 @@ static void createHtmlCaseInsensitiveAttributesSet(
         &str->m_charset,
         /* &checkedAttr, &clearAttr, &codetypeAttr, */ &str->m_color,
         /* &compactAttr,
-        &declareAttr, &deferAttr, */ &str->m_dir, /* &directionAttr, */
+        &declareAttr, &deferAttr, */
+        &str->m_dir, /* &directionAttr, */
         &str->m_disabled,
         /* &enctypeAttr, */
         &str->m_face, /* &frameAttr,
@@ -302,11 +303,13 @@ static void createHtmlCaseInsensitiveAttributesSet(
         &str->m_lang, /* &languageAttr, &linkAttr,
         &mediaAttr, &methodAttr, &multipleAttr,
         &nohrefAttr, &noresizeAttr, &noshadeAttr, &nowrapAttr,
-        &readonlyAttr, */ &str->m_rel,
+        &readonlyAttr, */
+        &str->m_rel,
         /* &revAttr, &rulesAttr,*/
         &str->m_scope,
         /*&scrollingAttr, &selectedAttr, &shapeAttr,
-        &targetAttr, &textAttr, */ &str->m_type,
+        &targetAttr, &textAttr, */
+        &str->m_type,
         /* &valignAttr, &valuetypeAttr, &vlinkAttr */
     };
 
@@ -328,4 +331,4 @@ bool HTMLDocument::isCaseSensitiveAttribute(Document* document,
     return caseInsensitiveAttrSet.find(attributeName.localName()) ==
            caseInsensitiveAttrSet.end();
 }
-}
+} // namespace Starfish

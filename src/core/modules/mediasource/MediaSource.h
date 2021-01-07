@@ -230,6 +230,6 @@ public:
 protected:
     MediaSource* m_mediaSource;
 };
-}
+} // namespace Starfish
 
 #endif

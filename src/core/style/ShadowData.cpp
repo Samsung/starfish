@@ -66,4 +66,4 @@ CanvasShadowDataList ShadowDataList::toCanvasShadowDataList(Frame* owner) const
     }
     return ret;
 }
-}
+} // namespace Starfish

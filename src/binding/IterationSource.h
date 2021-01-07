@@ -31,6 +31,6 @@ public:
     virtual bool next(ExecutionStateRef* state, KeyType& key,
                       ValueType& value) = 0;
 };
-}
+} // namespace Starfish
 
 #endif

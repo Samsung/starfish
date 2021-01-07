@@ -84,6 +84,6 @@ private:
     FilterFunctionType m_type;
     CSSStyleValuePair m_data;
 };
-}
+} // namespace Starfish
 
 #endif

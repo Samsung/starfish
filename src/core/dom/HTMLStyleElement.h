@@ -86,6 +86,6 @@ protected:
     CSSStyleSheet* m_generatedSheet;
     bool m_loaded;
 };
-}
+} // namespace Starfish
 
 #endif

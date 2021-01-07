@@ -66,6 +66,6 @@ ScriptArrayBuffer PushSubscriptionOptions::applicationServerKeyScriptValue()
     return createScriptArrayBuffer(scriptBindingInstance(), buffer,
                                    m_applicationServerKey->length());
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

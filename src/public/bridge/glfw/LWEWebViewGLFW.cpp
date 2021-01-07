@@ -261,6 +261,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewGLFW(win, x, y, width, height, devicePixelRatio,
                            defaultFontName, locale, timezoneID);
 }
-}
+} // namespace LWE
 
 #endif

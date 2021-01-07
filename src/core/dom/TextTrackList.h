@@ -63,7 +63,7 @@ public:
         return (*this)[idx];
     }
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

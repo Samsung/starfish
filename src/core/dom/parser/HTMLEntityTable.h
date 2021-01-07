@@ -68,6 +68,6 @@ public:
     static const HTMLEntityTableEntry* firstEntryStartingWith(char32_t);
     static const HTMLEntityTableEntry* lastEntryStartingWith(char32_t);
 };
-}
+} // namespace Starfish
 
 #endif

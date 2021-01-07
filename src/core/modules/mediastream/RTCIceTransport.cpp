@@ -43,8 +43,10 @@ RTCIceTransport::RTCIceTransport(
 {
     m_backend = backend;
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCIceTransport*)obj)->~RTCIceTransport(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCIceTransport*)obj)->~RTCIceTransport();
+        },
         NULL, NULL, NULL);
 }
 

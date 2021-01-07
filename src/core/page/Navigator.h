@@ -98,6 +98,6 @@ protected:
     BatteryManager* m_batteryManager;
 #endif
 };
-}
+} // namespace Starfish
 
 #endif

@@ -46,5 +46,5 @@ public:
         return (*this)[idx];
     }
 };
-}
+} // namespace Starfish
 #endif

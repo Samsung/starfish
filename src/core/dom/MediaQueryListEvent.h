@@ -91,6 +91,6 @@ private:
     String* m_media;
     bool m_matches;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -89,5 +89,5 @@ private:
     GCVector<Thread*> m_threadVector;
     ParallelJobWorker m_jobWorker;
 };
-}
+} // namespace Starfish
 #endif

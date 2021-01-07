@@ -56,6 +56,6 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     Error m_code;
 };
-}
+} // namespace Starfish
 
 #endif

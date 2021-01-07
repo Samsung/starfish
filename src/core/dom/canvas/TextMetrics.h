@@ -73,6 +73,6 @@ private:
     double m_alphabeticBaseline;
     double m_ideographicBaseline;
 };
-}
+} // namespace Starfish
 #endif
 #endif

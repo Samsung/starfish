@@ -1637,9 +1637,8 @@ void Node::validateReplace(Node* node, Node* child) // node, child
                     c = c->nextSibling();
                 }
 
-                if (child &&
-                    child->isSpecificTypeNodeFollowing(
-                        NodeType::DOCUMENT_TYPE_NODE)) {
+                if (child && child->isSpecificTypeNodeFollowing(
+                                 NodeType::DOCUMENT_TYPE_NODE)) {
                     throw new DOMException(
                         executionContext(), DOMException::HIERARCHY_REQUEST_ERR,
                         "node has one element child and doctype"
@@ -1658,9 +1657,8 @@ void Node::validateReplace(Node* node, Node* child) // node, child
                 }
                 c = c->nextSibling();
             }
-            if (child &&
-                child->isSpecificTypeNodeFollowing(
-                    NodeType::DOCUMENT_TYPE_NODE)) {
+            if (child && child->isSpecificTypeNodeFollowing(
+                             NodeType::DOCUMENT_TYPE_NODE)) {
                 throw new DOMException(executionContext(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "doctype is following child.");
@@ -2392,4 +2390,4 @@ ExecutionContext* Node::executionContext() const
 {
     return document()->executionContext();
 }
-}
+} // namespace Starfish

@@ -60,8 +60,10 @@ RTCRtpTransceiver::RTCRtpTransceiver(
     , m_backend(rtpTransceiver)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCRtpTransceiver*)obj)->~RTCRtpTransceiver(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCRtpTransceiver*)obj)->~RTCRtpTransceiver();
+        },
         NULL, NULL, NULL);
 }
 

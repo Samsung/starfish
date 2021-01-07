@@ -64,6 +64,6 @@ private:
     double m_duration{ 0 };
     uint32_t m_numberOfChannels{ 1 };
 };
-}
+} // namespace Starfish
 #endif
 #endif

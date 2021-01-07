@@ -97,7 +97,7 @@ private:
     bool m_hasValidBundlePolicy{ true };
     bool m_hasValidRtcpMuxPolicy{ true };
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

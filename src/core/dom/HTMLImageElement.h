@@ -111,6 +111,6 @@ private:
 
     size_t m_updateFrameTimer{ 0 };
 };
-}
+} // namespace Starfish
 
 #endif

@@ -76,6 +76,6 @@ private:
     void checkValidHeader(String* name);
     void checkValidHeader(String* name, String* value);
 };
-}
+} // namespace Starfish
 
 #endif

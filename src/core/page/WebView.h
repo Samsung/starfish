@@ -587,6 +587,6 @@ private:
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -132,7 +132,7 @@ namespace {
         return !item->hasTagName(s.m_optgroupTagName) &&
                !item->hasTagName(s.m_optionTagName);
     }
-}
+} // namespace
 
 HTMLElementStack::ElementRecord::ElementRecord(HTMLStackItem* item,
                                                ElementRecord* next)
@@ -743,4 +743,4 @@ void HTMLElementStack::show()
 }
 
 #endif
-}
+} // namespace Starfish

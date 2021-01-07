@@ -68,6 +68,6 @@ struct RTCIceServer : public gc {
     bool m_hasUsername{ false };
     bool m_hasValidCredentialType{ true };
 };
-}
+} // namespace Starfish
 #endif
 #endif

@@ -32,4 +32,4 @@ Attribute* findAttributeInVector(GCVector<Attribute>& attr,
     }
     return nullptr;
 }
-}
+} // namespace Starfish

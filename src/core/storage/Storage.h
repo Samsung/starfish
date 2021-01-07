@@ -57,6 +57,6 @@ private:
 
     StorageImpl* m_storageImpl;
 };
-}
+} // namespace Starfish
 
 #endif

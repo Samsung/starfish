@@ -54,6 +54,6 @@ public:
     int selectedIndex();
     void setSelectedIndex(int index);
 };
-}
+} // namespace Starfish
 
 #endif

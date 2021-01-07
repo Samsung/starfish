@@ -174,6 +174,6 @@ private:
     void* m_data;
     mutable GCVector<Node*> m_cachedNodeList;
 };
-}
+} // namespace Starfish
 
 #endif

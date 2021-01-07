@@ -66,7 +66,7 @@ private:
     bool m_userVisibleOnly;
     String* m_applicationServerKey;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

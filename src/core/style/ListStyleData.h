@@ -109,6 +109,6 @@ bool operator!=(const ListStyleData& a, const ListStyleData& b)
 {
     return !operator==(a, b);
 }
-}
+} // namespace Starfish
 
 #endif

@@ -467,6 +467,6 @@ bool operator!=(const StyleTransformDataGroup& a,
 {
     return !operator==(a, b);
 }
-}
+} // namespace Starfish
 
 #endif

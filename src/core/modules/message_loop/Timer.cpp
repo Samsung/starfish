@@ -49,4 +49,4 @@ void Timer::cancelAnimationFrame(size_t reqID)
         }
     }
 }
-}
+} // namespace Starfish

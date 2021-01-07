@@ -160,4 +160,4 @@ void DOMStringMap::defaultNamedEnumerator(GCVector<String*>& enums)
         }
     }
 }
-}
+} // namespace Starfish

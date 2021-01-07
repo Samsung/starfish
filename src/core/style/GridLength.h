@@ -291,6 +291,6 @@ private:
     GridLength m_data2;
     GridTrackType m_type;
 };
-}
+} // namespace Starfish
 
 #endif

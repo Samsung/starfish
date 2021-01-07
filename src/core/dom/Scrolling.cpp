@@ -517,9 +517,8 @@ void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
                 STARFISH_SCROLL_ACTIVE_TIME_IN_MS) {
                 needsToDrawScrollbar = true;
                 scrollbarOpacity =
-                    1 -
-                    float(currentTime - scrolling->m_lastActiveTime) /
-                        float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS);
+                    1 - float(currentTime - scrolling->m_lastActiveTime) /
+                            float(STARFISH_SCROLL_ACTIVE_TIME_IN_MS);
             }
         }
 
@@ -598,4 +597,4 @@ template void Scrolling::paintScrollbars<Compositor*>(Scrolling* scrolling,
                                                       FrameBlockBox*,
                                                       OverflowValue,
                                                       OverflowValue);
-}
+} // namespace Starfish

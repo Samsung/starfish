@@ -188,4 +188,4 @@ const char* CSSPropertyHelper::toCamelCaseString(
     }
     return "";
 }
-}
+} // namespace Starfish

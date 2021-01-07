@@ -40,4 +40,4 @@ WebView* DocumentHoldable::webView() const
 {
     return document()->window()->browsingContext()->webView();
 }
-}
+} // namespace Starfish

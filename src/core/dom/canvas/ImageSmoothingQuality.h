@@ -25,5 +25,5 @@ enum class ImageSmoothingQuality { Low, Medium, High };
 
 ImageRenderingValue toImageRenderingValue(bool imageSmoothingEnabled,
                                           ImageSmoothingQuality quality);
-}
+} // namespace Starfish
 #endif

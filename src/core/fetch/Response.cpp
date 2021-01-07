@@ -254,4 +254,4 @@ void Response::setMimeType(String* mimeType)
 {
     m_responseData->m_mimeType = mimeType;
 }
-}
+} // namespace Starfish

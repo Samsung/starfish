@@ -187,4 +187,4 @@ String* XMLSerializer::serializeToXML(Element* e, bool includeSelf)
 
     return String::fromUTF8(s.data(), s.length());
 }
-}
+} // namespace Starfish

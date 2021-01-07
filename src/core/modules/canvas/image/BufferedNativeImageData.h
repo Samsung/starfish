@@ -81,13 +81,13 @@ protected:
 #if !defined(OS_WINDOWS)
         everyNativeImageInstances().push_back(this);
 #endif
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           BufferedNativeImageData* self =
-                                               (BufferedNativeImageData*)obj;
-                                           self->disposeNativeImageData();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                BufferedNativeImageData* self = (BufferedNativeImageData*)obj;
+                self->disposeNativeImageData();
+            },
+            NULL, NULL, NULL);
     }
     bool m_isSeenByGC : 1;
 };

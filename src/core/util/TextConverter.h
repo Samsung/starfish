@@ -44,6 +44,6 @@ protected:
                       gc_allocator_ignore_off_page<char>>
         m_bufferToConvert;
 };
-}
+} // namespace Starfish
 
 #endif

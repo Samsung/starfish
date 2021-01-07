@@ -188,5 +188,5 @@ public:
     static String* namedColorToString(NamedColorValue namedColor);
     static Unit::Color namedColorToColor(NamedColorValue namedColor);
 };
-}
+} // namespace Starfish
 #endif

@@ -38,6 +38,6 @@ public:
     static void waitUntilDone();
     static void notifyDone();
 };
-}
+} // namespace Starfish
 #endif
 #endif

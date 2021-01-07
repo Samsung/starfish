@@ -76,7 +76,7 @@ private:
     PushSubscriptionOptionsInit m_optionsInit;
     PushManagerId m_pushManagerId;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

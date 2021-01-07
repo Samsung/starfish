@@ -108,6 +108,6 @@ private:
         CSSStyleSheet* m_parentStyleSheet;
     };
 };
-}
+} // namespace Starfish
 
 #endif

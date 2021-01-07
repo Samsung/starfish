@@ -643,6 +643,6 @@ size_t HTTPCache::calcBlocksSizeOfIndexFile()
     }
     return calcBlocksSize(bytes);
 }
-}
+} // namespace Starfish
 
 #endif

@@ -82,6 +82,6 @@ public:
 private:
     Rule* m_rule;
 };
-}
+} // namespace Starfish
 
 #endif

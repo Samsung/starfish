@@ -153,4 +153,4 @@ void EventSourceParser::EventSourceParser::parseLine()
     }
     // Unrecognized field name. Ignore!
 }
-}
+} // namespace Starfish

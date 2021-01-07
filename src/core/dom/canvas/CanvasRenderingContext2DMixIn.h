@@ -285,6 +285,6 @@ private:
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;
 };
-}
+} // namespace Starfish
 #endif
 #endif

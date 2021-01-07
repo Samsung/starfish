@@ -57,4 +57,4 @@ void DOMRect::unite(const DOMRect* other)
     setWidth(right - left);
     setHeight(bottom - top);
 }
-}
+} // namespace Starfish

@@ -56,4 +56,4 @@ void SVGMaskElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 }
-}
+} // namespace Starfish

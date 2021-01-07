@@ -69,6 +69,6 @@ protected:
     bool m_tizenWidgetTransparentBackground;
 #endif
 };
-}
+} // namespace Starfish
 
 #endif

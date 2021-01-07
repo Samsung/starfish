@@ -44,4 +44,4 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
 
     Resource::didDataReceived(buffer, length);
 }
-}
+} // namespace Starfish

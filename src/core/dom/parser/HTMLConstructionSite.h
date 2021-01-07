@@ -352,6 +352,6 @@ private:
 
     bool m_inQuirksMode;
 };
-}
+} // namespace Starfish
 
 #endif

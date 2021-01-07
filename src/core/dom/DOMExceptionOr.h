@@ -110,5 +110,5 @@ public:
 private:
     DOMException* m_exception{ nullptr };
 };
-}
+} // namespace Starfish
 #endif

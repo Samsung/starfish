@@ -28,4 +28,4 @@ DOMStringList::DOMStringList(Document* document)
     , m_scriptBindingInstance(document->scriptBindingInstance())
 {
 }
-}
+} // namespace Starfish

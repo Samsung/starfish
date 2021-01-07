@@ -41,6 +41,6 @@ private:
     GCUnorderedMap<String*, StorageNamespaceImpl*>
         m_localStoragePathToStorageNamespace;
 };
-}
+} // namespace Starfish
 
 #endif

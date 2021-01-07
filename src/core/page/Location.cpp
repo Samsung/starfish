@@ -274,9 +274,8 @@ private:
                 ShouldOverrideUrlLoading, (void*)p);
         } else {
             if (canNavigate) {
-                if (m_force ||
-                    !m_location->url()->urlString()->equals(
-                        m_url->urlString())) {
+                if (m_force || !m_location->url()->urlString()->equals(
+                                   m_url->urlString())) {
                     navigateImpl(m_location->document()->browsingContext(),
                                  m_url, m_referrerURL,
                                  HistoryManagerAction::Add);
@@ -366,4 +365,4 @@ void Location::reload(bool force)
     ResourceURL* newUrl = new ResourceURL(*url());
     assign(newUrl, force);
 }
-}
+} // namespace Starfish

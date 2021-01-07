@@ -100,6 +100,6 @@ namespace CanvasCairoUtils {
             break;
         }
     }
-}
-}
+} // namespace CanvasCairoUtils
+} // namespace Starfish
 #endif

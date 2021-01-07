@@ -92,6 +92,6 @@ private:
     String* m_message;
     String* m_name;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -91,6 +91,6 @@ private:
     Unit::Color m_color;
     String* m_url{ nullptr };
 };
-}
+} // namespace Starfish
 
 #endif

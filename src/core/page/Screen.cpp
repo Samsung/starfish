@@ -77,4 +77,4 @@ bool Screen::isMonochrome() const
 {
     return webView()->screenInfo().isMonochrome;
 }
-}
+} // namespace Starfish

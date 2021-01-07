@@ -1619,7 +1619,7 @@ void MediaOperationQueueDataRequestPlay::cancelOperationWithException(
 {
     m_promise->reject(exception->scriptValue());
 }
-}
+} // namespace Starfish
 
 #undef MEDIA_ELEMENT_LOG
 

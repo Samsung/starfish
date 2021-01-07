@@ -62,6 +62,6 @@ private:
     MediaStreamTrack* m_track{ nullptr };
     GCVector<MediaStream*> m_streams;
 };
-}
+} // namespace Starfish
 #endif
 #endif

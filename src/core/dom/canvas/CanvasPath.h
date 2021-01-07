@@ -72,7 +72,7 @@ private:
     ExecutionContext* m_executionContext;
     bool m_shouldDisable;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

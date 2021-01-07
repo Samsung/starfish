@@ -70,12 +70,13 @@ PathCairo::PathCairo()
     , m_dumyCairoSurface(nullptr)
 {
     init();
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       PathCairo* p = (PathCairo*)obj;
-                                       p->finalize();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            PathCairo* p = (PathCairo*)obj;
+            p->finalize();
+        },
+        NULL, NULL, NULL);
 }
 
 PathCairo::~PathCairo()
@@ -406,5 +407,5 @@ Unit::Rect PathCairo::boundingRect(bool isFill)
     }
     return Unit::Rect(x0, y0, x1 - x0, y1 - y0);
 }
-}
+} // namespace Starfish
 #endif

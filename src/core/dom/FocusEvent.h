@@ -87,6 +87,6 @@ public:
 private:
     EventTarget* m_relatedTarget;
 };
-}
+} // namespace Starfish
 
 #endif

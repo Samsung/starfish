@@ -44,6 +44,6 @@ public:
 private:
     HTMLCollection* m_areas;
 };
-}
+} // namespace Starfish
 
 #endif

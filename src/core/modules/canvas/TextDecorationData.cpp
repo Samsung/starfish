@@ -48,4 +48,4 @@ void TextDecorationData::merge(ComputedStyle* style)
         m_lineThroughColor = c.getValue();
     }
 }
-}
+} // namespace Starfish

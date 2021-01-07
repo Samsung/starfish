@@ -8363,7 +8363,8 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                     ComputedStyle* oldStyle = child->style();
                     if (oldStyle) {
                         bool damagedKeys
-                            [CSSStyleValuePair::KeyKindSize]; // don't care
+                            [CSSStyleValuePair::KeyKindSize]; // don't
+                                                              // care
                         childTextNodeComputedStyleDamage = compareStyle(
                             childTextNodeStyle, oldStyle, damagedKeys);
                     }
@@ -10063,9 +10064,8 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 } else {
                     return false;
                 }
-            } else if (isLenParser &&
-                       ret.updateValueUnitLength(CSSTokenValue(str),
-                                                 parserOption)) {
+            } else if (isLenParser && ret.updateValueUnitLength(
+                                          CSSTokenValue(str), parserOption)) {
                 if (unitParsed) {
                     return false;
                 }
@@ -10089,9 +10089,8 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                         val.setValue(-1 * ret.cssLengthValue());
                     }
                 }
-            } else if (isTimeParser &&
-                       ret.updateValueUnitTime(CSSTokenValue(str),
-                                               parserOption)) {
+            } else if (isTimeParser && ret.updateValueUnitTime(
+                                           CSSTokenValue(str), parserOption)) {
                 if (unitParsed) {
                     return false;
                 }
@@ -10102,9 +10101,8 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 } else {
                     val.setValue(-1 * ret.timeValue());
                 }
-            } else if (isAngleParser &&
-                       ret.updateValueUnitAngle(CSSTokenValue(str),
-                                                parserOption)) {
+            } else if (isAngleParser && ret.updateValueUnitAngle(
+                                            CSSTokenValue(str), parserOption)) {
                 if (unitParsed) {
                     return false;
                 }
@@ -13663,10 +13661,9 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
             for (idx = 0; idx < maxArgCnt && idx < valueListSize; idx++) {
                 TransformUnit unit = units[idx];
                 CSSStyleValuePair ret;
-                if (unit == Number &&
-                    ret.updateValueUnitNumber(
-                        transformValueList[idx].trim(),
-                        CSSPropertyParser::AllowNegative)) {
+                if (unit == Number && ret.updateValueUnitNumber(
+                                          transformValueList[idx].trim(),
+                                          CSSPropertyParser::AllowNegative)) {
                     values->emplace_back(ret);
                 } else if (unit == Angle &&
                            ret.updateValueUnitAngleOrCalc(
@@ -14748,4 +14745,4 @@ void StyleResolver::dumpDOMStyle(Document* document)
     printf("\n");
 }
 #endif
-}
+} // namespace Starfish

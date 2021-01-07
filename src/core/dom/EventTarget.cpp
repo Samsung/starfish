@@ -589,4 +589,4 @@ StaticStrings* EventTarget::staticStrings()
 {
     return executionContext()->webBase()->starfish()->staticStrings();
 }
-}
+} // namespace Starfish

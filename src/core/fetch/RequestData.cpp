@@ -195,4 +195,4 @@ RequestDestination RequestData::requestDestinationFromString(
     }
     return RequestDestination::Empty;
 }
-}
+} // namespace Starfish

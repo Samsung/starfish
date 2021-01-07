@@ -34,5 +34,5 @@ Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

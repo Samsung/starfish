@@ -25,7 +25,7 @@ class ContextRef;
 class ValueRef;
 class FunctionObjectRef;
 class ExecutionStateRef;
-}
+} // namespace Escargot
 
 #include "binding/Interfaces.h"
 
@@ -130,6 +130,6 @@ protected:
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,
                                        Escargot::ExecutionStateRef* state);
 };
-}
+} // namespace Starfish
 
 #endif

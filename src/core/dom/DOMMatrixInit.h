@@ -54,5 +54,5 @@ private:
     double m_m44{ 1 };
     bool m_is2D{ true };
 };
-}
+} // namespace Starfish
 #endif

@@ -147,6 +147,6 @@ private:
     QualifiedName m_name;
     String* m_standAloneValue;
 };
-}
+} // namespace Starfish
 
 #endif

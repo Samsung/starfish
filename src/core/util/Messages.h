@@ -61,6 +61,6 @@ size_t bufferSize(std::initializer_list<const char*> args);
     std::unique_ptr<char[]> MSG##buf(new char[MSG##siz + 1]);    \
     char* MSG = MSG##buf.get();                                  \
     snprintf(MSG, MSG##siz + 1, TEMPLATE_STR, ##__VA_ARGS__)
-}
+} // namespace Starfish
 
 #endif

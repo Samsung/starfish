@@ -86,6 +86,6 @@ protected:
     String* m_mediaType;
     GCVector<MediaQueryExp*> m_expressions;
 };
-}
+} // namespace Starfish
 
 #endif

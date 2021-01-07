@@ -44,6 +44,6 @@ private:
     // TODO: this should have an identifier.
     GCDeque<ServiceWorkerJob*> m_jobQueue;
 };
-}
+} // namespace Starfish
 
 #endif

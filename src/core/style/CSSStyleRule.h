@@ -298,6 +298,6 @@ private:
     GCVector<CSSRule*> m_childRuleWrappers;
     CSSRuleList* m_ruleListWrapper;
 };
-}
+} // namespace Starfish
 
 #endif

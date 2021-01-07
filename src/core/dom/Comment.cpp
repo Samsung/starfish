@@ -32,4 +32,4 @@ String* Comment::localName()
 {
     return starfish()->staticStrings()->m_commentLocalName.string();
 }
-}
+} // namespace Starfish

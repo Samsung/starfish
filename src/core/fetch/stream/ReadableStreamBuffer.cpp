@@ -98,4 +98,4 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
         STARFISH_ASSERT_NOT_REACHED();
     }
 }
-}
+} // namespace Starfish

@@ -763,4 +763,4 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
 
     return nullptr;
 }
-}
+} // namespace Starfish

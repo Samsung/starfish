@@ -94,4 +94,4 @@ Attr* NamedNodeMap::removeNamedItemNS(Nullable<String*> ns, String* localName)
     }
     return m_element->removeAttributeNode(old);
 }
-}
+} // namespace Starfish

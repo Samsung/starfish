@@ -145,6 +145,6 @@ private:
     BoundaryPoint m_start;
     BoundaryPoint m_end;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -32,4 +32,4 @@ size_t bufferSize(std::initializer_list<const char*> args)
 
     return len;
 }
-}
+} // namespace Starfish

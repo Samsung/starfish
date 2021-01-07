@@ -270,4 +270,4 @@ IterationSource<Nullable<String*>, Nullable<String*>>* Headers::startIteration(
 {
     return new HeadersIterationSource(m_headersData->httpHeaderMap());
 }
-}
+} // namespace Starfish

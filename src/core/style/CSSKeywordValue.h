@@ -52,6 +52,6 @@ protected:
 private:
     String* m_value;
 };
-}
+} // namespace Starfish
 
 #endif

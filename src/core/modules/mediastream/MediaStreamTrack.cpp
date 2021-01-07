@@ -40,8 +40,10 @@ MediaStreamTrack::MediaStreamTrack(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((MediaStreamTrack*)obj)->~MediaStreamTrack(); },
+        this,
+        [](void* obj, void* cd) {
+            ((MediaStreamTrack*)obj)->~MediaStreamTrack();
+        },
         NULL, NULL, NULL);
 }
 
@@ -280,5 +282,5 @@ WebCamStreamTrack::WebCamStreamTrackCapturer::source()
 {
     return m_videoCapturer.get();
 }
-}
+} // namespace Starfish
 #endif

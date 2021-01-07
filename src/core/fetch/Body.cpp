@@ -338,4 +338,4 @@ void Body::copyBody(Body* body)
         }
     }
 }
-};
+}; // namespace Starfish

@@ -99,5 +99,5 @@ private:
     CanvasFillStrokeSourceType m_type;
     CanvasFillStrokeSourceValue m_value;
 };
-}
+} // namespace Starfish
 #endif

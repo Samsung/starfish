@@ -72,6 +72,6 @@ private:
     Element* m_element;
     QualifiedName m_localName;
 };
-}
+} // namespace Starfish
 
 #endif

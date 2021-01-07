@@ -155,6 +155,6 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
     // Return ValueRef* from native value
     return ValueRef::create(result);
 }
-}
+} // namespace Starfish
 
 #endif

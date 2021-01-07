@@ -205,6 +205,6 @@ private:
 
     GCVector<MaskLayer> m_layers;
 };
-}
+} // namespace Starfish
 
 #endif

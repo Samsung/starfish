@@ -66,6 +66,6 @@ public:
 
     void unite(const DOMRect*);
 };
-}
+} // namespace Starfish
 
 #endif

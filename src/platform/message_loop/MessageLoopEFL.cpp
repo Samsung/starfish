@@ -103,19 +103,19 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     id->m_data = data;
     id->m_ml = this;
     id->m_globalScope = globalScope;
-    id->m_idler =
-        ecore_timer_add(0.0,
-                        [](void* data) -> Eina_Bool {
-                            IdlerData* id = (IdlerData*)data;
-                            removeIderFromList(id->m_ml->m_idlers, id);
+    id->m_idler = ecore_timer_add(
+        0.0,
+        [](void* data) -> Eina_Bool {
+            IdlerData* id = (IdlerData*)data;
+            removeIderFromList(id->m_ml->m_idlers, id);
 
-                            id->m_ml->invokeMicroTasksIfExist();
-                            id->m_fn((size_t)id, id->m_data);
+            id->m_ml->invokeMicroTasksIfExist();
+            id->m_fn((size_t)id, id->m_data);
 
-                            GC_FREE(id);
-                            return ECORE_CALLBACK_CANCEL;
-                        },
-                        id);
+            GC_FREE(id);
+            return ECORE_CALLBACK_CANCEL;
+        },
+        id);
 
     return (size_t)id;
 }
@@ -133,20 +133,20 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_globalScope = globalScope;
-    id->m_idler =
-        ecore_timer_add(0.0,
-                        [](void* data) -> Eina_Bool {
-                            IdlerData* id = (IdlerData*)data;
-                            removeIderFromList(id->m_ml->m_idlers, id);
+    id->m_idler = ecore_timer_add(
+        0.0,
+        [](void* data) -> Eina_Bool {
+            IdlerData* id = (IdlerData*)data;
+            removeIderFromList(id->m_ml->m_idlers, id);
 
-                            id->m_ml->invokeMicroTasksIfExist();
-                            ((void (*)(size_t, void*, void*))id->m_fn)(
-                                (size_t)id, id->m_data, id->m_data1);
+            id->m_ml->invokeMicroTasksIfExist();
+            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
+                                                       id->m_data1);
 
-                            GC_FREE(id);
-                            return ECORE_CALLBACK_CANCEL;
-                        },
-                        id);
+            GC_FREE(id);
+            return ECORE_CALLBACK_CANCEL;
+        },
+        id);
 
     return (size_t)id;
 }
@@ -377,16 +377,17 @@ void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
     Param* p = new Param();
     p->functor = functor;
 
-    addIdlerWithNoGCRootingInOtherThread(nullptr,
-                                         [](size_t, void* data) {
-                                             STARFISH_ASSERT(data != nullptr);
-                                             Param* p = (Param*)data;
-                                             p->functor();
-                                             delete p;
-                                         },
-                                         p);
+    addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t, void* data) {
+            STARFISH_ASSERT(data != nullptr);
+            Param* p = (Param*)data;
+            p->functor();
+            delete p;
+        },
+        p);
 
     return;
 }
-}
+} // namespace Starfish
 #endif

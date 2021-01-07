@@ -129,4 +129,4 @@ Node* Text::mergeWithTextSiblings()
 
     return Traverse::nextPostOrder(this, nullptr);
 }
-}
+} // namespace Starfish

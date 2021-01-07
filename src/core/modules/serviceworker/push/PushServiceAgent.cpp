@@ -61,6 +61,6 @@ NULLABLE PushSubscription* PushServiceAgent::findSubscription(PushManagerId& id)
     }
     return it->second;
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

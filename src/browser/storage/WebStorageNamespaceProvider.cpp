@@ -63,4 +63,4 @@ StorageNamespace* WebStorageNamespaceProvider::createSessionStorageNamespace()
 
     return storageNamespace;
 }
-}
+} // namespace Starfish

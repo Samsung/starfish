@@ -178,7 +178,7 @@ skiaBackendInternalLoadGlyph(Font* f, char32_t ch);
 std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
                                                       FontImplSkia* font);
 bool skiaBackendCanUseSimpleFontPath(Font* f, const StringView& sv);
-};
+}; // namespace Starfish
 
 #endif
 #endif

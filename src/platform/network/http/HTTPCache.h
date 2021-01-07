@@ -130,6 +130,6 @@ private:
     bool m_good;
     int m_cacheMode;
 };
-}
+} // namespace Starfish
 #endif
 #endif

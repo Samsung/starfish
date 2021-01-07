@@ -2754,15 +2754,14 @@ public:
         }
 
         auto br = m_rareComputedStyleData.borderRadius();
-        if (br &&
-            !(br->m_topLeftHorizontal.hasZeroValueAnyway() &&
-              br->m_topLeftVertical.hasZeroValueAnyway() &&
-              br->m_topRightHorizontal.hasZeroValueAnyway() &&
-              br->m_topRightVertical.hasZeroValueAnyway() &&
-              br->m_bottomLeftHorizontal.hasZeroValueAnyway() &&
-              br->m_bottomLeftVertical.hasZeroValueAnyway() &&
-              br->m_bottomRightHorizontal.hasZeroValueAnyway() &&
-              br->m_bottomRightVertical.hasZeroValueAnyway())) {
+        if (br && !(br->m_topLeftHorizontal.hasZeroValueAnyway() &&
+                    br->m_topLeftVertical.hasZeroValueAnyway() &&
+                    br->m_topRightHorizontal.hasZeroValueAnyway() &&
+                    br->m_topRightVertical.hasZeroValueAnyway() &&
+                    br->m_bottomLeftHorizontal.hasZeroValueAnyway() &&
+                    br->m_bottomLeftVertical.hasZeroValueAnyway() &&
+                    br->m_bottomRightHorizontal.hasZeroValueAnyway() &&
+                    br->m_bottomRightVertical.hasZeroValueAnyway())) {
             return true;
         } else {
             return false;
@@ -4120,6 +4119,6 @@ void computeCSSAnimationKeyframes(const StyleResolver& resolver,
 void computeWebAnimationKeyframes(const StyleResolver& resolver,
                                   Element* element, ComputedStyle* style,
                                   std::vector<StyleRuleBase*>& keyframes);
-}
+} // namespace Starfish
 
 #endif

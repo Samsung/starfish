@@ -35,7 +35,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLBodyElement() const override;
 
-/* Other methods (not in DOM API) */
+    /* Other methods (not in DOM API) */
 
 #define VIRTUAL virtual
 #define OVERRIDE override
@@ -88,6 +88,6 @@ public:
         return DocumentHoldable::window();
     }
 };
-}
+} // namespace Starfish
 
 #endif

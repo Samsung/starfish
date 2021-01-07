@@ -144,4 +144,4 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     doc->setWebOrigin(m_document->webOrigin());
     return doc;
 }
-}
+} // namespace Starfish

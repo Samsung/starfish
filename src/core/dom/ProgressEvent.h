@@ -129,6 +129,6 @@ private:
     uint64_t m_loaded;
     uint64_t m_total;
 };
-}
+} // namespace Starfish
 
 #endif

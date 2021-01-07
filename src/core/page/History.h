@@ -57,5 +57,5 @@ public:
 private:
     HistoryManager* historyManager();
 };
-}
+} // namespace Starfish
 #endif

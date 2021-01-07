@@ -30,6 +30,6 @@ ScriptBindingInstance* CanvasRenderingContext::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
-}
+} // namespace Starfish
 
 #endif

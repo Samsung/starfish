@@ -309,4 +309,4 @@ HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
 
     return info;
 }
-}
+} // namespace Starfish

@@ -228,4 +228,4 @@ bool TimingOptions::setTimingFunction(Element* element,
     }
     return true;
 }
-}
+} // namespace Starfish

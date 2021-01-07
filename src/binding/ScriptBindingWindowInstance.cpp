@@ -309,4 +309,4 @@ void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
 {
     m_ownerWindow->dispatchErrorEvent(errorInfo);
 }
-}
+} // namespace Starfish

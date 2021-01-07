@@ -185,6 +185,6 @@ private:
     OrdinalNumber m_line;
     OrdinalNumber m_column;
 };
-}
+} // namespace Starfish
 
 #endif

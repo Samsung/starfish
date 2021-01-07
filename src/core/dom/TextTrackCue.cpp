@@ -93,6 +93,6 @@ DocumentFragment* TextTrackCue::getCueAsHTML()
 
 DEFINE_EVENT_LISTENER(TextTrackCue, enter);
 DEFINE_EVENT_LISTENER(TextTrackCue, exit);
-}
+} // namespace Starfish
 
 #endif

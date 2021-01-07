@@ -148,6 +148,6 @@ protected:
     MessagePort* m_remotePort;
     PortMessageQueue* m_portMessageQueue;
 };
-}
+} // namespace Starfish
 
 #endif

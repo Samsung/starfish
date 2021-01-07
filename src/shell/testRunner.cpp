@@ -38,5 +38,5 @@ void testRunner::notifyDone()
 {
     g_DumpAsText_Async = false;
 }
-}
+} // namespace Starfish
 #endif

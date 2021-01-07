@@ -41,6 +41,6 @@ public:
     void setDateTime(String* dateTime);
     String* dateTime();
 };
-}
+} // namespace Starfish
 
 #endif

@@ -43,6 +43,6 @@ protected:
     GCVector<TextResource*> m_preloadedJS;
     GCVector<TextResource*> m_preloadedCSS;
 };
-}
+} // namespace Starfish
 
 #endif

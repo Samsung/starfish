@@ -66,6 +66,6 @@ public:
 private:
     HTMLCollection* m_cells;
 };
-}
+} // namespace Starfish
 
 #endif

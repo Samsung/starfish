@@ -32,4 +32,4 @@ String* CDATASection::localName()
 {
     return String::emptyString;
 }
-}
+} // namespace Starfish

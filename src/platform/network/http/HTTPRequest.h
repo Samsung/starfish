@@ -109,6 +109,6 @@ private:
 
     time_t m_requestTime;
 };
-}
+} // namespace Starfish
 
 #endif

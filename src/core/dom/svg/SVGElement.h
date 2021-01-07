@@ -43,8 +43,9 @@
             pair.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
             auto s = name->toUTF8NonGCString();                        \
             if (CSSPropertyParser::parseLength(                        \
-                    s.data(), CSSPropertyParser::AllowPercent |        \
-                                  CSSPropertyParser::AllowWithoutUnit, \
+                    s.data(),                                          \
+                    CSSPropertyParser::AllowPercent |                  \
+                        CSSPropertyParser::AllowWithoutUnit,           \
                     &pair)) {                                          \
                 cssValues.push_back(pair);                             \
             }                                                          \

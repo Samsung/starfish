@@ -39,4 +39,4 @@ DOMMatrixInit::DOMMatrixInit()
     , m_is2D(true)
 {
 }
-}
+} // namespace Starfish

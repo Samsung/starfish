@@ -64,6 +64,6 @@ protected:
     DOMPoint* m_p4;
     mutable DOMRect* m_bounds; // allocated lazily
 };
-}
+} // namespace Starfish
 
 #endif

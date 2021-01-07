@@ -95,4 +95,4 @@ void History::replaceState(ScriptValue state, String* title,
 {
     historyManager()->replaceState(document(), state, title, url);
 }
-}
+} // namespace Starfish

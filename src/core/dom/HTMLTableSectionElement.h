@@ -51,6 +51,6 @@ public:
 private:
     HTMLCollection* m_rows;
 };
-}
+} // namespace Starfish
 
 #endif

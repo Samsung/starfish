@@ -115,6 +115,6 @@ private:
     size_t m_loadProgress;
     LoadProgressState m_loadProgressState;
 };
-}
+} // namespace Starfish
 
 #endif

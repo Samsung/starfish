@@ -291,4 +291,4 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                                      StringRef::createFromASCII("console"),
                                      console, true, true, true);
 }
-}
+} // namespace Starfish

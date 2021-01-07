@@ -154,10 +154,8 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
     if (offset.isPercent()) {
         return origin + sign * offset.percent() * edgeDistance;
     } else if (offset.isCalc() && owner->node()) {
-        return origin +
-               sign *
-                   offset.calcData()->specifiedValue(edgeDistance,
-                                                     owner->node());
+        return origin + sign * offset.calcData()->specifiedValue(edgeDistance,
+                                                                 owner->node());
     }
 
     return origin + sign * offset.specifiedValue(edgeDistance, owner);
@@ -833,21 +831,25 @@ bool RadialGradientData::computeEndPoints(const Unit::Rect& rect,
     } else {
         switch (m_gradientSizeKeyword) {
         case RadialGradientSizeKeyword::ClosetSide:
-            radiusToSide(x2, y2, rect, [](float a, float b) { return a < b; },
-                         firstRadius, secondRadius);
+            radiusToSide(
+                x2, y2, rect, [](float a, float b) { return a < b; },
+                firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::FarthestSide:
-            radiusToSide(x2, y2, rect, [](float a, float b) { return a > b; },
-                         firstRadius, secondRadius);
+            radiusToSide(
+                x2, y2, rect, [](float a, float b) { return a > b; },
+                firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::ClosetCorner:
-            radiusToCorner(x2, y2, rect, [](float a, float b) { return a < b; },
-                           firstRadius, secondRadius);
+            radiusToCorner(
+                x2, y2, rect, [](float a, float b) { return a < b; },
+                firstRadius, secondRadius);
             break;
         case RadialGradientSizeKeyword::FarthestCorner:
         default:
-            radiusToCorner(x2, y2, rect, [](float a, float b) { return a > b; },
-                           firstRadius, secondRadius);
+            radiusToCorner(
+                x2, y2, rect, [](float a, float b) { return a > b; },
+                firstRadius, secondRadius);
             break;
         }
     }
@@ -966,4 +968,4 @@ bool GradientDrawingInfo::equals(const GradientDrawingInfo* src) const
 
     return false;
 }
-}
+} // namespace Starfish

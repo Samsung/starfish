@@ -259,14 +259,14 @@ public:
         , m_demuxingMutex(new Mutex())
         , m_packetGenerator(new MP4PacketGenerator())
     {
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           DEMUXERMP4_LOG(
-                                               "DemuxerMP4::~DemuxerMP4\n");
-                                           DemuxerMP4* self = (DemuxerMP4*)obj;
-                                           self->m_streamInfo.clear();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                DEMUXERMP4_LOG("DemuxerMP4::~DemuxerMP4\n");
+                DemuxerMP4* self = (DemuxerMP4*)obj;
+                self->m_streamInfo.clear();
+            },
+            NULL, NULL, NULL);
     }
 
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint);
@@ -741,7 +741,7 @@ Demuxer* Demuxer::createMP4Demuxer()
 {
     return new DemuxerMP4();
 }
-}
+} // namespace Starfish
 
 #undef DEMUXERMP4_LOG
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

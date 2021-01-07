@@ -174,4 +174,4 @@ void SVGStyleElement::dispatchLoadEvent()
         },
         this);
 }
-}
+} // namespace Starfish

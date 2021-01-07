@@ -50,6 +50,6 @@ public:
 protected:
     NodeListImpl m_nodeListImpl;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -47,7 +47,7 @@ public:
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

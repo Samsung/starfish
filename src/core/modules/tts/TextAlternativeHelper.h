@@ -48,5 +48,5 @@ private:
     GCVector<String*> m_textAlts;
     bool m_inAriaLabelledbyOrArialDescribedBy;
 };
-}
+} // namespace Starfish
 #endif

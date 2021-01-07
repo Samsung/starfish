@@ -149,5 +149,5 @@ Framerate Framerate::createFromLL(int64_t num, int64_t den)
 
     return { (int)(sign ? -a1num : a1num), (int)a1den };
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

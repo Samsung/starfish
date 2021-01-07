@@ -38,4 +38,4 @@ bool TimingFunction::operator!=(const TimingFunction& b) const
 {
     return !operator==(b);
 }
-}
+} // namespace Starfish

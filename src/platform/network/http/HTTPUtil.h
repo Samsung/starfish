@@ -88,6 +88,6 @@ public:
     static HTTPContentInfo getHTTPContentInfoFromHeaders(
         const HeaderMap& headers);
 };
-}
+} // namespace Starfish
 
 #endif

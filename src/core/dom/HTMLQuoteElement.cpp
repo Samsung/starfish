@@ -59,4 +59,4 @@ String* HTMLQuoteElement::cite()
         return String::emptyString;
     }
 }
-}
+} // namespace Starfish

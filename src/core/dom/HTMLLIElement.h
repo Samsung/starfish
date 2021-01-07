@@ -50,6 +50,6 @@ public:
     String* type();
     void setType(String* type);
 };
-}
+} // namespace Starfish
 
 #endif

@@ -220,4 +220,4 @@ void ExecutionContext::setActiveServiceWorker(ServiceWorker* serviceWorker)
     m_activeServiceWorker = serviceWorker;
 }
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */
-}
+} // namespace Starfish

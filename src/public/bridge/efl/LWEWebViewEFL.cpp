@@ -998,7 +998,6 @@ public:
                 }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
-
                 if (mayNeedsSync && g_evasGLAPI->evasglCreateSync &&
                     !m_glSync) {
                     int attr[] = { EVAS_GL_NONE };
@@ -1029,14 +1028,15 @@ public:
             }
         };
 
-        webContainer->RegisterSetNeedsRenderingCallback([this](
-            ::LWE::WebContainer* wc,
-            const std::function<void()>& doRenderingFunction) {
-            evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
-            evas_object_image_pixels_get_callback_set(
-                m_graphicsAdapter, m_pixelDirtyCallback, this);
-            m_lastDoRenderingFunction = doRenderingFunction;
-        });
+        webContainer->RegisterSetNeedsRenderingCallback(
+            [this](::LWE::WebContainer* wc,
+                   const std::function<void()>& doRenderingFunction) {
+                evas_object_image_pixels_dirty_set(m_graphicsAdapter,
+                                                   EINA_TRUE);
+                evas_object_image_pixels_get_callback_set(
+                    m_graphicsAdapter, m_pixelDirtyCallback, this);
+                m_lastDoRenderingFunction = doRenderingFunction;
+            });
 
         evas_object_image_pixels_get_callback_set(m_graphicsAdapter,
                                                   m_pixelDirtyCallback, this);
@@ -1069,12 +1069,13 @@ public:
             });
 #endif
 
-        webContainer->RegisterOnRenderedHandler([this](
-            ::LWE::WebContainer* c, ::LWE::WebContainer::RenderResult r) {
-            evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
-                                              r.updatedY, r.updatedWidth,
-                                              r.updatedHeight);
-        });
+        webContainer->RegisterOnRenderedHandler(
+            [this](::LWE::WebContainer* c,
+                   ::LWE::WebContainer::RenderResult r) {
+                evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
+                                                  r.updatedY, r.updatedWidth,
+                                                  r.updatedHeight);
+            });
 #endif
         webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
             [this](WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
@@ -1414,6 +1415,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewEFL(win, x, y, width, height, devicePixelRatio,
                           defaultFontName, locale, timezoneID);
 }
-}
+} // namespace LWE
 
 #endif

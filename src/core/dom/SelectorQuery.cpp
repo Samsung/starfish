@@ -551,4 +551,4 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
 
     findTraverseRootsAndExecute(rootNode, output, shouldOnlyMatchFirstElement);
 }
-}
+} // namespace Starfish

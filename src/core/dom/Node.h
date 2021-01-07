@@ -875,6 +875,6 @@ private:
     ComputedStyle* m_style;
     Frame* m_frame;
 };
-}
+} // namespace Starfish
 
 #endif

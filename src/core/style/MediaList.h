@@ -68,6 +68,6 @@ public:
 protected:
     MediaQuerySet* m_mediaQuerySet;
 };
-}
+} // namespace Starfish
 
 #endif

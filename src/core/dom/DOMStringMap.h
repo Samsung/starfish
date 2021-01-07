@@ -43,6 +43,6 @@ public:
 private:
     Element* m_element;
 };
-}
+} // namespace Starfish
 
 #endif

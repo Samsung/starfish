@@ -42,6 +42,6 @@ protected:
     MessagePort* m_port1;
     MessagePort* m_port2;
 };
-}
+} // namespace Starfish
 
 #endif

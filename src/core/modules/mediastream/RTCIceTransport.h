@@ -63,6 +63,6 @@ private:
     ExecutionContext* m_executionContext{ nullptr };
     rtc::scoped_refptr<webrtc::IceTransportInterface> m_backend;
 };
-}
+} // namespace Starfish
 #endif
 #endif

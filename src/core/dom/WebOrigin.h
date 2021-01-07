@@ -64,6 +64,6 @@ struct WebOriginEqual {
         return data1 == data2 ? true : data1->isSameOrigin(data2);
     }
 };
-}
+} // namespace Starfish
 
 #endif

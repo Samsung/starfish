@@ -47,5 +47,5 @@ private:
     GCDeque<Promise*> m_readPromiseQueue;
     String* m_mimeType;
 };
-}
+} // namespace Starfish
 #endif

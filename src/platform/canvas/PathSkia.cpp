@@ -72,12 +72,13 @@ PathSkia::PathSkia()
     : m_skiaPath(nullptr)
 {
     init();
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       PathSkia* p = (PathSkia*)obj;
-                                       p->finalize();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            PathSkia* p = (PathSkia*)obj;
+            p->finalize();
+        },
+        NULL, NULL, NULL);
 }
 
 PathSkia::~PathSkia()
@@ -242,5 +243,5 @@ void PathSkia::append(Path* path)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
-}
+} // namespace Starfish
 #endif

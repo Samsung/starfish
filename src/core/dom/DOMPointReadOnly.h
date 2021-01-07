@@ -65,6 +65,6 @@ protected:
     double m_z;
     double m_w;
 };
-}
+} // namespace Starfish
 
 #endif

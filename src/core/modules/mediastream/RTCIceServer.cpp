@@ -98,5 +98,5 @@ void RTCIceServer::setCredentialType(String* type)
         m_hasValidCredentialType = false;
     }
 }
-}
+} // namespace Starfish
 #endif

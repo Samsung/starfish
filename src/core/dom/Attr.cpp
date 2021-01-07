@@ -51,4 +51,4 @@ bool Attr::operator!=(const Attr& attr)
 {
     return !operator==(attr);
 }
-}
+} // namespace Starfish

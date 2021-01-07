@@ -69,6 +69,6 @@ private:
 
     RTCErrorDetailType m_errorDetail;
 };
-}
+} // namespace Starfish
 #endif
 #endif

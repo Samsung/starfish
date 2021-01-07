@@ -56,6 +56,6 @@ public:
         return nullptr;
     }
 };
-}
+} // namespace Starfish
 
 #endif

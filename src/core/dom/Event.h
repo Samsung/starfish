@@ -264,6 +264,6 @@ private:
 
     bool m_isDispatched; // dispatch flag
 };
-}
+} // namespace Starfish
 
 #endif

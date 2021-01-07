@@ -54,7 +54,8 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                     if (vm->hasPendingPromiseJob()) {
                         auto jobResult = vm->executePendingPromiseJob();
                         if (jobResult.error) {
-                            STARFISH_LOG_ERROR("Uncaught Error in Promise job\n");
+                            STARFISH_LOG_ERROR(
+                                "Uncaught Error in Promise job\n");
                         }
                     }
                 },
@@ -138,4 +139,4 @@ void ScriptEngineInstance::dispose()
 {
     m_engineInstance = nullptr;
 }
-}
+} // namespace Starfish

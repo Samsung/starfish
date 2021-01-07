@@ -1788,7 +1788,7 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MediaPlayerTizen(element);
 }
-}
+} // namespace Starfish
 
 #endif
 #endif

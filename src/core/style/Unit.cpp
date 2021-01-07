@@ -72,5 +72,5 @@ namespace Unit {
         snprintf(buf, sizeof(buf), "#%02x%02x%02x", m_r, m_g, m_b);
         return String::createASCIIString(buf, strnlen(buf, sizeof(buf)));
     }
-}
-}
+} // namespace Unit
+} // namespace Starfish

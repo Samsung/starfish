@@ -375,4 +375,4 @@ String* HTMLLinkElement::nonce()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
 }
-}
+} // namespace Starfish

@@ -251,6 +251,6 @@ private:
     BorderImageLength m_top;
     BorderImageLength m_bottom;
 };
-}
+} // namespace Starfish
 
 #endif

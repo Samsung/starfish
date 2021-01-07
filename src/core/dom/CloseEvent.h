@@ -146,6 +146,6 @@ private:
     int32_t m_code;
     String* m_reason;
 };
-}
+} // namespace Starfish
 
 #endif

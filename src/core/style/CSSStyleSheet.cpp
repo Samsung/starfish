@@ -150,10 +150,9 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
         if (selector->type() == CSSSelector::Type::PseudoClass &&
             selector->asCSSPseudoSelector()->pseudoType() ==
                 CSSSelector::PseudoType::PseudoNot) {
-            temp = total +
-                   selector->asCSSPseudoSelector()
-                       ->pseudoSelectorList()[0]
-                       ->specificityForOneSelector();
+            temp = total + selector->asCSSPseudoSelector()
+                               ->pseudoSelectorList()[0]
+                               ->specificityForOneSelector();
         } else {
             temp = total + selector->specificityForOneSelector();
         }

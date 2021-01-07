@@ -422,7 +422,7 @@ namespace Base64Utils {
         }
         return result;
     }
-}
+} // namespace Base64Utils
 
 } // namespace Starfish
 

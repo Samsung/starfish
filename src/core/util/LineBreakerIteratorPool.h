@@ -102,6 +102,6 @@ private:
     size_t m_capacity;
     std::vector<std::pair<BreakIteratorInfo, UBreakIterator*>> m_pool;
 };
-}
+} // namespace Starfish
 
 #endif

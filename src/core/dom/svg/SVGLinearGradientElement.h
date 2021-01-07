@@ -55,6 +55,6 @@ public:
 
     GCVector<ColorStop*> colorStops();
 };
-}
+} // namespace Starfish
 
 #endif

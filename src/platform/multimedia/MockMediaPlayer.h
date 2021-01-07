@@ -207,7 +207,7 @@ protected:
     size_t m_seekingTimer;
     MediaPlayerMediaSourceClient* m_mseClient;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

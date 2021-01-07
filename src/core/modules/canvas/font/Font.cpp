@@ -375,4 +375,4 @@ void FontSelector::clearCache(String* relatedFamilyName)
     cacheDeleter(m_fontCache, fm);
     cacheDeleter(m_webFontLocalSrcCache, fm);
 }
-};
+}; // namespace Starfish

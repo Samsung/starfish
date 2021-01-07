@@ -123,4 +123,4 @@ void MediaList::deleteMedium(String* oldMedium)
     }
     modifyStyleSheet();
 }
-}
+} // namespace Starfish

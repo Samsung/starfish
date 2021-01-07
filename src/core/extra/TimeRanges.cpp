@@ -51,6 +51,6 @@ ScriptBindingInstance* TimeRanges::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish
 
 #endif

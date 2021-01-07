@@ -380,7 +380,7 @@ hb_unicode_funcs_t *hb_icu_get_unicode_funcs()
 
     return funcs;
 }
-}
+} // namespace Starfish
 
 #if (defined(__GNUC__) || defined(__clang__))
 #pragma GCC diagnostic pop

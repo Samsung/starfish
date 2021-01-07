@@ -586,6 +586,6 @@ public:
                                         SerializeWithTransferResult& serialized,
                                         DeserializeWithTransferResult& result);
 };
-}
+} // namespace Starfish
 
 #endif

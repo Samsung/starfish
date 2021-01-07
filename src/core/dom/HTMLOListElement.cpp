@@ -141,4 +141,4 @@ unsigned HTMLOListElement::itemCount()
     }
     return itemCount;
 }
-}
+} // namespace Starfish

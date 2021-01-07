@@ -50,7 +50,7 @@ public:
 
     RTCIceTransport* iceTransport();
     String* stateStr();
-// GCVector<ScriptArrayBuffer> getRemoteCertificates();
+    // GCVector<ScriptArrayBuffer> getRemoteCertificates();
 
 #define VIRTUAL
 #define OVERRIDE
@@ -64,6 +64,6 @@ private:
     rtc::scoped_refptr<webrtc::DtlsTransportInterface> m_backend;
     RTCIceTransport* m_iceTransport{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

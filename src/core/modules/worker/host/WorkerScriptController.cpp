@@ -120,6 +120,6 @@ bool WorkerScriptController::evaluatefromString(String* string)
                    &result);
     return result;
 }
-}
+} // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

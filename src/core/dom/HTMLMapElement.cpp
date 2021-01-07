@@ -47,4 +47,4 @@ HTMLCollection* HTMLMapElement::areas()
                                  nullptr, false);
     return m_areas;
 }
-}
+} // namespace Starfish

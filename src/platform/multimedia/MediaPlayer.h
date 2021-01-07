@@ -184,6 +184,6 @@ protected:
     Mutex* m_playerStateMutex;
     CanvasSurface* m_canvasSurface;
 };
-}
+} // namespace Starfish
 #endif
 #endif

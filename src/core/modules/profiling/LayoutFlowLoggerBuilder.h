@@ -58,6 +58,6 @@ private:
     director.setLoggerBuilder(&builder);                                 \
     auto tracker = director.constructLogger();                           \
     tracker->installLogger();
-}
+} // namespace Starfish
 
 #endif

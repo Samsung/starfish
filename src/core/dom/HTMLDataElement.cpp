@@ -50,4 +50,4 @@ void HTMLDataElement::setValue(String* value)
         setAttribute(starfish()->staticStrings()->m_value, value);
     }
 }
-}
+} // namespace Starfish

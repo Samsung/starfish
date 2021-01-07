@@ -252,4 +252,4 @@ bool FetchUtils::isForbiddenHeaderName(String* name)
     }
     return false;
 }
-}
+} // namespace Starfish

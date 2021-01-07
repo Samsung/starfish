@@ -142,4 +142,4 @@ Document* MediaQuerySet::document() const
 {
     return m_document;
 }
-}
+} // namespace Starfish

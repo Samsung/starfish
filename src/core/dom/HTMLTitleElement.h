@@ -38,6 +38,6 @@ public:
     String* text();
     void setText(String* title);
 };
-}
+} // namespace Starfish
 
 #endif

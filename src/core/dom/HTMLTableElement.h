@@ -117,6 +117,6 @@ private:
     bool m_hasCellPaddingAttribute;
     bool m_hasCellSpacingAttribute;
 };
-}
+} // namespace Starfish
 
 #endif

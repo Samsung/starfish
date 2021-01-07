@@ -350,4 +350,4 @@ size_t decodeNamedEntityToUCharArray(const char* name, char32_t result[4])
     result[1] = search.mostRecentMatch()->secondValue;
     return numberOfCodePoints + 1;
 }
-}
+} // namespace Starfish

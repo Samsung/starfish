@@ -845,6 +845,6 @@ bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b)
 {
     return !operator==(a, b);
 }
-}
+} // namespace Starfish
 
 #endif

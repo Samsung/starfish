@@ -40,6 +40,6 @@ private:
     void initJavaScriptBinding(Escargot::ContextRef* context,
                                Escargot::ExecutionStateRef* state) override;
 };
-}
+} // namespace Starfish
 
 #endif

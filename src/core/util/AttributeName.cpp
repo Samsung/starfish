@@ -43,4 +43,4 @@ bool AttributeName::isMatch(const QualifiedName& qname) const
     }
     return false;
 }
-}
+} // namespace Starfish

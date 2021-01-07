@@ -167,4 +167,4 @@ PreloadScanner::PreloadScanner(Document* document, String* source)
         }
     }
 }
-}
+} // namespace Starfish

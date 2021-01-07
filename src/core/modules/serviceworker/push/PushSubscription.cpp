@@ -52,6 +52,6 @@ ScriptBindingInstance* PushSubscription::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

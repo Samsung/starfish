@@ -43,6 +43,6 @@ public:
         return new CDATASection(document(), data());
     }
 };
-}
+} // namespace Starfish
 
 #endif

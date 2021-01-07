@@ -41,4 +41,4 @@ HTTPRequest::~HTTPRequest()
 {
     std::vector<std::string>().swap(m_unsafeRequestHeaderNames);
 }
-}
+} // namespace Starfish

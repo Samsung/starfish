@@ -134,6 +134,6 @@ public:
                              const LayoutRect& absContentRect);
 };
 #endif
-}
+} // namespace Starfish
 
 #endif

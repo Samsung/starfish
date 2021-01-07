@@ -40,4 +40,4 @@ ValueRef* lengthCharacterDataGetterFunction(ExecutionStateRef* state,
         return ValueRef::create(data2->length());
     }
 }
-}
+} // namespace Starfish

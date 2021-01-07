@@ -279,4 +279,4 @@ void HTMLFormattingElementList::show()
 }
 
 #endif
-}
+} // namespace Starfish

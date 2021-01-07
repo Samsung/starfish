@@ -322,4 +322,4 @@ unsigned NodeIterator::acceptNode(Node* node, bool& error)
 
     return NodeFilter::FILTERREJECT;
 }
-}
+} // namespace Starfish

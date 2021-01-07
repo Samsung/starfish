@@ -327,7 +327,7 @@ public:
         return (::LWE::WebContainer*)m_impl;
     }
 };
-}
+} // namespace LWE
 
 extern "C" size_t LWE_EXPORT createWebViewInstance(
     unsigned x, unsigned y, unsigned width, unsigned height,

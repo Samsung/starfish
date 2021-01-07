@@ -43,6 +43,6 @@ public:
     void didNodeInserted(Node* parent, Node* newChild) override;
     void didNodeRemoved(Node* parent, Node* oldChild) override;
 };
-}
+} // namespace Starfish
 
 #endif

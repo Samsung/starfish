@@ -41,6 +41,6 @@ public:
 protected:
     T& m_lock;
 };
-}
+} // namespace Starfish
 
 #endif

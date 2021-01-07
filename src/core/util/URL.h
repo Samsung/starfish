@@ -71,6 +71,6 @@ protected:
     ResourceURL* m_resourceURL;
     Nullable<URLSearchParams*> m_searchParams;
 };
-}
+} // namespace Starfish
 
 #endif

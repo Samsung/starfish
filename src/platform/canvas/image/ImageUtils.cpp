@@ -59,4 +59,4 @@ std::vector<uint8_t> ImageUtils::encodePNG(const uint8_t* src, size_t w,
 
     return result;
 }
-}
+} // namespace Starfish

@@ -66,4 +66,4 @@ void HTMLBaseElement::didAttributeChanged(QualifiedName name, String* old,
         document()->processBaseElement();
     }
 }
-}
+} // namespace Starfish

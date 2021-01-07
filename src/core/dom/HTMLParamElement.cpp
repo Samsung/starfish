@@ -35,4 +35,4 @@ void* HTMLParamElement::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
-}
+} // namespace Starfish

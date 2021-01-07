@@ -98,4 +98,4 @@ void HTMLTableColElement::setCh(String* ch)
 {
     setAttribute(starfish()->staticStrings()->m_char, ch);
 }
-}
+} // namespace Starfish

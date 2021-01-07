@@ -58,6 +58,6 @@ ServiceWorkerJob* JobQueue::lastJob() const
 {
     return m_jobQueue.back();
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

@@ -56,6 +56,6 @@ public:
 private:
     unsigned itemCount();
 };
-}
+} // namespace Starfish
 
 #endif

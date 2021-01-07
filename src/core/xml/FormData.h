@@ -84,6 +84,6 @@ private:
     GCVector<FormDataSetItem*>* m_list;
     GCVector<FormDataSetItem*>::iterator findByName(String* name);
 };
-}
+} // namespace Starfish
 
 #endif

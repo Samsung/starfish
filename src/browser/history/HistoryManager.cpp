@@ -227,4 +227,4 @@ void HistoryManager::addHistoryEntry(HistoryEntry* entry)
         ++m_curEntry;
     }
 }
-}
+} // namespace Starfish

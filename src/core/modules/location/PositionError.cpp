@@ -34,4 +34,4 @@ ScriptBindingInstance* PositionError::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish

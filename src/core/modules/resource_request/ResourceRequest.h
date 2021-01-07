@@ -446,6 +446,6 @@ protected:
 
     GCVector<ResourceRequestClient*> m_clients;
 };
-}
+} // namespace Starfish
 
 #endif

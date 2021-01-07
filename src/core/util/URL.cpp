@@ -217,4 +217,4 @@ URLSearchParams* URL::searchParams()
 
     return m_searchParams.value();
 }
-}
+} // namespace Starfish

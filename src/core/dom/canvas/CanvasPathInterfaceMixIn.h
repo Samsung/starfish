@@ -46,6 +46,6 @@ public:
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) = 0;
 };
-}
+} // namespace Starfish
 #endif
 #endif

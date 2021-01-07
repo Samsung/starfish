@@ -420,5 +420,5 @@ AtomicString GatherableString<InlineStorageSize>::toAttrAtomicString(
             starfish));
     }
 }
-}
+} // namespace Starfish
 #endif

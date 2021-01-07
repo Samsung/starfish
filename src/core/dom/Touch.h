@@ -176,6 +176,6 @@ public:
 private:
     TouchData m_touchData;
 };
-}
+} // namespace Starfish
 
 #endif

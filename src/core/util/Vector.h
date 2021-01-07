@@ -569,6 +569,6 @@ protected:
     size_t m_size;
     size_t m_capacity;
 };
-}
+} // namespace Starfish
 
 #endif

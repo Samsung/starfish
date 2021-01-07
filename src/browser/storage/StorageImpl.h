@@ -50,6 +50,6 @@ private:
 
     GCUnorderedMap<String*, String*> m_map;
 };
-}
+} // namespace Starfish
 
 #endif

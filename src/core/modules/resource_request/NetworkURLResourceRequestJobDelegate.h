@@ -126,6 +126,6 @@ private:
 
     ResourceRequest* m_orgProxy;
 };
-}
+} // namespace Starfish
 
 #endif

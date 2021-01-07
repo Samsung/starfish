@@ -304,7 +304,7 @@ protected:
     GCVector<std::pair<size_t, size_t>> m_packetAccessCachePerStream;
     Mutex* m_packetGroupsMutex;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

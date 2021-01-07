@@ -64,7 +64,7 @@ public:
 private:
     audio_out_h m_audioOut{ nullptr };
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

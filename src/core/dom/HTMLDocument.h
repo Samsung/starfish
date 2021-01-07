@@ -62,6 +62,6 @@ public:
     static bool isCaseSensitiveAttribute(Document* document,
                                          const QualifiedName& attributeName);
 };
-}
+} // namespace Starfish
 
 #endif

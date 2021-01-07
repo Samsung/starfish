@@ -55,6 +55,6 @@ bool RTCCertificate::equals(RTCCertificate* certificate)
     // Using the overriden == operator
     return m_backend == certificate->backend();
 }
-}
+} // namespace Starfish
 
 #endif

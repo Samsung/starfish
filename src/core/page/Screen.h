@@ -40,6 +40,6 @@ public:
     float devicePixelRatio() const;
     bool isMonochrome() const;
 };
-}
+} // namespace Starfish
 
 #endif

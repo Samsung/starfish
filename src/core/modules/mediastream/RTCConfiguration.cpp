@@ -197,6 +197,6 @@ webrtc::PeerConnectionInterface::RTCConfiguration RTCConfiguration::genBackend()
 
     return config;
 }
-}
+} // namespace Starfish
 
 #endif

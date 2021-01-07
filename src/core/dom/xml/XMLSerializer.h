@@ -28,6 +28,6 @@ class XMLSerializer : public gc {
 public:
     static String* serializeToXML(Element* e, bool includeSelf);
 };
-}
+} // namespace Starfish
 
 #endif

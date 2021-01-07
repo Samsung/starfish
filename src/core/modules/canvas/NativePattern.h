@@ -71,5 +71,5 @@ protected:
     bool m_repeatY;
     SkMatrix m_matrix;
 };
-}
+} // namespace Starfish
 #endif

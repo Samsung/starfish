@@ -50,7 +50,7 @@ private:
     ExecutionContext* m_executionContext;
     NotificationJob* m_job;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

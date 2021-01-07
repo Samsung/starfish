@@ -87,6 +87,6 @@ protected:
     std::unordered_map<FrameBox*, LayoutRect>
         m_visibleRectOfFrameRectIsOverflowedBoxes;
 };
-}
+} // namespace Starfish
 
 #endif

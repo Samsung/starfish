@@ -31,6 +31,6 @@ ScriptBindingInstance* RTCTrackEvent::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
-}
+} // namespace Starfish
 
 #endif

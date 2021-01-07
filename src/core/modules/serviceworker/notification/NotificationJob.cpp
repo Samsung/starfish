@@ -78,5 +78,5 @@ void NotificationJob::showNotification(Promise* promise)
     // TODO: request notification to agent
     promise->fulfill(scriptUndefined());
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

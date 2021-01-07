@@ -66,4 +66,4 @@ bool ImageValue::operator==(const ImageValue& other) const
     }
     return false;
 }
-} // namespace
+} // namespace Starfish

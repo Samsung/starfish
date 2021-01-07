@@ -81,6 +81,6 @@ protected:
 
     String* m_target;
 };
-}
+} // namespace Starfish
 
 #endif

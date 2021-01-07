@@ -83,6 +83,6 @@ protected:
     double m_width;
     double m_height;
 };
-}
+} // namespace Starfish
 
 #endif

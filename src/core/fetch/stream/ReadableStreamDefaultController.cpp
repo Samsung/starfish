@@ -129,4 +129,4 @@ void ReadableStreamDefaultController::resolveRead(Promise* promise,
         },
         this, promise, value);
 }
-}
+} // namespace Starfish

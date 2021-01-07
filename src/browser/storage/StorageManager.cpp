@@ -35,14 +35,14 @@ StorageManager::StorageManager(String* localStoragePath)
     , m_jsonDocument(new JsonDocument())
 {
     m_jsonDocument->SetObject();
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       StorageManager* mgr =
-                                           (StorageManager*)obj;
-                                       mgr->writeJsonDocumentAsFile();
-                                       delete mgr->m_jsonDocument;
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            StorageManager* mgr = (StorageManager*)obj;
+            mgr->writeJsonDocumentAsFile();
+            delete mgr->m_jsonDocument;
+        },
+        NULL, NULL, NULL);
 }
 
 Nullable<String*> StorageManager::getItem(WebOrigin* webOrigin, String* key)
@@ -183,4 +183,4 @@ void StorageManager::writeJsonDocumentAsFile()
         fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
     }
 }
-}
+} // namespace Starfish

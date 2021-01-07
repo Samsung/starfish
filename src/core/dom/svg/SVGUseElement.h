@@ -65,6 +65,6 @@ private:
     ResourceURL* m_targetElementURL;
     SVGElement* m_targetElement;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -80,4 +80,4 @@ void ReadableStreamDefaultReader::releaseLock()
 {
     m_locked = false;
 }
-}
+} // namespace Starfish

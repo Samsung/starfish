@@ -104,6 +104,6 @@ private:
     HTMLCollection* m_selectedOptions;
     HTMLOptionsCollection* m_options;
 };
-}
+} // namespace Starfish
 
 #endif

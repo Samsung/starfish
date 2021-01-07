@@ -522,6 +522,6 @@ private:
     Event* m_currentDispatchingEvent;
 #endif
 };
-}
+} // namespace Starfish
 
 #endif

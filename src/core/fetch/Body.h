@@ -87,6 +87,6 @@ protected:
     ReadableStream* m_readableStream;
     Promise* m_promise;
 };
-}
+} // namespace Starfish
 
 #endif

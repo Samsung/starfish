@@ -150,5 +150,5 @@ GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
 
     return m_voiceList;
 }
-}
+} // namespace Starfish
 #endif // STARFISH_ENABLE_TTS

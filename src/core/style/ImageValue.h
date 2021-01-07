@@ -159,6 +159,6 @@ private:
     ImageValueData m_valueData;
     ImageValueType m_valueType;
 };
-}
+} // namespace Starfish
 
 #endif

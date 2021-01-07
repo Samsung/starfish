@@ -54,4 +54,4 @@ bool HTTPResponse::isRedirectionResponseStatus()
     }
     return false;
 }
-}
+} // namespace Starfish

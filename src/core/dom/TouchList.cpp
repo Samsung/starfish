@@ -33,4 +33,4 @@ ScriptBindingInstance* TouchList::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();
 }
-}
+} // namespace Starfish

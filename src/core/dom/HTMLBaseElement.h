@@ -46,6 +46,6 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 };
-}
+} // namespace Starfish
 
 #endif

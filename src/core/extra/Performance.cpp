@@ -34,4 +34,4 @@ double Performance::now()
 {
     return (longTickCount() - m_executionContext->createdTick()) / 1000.0;
 }
-}
+} // namespace Starfish

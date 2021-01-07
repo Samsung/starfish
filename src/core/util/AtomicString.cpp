@@ -258,4 +258,4 @@ AtomicString AtomicString::createAttrAtomicString(Starfish* starfish,
         return AtomicString(iter.operator*());
     }
 }
-}
+} // namespace Starfish

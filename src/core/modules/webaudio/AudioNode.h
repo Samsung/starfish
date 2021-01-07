@@ -93,6 +93,6 @@ protected:
 private:
     AudioNode(ExecutionContext* executionContext);
 };
-}
+} // namespace Starfish
 #endif
 #endif

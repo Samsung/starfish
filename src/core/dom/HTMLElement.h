@@ -153,10 +153,10 @@ public:
     DECLARE_EVENT_LISTENER(volumechange);
 #endif
 
-// https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
-// DECLARE_EVENT_LISTENER(copy);
-// DECLARE_EVENT_LISTENER(cut);
-// DECLARE_EVENT_LISTENER(paste);
+    // https://html.spec.whatwg.org/multipage/webappapis.html#documentandelementeventhandlers
+    // DECLARE_EVENT_LISTENER(copy);
+    // DECLARE_EVENT_LISTENER(cut);
+    // DECLARE_EVENT_LISTENER(paste);
 
 #undef VIRTUAL
 #undef OVERRIDE
@@ -188,6 +188,6 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 };
-}
+} // namespace Starfish
 
 #endif

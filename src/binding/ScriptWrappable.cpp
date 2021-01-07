@@ -845,15 +845,16 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           void* bufferSrc, size_t len)
 {
     ContextRef* ctx = instance->scriptContext();
-    return Evaluator::execute(ctx,
-                              [](ExecutionStateRef* state, void* bufferSrc,
-                                 size_t len) -> ValueRef* {
-                                  ArrayBufferObjectRef* obj =
-                                      ArrayBufferObjectRef::create(state);
-                                  obj->attachBuffer(state, bufferSrc, len);
-                                  return obj;
-                              },
-                              bufferSrc, len)
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, void* bufferSrc,
+                  size_t len) -> ValueRef* {
+                   ArrayBufferObjectRef* obj =
+                       ArrayBufferObjectRef::create(state);
+                   obj->attachBuffer(state, bufferSrc, len);
+                   return obj;
+               },
+               bufferSrc, len)
         .result->asArrayBufferObject();
 }
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
@@ -975,8 +976,8 @@ void registerJavaScriptNativeInterface(
         context,
         [](ExecutionStateRef* state, String* exposedObjectName,
            String* jsFunctionName, void* scriptObject,
-           Escargot::ScriptNativeFunctionPointer
-               scriptNativeFunctionPointer) -> ValueRef* {
+           Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer)
+            -> ValueRef* {
             ContextRef* context = state->context();
             GlobalObjectRef* globalObject = context->globalObject();
 
@@ -1230,4 +1231,4 @@ AttributeEventFunction::AttributeEventFunction(EventTarget* target)
 {
     m_target = target;
 }
-}
+} // namespace Starfish

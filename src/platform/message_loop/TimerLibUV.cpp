@@ -99,22 +99,22 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             },
             static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
     } else {
-        uv_timer_start(td->m_timerID,
-                       [](uv_timer_t* handle) -> void {
-                           TimeoutData* td = (TimeoutData*)handle->data;
-                           auto iter =
-                               td->m_timer->m_timeoutHandler.find(td->m_id);
-                           if (iter != td->m_timer->m_timeoutHandler.end()) {
-                               td->m_timer->m_timeoutHandler.erase(iter);
-                               td->m_timer->m_webBase->messageLoop()
-                                   ->invokeMicroTasksIfExist();
-                               td->m_handler(td->m_data);
-                               GC_FREE(td);
-                           }
-                           uv_timer_stop(handle);
-                           uv_close((uv_handle_t*)handle, on_close_handle);
-                       },
-                       static_cast<uint64_t>(delay), 0);
+        uv_timer_start(
+            td->m_timerID,
+            [](uv_timer_t* handle) -> void {
+                TimeoutData* td = (TimeoutData*)handle->data;
+                auto iter = td->m_timer->m_timeoutHandler.find(td->m_id);
+                if (iter != td->m_timer->m_timeoutHandler.end()) {
+                    td->m_timer->m_timeoutHandler.erase(iter);
+                    td->m_timer->m_webBase->messageLoop()
+                        ->invokeMicroTasksIfExist();
+                    td->m_handler(td->m_data);
+                    GC_FREE(td);
+                }
+                uv_timer_stop(handle);
+                uv_close((uv_handle_t*)handle, on_close_handle);
+            },
+            static_cast<uint64_t>(delay), 0);
     }
     m_timeoutHandler.insert(std::make_pair(id, td));
     return id;
@@ -159,30 +159,31 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
     ad->m_timerID->data = ad;
     ad->m_timerID->type = UV_UNKNOWN_HANDLE;
     uv_timer_init(uv_default_loop(), ad->m_timerID);
-    uv_timer_start(ad->m_timerID,
-                   [](uv_timer_t* handle) -> void {
-                       AnimationTickData* ad = (AnimationTickData*)handle->data;
-                       auto currentTick = longTickCount();
-                       if (currentTick - ad->m_lastExecutionTick <
-                           MINUMUM_ANIMATOR_WAIT_TIME) {
-                           return;
-                       }
+    uv_timer_start(
+        ad->m_timerID,
+        [](uv_timer_t* handle) -> void {
+            AnimationTickData* ad = (AnimationTickData*)handle->data;
+            auto currentTick = longTickCount();
+            if (currentTick - ad->m_lastExecutionTick <
+                MINUMUM_ANIMATOR_WAIT_TIME) {
+                return;
+            }
 
-                       ad->m_lastExecutionTick = currentTick;
-                       auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
-                       if (ad->m_handler(ad->m_data)) {
-                           return;
-                       }
+            ad->m_lastExecutionTick = currentTick;
+            auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
+            if (ad->m_handler(ad->m_data)) {
+                return;
+            }
 
-                       a = ad->m_timer->m_animationHandler.find(ad->m_id);
-                       if (ad->m_timer->m_animationHandler.end() != a) {
-                           ad->m_timer->m_animationHandler.erase(a);
-                           GC_FREE(ad);
-                           uv_timer_stop(handle);
-                           uv_close((uv_handle_t*)handle, on_close_handle);
-                       }
-                   },
-                   1, 1);
+            a = ad->m_timer->m_animationHandler.find(ad->m_id);
+            if (ad->m_timer->m_animationHandler.end() != a) {
+                ad->m_timer->m_animationHandler.erase(a);
+                GC_FREE(ad);
+                uv_timer_stop(handle);
+                uv_close((uv_handle_t*)handle, on_close_handle);
+            }
+        },
+        1, 1);
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }
@@ -275,5 +276,5 @@ void Timer::destroy()
         GC_FREE(ad);
     }
 }
-}
+} // namespace Starfish
 #endif

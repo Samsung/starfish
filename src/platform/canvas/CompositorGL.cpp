@@ -1524,13 +1524,13 @@ public:
 
         attachNativeBuffer(w, h, flag);
         checkError();
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           CanvasSurfaceGL* s =
-                                               (CanvasSurfaceGL*)obj;
-                                           s->detachNativeBuffer();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                CanvasSurfaceGL* s = (CanvasSurfaceGL*)obj;
+                s->detachNativeBuffer();
+            },
+            NULL, NULL, NULL);
     }
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -1670,13 +1670,17 @@ public:
                 m_buffer = nullptr;
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 AHardwareBuffer_Desc desc{
-                    m_bufferWidth, m_bufferHeight, 1,
+                    m_bufferWidth,
+                    m_bufferHeight,
+                    1,
                     AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
                     AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN |
                         AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
                         AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT |
                         AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE,
-                    0, 0, 0
+                    0,
+                    0,
+                    0
                 };
 
                 AHardwareBuffer_allocate(&desc, &m_aHardwareBuffer);

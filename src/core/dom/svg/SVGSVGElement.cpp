@@ -131,4 +131,4 @@ SVGLength* SVGSVGElement::createSVGLength()
 {
     return new SVGLength(this, m_name);
 }
-}
+} // namespace Starfish

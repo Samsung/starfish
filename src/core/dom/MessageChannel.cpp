@@ -47,4 +47,4 @@ ScriptBindingInstance* MessageChannel::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish

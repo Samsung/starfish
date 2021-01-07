@@ -73,5 +73,5 @@ private:
     float m_startGradient;
     float m_endGradient;
 };
-}
+} // namespace Starfish
 #endif

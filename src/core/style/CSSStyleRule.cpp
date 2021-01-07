@@ -671,4 +671,4 @@ void CSSKeyframesRule::setName(String* name)
 {
     return m_keyframesRule->setName(name);
 }
-}
+} // namespace Starfish

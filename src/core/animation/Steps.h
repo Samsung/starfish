@@ -68,5 +68,5 @@ private:
     bool m_isEndDirection;
     size_t m_numberOfSteps;
 };
-}
+} // namespace Starfish
 #endif

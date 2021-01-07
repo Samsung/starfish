@@ -136,4 +136,4 @@ Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info,
 
     return promise;
 }
-}
+} // namespace Starfish

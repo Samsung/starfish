@@ -28,4 +28,4 @@ TimingFunction* AnimationKeyframe::defaultTimingFunction()
 {
     return new CubicBezier(0.25, 0.1, 0.25, 1);
 }
-}
+} // namespace Starfish

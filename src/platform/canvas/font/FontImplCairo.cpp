@@ -548,6 +548,6 @@ Font* Font::createEmptyFont(FontSelector* s)
 {
     return new FontImplCairo((FontSelectorImplCairo*)s);
 }
-}
+} // namespace Starfish
 
 #endif

@@ -36,5 +36,5 @@ public:
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead,
                         int& errorCode, uint8_t* buffer) = 0;
 };
-}
+} // namespace Starfish
 #endif

@@ -154,6 +154,6 @@ protected:
     // for responseType = "document"
     ::Starfish::Document* m_responseXML;
 };
-}
+} // namespace Starfish
 
 #endif

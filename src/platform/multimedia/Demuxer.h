@@ -95,6 +95,6 @@ protected:
 
     GCVector<DemuxerClient*> m_demuxerClients;
 };
-}
+} // namespace Starfish
 
 #endif

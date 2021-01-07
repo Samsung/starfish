@@ -352,4 +352,4 @@ void CSSVariableSyntaxTreeBuilder::dump()
         }
     }
 }
-}
+} // namespace Starfish

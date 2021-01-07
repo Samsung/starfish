@@ -280,7 +280,7 @@ protected:
     double m_cachedTime;
     unsigned long m_cachedIdx;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

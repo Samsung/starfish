@@ -270,4 +270,4 @@ ScriptWrappable* TransferedMessagePort::createTransferReceivingInstance(
 {
     return new MessagePort(executionContext);
 }
-}
+} // namespace Starfish

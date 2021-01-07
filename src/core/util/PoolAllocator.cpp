@@ -82,4 +82,4 @@ void PoolAllocator::allocatePool()
     m_poolMemory = pool;
     m_poolEnd = pool + poolSize();
 }
-}
+} // namespace Starfish

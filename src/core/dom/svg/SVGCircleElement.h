@@ -56,6 +56,6 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cy);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(r);
 };
-}
+} // namespace Starfish
 
 #endif

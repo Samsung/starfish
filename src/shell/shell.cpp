@@ -623,45 +623,47 @@ int main(int argc, char* argv[])
         pthread_t t;
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        pthread_create(&t, &attr,
-                       [](void* data) -> void* {
-                           char buf[1024] = {
-                               0,
-                           };
-                           sleep(1);
-                           while (1) {
-                               auto ret = fgets(buf, 1024, stdin);
-                               if (ret != nullptr) {
-                                   char* b = new char[1024];
-                                   Pass* pass = new Pass;
-                                   pass->buf = b;
-                                   pass->webView = (LWE::WebView*)data;
-                                   idlerThreadAsyncHandle->data = pass;
-                                   memcpy(b, buf, sizeof buf);
+        pthread_create(
+            &t, &attr,
+            [](void* data) -> void* {
+                char buf[1024] = {
+                    0,
+                };
+                sleep(1);
+                while (1) {
+                    auto ret = fgets(buf, 1024, stdin);
+                    if (ret != nullptr) {
+                        char* b = new char[1024];
+                        Pass* pass = new Pass;
+                        pass->buf = b;
+                        pass->webView = (LWE::WebView*)data;
+                        idlerThreadAsyncHandle->data = pass;
+                        memcpy(b, buf, sizeof buf);
 
-                                   uv_async_send(idlerThreadAsyncHandle);
-                               }
-                           }
-                           return NULL;
-                       },
-                       webView);
+                        uv_async_send(idlerThreadAsyncHandle);
+                    }
+                }
+                return NULL;
+            },
+            webView);
 #endif
     }
     if (crashTest) {
         pthread_t t;
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        pthread_create(&t, &attr,
-                       [](void* data) -> void* {
-                           sleep(5);
-                           puts("raise SIGINT for crash test");
-                           puts(
-                               "if there is no crash until process exit, there "
-                               "is no problem");
-                           raise(SIGINT);
-                           return NULL;
-                       },
-                       nullptr);
+        pthread_create(
+            &t, &attr,
+            [](void* data) -> void* {
+                sleep(5);
+                puts("raise SIGINT for crash test");
+                puts(
+                    "if there is no crash until process exit, there "
+                    "is no problem");
+                raise(SIGINT);
+                return NULL;
+            },
+            nullptr);
     }
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)

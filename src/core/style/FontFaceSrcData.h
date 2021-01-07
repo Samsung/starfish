@@ -98,6 +98,6 @@ public:
 protected:
     FontFaceSrcDataList m_data;
 };
-}
+} // namespace Starfish
 
 #endif

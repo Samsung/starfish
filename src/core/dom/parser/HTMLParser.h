@@ -93,6 +93,6 @@ private:
     HTMLInputStream m_input;
     String* m_source;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -52,4 +52,4 @@ Element* DocumentFragment::getElementById(String* id)
         }
     });
 }
-}
+} // namespace Starfish

@@ -49,6 +49,6 @@ protected:
     std::string m_addr;
     bool m_isRunning;
 };
-}
+} // namespace Starfish
 
 #endif

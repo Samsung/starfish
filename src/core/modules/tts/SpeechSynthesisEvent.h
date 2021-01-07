@@ -128,6 +128,6 @@ private:
     float m_elapsedTime;
     String* m_name;
 };
-}
+} // namespace Starfish
 #endif
 #endif // STARFISH_ENABLE_TTS

@@ -856,8 +856,10 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
     m_webRtcManager->addPeerConnection(this);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCPeerConnection*)obj)->~RTCPeerConnection(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCPeerConnection*)obj)->~RTCPeerConnection();
+        },
         NULL, NULL, NULL);
 
     WEBRTC_LOGI("</RTCPeerConnection::%s> %p\n", __func__, (void*)this);
@@ -1076,13 +1078,13 @@ ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
                ctx,
                [](ExecutionStateRef* state, RTCSdpType type,
                   String* sdp) -> ValueRef* {
-
                    RTCSessionDescriptionInit sd(type, sdp);
                    ScriptObject obj = ObjectRef::create(state);
                    String* sdValue = sd.type();
-                   obj->set(state, ValueRef::create(
-                                       StringRef::createFromASCII("type")),
-                            ValueRef::create(toJSString(sdValue)));
+                   obj->set(
+                       state,
+                       ValueRef::create(StringRef::createFromASCII("type")),
+                       ValueRef::create(toJSString(sdValue)));
                    String* sdpValue = sd.sdp();
                    obj->set(state,
                             ValueRef::create(StringRef::createFromASCII("sdp")),
@@ -2253,6 +2255,6 @@ bool RTCPeerConnection::isValidRemoteState(RTCSdpType type)
 
     return false;
 }
-}
+} // namespace Starfish
 
 #endif

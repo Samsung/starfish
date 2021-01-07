@@ -157,4 +157,4 @@ CSSNumericValue* CSSNumericValue::parse(String* cssText)
     // TODO
     return nullptr;
 }
-}
+} // namespace Starfish

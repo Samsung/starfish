@@ -69,6 +69,6 @@ protected:
     // TODO : store parameter as dictionary
     String* m_parameter;
 };
-}
+} // namespace Starfish
 
 #endif

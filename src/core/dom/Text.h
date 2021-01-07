@@ -60,6 +60,6 @@ public:
         return new Text(document(), data());
     }
 };
-}
+} // namespace Starfish
 
 #endif

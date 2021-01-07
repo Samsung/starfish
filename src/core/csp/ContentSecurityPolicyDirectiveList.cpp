@@ -279,4 +279,4 @@ bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
     }
     return false;
 }
-}
+} // namespace Starfish

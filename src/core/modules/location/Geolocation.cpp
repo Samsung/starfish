@@ -54,8 +54,9 @@ bool Geolocation::getCurrentPositionPreprocessing(
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(document, new PositionError(document->executionContext(),
-                                               PositionError::Error::TIMEOUT),
+                cb(document,
+                   new PositionError(document->executionContext(),
+                                     PositionError::Error::TIMEOUT),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);
@@ -77,9 +78,10 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(document, new PositionError(
-                                 document->executionContext(),
-                                 PositionError::Error::POSITION_UNAVAILABLE),
+                cb(document,
+                   new PositionError(
+                       document->executionContext(),
+                       PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);
@@ -106,9 +108,10 @@ uint32_t Geolocation::watchPosition(GeoPositionCallback cb, void* cbData,
                 STARFISH_ASSERT(data2 != nullptr);
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(document, new PositionError(
-                                 document->executionContext(),
-                                 PositionError::Error::POSITION_UNAVAILABLE),
+                cb(document,
+                   new PositionError(
+                       document->executionContext(),
+                       PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);
@@ -119,4 +122,4 @@ uint32_t Geolocation::watchPosition(GeoPositionCallback cb, void* cbData,
 void Geolocation::clearWatch(uint32_t watchId)
 {
 }
-}
+} // namespace Starfish

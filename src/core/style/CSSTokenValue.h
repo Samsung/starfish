@@ -133,6 +133,6 @@ public:
         return String::fromUTF8(data(), size());
     }
 };
-}
+} // namespace Starfish
 
 #endif

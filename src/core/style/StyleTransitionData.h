@@ -217,6 +217,6 @@ private:
     size_t m_timingFunctionSize;
     size_t m_delaySize;
 };
-}
+} // namespace Starfish
 
 #endif

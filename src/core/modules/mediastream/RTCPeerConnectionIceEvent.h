@@ -56,6 +56,6 @@ private:
     RTCIceCandidate* m_candidate{ nullptr };
     Nullable<String*> m_url;
 };
-}
+} // namespace Starfish
 #endif
 #endif

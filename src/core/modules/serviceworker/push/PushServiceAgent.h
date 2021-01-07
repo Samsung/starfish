@@ -44,7 +44,7 @@ private:
     PushPermissionState m_permissionState;
     GCUnorderedMap<PushManagerId, PushSubscription*, IdHash> m_SubscriptionMap;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

@@ -465,6 +465,6 @@ public:
         return m_name;
     }
 };
-}
+} // namespace Starfish
 
 #endif

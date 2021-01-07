@@ -78,5 +78,5 @@ protected:
     bool m_transform;
     bool m_opacity;
 };
-}
+} // namespace Starfish
 #endif

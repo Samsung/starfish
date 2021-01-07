@@ -361,5 +361,5 @@ inline String* attemptStaticStringCreation(const UTF32String& vector,
     }
     return string;
 }
-}
+} // namespace Starfish
 #endif

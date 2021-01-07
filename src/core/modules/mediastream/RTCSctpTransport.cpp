@@ -44,8 +44,10 @@ RTCSctpTransport::RTCSctpTransport(
     , m_backend(sctpTransport)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCSctpTransport*)obj)->~RTCSctpTransport(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCSctpTransport*)obj)->~RTCSctpTransport();
+        },
         NULL, NULL, NULL);
 }
 

@@ -77,6 +77,6 @@ public:
 protected:
     FontFace* m_fontFace;
 };
-}
+} // namespace Starfish
 
 #endif

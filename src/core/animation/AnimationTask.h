@@ -883,7 +883,7 @@ struct ActiveElementAnimation : public gc {
 private:
     mutable size_t m_hash;
 };
-}
+} // namespace Starfish
 
 namespace std {
 template <>
@@ -902,7 +902,7 @@ struct equal_to<Starfish::ActiveElementAnimation*> {
         return lhs->equals(rhs);
     }
 };
-}
+} // namespace std
 
 namespace Starfish {
 
@@ -1045,6 +1045,6 @@ private:
                    std::hash<ActiveElementAnimation*>,
                    std::equal_to<ActiveElementAnimation*>>* m_activeAnimations;
 };
-}
+} // namespace Starfish
 
 #endif

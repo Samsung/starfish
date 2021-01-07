@@ -38,4 +38,4 @@ ValueRef* defaultViewDocumentGetterFunction(ExecutionStateRef* state,
     }
     return ValueRef::createNull();
 }
-}
+} // namespace Starfish

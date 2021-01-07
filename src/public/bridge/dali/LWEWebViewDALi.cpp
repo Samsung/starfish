@@ -382,10 +382,9 @@ public:
 
         auto cb = [x, y](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseDownEvent()\n");
-            TO_CONTAINER(data)
-                ->DispatchMouseDownEvent(LWE::MouseButtonValue::LeftButton,
-                                         LWE::MouseButtonsValue::LeftButtonDown,
-                                         x, y);
+            TO_CONTAINER(data)->DispatchMouseDownEvent(
+                LWE::MouseButtonValue::LeftButton,
+                LWE::MouseButtonsValue::LeftButtonDown, x, y);
         };
         sendAsyncHandle(this, cb);
     }
@@ -399,10 +398,9 @@ public:
 
         auto cb = [x, y](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseUpEvent()\n");
-            TO_CONTAINER(data)
-                ->DispatchMouseUpEvent(LWE::MouseButtonValue::NoButton,
-                                       LWE::MouseButtonsValue::NoButtonDown, x,
-                                       y);
+            TO_CONTAINER(data)->DispatchMouseUpEvent(
+                LWE::MouseButtonValue::NoButton,
+                LWE::MouseButtonsValue::NoButtonDown, x, y);
         };
         sendAsyncHandle(this, cb);
     }
@@ -417,13 +415,12 @@ public:
 
         auto cb = [x, y, isLButtonPressed](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseMoveEvent()\n");
-            TO_CONTAINER(data)
-                ->DispatchMouseMoveEvent(
-                    isLButtonPressed ? LWE::MouseButtonValue::LeftButton
-                                     : LWE::MouseButtonValue::NoButton,
-                    isLButtonPressed ? LWE::MouseButtonsValue::LeftButtonDown
-                                     : LWE::MouseButtonsValue::NoButtonDown,
-                    x, y);
+            TO_CONTAINER(data)->DispatchMouseMoveEvent(
+                isLButtonPressed ? LWE::MouseButtonValue::LeftButton
+                                 : LWE::MouseButtonValue::NoButton,
+                isLButtonPressed ? LWE::MouseButtonsValue::LeftButtonDown
+                                 : LWE::MouseButtonsValue::NoButtonDown,
+                x, y);
         };
         sendAsyncHandle(this, cb);
     }
@@ -490,72 +487,65 @@ public:
 #endif
 
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
-            TO_CONTAINER(data)
-                ->RegisterPreRenderingHandler(
-                    [data]() -> LWE::WebContainer::RenderInfo {
+            TO_CONTAINER(data)->RegisterPreRenderingHandler(
+                [data]() -> LWE::WebContainer::RenderInfo {
+                    DALiShellController* controller =
+                        ((DALiShellController*)data);
 
-                        DALiShellController* controller =
-                            ((DALiShellController*)data);
+                    Locker l(gMutex);
+                    if (controller->mOutputBuffer) {
+                        free(controller->mOutputBuffer);
+                        controller->mOutputBuffer = nullptr;
+                    }
+                    controller->mOutputBuffer = (uint8_t*)malloc(
+                        controller->mOutputWidth * controller->mOutputHeight *
+                        sizeof(uint32_t));
+                    controller->mOutputStride =
+                        controller->mOutputWidth * sizeof(uint32_t);
+                    ::LWE::WebContainer::RenderInfo result;
+                    result.updatedBufferAddress = controller->mOutputBuffer;
+                    result.bufferStride = controller->mOutputStride;
 
-                        Locker l(gMutex);
-                        if (controller->mOutputBuffer) {
-                            free(controller->mOutputBuffer);
-                            controller->mOutputBuffer = nullptr;
-                        }
-                        controller->mOutputBuffer = (uint8_t*)malloc(
-                            controller->mOutputWidth *
-                            controller->mOutputHeight * sizeof(uint32_t));
-                        controller->mOutputStride =
-                            controller->mOutputWidth * sizeof(uint32_t);
-                        ::LWE::WebContainer::RenderInfo result;
-                        result.updatedBufferAddress = controller->mOutputBuffer;
-                        result.bufferStride = controller->mOutputStride;
-
-                        return result;
-
-                    });
+                    return result;
+                });
 #endif
-            TO_CONTAINER(data)
-                ->RegisterOnRenderedHandler([controller](
+            TO_CONTAINER(data)->RegisterOnRenderedHandler(
+                [controller](
                     LWE::WebContainer* container,
                     const LWE::WebContainer::RenderResult& renderResult) {
                     controller->onRenderedHandler(container, renderResult);
                 });
-            TO_CONTAINER(data)
-                ->RegisterOnReceivedErrorHandler(
-                    [controller](LWE::WebContainer* container,
-                                 LWE::ResourceError error) -> void {
-                        controller->mCanGoBack = container->CanGoBack();
-                        controller->mCanGoForward = container->CanGoForward();
-                        controller->onReceivedError(container, error);
-                    });
-            TO_CONTAINER(data)
-                ->RegisterOnPageStartedHandler(
-                    [controller](LWE::WebContainer* container,
-                                 const std::string& url) -> void {
-                        controller->mURL = url;
-                        controller->mCanGoBack = container->CanGoBack();
-                        controller->mCanGoForward = container->CanGoForward();
-                        controller->onPageStartedHandler(container, url);
-                    });
-            TO_CONTAINER(data)
-                ->RegisterOnPageLoadedHandler(
-                    [controller](LWE::WebContainer* container,
-                                 const std::string& url) -> void {
-                        controller->mURL = url;
-                        controller->mCanGoBack = container->CanGoBack();
-                        controller->mCanGoForward = container->CanGoForward();
-                        controller->onPageFinishedHandler(container, url);
-                    });
-            TO_CONTAINER(data)
-                ->RegisterOnLoadResourceHandler(
-                    [controller](LWE::WebContainer* container,
-                                 const std::string& url) -> void {
-                        controller->mURL = url;
-                        controller->mCanGoBack = container->CanGoBack();
-                        controller->mCanGoForward = container->CanGoForward();
-                        controller->onLoadResourceHandler(container, url);
-                    });
+            TO_CONTAINER(data)->RegisterOnReceivedErrorHandler(
+                [controller](LWE::WebContainer* container,
+                             LWE::ResourceError error) -> void {
+                    controller->mCanGoBack = container->CanGoBack();
+                    controller->mCanGoForward = container->CanGoForward();
+                    controller->onReceivedError(container, error);
+                });
+            TO_CONTAINER(data)->RegisterOnPageStartedHandler(
+                [controller](LWE::WebContainer* container,
+                             const std::string& url) -> void {
+                    controller->mURL = url;
+                    controller->mCanGoBack = container->CanGoBack();
+                    controller->mCanGoForward = container->CanGoForward();
+                    controller->onPageStartedHandler(container, url);
+                });
+            TO_CONTAINER(data)->RegisterOnPageLoadedHandler(
+                [controller](LWE::WebContainer* container,
+                             const std::string& url) -> void {
+                    controller->mURL = url;
+                    controller->mCanGoBack = container->CanGoBack();
+                    controller->mCanGoForward = container->CanGoForward();
+                    controller->onPageFinishedHandler(container, url);
+                });
+            TO_CONTAINER(data)->RegisterOnLoadResourceHandler(
+                [controller](LWE::WebContainer* container,
+                             const std::string& url) -> void {
+                    controller->mURL = url;
+                    controller->mCanGoBack = container->CanGoBack();
+                    controller->mCanGoForward = container->CanGoForward();
+                    controller->onLoadResourceHandler(container, url);
+                });
         };
         sendAsyncHandle(this, cb);
     }
@@ -667,9 +657,8 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [exposedObjectName, jsFunctionName, callback](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] addJavaScriptInterface()\n");
-            TO_CONTAINER(data)
-                ->AddJavaScriptInterface(exposedObjectName, jsFunctionName,
-                                         callback);
+            TO_CONTAINER(data)->AddJavaScriptInterface(
+                exposedObjectName, jsFunctionName, callback);
         };
         sendAsyncHandle(this, cb);
     }
@@ -732,8 +721,8 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [exposedObjectName, jsFunctionName](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] removeJavascriptInterface()\n");
-            TO_CONTAINER(data)
-                ->RemoveJavascriptInterface(exposedObjectName, jsFunctionName);
+            TO_CONTAINER(data)->RemoveJavascriptInterface(exposedObjectName,
+                                                          jsFunctionName);
         };
         sendAsyncHandle(this, cb);
     }
@@ -839,48 +828,49 @@ void DALiShellController::Create(Application& application)
     Stage::GetCurrent().KeyEventSignal().Connect(
         this, &DALiShellController::keyEventHandler);
 
-    onRenderedHandler = [this](
-        LWE::WebContainer* c,
-        const LWE::WebContainer::RenderResult& renderResult) {
-        // STARFISH_LOG_INFO("[DALi Shell] onRenderedHandler()\n");
+    onRenderedHandler =
+        [this](LWE::WebContainer* c,
+               const LWE::WebContainer::RenderResult& renderResult) {
+            // STARFISH_LOG_INFO("[DALi Shell] onRenderedHandler()\n");
 
-        Locker l(gMutex);
-        int w = mOutputWidth;
-        int h = mOutputHeight;
-        uint8_t* dstBuffer;
-        size_t dstStride;
+            Locker l(gMutex);
+            int w = mOutputWidth;
+            int h = mOutputHeight;
+            uint8_t* dstBuffer;
+            size_t dstStride;
 #if defined(STARFISH_DALI_TBMSURFACE)
-        tbm_surface_info_s tbmSurfaceInfo;
-        if (tbm_surface_map(mTbmSurface, TBM_SURF_OPTION_WRITE,
-                            &tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
-            STARFISH_LOG_ERROR("Fail to map tbm_surface\n");
-            abort();
-        }
-        dstBuffer = tbmSurfaceInfo.planes[0].ptr;
-        dstStride = tbmSurfaceInfo.planes[0].stride;
-#else
-        dstBuffer = mBufferImage.GetBuffer();
-        dstStride = mBufferImage.GetBufferStride();
-#endif
-
-        uint32_t srcStride = renderResult.updatedWidth * sizeof(uint32_t);
-        uint8_t* srcBuffer = (uint8_t*)renderResult.updatedBufferAddress;
-
-        if (dstStride == srcStride) {
-            for (auto y = renderResult.updatedY;
-                 y < (renderResult.updatedHeight + renderResult.updatedY);
-                 y++) {
-                auto start = renderResult.updatedX;
-                memcpy(dstBuffer + (y * dstStride) + (start * 4),
-                       srcBuffer + (y * srcStride) + (start * 4), srcStride);
+            tbm_surface_info_s tbmSurfaceInfo;
+            if (tbm_surface_map(mTbmSurface, TBM_SURF_OPTION_WRITE,
+                                &tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
+                STARFISH_LOG_ERROR("Fail to map tbm_surface\n");
+                abort();
             }
-            misNeedsUpdate = true;
-        }
+            dstBuffer = tbmSurfaceInfo.planes[0].ptr;
+            dstStride = tbmSurfaceInfo.planes[0].stride;
+#else
+            dstBuffer = mBufferImage.GetBuffer();
+            dstStride = mBufferImage.GetBufferStride();
+#endif
+
+            uint32_t srcStride = renderResult.updatedWidth * sizeof(uint32_t);
+            uint8_t* srcBuffer = (uint8_t*)renderResult.updatedBufferAddress;
+
+            if (dstStride == srcStride) {
+                for (auto y = renderResult.updatedY;
+                     y < (renderResult.updatedHeight + renderResult.updatedY);
+                     y++) {
+                    auto start = renderResult.updatedX;
+                    memcpy(dstBuffer + (y * dstStride) + (start * 4),
+                           srcBuffer + (y * srcStride) + (start * 4),
+                           srcStride);
+                }
+                misNeedsUpdate = true;
+            }
 
 #if defined(STARFISH_DALI_TBMSURFACE)
-        tbm_surface_unmap(mTbmSurface);
+            tbm_surface_unmap(mTbmSurface);
 #endif
-    };
+        };
 
     onReceivedError = [](LWE::WebContainer* container,
                          LWE::ResourceError error) {
@@ -1139,7 +1129,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewDALi(win, x, y, width, height, devicePixelRatio,
                            defaultFontName, locale, timezoneID);
 }
-}
+} // namespace LWE
 #else // !defined(STARFISH_ENABLE_SHELL)
 namespace LWE {
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
@@ -1151,7 +1141,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 }
-}
+} // namespace LWE
 #endif
 
 #endif

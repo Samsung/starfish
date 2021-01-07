@@ -66,6 +66,6 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(Fetch, m_promise));
     }
 };
-}
+} // namespace Starfish
 
 #endif

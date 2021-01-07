@@ -24,7 +24,7 @@ namespace Escargot {
 class VMInstanceRef;
 class ExecutionStateRef;
 class JobRef;
-}
+} // namespace Escargot
 
 namespace Starfish {
 
@@ -46,6 +46,6 @@ public:
 protected:
     ScriptEngine m_engineInstance;
 };
-}
+} // namespace Starfish
 
 #endif

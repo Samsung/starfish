@@ -77,4 +77,4 @@ void SVGTextElement::styleForPresentationAttribute(
     }
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fontDashSize, FontSize);
 }
-}
+} // namespace Starfish

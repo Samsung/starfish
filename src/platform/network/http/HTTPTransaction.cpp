@@ -362,4 +362,4 @@ void HTTPTransaction::printCurlRequestDump()
     }
 }
 #endif
-}
+} // namespace Starfish

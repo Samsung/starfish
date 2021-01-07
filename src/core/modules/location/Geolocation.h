@@ -64,6 +64,6 @@ protected:
                                          bool enableHighAccuracy,
                                          int32_t timeout, int32_t maximumAge);
 };
-}
+} // namespace Starfish
 
 #endif

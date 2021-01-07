@@ -473,4 +473,4 @@ bool StyleRuleSupports::eval(Document* doc, String* conditionText)
     parser.makeToken(conditionText);
     return parser.parseSupportsCondition();
 }
-}
+} // namespace Starfish

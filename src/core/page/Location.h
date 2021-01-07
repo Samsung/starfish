@@ -71,6 +71,6 @@ private:
     void assign(ResourceURL* url, bool force = false);
     void assign(ResourceURL* url, ReferrerURL* referrerURL, bool force = false);
 };
-}
+} // namespace Starfish
 
 #endif

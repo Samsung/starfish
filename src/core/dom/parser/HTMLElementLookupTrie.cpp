@@ -1078,4 +1078,4 @@ QualifiedName lookupHTMLTag(StaticStrings& s, const char* data, unsigned length)
     return QualifiedName(AtomicString::emptyAtomicString(),
                          AtomicString::emptyAtomicString());
 }
-}
+} // namespace Starfish

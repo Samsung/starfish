@@ -116,7 +116,6 @@ void WindowProxy::init(ScriptBindingInstance* instance, void* domObjectPointer)
                             state->throwException(exception->scriptValue());
                         }
                     }
-
                 });
             return ValueRef::createUndefined();
         },
@@ -129,4 +128,4 @@ ScriptBindingInstance* WindowProxy::scriptBindingInstance()
 {
     return m_window->scriptBindingInstance();
 }
-}
+} // namespace Starfish

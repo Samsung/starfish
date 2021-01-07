@@ -334,13 +334,11 @@ static int voiceSpeed(tts_h handle, float rate)
 
     // Piecewise linear interpolation from |rate| to TTS internal speed value.
     if (rate < rateNormal) {
-        return (speedMin +
-                (rate - rateMin) *
-                    ((speedNormal - speedMin) / (rateNormal - rateMin)));
+        return (speedMin + (rate - rateMin) * ((speedNormal - speedMin) /
+                                               (rateNormal - rateMin)));
     } else {
-        return (speedNormal +
-                (rate - rateNormal) *
-                    ((speedMax - speedNormal) / (rateMax - rateNormal)));
+        return (speedNormal + (rate - rateNormal) * ((speedMax - speedNormal) /
+                                                     (rateMax - rateNormal)));
     }
 }
 
@@ -776,5 +774,5 @@ void TTS::cancel()
     dispatchCompleteEvent(this, utterId);
     utteranceList().clear();
 }
-}
+} // namespace Starfish
 #endif

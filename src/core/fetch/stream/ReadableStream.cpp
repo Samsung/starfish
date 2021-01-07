@@ -158,4 +158,4 @@ void ReadableStream::resolveData(Promise* promise,
         promise->fulfill(createScriptValue(String::emptyString));
     }
 }
-}
+} // namespace Starfish

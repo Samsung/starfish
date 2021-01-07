@@ -135,4 +135,4 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
         }
     }
 }
-}
+} // namespace Starfish

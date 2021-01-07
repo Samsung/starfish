@@ -39,5 +39,5 @@ public:
 
     virtual Element* namedItem(String* name) override;
 };
-}
+} // namespace Starfish
 #endif

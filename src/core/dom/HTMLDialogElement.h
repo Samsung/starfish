@@ -59,5 +59,5 @@ private:
     String* m_returnValue{ String::emptyString };
     bool m_isInShowModal{ false };
 };
-}
+} // namespace Starfish
 #endif

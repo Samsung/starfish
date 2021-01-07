@@ -86,7 +86,7 @@ protected:
 private:
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

@@ -434,4 +434,4 @@ bool CalcData::equals(CalcData* with) const
 
     return true;
 }
-}
+} // namespace Starfish

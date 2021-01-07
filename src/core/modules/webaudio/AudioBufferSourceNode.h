@@ -55,6 +55,6 @@ private:
     AudioBuffer* m_buffer{ nullptr };
     bool m_bufferSet{ false };
 };
-}
+} // namespace Starfish
 #endif
 #endif

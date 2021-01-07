@@ -82,4 +82,4 @@ void AVPlayHTMLObjectElementContent::drawContent(
                                  contentRect.width(), contentRect.height()));
 }
 #endif
-}
+} // namespace Starfish

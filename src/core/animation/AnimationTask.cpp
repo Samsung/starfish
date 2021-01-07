@@ -344,11 +344,12 @@ void ActiveAnimationTask::fireTransitionEndEvent()
     init.setBubbles(true);
     init.setCancelable(true);
     // TODO add more information to init
-    TransitionEvent* event = new TransitionEvent(
-        m_targetElement->executionContext(), m_targetElement->starfish()
-                                                 ->staticStrings()
-                                                 ->m_transitionend.localName(),
-        init);
+    TransitionEvent* event =
+        new TransitionEvent(m_targetElement->executionContext(),
+                            m_targetElement->starfish()
+                                ->staticStrings()
+                                ->m_transitionend.localName(),
+                            init);
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
@@ -2437,22 +2438,21 @@ bool applyTransitionIfNeeds(
             }
         }
 
-#define GEN_SIDE(Side, side)                                                 \
-    if (NEED_TRANSITION(CSSStyleValuePair::Side) == true) {                  \
-        bool found =                                                         \
-            executor->hasActiveTransition(element, CSSStyleValuePair::Side); \
-        AnimatedValue v1, v2;                                                \
-        if (found == false &&                                                \
-            AnimationUtil::lengthToAnimatedValue(oldStyle->side(),           \
-                                                 newStyle->side(), element,  \
-                                                 v1, v2) == true) {          \
-            auto task = new ActiveLengthAnimationTask(                       \
-                element, CSSStyleValuePair::Side, AnimatedValue(v1),         \
-                AnimatedValue(v2), duration, delay, timingFunction,          \
-                newStyle->side());                                           \
-            executor->registerTransition(task, newStyle);                    \
-            gotTransition = true;                                            \
-        }                                                                    \
+#define GEN_SIDE(Side, side)                                                   \
+    if (NEED_TRANSITION(CSSStyleValuePair::Side) == true) {                    \
+        bool found =                                                           \
+            executor->hasActiveTransition(element, CSSStyleValuePair::Side);   \
+        AnimatedValue v1, v2;                                                  \
+        if (found == false && AnimationUtil::lengthToAnimatedValue(            \
+                                  oldStyle->side(), newStyle->side(), element, \
+                                  v1, v2) == true) {                           \
+            auto task = new ActiveLengthAnimationTask(                         \
+                element, CSSStyleValuePair::Side, AnimatedValue(v1),           \
+                AnimatedValue(v2), duration, delay, timingFunction,            \
+                newStyle->side());                                             \
+            executor->registerTransition(task, newStyle);                      \
+            gotTransition = true;                                              \
+        }                                                                      \
     }
         GEN_SIDE(Left, left)
         GEN_SIDE(Right, right)
@@ -3265,9 +3265,9 @@ bool applyAnimationIfNeeds(Element* element, ComputedStyle* style,
                                             playState, isCSSAnimationTask);
                 gotAnimation = true;
             }
-// <- color series
+            // <- color series
 
-// length series
+            // length series
 
 #define APPLY_LENGTH_ANIMATION(propertyName)                                   \
     if (keyKind == CSSStyleValuePair::propertyName) {                          \
@@ -3614,4 +3614,4 @@ bool ActiveElementAnimation::equals(const ActiveElementAnimation* src) const
     return (m_name->equals(src->m_name) == true) &&
            (m_element == src->m_element);
 }
-}
+} // namespace Starfish

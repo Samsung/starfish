@@ -472,4 +472,4 @@ bool ContentSecurityPolicySourceListDirective::matchePath(String* sourcePath,
     // TODO: decode escape sequences
     return sourcePath->equalsIgnoreCase(urlPath);
 }
-}
+} // namespace Starfish

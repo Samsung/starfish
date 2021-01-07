@@ -149,6 +149,6 @@ private:
     static bool parsePath(ContentSecurityPolicySource* source,
                           String* sourceString, size_t& position);
 };
-}
+} // namespace Starfish
 
 #endif

@@ -43,6 +43,6 @@ public:
     static bool isForbiddenResponseHeaderName(const std::string& name);
     static bool isForbiddenHeaderName(String* name);
 };
-}
+} // namespace Starfish
 
 #endif

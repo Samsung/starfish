@@ -49,4 +49,4 @@ size_t StyleSheetList::length() const
     STARFISH_ASSERT(m_document->styleResolver().sheets().size());
     return m_document->styleResolver().sheets().size() - 1;
 }
-}
+} // namespace Starfish

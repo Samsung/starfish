@@ -161,6 +161,6 @@ bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
 {
     return false;
 }
-}
+} // namespace Starfish
 
 #endif

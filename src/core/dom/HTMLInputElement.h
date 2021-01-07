@@ -136,6 +136,6 @@ private:
 
     HTMLInputElement* m_previousCheckedRadioButton;
 };
-}
+} // namespace Starfish
 
 #endif

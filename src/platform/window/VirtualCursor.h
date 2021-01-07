@@ -26,7 +26,7 @@ namespace Starfish {
 
 extern unsigned char g_virtualCursorPNGData[];
 extern unsigned int g_virtualCursorPNGDataSize;
-};
+}; // namespace Starfish
 
 #endif
 

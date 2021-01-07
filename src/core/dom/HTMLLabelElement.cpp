@@ -58,4 +58,4 @@ HTMLElement* HTMLLabelElement::control()
 
     return nullptr;
 }
-}
+} // namespace Starfish

@@ -192,6 +192,6 @@ private:
     Element* m_bodyElement;
     unsigned m_stackDepth;
 };
-}
+} // namespace Starfish
 
 #endif

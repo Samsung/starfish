@@ -117,4 +117,4 @@ Promise* Blob::arrayBuffer()
 
     return promise;
 }
-}
+} // namespace Starfish

@@ -141,4 +141,4 @@ bool QualifiedName::validateQualifiedName(String* str)
 
     return true;
 }
-}
+} // namespace Starfish

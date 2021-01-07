@@ -95,6 +95,6 @@ protected:
     bool m_live;
     ReadyState m_readyState;
 };
-}
+} // namespace Starfish
 
 #endif

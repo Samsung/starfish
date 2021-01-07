@@ -52,4 +52,4 @@ void SVGLineElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 }
-}
+} // namespace Starfish

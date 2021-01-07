@@ -73,4 +73,4 @@ void EventModifierInit::setMetaKey(bool metaKey)
 {
     m_eventModifierData.setMetaKey(metaKey);
 }
-}
+} // namespace Starfish

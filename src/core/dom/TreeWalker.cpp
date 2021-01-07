@@ -400,4 +400,4 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
 
     return 0;
 }
-}
+} // namespace Starfish

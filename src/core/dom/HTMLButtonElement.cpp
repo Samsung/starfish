@@ -85,4 +85,4 @@ bool HTMLButtonElement::handleDefaultEvent(Event* event)
 
     return false;
 }
-}
+} // namespace Starfish

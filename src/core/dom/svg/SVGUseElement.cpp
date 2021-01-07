@@ -121,4 +121,4 @@ void SVGUseElement::updateShadowTree()
         }
     }
 }
-}
+} // namespace Starfish

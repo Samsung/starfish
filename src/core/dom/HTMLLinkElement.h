@@ -96,6 +96,6 @@ private:
 
     String* nonce();
 };
-}
+} // namespace Starfish
 
 #endif

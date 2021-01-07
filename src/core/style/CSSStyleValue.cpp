@@ -67,4 +67,4 @@ GCVector<CSSStyleValue*> CSSStyleValue::parseAll(String* property,
     // TODO: create CSSStyle* according to property
     return GCVector<CSSStyleValue*>();
 }
-}
+} // namespace Starfish

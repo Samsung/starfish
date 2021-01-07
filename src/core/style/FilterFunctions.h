@@ -168,6 +168,6 @@ public:
 
     bool getStandardDeviationOfBlurFilter(Length& out);
 };
-}
+} // namespace Starfish
 
 #endif

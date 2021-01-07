@@ -482,4 +482,4 @@ Starfish* ResourceRequest::starfish()
 {
     return m_executionContext->webBase()->starfish();
 }
-}
+} // namespace Starfish

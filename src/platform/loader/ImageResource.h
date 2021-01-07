@@ -82,6 +82,6 @@ protected:
     NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -217,4 +217,4 @@ Document* DOMParser::parseFromString(String* str, String* type)
                                DOMException::SCRIPT_TYPE_ERR, msg);
     }
 }
-}
+} // namespace Starfish

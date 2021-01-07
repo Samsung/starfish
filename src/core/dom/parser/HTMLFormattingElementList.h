@@ -193,6 +193,6 @@ private:
 
     GCVector<Entry> m_entries;
 };
-}
+} // namespace Starfish
 
 #endif

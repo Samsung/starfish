@@ -134,6 +134,6 @@ private:
     ExecutionContext* m_executionContext;
     SocketLWS* m_socketLWS;
 };
-}
+} // namespace Starfish
 #endif
 #endif

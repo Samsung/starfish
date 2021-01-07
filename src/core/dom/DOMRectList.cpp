@@ -60,4 +60,4 @@ DOMRect* DOMRectList::item(uint32_t index)
 
     return m_list[index];
 }
-}
+} // namespace Starfish

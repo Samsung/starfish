@@ -65,6 +65,6 @@ protected:
 #else
 #define INSTALL_PROFILE_TIMER(msg)
 #endif
-}
+} // namespace Starfish
 
 #endif

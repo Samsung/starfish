@@ -104,6 +104,6 @@ private:
 
 Attribute* findAttributeInVector(GCVector<Attribute>& attr,
                                  const QualifiedName& attributeName);
-}
+} // namespace Starfish
 
 #endif

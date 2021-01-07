@@ -103,6 +103,6 @@ protected:
     String* m_currentEditingText;
     int32_t m_maxlength;
 };
-}
+} // namespace Starfish
 
 #endif
