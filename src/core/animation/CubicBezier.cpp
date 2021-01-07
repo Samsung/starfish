@@ -116,4 +116,4 @@ float CubicBezier::getCurveX(float x, float epsilon)
     // Failure.
     return t2;
 }
-}
+} // namespace Starfish

@@ -109,4 +109,4 @@ ScriptBindingInstance* Event::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
-}
+} // namespace Starfish

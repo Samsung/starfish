@@ -386,6 +386,6 @@ protected:
     GCVector<String*> m_symbols;
     GCVector<AdditiveTuple> m_additiveSymbols;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -41,4 +41,4 @@ String* HTMLFieldSetElement::type()
 {
     return String::createASCIIString("fieldset");
 }
-}
+} // namespace Starfish

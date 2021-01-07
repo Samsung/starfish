@@ -460,4 +460,4 @@ bool AnimationUtil::paddingLeftToAnimatedValue(ComputedStyle* oldStyle,
     return lengthToAnimatedValue(oldStyle->padding().left(),
                                  newStyle->padding().left(), element, from, to);
 }
-}
+} // namespace Starfish

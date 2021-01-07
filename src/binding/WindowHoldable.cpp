@@ -39,4 +39,4 @@ ScriptBindingInstance* WindowHoldable::scriptBindingInstance()
 {
     return window()->scriptBindingInstance();
 }
-}
+} // namespace Starfish

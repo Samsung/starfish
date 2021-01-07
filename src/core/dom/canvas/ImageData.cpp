@@ -177,6 +177,6 @@ ScriptWrappable* SerializedImageData::createDeserializingInstance(
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return nullptr;
 }
-}
+} // namespace Starfish
 #undef CRASH
 #endif

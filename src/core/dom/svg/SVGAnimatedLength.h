@@ -47,6 +47,6 @@ protected:
     SVGLength* m_baseVal;
     SVGLength* m_animVal;
 };
-}
+} // namespace Starfish
 
 #endif

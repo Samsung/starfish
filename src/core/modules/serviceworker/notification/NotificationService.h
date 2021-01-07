@@ -33,7 +33,7 @@ public:
 private:
     GCVector<NotificationOptions> m_notificationList;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

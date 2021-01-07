@@ -147,9 +147,8 @@ void HTMLStyleElement::generateStyleSheet()
         child = child->nextSibling();
     }
 
-    if (str->length() > 0 &&
-        !document()->contentSecurityPolicy()->allowInline(
-            CSPDirectives::StyleSrc, str, nonce())) {
+    if (str->length() > 0 && !document()->contentSecurityPolicy()->allowInline(
+                                 CSPDirectives::StyleSrc, str, nonce())) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(document()->executionContext(), eventType,
                              EventInit(false, false));
@@ -211,4 +210,4 @@ void HTMLStyleElement::setNonce(String* str)
 {
     setAttribute(starfish()->staticStrings()->m_nonce, str);
 }
-}
+} // namespace Starfish

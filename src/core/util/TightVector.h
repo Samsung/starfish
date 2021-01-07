@@ -503,6 +503,6 @@ protected:
     T* m_buffer;
     size_t m_size;
 };
-}
+} // namespace Starfish
 
 #endif

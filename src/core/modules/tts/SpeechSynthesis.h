@@ -250,6 +250,6 @@ private:
     bool m_isCreatedVoiceList;
     GCVector<SpeechSynthesisVoice*> m_voiceList;
 };
-}
+} // namespace Starfish
 #endif
 #endif // STARFISH_ENABLE_TTS

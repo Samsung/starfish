@@ -441,4 +441,4 @@ void NodeListImpl::setItems(GCVector<Element*>& elements)
     m_cachedNodeList.insert(m_cachedNodeList.end(), elements.begin(),
                             elements.end());
 }
-}
+} // namespace Starfish

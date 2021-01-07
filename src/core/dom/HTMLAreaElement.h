@@ -47,5 +47,5 @@ public:
 private:
     DOMTokenList* m_relList;
 };
-}
+} // namespace Starfish
 #endif

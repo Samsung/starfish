@@ -140,6 +140,6 @@ private:
 
     uint32_t m_time;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -112,6 +112,6 @@ private:
     Nullable<String*> m_data;
     String* m_inputType;
 };
-}
+} // namespace Starfish
 
 #endif

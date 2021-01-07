@@ -42,6 +42,6 @@ void ServiceWorkerRequest::archive(Archiver& ar)
     ar.Member("name") & name;
     ar.Member("origin") & origin;
 }
-}
+} // namespace Starfish
 
 #endif

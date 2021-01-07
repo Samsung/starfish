@@ -709,4 +709,4 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_overflowString = String::fromUTF8("\u2026");
 #endif
 }
-}
+} // namespace Starfish

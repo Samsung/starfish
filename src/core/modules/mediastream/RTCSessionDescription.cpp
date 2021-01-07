@@ -157,6 +157,6 @@ String* RTCSessionDescription::type()
     RTCSessionDescriptionInit init(m_type, m_sdp);
     return init.type();
 }
-}
+} // namespace Starfish
 
 #endif

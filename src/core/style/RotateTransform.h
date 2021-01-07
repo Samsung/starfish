@@ -58,6 +58,6 @@ public:
 private:
     double m_angle;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -40,4 +40,4 @@ void FontResource::didLoadFinished()
     }
     Resource::didLoadFinished();
 }
-}
+} // namespace Starfish

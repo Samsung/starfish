@@ -41,5 +41,5 @@ protected:
 
     WebView* m_webView;
 };
-}
+} // namespace Starfish
 #endif

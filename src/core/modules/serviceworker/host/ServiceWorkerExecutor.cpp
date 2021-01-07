@@ -93,5 +93,5 @@ void ServiceWorkerExecutor::finalize()
     }
 #endif
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_WEBWORKER_HOST */

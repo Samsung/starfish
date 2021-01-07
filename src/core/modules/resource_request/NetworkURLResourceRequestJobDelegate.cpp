@@ -336,10 +336,9 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
         "%s, HitRate: %lf\n",
         nwd->request->response().size(), (float)((nwd->workingTime) / 1000.f),
         (nwd->cachehit) ? "hit" : "miss",
-        (NetworkURLWorkerData::hitCnt)
-            ? (double)NetworkURLWorkerData::hitCnt /
-                  NetworkURLWorkerData::reqCnt
-            : 0);
+        (NetworkURLWorkerData::hitCnt) ? (double)NetworkURLWorkerData::hitCnt /
+                                             NetworkURLWorkerData::reqCnt
+                                       : 0);
 #endif
     nwd->request->webBase()
         ->messageLoop()
@@ -470,13 +469,14 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         if (pos != header.end()) {
             nwd->helper = new AsyncNetworkWorkHelper();
             Thread* t = new Thread(m_orgProxy->webBase()->threadPool());
-            t->run(m_orgProxy->webBase()->messageLoop(),
-                   [](void* data) -> void* {
-                       NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
-                       NetworkURLResourceRequestJobDelegate::worker(d);
-                       return nullptr;
-                   },
-                   nwd);
+            t->run(
+                m_orgProxy->webBase()->messageLoop(),
+                [](void* data) -> void* {
+                    NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
+                    NetworkURLResourceRequestJobDelegate::worker(d);
+                    return nullptr;
+                },
+                nwd);
         } else {
             nwd->helper = new AsyncNetworkWorkHelper();
             m_orgProxy->webBase()->threadPool()->addWork(
@@ -767,7 +767,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                 request->m_abortRequestState =
                                     AbortRequestType::NoPendingRequest;
                             }
-
                         },
                         nwd);
         }
@@ -1023,4 +1022,4 @@ size_t NetworkURLResourceRequestJobDelegate::curlUploadBufferDataCallback(
     }
     return 0;
 }
-}
+} // namespace Starfish

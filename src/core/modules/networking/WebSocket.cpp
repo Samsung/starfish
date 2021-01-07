@@ -81,9 +81,8 @@ static inline bool IsValidSubprotocolCharacter(char32_t character)
         !(character >= ':' &&
           character <=
               '@') // U+003A - U+0040 (':', ';', '<', '=', '>', '?', '@').
-        &&
-        !(character >= '[' &&
-          character <= ']') // U+005B - U+005D ('[', '\\', ']').
+        && !(character >= '[' &&
+             character <= ']') // U+005B - U+005D ('[', '\\', ']').
         && character != '{' && character != '}';
     return character >= kMinimumProtocolCharacter &&
            character <= kMaximumProtocolCharacter && is_not_separator;
@@ -311,5 +310,5 @@ void WebSocket::send(ScriptArrayBufferView data)
 {
     send(data->rawBuffer(), data->byteLength(), 1);
 }
-}
+} // namespace Starfish
 #endif

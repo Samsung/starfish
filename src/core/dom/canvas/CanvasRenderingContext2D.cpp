@@ -27,6 +27,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
     : CanvasRenderingContext2DMixIn(canvasElement)
 {
 }
-}
+} // namespace Starfish
 
 #endif

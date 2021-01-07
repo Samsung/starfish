@@ -36,6 +36,6 @@ public:
 
     Document* parseFromString(String* str, String* type);
 };
-}
+} // namespace Starfish
 
 #endif

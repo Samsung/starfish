@@ -98,4 +98,4 @@ void HTMLOutputElement::reset()
     setTextContent(m_defaultValue);
     m_valueModeFlag = ValueModeFlag::defaultMode;
 }
-}
+} // namespace Starfish

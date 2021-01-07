@@ -61,4 +61,4 @@ void HTMLAreaElement::setReferrerPolicy(String* policy)
         setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
-}
+} // namespace Starfish

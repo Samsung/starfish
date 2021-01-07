@@ -89,5 +89,5 @@ private:
     bool m_dirtiness;
     bool m_selectedness;
 };
-}
+} // namespace Starfish
 #endif

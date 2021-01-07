@@ -45,4 +45,4 @@ ScriptBindingInstance* CSSUnitValue::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();
 }
-}
+} // namespace Starfish

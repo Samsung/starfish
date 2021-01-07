@@ -2367,4 +2367,4 @@ UnitType lookupUnitType(const char* data, unsigned length)
     }
     return UnitType::UnknownType;
 }
-}
+} // namespace Starfish

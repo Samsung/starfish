@@ -147,5 +147,5 @@ public:
 private:
     LoggerBuilder* m_loggerBuilder;
 };
-}
+} // namespace Starfish
 #endif

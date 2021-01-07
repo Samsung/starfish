@@ -131,6 +131,6 @@ protected:
 
     GCAtomicVector<std::pair<uint64_t, float>> m_lastScrollingData;
 };
-}
+} // namespace Starfish
 
 #endif

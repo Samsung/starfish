@@ -339,13 +339,14 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasPath(nullptr)
 {
     initialize();
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       CanvasRenderingContext2DMixIn* c =
-                                           (CanvasRenderingContext2DMixIn*)obj;
-                                       c->finalize();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            CanvasRenderingContext2DMixIn* c =
+                (CanvasRenderingContext2DMixIn*)obj;
+            c->finalize();
+        },
+        NULL, NULL, NULL);
 }
 
 void CanvasRenderingContext2DMixIn::initialize()

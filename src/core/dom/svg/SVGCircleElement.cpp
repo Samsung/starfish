@@ -53,4 +53,4 @@ void SVGCircleElement::styleForPresentationAttribute(
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY);
 }
-}
+} // namespace Starfish

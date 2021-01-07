@@ -308,6 +308,6 @@ private:
     EventModifierData m_eventModifierData;
     MouseData m_mouseData;
 };
-}
+} // namespace Starfish
 
 #endif

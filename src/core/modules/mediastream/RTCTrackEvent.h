@@ -96,6 +96,6 @@ private:
     GCVector<MediaStream*> m_streams;
     RTCRtpTransceiver* m_transceiver{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

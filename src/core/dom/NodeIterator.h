@@ -107,6 +107,6 @@ private:
     unsigned m_whatToShow;
     ScriptValue m_filter;
 };
-}
+} // namespace Starfish
 
 #endif

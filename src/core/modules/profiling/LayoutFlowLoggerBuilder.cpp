@@ -98,4 +98,4 @@ void LayoutFlowLoggerBuilder::buildOutgoingMessageWritter()
         logLayoutInformation(ud);
     });
 }
-}
+} // namespace Starfish

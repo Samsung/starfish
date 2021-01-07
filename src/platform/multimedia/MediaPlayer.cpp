@@ -116,5 +116,5 @@ void MediaPlayer::setPlaybackState(MediaPlayer::PlaybackState state)
     Locker<Mutex> locker(*m_playerStateMutex);
     m_playbackState = state;
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

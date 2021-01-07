@@ -41,7 +41,7 @@ private:
     String* m_endpoint;
     PushSubscriptionOptions* m_options;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

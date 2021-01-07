@@ -80,4 +80,4 @@ ScriptBindingInstance* DOMQuad::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
-}
+} // namespace Starfish

@@ -121,5 +121,5 @@ public:
 private:
     HeaderMap m_headerMap;
 };
-}
+} // namespace Starfish
 #endif

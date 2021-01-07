@@ -68,4 +68,4 @@ String* HTMLModElement::dateTime()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_datetime);
 }
-}
+} // namespace Starfish

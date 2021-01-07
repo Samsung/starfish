@@ -70,5 +70,5 @@ private:
     HeadersInit m_headers{ scriptUndefined() };
     ScriptValue m_body{ scriptUndefined() };
 };
-}
+} // namespace Starfish
 #endif

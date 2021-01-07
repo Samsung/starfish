@@ -249,6 +249,6 @@ rtc::scoped_refptr<webrtc::RtpSenderInterface> RTCRtpSender::backend()
 {
     return m_backend;
 }
-}
+} // namespace Starfish
 
 #endif

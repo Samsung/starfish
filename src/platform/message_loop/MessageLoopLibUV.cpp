@@ -121,18 +121,18 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
-    uv_timer_start(id->m_idler_uv,
-                   [](uv_timer_t* handle) {
-                       IdlerData* id = (IdlerData*)handle->data;
-                       id->m_ml->m_idlers.erase(
-                           id->m_ml->m_idlers.find((size_t)id));
-                       id->m_ml->invokeMicroTasksIfExist();
-                       id->m_fn((size_t)id, id->m_data);
-                       uv_timer_stop(handle);
-                       GC_FREE(id);
-                       uv_close((uv_handle_t*)handle, on_close_handle);
-                   },
-                   0, 0);
+    uv_timer_start(
+        id->m_idler_uv,
+        [](uv_timer_t* handle) {
+            IdlerData* id = (IdlerData*)handle->data;
+            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
+            id->m_ml->invokeMicroTasksIfExist();
+            id->m_fn((size_t)id, id->m_data);
+            uv_timer_stop(handle);
+            GC_FREE(id);
+            uv_close((uv_handle_t*)handle, on_close_handle);
+        },
+        0, 0);
 
     return (size_t)id;
 }
@@ -164,7 +164,6 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
             uv_timer_stop(handle);
             GC_FREE(id);
             uv_close((uv_handle_t*)handle, on_close_handle);
-
         },
         0, 0);
     return (size_t)id;
@@ -188,20 +187,19 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
-    uv_timer_start(id->m_idler_uv,
-                   [](uv_timer_t* handle) {
-                       IdlerData* id = (IdlerData*)handle->data;
-                       id->m_ml->m_idlers.erase(
-                           id->m_ml->m_idlers.find((size_t)id));
-                       id->m_ml->invokeMicroTasksIfExist();
-                       ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-                           (size_t)id, id->m_data, id->m_data1, id->m_data2);
-                       uv_timer_stop(handle);
-                       GC_FREE(id);
-                       uv_close((uv_handle_t*)handle, on_close_handle);
-
-                   },
-                   0, 0);
+    uv_timer_start(
+        id->m_idler_uv,
+        [](uv_timer_t* handle) {
+            IdlerData* id = (IdlerData*)handle->data;
+            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
+            id->m_ml->invokeMicroTasksIfExist();
+            ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                (size_t)id, id->m_data, id->m_data1, id->m_data2);
+            uv_timer_stop(handle);
+            GC_FREE(id);
+            uv_close((uv_handle_t*)handle, on_close_handle);
+        },
+        0, 0);
     return (size_t)id;
 }
 
@@ -432,15 +430,16 @@ void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
     Param* p = new Param();
     p->functor = functor;
 
-    addIdlerWithNoGCRootingInOtherThread(nullptr,
-                                         [](size_t, void* data) {
-                                             Param* p = (Param*)data;
-                                             p->functor();
-                                             delete p;
-                                         },
-                                         p);
+    addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t, void* data) {
+            Param* p = (Param*)data;
+            p->functor();
+            delete p;
+        },
+        p);
 
     return;
 }
-}
+} // namespace Starfish
 #endif

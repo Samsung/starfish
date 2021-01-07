@@ -671,5 +671,5 @@ inline T* getPtr(const RefPtr<T>& p)
 {
     return p.get();
 }
-}
+} // namespace Starfish
 #endif

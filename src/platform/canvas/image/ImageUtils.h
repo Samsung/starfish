@@ -27,6 +27,6 @@ public:
     static std::vector<uint8_t> encodePNG(const uint8_t* src, size_t width,
                                           size_t height, size_t stride);
 };
-}
+} // namespace Starfish
 
 #endif

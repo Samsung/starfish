@@ -662,7 +662,6 @@ public:
                                 p->webView->FetchWebContainer()
                                     ->DispatchKeyPressEvent(p->keyValue);
                                 delete p;
-
                             },
                             p);
                     }
@@ -1023,6 +1022,6 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
     return new WebViewEcoreWayland2(win, x, y, width, height, devicePixelRatio,
                                     defaultFontName, locale, timezoneID);
 }
-}
+} // namespace LWE
 
 #endif

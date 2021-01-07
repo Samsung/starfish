@@ -157,7 +157,7 @@ void MediaPlayerTizen::setMediaFormatExtraForAudio(media_format_h& mediaFormat,
                                                    StreamInfo* info)
 {
 }
-}
+} // namespace Starfish
 
 #endif
 #endif

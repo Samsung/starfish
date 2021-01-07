@@ -2063,4 +2063,4 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
     } /* switch */
 }
-}
+} // namespace Starfish

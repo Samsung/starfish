@@ -2511,8 +2511,7 @@ String* CSSStyleDeclaration::BorderColor(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderColor(const char* value, size_t length,
-                                         bool isImportant)
-{
+                                         bool isImportant){
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Color)
 }
 
@@ -2522,8 +2521,7 @@ String* CSSStyleDeclaration::BorderStyle(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderStyle(const char* value, size_t length,
-                                         bool isImportant)
-{
+                                         bool isImportant){
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Style)
 }
 
@@ -2533,8 +2531,7 @@ String* CSSStyleDeclaration::BorderWidth(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderWidth(const char* value, size_t length,
-                                         bool isImportant)
-{
+                                         bool isImportant){
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Width)
 }
 
@@ -2544,8 +2541,7 @@ String* CSSStyleDeclaration::BorderTop()
 }
 
 void CSSStyleDeclaration::setBorderTop(const char* value, size_t len,
-                                       bool isImportant)
-{
+                                       bool isImportant){
     GEN_ATTRIBUTE_SETTER_BORDER(Top)
 }
 
@@ -2555,8 +2551,7 @@ String* CSSStyleDeclaration::BorderRight()
 }
 
 void CSSStyleDeclaration::setBorderRight(const char* value, size_t len,
-                                         bool isImportant)
-{
+                                         bool isImportant){
     GEN_ATTRIBUTE_SETTER_BORDER(Right)
 }
 
@@ -2566,8 +2561,7 @@ String* CSSStyleDeclaration::BorderBottom()
 }
 
 void CSSStyleDeclaration::setBorderBottom(const char* value, size_t len,
-                                          bool isImportant)
-{
+                                          bool isImportant){
     GEN_ATTRIBUTE_SETTER_BORDER(Bottom)
 }
 
@@ -2577,8 +2571,7 @@ String* CSSStyleDeclaration::BorderLeft()
 }
 
 void CSSStyleDeclaration::setBorderLeft(const char* value, size_t len,
-                                        bool isImportant)
-{
+                                        bool isImportant){
     GEN_ATTRIBUTE_SETTER_BORDER(Left)
 }
 
@@ -3141,8 +3134,7 @@ String* CSSStyleDeclaration::Margin(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setMargin(const char* value, size_t length,
-                                    bool isImportant)
-{
+                                    bool isImportant){
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Margin)
 }
 
@@ -4060,4 +4052,4 @@ void InlineCSSStyleDeclaration::setCssText(String* text)
 #undef GEN_ATTRIBUTE_SETTER_FOURSIDE
 #undef GEN_ATTRIBUTE_GETTER_BORDER
 #undef GEN_ATTRIBUTE_SETTER_BORDER
-}
+} // namespace Starfish

@@ -549,4 +549,4 @@ void closeLineBreakIterator(UBreakIterator* iter)
 {
     ubrk_close(iter);
 }
-}
+} // namespace Starfish

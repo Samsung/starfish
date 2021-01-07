@@ -168,4 +168,4 @@ bool SVGImageElement::hasRequestError()
 {
     return m_requestErrorType != RequestErrorType::NoError;
 }
-}
+} // namespace Starfish

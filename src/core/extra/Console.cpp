@@ -87,4 +87,4 @@ void Console::debug(String* m)
 #endif
     STARFISH_LOG_ERROR("console.debug: %s\n", m->toUTF8NonGCString().data());
 }
-}
+} // namespace Starfish

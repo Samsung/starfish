@@ -38,6 +38,6 @@ protected:
     {
     }
 };
-}
+} // namespace Starfish
 
 #endif

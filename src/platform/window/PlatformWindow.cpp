@@ -492,4 +492,4 @@ void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
     callback(data);
 }
 #endif
-}
+} // namespace Starfish

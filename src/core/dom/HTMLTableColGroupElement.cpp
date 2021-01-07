@@ -34,4 +34,4 @@ void HTMLTableColGroupElement::styleForPresentationAttribute(
         additionalBorderRulesLeft(cssValues, "thin", "solid");
     }
 }
-}
+} // namespace Starfish

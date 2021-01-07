@@ -94,6 +94,6 @@ private:
     double m_e;
     double m_f;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -385,4 +385,4 @@ void LengthBox::checkComputed(Length curFontSize, Length rootFontSize,
     m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                    windowSize.width(), windowSize.height(), cs);
 }
-}
+} // namespace Starfish

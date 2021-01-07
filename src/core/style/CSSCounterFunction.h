@@ -82,6 +82,6 @@ protected:
     Nullable<String*> m_separator;
     Nullable<AtomicString> m_style;
 };
-}
+} // namespace Starfish
 
 #endif

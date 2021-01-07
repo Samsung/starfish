@@ -57,4 +57,4 @@ void SVGPathElement::styleForPresentationAttribute(
         cssValues.push_back(pair);
     }
 }
-}
+} // namespace Starfish

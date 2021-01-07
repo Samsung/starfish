@@ -169,6 +169,6 @@ private:
 
 typedef GCUnorderedMultiMap<size_t, RefPtr<HTTPCacheEntry>>
     HTTPCacheEntryMultiMap;
-}
+} // namespace Starfish
 #endif
 #endif

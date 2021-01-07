@@ -31,13 +31,14 @@ CanvasGradient::CanvasGradient(ExecutionContext* executionContext)
     , m_executionContext(executionContext)
 {
     STARFISH_ASSERT(executionContext != nullptr);
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       STARFISH_ASSERT(obj != nullptr);
-                                       CanvasGradient* c = (CanvasGradient*)obj;
-                                       c->~CanvasGradient();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            STARFISH_ASSERT(obj != nullptr);
+            CanvasGradient* c = (CanvasGradient*)obj;
+            c->~CanvasGradient();
+        },
+        NULL, NULL, NULL);
 }
 
 CanvasGradient::CanvasGradient(ExecutionContext* executionContext, double x0,
@@ -98,4 +99,4 @@ bool CanvasGradient::isZeroSize()
 {
     return m_nativeGardient->isZeroSize();
 }
-}
+} // namespace Starfish

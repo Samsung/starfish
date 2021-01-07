@@ -65,7 +65,7 @@ private:
     ExecutionContext* m_executionContext;
     CanvasPath* m_canvasPath;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

@@ -279,5 +279,5 @@ inline bool operator!=(const QualifiedName& q, const AtomicString& a)
 {
     return a != q.localNameAtomic();
 }
-}
+} // namespace Starfish
 #endif

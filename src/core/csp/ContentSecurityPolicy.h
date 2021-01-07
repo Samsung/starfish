@@ -87,6 +87,6 @@ private:
     static ScriptNullableValue checkUnsafeEvalCallback(
         ScriptExecutionState state, bool isEval);
 };
-}
+} // namespace Starfish
 
 #endif

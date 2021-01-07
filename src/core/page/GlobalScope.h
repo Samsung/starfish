@@ -51,6 +51,6 @@ private:
     WebBase* m_webBase;
     Id<GlobalScope> m_uid;
 };
-}
+} // namespace Starfish
 
 #endif

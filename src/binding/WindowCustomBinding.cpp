@@ -316,13 +316,13 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window,
-                                               [](size_t, void* data, void*) {
-                                                   PlatformWindow* window =
-                                                       (PlatformWindow*)data;
-                                                   window->pause();
-                                               },
-                                               window->webView(), nullptr);
+    window->webView()->messageLoop()->addIdler(
+        window,
+        [](size_t, void* data, void*) {
+            PlatformWindow* window = (PlatformWindow*)data;
+            window->pause();
+        },
+        window->webView(), nullptr);
     return scriptUndefined();
 }
 
@@ -332,13 +332,13 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window,
-                                               [](size_t, void* data, void*) {
-                                                   PlatformWindow* window =
-                                                       (PlatformWindow*)data;
-                                                   window->resume();
-                                               },
-                                               window->webView(), nullptr);
+    window->webView()->messageLoop()->addIdler(
+        window,
+        [](size_t, void* data, void*) {
+            PlatformWindow* window = (PlatformWindow*)data;
+            window->resume();
+        },
+        window->webView(), nullptr);
     return scriptUndefined();
 }
 
@@ -425,14 +425,14 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
     d->window = window;
     d->arg = argv[1];
 
-    window->screenShot(path,
-                       [](void* data) {
-                           ScreenShotTimeOutData* d =
-                               static_cast<ScreenShotTimeOutData*>(data);
-                           d->window->setTimeout(screenShotTimeoutHandler, 1,
-                                                 d);
-                       },
-                       d);
+    window->screenShot(
+        path,
+        [](void* data) {
+            ScreenShotTimeOutData* d =
+                static_cast<ScreenShotTimeOutData*>(data);
+            d->window->setTimeout(screenShotTimeoutHandler, 1, d);
+        },
+        d);
     return ValueRef::createUndefined();
 }
 
@@ -461,14 +461,14 @@ static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
     d->window = window;
     d->arg = argv[0];
 
-    window->screenShot(path->toUTF8NonGCString(),
-                       [](void* data) {
-                           ScreenShotTimeOutData* d =
-                               static_cast<ScreenShotTimeOutData*>(data);
-                           d->window->setTimeout(screenShotTimeoutHandler, 1,
-                                                 d);
-                       },
-                       d);
+    window->screenShot(
+        path->toUTF8NonGCString(),
+        [](void* data) {
+            ScreenShotTimeOutData* d =
+                static_cast<ScreenShotTimeOutData*>(data);
+            d->window->setTimeout(screenShotTimeoutHandler, 1, d);
+        },
+        d);
 
     return ValueRef::createUndefined();
 }
@@ -737,9 +737,10 @@ void Window::postInit(ScriptBindingInstance* instance)
 {
     ContextRef* context = instance->scriptContext();
 
-    Evaluator::execute(context,
-                       [](ExecutionStateRef* state, Window* self) -> ValueRef* {
-                           ContextRef* context = state->context();
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, Window* self) -> ValueRef* {
+            ContextRef* context = state->context();
 #ifdef STARFISH_ENABLE_TEST
 #define DEFINE_TEST_FUNCTION(name, length)                         \
     self->scriptObject()->defineDataProperty(                      \
@@ -750,33 +751,32 @@ void Window::postInit(ScriptBindingInstance* instance)
                        name##Function, length, true, false)),      \
         true, true, true);
 
-                           DEFINE_TEST_FUNCTION(debugPause, 0);
-                           DEFINE_TEST_FUNCTION(debugResume, 0);
-                           DEFINE_TEST_FUNCTION(networkEnable, 0);
-                           DEFINE_TEST_FUNCTION(networkDisable, 0);
-                           DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
-                           DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
-                           DEFINE_TEST_FUNCTION(isPixelTest, 0);
-                           DEFINE_TEST_FUNCTION(screenShot, 2);
-                           DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
-                           DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
-                           DEFINE_TEST_FUNCTION(getXYWH, 1);
-                           DEFINE_TEST_FUNCTION(simulateClick, 2);
-                           DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
-                           DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
-                           DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
-                           DEFINE_TEST_FUNCTION(testAssert, 1);
-                           DEFINE_TEST_FUNCTION(testEnd, 0);
-                           DEFINE_TEST_FUNCTION(testImgDiff, 2);
-                           DEFINE_TEST_FUNCTION(wptTestEnd, 0);
+            DEFINE_TEST_FUNCTION(debugPause, 0);
+            DEFINE_TEST_FUNCTION(debugResume, 0);
+            DEFINE_TEST_FUNCTION(networkEnable, 0);
+            DEFINE_TEST_FUNCTION(networkDisable, 0);
+            DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
+            DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
+            DEFINE_TEST_FUNCTION(isPixelTest, 0);
+            DEFINE_TEST_FUNCTION(screenShot, 2);
+            DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
+            DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
+            DEFINE_TEST_FUNCTION(getXYWH, 1);
+            DEFINE_TEST_FUNCTION(simulateClick, 2);
+            DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
+            DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
+            DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
+            DEFINE_TEST_FUNCTION(testAssert, 1);
+            DEFINE_TEST_FUNCTION(testEnd, 0);
+            DEFINE_TEST_FUNCTION(testImgDiff, 2);
+            DEFINE_TEST_FUNCTION(wptTestEnd, 0);
 
 #endif
 
-                           return ValueRef::createUndefined();
-
-                       },
-                       this);
+            return ValueRef::createUndefined();
+        },
+        this);
 
     m_object = window()->scriptObject();
 }
-}
+} // namespace Starfish

@@ -84,6 +84,6 @@ private:
     EntityBody m_entityBody;
     int64_t m_responseTime;
 };
-}
+} // namespace Starfish
 
 #endif

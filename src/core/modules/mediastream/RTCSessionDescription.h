@@ -29,7 +29,7 @@
 namespace webrtc {
 class SessionDescriptionInterface;
 enum class SdpType;
-}
+} // namespace webrtc
 
 namespace Starfish {
 class ExecutionContext;

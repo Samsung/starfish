@@ -70,6 +70,6 @@ protected:
     size_t m_animationCounter;
     GCUnorderedMap<uint32_t, void*> m_animationHandler;
 };
-}
+} // namespace Starfish
 
 #endif

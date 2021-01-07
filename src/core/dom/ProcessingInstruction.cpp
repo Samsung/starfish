@@ -27,4 +27,4 @@ String* ProcessingInstruction::nodeName()
 {
     return m_target;
 }
-}
+} // namespace Starfish

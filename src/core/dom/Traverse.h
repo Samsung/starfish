@@ -338,6 +338,6 @@ public:
         return current.previousSibling();
     }
 };
-}
+} // namespace Starfish
 
 #endif

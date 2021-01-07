@@ -37,6 +37,6 @@ protected:
     std::string m_name;
 #endif
 };
-}
+} // namespace Starfish
 
 #endif

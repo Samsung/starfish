@@ -1439,4 +1439,4 @@ ReferrerPolicy ReferrerURL::policyFromString(String* policy)
     }
     return ReferrerPolicy::NoReferrerWhenDowngrade;
 }
-}
+} // namespace Starfish

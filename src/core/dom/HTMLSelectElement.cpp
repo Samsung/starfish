@@ -522,4 +522,4 @@ void HTMLSelectElement::onDropdownMenuItemSelected(int position)
         }
     }
 }
-}
+} // namespace Starfish

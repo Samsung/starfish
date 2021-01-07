@@ -205,5 +205,5 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
 {
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

@@ -28,4 +28,4 @@ Starfish* WebViewHoldable::starfish() const
 {
     return webView()->starfish();
 }
-}
+} // namespace Starfish

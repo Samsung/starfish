@@ -149,6 +149,6 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     }
     return String::fromUTF8("data:,");
 }
-}
+} // namespace Starfish
 
 #endif

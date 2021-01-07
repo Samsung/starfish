@@ -81,6 +81,6 @@ public:
     Length m_tx;
     Length m_ty;
 };
-}
+} // namespace Starfish
 
 #endif

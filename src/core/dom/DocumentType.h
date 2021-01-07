@@ -99,6 +99,6 @@ protected:
     String* m_publicId;
     String* m_systemId;
 };
-}
+} // namespace Starfish
 
 #endif

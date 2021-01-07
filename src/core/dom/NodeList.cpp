@@ -59,4 +59,4 @@ Node* NodeList::item(uint32_t index)
 {
     return m_nodeListImpl.item(index);
 }
-}
+} // namespace Starfish

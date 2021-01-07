@@ -186,4 +186,4 @@ void HTMLTablePartElement::additionalPadding(
     GEN_FOURSIDE(ADDITIONAL_PADDING);
 #undef ADDITIONAL_PADDING
 }
-}
+} // namespace Starfish

@@ -47,7 +47,7 @@ struct equal_to<Starfish::WindowHandlerKind> {
         return a == b;
     }
 };
-}
+} // namespace std
 
 namespace Starfish {
 
@@ -93,7 +93,7 @@ enum class CompositionEventKind {
     CompositionEventUpdate,
     CompositionEventEnd,
 };
-}
+} // namespace Starfish
 
 namespace Starfish {
 

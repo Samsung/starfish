@@ -988,11 +988,12 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
                                     ", frame %p, buf %d opacity %f "
                                     "screenExtent %f %f %f %f visibleRect %f "
                                     "%f %f %f]",
-                                    depth / 2, ctx, ctx->owner()
-                                                        ->node()
-                                                        ->localName()
-                                                        ->toUTF8NonGCString()
-                                                        .data(),
+                                    depth / 2, ctx,
+                                    ctx->owner()
+                                        ->node()
+                                        ->localName()
+                                        ->toUTF8NonGCString()
+                                        .data(),
                                     ctx->owner(),
                                     (int)ctx->needsGraphicsBuffer(),
                                     ctx->owner()->style()->opacity(),
@@ -1149,11 +1150,10 @@ RenderResult WebView::rendering(bool force)
             ->document()
             ->resourceLoader()
             .isDocumentInOpenState() &&
-        ((timestamp() -
-          mainBrowsingContext()
-              ->document()
-              ->resourceLoader()
-              .documentOpenTime()) < 1000)) {
+        ((timestamp() - mainBrowsingContext()
+                            ->document()
+                            ->resourceLoader()
+                            .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
         m_needsRendering = false;
         Canvas* canvas = platformWindow()->preparePainting();
@@ -1258,10 +1258,11 @@ RenderResult WebView::rendering(bool force)
                 INSTALL_PROFILE_TIMER("track repaint region");
                 RepaintRegionTracker tracker(
                     oldRepaintRegionTrackerContext,
-                    m_repaintRegionTrackerContext, mainBrowsingContext()
-                                                       ->document()
-                                                       ->frame()
-                                                       ->asFrameBlockBox(),
+                    m_repaintRegionTrackerContext,
+                    mainBrowsingContext()
+                        ->document()
+                        ->frame()
+                        ->asFrameBlockBox(),
                     needsFullPainting, prevDrawnStackingContextInfo, scrollX,
                     scrollY, m_needsComposite);
                 m_repaintRegionInRendering = std::move(tracker.repaintRegion());
@@ -2057,4 +2058,4 @@ void WebView::setupInspector(uint32_t portNumber)
     m_inspector->run(portNumber);
 }
 #endif
-}
+} // namespace Starfish

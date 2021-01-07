@@ -206,6 +206,6 @@ private:
     size_t m_plannedNavigationTaskId;
     bool m_isLockedForReset;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -49,5 +49,5 @@ public:
 protected:
     Document* m_document;
 };
-}
+} // namespace Starfish
 #endif

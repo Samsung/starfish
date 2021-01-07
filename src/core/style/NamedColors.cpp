@@ -394,4 +394,4 @@ Unit::Color NamedColor::namedColorToColor(NamedColorValue namedColor)
     }
     return Unit::Color();
 }
-}
+} // namespace Starfish

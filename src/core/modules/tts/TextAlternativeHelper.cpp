@@ -360,5 +360,5 @@ String* TextAlternativeHelper::finalize()
     }
     return String::emptyString;
 }
-}
+} // namespace Starfish
 #endif

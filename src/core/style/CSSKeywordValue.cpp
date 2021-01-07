@@ -65,4 +65,4 @@ void CSSKeywordValue::setValue(String* value)
 
     m_value = value;
 }
-}
+} // namespace Starfish

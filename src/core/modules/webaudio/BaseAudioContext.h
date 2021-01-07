@@ -167,6 +167,6 @@ protected:
     RenderingMessageQueue* m_renderingQueue{ nullptr };
     bool m_suspendedByUser{ false };
 };
-}
+} // namespace Starfish
 #endif
 #endif

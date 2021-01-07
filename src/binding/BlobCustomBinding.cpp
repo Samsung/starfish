@@ -118,4 +118,4 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         new Blob(executionContext, totalByteLength, type, buffer, false, false);
     return newBlob->scriptValue();
 }
-}
+} // namespace Starfish

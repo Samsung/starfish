@@ -71,6 +71,6 @@ protected:
     RequestData m_data;
     Headers m_headers;
 };
-}
+} // namespace Starfish
 
 #endif

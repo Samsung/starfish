@@ -32,13 +32,13 @@ BaseRunnable::BaseRunnable(MessageLoop* messageLoop)
     , m_isStopped(false)
 {
     STARFISH_ASSERT(messageLoop != nullptr);
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       BaseRunnable* self =
-                                           castTo<BaseRunnable*>(obj);
-                                       self->~BaseRunnable();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            BaseRunnable* self = castTo<BaseRunnable*>(obj);
+            self->~BaseRunnable();
+        },
+        NULL, NULL, NULL);
 }
 
 BaseRunnable::~BaseRunnable()

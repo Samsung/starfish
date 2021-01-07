@@ -89,4 +89,4 @@ bool StyleTransitionData::operator==(const StyleTransitionData& b) const
     }
     return true;
 }
-}
+} // namespace Starfish

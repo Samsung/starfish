@@ -190,7 +190,7 @@ public:
 #if defined(STARFISH_ENABLE_TEST)
                     && false
 #endif
-                    ) {
+                ) {
                     width = roundf(((float)iter->second.second * intSize) /
                                    m_unitsPerEM);
                 } else {
@@ -216,7 +216,7 @@ public:
 #if defined(STARFISH_ENABLE_TEST)
                     && false
 #endif
-                    ) {
+                ) {
                     width = roundf((float)face->glyph->metrics.horiAdvance *
                                    intSize / m_unitsPerEM);
                 } else {
@@ -431,10 +431,9 @@ public:
         UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
         std::transform(after.begin(), after.end(), after.begin(), tolower);
 
-        if (familyName !=
-            m_webView->initialFontFamilyDatas()[1]
-                .m_familyName.string()
-                ->toUTF8NonGCString()) {
+        if (familyName != m_webView->initialFontFamilyDatas()[1]
+                              .m_familyName.string()
+                              ->toUTF8NonGCString()) {
             if (after != familyName) {
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);
@@ -499,6 +498,6 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
 bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv);
 bool unicodeBlockContainsGraphicSymbol(int unicodeBlock);
 bool charMayContainsGraphicSymbol(char32_t c);
-};
+}; // namespace Starfish
 
 #endif

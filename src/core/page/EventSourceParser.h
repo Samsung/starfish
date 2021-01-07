@@ -64,6 +64,6 @@ private:
     bool m_isRecognizingBOM;
     bool m_isStopped;
 };
-}
+} // namespace Starfish
 
 #endif

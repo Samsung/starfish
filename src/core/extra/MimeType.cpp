@@ -124,4 +124,4 @@ MimeType MimeType::parseFromString(String* str)
     result.setParameter(seq3);
     return result;
 }
-}
+} // namespace Starfish

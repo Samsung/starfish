@@ -437,7 +437,7 @@ private:
     RTCRtpTransceiver* getTransceiver(
         rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backendTransceiver);
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

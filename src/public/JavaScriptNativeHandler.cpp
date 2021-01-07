@@ -47,4 +47,4 @@ String* JavaScriptNativeHandler::callNativeHandler(String* param)
     auto returnValue = m_callback(param->toUTF8NonGCString());
     return String::fromUTF8(returnValue.data(), returnValue.size());
 }
-}
+} // namespace Starfish

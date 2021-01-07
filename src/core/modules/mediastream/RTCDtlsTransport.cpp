@@ -45,8 +45,10 @@ RTCDtlsTransport::RTCDtlsTransport(
     m_backend = rtpDtlsTransport;
 
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCDtlsTransport*)obj)->~RTCDtlsTransport(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCDtlsTransport*)obj)->~RTCDtlsTransport();
+        },
         NULL, NULL, NULL);
 }
 

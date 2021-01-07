@@ -71,4 +71,4 @@ String* NavigatorMixin::language()
     return String::fromUTF8(executionContext()->webBase()->locale().data(),
                             executionContext()->webBase()->locale().size());
 }
-}
+} // namespace Starfish

@@ -72,4 +72,4 @@ void Storage::clear()
 {
     m_storageImpl->clear();
 }
-}
+} // namespace Starfish

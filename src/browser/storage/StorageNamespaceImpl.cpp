@@ -57,4 +57,4 @@ Storage* StorageNamespaceImpl::storage(Window* window, WebOrigin* webOrigin)
     Storage* storage = new Storage(window, storageImpl);
     return storage;
 }
-}
+} // namespace Starfish

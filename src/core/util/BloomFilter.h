@@ -173,6 +173,6 @@ bool BloomFilter<keyBits>::isClear() const
     }
     return true;
 }
-}
+} // namespace Starfish
 
 #endif

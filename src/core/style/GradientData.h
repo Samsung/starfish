@@ -456,6 +456,6 @@ struct equal_to<Starfish::GradientDrawingInfo*> {
         return lhs->equals(rhs);
     }
 };
-}
+} // namespace std
 
 #endif

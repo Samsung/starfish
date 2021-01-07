@@ -160,6 +160,6 @@ public:
 private:
     Blob::BlobData m_data;
 };
-}
+} // namespace Starfish
 
 #endif

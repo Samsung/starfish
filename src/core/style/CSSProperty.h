@@ -29,6 +29,6 @@ public:
     static const char* toCamelCaseString(CSSStyleValuePair::KeyKind property);
     static String* toCamelCaseGCString(CSSStyleValuePair::KeyKind property);
 };
-}
+} // namespace Starfish
 
 #endif

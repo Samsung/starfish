@@ -153,4 +153,4 @@ void AncestorSelectorFilter::computeIdentifierHash(StyleRule* rule)
             selector->relationIsAffectedByPseudoContent();
     }
 }
-}
+} // namespace Starfish

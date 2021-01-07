@@ -80,4 +80,4 @@ unsigned char g_virtualCursorPNGData[] = {
 unsigned int g_virtualCursorPNGDataSize = 607;
 
 #endif
-}
+} // namespace Starfish

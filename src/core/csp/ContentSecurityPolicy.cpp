@@ -204,4 +204,4 @@ ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
 
     return ScriptNullableValue();
 }
-}
+} // namespace Starfish

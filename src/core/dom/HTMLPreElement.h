@@ -35,6 +35,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLPreElement() const override;
 };
-}
+} // namespace Starfish
 
 #endif

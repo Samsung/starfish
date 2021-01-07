@@ -47,6 +47,6 @@ public:
 
     Element* getElementById(String* id);
 };
-}
+} // namespace Starfish
 
 #endif

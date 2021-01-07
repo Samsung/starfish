@@ -214,4 +214,4 @@ const StaticStrings& HTMLStackItem::staticStrings() const
 {
     return *m_node->starfish()->staticStrings();
 }
-}
+} // namespace Starfish

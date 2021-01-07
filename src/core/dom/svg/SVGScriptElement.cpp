@@ -657,4 +657,4 @@ bool SVGScriptElement::blockForNoModule()
     return isValidClassicScriptType() &&
            hasAttribute(starfish()->staticStrings()->m_nomodule) != SIZE_MAX;
 }
-}
+} // namespace Starfish

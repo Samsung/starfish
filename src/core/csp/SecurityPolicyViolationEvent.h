@@ -115,6 +115,6 @@ protected:
     String* m_violatedDirective;
     String* m_blockedURI;
 };
-}
+} // namespace Starfish
 
 #endif

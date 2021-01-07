@@ -90,6 +90,6 @@ protected:
     NativeImageData* m_imageData;
     RequestErrorType m_requestErrorType;
 };
-}
+} // namespace Starfish
 
 #endif

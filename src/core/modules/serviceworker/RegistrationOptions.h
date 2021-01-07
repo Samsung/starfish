@@ -36,6 +36,6 @@ struct RegistrationOptions : public gc {
 
     String* m_scope;
 };
-}
+} // namespace Starfish
 
 #endif

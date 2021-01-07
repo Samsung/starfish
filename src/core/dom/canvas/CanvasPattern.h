@@ -64,6 +64,6 @@ private:
     std::shared_ptr<NativePattern> m_nativePattern;
     bool m_originCleanFlag;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -51,5 +51,5 @@ protected:
     String* m_name;
     NativeFunctionPtr m_callback;
 };
-}
+} // namespace Starfish
 #endif

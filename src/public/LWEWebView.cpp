@@ -197,4 +197,4 @@ void WebView::Blur()
 {
     FetchWebContainer()->Blur();
 }
-}
+} // namespace LWE

@@ -719,10 +719,9 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                 PseudoElementMap* pseudoElementMap =
                     ensureRareElementMembers()->ensurePseudoElementMap();
                 ComputedStyle* ocs =
-                    oldStyle
-                        ? oldStyle->pseudoStyle(this, type, nullptr, nullptr,
-                                                ctx)
-                        : nullptr;
+                    oldStyle ? oldStyle->pseudoStyle(this, type, nullptr,
+                                                     nullptr, ctx)
+                             : nullptr;
                 o = ocs && pseudoElementFrameIsNeeded(ocs) && ocs->content();
                 ComputedStyle* ncs =
                     n ? newStyle->pseudoStyle(this, type, nullptr, nullptr, ctx)
@@ -1967,7 +1966,6 @@ void Element::makeKeyframesFromObject(
         ctx,
         [](ExecutionStateRef* state, ScriptObject object,
            CSSStyleDeclaration* declarations) -> ValueRef* {
-
             ValueVectorRef* values = object->ownPropertyKeys(state);
 
             for (size_t i = 0; i < values->size(); i++) {
@@ -2080,4 +2078,4 @@ ShadowRoot* Element::shadowRoot()
     }
     return rareMembers->m_shadowRoot;
 }
-}
+} // namespace Starfish

@@ -68,7 +68,7 @@ protected:
     ExecutionContext* m_executionContext;
     bool m_originCleanFlag;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

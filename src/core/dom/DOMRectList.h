@@ -49,6 +49,6 @@ private:
     ExecutionContext* m_executionContext;
     GCVector<DOMRect*> m_list;
 };
-}
+} // namespace Starfish
 
 #endif

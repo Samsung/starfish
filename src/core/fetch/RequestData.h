@@ -141,6 +141,6 @@ public:
     static RequestRedirect requestRedirectFromString(String* inputString);
     static RequestDestination requestDestinationFromString(String* inputString);
 };
-}
+} // namespace Starfish
 
 #endif

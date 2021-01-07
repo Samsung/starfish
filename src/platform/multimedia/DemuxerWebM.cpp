@@ -299,6 +299,6 @@ Demuxer* Demuxer::createWebMDemuxer()
 {
     return new DemuxerWebM();
 }
-}
+} // namespace Starfish
 
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

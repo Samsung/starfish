@@ -37,4 +37,4 @@ void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
         setNeedsPainting();
     }
 }
-}
+} // namespace Starfish

@@ -87,6 +87,6 @@ private:
 
     BloomFilter<12> m_bloomFilter;
 };
-}
+} // namespace Starfish
 
 #endif

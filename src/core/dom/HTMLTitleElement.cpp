@@ -36,4 +36,4 @@ void HTMLTitleElement::setText(String* title)
 {
     setTextContent(title);
 }
-}
+} // namespace Starfish

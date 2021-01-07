@@ -88,6 +88,6 @@ void HTMLVideoElement::setPoster(String* poster)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
-}
+} // namespace Starfish
 
 #endif

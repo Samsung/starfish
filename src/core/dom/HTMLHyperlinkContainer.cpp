@@ -294,4 +294,4 @@ void HTMLHyperlinkContainer::setHash(String* hash)
     resourceURL = resourceURL->setHash(hash);
     setAttribute(starfish()->staticStrings()->m_href, resourceURL->href());
 }
-}
+} // namespace Starfish

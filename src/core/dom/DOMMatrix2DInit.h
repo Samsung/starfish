@@ -70,6 +70,6 @@ private:
     double m_m41{ 0 };
     double m_m42{ 0 };
 };
-}
+} // namespace Starfish
 
 #endif

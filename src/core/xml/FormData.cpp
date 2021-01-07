@@ -205,4 +205,4 @@ FormData::startIteration(ExecutionStateRef* state)
 {
     return new FormDataIterationSource(*m_list);
 }
-}
+} // namespace Starfish

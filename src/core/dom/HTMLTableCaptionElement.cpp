@@ -59,4 +59,4 @@ void HTMLTableCaptionElement::styleForPresentationAttribute(
         }
     }
 }
-}
+} // namespace Starfish

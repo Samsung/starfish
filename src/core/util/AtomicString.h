@@ -100,7 +100,7 @@ inline bool operator!=(const AtomicString& a, const AtomicString& b)
 {
     return a.string() != b.string();
 }
-}
+} // namespace Starfish
 
 namespace std {
 template <>
@@ -119,5 +119,5 @@ struct equal_to<Starfish::AtomicString> {
         return s1 == s2;
     }
 };
-}
+} // namespace std
 #endif

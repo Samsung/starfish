@@ -226,16 +226,17 @@ String* TextConverter::convert(const char* bytes, size_t len,
 
 void TextConverter::registerFinalizer()
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       // STARFISH_LOG_INFO(
-                                       //    "TextConverter::~TextConverter\n");
-                                       TextConverter* nr = (TextConverter*)obj;
-                                       if (nr->m_converter) {
-                                           ucnv_close(nr->m_converter);
-                                           nr->m_converter = nullptr;
-                                       }
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            // STARFISH_LOG_INFO(
+            //    "TextConverter::~TextConverter\n");
+            TextConverter* nr = (TextConverter*)obj;
+            if (nr->m_converter) {
+                ucnv_close(nr->m_converter);
+                nr->m_converter = nullptr;
+            }
+        },
+        NULL, NULL, NULL);
 }
-}
+} // namespace Starfish

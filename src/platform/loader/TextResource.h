@@ -83,6 +83,6 @@ protected:
     String* m_preferredEncoding;
     String* m_text;
 };
-}
+} // namespace Starfish
 
 #endif

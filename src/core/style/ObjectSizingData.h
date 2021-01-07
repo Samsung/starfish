@@ -93,6 +93,6 @@ private:
     Length m_offsetX;
     Length m_offsetY;
 };
-}
+} // namespace Starfish
 
 #endif

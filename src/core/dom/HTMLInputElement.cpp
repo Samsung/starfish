@@ -799,4 +799,4 @@ void HTMLInputElement::setDefaultBookkeepingValues()
         m_stepScaleFactor = 1;
     }
 }
-}
+} // namespace Starfish

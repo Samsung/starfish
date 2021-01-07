@@ -91,4 +91,4 @@ void HTMLHeadingElement::styleForPresentationAttribute(
         cssValues.push_back(pair);
     }
 }
-}
+} // namespace Starfish

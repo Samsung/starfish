@@ -38,4 +38,4 @@ void SVGTSpanElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 }
-}
+} // namespace Starfish

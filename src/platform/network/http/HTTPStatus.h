@@ -121,6 +121,6 @@ static String* httpStatusCodeToText(long responseCode)
         return String::emptyString;
     }
 }
-}
+} // namespace Starfish
 
 #endif

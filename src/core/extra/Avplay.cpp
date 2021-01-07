@@ -490,5 +490,5 @@ void Avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 
     callScriptFunction(instance, fn, argv, argc, thisValue);
 }
-}
+} // namespace Starfish
 #endif

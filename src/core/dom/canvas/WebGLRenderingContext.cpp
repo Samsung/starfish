@@ -29,6 +29,6 @@ WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     : CanvasRenderingContext(canvasElement->executionContext())
 {
 }
-}
+} // namespace Starfish
 
 #endif

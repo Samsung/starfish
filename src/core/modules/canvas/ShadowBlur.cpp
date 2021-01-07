@@ -277,4 +277,4 @@ void ShadowBlur::process(float stdDeviation)
     standardBoxBlur(m_source, m_workspace.get(), kernelSize, kernelSize,
                     m_stride, m_width, m_height, EDGEMODE_DUPLICATE);
 }
-}
+} // namespace Starfish

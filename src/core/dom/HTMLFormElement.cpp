@@ -964,4 +964,4 @@ bool HTMLFormElement::isSubmittableElement(Node* node)
     }
     return false;
 }
-}
+} // namespace Starfish

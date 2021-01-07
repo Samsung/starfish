@@ -267,6 +267,6 @@ private:
             clearAttributeEventListener(attr);                \
         }                                                     \
     }
-}
+} // namespace Starfish
 
 #endif

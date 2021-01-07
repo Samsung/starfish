@@ -308,6 +308,6 @@ inline bool operator!=(const BasicString<T, Allocator>& lhs, const T* rhs)
 {
     return !(lhs == rhs);
 }
-}
+} // namespace Starfish
 
 #endif

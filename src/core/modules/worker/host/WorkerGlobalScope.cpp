@@ -165,6 +165,6 @@ Promise* WorkerGlobalScope::fetch(RequestInfo& input, RequestInit& init)
 {
     return Fetch::fetch(executionContext(), input, init);
 }
-}
+} // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

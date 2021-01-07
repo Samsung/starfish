@@ -58,6 +58,6 @@ private:
     HTTPHeaderMap m_httpHeaderMap;
     Guard m_guard;
 };
-}
+} // namespace Starfish
 
 #endif

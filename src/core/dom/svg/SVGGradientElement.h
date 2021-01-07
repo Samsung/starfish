@@ -52,6 +52,6 @@ public:
         return false;
     }
 };
-}
+} // namespace Starfish
 
 #endif

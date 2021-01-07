@@ -37,4 +37,4 @@ void SVGPolygonElement::didAttributeChanged(QualifiedName name, String* old,
         setNeedsPainting();
     }
 }
-}
+} // namespace Starfish

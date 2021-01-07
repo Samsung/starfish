@@ -77,5 +77,5 @@ protected:
     GradientDrawingInfo* m_gradientDrawingInfo;
     NativeImageData* m_gradientImageDataCached;
 };
-}
+} // namespace Starfish
 #endif

@@ -196,4 +196,4 @@ void HTTPHeaderMap::dump()
     }
 }
 #endif
-}
+} // namespace Starfish

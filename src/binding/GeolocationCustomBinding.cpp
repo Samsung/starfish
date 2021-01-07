@@ -173,4 +173,4 @@ ValueRef* clearWatchGeolocationFunction(ExecutionStateRef* state,
     }
     return scriptUndefined();
 }
-}
+} // namespace Starfish

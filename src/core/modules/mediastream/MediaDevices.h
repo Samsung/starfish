@@ -50,7 +50,7 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

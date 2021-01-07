@@ -181,5 +181,5 @@ public:
 private:
     TransformOriginData* m_originValue;
 };
-}
+} // namespace Starfish
 #endif /* STYLETRANSFORMORIGIN_H_ */

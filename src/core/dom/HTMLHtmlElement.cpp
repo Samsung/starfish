@@ -41,4 +41,4 @@ void HTMLHtmlElement::didComputedStyleChanged(
         document()->setNeedsPainting();
     }
 }
-}
+} // namespace Starfish

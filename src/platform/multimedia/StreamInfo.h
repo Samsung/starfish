@@ -253,5 +253,5 @@ protected:
         } m_videoData;
     } m_data;
 };
-}
+} // namespace Starfish
 #endif

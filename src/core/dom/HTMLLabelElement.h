@@ -40,6 +40,6 @@ public:
 
     HTMLElement* control();
 };
-}
+} // namespace Starfish
 
 #endif

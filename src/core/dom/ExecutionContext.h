@@ -170,6 +170,6 @@ private:
     ServiceWorker* m_activeServiceWorker{ nullptr };
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */
 };
-}
+} // namespace Starfish
 
 #endif

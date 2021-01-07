@@ -64,7 +64,7 @@ namespace {
     {
         return isHTMLSpace<char32_t>(character) || character == 0xFFFD;
     }
-}
+} // namespace
 
 static TextPosition uninitializedPositionValue1()
 {
@@ -531,7 +531,7 @@ namespace {
         return item->hasTagName(s->m_ddTagName) ||
                item->hasTagName(s->m_dtTagName);
     }
-}
+} // namespace
 
 template <bool shouldClose(StaticStrings* s, const HTMLStackItem*)>
 void HTMLTreeBuilder::processCloseWhenNestedTag(AtomicHTMLToken* token)

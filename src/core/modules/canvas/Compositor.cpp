@@ -39,4 +39,4 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
 {
 }
 #endif
-}
+} // namespace Starfish

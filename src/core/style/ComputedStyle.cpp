@@ -2377,4 +2377,4 @@ bool ComputedStyle::isFourSideBorderStyleValueSolid()
 #undef _DAMAGED_KEYS
 #undef NEED_TRANSITION
 #undef RETURN_NEED_TRANSITION
-}
+} // namespace Starfish

@@ -52,7 +52,7 @@ private:
     ExecutionContext* m_executionContext;
     rtc::scoped_refptr<rtc::RTCCertificate> m_backend;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

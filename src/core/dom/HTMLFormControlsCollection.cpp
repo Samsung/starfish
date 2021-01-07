@@ -56,4 +56,4 @@ Element* HTMLFormControlsCollection::namedItem(String* name)
     // 5. Return that RadioNodeList object.
     return nullptr;
 }
-}
+} // namespace Starfish

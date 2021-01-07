@@ -43,6 +43,6 @@ struct RTCOAuthCredential : public gc {
     String* m_macKey{ String::emptyString };
     String* m_accessToken{ String::emptyString };
 };
-}
+} // namespace Starfish
 #endif
 // #endif

@@ -111,4 +111,4 @@ void StorageImpl::clear()
         m_storageManager->clear(m_webOrigin);
     }
 }
-}
+} // namespace Starfish

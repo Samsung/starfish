@@ -128,5 +128,5 @@ private:
 class CanvasShadowDataList : public GCVector<CanvasShadowData> {
 public:
 };
-}
+} // namespace Starfish
 #endif

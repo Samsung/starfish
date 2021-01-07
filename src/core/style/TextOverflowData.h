@@ -95,6 +95,6 @@ private:
         String* m_stringValue;
     };
 };
-}
+} // namespace Starfish
 
 #endif

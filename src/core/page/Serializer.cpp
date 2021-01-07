@@ -579,4 +579,4 @@ void Serializer::deserializeWithTransfer(
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);
     }
 }
-}
+} // namespace Starfish

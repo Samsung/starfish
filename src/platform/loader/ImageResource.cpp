@@ -260,9 +260,10 @@ void ImageResource::didLoadFinished()
                                 } else if (buffer.size()) {
                                     d->imageResource->m_imageData =
                                         CompressedNativeImageData::create(
-                                            buffer, d->imageResource->url()
-                                                        ->urlString()
-                                                        ->toUTF8NonGCString(),
+                                            buffer,
+                                            d->imageResource->url()
+                                                ->urlString()
+                                                ->toUTF8NonGCString(),
                                             d->needsDownScaleImageResourceLargerThan);
                                     if (!d->imageResource->m_imageData) {
                                         d->imageResource

@@ -94,7 +94,7 @@ private:
     Nullable<uint32_t> m_sdpMLineIndex;
     Nullable<String*> m_usernameFragment;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

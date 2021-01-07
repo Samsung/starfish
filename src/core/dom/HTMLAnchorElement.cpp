@@ -146,4 +146,4 @@ bool HTMLAnchorElement::supportsFocus()
                ? true
                : false;
 }
-}
+} // namespace Starfish

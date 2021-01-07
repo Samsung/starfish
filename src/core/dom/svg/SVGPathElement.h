@@ -52,6 +52,6 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 };
-}
+} // namespace Starfish
 
 #endif

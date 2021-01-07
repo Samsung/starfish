@@ -79,4 +79,4 @@ DOMPoint::DOMPoint(ExecutionContext* executionContext, const DOMPointInit& pi)
     : DOMPointReadOnly(executionContext, pi.x(), pi.y(), pi.z(), pi.w())
 {
 }
-}
+} // namespace Starfish

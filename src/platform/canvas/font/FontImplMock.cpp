@@ -132,5 +132,5 @@ FontSelector* FontSelector::create(Document* document,
     return new FontSelectorImplMock(document, platformFontSelector,
                                     platformFontCache);
 }
-}
+} // namespace Starfish
 #endif

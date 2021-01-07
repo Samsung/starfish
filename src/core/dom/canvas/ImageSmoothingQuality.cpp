@@ -39,4 +39,4 @@ ImageRenderingValue toImageRenderingValue(bool imageSmoothingEnabled,
     }
     return ret;
 }
-}
+} // namespace Starfish

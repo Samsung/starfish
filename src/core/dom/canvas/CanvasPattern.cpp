@@ -33,13 +33,14 @@ CanvasPattern::CanvasPattern(ExecutionContext* executionContext)
     , m_originCleanFlag(true)
 {
     STARFISH_ASSERT(executionContext != nullptr);
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       STARFISH_ASSERT(obj != nullptr);
-                                       CanvasPattern* c = (CanvasPattern*)obj;
-                                       c->~CanvasPattern();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            STARFISH_ASSERT(obj != nullptr);
+            CanvasPattern* c = (CanvasPattern*)obj;
+            c->~CanvasPattern();
+        },
+        NULL, NULL, NULL);
 }
 
 CanvasPattern::CanvasPattern(ExecutionContext* executionContext,
@@ -75,4 +76,4 @@ bool CanvasPattern::isEmptyPattern()
 {
     return m_nativePattern->isEmpyPattern();
 }
-}
+} // namespace Starfish

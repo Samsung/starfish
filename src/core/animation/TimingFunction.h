@@ -51,5 +51,5 @@ public:
     bool operator==(const TimingFunction& b) const;
     bool operator!=(const TimingFunction& b) const;
 };
-}
+} // namespace Starfish
 #endif

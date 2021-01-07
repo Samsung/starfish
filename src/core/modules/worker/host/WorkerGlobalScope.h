@@ -119,6 +119,6 @@ protected:
 private:
     void importScript(ResourceURL* url);
 };
-}
+} // namespace Starfish
 
 #endif

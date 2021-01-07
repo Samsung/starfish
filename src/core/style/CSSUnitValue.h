@@ -68,6 +68,6 @@ private:
     double m_value;
     String* m_unit;
 };
-}
+} // namespace Starfish
 
 #endif

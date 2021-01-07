@@ -49,7 +49,7 @@ private:
     String* m_tag;
     String* m_origin;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

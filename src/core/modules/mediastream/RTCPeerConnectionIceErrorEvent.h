@@ -53,6 +53,6 @@ private:
     ExecutionContext* m_executionContext{ nullptr };
     String* m_hostCandidate{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

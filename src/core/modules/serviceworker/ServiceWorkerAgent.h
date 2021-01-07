@@ -80,6 +80,6 @@ private:
     CastServer* m_castServer;
 #endif
 };
-}
+} // namespace Starfish
 #endif
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

@@ -173,4 +173,4 @@ String* HTMLMetaElement::content()
 {
     return m_content;
 }
-}
+} // namespace Starfish

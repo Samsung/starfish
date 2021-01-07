@@ -106,5 +106,5 @@ void Path2D::ellipse(float x, float y, float radiusX, float radiusY,
     m_canvasPath->ellipse(x, y, radiusX, radiusY, rotation, startAngle,
                           endAngle, anticlockwise);
 }
-}
+} // namespace Starfish
 #endif

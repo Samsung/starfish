@@ -46,6 +46,6 @@ private:
     ExecutionContext* m_executionContext;
     ResourceURL* m_url;
 };
-}
+} // namespace Starfish
 
 #endif

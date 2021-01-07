@@ -545,6 +545,6 @@ private:
     size_t m_playStateSize;
     size_t m_fillModeSize;
 };
-}
+} // namespace Starfish
 
 #endif

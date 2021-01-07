@@ -122,6 +122,6 @@ struct ScreenInfo {
         return !this->operator==(other);
     }
 };
-}
+} // namespace Starfish
 
 #endif

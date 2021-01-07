@@ -52,6 +52,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isXMLDocument() const override;
 };
-}
+} // namespace Starfish
 
 #endif

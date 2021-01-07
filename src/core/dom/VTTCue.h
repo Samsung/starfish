@@ -49,7 +49,7 @@ public:
         setPayload(text);
     }
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

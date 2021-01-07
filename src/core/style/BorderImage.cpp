@@ -30,4 +30,4 @@ NativeImageData* BorderImageData::imageData()
     }
     return NULL;
 }
-}
+} // namespace Starfish

@@ -33,6 +33,6 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(WorkerNavigator)
 };
-}
+} // namespace Starfish
 
 #endif

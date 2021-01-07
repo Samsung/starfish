@@ -69,6 +69,6 @@ protected:
 
     unsigned short m_unitType;
 };
-}
+} // namespace Starfish
 
 #endif

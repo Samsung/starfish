@@ -89,6 +89,6 @@ private:
     ScriptValue m_filter;
     bool m_activeFlag;
 };
-}
+} // namespace Starfish
 
 #endif

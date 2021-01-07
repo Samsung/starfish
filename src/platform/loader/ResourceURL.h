@@ -326,6 +326,6 @@ private:
     } else {                                                         \
         policy = document()->referrerPolicy();                       \
     }
-}
+} // namespace Starfish
 
 #endif

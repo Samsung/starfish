@@ -103,6 +103,6 @@ private:
     TextAnchor m_textAnchor{ TextAnchor::START };
     AlignmentBaseline m_alignmentBaseline{ AlignmentBaseline::AUTO };
 };
-}
+} // namespace Starfish
 
 #endif

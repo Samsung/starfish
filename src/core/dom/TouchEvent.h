@@ -51,6 +51,6 @@ public:
 private:
     TouchList* m_touches;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -50,7 +50,7 @@ enum StarfishPubicWebViewHandlerKind {
     OnDownloadStart,
     ShouldOverrideUrlLoading,
 };
-}
+} // namespace Starfish
 
 namespace std {
 template <>
@@ -86,7 +86,7 @@ struct equal_to<Starfish::BlobURLStore> {
         return a.m_blob == b.m_blob;
     }
 };
-}
+} // namespace std
 
 namespace Starfish {
 
@@ -248,6 +248,6 @@ public:
     std::function<void(void* handle)> m_fileCloseCallback;
     // <----
 };
-}
+} // namespace Starfish
 
 #endif

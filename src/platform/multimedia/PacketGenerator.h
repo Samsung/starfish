@@ -89,5 +89,5 @@ protected:
     std::vector<uint8_t> m_extraData;
     unsigned char m_H264NalSizeLength;
 };
-}
+} // namespace Starfish
 #endif

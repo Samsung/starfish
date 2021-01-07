@@ -72,6 +72,6 @@ protected:
     Document* m_document;
     GCVector<MediaQuery*> m_queries;
 };
-}
+} // namespace Starfish
 
 #endif

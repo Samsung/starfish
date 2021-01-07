@@ -55,7 +55,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLAudioElement() const override;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif // STARFISH_ENABLE_MULTIMEDIA

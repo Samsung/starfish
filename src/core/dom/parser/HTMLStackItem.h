@@ -141,6 +141,6 @@ private:
     AtomicString m_namespaceURI;
     bool m_isDocumentFragmentNode;
 };
-}
+} // namespace Starfish
 
 #endif

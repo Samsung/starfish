@@ -69,6 +69,6 @@ private:
     BodyType m_type;
     String* m_mimeType;
 };
-}
+} // namespace Starfish
 
 #endif

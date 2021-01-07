@@ -49,5 +49,5 @@ bool NotificationService::replaceNotification(
     }
     return false;
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

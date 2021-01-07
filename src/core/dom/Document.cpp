@@ -1395,15 +1395,13 @@ void Document::processBaseElement()
     String* href = nullptr;
     String* target = nullptr;
     while (baseElement && (!href || (target && target->isEmpty()))) {
-        if (!href &&
-            baseElement->hasAttribute(starfish()->staticStrings()->m_href) !=
-                SIZE_MAX) {
+        if (!href && baseElement->hasAttribute(
+                         starfish()->staticStrings()->m_href) != SIZE_MAX) {
             href = baseElement->getAttributeOrEmpty(
                 starfish()->staticStrings()->m_href);
         }
-        if (!target &&
-            baseElement->hasAttribute(starfish()->staticStrings()->m_target) !=
-                SIZE_MAX) {
+        if (!target && baseElement->hasAttribute(
+                           starfish()->staticStrings()->m_target) != SIZE_MAX) {
             target = baseElement->getAttributeOrEmpty(
                 starfish()->staticStrings()->m_target);
         }
@@ -2334,4 +2332,4 @@ void Document::updateShadowTreeForUseElement()
         m_isMiddleOfUseElementUpdating = false;
     }
 }
-}
+} // namespace Starfish

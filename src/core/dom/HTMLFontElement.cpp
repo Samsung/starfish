@@ -222,4 +222,4 @@ void HTMLFontElement::setSize(String* size)
 {
     setAttribute(starfish()->staticStrings()->m_size, size);
 }
-}
+} // namespace Starfish

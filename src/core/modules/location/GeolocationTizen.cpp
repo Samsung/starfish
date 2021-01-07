@@ -164,9 +164,10 @@ static void handleError(int error, LocationRequestInfoTizen* info)
             [](size_t, void* data, void* data2, void* data3) {
                 Document* d = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(d, new PositionError(
-                          d->executionContext(),
-                          PositionError::Error::POSITION_UNAVAILABLE),
+                cb(d,
+                   new PositionError(
+                       d->executionContext(),
+                       PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             info->document, (void*)info->errorCb, info->errorCbData);
@@ -207,8 +208,9 @@ static void timerIntervalFunction(void* data)
         [](size_t, void* data, void* data2, void* data3) {
             Document* d = (Document*)data;
             GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-            cb(d, new PositionError(d->executionContext(),
-                                    PositionError::Error::TIMEOUT),
+            cb(d,
+               new PositionError(d->executionContext(),
+                                 PositionError::Error::TIMEOUT),
                data3);
         },
         info->document, (void*)info->errorCb, info->errorCbData);
@@ -238,9 +240,8 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
         info->isSingleShot = true;
 
         auto currentTimestamp = timestamp();
-        if (maximumAge != 0 &&
-            (currentTimestamp - m_cachedLocation.timestamp) <
-                (DOMTimeStamp)maximumAge) {
+        if (maximumAge != 0 && (currentTimestamp - m_cachedLocation.timestamp) <
+                                   (DOMTimeStamp)maximumAge) {
             // use cached location
             STARFISH_LOG_INFO("use cached location...");
             m_pendingRequest.push_back(info);
@@ -402,9 +403,8 @@ uint32_t GeolocationTizen::watchPosition(GeoPositionCallback cb, void* cbData,
 
     // Check for cached location
     uint64_t currentTimestamp = timestamp();
-    if (maximumAge != 0 &&
-        (currentTimestamp - m_cachedLocation.timestamp) <
-            (DOMTimeStamp)maximumAge) {
+    if (maximumAge != 0 && (currentTimestamp - m_cachedLocation.timestamp) <
+                               (DOMTimeStamp)maximumAge) {
         info->altitude = m_cachedLocation.altitude;
         info->latitude = m_cachedLocation.latitude;
         info->longitude = m_cachedLocation.longitude;
@@ -523,6 +523,6 @@ void GeolocationTizen::clearWatch(uint32_t watchId)
         }
     }
 }
-}
+} // namespace Starfish
 
 #endif

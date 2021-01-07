@@ -127,6 +127,6 @@ protected:
     void unloadSrc();
     void loadSrcDoc();
 };
-}
+} // namespace Starfish
 
 #endif

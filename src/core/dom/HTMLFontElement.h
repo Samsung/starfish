@@ -57,6 +57,6 @@ private:
     bool m_hasColorAttribute;
     bool m_hasSizeAttribute;
 };
-}
+} // namespace Starfish
 
 #endif

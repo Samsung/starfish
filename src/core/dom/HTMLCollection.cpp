@@ -68,4 +68,4 @@ Element* HTMLCollection::namedItem(String* key)
     }
     return nullptr;
 }
-}
+} // namespace Starfish

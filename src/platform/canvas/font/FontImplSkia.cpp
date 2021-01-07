@@ -702,6 +702,6 @@ FontFace* FontSelectorImplSkia::loadFromPlatform(
         }
     }
 }
-}
+} // namespace Starfish
 
 #endif

@@ -51,5 +51,5 @@ private:
     MatchType m_type;
     QualifiedName m_qname;
 };
-}
+} // namespace Starfish
 #endif

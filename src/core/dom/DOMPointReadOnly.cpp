@@ -38,4 +38,4 @@ ScriptBindingInstance* DOMPointReadOnly::scriptBindingInstance()
 {
     return m_executionContext->scriptBindingInstance();
 }
-}
+} // namespace Starfish

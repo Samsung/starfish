@@ -414,4 +414,4 @@ void EventSource::close()
     document()->window()->clearTimeout(m_time);
     executionContext()->removePointerFromRootSet(this);
 }
-}
+} // namespace Starfish

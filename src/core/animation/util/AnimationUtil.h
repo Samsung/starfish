@@ -102,6 +102,6 @@ public:
                                       const Length& newLength, Element* element,
                                       AnimatedValue& from, AnimatedValue& to);
 };
-}
+} // namespace Starfish
 
 #endif

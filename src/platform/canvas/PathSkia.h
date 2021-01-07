@@ -71,5 +71,5 @@ public:
 private:
     SkPath* m_skiaPath;
 };
-}
+} // namespace Starfish
 #endif

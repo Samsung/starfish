@@ -329,5 +329,5 @@ protected:
                                        bool isGenericName, char style,
                                        char weight);
 };
-};
+}; // namespace Starfish
 #endif

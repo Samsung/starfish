@@ -63,4 +63,4 @@ void SVGEllipseElement::styleForPresentationAttribute(
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(rx, RX);
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(ry, RY);
 }
-}
+} // namespace Starfish

@@ -71,5 +71,5 @@ namespace UnitHelper {
     {
         return value * static_cast<float>(M_PI) / 180.0f;
     }
-}
-}
+} // namespace UnitHelper
+} // namespace Starfish

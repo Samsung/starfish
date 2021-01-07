@@ -205,4 +205,4 @@ void Resource::didLoadCanceled()
         m_resourceRequest = nullptr;
     }
 }
-}
+} // namespace Starfish

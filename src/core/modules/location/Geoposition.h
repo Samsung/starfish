@@ -47,6 +47,6 @@ protected:
     Coordinates* m_coords;
     DOMTimeStamp m_timestamp;
 };
-}
+} // namespace Starfish
 
 #endif

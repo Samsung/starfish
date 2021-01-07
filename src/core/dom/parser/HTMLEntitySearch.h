@@ -93,6 +93,6 @@ private:
     const HTMLEntityTableEntry* m_first;
     const HTMLEntityTableEntry* m_last;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -87,6 +87,6 @@ public:
 protected:
     ScriptValue m_detail;
 };
-}
+} // namespace Starfish
 
 #endif

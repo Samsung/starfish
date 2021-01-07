@@ -142,13 +142,13 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
                                       webView()->screenInfo().devicePixelRatio);
     } else {
         if (m_sourceElement->frame()) {
-            m_window =
-                Window::create(this, url, (uint32_t)m_sourceElement->frame()
-                                              ->asFrameBox()
-                                              ->contentWidth(),
-                               (uint32_t)m_sourceElement->frame()
-                                   ->asFrameBox()
-                                   ->contentHeight());
+            m_window = Window::create(this, url,
+                                      (uint32_t)m_sourceElement->frame()
+                                          ->asFrameBox()
+                                          ->contentWidth(),
+                                      (uint32_t)m_sourceElement->frame()
+                                          ->asFrameBox()
+                                          ->contentHeight());
         } else {
             m_window = Window::create(this, url, STARFISH_DEFAULT_IFRAME_WIDTH,
                                       STARFISH_DEFAULT_IFRAME_HEIGHT);
@@ -706,12 +706,11 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 std::pair<bool, Unit::Color> BrowsingContext::hasWindowBackgroundColor()
 {
     if (hasRootElementBackground() || hasBodyElementBackground()) {
-        if (hasRootElementBackground() &&
-            !document()
-                 ->rootElement()
-                 ->style()
-                 ->backgroundColor()
-                 .isTransparent()) {
+        if (hasRootElementBackground() && !document()
+                                               ->rootElement()
+                                               ->style()
+                                               ->backgroundColor()
+                                               .isTransparent()) {
             HTMLHtmlElement* root = document()->rootElement();
             return std::make_pair(true, root->style()->backgroundColor());
         } else {
@@ -763,14 +762,15 @@ void BrowsingContext::iterateChildContext(
 {
     if (document()) {
         GCVector<Element*> col;
-        Traverse::collectDescendants(col, document(),
-                                     [](Node* nd) -> bool {
-                                         if (nd->isHTMLIFrameElement()) {
-                                             return true;
-                                         }
-                                         return false;
-                                     },
-                                     false);
+        Traverse::collectDescendants(
+            col, document(),
+            [](Node* nd) -> bool {
+                if (nd->isHTMLIFrameElement()) {
+                    return true;
+                }
+                return false;
+            },
+            false);
 
         for (size_t i = 0; i < col.size(); i++) {
             if (col[i]->asHTMLIFrameElement()->browsingContext()) {
@@ -2087,4 +2087,4 @@ bool BrowsingContext::isDescendantOf(BrowsingContext* ancester)
     }
     return false;
 }
-}
+} // namespace Starfish

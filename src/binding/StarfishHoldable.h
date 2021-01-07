@@ -45,5 +45,5 @@ private:
     {
     }
 };
-}
+} // namespace Starfish
 #endif

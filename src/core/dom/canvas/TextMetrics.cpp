@@ -58,6 +58,6 @@ ScriptBindingInstance* TextMetrics::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
-}
+} // namespace Starfish
 
 #endif

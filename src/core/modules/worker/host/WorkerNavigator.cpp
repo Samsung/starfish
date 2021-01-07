@@ -37,6 +37,6 @@ ScriptBindingInstance* WorkerNavigator::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
-}
+} // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

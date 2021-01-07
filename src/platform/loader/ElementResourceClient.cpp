@@ -88,4 +88,4 @@ void ElementResourceClient::cancelDispatchedEventIfExists()
         m_dispatchedEventHandler = TimerInvalidID;
     }
 }
-}
+} // namespace Starfish

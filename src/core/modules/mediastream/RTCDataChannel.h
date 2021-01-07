@@ -125,6 +125,6 @@ private:
 
     rtc::scoped_refptr<webrtc::DataChannelInterface> m_backend;
 };
-}
+} // namespace Starfish
 #endif
 #endif

@@ -46,6 +46,6 @@ private:
         gc_allocator_ignore_off_page<std::pair<WebOrigin* const, StorageImpl*>>>
         m_originToStorage;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -66,6 +66,6 @@ private:
 
     MediaStreamTrack* m_track{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

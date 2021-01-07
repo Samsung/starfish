@@ -50,4 +50,4 @@ void SVGClipPathElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 }
-}
+} // namespace Starfish

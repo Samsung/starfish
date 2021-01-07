@@ -314,6 +314,6 @@ private:
     // token here so we remember it next time we re-enter the tokenizer.
     GCAtomicVector<char> m_bufferedEndTagName;
 };
-}
+} // namespace Starfish
 
 #endif

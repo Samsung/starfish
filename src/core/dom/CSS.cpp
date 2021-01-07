@@ -41,4 +41,4 @@ bool CSS::supports(Document* document, String* conditionText)
 
     return parser.parseSupportCondition(conditionText);
 }
-}
+} // namespace Starfish

@@ -496,6 +496,6 @@ private:
     // For DOCTYPE
     DoctypeData* m_doctypeData;
 };
-}
+} // namespace Starfish
 
 #endif

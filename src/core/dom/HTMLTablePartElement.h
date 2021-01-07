@@ -62,5 +62,5 @@ public:
     void additionalPadding(CSSStyleValuePairVectorHolder& cssValues,
                            String* padding);
 };
-}
+} // namespace Starfish
 #endif

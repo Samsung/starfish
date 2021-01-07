@@ -203,6 +203,6 @@ private:
     String* m_lastEventId;
     Nullable<MessageEventSource> m_source;
 };
-}
+} // namespace Starfish
 
 #endif

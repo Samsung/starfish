@@ -703,4 +703,4 @@ String* HTMLTableElement::cellpadding()
     }
     return value;
 }
-}
+} // namespace Starfish

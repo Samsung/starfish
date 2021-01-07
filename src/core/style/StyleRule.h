@@ -516,6 +516,6 @@ inline StyleRuleKeyframes* StyleRuleBase::asStyleRuleKeyframes()
     STARFISH_ASSERT(isKeyframesRule());
     return (StyleRuleKeyframes*)this;
 }
-}
+} // namespace Starfish
 
 #endif

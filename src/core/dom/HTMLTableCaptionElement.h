@@ -44,6 +44,6 @@ public:
 
     /* Other methods (not in DOM API) */
 };
-}
+} // namespace Starfish
 
 #endif

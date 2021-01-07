@@ -35,4 +35,4 @@ Animation::Animation(ExecutionContext* executionContext)
     , m_executionContext(executionContext)
 {
 }
-}
+} // namespace Starfish

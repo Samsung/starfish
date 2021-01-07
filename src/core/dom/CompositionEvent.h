@@ -102,6 +102,6 @@ public:
 private:
     String* m_data;
 };
-}
+} // namespace Starfish
 
 #endif

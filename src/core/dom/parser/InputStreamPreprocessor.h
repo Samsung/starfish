@@ -159,6 +159,6 @@ private:
     char32_t m_nextInputCharacter;
     bool m_skipNextNewLine;
 };
-}
+} // namespace Starfish
 
 #endif

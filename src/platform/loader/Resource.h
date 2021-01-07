@@ -279,6 +279,6 @@ public:
 protected:
     Resource* m_resource;
 };
-}
+} // namespace Starfish
 
 #endif

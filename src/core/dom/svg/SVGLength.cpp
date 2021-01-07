@@ -88,8 +88,9 @@ float SVGLength::value()
         auto s = attrValue->toUTF8NonGCString();
         CSSStyleValuePair pair;
         if (CSSPropertyParser::parseLength(
-                s.data(), CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowWithoutUnit,
+                s.data(),
+                CSSPropertyParser::AllowPercent |
+                    CSSPropertyParser::AllowWithoutUnit,
                 &pair)) {
             Nullable<Length> value =
                 valueToLength(pair.valueKind(), pair.value());
@@ -216,8 +217,9 @@ void SVGLength::setValueAsString(String* valueAsString)
         auto s = valueAsString->toUTF8NonGCString();
         CSSStyleValuePair pair;
         if (CSSPropertyParser::parseLength(
-                s.data(), CSSPropertyParser::AllowPercent |
-                              CSSPropertyParser::AllowWithoutUnit,
+                s.data(),
+                CSSPropertyParser::AllowPercent |
+                    CSSPropertyParser::AllowWithoutUnit,
                 &pair)) {
             if (pair.cssLengthValue().kind() == CSSLength::PX) {
                 setUnitType(SVG_LENGTHTYPE_PX);
@@ -276,4 +278,4 @@ void SVGLength::convertToSpecifiedUnits(unsigned short unitType)
 
     setUnitType(unitType);
 }
-}
+} // namespace Starfish

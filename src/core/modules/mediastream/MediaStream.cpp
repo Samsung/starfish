@@ -508,5 +508,5 @@ void MediaStream::syncTracks()
         }
     }
 }
-}
+} // namespace Starfish
 #endif

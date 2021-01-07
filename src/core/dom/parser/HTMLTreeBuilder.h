@@ -330,6 +330,6 @@ private:
     // Starting line number of the script tag needing processing.
     TextPosition m_scriptToProcessStartPosition;
 };
-}
+} // namespace Starfish
 
 #endif

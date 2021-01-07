@@ -60,6 +60,6 @@ public:
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -163,6 +163,6 @@ private:
     int m_defaultVoiceType;
     int m_currentUtterId;
 };
-}
+} // namespace Starfish
 #endif
 #endif

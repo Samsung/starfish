@@ -519,12 +519,13 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
                 org, now);
         }
     } else if (s == Resource::State::Failed) {
-        webView()->messageLoop()->addIdler(window(),
-                                           [](size_t, void* data) {
-                                               Resource* now = (Resource*)data;
-                                               now->didLoadFailed();
-                                           },
-                                           now);
+        webView()->messageLoop()->addIdler(
+            window(),
+            [](size_t, void* data) {
+                Resource* now = (Resource*)data;
+                now->didLoadFailed();
+            },
+            now);
     } else {
         org->addResourceClient(new ResourceWatcher(org, now));
     }

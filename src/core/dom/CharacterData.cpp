@@ -217,4 +217,4 @@ void CharacterData::replaceData(unsigned long offset, unsigned long count,
         setData(String::fromUTF16(newString.data(), newString.length()));
     }
 }
-}
+} // namespace Starfish

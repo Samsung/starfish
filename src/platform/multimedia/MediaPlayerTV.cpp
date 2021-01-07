@@ -126,13 +126,13 @@ void MediaPlayerTizen::disposePlayer()
         }
         PLAYER_LOGI(
             "MediaPlayerTizen::close() - dispose player next idle time\n");
-        msgLoop->addIdler(nullptr,
-                          [](size_t, void* data) {
-                              MediaPlayerTizen* player =
-                                  (MediaPlayerTizen*)data;
-                              player->dispose();
-                          },
-                          this);
+        msgLoop->addIdler(
+            nullptr,
+            [](size_t, void* data) {
+                MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+                player->dispose();
+            },
+            this);
     } else {
         PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal \n");
         dispose();
@@ -271,7 +271,7 @@ void MediaPlayerTizen::setMediaFormatExtraForAudio(media_format_h& mediaFormat,
     mediaFormatExtra->drm_type = PLAYER_DRM_TYPE_NONE;
     media_format_set_extra(mediaFormat, mediaFormatExtra);
 }
-}
+} // namespace Starfish
 
 #endif
 #endif

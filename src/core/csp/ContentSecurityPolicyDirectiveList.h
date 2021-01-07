@@ -106,6 +106,6 @@ private:
     bool isMatchingSelf(ContentSecurityPolicySourceListDirective* directive,
                         ResourceURL* url);
 };
-}
+} // namespace Starfish
 
 #endif

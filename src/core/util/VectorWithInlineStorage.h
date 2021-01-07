@@ -175,6 +175,6 @@ protected:
     T m_inlineStorage[InlineStorageSize];
     std::vector<T, ExternalStoreageAllocator> m_externalStorage;
 };
-}
+} // namespace Starfish
 
 #endif

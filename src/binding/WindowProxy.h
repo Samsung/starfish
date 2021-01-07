@@ -43,5 +43,5 @@ public:
 protected:
     Window* m_window;
 };
-}
+} // namespace Starfish
 #endif

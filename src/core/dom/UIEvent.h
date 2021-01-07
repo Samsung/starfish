@@ -146,6 +146,6 @@ private:
     Window* m_view;
     int32_t m_detail;
 };
-}
+} // namespace Starfish
 
 #endif

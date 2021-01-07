@@ -439,4 +439,4 @@ void HTMLImageElement::updateFrame(size_t delay)
         },
         this, false);
 }
-}
+} // namespace Starfish

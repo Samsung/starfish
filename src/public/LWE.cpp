@@ -129,4 +129,4 @@ bool LWE::IsInitialized()
 {
     return g_starfishInstance;
 }
-}
+} // namespace LWE

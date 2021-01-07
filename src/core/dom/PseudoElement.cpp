@@ -179,4 +179,4 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
 
     return firstLetterFrame;
 }
-}
+} // namespace Starfish

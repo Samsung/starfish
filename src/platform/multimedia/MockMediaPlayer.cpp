@@ -67,16 +67,16 @@ public:
         , m_player(player)
     {
 #ifndef NDEBUG
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           MOCKPLAYER_LOG(
-                                               obj,
-                                               "[TRACE_MSE_GC] "
-                                               "MediaPlayerMediaSourceClient::~"
-                                               "MediaPlayerMediaSourceClient "
-                                               "\n");
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                MOCKPLAYER_LOG(obj,
+                               "[TRACE_MSE_GC] "
+                               "MediaPlayerMediaSourceClient::~"
+                               "MediaPlayerMediaSourceClient "
+                               "\n");
+            },
+            NULL, NULL, NULL);
 #endif
     }
 
@@ -239,18 +239,16 @@ void MockMediaPlayer::play()
                 uint64_t targetTime = currentTime + timerInterval;
                 targetTime = targetTime > self->duration() ? self->duration()
                                                            : targetTime;
-                if (audioStream &&
-                    audioStream->lastSubmittedDTS() <
-                        currentTime + forwardDuration) {
+                if (audioStream && audioStream->lastSubmittedDTS() <
+                                       currentTime + forwardDuration) {
                     self->fillBuffer(audioStream);
                     if (audioStream->lastSubmittedDTS() < targetTime) {
                         MOCKPLAYER_LOG(self, "AUDIO underrun state\n");
                         return;
                     }
                 }
-                if (videoStream &&
-                    videoStream->lastSubmittedDTS() <
-                        currentTime + forwardDuration) {
+                if (videoStream && videoStream->lastSubmittedDTS() <
+                                       currentTime + forwardDuration) {
                     self->fillBuffer(videoStream);
                     if (videoStream->lastSubmittedDTS() < targetTime) {
                         MOCKPLAYER_LOG(self, "VIDEO underrun state\n");
@@ -454,6 +452,6 @@ void MockMediaPlayer::destroy()
         m_canvasSurface = nullptr;
     }
 }
-}
+} // namespace Starfish
 #endif
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

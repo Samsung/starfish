@@ -105,7 +105,7 @@ private:
     CanvasRenderingContext* m_canvasRenderingContext;
     CanvasContextMode m_contextMode;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

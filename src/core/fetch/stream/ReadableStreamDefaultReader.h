@@ -83,6 +83,6 @@ private:
     ReadableStreamState m_state;
     Promise* m_closedPromise;
 };
-}
+} // namespace Starfish
 
 #endif

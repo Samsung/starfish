@@ -90,6 +90,6 @@ protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;
 };
-}
+} // namespace Starfish
 
 #endif

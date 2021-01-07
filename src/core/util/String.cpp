@@ -2765,4 +2765,4 @@ bool isalpha(char32_t ch)
 {
     return isupper(ch) || islower(ch);
 }
-}
+} // namespace Starfish

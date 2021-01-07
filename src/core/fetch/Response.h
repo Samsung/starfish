@@ -105,6 +105,6 @@ private:
     void handleBodyInit(Nullable<BodyInit>& body);
     void copyResponseData(Response* destResponse);
 };
-}
+} // namespace Starfish
 
 #endif

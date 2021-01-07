@@ -121,6 +121,6 @@ inline CSSAngle& operator/=(CSSAngle& a, float b)
     a = a / b;
     return a;
 }
-}
+} // namespace Starfish
 
 #endif

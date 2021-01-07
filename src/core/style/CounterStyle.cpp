@@ -773,9 +773,8 @@ bool CounterStyle::equals(const CounterStyle* b) const
             return false;
         }
     }
-    if (m_system == FixedSystem &&
-        m_systemExtra.m_firstSymbolValue !=
-            b->m_systemExtra.m_firstSymbolValue) {
+    if (m_system == FixedSystem && m_systemExtra.m_firstSymbolValue !=
+                                       b->m_systemExtra.m_firstSymbolValue) {
         return false;
     }
     if (m_fallback) {

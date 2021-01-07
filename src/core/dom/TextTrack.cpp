@@ -174,6 +174,6 @@ TextTrackCueList* TextTrack::updateActiveCues(double time)
 
     return activeCues();
 }
-}
+} // namespace Starfish
 
 #endif

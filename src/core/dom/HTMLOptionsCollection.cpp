@@ -110,4 +110,4 @@ void HTMLOptionsCollection::setSelectedIndex(int index)
         }
     }
 }
-}
+} // namespace Starfish

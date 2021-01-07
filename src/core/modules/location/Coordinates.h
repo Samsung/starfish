@@ -83,6 +83,6 @@ protected:
     Nullable<double> m_heading;
     Nullable<double> m_speed;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -71,5 +71,5 @@ public:
     String* hash();
     void setHash(String* hash);
 };
-}
+} // namespace Starfish
 #endif

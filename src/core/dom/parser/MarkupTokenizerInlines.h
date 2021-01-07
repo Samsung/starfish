@@ -115,6 +115,6 @@ inline void advanceStringAndASSERT(SegmentedString& source,
         cc = m_inputStreamPreprocessor.nextInputCharacter();               \
         goto stateName;                                                    \
     } while (false)
-}
+} // namespace Starfish
 
 #endif

@@ -38,6 +38,6 @@ public:
     void setCite(String* cite);
     String* cite();
 };
-}
+} // namespace Starfish
 
 #endif

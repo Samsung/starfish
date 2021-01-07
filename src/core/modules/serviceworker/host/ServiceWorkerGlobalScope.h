@@ -47,6 +47,6 @@ private:
         WorkerGlobalScope::fillGCDescriptor(desc);
     }
 };
-}
+} // namespace Starfish
 
 #endif

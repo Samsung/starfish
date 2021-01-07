@@ -73,5 +73,5 @@ private:
     cairo_t* m_cairoContext;
     cairo_surface_t* m_dumyCairoSurface;
 };
-}
+} // namespace Starfish
 #endif

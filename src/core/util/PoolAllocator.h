@@ -67,5 +67,5 @@ private:
 
     std::vector<void*> m_pools;
 };
-}
+} // namespace Starfish
 #endif

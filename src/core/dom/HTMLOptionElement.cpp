@@ -283,4 +283,4 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
         }
     }
 }
-}
+} // namespace Starfish

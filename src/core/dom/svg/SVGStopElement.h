@@ -62,6 +62,6 @@ public:
 
     ColorStop* colorStop();
 };
-}
+} // namespace Starfish
 
 #endif

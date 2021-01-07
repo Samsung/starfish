@@ -33,6 +33,6 @@ public:
         ServiceWorkerAgentStateHandler cb);
     static void finalize();
 };
-}
+} // namespace Starfish
 #endif
 #endif /* STARFISH_WEBWORKER_HOST */

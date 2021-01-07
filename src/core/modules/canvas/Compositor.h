@@ -105,6 +105,6 @@ public:
 
     static bool supportsFilterEffect(size_t textureWidth, size_t textureHeight);
 };
-}
+} // namespace Starfish
 
 #endif

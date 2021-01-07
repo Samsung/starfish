@@ -81,6 +81,6 @@ private:
     size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -109,7 +109,7 @@ namespace CanvasCompositing {
         sizeof(*canvasCompositeOperatorNames);
     const int sizeOfCanvasBlendModeNames =
         sizeof(canvasBlendModeNames) / sizeof(*canvasBlendModeNames);
-}
+} // namespace CanvasCompositing
 
 class CanvasState : public gc {
 public:
@@ -648,6 +648,6 @@ protected:
     GCVector<CanvasState*> m_stateMemoryPool{};
     bool m_shouldApplyCanvasFillStrokeSource{ false };
 };
-}
+} // namespace Starfish
 
 #endif

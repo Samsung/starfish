@@ -108,6 +108,6 @@ private:
     int32_t m_percent;
     CSSNumericValue::CSSNumericBaseType m_percentHint;
 };
-}
+} // namespace Starfish
 
 #endif

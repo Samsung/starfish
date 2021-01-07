@@ -36,4 +36,4 @@ ScriptBindingInstance* SVGAnimatedLength::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish

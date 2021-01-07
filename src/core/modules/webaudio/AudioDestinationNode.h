@@ -49,6 +49,6 @@ private:
     uint32_t m_maxChannelCount{ 0 };
     MediaPlayerAudio* m_player{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

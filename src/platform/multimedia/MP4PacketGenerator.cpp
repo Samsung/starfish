@@ -285,6 +285,6 @@ void MP4PacketGenerator::setHEVCExtraData(std::vector<uint8_t>& extraData)
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return;
 }
-}
+} // namespace Starfish
 #undef MP4PACKET_GENERATOR_LOG
 #endif

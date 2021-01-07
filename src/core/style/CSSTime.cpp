@@ -73,4 +73,4 @@ String* CSSTime::toString() const
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
-}
+} // namespace Starfish

@@ -36,4 +36,4 @@ ScriptBindingInstance* Geoposition::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish

@@ -65,6 +65,6 @@ public:
                                   KeyframeAnimationOptions& options,
                                   TimingOutput& output);
 };
-}
+} // namespace Starfish
 
 #endif

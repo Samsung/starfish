@@ -43,4 +43,4 @@ ScriptBindingInstance* Coordinates::scriptBindingInstance()
 {
     return m_scriptBindingInstance;
 }
-}
+} // namespace Starfish

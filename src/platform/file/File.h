@@ -136,6 +136,6 @@ protected:
 
 private:
 };
-}
+} // namespace Starfish
 
 #endif

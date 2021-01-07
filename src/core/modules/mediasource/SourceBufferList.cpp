@@ -86,5 +86,5 @@ void SourceBufferList::scheduleEvent(String* eventName)
             this, new Event(executionContext(), eventName));
     }
 }
-}
+} // namespace Starfish
 #endif

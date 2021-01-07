@@ -54,6 +54,6 @@ public:
 private:
     HTMLMediaElement* m_mediaElement{ nullptr };
 };
-}
+} // namespace Starfish
 #endif
 #endif

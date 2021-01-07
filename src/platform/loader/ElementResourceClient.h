@@ -45,6 +45,6 @@ protected:
     size_t m_dispatchedEventHandler;
     Element* m_element;
 };
-}
+} // namespace Starfish
 
 #endif

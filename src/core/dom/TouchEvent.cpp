@@ -45,4 +45,4 @@ TouchEvent::TouchEvent(Document* document, String* eventType, TouchData* data,
         m_touches->push_back(new Touch(document, data[i]));
     }
 }
-}
+} // namespace Starfish

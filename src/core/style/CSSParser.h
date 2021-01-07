@@ -413,7 +413,7 @@ public:
         bool allowSharp = option & AllowSharp;
 
         int len = 0;
-        for (char *cur = m_curPos; cur < m_endPos; cur++, len++) {
+        for (char* cur = m_curPos; cur < m_endPos; cur++, len++) {
             if (isAlpha(*cur) || isDigit(*cur)) {
                 continue;
             } else if (allowPercent && *cur == '%') {
@@ -606,7 +606,7 @@ public:
 
         size_t len = 0;
         char* start = m_curPos;
-        for (char *cur = m_curPos; cur < m_endPos && *cur != ')';
+        for (char* cur = m_curPos; cur < m_endPos && *cur != ')';
              cur++, len++) {
         }
 
@@ -1100,9 +1100,8 @@ public:
                 }
 
                 // parse alpha if exists
-                if (hasAlpha &&
-                    !parseColorFunctionPart(v[3], true, &parsed[3],
-                                            &isPercent)) {
+                if (hasAlpha && !parseColorFunctionPart(v[3], true, &parsed[3],
+                                                        &isPercent)) {
                     return false;
                 }
 
@@ -1979,6 +1978,6 @@ protected:
     MediaFeature m_mediaFeature;
     MediaQueryExpValue m_expValue;
 };
-}
+} // namespace Starfish
 
 #endif

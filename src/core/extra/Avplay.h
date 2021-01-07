@@ -105,7 +105,7 @@ protected:
     ScriptValue m_prepare_async;
     ScriptValue m_listener;
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

@@ -42,10 +42,10 @@
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define SOURCEBUFFER_TYPE(sb)                                              \
-    (sb->type()->charAt(0) == 'v' ? "video" : sb->type()->charAt(0) == 'a' \
-                                                  ? "audio"                \
-                                                  : "etc")
+#define SOURCEBUFFER_TYPE(sb)     \
+    (sb->type()->charAt(0) == 'v' \
+         ? "video"                \
+         : sb->type()->charAt(0) == 'a' ? "audio" : "etc")
 #define SOURCEBUFFER_LOG(sb, STR, ...) \
     STARFISH_LOG_INFO(                 \
         "[SourceBuffer|%p|%s] "        \
@@ -156,13 +156,14 @@ public:
         , m_appendWindowStart(0)
         , m_appendWindowEnd(std::numeric_limits<double>::infinity())
     {
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           DemuxerClientSourceBuffer* self =
-                                               (DemuxerClientSourceBuffer*)obj;
-                                           self->clearAll();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                DemuxerClientSourceBuffer* self =
+                    (DemuxerClientSourceBuffer*)obj;
+                self->clearAll();
+            },
+            NULL, NULL, NULL);
     }
 
     virtual void onDetectStream(const StreamInfo& info)
@@ -418,14 +419,14 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
 
     SOURCEBUFFER_LOG(this, "SourceBuffer::SourceBuffer\n");
-    GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                   [](void* obj, void* cd) {
-                                       SourceBuffer* nr = (SourceBuffer*)obj;
-                                       SOURCEBUFFER_LOG(
-                                           nr, "SourceBuffer::~SourceBuffer\n");
-                                       nr->clearAll();
-                                   },
-                                   NULL, NULL, NULL);
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            SourceBuffer* nr = (SourceBuffer*)obj;
+            SOURCEBUFFER_LOG(nr, "SourceBuffer::~SourceBuffer\n");
+            nr->clearAll();
+        },
+        NULL, NULL, NULL);
 }
 
 ExecutionContext* SourceBuffer::executionContext() const
@@ -1588,7 +1589,7 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
                          (int)m_parentMediaSource->availableBufferSize());
     }
 }
-}
+} // namespace Starfish
 
 #undef STARFISH_FRAME_EVICTION_BACKWARD_DUR
 #undef SOURCEBUFFER_LOG

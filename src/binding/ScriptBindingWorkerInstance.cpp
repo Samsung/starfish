@@ -127,6 +127,6 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 BINDING_WORKER_MOCKUP_INTERFACE(FOR_EACH_BINDING_FN)
 #undef FOR_EACH_BINDING_FN
 #undef BINDING_WORKER_MOCKUP_INTERFACE
-}
+} // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

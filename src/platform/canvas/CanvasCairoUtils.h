@@ -30,8 +30,8 @@ namespace CanvasCairoUtils {
     cairo_line_cap_t cavansLineCapToCairoLineCap(const CanvasLineCap& cap);
     CanvasLineJoin cairoLineJoinToCanvasLineJoin(const cairo_line_join_t& join);
     cairo_line_join_t canvasLineJoinToCairoLineJoin(const CanvasLineJoin& join);
-}
-}
+} // namespace CanvasCairoUtils
+} // namespace Starfish
 
 #endif
 #endif

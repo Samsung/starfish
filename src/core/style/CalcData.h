@@ -410,6 +410,6 @@ public:
 private:
     GCVector<CalcTerm*> m_terms;
 };
-}
+} // namespace Starfish
 
 #endif

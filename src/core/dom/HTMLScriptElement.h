@@ -126,6 +126,6 @@ protected:
     bool m_shouldResumeParsing;
     String* m_nonce;
 };
-}
+} // namespace Starfish
 
 #endif

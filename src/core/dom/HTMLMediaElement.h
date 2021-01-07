@@ -467,6 +467,6 @@ protected:
 private:
     DOMTokenList* m_controlsList;
 };
-}
+} // namespace Starfish
 
 #endif

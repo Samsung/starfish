@@ -458,4 +458,4 @@ bool DOMTokenList::supportedTokensOfMedia(String* token)
     }
     return false;
 }
-}
+} // namespace Starfish

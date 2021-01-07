@@ -288,7 +288,7 @@ protected:
     void videoFramerateChanged(MediaPlayerSourceStream* stream, int num,
                                int den);
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

@@ -247,4 +247,4 @@ String* HeadersData::extractMIMEType()
                             mimeType.getValue().size())
         ->toLower();
 }
-}
+} // namespace Starfish

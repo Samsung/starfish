@@ -51,5 +51,5 @@ public:
 
     static String* reponseTypeString(ResponseType type);
 };
-}
+} // namespace Starfish
 #endif

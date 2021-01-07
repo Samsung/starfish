@@ -54,8 +54,10 @@ RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
     }
 
     GC_REGISTER_FINALIZER_NO_ORDER(
-        this, [](void* obj,
-                 void* cd) { ((RTCIceCandidate*)obj)->~RTCIceCandidate(); },
+        this,
+        [](void* obj, void* cd) {
+            ((RTCIceCandidate*)obj)->~RTCIceCandidate();
+        },
         NULL, NULL, NULL);
 }
 
@@ -93,6 +95,6 @@ std::unique_ptr<webrtc::IceCandidateInterface> RTCIceCandidate::genBackend()
 
     return std::move(candidate);
 }
-}
+} // namespace Starfish
 
 #endif

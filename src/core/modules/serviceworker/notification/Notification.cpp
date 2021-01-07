@@ -64,5 +64,5 @@ String* Notification::tag()
 {
     return m_job->options().tag();
 }
-}
+} // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

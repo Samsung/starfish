@@ -141,6 +141,6 @@ private:
     float m_elapsedTime;
     String* m_pseudoElement;
 };
-}
+} // namespace Starfish
 
 #endif

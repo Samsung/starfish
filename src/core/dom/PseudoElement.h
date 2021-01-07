@@ -96,6 +96,6 @@ public:
     static size_t firstLetterLength(String* text);
     static Frame* firstLetterFrameText(Node* n);
 };
-}
+} // namespace Starfish
 
 #endif

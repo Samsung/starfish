@@ -85,6 +85,6 @@ private:
     Unit::Color m_underLineColor;
     Unit::Color m_lineThroughColor;
 };
-}
+} // namespace Starfish
 
 #endif

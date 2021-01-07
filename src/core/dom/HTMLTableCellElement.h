@@ -65,6 +65,6 @@ public:
     String* ch();
     void setCh(String* ch);
 };
-}
+} // namespace Starfish
 
 #endif

@@ -57,6 +57,6 @@ public:
     /* 4.12 Interface Comment */
     // Comment node does not have any public APIs
 };
-}
+} // namespace Starfish
 
 #endif

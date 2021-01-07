@@ -421,8 +421,9 @@ void MediaSource::detach()
 {
     STARFISH_LOG_INFO("MediaSource::detach()\n");
     // Update duration to NaN.
-    m_duration = std::numeric_limits<
-        double>::quiet_NaN(); // update duration directly for avoiding exception
+    m_duration =
+        std::numeric_limits<double>::quiet_NaN(); // update duration directly
+                                                  // for avoiding exception
     m_shortestMediaDuration = std::numeric_limits<uint64_t>::max();
 
     // Remove all the SourceBuffer objects from activeSourceBuffers.
@@ -608,5 +609,5 @@ void MediaSource::evict(uint64_t start, uint64_t end)
         }
     }
 }
-}
+} // namespace Starfish
 #endif

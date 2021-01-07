@@ -78,6 +78,6 @@ public:
         m_w = w;
     }
 };
-}
+} // namespace Starfish
 
 #endif

@@ -1680,7 +1680,6 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                     sender.declaration = declaration;
                     aToken->value()->peekASCIIBuffer(
                         [](const char* buf, size_t len, void* data) -> size_t {
-
                             // We can modify content of `buf`.
                             // peekASCIIBuffer function allocates new buffer for
                             // this function.

@@ -1117,4 +1117,4 @@ void HTMLConstructionSite::fosterParent(Node* node)
     STARFISH_ASSERT(task.parent);
     queueTask(task);
 }
-}
+} // namespace Starfish

@@ -301,4 +301,4 @@ bool HTMLBodyElement::isPotentiallyScrollable()
     }
     return false;
 }
-}
+} // namespace Starfish

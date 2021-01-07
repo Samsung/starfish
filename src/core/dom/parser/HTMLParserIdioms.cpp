@@ -493,4 +493,4 @@ StringImpl* findStringIfStatic(const UChar* characters, unsigned length)
 }
 
 */
-}
+} // namespace Starfish

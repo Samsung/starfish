@@ -56,4 +56,4 @@ void BackgroundLayer::checkComputed(Length curFontSize, Length rootFontSize,
                                                 windowSize, cs);
     }
 }
-}
+} // namespace Starfish

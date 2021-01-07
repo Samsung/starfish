@@ -99,4 +99,4 @@ ValueRef* urlsearchparamsConstructor(ExecutionStateRef* state,
 
     return result->scriptValue();
 }
-}
+} // namespace Starfish

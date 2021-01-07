@@ -799,6 +799,6 @@ protected:
     GCVector<SVGUseElement*> m_useElementListNeedUpdating;
     bool m_isMiddleOfUseElementUpdating;
 };
-}
+} // namespace Starfish
 
 #endif

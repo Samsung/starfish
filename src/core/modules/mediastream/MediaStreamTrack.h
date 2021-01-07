@@ -209,7 +209,7 @@ public:
     virtual void removeVideoTrack(VideoStreamTrack* track) = 0;
     virtual ~MediaStreamTrackObserver(){};
 };
-}
+} // namespace Starfish
 
 #endif
 #endif

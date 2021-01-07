@@ -60,13 +60,13 @@ public:
         m_buffer = nullptr;
 
         attachNativeBuffer(w, h, CanvasSurface::PlainElement);
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           CanvasSurfaceSimple* s =
-                                               (CanvasSurfaceSimple*)obj;
-                                           s->detachNativeBuffer();
-                                       },
-                                       NULL, NULL, NULL);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                CanvasSurfaceSimple* s = (CanvasSurfaceSimple*)obj;
+                s->detachNativeBuffer();
+            },
+            NULL, NULL, NULL);
     }
 
     virtual void detachNativeBuffer() override
@@ -843,4 +843,4 @@ void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
     delete nativeImage;
 }
 #undef NEEDS_UNPREMULTIPLIED
-}
+} // namespace Starfish

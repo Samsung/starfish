@@ -47,6 +47,6 @@ private:
     String* m_localStoragePath;
     JsonDocument* m_jsonDocument;
 };
-}
+} // namespace Starfish
 
 #endif

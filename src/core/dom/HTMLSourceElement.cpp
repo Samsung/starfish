@@ -44,6 +44,6 @@ void HTMLSourceElement::setType(String* type)
 {
     setAttribute(starfish()->staticStrings()->m_type, type);
 }
-}
+} // namespace Starfish
 
 #endif

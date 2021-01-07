@@ -84,6 +84,6 @@ String* WorkerLocation::hash()
 {
     return m_url->hash();
 }
-}
+} // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

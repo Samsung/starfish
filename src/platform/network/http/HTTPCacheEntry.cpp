@@ -360,5 +360,5 @@ void HTTPCacheEntry::setToBad()
     STARFISH_ASSERT(isMainThread());
     m_good = false;
 }
-}
+} // namespace Starfish
 #endif

@@ -80,5 +80,5 @@ private:
 
     GCVector<CSSSelectorList*>& m_selectorListContainer;
 };
-}
+} // namespace Starfish
 #endif

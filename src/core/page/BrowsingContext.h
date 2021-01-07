@@ -345,6 +345,6 @@ private:
 
     LayoutRepaintTracker m_layoutRepaintTracker;
 };
-}
+} // namespace Starfish
 
 #endif

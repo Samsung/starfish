@@ -4653,7 +4653,7 @@ namespace {
         &staticEntityTable[2204], &staticEntityTable[2218],
         &staticEntityTable[2231],
     };
-}
+} // namespace
 
 const HTMLEntityTableEntry* HTMLEntityTable::firstEntryStartingWith(char32_t c)
 {
@@ -4686,4 +4686,4 @@ const HTMLEntityTableEntry* HTMLEntityTable::lastEntry()
 {
     return &staticEntityTable[2231 - 1];
 }
-}
+} // namespace Starfish

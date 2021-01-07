@@ -336,6 +336,6 @@ public:
     void updateValue(CSSStyleValuePair::KeyKind keyKind) override;
     Stage requiredStage(CSSStyleValuePair::KeyKind keyKind) override;
 };
-}
+} // namespace Starfish
 
 #endif

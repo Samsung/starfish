@@ -232,4 +232,4 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
     }
     return false;
 }
-}
+} // namespace Starfish

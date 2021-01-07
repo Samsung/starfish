@@ -31,6 +31,6 @@ ImageBitmapRenderingContext::ImageBitmapRenderingContext(
     , m_ownerHTMLCanvasElement(canvasElement)
 {
 }
-}
+} // namespace Starfish
 
 #endif

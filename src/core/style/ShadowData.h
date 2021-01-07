@@ -171,5 +171,5 @@ public:
         return !operator==(o);
     }
 };
-}
+} // namespace Starfish
 #endif

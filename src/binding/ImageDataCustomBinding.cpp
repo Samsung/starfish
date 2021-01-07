@@ -86,5 +86,5 @@ ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
     }
     return result->scriptValue();
 }
-}
+} // namespace Starfish
 #endif

@@ -37,6 +37,6 @@ namespace Starfish {
 hb_script_t hb_icu_script_to_script(int script);
 int hb_icu_script_from_script(hb_script_t script);
 hb_unicode_funcs_t* hb_icu_get_unicode_funcs(void);
-}
+} // namespace Starfish
 
 #endif /* HB_ICU_H */

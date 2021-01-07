@@ -200,4 +200,4 @@ void HTMLTableRowElement::deleteCell(long index)
 
     removeChild(cells->item(index));
 }
-}
+} // namespace Starfish

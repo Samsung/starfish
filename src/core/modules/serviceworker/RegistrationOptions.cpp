@@ -40,6 +40,6 @@ void RegistrationOptions::setScope(String* scope)
 {
     m_scope = scope;
 }
-}
+} // namespace Starfish
 
 // #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

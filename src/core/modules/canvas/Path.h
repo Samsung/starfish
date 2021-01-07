@@ -102,6 +102,6 @@ protected:
     SkMatrix m_matrix;
     bool m_needNewSubPath;
 };
-}
+} // namespace Starfish
 
 #endif

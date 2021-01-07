@@ -240,4 +240,4 @@ void HTMLTextAreaElement::setRows(uint32_t value)
     setAttribute(starfish()->staticStrings()->m_rows, String::fromInt(value));
     setNeedsFrameTreeBuildWithoutSelf();
 }
-}
+} // namespace Starfish

@@ -315,6 +315,6 @@ inline void AtomicHTMLToken::initializeAttributes(
         }
     }
 }
-}
+} // namespace Starfish
 
 #endif

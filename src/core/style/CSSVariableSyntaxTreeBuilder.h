@@ -128,6 +128,6 @@ private:
     bool m_valid;
     GCVector<VariableContainer> m_variableContainers;
 };
-}
+} // namespace Starfish
 
 #endif /* __StarfishCSSVariableSyntaxTreeBuilder__ */

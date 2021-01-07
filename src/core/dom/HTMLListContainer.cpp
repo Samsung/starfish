@@ -44,4 +44,4 @@ void HTMLListContainer::didNodeRemoved(Node* parent, Node* oldChild)
     HTMLElement::didNodeRemoved(parent, oldChild);
     document()->notifyCountingOutdated();
 }
-}
+} // namespace Starfish

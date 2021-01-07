@@ -374,4 +374,4 @@ bool Request::isHistoryNavigation()
 {
     return false;
 }
-}
+} // namespace Starfish

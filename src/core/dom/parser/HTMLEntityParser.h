@@ -78,6 +78,6 @@ public:
 bool consumeHTMLEntity(SegmentedString&, DecodedHTMLEntity& decodedEntity,
                        bool& notEnoughCharacters,
                        char32_t additionalAllowedCharacter = '\0');
-}
+} // namespace Starfish
 
 #endif

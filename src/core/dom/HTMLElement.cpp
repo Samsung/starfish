@@ -479,4 +479,4 @@ DEFINE_EVENT_LISTENER(HTMLElement, pause);
 DEFINE_EVENT_LISTENER(HTMLElement, ratechange);
 DEFINE_EVENT_LISTENER(HTMLElement, volumechange);
 #endif
-}
+} // namespace Starfish

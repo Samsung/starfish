@@ -52,7 +52,7 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  ValueRef* thisValue,
                                                  size_t argc, ValueRef** argv,
                                                  bool isNewExpression);
-}
+} // namespace Escargot
 
 namespace Starfish {
 
@@ -435,6 +435,6 @@ protected:
     ScriptValue m_scriptValue;
     ScriptBindingInstance* m_instance;
 };
-}
+} // namespace Starfish
 
 #endif
