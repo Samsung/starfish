@@ -476,7 +476,8 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
         if ((property == U_RIGHT_TO_LEFT) ||
             (property == U_RIGHT_TO_LEFT_ARABIC) ||
             (property == U_RIGHT_TO_LEFT_EMBEDDING) ||
-            (property == U_RIGHT_TO_LEFT_OVERRIDE)) {
+            (property == U_RIGHT_TO_LEFT_OVERRIDE) ||
+            (property == U_DIR_NON_SPACING_MARK)) {
             return false;
         }
 
