@@ -913,11 +913,6 @@ public:
     {
         STARFISH_ASSERT(window != nullptr);
         m_window = window;
-        m_activeAnimations =
-            new GCUnorderedMap<ActiveElementAnimation*,
-                               GCVector<ActiveAnimationTask*>,
-                               std::hash<ActiveElementAnimation*>,
-                               std::equal_to<ActiveElementAnimation*>>();
     }
 
     Window* window()
@@ -930,12 +925,10 @@ public:
         return m_activeTransitions;
     }
 
-    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>,
-                   std::hash<ActiveElementAnimation*>,
-                   std::equal_to<ActiveElementAnimation*>>&
+    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>>&
     activeAnimations()
     {
-        return *m_activeAnimations;
+        return m_activeAnimations;
     }
 
     void iterateAnimationTasks(void (*fn)(ActiveAnimationTask*, void*), void*);
@@ -945,13 +938,10 @@ public:
         if (m_activeTransitions.size() > 0) {
             m_activeTransitions.clear();
         }
-        if (m_activeAnimations != nullptr) {
-            for (auto& animations : *m_activeAnimations) {
-                animations.second.clear();
-            }
-            m_activeAnimations->clear();
-            m_activeAnimations = nullptr;
+        for (auto& animations : m_activeAnimations) {
+            animations.second.clear();
         }
+        m_activeAnimations.clear();
     }
 
     bool hasActiveTransition(Element* element, CSSStyleValuePair::KeyKind p)
@@ -982,8 +972,8 @@ public:
     {
         STARFISH_ASSERT(element != nullptr);
 
-        for (auto animations = m_activeAnimations->begin();
-             animations != m_activeAnimations->end(); animations++) {
+        for (auto animations = m_activeAnimations.begin();
+             animations != m_activeAnimations.end(); animations++) {
             for (auto task = (*animations).second.begin();
                  task != (*animations).second.end();) {
                 if ((*task)->targetElement() == element &&
@@ -1016,11 +1006,11 @@ public:
         ActiveElementAnimation* key =
             new ActiveElementAnimation(name, task->targetElement(), index,
                                        iterationCount, direction, playState);
-        auto iter = m_activeAnimations->find(key);
-        if (iter == m_activeAnimations->end()) {
+        auto iter = m_activeAnimations.find(key);
+        if (iter == m_activeAnimations.end()) {
             GCVector<ActiveAnimationTask*> v;
             v.push_back(task);
-            m_activeAnimations->insert(std::make_pair(key, v));
+            m_activeAnimations.insert(std::make_pair(key, v));
         } else {
             // Because all of tasks with same property are already removed in
             // removeActiveAnimationTaskIfNeeds(), just add the task to vector.
@@ -1041,9 +1031,8 @@ public:
 private:
     Window* m_window;
     GCVector<ActiveAnimationTask*> m_activeTransitions;
-    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>,
-                   std::hash<ActiveElementAnimation*>,
-                   std::equal_to<ActiveElementAnimation*>>* m_activeAnimations;
+    GCUnorderedMap<ActiveElementAnimation*, GCVector<ActiveAnimationTask*>>
+        m_activeAnimations;
 };
 } // namespace Starfish
 

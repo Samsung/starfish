@@ -63,8 +63,8 @@ void AnimationExecutor::iterateAnimationTasks(void (*fn)(ActiveAnimationTask*,
         fn(m_activeTransitions[i], data);
     }
 
-    for (auto animations = m_activeAnimations->begin();
-         animations != m_activeAnimations->end(); animations++) {
+    for (auto animations = m_activeAnimations.begin();
+         animations != m_activeAnimations.end(); animations++) {
         const auto& v = (*animations).second;
         for (size_t i = 0; i < v.size(); i++) {
             fn(v[i], data);
@@ -101,7 +101,7 @@ void AnimationExecutor::checkActiveExecutorInWebView()
 {
     auto& v = window()->webView()->m_activeAnimationExecutor;
 
-    if (m_activeTransitions.size() > 0 || m_activeAnimations->size() > 0) {
+    if (m_activeTransitions.size() > 0 || m_activeAnimations.size() > 0) {
         for (size_t i = 0; i < v.size(); i++) {
             if (v[i] == this) {
                 return;
