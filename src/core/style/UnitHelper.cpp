@@ -59,7 +59,7 @@ namespace UnitHelper {
 
     float convertFromRadToDeg(float value)
     {
-        return value * 180 / PI;
+        return value * 180 / static_cast<float>(M_PI);
     }
 
     float convertFromTurnToDeg(float value)
@@ -70,6 +70,11 @@ namespace UnitHelper {
     float convertFromDegToRad(float value)
     {
         return value * static_cast<float>(M_PI) / 180.0f;
+    }
+
+    float convertFromDegToGrad(float value)
+    {
+        return value * 400 / 360;
     }
 } // namespace UnitHelper
 } // namespace Starfish

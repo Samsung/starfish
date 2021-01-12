@@ -34,7 +34,7 @@ interface SVGSVGElement : SVGElement {
   [Unimplemented] void deselectAll();
   [Unimplemented] SVGNumber createSVGNumber();
   SVGLength createSVGLength();
-  [Unimplemented] SVGAngle createSVGAngle();
+  SVGAngle createSVGAngle();
   [Unimplemented] SVGPoint createSVGPoint();
   [Unimplemented] SVGMatrix createSVGMatrix();
   [Unimplemented] SVGRect createSVGRect();

@@ -43,6 +43,7 @@ namespace UnitHelper {
     float convertFromRadToDeg(float value);
     float convertFromTurnToDeg(float value);
     float convertFromDegToRad(float value);
+    float convertFromDegToGrad(float value);
 } // namespace UnitHelper
 } // namespace Starfish
 

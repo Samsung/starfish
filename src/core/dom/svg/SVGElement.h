@@ -22,6 +22,7 @@
 
 #include "core/dom/Element.h"
 #include "core/dom/svg/SVGAnimatedLength.h"
+#include "core/dom/svg/SVGAngle.h"
 #include "core/style/Style.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 

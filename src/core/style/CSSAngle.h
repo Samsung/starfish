@@ -21,23 +21,25 @@
 #ifndef __StarfishCSSAngle__
 #define __StarfishCSSAngle__
 
+#include "core/style/Angle.h"
+
 namespace Starfish {
 
 class String;
 // https://www.w3.org/TR/css3-values/#angles
 class CSSAngle {
 public:
-    enum Kind { DEG, GRAD, RAD, TURN };
+    enum Kind { UNSPECIFIED, DEG, GRAD, RAD, TURN };
 
     CSSAngle()
     {
-        m_kind = DEG;
+        m_kind = UNSPECIFIED;
         m_value = 0;
     }
 
     CSSAngle(float f)
     {
-        m_kind = DEG;
+        m_kind = UNSPECIFIED;
         m_value = f;
     }
 
@@ -61,6 +63,8 @@ public:
     }
 
     float toDegreeValue() const;
+
+    Angle toAngle() const;
 
     String* toString() const;
 
