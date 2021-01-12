@@ -85,6 +85,7 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
     SVGLength* createSVGLength();
+    SVGAngle* createSVGAngle();
 
 protected:
     bool m_hasViewBox;

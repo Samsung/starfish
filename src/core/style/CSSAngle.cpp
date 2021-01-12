@@ -56,7 +56,9 @@ CSSAngle::CSSAngle(const CSSTokenValue& str, float f)
 
 float CSSAngle::toDegreeValue() const
 {
-    if (m_kind == DEG) {
+    if (m_kind == UNSPECIFIED) {
+        return m_value;
+    } else if (m_kind == DEG) {
         return m_value;
     } else if (m_kind == RAD) {
         return UnitHelper::convertFromRadToDeg(m_value);
@@ -70,12 +72,29 @@ float CSSAngle::toDegreeValue() const
     return m_value;
 }
 
+Angle CSSAngle::toAngle() const
+{
+    if (m_kind == UNSPECIFIED) {
+        return Angle(Angle::Fixed, m_value);
+    } else if (m_kind == DEG) {
+        return Angle(Angle::Fixed, m_value);
+    } else if (m_kind == RAD) {
+        return Angle(Angle::Fixed, UnitHelper::convertFromRadToDeg(m_value));
+    } else if (m_kind == GRAD) {
+        return Angle(Angle::Fixed, UnitHelper::convertFromGradToDeg(m_value));
+    }
+
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+}
+
 String* CSSAngle::toString() const
 {
     std::stringstream ss(std::stringstream::in | std::stringstream::out);
     ss << m_value;
     std::string stdStr = ss.str();
-    if (m_kind == DEG) {
+    if (m_kind == UNSPECIFIED) {
+        return String::fromUTF8(stdStr.data(), stdStr.size());
+    } else if (m_kind == DEG) {
         stdStr.append("deg");
         return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == RAD) {
@@ -87,7 +106,6 @@ String* CSSAngle::toString() const
     } else if (m_kind == TURN) {
         stdStr.append("turn");
         return String::fromUTF8(stdStr.data(), stdStr.size());
-        ;
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

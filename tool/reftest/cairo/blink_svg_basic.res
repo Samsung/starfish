@@ -98,7 +98,7 @@ test/cairo/reftest/vendor/blink_original/svg/custom/inline-svg-use-available-wid
 #test/cairo/reftest/vendor/blink_original/svg/dom/path-queries-pathLength.html
 test/cairo/reftest/vendor/blink_original/svg/dom/set-title-element-on-inner-svg-document.html
 test/cairo/reftest/vendor/blink_original/svg/dom/set-title-html-namespace-on-SVG.html
-#test/cairo/reftest/vendor/blink_original/svg/dom/SVGAngle.html
+test/cairo/reftest/vendor/blink_original/svg/dom/SVGAngle.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/svgangle-units.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/svganimatedangle-initial-values.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/svganimatedenumeration-initial-values.html
