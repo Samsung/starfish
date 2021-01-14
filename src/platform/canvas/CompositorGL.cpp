@@ -3629,8 +3629,9 @@ public:
         } else {
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-            if (m_mainViewFBO) {
-                glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
+            if (m_compositorContext->m_mainViewFBO) {
+                glBindFramebuffer(GL_FRAMEBUFFER,
+                                  m_compositorContext->m_mainViewFBO);
             }
 #else
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
