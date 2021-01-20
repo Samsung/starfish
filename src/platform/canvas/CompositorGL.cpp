@@ -484,7 +484,7 @@ static void checkError()
     volatile auto error = glGetError();
     if (error != 0) {
         STARFISH_LOG_ERROR("OpenGL error.. 0x%04x\n", error);
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        STARFISH_ASSERT_NOT_REACHED();
     }
 }
 
@@ -537,6 +537,12 @@ inline static GLenum textureFormat()
         kind = GL_BGRA_EXT;
     }
 #endif
+
+    if (g_needsCheckCompatibility) {
+        STARFISH_LOG_ERROR("Read textureFormat before check compatibility\n");
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
     return kind;
 }
 
