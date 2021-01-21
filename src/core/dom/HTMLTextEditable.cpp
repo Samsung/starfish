@@ -85,6 +85,8 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
             m_shouldDrawCaret = false;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
+        } else if (oldGotFocus && newGotFocus) {
+            webView()->platformWindow()->showSoftwareKeyboardIfPossible();
         }
     }
 }
