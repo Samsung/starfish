@@ -707,7 +707,6 @@ public:
 
 #if defined(PORT_WINDOW_BACKEND_GL)
             g_evasGL = nullptr;
-            g_evasGLAPI = nullptr;
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
