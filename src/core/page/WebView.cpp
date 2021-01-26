@@ -732,7 +732,7 @@ void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
     String* ret = String::emptyString;
 
     if (mainBrowsingContext()) {
-        toBrowserString(
+        ret = toBrowserString(
             mainBrowsingContext()->scriptBindingInstance(),
             evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
     }
