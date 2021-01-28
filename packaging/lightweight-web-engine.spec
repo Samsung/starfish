@@ -164,6 +164,14 @@ BuildRequires: pkgconfig(vconf-internal-keys-tv)
 
 BuildRequires: pkgconfig(bundle)
 
+# If you want to speed up the gbs build for devel, please uncomment below block.
+#%ifarch armv7l
+#BuildRequires: clang-accel-armv7l-cross-arm
+#%endif # arm7l
+#%ifarch aarch64
+#BuildRequires: clang-accel-aarch64-cross-aarch64
+#%endif # aarch64
+
 # Supporting multiprofiles
 # Use profile_mobile as default, as it is both minimal and
 # platform-independent version of LWE at the time of writing

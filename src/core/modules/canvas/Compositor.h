@@ -36,7 +36,9 @@ public:
     virtual void didRendering() = 0;
     virtual void onIdle() = 0;
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    virtual void willRenderingExternalSurface(void* externalSurface) = 0;
+    virtual void prepareExternalSurface(void* externalSurface) = 0;
+    virtual void flushExternalSurface(
+        const std::function<void(bool needsFlush)>& cb, bool needsFlush) = 0;
 #endif
 };
 

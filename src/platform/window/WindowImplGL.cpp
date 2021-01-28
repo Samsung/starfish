@@ -119,7 +119,7 @@ public:
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         {
             RenderInfo renderInfo = m_renderingPrepareCallback();
-            m_compostiorContext->willRenderingExternalSurface(
+            m_compostiorContext->prepareExternalSurface(
                 renderInfo.updatedBufferAddress);
         }
 #endif
@@ -142,6 +142,10 @@ public:
             }
             m_compostiorContext->didRendering();
             glSwapBuffers();
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+            m_compostiorContext->flushExternalSurface(
+                m_surfaceFlushCallback, ret.didPaintingOrCompositing);
+#endif
         } else {
 #if !defined(STARFISH_ENABLE_TEST)
             if (shouldDrawOnEveryRenderingCallback()) {
@@ -165,6 +169,10 @@ public:
                 m_compostiorContext->didRendering();
                 glSwapBuffers();
             }
+#endif
+#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+            m_compostiorContext->flushExternalSurface(m_surfaceFlushCallback,
+                                                      false);
 #endif
         }
 
