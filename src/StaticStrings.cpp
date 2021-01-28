@@ -521,6 +521,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "text-anchor"));
     m_alignmentBaseline = QualifiedName(
         AtomicString::createAtomicString(starfish, "alignment-baseline"));
+    m_orient =
+        QualifiedName(AtomicString::createAtomicString(starfish, "orient"));
     m_reset =
         QualifiedName(AtomicString::createAtomicString(starfish, "reset"));
     m_resize =

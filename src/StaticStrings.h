@@ -180,7 +180,8 @@ namespace Starfish {
     F(use)                             \
     F(clippath)                        \
     F(mask)                            \
-    F(tspan)
+    F(tspan)                           \
+    F(marker)
 
 // FIXME: current parser converts linearGradient to lineargradient
 // Remove F(lineargradient) after fixing this issue
@@ -467,6 +468,7 @@ public:
     QualifiedName m_clipPath;
     QualifiedName m_textAnchor;
     QualifiedName m_alignmentBaseline;
+    QualifiedName m_orient;
 
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;

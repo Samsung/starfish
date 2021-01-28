@@ -39,6 +39,7 @@
 #include "core/dom/svg/SVGClipPathElement.h"
 #include "core/dom/svg/SVGMaskElement.h"
 #include "core/dom/svg/SVGTSpanElement.h"
+#include "core/dom/svg/SVGMarkerElement.h"
 
 namespace Starfish {
 
@@ -89,6 +90,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGMaskElement(document, qname);
     } else if (str->m_svgtspanTagName == localName) {
         return new SVGTSpanElement(document, qname);
+    } else if (str->m_svgmarkerTagName == localName) {
+        return new SVGMarkerElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }
