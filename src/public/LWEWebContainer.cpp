@@ -609,7 +609,7 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
     const std::function<void(WebContainer*, bool mayNeedsSync)>&
         onGLSwapBuffers,
     const std::function<ExternalImageInfo(void)>& prepareImageCb,
-    const std::function<void(WebContainer*)>& renderedCb,
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
@@ -648,10 +648,9 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
                     return result;
                 });
 
-            webView->platformWindow()->registerRenderingFinishedCallback(
-                [newWebContainer,
-                 renderedCb](const Starfish::RenderResult& renderResult) {
-                    renderedCb(newWebContainer);
+            webView->platformWindow()->registerSurfaceFlushedCallback(
+                [newWebContainer, flushCb](bool needsFlush) {
+                    flushCb(newWebContainer, needsFlush);
                 });
 
             return (size_t)newWebContainer;
@@ -683,9 +682,8 @@ WebContainer* WebContainer::CreateGLWithPlatformImage(
         });
 
     webView->platformWindow()->registerRenderingFinishedCallback(
-        [newWebContainer,
-         renderedCb](const Starfish::RenderResult& renderResult) {
-            renderedCb(newWebContainer);
+        [newWebContainer, flushCb](const Starfish::RenderResult& renderResult) {
+            flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
         });
     return newWebContainer;
 #endif

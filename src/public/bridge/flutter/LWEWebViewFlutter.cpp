@@ -65,12 +65,13 @@ namespace LWE {
 
 class WebViewFlutter : public WebView {
 public:
-    WebViewFlutter(unsigned x, unsigned y, unsigned width, unsigned height,
-                   float devicePixelRatio, const char* defaultFontName,
-                   const char* locale, const char* timezoneID,
-                   const std::function<WebContainer::ExternalImageInfo(void)>&
-                       prepareImageCb,
-                   const std::function<void(WebContainer*)>& renderedCb)
+    WebViewFlutter(
+        unsigned x, unsigned y, unsigned width, unsigned height,
+        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        const char* timezoneID,
+        const std::function<WebContainer::ExternalImageInfo(void)>&
+            prepareImageCb,
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
         : WebView(nullptr)
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
@@ -275,7 +276,7 @@ public:
                     }
                     m_isBufferSwapped = true;
                 },
-                prepareImageCb, renderedCb, devicePixelRatio, defaultFontName,
+                prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
                 locale, timezoneID);
         m_impl = webContainer;
     }
@@ -342,7 +343,7 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
             result.imageAddress = nullptr;
             return result;
         },
-        [](WebContainer* c) {});
+        [](WebContainer* c, bool needsFlush) {});
 }
 } // namespace LWE
 
@@ -352,11 +353,11 @@ extern "C" size_t LWE_EXPORT createWebViewInstance(
     const char* timezoneID,
     const std::function<::LWE::WebContainer::ExternalImageInfo(void)>&
         prepareImageCb,
-    const std::function<void(::LWE::WebContainer*)>& renderedCb)
+    const std::function<void(::LWE::WebContainer*, bool needsFlush)>& flushCb)
 {
     ::LWE::WebViewFlutter* wv = new ::LWE::WebViewFlutter(
         x, y, width, height, devicePixelRatio, defaultFontName, locale,
-        timezoneID, prepareImageCb, renderedCb);
+        timezoneID, prepareImageCb, flushCb);
     return (size_t)wv->FetchWebContainer();
 }
 #endif

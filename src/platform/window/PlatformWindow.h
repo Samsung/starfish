@@ -173,6 +173,12 @@ public:
         m_renderingFinishedCallback = cb;
     }
 
+    void registerSurfaceFlushedCallback(
+        const std::function<void(bool surfaceFlushCallback)>& cb)
+    {
+        m_surfaceFlushCallback = cb;
+    }
+
     void registerGLMakeCurrentCallback(
         const std::function<void(PlatformWindow* wnd)>& cb)
     {
@@ -295,6 +301,7 @@ protected:
     std::function<void(PlatformWindow* wnd, bool)> m_glSwapBufferCallback;
 
     std::function<bool(PlatformWindow* wnd)> m_canRenderingCallback;
+    std::function<void(bool needsFlush)> m_surfaceFlushCallback;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>
         m_handlersToCallbacks;

@@ -796,7 +796,7 @@ public:
     }
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-    virtual void willRenderingExternalSurface(void* externalSurface) override
+    virtual void prepareExternalSurface(void* externalSurface) override
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
         EGLDisplay display = eglGetCurrentDisplay();
@@ -810,17 +810,25 @@ public:
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, m_mainViewTexture, 0);
     }
+
+    virtual void flushExternalSurface(
+        const std::function<void(bool needsFlush)>& cb,
+        bool isRendered) override
+    {
+        EGLDisplay display = eglGetCurrentDisplay();
+        if (isRendered) {
+            glFlush();
+        }
+        cb(isRendered);
+        g_eglDestroyImageKHRProc(display, m_mainViewImage);
+        m_mainViewImage = nullptr;
+        glDeleteTextures(1, &m_mainViewTexture);
+    }
 #endif
 
     virtual void didRendering() override
     {
         cleanUpTextureCache();
-#if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
-        EGLDisplay display = eglGetCurrentDisplay();
-        g_eglDestroyImageKHRProc(display, m_mainViewImage);
-        m_mainViewImage = nullptr;
-        glDeleteTextures(1, &m_mainViewTexture);
-#endif
     }
 
     virtual void onIdle() override
