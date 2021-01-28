@@ -1,4 +1,4 @@
-#http://web-platform.test:8000/svg/types/scripted/SVGAnimatedAngle.html
+http://web-platform.test:8000/svg/types/scripted/SVGAnimatedAngle.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedBoolean.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGClipPathElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGComponentTransferFunctionElement.html
@@ -32,5 +32,4 @@ http://web-platform.test:8000/svg/types/scripted/SVGLength.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-appendItemFromClearedList.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-basics.html
 #http://web-platform.test:8000/svg/types/scripted/SVGLengthList-getItem.html
-#http://web-platform.test:8000/svg/types/scripted/SVGAnimatedAngle.html
 #http://web-platform.test:8000/svg/types/elements/SVGGeometryElement-rect.svg
