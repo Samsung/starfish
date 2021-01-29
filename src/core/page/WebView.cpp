@@ -230,7 +230,11 @@ static void rtDoTest(Document* document)
 #endif
 
 #ifndef STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT
+#ifdef STARFISH_FLUTTER
+#define STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT 100
+#else
 #define STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT 10
+#endif
 #endif
 size_t WebView::g_fillingGraphicsBufferTileFrameTimeLimitInMS =
     STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT;
@@ -1214,6 +1218,7 @@ RenderResult WebView::rendering(bool force)
 
         if (!m_didCompositeBefore && m_needsComposite) {
             STARFISH_LOG_INFO("Start composite mode\n");
+
         } else if (m_didCompositeBefore && !m_needsComposite) {
             STARFISH_LOG_INFO("End composite mode\n");
         }

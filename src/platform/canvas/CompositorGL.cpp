@@ -801,12 +801,22 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
         EGLDisplay display = eglGetCurrentDisplay();
         EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+
         m_mainViewImage = g_eglCreateImageKHRProc(
             display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
             (void*)(intptr_t)externalSurface, attribs);
+
         glGenTextures(1, &m_mainViewTexture);
         glBindTexture(GL_TEXTURE_2D, m_mainViewTexture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
         g_glEGLImageTargetTexture2DOESProc(GL_TEXTURE_2D, m_mainViewImage);
+
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, m_mainViewTexture, 0);
     }
@@ -815,6 +825,9 @@ public:
         const std::function<void(bool needsFlush)>& cb,
         bool isRendered) override
     {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         EGLDisplay display = eglGetCurrentDisplay();
         if (isRendered) {
             glFlush();
