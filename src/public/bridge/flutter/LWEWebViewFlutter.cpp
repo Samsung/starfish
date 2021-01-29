@@ -213,24 +213,6 @@ public:
             ::LWE::WebContainer::CreateGLWithPlatformImage(
                 width, height,
                 [this](WebContainer* wc) {
-                    if (m_isBufferSwapped) {
-                        if (m_fence) {
-                            Starfish::LongTaskFinder p(
-                                "WebViewFlutter - eglClientWaitSyncKHRProc", 1);
-                            EGLint result = g_eglClientWaitSyncKHRProc(
-                                m_display, m_fence,
-                                EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
-                                EGL_FOREVER_KHR);
-                            if (result == EGL_FALSE) {
-                                STARFISH_LOG_ERROR(
-                                    "EGL FENCE: error waiting for fence: %d\n",
-                                    (int)eglGetError());
-                            }
-                            g_eglDestroySyncKHRProc(m_display, m_fence);
-                            m_fence = nullptr;
-                        }
-                        m_isBufferSwapped = false;
-                    }
                     {
                         Starfish::LongTaskFinder p(
                             "WebViewFlutter - eglMakeCurrent", 1);
@@ -265,14 +247,6 @@ public:
 #endif
                         m_lastInputTime = 0;
                         ANNOTATE_CHANNEL_END(3002);
-                    }
-                    if (mayNeedsSync) {
-                        m_fence = g_eglCreateSyncKHRProc(
-                            m_display, EGL_SYNC_FENCE_KHR, NULL);
-                        if (!m_fence) {
-                            STARFISH_LOG_ERROR("eglCreateSyncKHR Error: %d\n",
-                                               (int)eglGetError());
-                        }
                     }
                     m_isBufferSwapped = true;
                 },
