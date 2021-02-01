@@ -299,6 +299,7 @@ CanvasState::CanvasState()
     , m_shadowData()
     , m_maskPattern(nullptr)
     , m_maskPatternData(nullptr)
+    , m_maskTM()
 {
 }
 
