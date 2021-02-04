@@ -35,14 +35,12 @@ class TTS : public gc, public WebViewHoldable {
 public:
     TTS(WebView* webView)
         : WebViewHoldable(webView)
-        , m_element(nullptr)
         , m_isAccessibilityMode(false)
         , m_isCreatedVoiceList(false)
         , m_isPaused(false)
         , m_state(-1)
         , m_lweTTSMode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
-        , m_ttsText(String::emptyString)
         , m_currentUtterId(0)
     {
         initialize();
@@ -69,11 +67,6 @@ public:
 
     void setMode(LWE::TTSMode lweTTSMode);
 
-    Element* element()
-    {
-        return m_element;
-    }
-
     SpeechSynthesisUtterance* utterance()
     {
         return m_utterance;
@@ -82,16 +75,6 @@ public:
     void setUtterance(SpeechSynthesisUtterance* u)
     {
         m_utterance = u;
-    }
-
-    String* ttsText()
-    {
-        return m_ttsText;
-    }
-
-    void clearTTSText()
-    {
-        m_ttsText = String::emptyString;
     }
 
     GCUnorderedMap<int, SpeechSynthesisUtterance*>& utteranceList()
@@ -138,6 +121,11 @@ public:
     {
         return m_handle;
     }
+
+    Nullable<Element*> lastSpeechElement()
+    {
+        return m_lastSpeechElement;
+    }
 #endif
 
 private:
@@ -148,15 +136,16 @@ private:
 
 #if defined(STARFISH_TIZEN)
     tts_h m_handle;
+    Nullable<Element*> m_lastSpeechElement;
+    friend void utteranceCompletedCB(tts_h handle, int utteranceId, void* data);
 #endif
-    Element* m_element;
     bool m_isAccessibilityMode;
     bool m_isCreatedVoiceList;
     bool m_isPaused;
     int m_state;
     LWE::TTSMode m_lweTTSMode;
     SpeechSynthesisUtterance* m_utterance;
-    String* m_ttsText;
+    GCVector<std::pair<Element*, String*>> m_pendingSpeechList;
     GCUnorderedMap<int, SpeechSynthesisUtterance*> m_utteranceList;
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;
