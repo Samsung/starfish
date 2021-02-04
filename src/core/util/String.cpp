@@ -573,8 +573,11 @@ String* String::stripAndCollapseASCIIwhitespace()
     StringBuilder sb;
 
     size_t len = length();
-    size_t pt = 0;
+    if (!len) {
+        return String::emptyString;
+    }
 
+    size_t pt = 0;
     for (; pt < len; pt++) {
         if (!isASCIISpace(pt)) {
             break;
