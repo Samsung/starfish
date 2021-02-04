@@ -508,6 +508,8 @@ cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bi
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.so*
+strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
 %if "%{rpm}" == "prod_tv"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
