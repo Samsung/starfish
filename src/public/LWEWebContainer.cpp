@@ -1533,4 +1533,13 @@ void* WebContainer::GetUserData(const std::string& key)
     return ret;
 }
 
+std::string WebContainer::GetTitle()
+{
+    Starfish::String* ret;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ret = TO_WEBVIEW(m_impl)->mainBrowsingContext()->document()->title();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return ret->toUTF8NonGCString();
+}
+
 } // namespace LWE
