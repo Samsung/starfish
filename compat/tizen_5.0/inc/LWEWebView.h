@@ -283,6 +283,8 @@ public:
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
 
+    std::string GetTitle();
+
     size_t Width();
     size_t Height();
 
@@ -358,6 +360,8 @@ public:
 
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
+
+    std::string GetTitle();
 
     virtual void* Unwrap()
     {
