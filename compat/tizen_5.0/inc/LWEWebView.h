@@ -284,6 +284,8 @@ public:
     void* GetUserData(const std::string& key);
 
     std::string GetTitle();
+    void ScrollTo(int x, int y);
+    void ScrollBy(int x, int y);
 
     size_t Width();
     size_t Height();
@@ -362,6 +364,8 @@ public:
     void* GetUserData(const std::string& key);
 
     std::string GetTitle();
+    void ScrollTo(int x, int y);
+    void ScrollBy(int x, int y);
 
     virtual void* Unwrap()
     {

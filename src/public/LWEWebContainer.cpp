@@ -1542,4 +1542,20 @@ std::string WebContainer::GetTitle()
     return ret->toUTF8NonGCString();
 }
 
+void WebContainer::ScrollTo(int x, int y)
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollTo((double)x,
+                                                                  (double)y);
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
+void WebContainer::ScrollBy(int x, int y)
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollBy((double)x,
+                                                                  (double)y);
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
 } // namespace LWE

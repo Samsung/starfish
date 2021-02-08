@@ -508,6 +508,16 @@ bool Window::scrollTo(ScrollToOptions options)
     return scrollToWithoutLayout(x.toDouble(), y.toDouble());
 }
 
+bool Window::scrollBy(ScrollToOptions options)
+{
+    return scrollTo(options.left() + scrollX(), options.top() + scrollY());
+}
+
+bool Window::scrollBy(double x, double y)
+{
+    return scrollTo(x + scrollX(), y + scrollY());
+}
+
 bool Window::handleDefaultEvent(Event* event)
 {
     if (EventTarget::handleDefaultEvent(event)) {
