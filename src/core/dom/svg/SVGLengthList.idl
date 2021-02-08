@@ -1,0 +1,16 @@
+// https://www.w3.org/TR/SVG/types.html#InterfaceSVGLengthList
+
+interface SVGLengthList {
+
+  readonly attribute unsigned long length;
+  readonly attribute unsigned long numberOfItems;
+
+  [RaisesException] void clear();
+  [RaisesException] SVGLength initialize(SVGLength newItem);
+  [RaisesException] getter SVGLength getItem(unsigned long index);
+  [RaisesException] SVGLength insertItemBefore(SVGLength newItem, unsigned long index);
+  [RaisesException] SVGLength replaceItem(SVGLength newItem, unsigned long index);
+  [RaisesException] SVGLength removeItem(unsigned long index);
+  [RaisesException] SVGLength appendItem(SVGLength newItem);
+  [RaisesException] setter void (unsigned long index, SVGLength newItem);
+};

@@ -62,6 +62,7 @@ protected:
     QualifiedName m_targetAttribute;
 
     unsigned short m_unitType;
+    float m_valueInSpecifiedUnits;
 };
 } // namespace Starfish
 

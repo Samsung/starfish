@@ -27,9 +27,19 @@ namespace UnitHelper {
         return value * UNIT_PX_PER_CM;
     }
 
+    float convertFromPxToCm(float value)
+    {
+        return value / UNIT_PX_PER_CM;
+    }
+
     float convertFromMmToPx(float value)
     {
         return value * UNIT_PX_PER_MM;
+    }
+
+    float convertFromPxToMm(float value)
+    {
+        return value / UNIT_PX_PER_MM;
     }
 
     float convertFromInToPx(float value)
@@ -37,9 +47,19 @@ namespace UnitHelper {
         return value * UNIT_PX_PER_IN;
     }
 
+    float convertFromPxToIn(float value)
+    {
+        return value / UNIT_PX_PER_IN;
+    }
+
     float convertFromPcToPx(float value)
     {
         return value * UNIT_PX_PER_PC;
+    }
+
+    float convertFromPxToPc(float value)
+    {
+        return value / UNIT_PX_PER_PC;
     }
 
     float convertFromPtToPx(float value)

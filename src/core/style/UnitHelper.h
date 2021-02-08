@@ -30,9 +30,13 @@ namespace UnitHelper {
     const float UNIT_PX_PER_PT = UNIT_PX_PER_IN / 72;
 
     float convertFromCmToPx(float value);
+    float convertFromPxToCm(float value);
     float convertFromMmToPx(float value);
+    float convertFromPxToMm(float value);
     float convertFromInToPx(float value);
+    float convertFromPxToIn(float value);
     float convertFromPcToPx(float value);
+    float convertFromPxToPc(float value);
     float convertFromPtToPx(float value);
     float convertFromPxToPt(float value);
 

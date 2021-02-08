@@ -46,6 +46,10 @@ public:
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(SVGTextElement)] = { 0 };
             SVGElement::fillGCDescriptor(desc);
+
+            GC_set_bit(desc, GC_WORD_OFFSET(SVGTextElement, m_x));
+            GC_set_bit(desc, GC_WORD_OFFSET(SVGTextElement, m_y));
+
             descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGTextElement));
             typeInited = true;
         }
@@ -53,10 +57,7 @@ public:
     }
     void* operator new[](size_t size) = delete;
 
-    SVGTextElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
+    SVGTextElement(Document* document, const QualifiedName& qname);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -99,9 +100,15 @@ public:
         return m_alignmentBaseline;
     }
 
+    SVGAnimatedLengthList* x();
+    SVGAnimatedLengthList* y();
+
 private:
     TextAnchor m_textAnchor{ TextAnchor::START };
     AlignmentBaseline m_alignmentBaseline{ AlignmentBaseline::AUTO };
+
+    SVGAnimatedLengthList* m_x;
+    SVGAnimatedLengthList* m_y;
 };
 } // namespace Starfish
 

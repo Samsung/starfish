@@ -25,6 +25,11 @@
 
 namespace Starfish {
 
+SVGTextElement::SVGTextElement(Document* document, const QualifiedName& qname)
+    : SVGElement(document, qname)
+{
+}
+
 void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
                                          bool attributeRemoved)
@@ -55,6 +60,22 @@ void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
         }
         setAlignmentBaseline(al);
         setNeedsPainting();
+    } else if (ss->m_x == name) {
+        if (x()->baseVal()->isUpdated()) {
+            x()->baseVal()->unsetUpdated();
+        } else {
+            x()->baseVal()->updateListByAttribute();
+        }
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
+    } else if (ss->m_y == name) {
+        if (y()->baseVal()->isUpdated()) {
+            y()->baseVal()->unsetUpdated();
+        } else {
+            y()->baseVal()->updateListByAttribute();
+        }
+        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+        setNeedsPainting();
     }
 }
 
@@ -77,4 +98,51 @@ void SVGTextElement::styleForPresentationAttribute(
     }
     STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fontDashSize, FontSize);
 }
+
+SVGAnimatedLengthList* SVGTextElement::x()
+{
+    if (m_x == nullptr) {
+        SVGLengthList* xBaseVal =
+            new SVGLengthList(this, starfish()->staticStrings()->m_x);
+        SVGLengthList* xAnimVal =
+            new SVGLengthList(this, starfish()->staticStrings()->m_x);
+
+        m_x = new SVGAnimatedLengthList(document(), xBaseVal, xAnimVal);
+
+        xBaseVal->updateListByAttribute();
+        xAnimVal->updateListByAttribute();
+        xBaseVal->setBaseVal();
+
+        for (size_t i = 0; i < xAnimVal->length(); ++i) {
+            xAnimVal->getItem(i)->setReadOnly();
+        }
+        xAnimVal->setReadOnly();
+    }
+
+    return m_x;
+}
+
+SVGAnimatedLengthList* SVGTextElement::y()
+{
+    if (m_y == nullptr) {
+        SVGLengthList* yBaseVal =
+            new SVGLengthList(this, starfish()->staticStrings()->m_y);
+        SVGLengthList* yAnimVal =
+            new SVGLengthList(this, starfish()->staticStrings()->m_y);
+
+        m_y = new SVGAnimatedLengthList(document(), yBaseVal, yAnimVal);
+
+        yBaseVal->updateListByAttribute();
+        yAnimVal->updateListByAttribute();
+        yBaseVal->setBaseVal();
+
+        for (size_t i = 0; i < yAnimVal->length(); ++i) {
+            yAnimVal->getItem(i)->setReadOnly();
+        }
+        yAnimVal->setReadOnly();
+    }
+
+    return m_y;
+}
+
 } // namespace Starfish

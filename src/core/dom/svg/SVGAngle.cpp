@@ -36,6 +36,7 @@ SVGAngle::SVGAngle(SVGElement* sourceElement, QualifiedName targetAttribute)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
     , m_unitType(SVG_ANGLETYPE_UNSPECIFIED)
+    , m_valueInSpecifiedUnits(0)
 {
 }
 
@@ -110,30 +111,7 @@ void SVGAngle::setValue(float v)
 
 float SVGAngle::valueInSpecifiedUnits()
 {
-    m_sourceElement->document()->browsingContext()->layoutIfNeeded();
-
-    String* attrValue = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
-    Angle ang;
-    if (attrValue->length()) {
-        auto s = attrValue->toUTF8NonGCString();
-        CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseAngle(
-                s.data(),
-                CSSPropertyParser::AllowNegative |
-                    CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
-            Nullable<Angle> value =
-                valueToAngle(pair.valueKind(), pair.value());
-            if (value.hasValue()) {
-                ang = value.getValue();
-            }
-        }
-    }
-
-    if (ang.isSpecified()) {
-        return ang.specifiedValue();
-    }
-    return 0;
+    return m_valueInSpecifiedUnits;
 }
 
 void SVGAngle::setValueInSpecifiedUnits(float v)
@@ -144,7 +122,10 @@ void SVGAngle::setValueInSpecifiedUnits(float v)
                                "The provided float value is non-finite");
     }
 
-    m_sourceElement->setAttribute(m_targetAttribute, String::fromFloat(v));
+    m_valueInSpecifiedUnits = v;
+    if (!m_targetAttribute.equalsLocalName(AtomicString::emptyAtomicString())) {
+        m_sourceElement->setAttribute(m_targetAttribute, String::fromFloat(v));
+    }
 }
 
 String* SVGAngle::valueAsString()

@@ -21,6 +21,7 @@
 #define __StarfishSVGElement__
 
 #include "core/dom/Element.h"
+#include "core/dom/svg/SVGAnimatedLengthList.h"
 #include "core/dom/svg/SVGAnimatedLength.h"
 #include "core/dom/svg/SVGAngle.h"
 #include "core/style/Style.h"
