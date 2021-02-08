@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "SVGLength.h"
 #include "SVGElement.h"
+#include "SVGLength.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CalcData.h"
 #include "core/style/CSSParser.h"
@@ -27,20 +28,28 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
+#include "core/dom/svg/SVGDocument.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/svg/SVGTextElement.h"
 
 namespace Starfish {
 
-SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
+SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute,
+                     unsigned short unitType, float value)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
-    , m_unitType(SVG_LENGTHTYPE_NUMBER)
+    , m_unitType(unitType)
+    , m_valueInSpecifiedUnits(value)
+    , m_readOnly(false)
 {
 }
 
 ScriptBindingInstance* SVGLength::scriptBindingInstance()
 {
+    if (m_sourceElement == nullptr) {
+        return nullptr;
+    }
     return m_sourceElement->scriptBindingInstance();
 }
 
@@ -51,6 +60,13 @@ unsigned short SVGLength::unitType()
 
 void SVGLength::setUnitType(unsigned short unitType)
 {
+    if (isReadOnly()) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "NoModificationAllowedError");
+        return;
+    }
+
     m_unitType = unitType;
 }
 
@@ -80,27 +96,8 @@ static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
 
 float SVGLength::value()
 {
-    m_sourceElement->document()->browsingContext()->layoutIfNeeded();
-
-    String* attrValue = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
-    Length len;
-    if (attrValue->length()) {
-        auto s = attrValue->toUTF8NonGCString();
-        CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLength(
-                s.data(),
-                CSSPropertyParser::AllowPercent |
-                    CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
-            Nullable<Length> value =
-                valueToLength(pair.valueKind(), pair.value());
-            if (value.hasValue()) {
-                len = value.getValue();
-            }
-        }
-    }
-
-    if (len.isSpecified()) {
+    if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
+        Length len = Length(Length::Percent, m_valueInSpecifiedUnits / 100.0);
         FrameBox* cb =
             m_sourceElement->frame()
                 ? m_sourceElement->frame()->layoutParent()->asFrameBox()
@@ -108,12 +105,16 @@ float SVGLength::value()
         FrameBox* svgBox = nullptr;
         if (cb) {
             svgBox = cb;
-            while (true) {
+            while (svgBox != nullptr) {
                 if (svgBox->isFrameReplaced() &&
                     svgBox->asFrameReplaced()->isFrameSVGSVGBox()) {
                     break;
                 }
-                svgBox = svgBox->layoutParent()->asFrameBox();
+                if (svgBox->layoutParent() != nullptr) {
+                    svgBox = svgBox->layoutParent()->asFrameBox();
+                } else {
+                    break;
+                }
             }
         }
 
@@ -123,64 +124,90 @@ float SVGLength::value()
             result = result * ((FrameSVGSVGBox*)svgBox)->svgScale();
         }
         return result;
+    } else {
+        // unimplemented EMS, EXS
+        if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
+            return valueInSpecifiedUnits();
+        } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+            return valueInSpecifiedUnits();
+        } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+            return UnitHelper::convertFromCmToPx(valueInSpecifiedUnits());
+        } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+            return UnitHelper::convertFromMmToPx(valueInSpecifiedUnits());
+        } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+            return UnitHelper::convertFromInToPx(valueInSpecifiedUnits());
+        } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+            return UnitHelper::convertFromPtToPx(valueInSpecifiedUnits());
+        } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+            return UnitHelper::convertFromPcToPx(valueInSpecifiedUnits());
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
     }
     return 0;
 }
 
 void SVGLength::setValue(float v)
 {
-    if (std::isnan(v) || std::isinf(v)) {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "The provided float value is non-finite");
+    // unimplemented PERCENTAGE, EMS, EXS
+    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
+        setValueInSpecifiedUnits(v);
+    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
+        setValueInSpecifiedUnits(v);
+    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
+        setValueInSpecifiedUnits(UnitHelper::convertFromPxToCm(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
+        setValueInSpecifiedUnits(UnitHelper::convertFromPxToMm(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
+        setValueInSpecifiedUnits(UnitHelper::convertFromPxToIn(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
+        setValueInSpecifiedUnits(UnitHelper::convertFromPxToPt(v));
+    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
+        setValueInSpecifiedUnits(UnitHelper::convertFromPxToPc(v));
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-
-    m_sourceElement->setAttribute(m_targetAttribute, String::fromFloat(v));
 }
 
 float SVGLength::valueInSpecifiedUnits()
 {
-    // unimplemented PERCENTAGE, EMS, EXS
-    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
-        return value();
-    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
-        return value();
-    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
-        return value() / UnitHelper::UNIT_PX_PER_CM;
-    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
-        return value() / UnitHelper::UNIT_PX_PER_MM;
-    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
-        return value() / UnitHelper::UNIT_PX_PER_IN;
-    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
-        return value() / UnitHelper::UNIT_PX_PER_PT;
-    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
-        return value() / UnitHelper::UNIT_PX_PER_PC;
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-
-    return 0;
+    m_sourceElement->document()->browsingContext()->layoutIfNeeded();
+    return m_valueInSpecifiedUnits;
 }
 
 void SVGLength::setValueInSpecifiedUnits(float v)
 {
-    // unimplemented PERCENTAGE, EMS, EXS
-    if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
-        setValue(v);
-    } else if (m_unitType == SVG_LENGTHTYPE_PX) {
-        setValue(v);
-    } else if (m_unitType == SVG_LENGTHTYPE_CM) {
-        setValue(UnitHelper::convertFromCmToPx(v));
-    } else if (m_unitType == SVG_LENGTHTYPE_MM) {
-        setValue(UnitHelper::convertFromMmToPx(v));
-    } else if (m_unitType == SVG_LENGTHTYPE_IN) {
-        setValue(UnitHelper::convertFromInToPx(v));
-    } else if (m_unitType == SVG_LENGTHTYPE_PT) {
-        setValue(UnitHelper::convertFromPtToPx(v));
-    } else if (m_unitType == SVG_LENGTHTYPE_PC) {
-        setValue(UnitHelper::convertFromPcToPx(v));
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (isReadOnly()) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "NoModificationAllowedError");
+        return;
+    }
+
+    if (std::isnan(v) || std::isinf(v)) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The provided float value is non-finite");
+        return;
+    }
+
+    m_valueInSpecifiedUnits = v;
+
+    if (m_targetAttribute.localName()->length()) {
+        if (m_sourceElement->isSVGTextElement()) {
+            SVGLengthList* list;
+            StaticStrings* ss =
+                m_sourceElement->document()->starfish()->staticStrings();
+
+            if (m_targetAttribute == ss->m_x) {
+                list = ((SVGTextElement*)m_sourceElement)->x()->baseVal();
+            } else if (m_targetAttribute == ss->m_y) {
+                list = ((SVGTextElement*)m_sourceElement)->y()->baseVal();
+            }
+            list->updateAttributeByList();
+        } else {
+            m_sourceElement->setAttribute(m_targetAttribute, valueAsString());
+        }
     }
 }
 
@@ -188,7 +215,7 @@ String* SVGLength::valueAsString()
 {
     String* str = String::fromFloat(valueInSpecifiedUnits());
 
-    // unimplemented PERCENTAGE, EMS, EXS
+    // unimplemented EMS, EXS
     if (m_unitType == SVG_LENGTHTYPE_NUMBER) {
     } else if (m_unitType == SVG_LENGTHTYPE_PX) {
         str = str->concat("px");
@@ -202,6 +229,8 @@ String* SVGLength::valueAsString()
         str = str->concat("pt");
     } else if (m_unitType == SVG_LENGTHTYPE_PC) {
         str = str->concat("pc");
+    } else if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
+        str = str->concat("%");
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
@@ -216,11 +245,15 @@ void SVGLength::setValueAsString(String* valueAsString)
     if (valueAsString->length()) {
         auto s = valueAsString->toUTF8NonGCString();
         CSSStyleValuePair pair;
-        if (CSSPropertyParser::parseLength(
-                s.data(),
-                CSSPropertyParser::AllowPercent |
-                    CSSPropertyParser::AllowWithoutUnit,
-                &pair)) {
+        float v;
+        if (CSSPropertyParser::parseNumber(s.data(), 0, &v)) {
+            setUnitType(SVG_LENGTHTYPE_NUMBER);
+            setValueInSpecifiedUnits(v);
+        } else if (CSSPropertyParser::parseLength(
+                       s.data(),
+                       CSSPropertyParser::AllowPercent |
+                           CSSPropertyParser::AllowWithoutUnit,
+                       &pair)) {
             if (pair.cssLengthValue().kind() == CSSLength::PX) {
                 setUnitType(SVG_LENGTHTYPE_PX);
             } else if (pair.cssLengthValue().kind() == CSSLength::CM) {
@@ -236,7 +269,7 @@ void SVGLength::setValueAsString(String* valueAsString)
             } else if (pair.cssLengthValue().kind() == CSSLength::EX) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             } else if (pair.cssLengthValue().kind() == CSSLength::PERCENT) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                setUnitType(SVG_LENGTHTYPE_PERCENTAGE);
             } else {
                 throw new DOMException(m_sourceElement->executionContext(),
                                        DOMException::Code::NOT_SUPPORTED_ERR,
@@ -277,5 +310,43 @@ void SVGLength::convertToSpecifiedUnits(unsigned short unitType)
     }
 
     setUnitType(unitType);
+}
+
+bool SVGLength::isReadOnly()
+{
+    return m_readOnly;
+}
+
+void SVGLength::setReadOnly()
+{
+    m_readOnly = true;
+}
+
+void SVGLength::detach()
+{
+    // Set the SVGLength to no longer be associated with any element.
+    m_sourceElement = nullptr;
+    m_targetAttribute = AtomicString::emptyAtomicString();
+
+    // If the SVGLength is read only, set it to be no longer read only. Set the
+    // SVGLength to have unspecified directionality.
+    if (isReadOnly()) {
+        m_readOnly = false;
+    }
+}
+
+void SVGLength::attach(SVGElement* sourceElement, QualifiedName targetAttribute)
+{
+    // Associate the SVGLength with the element that the list interface object
+    // is associated with and set its directionality to that specified by the
+    // attribute being reflected.
+    m_sourceElement = sourceElement;
+    m_targetAttribute = targetAttribute;
+}
+
+bool SVGLength::isDetached()
+{
+    return m_targetAttribute.toString()->equals(
+        AtomicString::emptyAtomicString());
 }
 } // namespace Starfish

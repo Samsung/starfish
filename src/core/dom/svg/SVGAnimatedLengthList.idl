@@ -1,0 +1,6 @@
+// https://www.w3.org/TR/SVG/types.html#InterfaceSVGAnimatedLengthList
+
+interface SVGAnimatedLengthList {
+  [SameObject] readonly attribute SVGLengthList baseVal;
+  [SameObject] readonly attribute SVGLengthList animVal;
+};

@@ -129,11 +129,11 @@ SVGSVGElement::preserveAspectRatioValue()
 
 SVGLength* SVGSVGElement::createSVGLength()
 {
-    return new SVGLength(this, m_name);
+    return new SVGLength(this, AtomicString::emptyAtomicString());
 }
 
 SVGAngle* SVGSVGElement::createSVGAngle()
 {
-    return new SVGAngle(this, m_name);
+    return new SVGAngle(this, AtomicString::emptyAtomicString());
 }
 } // namespace Starfish
