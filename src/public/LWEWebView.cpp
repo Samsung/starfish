@@ -193,6 +193,16 @@ std::string WebView::GetTitle()
     return FetchWebContainer()->GetTitle();
 }
 
+void WebView::ScrollTo(int x, int y)
+{
+    FetchWebContainer()->ScrollTo(x, y);
+}
+
+void WebView::ScrollBy(int x, int y)
+{
+    FetchWebContainer()->ScrollBy(x, y);
+}
+
 void WebView::Focus()
 {
     FetchWebContainer()->Focus();

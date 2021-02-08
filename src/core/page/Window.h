@@ -330,6 +330,13 @@ public:
         return scrollTo(options);
     }
 
+    bool scrollBy() // returns scrolling is actually happened
+    {
+        return scrollTo();
+    }
+    bool scrollBy(ScrollToOptions options);
+    bool scrollBy(double x, double y);
+
     bool scroll() // returns scrolling is actually happened
     {
         return scrollTo();

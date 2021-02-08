@@ -98,8 +98,8 @@ interface Window : EventTarget {
   [CrossOrigin] void scroll(unrestricted double x, unrestricted double y);
   [CrossOrigin] void scrollTo(optional ScrollToOptions options);
   [CrossOrigin] void scrollTo(unrestricted double x, unrestricted double y);
-  [Unimplemented] void scrollBy(optional ScrollToOptions options);
-  [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
+  [CrossOrigin] void scrollBy(optional ScrollToOptions options);
+  [CrossOrigin] void scrollBy(unrestricted double x, unrestricted double y);
 
   // client
   [Unimplemented, Replaceable] readonly attribute long screenX;
