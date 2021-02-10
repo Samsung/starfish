@@ -41,6 +41,7 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/page/WebView.h"
 #include "platform/network/http/HTTPCache.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceURL.h"
 #include "platform/loader/ResourceLoader.h"
@@ -97,6 +98,7 @@
 namespace LWE {
 
 extern Starfish::Starfish* g_starfishInstance;
+static CookieManager* g_cookieManager;
 
 Settings::Settings(const std::string& default_ua, const std::string& ua)
     : m_defaultUserAgent(default_ua)
@@ -1556,6 +1558,90 @@ void WebContainer::ScrollBy(int x, int y)
     TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollBy((double)x,
                                                                   (double)y);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
+int WebContainer::GetScrollX()
+{
+    int x = 0;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    x = (int)TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollX();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return x;
+}
+
+int WebContainer::GetScrollY()
+{
+    int y = 0;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    y = (int)TO_WEBVIEW(m_impl)->mainBrowsingContext()->window()->scrollY();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return y;
+}
+
+std::string CookieManager::GetCookie(std::string url)
+{
+    std::string result;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    result = Starfish::NetworkSharedResourceManager::getInstance()
+                 ->cookies(new Starfish::ResourceURL(url.c_str(), url.size()))
+                 ->toUTF8NonGCString();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+
+    return result;
+}
+bool CookieManager::HasCookies()
+{
+    bool hasCookies;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    hasCookies =
+        Starfish::NetworkSharedResourceManager::getInstance()->hasCookies();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+
+    return hasCookies;
+}
+void CookieManager::ClearCookies()
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    Starfish::NetworkSharedResourceManager::getInstance()->clearCookies();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
+CookieManager* CookieManager::GetInstance()
+{
+    if (!LWE::IsInitialized()) {
+        STARFISH_LOG_ERROR(
+            "You must call LWE::Initialize function before using "
+            "CookieManager");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return nullptr;
+    }
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    if (!g_cookieManager) {
+        g_cookieManager = new CookieManager();
+    }
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return g_cookieManager;
+}
+
+void CookieManager::Destroy()
+{
+    if (!LWE::IsInitialized()) {
+        return;
+    }
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    if (g_cookieManager) {
+        delete g_cookieManager;
+        g_cookieManager = nullptr;
+    }
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+
+CookieManager::CookieManager()
+{
+}
+
+CookieManager::~CookieManager()
+{
 }
 
 } // namespace LWE

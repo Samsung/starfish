@@ -292,7 +292,7 @@ String* Document::cookie()
     }
 
     String* ret =
-        NetworkSharedResourceManager::getInstance()->cookeis(documentURI());
+        NetworkSharedResourceManager::getInstance()->cookies(documentURI());
     return ret;
 }
 

@@ -472,7 +472,7 @@ void NetworkSharedResourceManager::clearAllCurlHandleDataCache()
     }
 }
 
-String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
+String* NetworkSharedResourceManager::cookies(ResourceURL* url)
 {
     String* cookies = String::emptyString;
     CURL* curl = curl_easy_init();
@@ -501,6 +501,27 @@ String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
     return cookies;
 }
 
+bool NetworkSharedResourceManager::hasCookies()
+{
+    CURL* curl = curl_easy_init();
+
+    if (!curl) {
+        return false;
+    }
+    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
+
+    struct curl_slist* cookieList = nullptr;
+    curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookieList);
+
+    bool hasCookies = false;
+    if (cookieList) {
+        hasCookies = true;
+        curl_slist_free_all(cookieList);
+    }
+    curl_easy_cleanup(curl);
+    return hasCookies;
+}
+
 void NetworkSharedResourceManager::setCookies(
     ExecutionContext* executionContext, ResourceURL* url, String* value)
 {
@@ -525,6 +546,19 @@ void NetworkSharedResourceManager::setCookies(
 #ifdef STARFISH_ENABLE_TEST
 // dumpCookies(curl, "Affter setCookie");
 #endif
+    curl_easy_cleanup(curl);
+}
+
+void NetworkSharedResourceManager::clearCookies()
+{
+    CURL* curl = curl_easy_init();
+
+    if (!curl) {
+        return;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
+    curl_easy_setopt(curl, CURLOPT_COOKIELIST, "ALL");
     curl_easy_cleanup(curl);
 }
 } // namespace Starfish

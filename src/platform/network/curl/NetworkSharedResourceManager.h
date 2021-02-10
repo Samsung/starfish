@@ -55,9 +55,11 @@ public:
     void initCookieSession();
 
     // for document.cookie
-    String* cookeis(ResourceURL* url);
+    String* cookies(ResourceURL* url);
     void setCookies(ExecutionContext* executionContext, ResourceURL* url,
                     String* value);
+    void clearCookies();
+    bool hasCookies();
 
     size_t cacheClearTimerID()
     {
