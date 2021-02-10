@@ -203,6 +203,16 @@ void WebView::ScrollBy(int x, int y)
     FetchWebContainer()->ScrollBy(x, y);
 }
 
+int WebView::GetScrollX()
+{
+    return FetchWebContainer()->GetScrollX();
+}
+
+int WebView::GetScrollY()
+{
+    return FetchWebContainer()->GetScrollY();
+}
+
 void WebView::Focus()
 {
     FetchWebContainer()->Focus();
