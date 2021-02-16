@@ -145,7 +145,7 @@ private:
     int m_state;
     LWE::TTSMode m_lweTTSMode;
     SpeechSynthesisUtterance* m_utterance;
-    GCVector<std::pair<Element*, String*>> m_pendingSpeechList;
+    std::pair<Element*, String*> m_pendingSpeech;
     GCUnorderedMap<int, SpeechSynthesisUtterance*> m_utteranceList;
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;

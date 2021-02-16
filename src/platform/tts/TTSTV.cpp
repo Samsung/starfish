@@ -277,9 +277,9 @@ void utteranceCompletedCB(tts_h handle, int utteranceId, void* data)
     dispatchCompleteEvent(t, utteranceId);
     t->setCurrentUtterId(0);
 
-    if (t->m_pendingSpeechList.size()) {
-        t->m_lastSpeechElement = t->m_pendingSpeechList[0].first;
-        String* text = t->m_pendingSpeechList[0].second;
+    if (t->m_pendingSpeech.first) {
+        t->m_lastSpeechElement = t->m_pendingSpeech.first;
+        String* text = t->m_pendingSpeech.second;
         // STARFISH_LOG_ERROR("[TTS] tts_add_text: %s\n", CSTR(text));
         int ret =
             tts_add_text(t->m_handle, CSTR(text), NULL, TTS_VOICE_TYPE_AUTO,
@@ -287,7 +287,8 @@ void utteranceCompletedCB(tts_h handle, int utteranceId, void* data)
         if (ret != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("[TTS] tts_add_text failed : %d", ret);
         }
-        t->m_pendingSpeechList.erase(0);
+        t->m_pendingSpeech.first = nullptr;
+        t->m_pendingSpeech.second = String::emptyString;
     } else if (gUtteranceId == utteranceId) {
         // STARFISH_LOG_ERROR("[TTS] unprepare on utteranceCompletedCB\n");
         t->unprepare();
@@ -556,7 +557,8 @@ void TTS::unprepare()
 void TTS::speech(Element* element, String* text)
 {
     if (!text->isEmpty()) {
-        m_pendingSpeechList.push_back(std::make_pair(element, text));
+        m_pendingSpeech.first = element;
+        m_pendingSpeech.second = text;
         TTS* t = (TTS*)this;
         STARFISH_LOG_ERROR("[TTS] speech TV : %s\n",
                            text->toUTF8NonGCString().data());
@@ -593,18 +595,19 @@ int TTS::speechElementText()
 
 int TTS::ttsPlay()
 {
-    if (!m_pendingSpeechList.size()) {
+    if (!m_pendingSpeech.first) {
         return TTS_ERROR_NONE;
     }
 
     int ret = TTS_ERROR_NONE;
 
-    m_lastSpeechElement = m_pendingSpeechList[0].first;
-    String* text = m_pendingSpeechList[0].second;
+    m_lastSpeechElement = m_pendingSpeech.first;
+    String* text = m_pendingSpeech.second;
     // STARFISH_LOG_ERROR("[TTS] tts_add_text: %s\n", CSTR(text));
     ret = tts_add_text(m_handle, CSTR(text), NULL, TTS_VOICE_TYPE_AUTO,
                        TTS_SPEED_AUTO, &gUtteranceId);
-    m_pendingSpeechList.erase(0);
+    m_pendingSpeech.first = nullptr;
+    m_pendingSpeech.second = String::emptyString;
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_add_text failed : %d", ret);
         return ret;
