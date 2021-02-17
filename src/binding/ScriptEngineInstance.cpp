@@ -40,9 +40,8 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
         {
         }
 
-        virtual void didPromiseJobEnqueued(
-            Escargot::ContextRef* relatedContext,
-            Escargot::PromiseObjectRef* obj) override
+        virtual void markJSJobEnqueued(
+            Escargot::ContextRef* relatedContext) override
         {
             Window* window =
                 (Window*)relatedContext->globalObject()->extraData();
@@ -51,11 +50,11 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                 window,
                 [](size_t handle, void* data) {
                     VMInstanceRef* vm = (VMInstanceRef*)data;
-                    if (vm->hasPendingPromiseJob()) {
-                        auto jobResult = vm->executePendingPromiseJob();
+                    if (vm->hasPendingJob()) {
+                        auto jobResult = vm->executePendingJob();
                         if (jobResult.error) {
                             STARFISH_LOG_ERROR(
-                                "Uncaught Error in Promise job\n");
+                                "Uncaught Error in JS job\n");
                         }
                     }
                 },

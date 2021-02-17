@@ -96,7 +96,7 @@ void ScriptBindingInstance::destroy()
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::close(m_scriptContext);
 #endif
-    m_scriptContext->clearRelatedQueuedPromiseJobs();
+    m_scriptContext->clearRelatedQueuedJobs();
     m_scriptContext->setVirtualIdentifierCallback(nullptr);
 }
 
