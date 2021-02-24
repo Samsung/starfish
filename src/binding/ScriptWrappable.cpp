@@ -1182,7 +1182,7 @@ void detachArrayBuffer(ScriptBindingInstance* instance,
     Evaluator::execute(
         ctx,
         [](ExecutionStateRef* state, ScriptArrayBuffer buffer) -> ValueRef* {
-            buffer->detachArrayBuffer(state);
+            buffer->detachArrayBuffer();
             return ValueRef::createUndefined();
         },
         buffer);
