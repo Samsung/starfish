@@ -129,14 +129,17 @@ public:
         pushBack(val);
     }
 
-    void insert(size_t pos, const T& val)
+    template <typename PositionType>
+    typename std::enable_if<std::is_integral<PositionType>::value>::type insert(
+        PositionType pos, const T& val)
     {
         STARFISH_ASSERT(pos <= m_size);
         insertImpl(pos, val);
     }
 
     template <class _Iterator>
-    void insert(_Iterator pos, const T& val)
+    typename std::enable_if<!std::is_integral<_Iterator>::value>::type insert(
+        _Iterator pos, const T& val)
     {
         size_t npos = std::distance(begin(), pos);
         insertImpl(npos, val);
