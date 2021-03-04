@@ -2280,6 +2280,7 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                         (uint64_t)WebView::
                                                 g_fillingGraphicsBufferTileFrameTimeLimitInMS *
                                             1000) {
+                                        tileIndex++;
                                         continue;
                                     }
                                 }

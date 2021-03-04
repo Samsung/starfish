@@ -47,8 +47,28 @@ public:
         if (id &&
             node()->asSVGImageElement()->preserveAspectRatioValue() ==
                 NativeImageData::None) {
-            setWidth(id->width());
-            setHeight(id->height());
+
+            auto styleWidth = style()->width();
+            auto styleHeight = style()->height();
+            FrameBox* cb = layoutParent()->asFrameBox();
+            if (styleWidth.isAuto() && styleHeight.isAuto()) {
+                setWidth(id->width());
+                setHeight(id->height());
+            } else if (styleWidth.isAuto()) {
+                setHeight(styleHeight.specifiedValue(cb->height(), this));
+                if (id->width() && id->height()) {
+                    setWidth(height() * id->width() / id->height());
+                } else {
+                    setWidth(0);
+                }
+            } else if (styleHeight.isAuto()) {
+                setWidth(styleWidth.specifiedValue(cb->width(), this));
+                if (id->width() && id->height()) {
+                    setHeight(width() * id->height() / id->width());
+                } else {
+                    setHeight(0);
+                }
+            }
         }
     }
 
