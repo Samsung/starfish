@@ -240,12 +240,7 @@ public:
         return n;
     }
 
-    Node* getRootNode(GetRootNodeOptions options)
-    {
-        // TODO shadow-including root
-        STARFISH_ASSERT(!options.composed());
-        return getRootNode();
-    }
+    Node* getRootNode(GetRootNodeOptions options);
 
     Node* parentNode() const
     {

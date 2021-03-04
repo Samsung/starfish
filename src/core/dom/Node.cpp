@@ -453,6 +453,23 @@ Node* Node::cloneNode(bool deep)
     return newNode;
 }
 
+Node* Node::getRootNode(GetRootNodeOptions options)
+{
+    bool composed = options.composed();
+    if (composed) {
+        return getRootNode();
+    } else {
+        Node* n = this;
+        while (n) {
+            if (!n->parentNode() || n->isShadowRoot()) {
+                break;
+            }
+            n = n->parentNode();
+        }
+        return n;
+    }
+}
+
 Node* Node::makeShadowClone()
 {
     if (isSVGUseElement()) {
