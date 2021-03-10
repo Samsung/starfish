@@ -48,6 +48,10 @@ HTMLTextEditable::HTMLTextEditable(Document* document,
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
     , m_maxlength(INITIAL_MAXLENGTH)
+    , m_editStatus(EditStatus::None)
+    , m_havePreedit(false)
+    , m_preeditEndPos(0)
+    , m_preeditStartPos(0)
 {
 }
 
@@ -136,6 +140,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
             }
             m_shouldDrawCaret = true;
             isUseful = true;
+            resetCurrentContext();
         } break;
         case LWE::KeyValue::ArrowRightKey: {
             if (m_currentCaretPosition < value->length()) {
@@ -143,6 +148,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
             }
             m_shouldDrawCaret = true;
             isUseful = true;
+            resetCurrentContext();
         } break;
         case LWE::KeyValue::BackspaceKey: {
             if (value->length()) {
@@ -158,6 +164,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 }
                 isUseful = true;
             }
+            resetCurrentContext();
         } break;
         case LWE::KeyValue::DeleteKey: {
             if (value->length()) {
@@ -172,6 +179,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 }
                 isUseful = true;
             }
+            resetCurrentContext();
         } break;
         case LWE::KeyValue::EnterKey: {
             if (!ignoreLineBreaks() &&
@@ -181,6 +189,8 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
                 m_shouldDrawCaret = true;
                 isUseful = true;
             }
+            resetCurrentContext();
+            webView()->platformWindow()->hideSoftwareKeyboardIfPossible();
         } break;
         default: {
             if (String::isASCIIPrintableKey(
@@ -209,22 +219,50 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
             return true;
         }
     } else if (event->isCompositionEvent()) {
-        if (event->type()->equals("compositionstart")) {
-        } else if (((event->type()->equals("compositionupdate") ||
-                     event->type()->equals("compositionend"))) &&
-                   m_currentCaretPosition < (size_t)maxLength()) {
-            size_t originalTextPosition =
-                value->length() - m_currentEditingText->length();
-            value = value->remove(originalTextPosition,
-                                  m_currentEditingText->length());
+        STARFISH_LOG_INFO("Composition Event [%s]",
+                          event->type()->toUTF8NonGCString().data());
+        if (m_currentCaretPosition < (size_t)maxLength()) {
+            String* data = event->asCompositionEvent()->data();
 
-            m_currentEditingText = event->asCompositionEvent()->data();
-            value = value->insert(m_currentEditingText, originalTextPosition);
-            m_currentCaretPosition = value->length();
-            m_shouldDrawCaret = true;
+            if (event->type()->equals("compositionstart")) {
+            } else if (event->type()->equals("compositionupdate")) {
+                STARFISH_LOG_INFO("CompositionUpdate data[%s]",
+                                  data->toUTF8NonGCString().data());
+                setEditStatus(EditStatus::PreeditStart);
+                if (data->isEmpty()) {
+                    setEditStatus(EditStatus::PreeditEnd);
+                }
 
-            if (event->type()->equals("compositionend")) {
-                m_currentEditingText = String::emptyString;
+                if (m_editStatus == EditStatus::PreeditStart ||
+                    m_editStatus == EditStatus::PreeditEnd) {
+                    consumeLastPreedit();
+                }
+
+                m_havePreedit = false;
+                if (m_editStatus == EditStatus::PreeditStart) {
+                    m_preeditStartPos = m_currentCaretPosition;
+
+                    m_currentEditingText = data;
+                    String* v = this->value()->insert(m_currentEditingText,
+                                                      m_preeditStartPos);
+                    setValue(v);
+                    m_currentCaretPosition += m_currentEditingText->length();
+                    m_preeditEndPos = m_currentCaretPosition;
+                    m_havePreedit = true;
+                }
+                m_shouldDrawCaret = true;
+            } else if (event->type()->equals("compositionend")) {
+                setEditStatus(EditStatus::Commit);
+
+                consumeLastPreedit();
+
+                m_currentEditingText = data;
+                String* v = this->value()->insert(m_currentEditingText,
+                                                  m_currentCaretPosition);
+                setValue(v);
+                m_currentCaretPosition += m_currentEditingText->length();
+
+                setEditStatus(EditStatus::None);
             }
         }
         if (!value->equals(oldValue)) {
@@ -233,5 +271,35 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         return true;
     }
     return false;
+}
+
+void HTMLTextEditable::setEditStatus(EditStatus status)
+{
+    STARFISH_LOG_INFO("Set edit status[%d]", status);
+    m_editStatus = status;
+}
+
+void HTMLTextEditable::consumeLastPreedit()
+{
+    if (m_havePreedit) {
+        int count = m_preeditEndPos - m_preeditStartPos;
+        int start = m_currentCaretPosition - count;
+
+        String* v = value()->remove(start, count);
+        setValue(v);
+
+        m_currentCaretPosition -= count;
+    }
+    m_havePreedit = false;
+    m_preeditEndPos = 0;
+    m_preeditStartPos = 0;
+}
+
+void HTMLTextEditable::resetCurrentContext()
+{
+    setEditStatus(EditStatus::None);
+    m_preeditStartPos = 0;
+    m_preeditEndPos = 0;
+    m_havePreedit = false;
 }
 } // namespace Starfish
