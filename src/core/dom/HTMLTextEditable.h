@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+enum EditStatus { None, PreeditStart, PreeditEnd, Commit };
+
 class HTMLTextEditable : public HTMLFormControl {
     const int CARET_THICKNESS = 2;
 
@@ -85,6 +87,9 @@ public:
     bool readonly() const;
     String* placeholder();
 
+    void setEditStatus(EditStatus editStatus);
+    void resetCurrentContext();
+
 protected:
     HTMLTextEditable(Document* document, const QualifiedName& qname);
 
@@ -95,6 +100,8 @@ protected:
         HTMLFormControl::fillGCDescriptor(desc);
     }
 
+    void consumeLastPreedit();
+
     bool m_dirtyValueFlag;
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
@@ -102,6 +109,10 @@ protected:
     LayoutLocation m_currentCaretLayoutLocation;
     String* m_currentEditingText;
     int32_t m_maxlength;
+    EditStatus m_editStatus;
+    bool m_havePreedit;
+    int m_preeditEndPos;
+    int m_preeditStartPos;
 };
 } // namespace Starfish
 
