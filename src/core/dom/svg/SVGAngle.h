@@ -57,12 +57,21 @@ public:
                                 float valueInSpecifiedUnits);
     void convertToSpecifiedUnits(unsigned short unitType);
 
+    bool isUpdated();
+    void unsetIsUpdated();
+
+    void newValueSpecifiedUnitsWithoutUpdateAttribute(
+        unsigned short unitType, float valueInSpecifiedUnits);
+    void updateAttribute();
+
 protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
 
     unsigned short m_unitType;
     float m_valueInSpecifiedUnits;
+
+    bool m_isUpdated;
 };
 } // namespace Starfish
 

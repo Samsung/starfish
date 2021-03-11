@@ -26,6 +26,7 @@
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGAngle.h"
 #include "core/dom/svg/SVGAnimatedAngle.h"
+#include "core/dom/svg/SVGAnimatedEnumeration.h"
 
 namespace Starfish {
 
@@ -56,10 +57,19 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    SVGAnimatedEnumeration* markerUnits();
     SVGAnimatedAngle* orientAngle();
+    SVGAnimatedEnumeration* orientType();
+
+    void setOrientToAuto();
+    void setOrientToAngle(SVGAngle* angle);
 
 private:
+    SVGAnimatedEnumeration* m_markerUnits;
     SVGAnimatedAngle* m_orientAngle;
+    SVGAnimatedEnumeration* m_orientType;
+
+    bool m_attributeUpdated;
 };
 } // namespace Starfish
 

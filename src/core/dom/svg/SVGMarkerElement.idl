@@ -4,7 +4,7 @@ interface SVGMarkerElement : SVGElement {
     // Marker Unit Types
     const unsigned short SVG_MARKERUNITS_UNKNOWN = 0;
     const unsigned short SVG_MARKERUNITS_USERSPACEONUSE = 1;
-    const unsigned short SVG_MARKERUNITS_STROKENWIDTH = 2;
+    const unsigned short SVG_MARKERUNITS_STROKEWIDTH = 2;
 
     // Marker Orientation Types
     const unsigned short SVG_MARKER_ORIENT_UNKNOWN = 0;
@@ -13,15 +13,15 @@ interface SVGMarkerElement : SVGElement {
 
     [Unimplemented, SameObject] readonly attribute SVGAnimatedLength refX;
     [Unimplemented, SameObject] readonly attribute SVGAnimatedLength refY;
-    [Unimplemented, SameObject] readonly attribute SVGAnimatedEnumeration markerUnits;
+    [SameObject] readonly attribute SVGAnimatedEnumeration markerUnits;
     [Unimplemented, SameObject] readonly attribute SVGAnimatedLength markerWidth;
     [Unimplemented, SameObject] readonly attribute SVGAnimatedLength markerHeight;
-    [Unimplemented, SameObject] readonly attribute SVGAnimatedEnumeration orientType;
+    [SameObject] readonly attribute SVGAnimatedEnumeration orientType;
     [SameObject] readonly attribute SVGAnimatedAngle orientAngle;
     [Unimplemented] attribute DOMString orient;
 
-    [Unimplemented] void setOrientToAuto();
-    [Unimplemented] void setOrientToAngle(SVGAngle angle);
+    void setOrientToAuto();
+    void setOrientToAngle(SVGAngle angle);
 };
 
 // SVGMarkerElement implements SVGFitToViewBox;

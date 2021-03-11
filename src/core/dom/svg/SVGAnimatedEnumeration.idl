@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/SVG/types.html#InterfaceSVGAnimatedEnumeration
+
+[Exposed=Window]
+interface SVGAnimatedEnumeration {
+  [RaisesException] attribute unsigned short baseVal;
+  readonly attribute unsigned short animVal;
+};

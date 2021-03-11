@@ -1,6 +1,6 @@
 http://web-platform.test:8000/svg/types/scripted/SVGAnimatedAngle.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedBoolean.html
-#http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGClipPathElement.html
+http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGClipPathElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGComponentTransferFunctionElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGFEBlendElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGFEColorMatrixElement.html
@@ -11,12 +11,12 @@ http://web-platform.test:8000/svg/types/scripted/SVGAnimatedAngle.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGFETurbulenceElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGFilterElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGGradientElement.html
-#http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGMarkerElement.html
+http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGMarkerElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGMaskElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGPatternElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGTextContentElement.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration-SVGTextPathElement.html
-#http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration.html
+http://web-platform.test:8000/svg/types/scripted/SVGAnimatedEnumeration.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedInteger.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedLength.html
 #http://web-platform.test:8000/svg/types/scripted/SVGAnimatedLengthList.html
