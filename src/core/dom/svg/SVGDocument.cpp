@@ -48,6 +48,7 @@ Element* SVGDocument::createSVGElement(Document* document,
 {
     StaticStrings* str = document->starfish()->staticStrings();
     AtomicString localName = qname.localNameAtomic();
+
     if (str->m_svgsvgTagName == localName) {
         return new SVGSVGElement(document, qname);
     } else if (str->m_svgrectTagName == localName) {

@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/dom/Document.h"
 #include "SVGAngle.h"
 #include "SVGElement.h"
 #include "core/style/ComputedStyle.h"
@@ -37,6 +38,7 @@ SVGAngle::SVGAngle(SVGElement* sourceElement, QualifiedName targetAttribute)
     , m_targetAttribute(targetAttribute)
     , m_unitType(SVG_ANGLETYPE_UNSPECIFIED)
     , m_valueInSpecifiedUnits(0)
+    , m_isUpdated(false)
 {
 }
 
@@ -123,9 +125,7 @@ void SVGAngle::setValueInSpecifiedUnits(float v)
     }
 
     m_valueInSpecifiedUnits = v;
-    if (!m_targetAttribute.equalsLocalName(AtomicString::emptyAtomicString())) {
-        m_sourceElement->setAttribute(m_targetAttribute, String::fromFloat(v));
-    }
+    updateAttribute();
 }
 
 String* SVGAngle::valueAsString()
@@ -184,15 +184,9 @@ void SVGAngle::setValueAsString(String* valueAsString)
 void SVGAngle::newValueSpecifiedUnits(unsigned short unitType,
                                       float valueInSpecifiedUnits)
 {
-    if (std::isnan(valueInSpecifiedUnits) ||
-        std::isinf(valueInSpecifiedUnits)) {
-        throw new DOMException(m_sourceElement->executionContext(),
-                               DOMException::Code::SCRIPT_TYPE_ERR,
-                               "The provided float value is non-finite");
-    }
-
-    convertToSpecifiedUnits(unitType);
-    setValueInSpecifiedUnits(valueInSpecifiedUnits);
+    newValueSpecifiedUnitsWithoutUpdateAttribute(unitType,
+                                                 valueInSpecifiedUnits);
+    updateAttribute();
 }
 
 void SVGAngle::convertToSpecifiedUnits(unsigned short unitType)
@@ -204,5 +198,43 @@ void SVGAngle::convertToSpecifiedUnits(unsigned short unitType)
     }
 
     setUnitType(unitType);
+}
+
+bool SVGAngle::isUpdated()
+{
+    return m_isUpdated;
+}
+
+void SVGAngle::unsetIsUpdated()
+{
+    m_isUpdated = false;
+}
+
+void SVGAngle::newValueSpecifiedUnitsWithoutUpdateAttribute(
+    unsigned short unitType, float valueInSpecifiedUnits)
+{
+    if (std::isnan(valueInSpecifiedUnits) ||
+        std::isinf(valueInSpecifiedUnits)) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "The provided float value is non-finite");
+    }
+
+    if (unitType < SVG_ANGLETYPE_UNSPECIFIED || unitType > SVG_ANGLETYPE_GRAD) {
+        throw new DOMException(m_sourceElement->executionContext(),
+                               DOMException::Code::NOT_SUPPORTED_ERR,
+                               "NotSupportedError");
+    }
+
+    m_unitType = unitType;
+    m_valueInSpecifiedUnits = valueInSpecifiedUnits;
+}
+
+void SVGAngle::updateAttribute()
+{
+    if (!m_targetAttribute.equalsLocalName(AtomicString::emptyAtomicString())) {
+        m_isUpdated = true;
+        m_sourceElement->setAttribute(m_targetAttribute, valueAsString());
+    }
 }
 } // namespace Starfish

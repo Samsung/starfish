@@ -517,12 +517,16 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "onscroll"));
     m_clipPath =
         QualifiedName(AtomicString::createAtomicString(starfish, "clip-path"));
+    m_clipPathUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "clipPathUnits"));
     m_textAnchor = QualifiedName(
         AtomicString::createAtomicString(starfish, "text-anchor"));
     m_alignmentBaseline = QualifiedName(
         AtomicString::createAtomicString(starfish, "alignment-baseline"));
     m_orient =
         QualifiedName(AtomicString::createAtomicString(starfish, "orient"));
+    m_markerUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "markerUnits"));
     m_reset =
         QualifiedName(AtomicString::createAtomicString(starfish, "reset"));
     m_resize =

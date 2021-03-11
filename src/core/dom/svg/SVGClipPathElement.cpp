@@ -22,6 +22,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/ShadowRoot.h"
 #include "core/dom/svg/SVGClipPathElement.h"
+#include "binding/DocumentHoldable.h"
 
 namespace Starfish {
 
@@ -32,8 +33,10 @@ void* SVGClipPathElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGClipPathElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGClipPathElement, m_clipPathUnits));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGClipPathElement));
+
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -43,11 +46,20 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
                                        const QualifiedName& qname)
     : SVGElement(document, qname)
 {
+    m_clipPathUnits = new SVGAnimatedEnumeration(
+        this, QualifiedName(staticStrings()->m_clipPathUnits),
+        SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE,
+        SVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE);
 }
 
 void SVGClipPathElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
     SVGElement::styleForPresentationAttribute(cssValues);
+}
+
+SVGAnimatedEnumeration* SVGClipPathElement::clipPathUnits()
+{
+    return m_clipPathUnits;
 }
 } // namespace Starfish

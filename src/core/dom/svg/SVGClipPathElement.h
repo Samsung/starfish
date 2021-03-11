@@ -21,6 +21,7 @@
 #define __StarfishSVGClipPathElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "SVGAnimatedEnumeration.h"
 
 namespace Starfish {
 
@@ -48,6 +49,11 @@ public:
     {
         return true;
     }
+
+    SVGAnimatedEnumeration* clipPathUnits();
+
+private:
+    SVGAnimatedEnumeration* m_clipPathUnits;
 };
 } // namespace Starfish
 

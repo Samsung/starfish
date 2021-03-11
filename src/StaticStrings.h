@@ -469,6 +469,8 @@ public:
     QualifiedName m_textAnchor;
     QualifiedName m_alignmentBaseline;
     QualifiedName m_orient;
+    QualifiedName m_markerUnits;
+    QualifiedName m_clipPathUnits;
 
     // TTS SpeechSynthesisUtterance
     QualifiedName m_end;
