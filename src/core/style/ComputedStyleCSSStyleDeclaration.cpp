@@ -327,9 +327,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(style->fontFamily()[1].m_familyName);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* val =
-                new ValueList(ValueList::Separator::
-                                  CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
+            ValueList* val = new ValueList(
+                Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
             size_t len = style->fontFamily()[0].m_length;
             for (size_t i = 0; i < len; i++) {
                 val->emplace_back(
@@ -527,7 +526,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
         ValueList* bgImageValues;
-        bgImageValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgImageValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -560,14 +559,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgSizeValues;
 
-        bgSizeValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgSizeValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
             if (style->backgroundSizeIsLength(i)) {
                 item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* vals =
-                    new ValueList(ValueList::Separator::SpaceSeparator);
+                ValueList* vals = new ValueList(Separator::SpaceSeparator);
                 LengthSize lengthSize = style->backgroundSizeLengthValue(i);
 
                 CSSStyleValuePair w = lengthToCSSStyleValue(lengthSize.width());
@@ -605,8 +603,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         bgAttachment.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* bgAttachmentValues;
 
-        bgAttachmentValues =
-            new ValueList(ValueList::Separator::CommaSeparator);
+        bgAttachmentValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -632,7 +629,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgClipValues;
 
-        bgClipValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgClipValues = new ValueList(Separator::CommaSeparator);
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
 
@@ -657,7 +654,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgOriginValues;
 
-        bgOriginValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgOriginValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -681,7 +678,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgRepeatXValues;
 
-        bgRepeatXValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgRepeatXValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -707,7 +704,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgRepeatYValues;
 
-        bgRepeatYValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgRepeatYValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -732,7 +729,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgPositionXValues;
 
-        bgPositionXValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgPositionXValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -758,7 +755,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         ValueList* bgPositionYValues;
 
-        bgPositionYValues = new ValueList(ValueList::Separator::CommaSeparator);
+        bgPositionYValues = new ValueList(Separator::CommaSeparator);
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
@@ -787,7 +784,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
+        ValueList* vals = new ValueList(Separator::SpaceSeparator);
         BorderData border = style->border();
         BorderImageLengthBox box = border.image().slices();
 
@@ -836,8 +833,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (bImage.repeatX() == bImage.repeatY()) {
             p.setBorderImageRepeatValue(bImage.repeatX());
         } else {
-            ValueList* vals =
-                new ValueList(ValueList::Separator::SpaceSeparator);
+            ValueList* vals = new ValueList(Separator::SpaceSeparator);
             vals->emplace_back(
                 CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind,
                 bImage.repeatX());
@@ -855,7 +851,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
+        ValueList* vals = new ValueList(Separator::SpaceSeparator);
         BorderData border = style->border();
         BorderImageLengthBox box = border.image().widths();
 
@@ -895,7 +891,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageOutset);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(ValueList::Separator::SpaceSeparator);
+        ValueList* vals = new ValueList(Separator::SpaceSeparator);
         BorderData border = style->border();
         BorderImageLengthBox box = border.image().outsets();
 
@@ -966,8 +962,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
             CSSTransformFunctions* transforms = new CSSTransformFunctions();
 
-            ValueList* values =
-                new ValueList(ValueList::Separator::CommaSeparator);
+            ValueList* values = new ValueList(Separator::CommaSeparator);
 
             values->emplace_back(CSSStyleValuePair::ValueKind::Number,
                                  m.getScaleX());
@@ -1043,8 +1038,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals =
-                new ValueList(ValueList::Separator::SpaceSeparator);
+            ValueList* vals = new ValueList(Separator::SpaceSeparator);
             CSSStyleValuePair x =
                 lengthToCSSStyleValue(style->objectPositionX());
             vals->emplace_back(x.valueKind(), x.value());
@@ -1090,13 +1084,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            shadows.setValueList(
-                new ValueList(ValueList::Separator::CommaSeparator));
+            shadows.setValueList(new ValueList(Separator::CommaSeparator));
 
             for (auto& sd : *style->textShadow()) {
                 CSSStyleValuePair s;
-                s.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+                s.setValueList(new ValueList(Separator::SpaceSeparator));
                 {
                     CSSStyleValuePair color;
                     if (sd.hasColor()) {
@@ -1109,8 +1101,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 }
 
                 CSSStyleValuePair lengths;
-                lengths.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+                lengths.setValueList(new ValueList(Separator::SpaceSeparator));
 
                 CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
                 lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
@@ -1146,8 +1137,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValue(lengthToCSSStyleValue(h).value());
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* list =
-                new ValueList(ValueList::Separator::SpaceSeparator);
+            ValueList* list = new ValueList(Separator::SpaceSeparator);
             list->emplace_back(CSSStyleValuePair::ValueKind::Length,
                                lengthToCSSStyleValue(h).value());
             list->emplace_back(CSSStyleValuePair::ValueKind::Length,
@@ -1201,7 +1191,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TransitionProperty: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionProperty);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(
@@ -1219,12 +1209,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TransitionDuration: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDuration);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
         } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
+            ValueList* list = new ValueList(Separator::CommaSeparator);
             for (size_t i = 0; i < layerSize; i++) {
                 p.multiValue()->emplace_back(CSSStyleValuePair::Time,
                                              style->transitionDuration(i));
@@ -1235,12 +1225,12 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TransitionDelay: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionDelay);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
         } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
+            ValueList* list = new ValueList(Separator::CommaSeparator);
             for (size_t i = 0; i < layerSize; i++) {
                 p.multiValue()->emplace_back(CSSStyleValuePair::Time,
                                              style->transitionDelay(i));
@@ -1251,14 +1241,14 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TransitionTimingFunction: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransitionTimingFunction);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t layerSize = style->transitionLayerSize();
         if (!layerSize) {
             p.multiValue()->emplace_back(
                 CSSStyleValuePair::TimingFunctionPointerKind,
                 StyleTransitionData::defaultTimingFunction());
         } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
+            ValueList* list = new ValueList(Separator::CommaSeparator);
             for (size_t i = 0; i < layerSize; i++) {
                 p.multiValue()->emplace_back(
                     CSSStyleValuePair::TimingFunctionPointerKind,
@@ -1270,7 +1260,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationName: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationName);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->animationNameSize() : 0;
         if (size == 0) {
@@ -1289,7 +1279,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationDuration: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDuration);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->durationSize() : 0;
         if (size == 0) {
@@ -1305,7 +1295,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationTimingFunction: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationTimingFunction);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->timingFunctionSize() : 0;
         if (size == 0) {
@@ -1324,7 +1314,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationDelay: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDelay);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size = style->animation() ? style->animation()->delaySize() : 0;
         if (size == 0) {
             p.multiValue()->emplace_back(CSSStyleValuePair::Time, CSSTime(0));
@@ -1339,7 +1329,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationIterationCount: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationIterationCount);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->iterationCountSize() : 0;
         if (size == 0) {
@@ -1355,7 +1345,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationDirection: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationDirection);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->directionSize() : 0;
         if (size == 0) {
@@ -1374,7 +1364,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationPlayState: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationPlayState);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->playStateSize() : 0;
         if (size == 0) {
@@ -1393,7 +1383,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::AnimationFillMode: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::AnimationFillMode);
-        p.setValueList(new ValueList(ValueList::CommaSeparator));
+        p.setValueList(new ValueList(Separator::CommaSeparator));
         size_t size =
             style->animation() ? style->animation()->fillModeSize() : 0;
         if (size == 0) {
@@ -1416,13 +1406,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            shadows.setValueList(
-                new ValueList(ValueList::Separator::CommaSeparator));
+            shadows.setValueList(new ValueList(Separator::CommaSeparator));
 
             for (auto& sd : *style->boxShadow()) {
                 CSSStyleValuePair s;
-                s.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+                s.setValueList(new ValueList(Separator::SpaceSeparator));
                 {
                     CSSStyleValuePair color;
                     if (sd.hasColor()) {
@@ -1435,8 +1423,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 }
 
                 CSSStyleValuePair lengths;
-                lengths.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+                lengths.setValueList(new ValueList(Separator::SpaceSeparator));
 
                 CSSStyleValuePair l1 = lengthToCSSStyleValue(sd.offsetX());
                 lengths.multiValue()->emplace_back(l1.valueKind(), l1.value());
@@ -1630,7 +1617,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridColumn);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        p.setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+        p.setValueList(new ValueList(Separator::SlashSeparator));
         CSSStyleValuePair cs;
         cs.setKeyKind(CSSStyleValuePair::KeyKind::GridColumnStart);
         cs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
@@ -1656,7 +1643,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridRow);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        p.setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+        p.setValueList(new ValueList(Separator::SlashSeparator));
         CSSStyleValuePair rs;
         rs.setKeyKind(CSSStyleValuePair::KeyKind::GridRowStart);
         rs.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind);
@@ -1693,7 +1680,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridGap);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+        ValueList* values = new ValueList(Separator::SpaceSeparator);
         Length row = style->gridRowGap();
         Length column = style->gridColumnGap();
         CSSStyleValuePair ret1;
@@ -1743,7 +1730,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridArea);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        p.setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+        p.setValueList(new ValueList(Separator::SlashSeparator));
 
         // row start / column start / row end / column end
         CSSStyleValuePair rs;
@@ -1800,7 +1787,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::CounterReset);
         CounterBaseList* list = style->counterReset();
         if (list) {
-            ValueList* v = new ValueList(ValueList::SpaceSeparator);
+            ValueList* v = new ValueList(Separator::SpaceSeparator);
             size_t size = list->size();
             for (size_t i = 0; i < size; i++) {
                 v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
@@ -1818,7 +1805,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::CounterIncrement);
         CounterBaseList* list = style->counterIncrement();
         if (list) {
-            ValueList* v = new ValueList(ValueList::SpaceSeparator);
+            ValueList* v = new ValueList(Separator::SpaceSeparator);
             size_t size = list->size();
             for (size_t i = 0; i < size; i++) {
                 v->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
@@ -1866,7 +1853,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (!data) {
             p.setValueKind(CSSStyleValuePair::Auto);
         } else {
-            ValueList* list = new ValueList(ValueList::CommaSeparator);
+            ValueList* list = new ValueList(Separator::CommaSeparator);
             if (data->contents()) {
                 list->emplace_back(CSSStyleValuePair::KeywordValueKind,
                                    String::fromUTF8("contents"));
@@ -1891,7 +1878,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         if (style->textDecorationLine()) {
             p.setValue(style->textDecorationLine());
         } else {
-            p.setValue(new ValueList(ValueList::Separator::SpaceSeparator));
+            p.setValue(new ValueList(Separator::SpaceSeparator));
         }
         addValuePair(p);
     } break;
@@ -1922,7 +1909,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair p;                                                  \
         p.setKeyKind(CSSStyleValuePair::KeyKind::Border##Name1Name2##Radius); \
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);          \
-        ValueList* valueList = new ValueList(ValueList::SpaceSeparator);      \
+        ValueList* valueList = new ValueList(Separator::SpaceSeparator);      \
         if (style->hasBorderRadius()) {                                       \
             if (style->borderRadius().m_##name1Name2##Vertical ==             \
                 style->borderRadius().m_##name1Name2##Horizontal) {           \

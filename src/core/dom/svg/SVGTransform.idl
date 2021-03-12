@@ -1,0 +1,24 @@
+// https://www.w3.org/TR/SVG/coords.html#InterfaceSVGTransform
+[Exposed=Window]
+interface SVGTransform {
+
+  // Transform Types
+  const unsigned short SVG_TRANSFORM_UNKNOWN = 0;
+  const unsigned short SVG_TRANSFORM_MATRIX = 1;
+  const unsigned short SVG_TRANSFORM_TRANSLATE = 2;
+  const unsigned short SVG_TRANSFORM_SCALE = 3;
+  const unsigned short SVG_TRANSFORM_ROTATE = 4;
+  const unsigned short SVG_TRANSFORM_SKEWX = 5;
+  const unsigned short SVG_TRANSFORM_SKEWY = 6;
+
+  readonly attribute unsigned short type;
+  [SameObject] readonly attribute DOMMatrix matrix;
+  readonly attribute float angle;
+
+  [RaisesException] void setMatrix(DOMMatrixReadOnly matrix);
+  [RaisesException] void setTranslate(float tx, float ty);
+  [RaisesException] void setScale(float sx, float sy);
+  [RaisesException] void setRotate(float angle, float cx, float cy);
+  [RaisesException] void setSkewX(float angle);
+  [RaisesException] void setSkewY(float angle);
+};

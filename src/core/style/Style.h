@@ -545,6 +545,14 @@ enum BoxDecorationBreakValue ENSURE_ENUM_UNSIGNED {
     CloneBoxDecorationBreakValue,
 };
 
+enum class Separator {
+    None,
+    SpaceSeparator,
+    CommaSeparator,
+    CommaSeparatorAppendQuoteWhenMeetWhiteSpace,
+    SlashSeparator
+};
+
 class ValueList;
 class ValuePair;
 class FontFaceSrcData;
@@ -2406,6 +2414,12 @@ public:
         m_value.m_filterFunction = v;
     }
 
+    void setTransformFunctionsValue(CSSTransformFunctions* transforms)
+    {
+        m_valueKind = TransformFunctions;
+        m_value.m_transforms = transforms;
+    }
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
@@ -2484,7 +2498,8 @@ public:
     bool updateValueUnitWordSpacing(const CSSTokenValue& value);
     bool updateValueUnitCSSImage(const CSSTokenValue& value);
 
-    bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit);
+    bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit,
+                              Separator sep = Separator::CommaSeparator);
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);
@@ -2609,17 +2624,9 @@ private:
 
 class ValueList : public GCAtomicVector<CSSStyleValuePair> {
 public:
-    enum Separator {
-        None,
-        SpaceSeparator,
-        CommaSeparator,
-        CommaSeparatorAppendQuoteWhenMeetWhiteSpace,
-        SlashSeparator
-    };
-
     ValueList()
         : GCAtomicVector<CSSStyleValuePair>()
-        , m_separator(None)
+        , m_separator(Separator::None)
     {
     }
 
@@ -2709,7 +2716,8 @@ public:
         size_t len = size();
         for (size_t i = 0; i < len; i++) {
             String* src = at(i).toString();
-            if (m_separator == CommaSeparatorAppendQuoteWhenMeetWhiteSpace &&
+            if (m_separator ==
+                    Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace &&
                 src->containsWhitespace()) {
                 builder.appendChar('"');
                 builder.appendString(src);
@@ -2727,13 +2735,14 @@ public:
 protected:
     String* separatorString()
     {
-        if (m_separator == None) {
+        if (m_separator == Separator::None) {
             return String::emptyString;
-        } else if (m_separator == SpaceSeparator) {
+        } else if (m_separator == Separator::SpaceSeparator) {
             return String::spaceString;
-        } else if (m_separator == CommaSeparator) {
+        } else if (m_separator == Separator::CommaSeparator) {
             return String::createASCIIString(", ");
-        } else if (m_separator == CommaSeparatorAppendQuoteWhenMeetWhiteSpace) {
+        } else if (m_separator ==
+                   Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace) {
             return String::createASCIIString(", ");
         } else {
             return String::createASCIIString("/ ");

@@ -8759,7 +8759,7 @@ bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
     if (len < 1 || len > 2) {
         return false;
     }
-    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
 
     for (size_t i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& t = tokens[i];
@@ -9076,8 +9076,7 @@ bool CSSStyleValuePair::updateValueObjectPosition(Document* document,
 
     if (updateValueObjectPosition(tokens, xPair, yPair)) {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        m_value.m_multiValue =
-            new ValueList(ValueList::Separator::SpaceSeparator);
+        m_value.m_multiValue = new ValueList(Separator::SpaceSeparator);
         m_value.m_multiValue->push_back(xPair);
         m_value.m_multiValue->push_back(yPair);
         return true;
@@ -9717,7 +9716,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
                                                    bool allowComma)
 {
     bool shouldBeComma = false;
-    ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+    ValueList* values = new ValueList(Separator::CommaSeparator);
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         if (value.equals(",")) {
@@ -9877,7 +9876,7 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
-    ValueList* values = new ValueList(ValueList::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         CSSStyleValuePair ret;
@@ -9931,7 +9930,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
     if (len < 1 || len > 2) {
         return false;
     }
-    ValueList* values = new ValueList(ValueList::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
     for (size_t i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         CSSStyleValuePair pair;
@@ -10369,7 +10368,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageOutset(
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
 
     float result = 0.f;
     for (unsigned int i = 0; i < size; i++) {
@@ -10407,7 +10406,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
 
     float result = 0.f;
     for (unsigned int i = 0; i < size; i++) {
@@ -10522,7 +10521,7 @@ bool CSSStyleValuePair::updateValueBackgroundAttachment(
 {
     size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    setValueList(new ValueList(Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -10588,7 +10587,7 @@ bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
 {
     size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    setValueList(new ValueList(Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -10633,7 +10632,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
     // auto
     size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    setValueList(new ValueList(Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -10659,8 +10658,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                 ret.setBackgroundSizeValue(
                     BackgroundSizeValue::ContainBackgroundSizeValue);
             } else {
-                ret.setValueList(
-                    new ValueList(ValueList::Separator::SpaceSeparator));
+                ret.setValueList(new ValueList(Separator::SpaceSeparator));
                 CSSStyleValuePair r;
                 if (!r.updateValueUnitLengthOrCalc(tokens[i - 1], option)) {
                     return false;
@@ -10668,8 +10666,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                 ret.multiValue()->push_back(r);
             }
         } else if (len == 2) {
-            ret.setValueList(
-                new ValueList(ValueList::Separator::SpaceSeparator));
+            ret.setValueList(new ValueList(Separator::SpaceSeparator));
             CSSStyleValuePair r1, r2;
             if (!r1.updateValueUnitLengthOrCalc(tokens[i - 2], option) ||
                 !r2.updateValueUnitLengthOrCalc(tokens[i - 1], option)) {
@@ -10716,7 +10713,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageSlice(
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
 
     float result = 0.f;
     for (unsigned int i = 0; i < size; i++) {
@@ -11368,7 +11365,7 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
     }
 
     GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
-    ValueList* v1 = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* v1 = new ValueList(Separator::SpaceSeparator);
 
     if (!parseGridTemplateColumns(tokens, v)) {
         return false;
@@ -11600,7 +11597,7 @@ bool CSSStyleValuePair::updateValueGridArea(Document* document,
 
     bool result = true;
     setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    setValueList(new ValueList(Separator::SlashSeparator));
     CSSStyleValuePair rs;
     CSSStyleValuePair cs;
     CSSStyleValuePair re;
@@ -11768,7 +11765,7 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
         return false;
     }
 
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
 
     for (size_t i = 0; i < tokens.size(); i++) {
         auto ss = tokens[i];
@@ -11893,7 +11890,7 @@ bool CSSStyleValuePair::updateValueGridRow(Document* document,
 
     bool result = true;
     setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    setValueList(new ValueList(Separator::SlashSeparator));
     CSSStyleValuePair rs;
     CSSStyleValuePair re;
 
@@ -11967,7 +11964,7 @@ bool CSSStyleValuePair::updateValueGridColumn(Document* document,
 
     bool result = true;
     setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    setValueList(new ValueList(ValueList::Separator::SlashSeparator));
+    setValueList(new ValueList(Separator::SlashSeparator));
     CSSStyleValuePair cs;
     CSSStyleValuePair ce;
 
@@ -12271,7 +12268,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
 
     CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind,
                             SideValue::CenterSideValue);
@@ -12420,8 +12417,8 @@ bool CSSStyleValuePair::updateValueFontFamily(const CSSTokenVector& tokens)
         }
         return true;
     }
-    ValueList* val = new ValueList(
-        ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
+    ValueList* val =
+        new ValueList(Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
     bool seenComma = false;
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i] == ",") {
@@ -12596,7 +12593,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
 
-        setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+        setValueList(new ValueList(Separator::CommaSeparator));
         uint8_t option = CSSPropertyParser::AllowNegative |
                          CSSPropertyParser::AllowWithoutUnit;
 
@@ -12630,8 +12627,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
             bool didParseLength = false;
 
             CSSStyleValuePair shadow;
-            shadow.setValueList(
-                new ValueList(ValueList::Separator::SpaceSeparator));
+            shadow.setValueList(new ValueList(Separator::SpaceSeparator));
 
             size_t j = i;
             size_t currentShadowSize = 0;
@@ -12647,7 +12643,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
                     didParseLength = true;
                     CSSStyleValuePair lengths;
                     lengths.setValueList(
-                        new ValueList(ValueList::Separator::SpaceSeparator));
+                        new ValueList(Separator::SpaceSeparator));
 
                     CSSStyleValuePair length;
                     size_t len2 = 1;
@@ -12732,7 +12728,7 @@ bool CSSStyleValuePair::updateValueTextDecorationLine(
     }
 
     m_valueKind = CSSStyleValuePair::ValueListKind;
-    m_value.m_multiValue = new ValueList(ValueList::Separator::SpaceSeparator);
+    m_value.m_multiValue = new ValueList(Separator::SpaceSeparator);
     std::set<TextDecorationLineValue> set;
     for (size_t i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -13108,8 +13104,7 @@ bool CSSStyleValuePair::updateValueBorderSpacing(Document* document,
             if (CSSPropertyParser::parseLength(second.data(), 0, this)) {
                 secondData.m_length = m_value.m_length;
                 m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-                m_value.m_multiValue =
-                    new ValueList(ValueList::Separator::SpaceSeparator);
+                m_value.m_multiValue = new ValueList(Separator::SpaceSeparator);
                 m_value.m_multiValue->emplace_back(
                     CSSStyleValuePair::ValueKind::Length, firstData);
                 m_value.m_multiValue->emplace_back(
@@ -13425,8 +13420,9 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
     }
     return true;
 }
+
 bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
-                                             bool canIgnoreUnit)
+                                             bool canIgnoreUnit, Separator sep)
 {
     if (tokens.size() == 1 && tokens[0].equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
@@ -13580,6 +13576,8 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
             } else if (name == "rotate") {
                 fkind = CSSTransformFunction::Kind::Rotate;
                 units[0] = Angle;
+                units[1] = units[2] = Length;
+                maxArgCnt = 3;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "rotate");
                 if (transformValue.getValue().find(',') != std::string::npos) {
@@ -13649,8 +13647,7 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 return false;
             }
 
-            ValueList* values =
-                new ValueList(ValueList::Separator::CommaSeparator);
+            ValueList* values = new ValueList(sep);
             int idx = -1;
             uint8_t option = 0;
             if (canIgnoreUnit) {
@@ -14143,7 +14140,7 @@ static bool parseCounterPairList(Document* document,
     }
     size = tempIdent.size();
     size_t intSize = tempInt.size();
-    ValueList* list = new ValueList(ValueList::Separator::SpaceSeparator);
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
     for (size_t i = 0; i < size; i++) {
         list->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
                            AtomicString::createAtomicString(
@@ -14317,7 +14314,7 @@ bool CSSStyleValuePair::updateValueWillChange(Document* document,
         setValueKind(Auto);
         return true;
     }
-    auto list = new ValueList(ValueList::Separator::CommaSeparator);
+    auto list = new ValueList(Separator::CommaSeparator);
     for (size_t i = 0; i < size; i++) {
         if (i % 2 != 0) {
             if (!tokens[i].equals(",")) {
@@ -14693,7 +14690,7 @@ bool CSSStyleValuePair::updateValueFilter(Document* document,
         return true;
     }
 
-    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
     for (size_t i = 0; i < tokens.size(); i++) {
         CSSStyleValuePair item;
         if (item.updateValueUnitFilterFunction(tokens[i])) {

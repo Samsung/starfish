@@ -36,9 +36,9 @@ interface SVGSVGElement : SVGElement {
   SVGLength createSVGLength();
   SVGAngle createSVGAngle();
   [Unimplemented] SVGPoint createSVGPoint();
-  [Unimplemented] SVGMatrix createSVGMatrix();
+  [Unimplemented] DOMMatrix createSVGMatrix();
   [Unimplemented] SVGRect createSVGRect();
-  [Unimplemented] SVGTransform createSVGTransform();
-  [Unimplemented] SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
+  SVGTransform createSVGTransform();
+  [Unimplemented] SVGTransform createSVGTransformFromMatrix(DOMMatrixReadOnly matrix);
   [Unimplemented] Element getElementById(DOMString elementId);
 };
