@@ -2,6 +2,7 @@ P /.git
 P /.github
 P /.circleci
 
+- /src/public/bridge/android
 - /inspector
 - /build/windows
 - /build/android
