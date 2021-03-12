@@ -21,7 +21,7 @@ Summary:       Lightweight Web Engine for Tizen
 Version:       1.0.0
 Release:       1
 Group:         Development/Libraries
-License:       LGPL-2.1+ and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT and ISC and Zlib and BOEHM-GC and NCSA and ICU and Old-MIT
+License:       LGPL-2.1+ and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and MIT and ISC and Zlib and BOEHM-GC and ICU
 Source:        %{name}-%{version}.tar.gz
 #ExclusiveArch: %arm
 
@@ -701,7 +701,7 @@ exit 0
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/tv/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
 %if "%{rpm}" == "headless"
@@ -711,7 +711,7 @@ exit 0
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/headless/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
@@ -721,7 +721,7 @@ exit 0
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/mobile/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
@@ -731,7 +731,7 @@ exit 0
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/wearable/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -741,7 +741,7 @@ exit 0
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/flutter/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
-%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.NCSA LICENSE.ICU LICENSE.Old-MIT
+%license LICENSE.LGPL-2.1+ LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.MIT LICENSE.ISC LICENSE.Zlib LICENSE.BOEHM-GC LICENSE.ICU
 %endif
 
 %files devel
