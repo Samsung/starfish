@@ -127,7 +127,7 @@ test/cairo/reftest/vendor/blink_original/svg/dom/SVGGeometryElement-valid-argume
 #test/cairo/reftest/vendor/blink_original/svg/dom/svglist-immutable.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGMarkerElement-orientType-synchronization.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGMatrix.html
-#test/cairo/reftest/vendor/blink_original/svg/dom/SVGNumber.html
+test/cairo/reftest/vendor/blink_original/svg/dom/SVGNumber.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGPoint.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGStyleElement.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGSVGElement-no-op-methods.html
