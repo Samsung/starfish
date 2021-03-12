@@ -56,7 +56,7 @@ static bool parseDropShadowFilter(const CSSTokenValue& data,
         return false;
     }
     int lengthTypes = 0;
-    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
     for (size_t i = 0; i < total; i++) {
         CSSStyleValuePair item;
         if (!parseLengthOrColor(tokens[i], item)) {

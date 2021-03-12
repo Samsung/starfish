@@ -624,7 +624,7 @@ CSSGradientValue* RadialGradientData::convertToCSSGradientValue()
     //        if they are 3 to 4 in length.
     CSSStyleValuePair xlist;
     xlist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    xlist.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    xlist.setValueList(new ValueList(Separator::SpaceSeparator));
     if (m_horizentalSide != SideValue::NoneSideValue) {
         CSSStyleValuePair x;
         x.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
@@ -639,7 +639,7 @@ CSSGradientValue* RadialGradientData::convertToCSSGradientValue()
 
     CSSStyleValuePair ylist;
     ylist.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    ylist.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    ylist.setValueList(new ValueList(Separator::SpaceSeparator));
     if (m_verticalSide != SideValue::NoneSideValue) {
         CSSStyleValuePair y;
         y.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);

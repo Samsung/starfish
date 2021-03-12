@@ -259,8 +259,8 @@ static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
     // <repeat-style> = repeat-x | repeat-y | [repeat | no-repeat]{1,2}
     // <repeat-style> [, <repeat-style>]*
     size_t len = 0;
-    retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
-    rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    retx->setValueList(new ValueList(Separator::CommaSeparator));
+    rety->setValueList(new ValueList(Separator::CommaSeparator));
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         if (value.equals(",")) {
@@ -1019,7 +1019,7 @@ bool CSSStyleDeclaration::parseFontShorthand(
             fontFamilyCandidate[0].data(), fontFamilyCandidate[0].length()));
     } else {
         ValueList* val = new ValueList(
-            ValueList::Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
+            Separator::CommaSeparatorAppendQuoteWhenMeetWhiteSpace);
         for (size_t i = 0; i < fontFamilyCandidate.size(); i++) {
             auto str = fontFamilyCandidate[i];
             val->emplace_back(CSSStyleValuePair::ValueKind::KeywordValueKind,
@@ -2186,8 +2186,7 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
 #define APPEND_NEW_LAYER(PROP, NEWPROP)                                       \
     if (PROP.valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) {    \
         CSSStyleValuePair tmp = PROP;                                         \
-        PROP.setValueList(                                                    \
-            new ValueList(ValueList::Separator::CommaSeparator));             \
+        PROP.setValueList(new ValueList(Separator::CommaSeparator));          \
         PROP.multiValue()->push_back(tmp);                                    \
     }                                                                         \
     if (NEWPROP.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) { \
@@ -2276,8 +2275,8 @@ bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
     size_t len = 0;
     retx->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
     rety->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    retx->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
-    rety->setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+    retx->setValueList(new ValueList(Separator::SpaceSeparator));
+    rety->setValueList(new ValueList(Separator::SpaceSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -3360,7 +3359,7 @@ void CSSStyleDeclaration::setTransitionProperty(const char* value,
     if (!CSSPropertyParser::parseLayers(value, length, layers)) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3390,7 +3389,7 @@ void CSSStyleDeclaration::setTransitionDuration(const char* value,
     if (!CSSPropertyParser::parseLayers(value, length, layers)) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3421,7 +3420,7 @@ void CSSStyleDeclaration::setTransitionTimingFunction(const char* value,
     if (!CSSPropertyParser::parseLayers(value, length, layers)) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3451,7 +3450,7 @@ void CSSStyleDeclaration::setTransitionDelay(const char* value, size_t length,
     if (!CSSPropertyParser::parseLayers(value, length, layers)) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3541,10 +3540,10 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
         return;
     }
 
-    ValueList* properties = new ValueList(ValueList::CommaSeparator);
-    ValueList* durations = new ValueList(ValueList::CommaSeparator);
-    ValueList* timingFns = new ValueList(ValueList::CommaSeparator);
-    ValueList* delays = new ValueList(ValueList::CommaSeparator);
+    ValueList* properties = new ValueList(Separator::CommaSeparator);
+    ValueList* durations = new ValueList(Separator::CommaSeparator);
+    ValueList* timingFns = new ValueList(Separator::CommaSeparator);
+    ValueList* delays = new ValueList(Separator::CommaSeparator);
 
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
@@ -3652,7 +3651,7 @@ void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3684,7 +3683,7 @@ void CSSStyleDeclaration::setAnimationDuration(const char* value, size_t length,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3716,7 +3715,7 @@ void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3747,7 +3746,7 @@ void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3779,7 +3778,7 @@ void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3810,7 +3809,7 @@ void CSSStyleDeclaration::setAnimationDirection(const char* value,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3841,7 +3840,7 @@ void CSSStyleDeclaration::setAnimationPlayState(const char* value,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3872,7 +3871,7 @@ void CSSStyleDeclaration::setAnimationFillMode(const char* value, size_t length,
     if (CSSPropertyParser::parseLayers(value, length, layers) == false) {
         return;
     }
-    ValueList* list = new ValueList(ValueList::CommaSeparator);
+    ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
         CSSStyleValuePair sub;
@@ -3911,14 +3910,14 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
         return;
     }
 
-    ValueList* names = new ValueList(ValueList::CommaSeparator);
-    ValueList* durations = new ValueList(ValueList::CommaSeparator);
-    ValueList* timingFns = new ValueList(ValueList::CommaSeparator);
-    ValueList* delays = new ValueList(ValueList::CommaSeparator);
-    ValueList* iterations = new ValueList(ValueList::CommaSeparator);
-    ValueList* directions = new ValueList(ValueList::CommaSeparator);
-    ValueList* playStates = new ValueList(ValueList::CommaSeparator);
-    ValueList* fillModes = new ValueList(ValueList::CommaSeparator);
+    ValueList* names = new ValueList(Separator::CommaSeparator);
+    ValueList* durations = new ValueList(Separator::CommaSeparator);
+    ValueList* timingFns = new ValueList(Separator::CommaSeparator);
+    ValueList* delays = new ValueList(Separator::CommaSeparator);
+    ValueList* iterations = new ValueList(Separator::CommaSeparator);
+    ValueList* directions = new ValueList(Separator::CommaSeparator);
+    ValueList* playStates = new ValueList(Separator::CommaSeparator);
+    ValueList* fillModes = new ValueList(Separator::CommaSeparator);
 
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {

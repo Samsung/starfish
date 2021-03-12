@@ -136,4 +136,9 @@ SVGAngle* SVGSVGElement::createSVGAngle()
 {
     return new SVGAngle(this, AtomicString::emptyAtomicString());
 }
+
+SVGTransform* SVGSVGElement::createSVGTransform()
+{
+    return new SVGTransform(this, AtomicString::emptyAtomicString());
+}
 } // namespace Starfish

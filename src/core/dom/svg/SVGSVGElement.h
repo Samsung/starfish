@@ -21,6 +21,7 @@
 #define __StarfishSVGSVGElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGTransform.h"
 
 #define STARFISH_DEFAULT_SVG_WIDTH 300
 #define STARFISH_DEFAULT_SVG_HEIGHT 150
@@ -86,6 +87,7 @@ public:
 
     SVGLength* createSVGLength();
     SVGAngle* createSVGAngle();
+    SVGTransform* createSVGTransform();
 
 protected:
     bool m_hasViewBox;

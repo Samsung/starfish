@@ -169,8 +169,7 @@ void HTMLBodyElement::styleForPresentationAttribute(
             pair.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
             pair.setUrlValue(value);
 
-            ValueList* values =
-                new ValueList(ValueList::Separator::CommaSeparator);
+            ValueList* values = new ValueList(Separator::CommaSeparator);
             values->push_back(pair);
             containerPair.setKeyKind(
                 CSSStyleValuePair::KeyKind::BackgroundImage);

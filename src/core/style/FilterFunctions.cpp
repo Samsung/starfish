@@ -234,7 +234,7 @@ void FilterFunctions::toCSSStyleValue(CSSStyleValuePair& result) const
         result.setValueKind(CSSStyleValuePair::ValueKind::None);
         return;
     }
-    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+    ValueList* list = new ValueList(Separator::SpaceSeparator);
     for (size_t i = 0; i < length; i++) {
         list->emplace_back(
             CSSStyleValuePair::ValueKind::FilterFunctionValueKind,
