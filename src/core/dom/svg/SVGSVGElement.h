@@ -85,6 +85,7 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
+    SVGNumber* createSVGNumber();
     SVGLength* createSVGLength();
     SVGAngle* createSVGAngle();
     SVGTransform* createSVGTransform();

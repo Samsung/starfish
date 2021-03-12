@@ -127,6 +127,11 @@ SVGSVGElement::preserveAspectRatioValue()
     return m_preserveAspectRatioValue;
 }
 
+SVGNumber* SVGSVGElement::createSVGNumber()
+{
+    return new SVGNumber(this, AtomicString::emptyAtomicString());
+}
+
 SVGLength* SVGSVGElement::createSVGLength()
 {
     return new SVGLength(this, AtomicString::emptyAtomicString());
