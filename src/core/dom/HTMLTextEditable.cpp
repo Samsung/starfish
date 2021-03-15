@@ -268,6 +268,10 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         if (!value->equals(oldValue)) {
             setValue(value);
         }
+        STARFISH_LOG_INFO("Result [text:%s][cursor:%d]",
+                          this->value()->toUTF8NonGCString().data(),
+                          (int)m_currentCaretPosition);
+
         return true;
     }
     return false;
