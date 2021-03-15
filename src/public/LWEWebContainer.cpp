@@ -1537,7 +1537,7 @@ void* WebContainer::GetUserData(const std::string& key)
 
 std::string WebContainer::GetTitle()
 {
-    Starfish::String* ret;
+    Starfish::String* ret = Starfish::String::emptyString;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)->mainBrowsingContext()->document()->title();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER

@@ -27,6 +27,8 @@ namespace Starfish {
 
 SVGTextElement::SVGTextElement(Document* document, const QualifiedName& qname)
     : SVGElement(document, qname)
+    , m_x(nullptr)
+    , m_y(nullptr)
 {
 }
 
