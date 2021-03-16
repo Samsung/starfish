@@ -1364,21 +1364,12 @@ CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
 
 void CSSStyleDeclaration::rootPointerValueIfExists(const CSSStyleValuePair& v)
 {
-    auto p = v.pointerValue();
-    if (p) {
-        m_pointerRooter.push_back(p);
-    }
+    v.rootPointerValue(m_pointerRooter);
 }
 
 void CSSStyleDeclaration::removeRootPointerValue(const CSSStyleValuePair& v)
 {
-    auto p = v.pointerValue();
-    if (p) {
-        m_pointerRooter.erase(
-            std::remove_if(m_pointerRooter.begin(), m_pointerRooter.end(),
-                           [p](void* ptr) { return ptr == p; }),
-            m_pointerRooter.end());
-    }
+    v.unrootPointerValue(m_pointerRooter);
 }
 
 void CSSStyleDeclaration::addValuePair(CSSStyleValuePair p)
@@ -1571,15 +1562,16 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
             if (isInlineStyle() || ret.flagImportant() == true ||
                 (ret.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
-                removeRootPointerValue(m_cssValues[i]);
-                m_cssValues[i].setValueKind(ret.valueKind());
-                m_cssValues[i].setValue(ret.value());
-                m_cssValues[i].setFlagImportant(ret.flagImportant());
-                m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
-                rootPointerValueIfExists(ret);
-                notifyNeedsStyleRecalc();
+                if (!m_cssValues[i].valueEquals(ret)) {
+                    removeRootPointerValue(m_cssValues[i]);
+                    m_cssValues[i].setValueKind(ret.valueKind());
+                    m_cssValues[i].setValue(ret.value());
+                    m_cssValues[i].setFlagImportant(ret.flagImportant());
+                    m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
+                    rootPointerValueIfExists(ret);
+                    notifyNeedsStyleRecalc();
+                }
             }
-
             return;
         }
     }

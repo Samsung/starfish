@@ -142,6 +142,11 @@ const char* CSSFilterFunction::typeToString(FilterFunctionType type)
     return "";
 }
 
+bool CSSFilterFunction::equals(CSSFilterFunction* src)
+{
+    return m_type == src->m_type && m_data == src->m_data;
+}
+
 String* CSSFilterFunction::toString() const
 {
     if (m_type == FilterFunctionType::SVGUrlFilterFunctionType) {

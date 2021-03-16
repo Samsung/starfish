@@ -51,6 +51,29 @@ public:
         return m_data;
     }
 
+    bool equals(FontFaceSrcData* src)
+    {
+        if (m_data.size() != src->m_data.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < m_data.size(); i++) {
+            if (!std::get<0>(m_data[i])->equals(std::get<0>(src->m_data[i]))) {
+                return false;
+            }
+
+            if (std::get<1>(m_data[i]) != std::get<1>(src->m_data[i])) {
+                return false;
+            }
+
+            if (std::get<2>(m_data[i]) != std::get<2>(src->m_data[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     String* toString()
     {
         StringBuilder builder;

@@ -64,6 +64,17 @@ public:
         return builder.finalize();
     }
 
+    bool operator==(const Steps& b) const
+    {
+        if (m_isEndDirection != b.m_isEndDirection) {
+            return false;
+        }
+        if (m_numberOfSteps != b.m_numberOfSteps) {
+            return false;
+        }
+        return true;
+    }
+
 private:
     bool m_isEndDirection;
     size_t m_numberOfSteps;

@@ -62,6 +62,36 @@ public:
     float getValueX(float x);
     float curveDerivativeX(float t);
 
+    bool operator==(const CubicBezier& b) const
+    {
+        if (m_coffX1 != b.m_coffX1) {
+            return false;
+        }
+        if (m_coffX2 != b.m_coffX2) {
+            return false;
+        }
+        if (m_coffX3 != b.m_coffX3) {
+            return false;
+        }
+        if (m_coffY1 != b.m_coffY1) {
+            return false;
+        }
+        if (m_coffY2 != b.m_coffY2) {
+            return false;
+        }
+        if (m_coffY3 != b.m_coffY3) {
+            return false;
+        }
+
+        if (m_startGradient != b.m_startGradient) {
+            return false;
+        }
+        if (m_endGradient != b.m_endGradient) {
+            return false;
+        }
+        return true;
+    }
+
 private:
     float m_coffX1;
     float m_coffX2;

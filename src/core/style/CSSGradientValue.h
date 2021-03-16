@@ -90,6 +90,27 @@ public:
 
     virtual String* toString() = 0;
     virtual GradientData* convertToGradientData() = 0;
+    virtual bool equals(CSSGradientValue* src)
+    {
+        if (m_gradientType != src->m_gradientType) {
+            return false;
+        }
+
+        if (m_cssColorStopList.size() != src->m_cssColorStopList.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < m_cssColorStopList.size(); i++) {
+            if (m_cssColorStopList[i]->color() !=
+                    src->m_cssColorStopList[i]->color() ||
+                m_cssColorStopList[i]->offset() !=
+                    src->m_cssColorStopList[i]->offset()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     GCVector<CSSColorStop*>& cssColorStopList()
     {
@@ -146,6 +167,17 @@ public:
 
     virtual String* toString() override;
     virtual GradientData* convertToGradientData() override;
+
+    virtual bool equals(CSSGradientValue* src) override
+    {
+        if (equals(src)) {
+            CSSLinearGradientValue* s = (CSSLinearGradientValue*)src;
+            return m_angle == s->m_angle && m_leftOrRight == s->m_leftOrRight &&
+                   m_topOrBottom == s->m_topOrBottom;
+        } else {
+            return false;
+        }
+    }
 
 private:
     CSSAngle m_angle;
@@ -224,6 +256,13 @@ public:
         m_keyword = keyword;
     }
 
+    bool operator==(const CSSRadialGradientSize& src)
+    {
+        return m_firstRadius == src.m_firstRadius &&
+               m_secondRadius == src.m_secondRadius &&
+               m_keyword == src.m_keyword;
+    }
+
 private:
     CSSStyleValuePair m_firstRadius;
     CSSStyleValuePair m_secondRadius;
@@ -297,6 +336,17 @@ public:
 
     virtual String* toString() override;
     virtual GradientData* convertToGradientData() override;
+    virtual bool equals(CSSGradientValue* src) override
+    {
+        if (equals(src)) {
+            CSSRadialGradientValue* s = (CSSRadialGradientValue*)src;
+            return m_shape == s->m_shape && m_size == s->m_size &&
+                   m_positionX == s->m_positionX &&
+                   m_positionY == s->m_positionY;
+        } else {
+            return false;
+        }
+    }
 
 private:
     RadialGradientShape m_shape;
