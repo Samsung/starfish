@@ -339,6 +339,10 @@ public:
             return std::min(result, 1.0f);
         }
 
+        if (!m_startTimeMs) {
+            return 0;
+        }
+
         if (tickCount < (m_startTimeMs + m_delayMs)) {
             return 0;
         }
@@ -356,6 +360,10 @@ public:
 
         if (!m_isRunning) {
             return m_durationMs - m_gapTimeMs;
+        }
+
+        if (!m_startTimeMs) {
+            return m_durationMs;
         }
 
         if (tickCount < (m_startTimeMs + m_delayMs)) {
@@ -429,13 +437,13 @@ public:
 
     void setStartTime(uint64_t t)
     {
-        if (m_startTimeMs != 0) {
-            m_startTimeMs = t;
-        }
+        STARFISH_ASSERT(m_startTimeMs);
+        m_startTimeMs = t;
     }
 
     uint64_t startTime()
     {
+        STARFISH_ASSERT(m_startTimeMs);
         return m_startTimeMs;
     }
 

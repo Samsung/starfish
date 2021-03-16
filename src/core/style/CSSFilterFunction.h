@@ -56,6 +56,8 @@ public:
         return m_data;
     }
 
+    bool equals(CSSFilterFunction* src);
+
     static const char* typeToString(FilterFunctionType type);
     String* toString() const;
 

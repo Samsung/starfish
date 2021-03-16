@@ -856,6 +856,12 @@ public:
         return m_values;
     }
 
+    bool operator==(const CSSTransformFunction& src);
+    bool operator!=(const CSSTransformFunction& src)
+    {
+        return !operator==(src);
+    }
+
     String* functionName()
     {
         switch (m_kind) {
@@ -908,6 +914,21 @@ class CSSTransformFunctions : public GCVector<CSSTransformFunction> {
 public:
     void toTransformDataGroup(ComputedStyle* style);
     String* toString();
+
+    bool equals(CSSTransformFunctions* src)
+    {
+        if (size() != src->size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < size(); i++) {
+            if (at(i) != src->at(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 };
 
 class CSSStyleValuePair : public gc {
@@ -917,7 +938,7 @@ class CSSStyleValuePair : public gc {
 public:
     enum KeyKind ENSURE_ENUM_UNSIGNED {
         Unknown,
-#define ADD_CSS_KEYKIND(Name, name, cssname) Name,
+#define ADD_CSS_KEYKIND(Name, ...) Name,
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
             VarValue,
@@ -1721,6 +1742,13 @@ public:
         return m_value.m_filterFunction;
     }
 
+    bool valueEquals(const CSSStyleValuePair& src);
+    bool operator==(const CSSStyleValuePair& src);
+    bool operator!=(const CSSStyleValuePair& src)
+    {
+        return !operator==(src);
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -2151,44 +2179,8 @@ public:
     {
     }
 
-    void* pointerValue() const
-    {
-        switch (m_valueKind) {
-        case UrlValueKind:
-        case PathFunctionValueKind:
-        case StringValueKind:
-        case KeywordValueKind:
-        case Attr:
-        case VarFunctionValueKind:
-            return m_value.m_stringValue;
-        case ValueListKind:
-            return m_value.m_multiValue;
-        case TransformFunctions:
-            return m_value.m_transforms;
-        case CalcValueKind:
-            return m_value.m_calc;
-        case FontFaceSrcDataValueKind:
-            return m_value.m_fontFaceSrcData;
-        case ValuePairKind:
-            return m_value.m_pairValue;
-        case RectValueKind:
-            return m_value.m_rect;
-        case GridTemplateUnits:
-            return m_value.m_gridTemplateUnits;
-        case CounterFunctionValueKind:
-            return m_value.m_counterFunctionValue;
-        case TextOverflowValueKind:
-            return m_value.m_textOverflowData;
-        case GradientValueKind:
-            return m_value.m_gradientValue;
-        case TimingFunctionPointerKind:
-            return m_value.m_timingFunction;
-        case FilterFunctionValueKind:
-            return m_value.m_filterFunction;
-        default:
-            return nullptr;
-        }
-    }
+    void rootPointerValue(GCVector<void*>& rooter) const;
+    void unrootPointerValue(GCVector<void*>& rooter) const;
 
     void setValue(const ValueData& value)
     {
@@ -2564,10 +2556,7 @@ public:
 protected:
     void rootPointer(const CSSStyleValuePair& v)
     {
-        auto p = v.pointerValue();
-        if (p) {
-            m_pointerRooter.push_back(p);
-        }
+        v.rootPointerValue(m_pointerRooter);
     }
     GCAtomicVector<CSSStyleValuePair> m_data;
     GCVector<void*> m_pointerRooter;
@@ -2583,17 +2572,7 @@ public:
 
     void* operator new(size_t size)
     {
-        STARFISH_ASSERT(size == sizeof(ValuePair));
-        static bool typeInited = false;
-        static GC_descr descr;
-        if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(ValuePair)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ValuePair, m_first));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ValuePair, m_second));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ValuePair));
-            typeInited = true;
-        }
-        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+        return GC_MALLOC_ATOMIC(size);
     }
     void* operator new[](size_t size) = delete;
 
@@ -2605,6 +2584,11 @@ public:
     const CSSStyleValuePair& second()
     {
         return m_second;
+    }
+
+    bool equals(ValuePair* src)
+    {
+        return m_first == src->m_first && m_second == src->m_second;
     }
 
     String* toString()
@@ -2710,6 +2694,21 @@ public:
         return true;
     }
 
+    bool equals(ValueList* list)
+    {
+        if (size() != list->size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < size(); i++) {
+            if (at(i) != list->at(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     String* toString()
     {
         StringBuilder builder;
@@ -2751,10 +2750,7 @@ protected:
 
     void rootPointer(CSSStyleValuePair v)
     {
-        auto p = v.pointerValue();
-        if (p) {
-            m_pointerRooter.push_back(p);
-        }
+        v.rootPointerValue(m_pointerRooter);
     }
 
     Separator m_separator;

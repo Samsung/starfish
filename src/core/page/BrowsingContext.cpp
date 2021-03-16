@@ -484,13 +484,6 @@ void BrowsingContext::resolveStyleIfNeeds()
             uint64_t currentTick = tickCount();
             bool canceled = false;
             for (size_t i = 0; i < l.size(); i++) {
-                if (webView()->inRendering() != true) {
-                    // when in rendering, start time is updated by
-                    // WebView::rendering()
-                    // because other steps(painting, layout) can take too
-                    // long(ex. longer than duration)
-                    l[i]->initializeStartTimeIfNeeded(currentTick);
-                }
                 if ((l[i]->targetElement()->isInDocumentScope() == false) ||
                     (l[i]->targetElement()->style() == nullptr) ||
                     l[i]->targetElement()->style()->display() ==
@@ -521,13 +514,6 @@ void BrowsingContext::resolveStyleIfNeeds()
                 bool canceled = false;
                 for (auto task = animation.second.begin();
                      task != animation.second.end();) {
-                    if (webView()->inRendering() != true) {
-                        // when in rendering, start time is updated by
-                        // WebView::rendering()
-                        // because other steps(painting, layout) can take too
-                        // long(ex. longer than duration)
-                        (*task)->initializeStartTimeIfNeeded(currentTick);
-                    }
                     if (((*task)->targetElement()->isInDocumentScope() ==
                          false) ||
                         ((*task)->targetElement()->style() == nullptr) ||

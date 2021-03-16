@@ -275,6 +275,11 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
     }
 }
 
+bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
+{
+    return m_kind == src.m_kind && m_values->equals(src.m_values);
+}
+
 void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
@@ -932,6 +937,389 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
         break;
     case PseudoTotalCount:
         break;
+    }
+}
+
+bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src)
+{
+    if (m_valueKind != src.m_valueKind) {
+        return false;
+    }
+
+    switch (m_valueKind) {
+    case Initial:
+    case Inherit:
+    case Unset:
+    case Auto:
+    case None:
+    case Normal:
+        return true;
+
+    case Length:
+        return m_value.m_length == src.m_value.m_length;
+    case Percentage:
+    case Number:
+        return m_value.m_floatValue == src.m_value.m_floatValue;
+
+    case Int32:
+        return m_value.m_int32Value == src.m_value.m_int32Value;
+
+    case Angle:
+        return m_value.m_angle == src.m_value.m_angle;
+
+    case Time:
+        return m_value.m_time == src.m_value.m_time;
+
+    case StringValueKind:
+    case KeywordValueKind:
+    case UrlValueKind:
+    case PathFunctionValueKind:
+    case Attr:
+    case VarFunctionValueKind:
+        return m_value.m_stringValue->equals(src.m_value.m_stringValue);
+
+    case AtomicStringValueKind:
+        return m_value.m_atomicStringValue == src.m_value.m_atomicStringValue;
+
+    case ColorValueKind:
+        return m_value.m_color == src.m_value.m_color;
+
+    case NamedColorValueKind:
+        return m_value.m_namedColor == src.m_value.m_namedColor;
+
+    case CSSPropertyNameValueKind:
+        return m_value.m_cssPropertyNameValue ==
+               src.m_value.m_cssPropertyNameValue;
+
+    case FilterFunctionValueKind:
+        return m_value.m_filterFunction->equals(src.m_value.m_filterFunction);
+
+    case CalcValueKind:
+        return m_value.m_calc->equals(src.m_value.m_calc);
+
+    case FontFaceSrcDataValueKind:
+        return m_value.m_fontFaceSrcData->equals(src.m_value.m_fontFaceSrcData);
+
+    case DisplayValueKind:
+        return m_value.m_display == src.m_value.m_display;
+
+    case PositionValueKind:
+        return m_value.m_position == src.m_value.m_position;
+
+    case FloatValueKind:
+        return m_value.m_float == src.m_value.m_float;
+
+    case ClearValueKind:
+        return m_value.m_clear == src.m_value.m_clear;
+
+    case VerticalAlignValueKind:
+        return m_value.m_verticalAlign == src.m_value.m_verticalAlign;
+
+    case TextAlignValueKind:
+        return m_value.m_textAlign == src.m_value.m_textAlign;
+
+    case SideValueKind:
+        return m_value.m_side == src.m_value.m_side;
+
+    case DirectionValueKind:
+        return m_value.m_direction == src.m_value.m_direction;
+
+    case WhiteSpaceValueKind:
+        return m_value.m_whiteSpace == src.m_value.m_whiteSpace;
+
+    case ValueListKind:
+        return m_value.m_multiValue->equals(src.m_value.m_multiValue);
+
+    case ValuePairKind:
+        return m_value.m_pairValue->equals(src.m_value.m_pairValue);
+
+    case BackgroundSizeValueKind:
+        return m_value.m_backgroundSize == src.m_value.m_backgroundSize;
+
+    case BackgroundRepeatValueKind:
+        return m_value.m_backgroundRepeat == src.m_value.m_backgroundRepeat;
+
+    case BackgroundAttachmentValueKind:
+        return m_value.m_backgroundAttachment ==
+               src.m_value.m_backgroundAttachment;
+
+    case BoxValueKind:
+        return m_value.m_box == src.m_value.m_box;
+
+    case MaskSizeValueKind:
+        return m_value.m_maskSize == src.m_value.m_maskSize;
+
+    case FontSizeValueKind:
+        return m_value.m_fontSize == src.m_value.m_fontSize;
+
+    case FontStyleValueKind:
+        return m_value.m_fontStyle == src.m_value.m_fontStyle;
+
+    case FontWeightValueKind:
+        return m_value.m_fontWeight == src.m_value.m_fontWeight;
+
+    case WordWrapValueKind:
+        return m_value.m_wordWrap == src.m_value.m_wordWrap;
+
+    case BorderStyleValueKind:
+        return m_value.m_borderStyle == src.m_value.m_borderStyle;
+
+    case BorderWidthValueKind:
+        return m_value.m_borderWidth == src.m_value.m_borderWidth;
+
+    case BorderImageRepeatValueKind:
+        return m_value.m_borderImageRepeat == src.m_value.m_borderImageRepeat;
+
+    case BorderCollapseValueKind:
+        return m_value.m_borderCollapse == src.m_value.m_borderCollapse;
+
+    case CaptionSideValueKind:
+        return m_value.m_captionSide == src.m_value.m_captionSide;
+
+    case TableLayoutValueKind:
+        return m_value.m_tableLayout == src.m_value.m_tableLayout;
+
+    case EmptyCellsValueKind:
+        return m_value.m_emptyCells == src.m_value.m_emptyCells;
+
+    case OverflowValueKind:
+        return m_value.m_overflow == src.m_value.m_overflow;
+
+    case TextDecorationLineValueKind:
+        return m_value.m_textDecorationLine == src.m_value.m_textDecorationLine;
+
+    case TextDecorationStyleValueKind:
+        return m_value.m_textDecorationStyle ==
+               src.m_value.m_textDecorationStyle;
+
+    case TextUnderlinePositionValueKind:
+        return m_value.m_textUnderlinePosition ==
+               src.m_value.m_textUnderlinePosition;
+
+    case ResizeValueKind:
+        return m_value.m_resize == src.m_value.m_resize;
+
+    case VisibilityValueKind:
+        return m_value.m_visibility == src.m_value.m_visibility;
+
+    case UnicodeBidiValueKind:
+        return m_value.m_unicodeBidi == src.m_value.m_unicodeBidi;
+
+    case BoxSizingValueKind:
+        return m_value.m_boxSizing == src.m_value.m_boxSizing;
+
+    case BoxDecorationBreakValueKind:
+        return m_value.m_boxDecorationBreakValue ==
+               src.m_value.m_boxDecorationBreakValue;
+
+    case FlexDirectionValueKind:
+        return m_value.m_flexDirection == src.m_value.m_flexDirection;
+
+    case FlexWrapValueKind:
+        return m_value.m_flexWrap == src.m_value.m_flexWrap;
+
+    case JustifyContentValueKind:
+        return m_value.m_justifyContent == src.m_value.m_justifyContent;
+
+    case AlignItemValueKind:
+        return m_value.m_alignItem == src.m_value.m_alignItem;
+
+    case AlignContentValueKind:
+        return m_value.m_alignContent == src.m_value.m_alignContent;
+
+    case FlexBasisValueKind:
+        return m_value.m_flexBasis == src.m_value.m_flexBasis;
+
+    case TransformFunctions:
+        return m_value.m_transforms->equals(src.m_value.m_transforms);
+
+    case TimingFunctionValueKind:
+        return m_value.m_timingFunctionValue ==
+               src.m_value.m_timingFunctionValue;
+
+    case TimingFunctionPointerKind:
+        return *m_value.m_timingFunction == *src.m_value.m_timingFunction;
+
+    case AnimationDirectionValueKind:
+        return m_value.m_animationDirectionValue ==
+               src.m_value.m_animationDirectionValue;
+
+    case AnimationPlayStateValueKind:
+        return m_value.m_animationPlayStateValue ==
+               src.m_value.m_animationPlayStateValue;
+
+    case AnimationFillModeValueKind:
+        return m_value.m_animationFillModeValue ==
+               src.m_value.m_animationFillModeValue;
+
+    case QuoteValueKind:
+        return m_value.m_quote == src.m_value.m_quote;
+
+    case FillRuleValueKind:
+        return m_value.m_fillRule == src.m_value.m_fillRule;
+
+    case TextTransformValueKind:
+        return m_value.m_textTransform == src.m_value.m_textTransform;
+
+    case ObjectFitValueKind:
+        return m_value.m_objectFit == src.m_value.m_objectFit;
+
+    case ListStylePositionValueKind:
+        return m_value.m_listStylePosition == src.m_value.m_listStylePosition;
+
+    case CounterFunctionValueKind:
+        return m_value.m_counterFunctionValue ==
+               src.m_value.m_counterFunctionValue;
+
+    case RectValueKind:
+        return *m_value.m_rect == *src.m_value.m_rect;
+
+    case UserSelectValueKind:
+        return m_value.m_userSelect == src.m_value.m_userSelect;
+
+    case GridTemplateUnits:
+        return *m_value.m_gridTemplateUnits == *src.m_value.m_gridTemplateUnits;
+
+    case ImageRenderingValueKind:
+        return m_value.m_imageRendering == src.m_value.m_imageRendering;
+
+    case TextOverflowValueKind:
+        return *m_value.m_textOverflowData == *src.m_value.m_textOverflowData;
+
+    case HyphensValueKind:
+        return m_value.m_hyphens == src.m_value.m_hyphens;
+
+    case LineBreakValueKind:
+        return m_value.m_lineBreak == src.m_value.m_lineBreak;
+
+    case WordBreakValueKind:
+        return m_value.m_wordBreak == src.m_value.m_wordBreak;
+
+    case AppearanceValueKind:
+        return m_value.m_appearance == src.m_value.m_appearance;
+
+    case GradientValueKind:
+        return m_value.m_gradientValue->equals(src.m_value.m_gradientValue);
+
+    case WidthHeightKeywordValueKind:
+        return m_value.m_widthHeightKeywordValue ==
+               src.m_value.m_widthHeightKeywordValue;
+
+    case PointerEventsValueKind:
+        return m_value.m_pointerEventsValue == src.m_value.m_pointerEventsValue;
+
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+        break;
+    }
+
+    return true;
+}
+
+bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src)
+{
+    if (m_flagImportant != src.m_flagImportant) {
+        return false;
+    }
+    if (m_keyKind != src.m_keyKind) {
+        return false;
+    }
+    if (m_temporaryKeyKind != src.m_temporaryKeyKind) {
+        return false;
+    }
+
+    return valueEquals(src);
+}
+
+#define ROOT_POINTER_SIMPLE()                 \
+    case StringValueKind:                     \
+    case KeywordValueKind:                    \
+    case UrlValueKind:                        \
+    case PathFunctionValueKind:               \
+    case Attr:                                \
+    case VarFunctionValueKind:                \
+        ptr = m_value.m_stringValue;          \
+        break;                                \
+    case TransformFunctions:                  \
+        ptr = m_value.m_transforms;           \
+        break;                                \
+    case CalcValueKind:                       \
+        ptr = m_value.m_calc;                 \
+        break;                                \
+    case FontFaceSrcDataValueKind:            \
+        ptr = m_value.m_fontFaceSrcData;      \
+        break;                                \
+    case RectValueKind:                       \
+        ptr = m_value.m_rect;                 \
+        break;                                \
+    case GridTemplateUnits:                   \
+        ptr = m_value.m_gridTemplateUnits;    \
+        break;                                \
+    case CounterFunctionValueKind:            \
+        ptr = m_value.m_counterFunctionValue; \
+        break;                                \
+    case TextOverflowValueKind:               \
+        ptr = m_value.m_textOverflowData;     \
+        break;                                \
+    case GradientValueKind:                   \
+        ptr = m_value.m_gradientValue;        \
+        break;                                \
+    case TimingFunctionPointerKind:           \
+        ptr = m_value.m_timingFunction;       \
+        break;                                \
+    case FilterFunctionValueKind:             \
+        ptr = m_value.m_filterFunction;       \
+        break;
+
+void CSSStyleValuePair::rootPointerValue(GCVector<void*>& rooter) const
+{
+    void* ptr = nullptr;
+    switch (m_valueKind) {
+        ROOT_POINTER_SIMPLE()
+    case ValuePairKind:
+        ptr = m_value.m_pairValue;
+        m_value.m_pairValue->first().rootPointerValue(rooter);
+        m_value.m_pairValue->second().rootPointerValue(rooter);
+        break;
+    case ValueListKind:
+        ptr = m_value.m_multiValue;
+        for (size_t i = 0; i < m_value.m_multiValue->size(); i++) {
+            m_value.m_multiValue->at(i).rootPointerValue(rooter);
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (ptr) {
+        rooter.push_back(ptr);
+    }
+}
+
+void CSSStyleValuePair::unrootPointerValue(GCVector<void*>& rooter) const
+{
+    void* ptr = nullptr;
+    switch (m_valueKind) {
+        ROOT_POINTER_SIMPLE()
+    case ValuePairKind:
+        ptr = m_value.m_pairValue;
+        m_value.m_pairValue->first().unrootPointerValue(rooter);
+        m_value.m_pairValue->second().unrootPointerValue(rooter);
+        break;
+    case ValueListKind:
+        ptr = m_value.m_multiValue;
+        for (size_t i = 0; i < m_value.m_multiValue->size(); i++) {
+            m_value.m_multiValue->at(i).unrootPointerValue(rooter);
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (ptr) {
+        rooter.erase(std::remove_if(rooter.begin(), rooter.end(),
+                                    [ptr](void* p) { return ptr == p; }),
+                     rooter.end());
     }
 }
 
