@@ -22,6 +22,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "LWEWebView.h"
+#include <EscargotPublic.h>
 
 #define THREAD_MINIMUM_STACK_SIZE \
     4 * 1024 * 1024 // we need at least 4MB for stack
@@ -66,6 +67,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     }
 
     Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
+        Escargot::Globals::initialize();
         g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
             httpCacheDataDirectorypath);
@@ -92,6 +94,8 @@ void LWE::Finalize()
         Starfish::Starfish::doFullGCWithoutSeeingStack();
         Starfish::Starfish::doFullGCWithoutSeeingStack();
 
+        // Escargot::Globals::finalize should be invoked after full gc
+        Escargot::Globals::finalize();
         return 0;
     });
 }
@@ -102,6 +106,8 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
+
+    Escargot::Globals::initialize();
     g_starfishInstance = new (NoGC)
         Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
                            httpCacheDataDirectorypath);
@@ -122,6 +128,9 @@ void LWE::Finalize()
     Starfish::Starfish::doFullGCWithoutSeeingStack();
     Starfish::Starfish::doFullGCWithoutSeeingStack();
     Starfish::Starfish::doFullGCWithoutSeeingStack();
+
+    // Escargot::Globals::finalize should be invoked after full gc
+    Escargot::Globals::finalize();
 }
 #endif
 

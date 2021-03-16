@@ -158,6 +158,7 @@ BuildRequires: pkgconfig(capi-system-device)
 %endif
 
 %if "%{rpm}" == "prod_tv"
+BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
 %endif

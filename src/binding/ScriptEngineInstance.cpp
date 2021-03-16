@@ -26,6 +26,9 @@
 
 #include "core/modules/message_loop/MessageLoop.h"
 
+#ifdef STARFISH_TIZEN_TV
+#include <app_common.h>
+#endif
 #include <EscargotPublic.h>
 
 namespace Starfish {
@@ -130,8 +133,14 @@ ScriptEngineInstance::ScriptEngineInstance(const char* locale,
         WebView* m_webView;
     };
 
+#ifdef STARFISH_TIZEN_TV
+    // add argument for CodeCache directory
+    m_engineInstance = Escargot::VMInstanceRef::create(
+        new EscargotStarfishPlatform(wv), locale, timezone, app_get_data_path());
+#else
     m_engineInstance = Escargot::VMInstanceRef::create(
         new EscargotStarfishPlatform(wv), locale, timezone);
+#endif
 }
 
 void ScriptEngineInstance::dispose()
