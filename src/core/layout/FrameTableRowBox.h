@@ -88,6 +88,6 @@ private:
 
     LayoutUnit m_baseline;
 };
-}
+} // namespace Starfish
 
 #endif

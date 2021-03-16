@@ -65,6 +65,6 @@ protected:
 private:
     FrameText* firstFrameTextChild();
 };
-}
+} // namespace Starfish
 
 #endif

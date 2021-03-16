@@ -163,4 +163,4 @@ IntrinsicSize FrameReplacedImage::intrinsicSize()
     }
     return result;
 }
-}
+} // namespace Starfish

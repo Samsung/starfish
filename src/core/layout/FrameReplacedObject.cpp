@@ -64,4 +64,4 @@ void FrameReplacedObject::computeStyleFlags()
             node()->asHTMLObjectElement()->content()->needsGraphicsBuffer();
     }
 }
-}
+} // namespace Starfish

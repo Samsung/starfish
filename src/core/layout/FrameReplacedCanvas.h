@@ -82,6 +82,6 @@ protected:
 private:
     CanvasSurface* m_emptySurface;
 };
-}
+} // namespace Starfish
 #endif
 #endif

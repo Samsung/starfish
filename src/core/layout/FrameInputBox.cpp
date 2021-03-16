@@ -347,4 +347,4 @@ void FrameInputBox::paintContent(PaintingContext& ctx)
         paintCaret(ctx.m_canvas);
     }
 }
-}
+} // namespace Starfish

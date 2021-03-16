@@ -1068,8 +1068,8 @@ void StackingContext::computeStackingContextProperties(
     }
 
     if (Compositor::supportsFilterEffect(1, 1) ==
-            true /* test whatever compostior supports filter */ &&
-        m_hasFilterEffect) {
+            true /* test whatever compostior supports filter */
+        && m_hasFilterEffect) {
         compositedBySelf = true;
     }
 
@@ -1833,18 +1833,16 @@ void StackingContext::fillGraphicsBufferContents(
         auto clipRect = iframeBox->makeRect(BoxValue::PaddingBoxBoxValue);
         HTMLIFrameElement* iframe =
             m_owner->node()->document()->browsingContext()->sourceElement();
-        clipRect.setX(clipRect.x() +
-                      m_owner->node()
-                          ->document()
-                          ->browsingContext()
-                          ->window()
-                          ->scrollX());
-        clipRect.setY(clipRect.y() +
-                      m_owner->node()
-                          ->document()
-                          ->browsingContext()
-                          ->window()
-                          ->scrollY());
+        clipRect.setX(clipRect.x() + m_owner->node()
+                                         ->document()
+                                         ->browsingContext()
+                                         ->window()
+                                         ->scrollX());
+        clipRect.setY(clipRect.y() + m_owner->node()
+                                         ->document()
+                                         ->browsingContext()
+                                         ->window()
+                                         ->scrollY());
 
         if (!needsGraphicsBuffer()) {
             canvas->translate(iframeBox->borderLeft() +
@@ -1890,10 +1888,9 @@ void StackingContext::fillGraphicsBufferContents(
     }
 
     if (!canRejectPainting) {
-        if (m_hasFilterEffect &&
-            !Compositor::supportsFilterEffect(
-                canvas->renderTargetInfo().m_width,
-                canvas->renderTargetInfo().m_height)) {
+        if (m_hasFilterEffect && !Compositor::supportsFilterEffect(
+                                     canvas->renderTargetInfo().m_width,
+                                     canvas->renderTargetInfo().m_height)) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
@@ -1955,12 +1952,13 @@ uint32_t StackingContext::additionalPixelRatio()
 
 static LayoutRect computeScreenRect(StackingContext* ctx)
 {
-    LayoutRect screenRect(0, 0, ctx->owner()
-                                    ->node()
-                                    ->webView()
-                                    ->mainBrowsingContext()
-                                    ->window()
-                                    ->innerWidth(),
+    LayoutRect screenRect(0, 0,
+                          ctx->owner()
+                              ->node()
+                              ->webView()
+                              ->mainBrowsingContext()
+                              ->window()
+                              ->innerWidth(),
                           ctx->owner()
                               ->node()
                               ->webView()
@@ -2273,10 +2271,9 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                         ->didFirstRenderingAfterWakeup() &&
                                     !isVisible && isEarlyPainting) {
                                     auto tick = longTickCount();
-                                    if (tick -
-                                            m_owner->node()
-                                                ->webView()
-                                                ->lastRenderingTick() >
+                                    if (tick - m_owner->node()
+                                                   ->webView()
+                                                   ->lastRenderingTick() >
                                         (uint64_t)WebView::
                                                 g_fillingGraphicsBufferTileFrameTimeLimitInMS *
                                             1000) {
@@ -2718,18 +2715,16 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         auto clipRect = iframeBox->makeRect(BoxValue::PaddingBoxBoxValue);
         HTMLIFrameElement* iframe =
             m_owner->node()->document()->browsingContext()->sourceElement();
-        clipRect.setX(clipRect.x() +
-                      m_owner->node()
-                          ->document()
-                          ->browsingContext()
-                          ->window()
-                          ->scrollX());
-        clipRect.setY(clipRect.y() +
-                      m_owner->node()
-                          ->document()
-                          ->browsingContext()
-                          ->window()
-                          ->scrollY());
+        clipRect.setX(clipRect.x() + m_owner->node()
+                                         ->document()
+                                         ->browsingContext()
+                                         ->window()
+                                         ->scrollX());
+        clipRect.setY(clipRect.y() + m_owner->node()
+                                         ->document()
+                                         ->browsingContext()
+                                         ->window()
+                                         ->scrollY());
         canvas->clip(clipRect);
         canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
                           iframeBox->borderTop() + iframeBox->paddingTop());
@@ -3327,4 +3322,4 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
 
     return nullptr;
 }
-}
+} // namespace Starfish

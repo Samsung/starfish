@@ -164,6 +164,6 @@ protected:
 
     FrameTreeItemModel m_treeItemModel;
 };
-}
+} // namespace Starfish
 
 #endif

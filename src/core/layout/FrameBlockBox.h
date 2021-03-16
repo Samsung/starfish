@@ -1456,6 +1456,6 @@ public:
     LanguageDirection m_currentLanguageDirection;
     std::unordered_map<Frame*, LanguageDirection> m_languageDirections;
 };
-}
+} // namespace Starfish
 
 #endif

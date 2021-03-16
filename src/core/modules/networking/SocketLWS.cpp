@@ -117,10 +117,20 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
                     lws_write(wsi, ((unsigned char*)data->data()) + LWS_PRE,
                               data->size(), LWS_WRITE_BINARY);
                 }
-                socket->m_txBufferSize =
-                    (socket->m_txBufferSize - data->size());
+                size_t siz = data->size();
                 iter = buffer->erase(iter);
                 delete data;
+
+                WebBase* webBase =
+                    socket->parent()->executionContext()->webBase();
+                webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    nullptr,
+                    [](size_t handle, void* data, void* data1) {
+                        SocketLWS* socket = (SocketLWS*)data;
+                        size_t siz = (size_t)data1;
+                        socket->m_txBufferSize -= siz;
+                    },
+                    socket, (void*)siz);
             }
             if (!buffer->empty()) {
                 lws_callback_on_writable(wsi);
@@ -348,13 +358,7 @@ int SocketLWS::send(const void* buf, size_t len, int flags)
     }
 
     if (m_lwsClient) {
-        parent()->executionContext()->webBase()->messageLoop()->addIdler(
-            parent()->executionContext()->document()->window(),
-            [](size_t, void* data) {
-                lws* lwsClient = (lws*)data;
-                lws_callback_on_writable(lwsClient);
-            },
-            m_lwsClient);
+        lws_callback_on_writable(m_lwsClient);
     }
     return 0;
 }

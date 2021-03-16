@@ -68,4 +68,4 @@ void FrameTableCaptionBox::fillGCDescriptor(GC_word* obj_bitmap)
 {
     FrameTableObjectBox::fillGCDescriptor(obj_bitmap);
 }
-}
+} // namespace Starfish

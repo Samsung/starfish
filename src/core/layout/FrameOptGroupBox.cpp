@@ -44,4 +44,4 @@ FrameOptGroupBox::FrameOptGroupBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
 }
-}
+} // namespace Starfish

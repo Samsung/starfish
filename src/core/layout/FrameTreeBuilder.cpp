@@ -1530,4 +1530,4 @@ String* FrameTreeBuilder::dumpFrameTreeAsText(Document* document,
 }
 
 #endif
-}
+} // namespace Starfish

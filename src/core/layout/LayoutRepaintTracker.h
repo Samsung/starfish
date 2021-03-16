@@ -99,6 +99,6 @@ protected:
     std::vector<std::tuple<LayoutRect, FrameBox*>>
         m_boundMaxExtentDueToOverflow;
 };
-}
+} // namespace Starfish
 
 #endif

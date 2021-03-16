@@ -76,6 +76,7 @@ class TouchData;
 class PlatformKeyEventData;
 class EventTarget;
 class Scrolling;
+class NativeImageData;
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
@@ -462,6 +463,11 @@ public:
         void (*callback)(const std::string& url, NULLABLE void* data),
         NULLABLE void* data);
 
+    void putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
+                                    NativeImageData* image);
+    Nullable<NativeImageData*> isThereImageInBoxShadowCache(FrameBox* box,
+                                                            size_t idx);
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -549,6 +555,18 @@ private:
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;
     FontFamilyData* m_initialFontFamilyDatas;
+
+    // when painting tile, each box can be painted multiple times
+    template <class T1, class T2>
+    struct pair_hash {
+        size_t operator()(const std::pair<T1, T2>& pair) const
+        {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+    GCUnorderedMap<std::pair<FrameBox*, size_t>, NativeImageData*,
+                   pair_hash<FrameBox*, size_t>>
+        m_boxShadowCachePerRendering;
 
     GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedSet<Scrolling*> m_activeScrollingSet;

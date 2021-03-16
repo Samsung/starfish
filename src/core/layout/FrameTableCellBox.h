@@ -119,6 +119,6 @@ private:
     size_t m_updatedColspan;
     size_t m_updatedRowspan;
 };
-}
+} // namespace Starfish
 
 #endif

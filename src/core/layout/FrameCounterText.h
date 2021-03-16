@@ -100,6 +100,6 @@ protected:
 protected:
     CounterType m_type;
 };
-}
+} // namespace Starfish
 
 #endif

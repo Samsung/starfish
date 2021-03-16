@@ -131,4 +131,4 @@ Frame* FrameDocument::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     }
     return this;
 }
-}
+} // namespace Starfish

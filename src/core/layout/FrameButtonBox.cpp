@@ -67,4 +67,4 @@ void FrameButtonBox::doAdditionalLayout(LayoutContext& ctx)
         layoutLineBoxesVerticallyCenter();
     }
 }
-}
+} // namespace Starfish

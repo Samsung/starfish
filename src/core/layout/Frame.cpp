@@ -2122,4 +2122,4 @@ BorderRadiusData Frame::frameBorderRadius()
     }
     return data;
 }
-}
+} // namespace Starfish

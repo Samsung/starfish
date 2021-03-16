@@ -46,6 +46,6 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap);
 };
-}
+} // namespace Starfish
 
 #endif
