@@ -254,28 +254,33 @@ void SVGLength::setValueAsString(String* valueAsString)
                        CSSPropertyParser::AllowPercent |
                            CSSPropertyParser::AllowWithoutUnit,
                        &pair)) {
-            if (pair.cssLengthValue().kind() == CSSLength::PX) {
-                setUnitType(SVG_LENGTHTYPE_PX);
-            } else if (pair.cssLengthValue().kind() == CSSLength::CM) {
-                setUnitType(SVG_LENGTHTYPE_CM);
-            } else if (pair.cssLengthValue().kind() == CSSLength::MM) {
-                setUnitType(SVG_LENGTHTYPE_MM);
-            } else if (pair.cssLengthValue().kind() == CSSLength::INCH) {
-                setUnitType(SVG_LENGTHTYPE_IN);
-            } else if (pair.cssLengthValue().kind() == CSSLength::PT) {
-                setUnitType(SVG_LENGTHTYPE_PC);
-            } else if (pair.cssLengthValue().kind() == CSSLength::EM) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            } else if (pair.cssLengthValue().kind() == CSSLength::EX) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            } else if (pair.cssLengthValue().kind() == CSSLength::PERCENT) {
+            // unimplemented EMS, EXS
+            if (pair.valueKind() == CSSStyleValuePair::Length) {
+                if (pair.cssLengthValue().kind() == CSSLength::PX) {
+                    setUnitType(SVG_LENGTHTYPE_PX);
+                } else if (pair.cssLengthValue().kind() == CSSLength::CM) {
+                    setUnitType(SVG_LENGTHTYPE_CM);
+                } else if (pair.cssLengthValue().kind() == CSSLength::MM) {
+                    setUnitType(SVG_LENGTHTYPE_MM);
+                } else if (pair.cssLengthValue().kind() == CSSLength::INCH) {
+                    setUnitType(SVG_LENGTHTYPE_IN);
+                } else if (pair.cssLengthValue().kind() == CSSLength::PC) {
+                    setUnitType(SVG_LENGTHTYPE_PC);
+                } else if (pair.cssLengthValue().kind() == CSSLength::PT) {
+                    setUnitType(SVG_LENGTHTYPE_PT);
+                } else {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    setUnitType(SVG_LENGTHTYPE_PX);
+                }
+                setValueInSpecifiedUnits(pair.cssLengthValue().value());
+            } else if (pair.valueKind() == CSSStyleValuePair::Percentage) {
                 setUnitType(SVG_LENGTHTYPE_PERCENTAGE);
+                setValueInSpecifiedUnits(pair.percentageValue() * 100);
             } else {
                 throw new DOMException(m_sourceElement->executionContext(),
                                        DOMException::Code::NOT_SUPPORTED_ERR,
                                        "Not Supported error");
             }
-            setValueInSpecifiedUnits(pair.cssLengthValue().value());
         } else {
             throw new DOMException(m_sourceElement->executionContext(),
                                    DOMException::Code::SYNTAX_ERR,
