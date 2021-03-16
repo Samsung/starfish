@@ -288,6 +288,6 @@ protected:
     StackingContextRareData* m_rareData;
     LayoutRect m_screenExtent;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -89,7 +89,8 @@ uint64_t AnimationExecutor::transformOpacityAnimationRemainTime()
             Data* d = (Data*)data;
             if (task->property() == CSSStyleValuePair::KeyKind::Opacity ||
                 task->property() == CSSStyleValuePair::KeyKind::Transform) {
-                *d->result = std::max(*d->result, task->remainTime(*d->tick));
+                *d->result = std::max(*d->result, task->remainTime(*d->tick) +
+                                                      17); // add 1/60s
             }
         },
         &d);

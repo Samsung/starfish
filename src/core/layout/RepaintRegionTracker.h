@@ -75,6 +75,6 @@ protected:
 
     void trackRepaintRegion(FrameBox* frame, SkMatrix currentMatrix);
 };
-}
+} // namespace Starfish
 
 #endif

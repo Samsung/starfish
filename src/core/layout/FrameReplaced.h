@@ -186,6 +186,6 @@ protected:
     FrameTreeItemModel m_treeItemModel;
     void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
 };
-}
+} // namespace Starfish
 
 #endif

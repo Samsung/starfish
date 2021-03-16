@@ -1734,4 +1734,4 @@ FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)
 
     return nullptr;
 }
-}
+} // namespace Starfish

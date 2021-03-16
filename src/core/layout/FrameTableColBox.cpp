@@ -86,4 +86,4 @@ void FrameTableColBox::paintContent(PaintingContext& ctx)
 {
     // FrameTableCol should only exist logically and ignore paint.
 }
-}
+} // namespace Starfish

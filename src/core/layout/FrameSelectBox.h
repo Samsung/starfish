@@ -58,6 +58,6 @@ protected:
 private:
     int m_drawOptionsCount;
 };
-}
+} // namespace Starfish
 
 #endif

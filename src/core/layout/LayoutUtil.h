@@ -1411,6 +1411,6 @@ inline LayoutSize& operator-=(LayoutSize& a, const LayoutSize& b)
     a.setHeight(a.height() - b.height());
     return a;
 }
-}
+} // namespace Starfish
 
 #endif

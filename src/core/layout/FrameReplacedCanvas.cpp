@@ -86,5 +86,5 @@ void FrameReplacedCanvas::createGraphicsBuffer(CanvasSurface** surfaceHolder,
         *surfaceHolder = m_emptySurface;
     }
 }
-}
+} // namespace Starfish
 #endif

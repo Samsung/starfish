@@ -69,6 +69,6 @@ private:
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paintContent(PaintingContext& ctx) override;
 };
-}
+} // namespace Starfish
 
 #endif

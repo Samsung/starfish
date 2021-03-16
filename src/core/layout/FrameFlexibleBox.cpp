@@ -1455,65 +1455,74 @@ void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
         } else if (child->isFrameBox()) {
             if (shouldApplyLineClamp(child->asFrameBox())) {
                 auto lc = lineClamp();
-                child->asFrameBox()->iterateChildFrameBoxOnCondition([&](
-                    FrameBox* box) {
-                    if (box->isFrameBlockBox() &&
-                        !box->asFrameBlockBox()
-                             ->style()
-                             ->isAbsolutePositioned() &&
-                        box->asFrameBlockBox()->style()->direction() !=
-                            DirectionValue::RtlDirectionValue) {
-                        auto& lineBoxes = box->asFrameBlockBox()->lineBoxes();
+                child->asFrameBox()->iterateChildFrameBoxOnCondition(
+                    [&](FrameBox* box) {
+                        if (box->isFrameBlockBox() &&
+                            !box->asFrameBlockBox()
+                                 ->style()
+                                 ->isAbsolutePositioned() &&
+                            box->asFrameBlockBox()->style()->direction() !=
+                                DirectionValue::RtlDirectionValue) {
+                            auto& lineBoxes =
+                                box->asFrameBlockBox()->lineBoxes();
 
-                        if (!lineBoxes.size()) {
-                            return lc ? true : false;
-                        }
+                            if (!lineBoxes.size()) {
+                                return lc ? true : false;
+                            }
 
-                        for (size_t i = 0; i < lineBoxes.size() - 1 && lc;
-                             i++) {
-                            lc--;
-                            if (lc == 0) {
-                                auto lineBoxContentWidth =
-                                    lineBoxes[i]->contentWidth();
-                                auto& boxes = lineBoxes[i]->boxes();
-                                for (size_t j = boxes.size() - 1; j != SIZE_MAX;
-                                     j--) {
-                                    if (boxes[j]->isInlineTextBox()) {
-                                        auto overflowString =
-                                            ctx.starfish()
-                                                ->staticStrings()
-                                                ->m_overflowString;
-                                        auto fnt = boxes[j]->style()->font();
-                                        auto inlineTextBoxWidth =
-                                            boxes[j]->width();
+                            for (size_t i = 0; i < lineBoxes.size() - 1 && lc;
+                                 i++) {
+                                lc--;
+                                if (lc == 0) {
+                                    auto lineBoxContentWidth =
+                                        lineBoxes[i]->contentWidth();
+                                    auto& boxes = lineBoxes[i]->boxes();
+                                    for (size_t j = boxes.size() - 1;
+                                         j != SIZE_MAX; j--) {
+                                        if (boxes[j]->isInlineTextBox()) {
+                                            auto overflowString =
+                                                ctx.starfish()
+                                                    ->staticStrings()
+                                                    ->m_overflowString;
+                                            auto fnt =
+                                                boxes[j]->style()->font();
+                                            auto inlineTextBoxWidth =
+                                                boxes[j]->width();
 
-                                        StringView text =
-                                            boxes[j]->asInlineTextBox()->text();
+                                            StringView text =
+                                                boxes[j]
+                                                    ->asInlineTextBox()
+                                                    ->text();
 
-                                        auto overflowStringWidth =
-                                            fnt->measureText(overflowString);
-                                        auto textWidth = fnt->measureText(text);
-                                        auto oldTextWidth = textWidth;
-                                        auto sum =
-                                            textWidth + overflowStringWidth;
-
-                                        while (sum > lineBoxContentWidth) {
-                                            text.setEnd(text.end() - 1);
-                                            textWidth = fnt->measureText(text);
-                                            sum =
+                                            auto overflowStringWidth =
+                                                fnt->measureText(
+                                                    overflowString);
+                                            auto textWidth =
+                                                fnt->measureText(text);
+                                            auto oldTextWidth = textWidth;
+                                            auto sum =
                                                 textWidth + overflowStringWidth;
+
+                                            while (sum > lineBoxContentWidth) {
+                                                text.setEnd(text.end() - 1);
+                                                textWidth =
+                                                    fnt->measureText(text);
+                                                sum = textWidth +
+                                                      overflowStringWidth;
+                                            }
+                                            boxes[j]
+                                                ->asInlineTextBox()
+                                                ->setText(
+                                                    text.substring()->concat(
+                                                        overflowString));
                                         }
-                                        boxes[j]->asInlineTextBox()->setText(
-                                            text.substring()->concat(
-                                                overflowString));
                                     }
                                 }
                             }
+                            return lc ? true : false;
                         }
-                        return lc ? true : false;
-                    }
-                    return false;
-                });
+                        return false;
+                    });
             }
         }
         child = child->next();

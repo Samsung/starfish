@@ -200,6 +200,6 @@ private:
                                             CountingContext& countingCtx,
                                             QuoteContext& quoteCtx);
 };
-}
+} // namespace Starfish
 
 #endif

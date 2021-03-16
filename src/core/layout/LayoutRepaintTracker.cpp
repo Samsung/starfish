@@ -388,4 +388,4 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
 
     return gotPaintingDirty;
 }
-}
+} // namespace Starfish

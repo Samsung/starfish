@@ -180,6 +180,6 @@ private:
     GCVector<RowStruct*> m_grid; // cells in a 2D table for easier traversal
     GCVector<ColSizeStruct*> m_columnWidths;
 };
-}
+} // namespace Starfish
 
 #endif

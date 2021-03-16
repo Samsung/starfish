@@ -586,8 +586,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             if (left.isAuto() && right.isAuto()) {
                 if (width.isAuto()) {
                     if (parentDirection == LtrDirectionValue) {
-                        computeContentWidth(ctx, cb, data.m_contentWidth -
-                                                         data.m_absX - x());
+                        computeContentWidth(
+                            ctx, cb, data.m_contentWidth - data.m_absX - x());
                     } else {
                         computeContentWidth(ctx, cb, x() + data.m_absX);
                     }
@@ -643,9 +643,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 }
             } else {
                 if (width.isAuto()) {
-                    computeContentWidth(ctx, cb, data.m_contentWidth -
-                                                     data.m_left -
-                                                     data.m_right);
+                    computeContentWidth(ctx, cb,
+                                        data.m_contentWidth - data.m_left -
+                                            data.m_right);
                 } else {
                     computeContentWidth(ctx, cb, data.m_contentWidth);
                 }
@@ -1153,4 +1153,4 @@ void FrameBlockBox::dump(int depth)
     }
 }
 #endif
-}
+} // namespace Starfish

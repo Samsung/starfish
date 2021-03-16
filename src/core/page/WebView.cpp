@@ -1490,6 +1490,17 @@ RenderResult WebView::rendering(bool force)
         m_needsComposite = false;
     }
 
+    // cleanup box-shadow cache
+    {
+        auto iter = m_boxShadowCachePerRendering.begin();
+        while (iter != m_boxShadowCachePerRendering.end()) {
+            delete iter->second;
+            iter->second = nullptr;
+            iter++;
+        }
+        m_boxShadowCachePerRendering.clear();
+    }
+
     m_needsRendering = false;
     m_inRendering = false;
 
@@ -2053,6 +2064,20 @@ void WebView::accessActiveImageURLsInRenderingSet(
         callback(*iter, data);
         iter++;
     }
+}
+
+void WebView::putImageIntoBoxShadowCache(FrameBox* box, size_t idx,
+                                         NativeImageData* image)
+{
+    m_boxShadowCachePerRendering[std::make_pair(box, idx)] = image;
+}
+
+Nullable<NativeImageData*> WebView::isThereImageInBoxShadowCache(FrameBox* box,
+                                                                 size_t idx)
+{
+    Nullable<NativeImageData*> data =
+        m_boxShadowCachePerRendering[std::make_pair(box, idx)];
+    return data;
 }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)

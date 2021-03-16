@@ -416,6 +416,6 @@ private:
     // Keep track of FrameTableSections for border and background
     LayoutRect m_tableRect;
 };
-}
+} // namespace Starfish
 
 #endif

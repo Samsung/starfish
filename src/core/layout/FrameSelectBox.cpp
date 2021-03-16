@@ -56,4 +56,4 @@ void FrameSelectBox::layout(LayoutContext& ctx,
     m_drawOptionsCount = 0;
     FrameBlockBox::layout(ctx, resolveWhat);
 }
-}
+} // namespace Starfish

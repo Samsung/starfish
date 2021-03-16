@@ -962,6 +962,13 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    void computeBorderRadiusProperties(
+        const BorderRadiusData& br, const LayoutRect& rect,
+        float& topLeftHorizontal, float& topRightHorizontal,
+        float& topLeftVertical, float& bottomLeftVertical,
+        float& topRightVertical, float& bottomRightVertical,
+        float& bottomLeftHorizontal, float& bottomRightHorizontal);
+
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
@@ -972,13 +979,6 @@ protected:
     static void paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                       NULLABLE HTMLElement* rootOrBodyelement,
                                       ComputedStyle* style);
-
-    void computeBorderRadiusProperties(
-        const BorderRadiusData& br, const LayoutRect& rect,
-        float& topLeftHorizontal, float& topRightHorizontal,
-        float& topLeftVertical, float& bottomLeftVertical,
-        float& topRightVertical, float& bottomRightVertical,
-        float& bottomLeftHorizontal, float& bottomRightHorizontal);
 
     void applyBorderShapeClippingUsedInPaintingBoxShadow(
         const Unit::Rect& shadowRect, const Unit::Rect& borderRect,
@@ -1057,6 +1057,6 @@ struct MBPRestorer {
     LayoutBoxSurroundData m_border;
     LayoutBoxSurroundData m_padding;
 };
-}
+} // namespace Starfish
 
 #endif

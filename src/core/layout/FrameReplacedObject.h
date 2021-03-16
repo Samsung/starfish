@@ -64,6 +64,6 @@ protected:
         FrameReplaced::fillGCDescriptor(desc);
     }
 };
-}
+} // namespace Starfish
 
 #endif

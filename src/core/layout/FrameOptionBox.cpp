@@ -97,4 +97,4 @@ void FrameOptionBox::layout(LayoutContext& ctx,
         }
     }
 }
-}
+} // namespace Starfish

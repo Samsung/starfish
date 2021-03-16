@@ -132,4 +132,4 @@ Frame* FrameReplacedIFrame::hitTest(LayoutUnit x, LayoutUnit y,
     }
     return result;
 }
-}
+} // namespace Starfish

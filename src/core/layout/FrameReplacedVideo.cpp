@@ -80,5 +80,5 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
         }
     }
 }
-}
+} // namespace Starfish
 #endif

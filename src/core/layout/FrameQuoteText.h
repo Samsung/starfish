@@ -67,6 +67,6 @@ protected:
 
     QuoteValue m_quote;
 };
-}
+} // namespace Starfish
 
 #endif

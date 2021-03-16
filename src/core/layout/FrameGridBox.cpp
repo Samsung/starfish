@@ -1733,4 +1733,4 @@ void FrameGridBox::layoutGrid(LayoutContext& ctx)
     GridFormattingContext gridFormattingContext(ctx, this, contentWidth());
     gridFormattingContext.computeColumnsAndRows();
 }
-}
+} // namespace Starfish

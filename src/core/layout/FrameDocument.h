@@ -101,6 +101,6 @@ protected:
     bool m_countingOutdatedFlag;
     bool m_quoteOutdatedFlag;
 };
-}
+} // namespace Starfish
 
 #endif

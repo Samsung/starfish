@@ -250,4 +250,4 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
     paintInsetBoxShadows(canvas);
     paintBorders(canvas, m_frameRect);
 }
-}
+} // namespace Starfish

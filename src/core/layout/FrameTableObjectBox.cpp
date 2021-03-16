@@ -43,4 +43,4 @@ FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
 }
-}
+} // namespace Starfish

@@ -546,5 +546,5 @@ public:
         return dataSet;
     }
 };
-}
+} // namespace Starfish
 #endif

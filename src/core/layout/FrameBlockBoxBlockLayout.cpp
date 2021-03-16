@@ -284,10 +284,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             if (floatAffected) {
                 LayoutUnit width = boundaries.second - boundaries.first;
                 LayoutUnit nextDistanceToFloatBottom;
-                if ((hasToStretchWidth &&
-                     child->asFrameBox()->contentWidth() + width -
-                             child->asFrameBox()->width() >
-                         0) ||
+                if ((hasToStretchWidth && child->asFrameBox()->contentWidth() +
+                                                  width -
+                                                  child->asFrameBox()->width() >
+                                              0) ||
                     (width >= child->asFrameBox()->width()) ||
                     ((nextDistanceToFloatBottom = ctx.nextDistanceToFloatBottom(
                           selfLoc.y(), child->asFrameBox()->height())) == 0)) {
@@ -448,4 +448,4 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
     return normalFlowHeight;
 }
-}
+} // namespace Starfish
