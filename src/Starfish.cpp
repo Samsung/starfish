@@ -38,8 +38,6 @@
 
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
-#include <EscargotPublic.h>
-
 namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
@@ -76,8 +74,6 @@ Starfish::Starfish(const char* localStorageFilePath,
     registerMainThread();
     if (!g_starfishGlobalInit) {
         g_starfishGlobalInit = true;
-
-        Escargot::Globals::initialize();
 
         GC_set_abort_func([](const char* msg) {
             STARFISH_LOG_ERROR("Starfish: GC aborted\n");
