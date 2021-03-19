@@ -368,7 +368,6 @@ void SVGLengthList::updateListByAttribute()
         StringUtils::wordTokenizer(attrValue, tokens);
 
         for (size_t i = 0; i < tokens.size(); ++i) {
-            auto s = tokens[i].substring()->toUTF8NonGCString();
             SVGLength* newItem = new SVGLength(
                 m_sourceElement, AtomicString::emptyAtomicString());
             newItem->setValueAsString(tokens[i].substring());

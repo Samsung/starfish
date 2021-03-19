@@ -201,10 +201,11 @@ void SVGLength::setValueInSpecifiedUnits(float v)
 
             if (m_targetAttribute == ss->m_x) {
                 list = ((SVGTextElement*)m_sourceElement)->x()->baseVal();
+                list->updateAttributeByList();
             } else if (m_targetAttribute == ss->m_y) {
                 list = ((SVGTextElement*)m_sourceElement)->y()->baseVal();
+                list->updateAttributeByList();
             }
-            list->updateAttributeByList();
         } else {
             m_sourceElement->setAttribute(m_targetAttribute, valueAsString());
         }
