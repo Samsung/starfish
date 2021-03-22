@@ -24,6 +24,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CalcData.h"
 
+#define PI 3.1415926
 namespace Starfish {
 
 SVGTransform::SVGTransform(SVGElement* sourceElement,
@@ -182,8 +183,7 @@ void SVGTransform::setMatrix(DOMMatrixReadOnly* matrix)
     }
     updateMatrixByValue();
 
-    // need to attribute update
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setTranslate(float tx, float ty)
@@ -199,6 +199,7 @@ void SVGTransform::setTranslate(float tx, float ty)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
+        return;
     }
 
     if (m_matrixObject == nullptr) {
@@ -215,8 +216,7 @@ void SVGTransform::setTranslate(float tx, float ty)
 
     updateMatrixByValue();
 
-    // need to update attribute
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setScale(float sx, float sy)
@@ -232,6 +232,7 @@ void SVGTransform::setScale(float sx, float sy)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
+        return;
     }
 
     if (m_matrixObject == nullptr) {
@@ -245,8 +246,7 @@ void SVGTransform::setScale(float sx, float sy)
 
     updateMatrixByValue();
 
-    // need to update attribute
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setRotate(float angle, float cx, float cy)
@@ -263,6 +263,7 @@ void SVGTransform::setRotate(float angle, float cx, float cy)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
+        return;
     }
 
     if (m_matrixObject == nullptr) {
@@ -282,8 +283,7 @@ void SVGTransform::setRotate(float angle, float cx, float cy)
 
     updateMatrixByValue();
 
-    // need to update attribute
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setSkewX(float angle)
@@ -299,6 +299,7 @@ void SVGTransform::setSkewX(float angle)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
+        return;
     }
 
     if (m_matrixObject == nullptr) {
@@ -312,8 +313,7 @@ void SVGTransform::setSkewX(float angle)
 
     updateMatrixByValue();
 
-    // need to update attribute
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setSkewY(float angle)
@@ -329,6 +329,7 @@ void SVGTransform::setSkewY(float angle)
         throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
+        return;
     }
 
     if (m_matrixObject == nullptr) {
@@ -342,8 +343,7 @@ void SVGTransform::setSkewY(float angle)
 
     updateMatrixByValue();
 
-    // need to update attribute
-    // It will be implemented with implementing SVGTransformList
+    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
 }
 
 bool SVGTransform::isReadOnly()
@@ -409,17 +409,18 @@ void SVGTransform::updateMatrixByValue()
         m_matrixObject->setMatrix(SkMatrix44::I());
         if (m_value.values()->size() != 1) {
             m_matrixObject->translateSelf(
-                -m_value.values()->at(1).numberValue(),
-                -m_value.values()->at(2).numberValue());
-            m_matrixObject->rotateSelf(0, 0,
-                                       m_value.values()->at(0).numberValue());
+                m_value.values()->at(1).lengthValue().fixed(),
+                m_value.values()->at(2).lengthValue().fixed());
+            m_matrixObject->rotateSelf(
+                0, 0, PI * m_value.values()->at(0).angleValue().value() / 180);
             m_matrixObject->translateSelf(
-                m_value.values()->at(1).numberValue(),
-                m_value.values()->at(2).numberValue());
+                -m_value.values()->at(1).lengthValue().fixed(),
+                -m_value.values()->at(2).lengthValue().fixed());
         } else {
-            m_matrixObject->rotateSelf(0, 0,
-                                       m_value.values()->at(0).numberValue());
+            m_matrixObject->rotateSelf(
+                0, 0, PI * m_value.values()->at(0).angleValue().value() / 180);
         }
+
         m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
         return;
     } else if (m_value.kind() == CSSTransformFunction::SkewX) {
@@ -436,4 +437,25 @@ void SVGTransform::updateMatrixByValue()
     STARFISH_ASSERT_NOT_REACHED();
 }
 
+void SVGTransform::detach()
+{
+    m_targetAttribute = AtomicString::emptyAtomicString();
+}
+
+bool SVGTransform::isDetached()
+{
+    return m_targetAttribute.equalsLocalName(AtomicString::emptyAtomicString());
+}
+
+void SVGTransform::attach(SVGElement* sourceElement,
+                          QualifiedName targetAttribute)
+{
+    m_sourceElement = sourceElement;
+    m_targetAttribute = targetAttribute;
+}
+
+CSSTransformFunction SVGTransform::value()
+{
+    return m_value;
+}
 } // namespace Starfish

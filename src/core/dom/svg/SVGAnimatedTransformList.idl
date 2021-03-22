@@ -1,0 +1,7 @@
+// https://www.w3.org/TR/SVG/coords.html#InterfaceSVGAnimatedTransformList
+
+[Exposed=Window]
+interface SVGAnimatedTransformList {
+  [SameObject] readonly attribute SVGTransformList baseVal;
+  [SameObject] readonly attribute SVGTransformList animVal;
+};

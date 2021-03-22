@@ -68,6 +68,12 @@ public:
     void setReadOnly(bool readOnly);
     void updateMatrixByValue();
 
+    void detach();
+    bool isDetached();
+    void attach(SVGElement* sourceElement, QualifiedName targetAttribute);
+
+    CSSTransformFunction value();
+
 protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
