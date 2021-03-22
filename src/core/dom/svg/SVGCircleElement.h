@@ -31,6 +31,9 @@ public:
     {
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGCircleElement() const override;
@@ -49,12 +52,19 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void updateAttributeNeeded(QualifiedName name);
+
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cx);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(cy);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(r);
+
+    SVGAnimatedTransformList* transform();
+
+private:
+    SVGAnimatedTransformList* m_transform;
 };
 } // namespace Starfish
 

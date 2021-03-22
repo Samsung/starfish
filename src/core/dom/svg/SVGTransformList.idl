@@ -1,0 +1,21 @@
+// https://www.w3.org/TR/SVG/coords.html#InterfaceSVGTransformList
+
+[Exposed=Window]
+interface SVGTransformList {
+
+  readonly attribute unsigned long length;
+  readonly attribute unsigned long numberOfItems;
+
+  [RaisesException] void clear();
+  [RaisesException] SVGTransform initialize(SVGTransform newItem);
+  [RaisesException] getter SVGTransform getItem(unsigned long index);
+  [RaisesException] SVGTransform insertItemBefore(SVGTransform newItem, unsigned long index);
+  [RaisesException] SVGTransform replaceItem(SVGTransform newItem, unsigned long index);
+  [RaisesException] SVGTransform removeItem(unsigned long index);
+  [RaisesException] SVGTransform appendItem(SVGTransform newItem);
+  [RaisesException] setter void (unsigned long index, SVGTransform newItem);
+
+  // Additional methods not common to other list interfaces.
+  [Unimplemented] SVGTransform createSVGTransformFromMatrix(DOMMatrixReadOnly matrix);
+  [Unimplemented, RaisesException] SVGTransform? consolidate();
+};

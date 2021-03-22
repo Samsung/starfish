@@ -1,6 +1,10 @@
 // https://www.w3.org/TR/SVG11/shapes.html#InterfaceSVGCircleElement
 interface SVGCircleElement : SVGElement {
-  readonly attribute SVGAnimatedLength r;
-  readonly attribute SVGAnimatedLength cx;
-  readonly attribute SVGAnimatedLength cy;
+    // SVGGraphicsElement
+    // It used for SVGTransformList-basic.html
+    [SameObject] readonly attribute SVGAnimatedTransformList transform;
+
+    readonly attribute SVGAnimatedLength r;
+    readonly attribute SVGAnimatedLength cx;
+    readonly attribute SVGAnimatedLength cy;
 };

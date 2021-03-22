@@ -13929,7 +13929,11 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                 units[0] = units[1] = Number;
                 transformValue = CSSPropertyParser::parseFunctionBlock(
                     (char*)tokens[i].data(), "scale");
-                transformValue.getValue().split(',', transformValueList);
+                if (transformValue.getValue().find(',') != std::string::npos) {
+                    transformValue.getValue().split(',', transformValueList);
+                } else {
+                    transformValue.getValue().split(' ', transformValueList);
+                }
             } else if (name == "scale3d") {
                 maxArgCnt = 3;
                 fkind = CSSTransformFunction::Kind::Scale3D;
