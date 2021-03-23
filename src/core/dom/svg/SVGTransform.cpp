@@ -27,15 +27,19 @@
 namespace Starfish {
 
 SVGTransform::SVGTransform(SVGElement* sourceElement,
-                           QualifiedName targetAttribute)
+                           QualifiedName targetAttribute,
+                           CSSTransformFunction value)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
-    , m_value(nullptr)
-    , m_matrixObject(nullptr)
-    , m_matrixComparisonTarget(nullptr)
+    , m_value(value)
     , m_readOnly(false)
 {
+    m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
+    m_matrixComparisonTarget =
+        new DOMMatrix(m_sourceElement->executionContext());
+
+    updateMatrixByValue();
 }
 
 ScriptBindingInstance* SVGTransform::scriptBindingInstance()
@@ -65,38 +69,32 @@ void* SVGTransform::operator new(size_t size)
 
 unsigned short SVGTransform::type()
 {
-    if (m_matrixObject == nullptr) {
-        initTransform();
-    } else if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
+    if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
         setMatrix(m_matrixObject);
     }
 
-    if (m_value != nullptr) {
-        switch (m_value->transformValue()->at(0).kind()) {
-        case CSSTransformFunction::Kind::Matrix:
-            return SVG_TRANSFORM_MATRIX;
-        case CSSTransformFunction::Kind::Translate:
-            return SVG_TRANSFORM_TRANSLATE;
-        case CSSTransformFunction::Kind::Scale:
-            return SVG_TRANSFORM_SCALE;
-        case CSSTransformFunction::Kind::Rotate:
-            return SVG_TRANSFORM_ROTATE;
-        case CSSTransformFunction::Kind::SkewX:
-            return SVG_TRANSFORM_SKEWX;
-        case CSSTransformFunction::Kind::SkewY:
-            return SVG_TRANSFORM_SKEWY;
-        default:
-            return SVG_TRANSFORM_UNKOWN;
-        }
+    switch (m_value.kind()) {
+    case CSSTransformFunction::Kind::Matrix:
+        return SVG_TRANSFORM_MATRIX;
+    case CSSTransformFunction::Kind::Translate:
+        return SVG_TRANSFORM_TRANSLATE;
+    case CSSTransformFunction::Kind::Scale:
+        return SVG_TRANSFORM_SCALE;
+    case CSSTransformFunction::Kind::Rotate:
+        return SVG_TRANSFORM_ROTATE;
+    case CSSTransformFunction::Kind::SkewX:
+        return SVG_TRANSFORM_SKEWX;
+    case CSSTransformFunction::Kind::SkewY:
+        return SVG_TRANSFORM_SKEWY;
+    default:
+        return SVG_TRANSFORM_UNKOWN;
     }
     return SVG_TRANSFORM_UNKOWN;
 }
 
 DOMMatrix* SVGTransform::matrix()
 {
-    if (m_matrixObject == nullptr) {
-        initTransform();
-    } else if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
+    if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
         setMatrix(m_matrixObject);
     }
 
@@ -105,18 +103,14 @@ DOMMatrix* SVGTransform::matrix()
 
 float SVGTransform::angle()
 {
-    if (m_matrixObject == nullptr) {
-        initTransform();
-    } else if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
+    if (m_matrixObject->matrix() != m_matrixComparisonTarget->matrix()) {
         setMatrix(m_matrixObject);
     }
 
-    CSSTransformFunction f = m_value->transformValue()->at(0);
-
-    if (f.kind() == CSSTransformFunction::Kind::Rotate ||
-        f.kind() == CSSTransformFunction::Kind::SkewX ||
-        f.kind() == CSSTransformFunction::Kind::SkewY) {
-        return f.values()->at(0).angleValue().value();
+    if (m_value.kind() == CSSTransformFunction::Kind::Rotate ||
+        m_value.kind() == CSSTransformFunction::Kind::SkewX ||
+        m_value.kind() == CSSTransformFunction::Kind::SkewY) {
+        return m_value.values()->at(0).angleValue().value();
     }
     return 0;
 }
@@ -134,20 +128,62 @@ void SVGTransform::setMatrix(DOMMatrixReadOnly* matrix)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    auto str = matrix->toString()->toUTF8NonGCString();
-    CSSTokenVector tokens;
-    CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(), str.length());
-
-    m_value = new CSSStyleValuePair;
-    m_value->updateValueTransform(tokens, true, Separator::SpaceSeparator);
-
-    m_matrixObject->setIs2D(matrix->is2D());
-    m_matrixObject->setMatrix(matrix->matrix());
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
+    ValueList* values = new ValueList(Separator::SpaceSeparator);
+    if (matrix->is2D()) {
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->a()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->b()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->c()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->d()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->e()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->f()));
+        m_value =
+            CSSTransformFunction(CSSTransformFunction::Kind::Matrix, values);
+    } else {
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m11()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m12()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m13()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m14()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m21()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m22()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m23()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m24()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m31()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m32()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m33()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m34()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m41()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m42()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m43()));
+        values->emplace_back(CSSStyleValuePair(
+            CSSStyleValuePair::ValueKind::Number, (float)matrix->m44()));
+        m_value =
+            CSSTransformFunction(CSSTransformFunction::Kind::Matrix3D, values);
     }
+    updateMatrixByValue();
+
+    // need to attribute update
+    // It will be implemented with implementing SVGTransformList
 }
 
 void SVGTransform::setTranslate(float tx, float ty)
@@ -169,26 +205,18 @@ void SVGTransform::setTranslate(float tx, float ty)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    m_matrixObject->setMatrix(SkMatrix44::I());
-    m_matrixObject->translateSelf(tx, ty);
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    CSSTransformFunctions* transformations = new CSSTransformFunctions();
-    m_value = new CSSStyleValuePair;
-    m_value->setTransformFunctionsValue(transformations);
-
     ValueList* values = new ValueList(Separator::SpaceSeparator);
-    CSSStyleValuePair ret;
-    ret.setLengthValue(tx);
-    values->emplace_back(ret);
-    ret.setLengthValue(ty);
-    values->emplace_back(ret);
-    m_value->transformValue()->emplace_back(
-        CSSTransformFunction::Kind::Translate, values);
+    values->emplace_back(
+        CSSStyleValuePair(CSSStyleValuePair::Length, CSSLength(tx)));
+    values->emplace_back(
+        CSSStyleValuePair(CSSStyleValuePair::Length, CSSLength(ty)));
+    m_value =
+        CSSTransformFunction(CSSTransformFunction::Kind::Translate, values);
 
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
-    }
+    updateMatrixByValue();
+
+    // need to update attribute
+    // It will be implemented with implementing SVGTransformList
 }
 
 void SVGTransform::setScale(float sx, float sy)
@@ -210,26 +238,15 @@ void SVGTransform::setScale(float sx, float sy)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    m_matrixObject->setMatrix(SkMatrix44::I());
-    m_matrixObject->scaleSelf(sx, sy);
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    CSSTransformFunctions* transformations = new CSSTransformFunctions();
-    m_value = new CSSStyleValuePair;
-    m_value->setTransformFunctionsValue(transformations);
-
     ValueList* values = new ValueList(Separator::SpaceSeparator);
-    CSSStyleValuePair ret;
-    ret.setNumberValue(sx);
-    values->emplace_back(ret);
-    ret.setNumberValue(sy);
-    values->emplace_back(ret);
-    m_value->transformValue()->emplace_back(CSSTransformFunction::Kind::Scale,
-                                            values);
+    values->emplace_back(CSSStyleValuePair(CSSStyleValuePair::Number, sx));
+    values->emplace_back(CSSStyleValuePair(CSSStyleValuePair::Number, sy));
+    m_value = CSSTransformFunction(CSSTransformFunction::Kind::Scale, values);
 
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
-    }
+    updateMatrixByValue();
+
+    // need to update attribute
+    // It will be implemented with implementing SVGTransformList
 }
 
 void SVGTransform::setRotate(float angle, float cx, float cy)
@@ -252,37 +269,21 @@ void SVGTransform::setRotate(float angle, float cx, float cy)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    m_matrixObject->setMatrix(SkMatrix44::I());
-
-    if (cx != 0 && cy != 0) {
-        m_matrixObject->translateSelf(-cx, -cy);
-        m_matrixObject->rotateSelf(0, 0, angle);
-        m_matrixObject->translateSelf(cx, cy);
-    } else {
-        m_matrixObject->rotateSelf(0, 0, angle);
-    }
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    CSSTransformFunctions* transformations = new CSSTransformFunctions();
-    m_value = new CSSStyleValuePair;
-    m_value->setTransformFunctionsValue(transformations);
-
     ValueList* values = new ValueList(Separator::SpaceSeparator);
-    CSSStyleValuePair ret;
-    ret.setAngleValue(angle);
-    values->emplace_back(ret);
+    values->emplace_back(
+        CSSStyleValuePair(CSSStyleValuePair::Angle, CSSAngle(angle)));
     if (cx != 0 && cy != 0) {
-        ret.setLengthValue(cx);
-        values->emplace_back(ret);
-        ret.setLengthValue(cy);
-        values->emplace_back(ret);
+        values->emplace_back(
+            CSSStyleValuePair(CSSStyleValuePair::Length, CSSLength(cx)));
+        values->emplace_back(
+            CSSStyleValuePair(CSSStyleValuePair::Length, CSSLength(cy)));
     }
-    m_value->transformValue()->emplace_back(CSSTransformFunction::Kind::Rotate,
-                                            values);
+    m_value = CSSTransformFunction(CSSTransformFunction::Kind::Rotate, values);
 
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
-    }
+    updateMatrixByValue();
+
+    // need to update attribute
+    // It will be implemented with implementing SVGTransformList
 }
 
 void SVGTransform::setSkewX(float angle)
@@ -304,24 +305,15 @@ void SVGTransform::setSkewX(float angle)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    m_matrixObject->setMatrix(SkMatrix44::I());
-    m_matrixObject->skewXSelf(angle);
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    CSSTransformFunctions* transformations = new CSSTransformFunctions();
-    m_value = new CSSStyleValuePair;
-    m_value->setTransformFunctionsValue(transformations);
-
     ValueList* values = new ValueList(Separator::SpaceSeparator);
-    CSSStyleValuePair ret;
-    ret.setAngleValue(angle);
-    values->emplace_back(ret);
-    m_value->transformValue()->emplace_back(CSSTransformFunction::Kind::SkewX,
-                                            values);
+    values->emplace_back(
+        CSSStyleValuePair(CSSStyleValuePair::Angle, CSSAngle(angle)));
+    m_value = CSSTransformFunction(CSSTransformFunction::Kind::SkewX, values);
 
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
-    }
+    updateMatrixByValue();
+
+    // need to update attribute
+    // It will be implemented with implementing SVGTransformList
 }
 
 void SVGTransform::setSkewY(float angle)
@@ -343,96 +335,15 @@ void SVGTransform::setSkewY(float angle)
         m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     }
 
-    m_matrixObject->setMatrix(SkMatrix44::I());
-    m_matrixObject->skewYSelf(angle);
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
-
-    CSSTransformFunctions* transformations = new CSSTransformFunctions();
-    m_value = new CSSStyleValuePair;
-    m_value->setTransformFunctionsValue(transformations);
-
     ValueList* values = new ValueList(Separator::SpaceSeparator);
-    CSSStyleValuePair ret;
-    ret.setAngleValue(angle);
-    values->emplace_back(ret);
-    m_value->transformValue()->emplace_back(CSSTransformFunction::Kind::SkewY,
-                                            values);
+    values->emplace_back(
+        CSSStyleValuePair(CSSStyleValuePair::Angle, CSSAngle(angle)));
+    m_value = CSSTransformFunction(CSSTransformFunction::Kind::SkewY, values);
 
-    if (m_targetAttribute.localName()->length()) {
-        m_sourceElement->setAttribute(m_targetAttribute, m_value->toString());
-    }
-}
+    updateMatrixByValue();
 
-void SVGTransform::initTransform()
-{
-    m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
-    m_matrixComparisonTarget =
-        new DOMMatrix(m_sourceElement->executionContext());
-    if (m_targetAttribute != AtomicString::emptyAtomicString()) {
-        String* attrValue =
-            m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
-
-        if (attrValue->length()) {
-            auto str = attrValue->toUTF8NonGCString();
-            CSSTokenVector tokens;
-            CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
-                                                  str.length());
-
-            m_value = new CSSStyleValuePair;
-            m_value->updateValueTransform(tokens, true,
-                                          Separator::SpaceSeparator);
-
-            CSSTransformFunction f = m_value->transformValue()->at(0);
-
-            if (f.kind() == CSSTransformFunction::Matrix) {
-                m_matrixObject->set2DMatrix(f.values()->at(0).numberValue(),
-                                            f.values()->at(1).numberValue(),
-                                            f.values()->at(2).numberValue(),
-                                            f.values()->at(3).numberValue(),
-                                            f.values()->at(4).numberValue(),
-                                            f.values()->at(5).numberValue());
-            } else if (f.kind() == CSSTransformFunction::Translate) {
-                m_matrixObject->setMatrix(SkMatrix44::I());
-                m_matrixObject->translateSelf(f.values()->at(0).numberValue(),
-                                              f.values()->at(1).numberValue());
-            } else if (f.kind() == CSSTransformFunction::Scale) {
-                m_matrixObject->setMatrix(SkMatrix44::I());
-                m_matrixObject->scaleSelf(f.values()->at(0).numberValue(),
-                                          f.values()->at(1).numberValue());
-            } else if (f.kind() == CSSTransformFunction::Rotate) {
-                m_matrixObject->setMatrix(SkMatrix44::I());
-                if (f.values()->size() != 1) {
-                    m_matrixObject->translateSelf(
-                        -f.values()->at(1).numberValue(),
-                        -f.values()->at(2).numberValue());
-                    m_matrixObject->rotateSelf(0, 0,
-                                               f.values()->at(0).numberValue());
-                    m_matrixObject->translateSelf(
-                        f.values()->at(1).numberValue(),
-                        f.values()->at(2).numberValue());
-                } else {
-                    m_matrixObject->rotateSelf(0, 0,
-                                               f.values()->at(0).numberValue());
-                }
-            } else if (f.kind() == CSSTransformFunction::SkewX) {
-                m_matrixObject->setMatrix(SkMatrix44::I());
-                m_matrixObject->skewXSelf(f.values()->at(0).numberValue());
-            } else if (f.kind() == CSSTransformFunction::SkewY) {
-                m_matrixObject->setMatrix(SkMatrix44::I());
-                m_matrixObject->skewYSelf(f.values()->at(0).numberValue());
-            } else {
-                STARFISH_ASSERT_NOT_REACHED();
-            }
-
-        } else {
-            setMatrix(new DOMMatrixReadOnly(m_sourceElement->executionContext(),
-                                            SkMatrix44::I(), true));
-        }
-    } else {
-        setMatrix(new DOMMatrixReadOnly(m_sourceElement->executionContext(),
-                                        SkMatrix44::I(), true));
-    }
-    m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+    // need to update attribute
+    // It will be implemented with implementing SVGTransformList
 }
 
 bool SVGTransform::isReadOnly()
@@ -444,4 +355,85 @@ void SVGTransform::setReadOnly(bool readOnly)
 {
     m_readOnly = readOnly;
 }
+
+void SVGTransform::updateMatrixByValue()
+{
+    if (m_value.kind() == CSSTransformFunction::Matrix) {
+        if (m_value.values() == nullptr) {
+            m_matrixObject->setMatrix(SkMatrix44::I());
+        } else {
+            m_matrixObject->set2DMatrix(m_value.values()->at(0).numberValue(),
+                                        m_value.values()->at(1).numberValue(),
+                                        m_value.values()->at(2).numberValue(),
+                                        m_value.values()->at(3).numberValue(),
+                                        m_value.values()->at(4).numberValue(),
+                                        m_value.values()->at(5).numberValue());
+        }
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        m_matrixComparisonTarget->setIs2D(m_matrixObject->is2D());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::Matrix3D) {
+        m_matrixObject->set3DMatrix(m_value.values()->at(0).numberValue(),
+                                    m_value.values()->at(1).numberValue(),
+                                    m_value.values()->at(2).numberValue(),
+                                    m_value.values()->at(3).numberValue(),
+                                    m_value.values()->at(4).numberValue(),
+                                    m_value.values()->at(5).numberValue(),
+                                    m_value.values()->at(6).numberValue(),
+                                    m_value.values()->at(7).numberValue(),
+                                    m_value.values()->at(8).numberValue(),
+                                    m_value.values()->at(9).numberValue(),
+                                    m_value.values()->at(10).numberValue(),
+                                    m_value.values()->at(11).numberValue(),
+                                    m_value.values()->at(12).numberValue(),
+                                    m_value.values()->at(13).numberValue(),
+                                    m_value.values()->at(14).numberValue(),
+                                    m_value.values()->at(15).numberValue());
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        m_matrixComparisonTarget->setIs2D(m_matrixObject->is2D());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::Translate) {
+        m_matrixObject->setMatrix(SkMatrix44::I());
+        m_matrixObject->translateSelf(
+            m_value.values()->at(0).lengthValue().fixed(),
+            m_value.values()->at(1).lengthValue().fixed());
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::Scale) {
+        m_matrixObject->setMatrix(SkMatrix44::I());
+        m_matrixObject->scaleSelf(m_value.values()->at(0).numberValue(),
+                                  m_value.values()->at(1).numberValue());
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::Rotate) {
+        m_matrixObject->setMatrix(SkMatrix44::I());
+        if (m_value.values()->size() != 1) {
+            m_matrixObject->translateSelf(
+                -m_value.values()->at(1).numberValue(),
+                -m_value.values()->at(2).numberValue());
+            m_matrixObject->rotateSelf(0, 0,
+                                       m_value.values()->at(0).numberValue());
+            m_matrixObject->translateSelf(
+                m_value.values()->at(1).numberValue(),
+                m_value.values()->at(2).numberValue());
+        } else {
+            m_matrixObject->rotateSelf(0, 0,
+                                       m_value.values()->at(0).numberValue());
+        }
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::SkewX) {
+        m_matrixObject->setMatrix(SkMatrix44::I());
+        m_matrixObject->skewXSelf(m_value.values()->at(0).angleValue().value());
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        return;
+    } else if (m_value.kind() == CSSTransformFunction::SkewY) {
+        m_matrixObject->setMatrix(SkMatrix44::I());
+        m_matrixObject->skewYSelf(m_value.values()->at(0).angleValue().value());
+        m_matrixComparisonTarget->setMatrix(m_matrixObject->matrix());
+        return;
+    }
+    STARFISH_ASSERT_NOT_REACHED();
+}
+
 } // namespace Starfish
