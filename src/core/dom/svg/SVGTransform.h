@@ -44,7 +44,9 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    SVGTransform(SVGElement* sourceElement, QualifiedName targetAttribute);
+    SVGTransform(SVGElement* sourceElement, QualifiedName targetAttribute,
+                 CSSTransformFunction value =
+                     CSSTransformFunction(CSSTransformFunction::Matrix));
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -62,16 +64,15 @@ public:
     void setSkewX(float angle);
     void setSkewY(float angle);
 
-    void initTransform();
-
     bool isReadOnly();
     void setReadOnly(bool readOnly);
+    void updateMatrixByValue();
 
 protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
 
-    CSSStyleValuePair* m_value;
+    CSSTransformFunction m_value;
     DOMMatrix* m_matrixObject;
     DOMMatrix* m_matrixComparisonTarget;
 
