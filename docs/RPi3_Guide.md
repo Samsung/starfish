@@ -52,7 +52,7 @@ sudo ./sd_fusing_rpi3.sh -d /dev/sdb -b tizen-4.0-unified_XXX_iot-boot-arm64-rpi
 1. Insert the SD Card to RPi3.
 2. Power up RPi3, and connect it to a host PC.
 3. Run a terminal such as minicom.
-4. Use userid=root, and password=tizen
+4. Use the default Tizen user id and password
 
 #### How to use minicom
 ```sh
