@@ -170,7 +170,7 @@ public:
 
     virtual bool equals(CSSGradientValue* src) override
     {
-        if (equals(src)) {
+        if (CSSGradientValue::equals(src)) {
             CSSLinearGradientValue* s = (CSSLinearGradientValue*)src;
             return m_angle == s->m_angle && m_leftOrRight == s->m_leftOrRight &&
                    m_topOrBottom == s->m_topOrBottom;
@@ -338,7 +338,7 @@ public:
     virtual GradientData* convertToGradientData() override;
     virtual bool equals(CSSGradientValue* src) override
     {
-        if (equals(src)) {
+        if (CSSGradientValue::equals(src)) {
             CSSRadialGradientValue* s = (CSSRadialGradientValue*)src;
             return m_shape == s->m_shape && m_size == s->m_size &&
                    m_positionX == s->m_positionX &&
