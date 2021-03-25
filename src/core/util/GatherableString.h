@@ -347,8 +347,7 @@ size_t GatherableString<InlineStorageSize>::peekUTF8Buffer(
         for (size_t i = 0; i < length(); i++) {
             pos += utf32ToUtf8(charAt(i), &utf8Buffer[pos]);
         }
-        // We don't need to fill '\0' at end
-        // utf32ToUtf8 function already fills to end
+        utf8Buffer[utf8Len] = 0;
         return cb(utf8Buffer, utf8Len, data);
     }
 }

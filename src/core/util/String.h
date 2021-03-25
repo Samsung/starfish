@@ -530,7 +530,17 @@ inline CharType toASCIIUpper(CharType c)
     return static_cast<CharType>(c & ~((c >= 'a' && c <= 'z') << 5));
 }
 
-size_t utf32ToUtf8(char32_t uc, char* UTF8);
+// utf32ToUtf8 function doesn't fill "0" for UTF8 buffer
+NEVER_INLINE size_t utf32ToUtf8SlowCase(char32_t uc, char* UTF8);
+ALWAYS_INLINE size_t utf32ToUtf8(char32_t uc, char* UTF8)
+{
+    if (LIKELY(uc <= 0x7f)) {
+        UTF8[0] = (char)uc;
+        return 1;
+    }
+    return utf32ToUtf8SlowCase(uc, UTF8);
+}
+
 template <typename T>
 size_t utf16ToUtf32(const T* UTF16, const T* bufferEnd, char32_t& uc)
 {

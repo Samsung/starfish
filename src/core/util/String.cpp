@@ -171,65 +171,47 @@ size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
     return tRequiredSize;
 }
 
-size_t utf32ToUtf8(char32_t uc, char* UTF8)
+size_t utf32ToUtf8SlowCase(char32_t uc, char* UTF8)
 {
     size_t tRequiredSize = 0;
     if (uc >= 0xd800u && uc <= 0xdfffu) {
-        return utf32ToUtf8(0xFFFD, UTF8);
+        return utf32ToUtf8SlowCase(0xFFFD, UTF8);
     }
     if (uc <= 0x7f) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)uc;
-            UTF8[1] = (char)'\0';
-        }
+        UTF8[0] = (char)uc;
         tRequiredSize = 1;
     } else if (uc <= 0x7ff) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)(0xc0 + uc / (0x01 << 6));
-            UTF8[1] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[2] = (char)'\0';
-        }
+        UTF8[0] = (char)(0xc0 + uc / (0x01 << 6));
+        UTF8[1] = (char)(0x80 + uc % (0x01 << 6));
         tRequiredSize = 2;
     } else if (uc <= 0xffff) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)(0xe0 + uc / (0x01 << 12));
-            UTF8[1] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
-            UTF8[2] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[3] = (char)'\0';
-        }
+        UTF8[0] = (char)(0xe0 + uc / (0x01 << 12));
+        UTF8[1] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+        UTF8[2] = (char)(0x80 + uc % (0x01 << 6));
         tRequiredSize = 3;
     } else if (uc <= 0x1fffff) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)(0xf0 + uc / (0x01 << 18));
-            UTF8[1] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
-            UTF8[2] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
-            UTF8[3] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[4] = (char)'\0';
-        }
+        UTF8[0] = (char)(0xf0 + uc / (0x01 << 18));
+        UTF8[1] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
+        UTF8[2] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+        UTF8[3] = (char)(0x80 + uc % (0x01 << 6));
         tRequiredSize = 4;
     } else if (uc <= 0x3ffffff) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)(0xf8 + uc / (0x01 << 24));
-            UTF8[1] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
-            UTF8[2] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
-            UTF8[3] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
-            UTF8[4] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[5] = (char)'\0';
-        }
+        UTF8[0] = (char)(0xf8 + uc / (0x01 << 24));
+        UTF8[1] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
+        UTF8[2] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
+        UTF8[3] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+        UTF8[4] = (char)(0x80 + uc % (0x01 << 6));
         tRequiredSize = 5;
     } else if (uc <= 0x7fffffff) {
-        if (NULL != UTF8) {
-            UTF8[0] = (char)(0xfc + uc / (0x01 << 30));
-            UTF8[1] = (char)(0x80 + uc / (0x01 << 24) % (0x01 << 24));
-            UTF8[2] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
-            UTF8[3] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
-            UTF8[4] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
-            UTF8[5] = (char)(0x80 + uc % (0x01 << 6));
-            UTF8[6] = (char)'\0';
-        }
+        UTF8[0] = (char)(0xfc + uc / (0x01 << 30));
+        UTF8[1] = (char)(0x80 + uc / (0x01 << 24) % (0x01 << 24));
+        UTF8[2] = (char)(0x80 + uc / (0x01 << 18) % (0x01 << 18));
+        UTF8[3] = (char)(0x80 + uc / (0x01 << 12) % (0x01 << 12));
+        UTF8[4] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+        UTF8[5] = (char)(0x80 + uc % (0x01 << 6));
         tRequiredSize = 6;
     } else {
-        return utf32ToUtf8(0xFFFD, UTF8);
+        return utf32ToUtf8SlowCase(0xFFFD, UTF8);
     }
 
     return tRequiredSize;
@@ -1974,9 +1956,16 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
         } else {
             char* buf = ALLOCA((bufData.length * 6) + 1, char);
             size_t realUsage = 0;
-            for (size_t i = 0; i < bufData.length; i++) {
-                char32_t ch = bufData.charAt(i);
-                realUsage += utf32ToUtf8(ch, buf + realUsage);
+            if (bufData.bufferDataKind == StringBufferAccessData::BMPData) {
+                for (size_t i = 0; i < bufData.length; i++) {
+                    char32_t ch = bufData.utf16Data()[i];
+                    realUsage += utf32ToUtf8(ch, buf + realUsage);
+                }
+            } else {
+                for (size_t i = 0; i < bufData.length; i++) {
+                    char32_t ch = bufData.utf32Data()[i];
+                    realUsage += utf32ToUtf8(ch, buf + realUsage);
+                }
             }
 
             buf[realUsage] = 0;
