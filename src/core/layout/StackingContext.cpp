@@ -46,6 +46,18 @@
 
 namespace Starfish {
 
+inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY, LayoutUnit maxX, LayoutUnit maxY,
+        size_t& bufferWidth, size_t& bufferHeight)
+{
+#if defined(STARFISH_ENABLE_TEST)
+    bufferWidth = (int)(maxX - minX);
+    bufferHeight = (int)(maxY - minY);
+#else
+    bufferWidth = (maxX - minX).round();
+    bufferHeight = (maxY - minY).round();
+#endif
+}
+
 struct StackingContext::ComputeStackingContextContext {
     bool needsToAllocateGraphicsBufferForFixedElement;
     bool seenPositionFixed;
@@ -1625,8 +1637,10 @@ public:
             maxX = maxX.ceil();
             minY = minY.floor();
             maxY = maxY.ceil();
-            size_t bufferWidth = (int)(maxX - minX);
-            size_t bufferHeight = (int)(maxY - minY);
+
+            size_t bufferWidth;
+            size_t bufferHeight;
+            computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
 
             if (owner->owner()->node()->webView()->needsComposite()) {
                 auto& renderTarget = m_originCanvas->renderTargetInfo();
@@ -2042,8 +2056,9 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
         LayoutUnit maxY = visibleRect.maxY();
-        size_t bufferWidth = (int)(maxX - minX);
-        size_t bufferHeight = (int)(maxY - minY);
+        size_t bufferWidth;
+        size_t bufferHeight;
+        computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
 
         if (owner()->hasOwnGraphicsBufferMethod()) {
             CanvasSurface* s = nullptr;
@@ -2374,8 +2389,9 @@ bool StackingContext::fillGraphicsBufferContents(
     LayoutUnit minY = visibleRect.y();
     LayoutUnit maxY = visibleRect.maxY();
 
-    size_t bufferWidth = (int)(maxX - minX);
-    size_t bufferHeight = (int)(maxY - minY);
+    size_t bufferWidth;
+    size_t bufferHeight;
+    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
 
     if (canSkipFillGraphicsBufferDueToOpacityIsZero(this)) {
         return false;
@@ -2916,8 +2932,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     LayoutUnit minY = visibleRect.y();
     LayoutUnit maxY = visibleRect.maxY();
 
-    size_t bufferWidth = (int)(maxX - minX);
-    size_t bufferHeight = (int)(maxY - minY);
+    size_t bufferWidth;
+    size_t bufferHeight;
+    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
 
     bool thereIsNoBufferBecauseThereIsNoVisibleContent =
         !bufferWidth || !bufferHeight;

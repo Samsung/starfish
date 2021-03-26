@@ -373,14 +373,32 @@ public:
     virtual void strokeRect(const LayoutRect& rt) = 0;
     void drawPixelSnappedRect(const LayoutRect& rt)
     {
+#if defined(STARFISH_ENABLE_TEST)
+        // retain old method for our test suite
         LayoutUnit rx = rt.x();
         LayoutUnit ry = rt.y();
-
         int xx = rx.floor();
         int yy = ry.floor();
         int ww = snapSizeToPixel(rt.width(), rx);
         int hh = snapSizeToPixel(rt.height(), ry);
         drawRect(LayoutRect(xx, yy, ww, hh));
+#else
+        auto ctm = currentTransformMatrix();
+        auto tp = ctm.getType();
+        if (!(tp & SkMatrix::TypeMask::kScale_Mask) &&
+            !(tp & SkMatrix::TypeMask::kAffine_Mask) &&
+            !(tp & SkMatrix::TypeMask::kPerspective_Mask)) {
+            save();
+            LayoutUnit tx = ctm.getTranslateX();
+            LayoutUnit ty = ctm.getTranslateY();
+            resetMatrix();
+            LayoutRect newRt(rt.x() + tx, rt.y() + ty, rt.width(), rt.height());
+            drawRect(newRt.snapSizeToPixel());
+            restore();
+        } else {
+            drawRect(rt);
+        }
+#endif
     }
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,

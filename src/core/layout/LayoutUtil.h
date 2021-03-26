@@ -1291,8 +1291,14 @@ public:
         LayoutRect ret;
         LayoutUnit rx = m_location.x();
         LayoutUnit ry = m_location.y();
+#if defined(STARFISH_ENABLE_TEST)
+        // NOTE: blink is using 'round', but phantomjs-webkit passes 'floor'.
         ret.m_location.setX(rx.floor());
         ret.m_location.setY(ry.floor());
+#else
+        ret.m_location.setX(rx.round());
+        ret.m_location.setY(ry.round());
+#endif
         ret.setWidth(::Starfish::snapSizeToPixel(m_size.width(), rx));
         ret.setHeight(::Starfish::snapSizeToPixel(m_size.height(), ry));
         return ret;
