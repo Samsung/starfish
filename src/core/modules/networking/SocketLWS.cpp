@@ -506,19 +506,11 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             };
             Param* p = new Param();
             p->lws = this;
-            p->data = m_rxBuffer;
-
-            // TODO
-            m_rxBuffer.clear();
-            m_rxBuffer.shrink_to_fit();
+            p->data = std::move(m_rxBuffer);
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t handle, void* data) {
-                    struct Param {
-                        std::vector<char> data;
-                        SocketLWS* lws;
-                    };
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
 
@@ -555,23 +547,18 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         } else {
             // Text
             struct Param {
-                std::string msg;
+                std::vector<char> msg;
                 SocketLWS* lws;
+                bool isAllASCII;
             };
             Param* p = new Param();
             p->lws = this;
-            p->msg = std::string(m_rxBuffer.data(), m_rxBuffer.size());
-
-            m_rxBuffer.clear();
-            m_rxBuffer.shrink_to_fit();
+            p->isAllASCII = isAllASCII(m_rxBuffer.data(), m_rxBuffer.size());
+            p->msg = std::move(m_rxBuffer);
 
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                 nullptr,
                 [](size_t handle, void* data) {
-                    struct Param {
-                        std::string msg;
-                        SocketLWS* lws;
-                    };
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
 
@@ -582,8 +569,13 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                                             ->m_message.localName();
                     MessageEvent* e =
                         new MessageEvent(socket->executionContext(), eventName);
-                    e->setData(createScriptValue(createScriptString(
-                        String::fromUTF8(p->msg.c_str(), p->msg.length()))));
+                    if (p->isAllASCII) {
+                        e->setData(createScriptValue(createScriptASCIIString(
+                            p->msg.data(), p->msg.size())));
+                    } else {
+                        e->setData(createScriptValue(
+                            createScriptString(p->msg.data(), p->msg.size())));
+                    }
                     socket->EventTarget::dispatchEventByUA(socket, e);
                     delete p;
                 },

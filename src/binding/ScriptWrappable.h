@@ -154,6 +154,7 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
 
 ScriptString createScriptString(String* str);
 ScriptString createScriptString(const char* utf8Buffer, size_t len);
+ScriptString createScriptASCIIString(const char* asciiBuffer, size_t len);
 ScriptValue createScriptValue(ScriptObject object);
 ScriptValue createScriptValue(ScriptString s);
 ScriptValue createScriptValue(ScriptArrayBuffer buffer);
