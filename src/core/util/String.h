@@ -530,6 +530,8 @@ inline CharType toASCIIUpper(CharType c)
     return static_cast<CharType>(c & ~((c >= 'a' && c <= 'z') << 5));
 }
 
+bool isAllASCII(const char* buf, const size_t len);
+
 // utf32ToUtf8 function doesn't fill "0" for UTF8 buffer
 NEVER_INLINE size_t utf32ToUtf8SlowCase(char32_t uc, char* UTF8);
 ALWAYS_INLINE size_t utf32ToUtf8(char32_t uc, char* UTF8)

@@ -530,6 +530,11 @@ ScriptString createScriptString(const char* utf8Buffer, size_t len)
     return StringRef::createFromUTF8(utf8Buffer, len);
 }
 
+ScriptString createScriptASCIIString(const char* asciiBuffer, size_t len)
+{
+    return StringRef::createFromASCII(asciiBuffer, len);
+}
+
 ScriptValue createScriptValue(ScriptObject object)
 {
     return object;

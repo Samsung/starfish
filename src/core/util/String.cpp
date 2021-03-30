@@ -109,6 +109,16 @@ static size_t utf8ContentLength(const char* UTF8, size_t len)
     return contentLength;
 }
 
+bool isAllASCII(const char* buf, const size_t len)
+{
+    for (unsigned i = 0; i < len; i++) {
+        if ((buf[i] & 0x80) != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
 size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 {
     size_t tRequiredSize = 0;

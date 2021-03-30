@@ -290,8 +290,13 @@ void WebSocket::send(const void* buf, size_t len, int type)
 
 void WebSocket::send(String* data)
 {
-    UTF8StringDataNonGCStd dataString = data->toUTF8NonGCString();
-    send(dataString.c_str(), dataString.length(), 0);
+    data->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            WebSocket* self = (WebSocket*)data;
+            self->send(buf, len, 0);
+            return 0;
+        },
+        this);
 }
 
 void WebSocket::send(Blob* data)
