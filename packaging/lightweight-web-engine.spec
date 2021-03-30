@@ -480,7 +480,7 @@ ninja starfish.executable
 %if "%{rpm}" == "flutter"
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=flutter -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.mobile -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=flutter -DBACKEND=flutter -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.flutter -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
@@ -545,9 +545,9 @@ cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buil
 
 %if "%{rpm}" == "flutter"
 mkdir -p %{buildroot}/%{_libdir}/lwe/flutter
-cp -fr out_tizen/unified_mobile/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
-cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/flutter
-cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
+cp -fr out_tizen/flutter/release/lib/*.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/flutter/release/lib/*.flutter.so* %{buildroot}%{_libdir}/lwe/flutter
+cp -fr out_tizen/flutter/release/lightweight-web-engine.flutter %{buildroot}%{_bindir}
 %endif
 
 # for devel files
@@ -670,15 +670,15 @@ exit 0
 %if "%{rpm}" == "flutter"
 %post profile_flutter
 pushd %{_libdir}/lwe
-for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
+for FILE in `ls flutter/*.so* | grep -v 'flutter.so'`; do
    ln -sf "$FILE" .
 done
-ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
+ln -sf flutter/liblightweight-web-engine.flutter.so liblightweight-web-engine.so.1
 popd
 %endif
 %if "%{rpm}" == "flutter"
 pushd %{_bindir}
-ln -sf lightweight-web-engine.mobile %{bin}
+ln -sf lightweight-web-engine.flutter %{bin}
 popd
 /sbin/ldconfig
 exit 0
@@ -783,5 +783,5 @@ exit 0
 %if "%{rpm}" == "flutter"
 %files shell-profile_flutter
 %manifest %{name}.manifest
-%{_bindir}/lightweight-web-engine.mobile
+%{_bindir}/lightweight-web-engine.flutter
 %endif
