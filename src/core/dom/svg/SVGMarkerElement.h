@@ -68,8 +68,6 @@ private:
     SVGAnimatedEnumeration* m_markerUnits;
     SVGAnimatedAngle* m_orientAngle;
     SVGAnimatedEnumeration* m_orientType;
-
-    bool m_attributeUpdated;
 };
 } // namespace Starfish
 
