@@ -317,6 +317,7 @@ void NetworkSharedResourceManager::destroy()
 
 NetworkSharedResourceManager::NetworkSharedResourceManager()
     : m_curlShareHandle(nullptr)
+    , m_curlNonCookieShareHandle(nullptr)
     , m_curlHandleDataCache()
     , m_lastCachePruneTime(0)
     , m_cacheClearTimerID(SIZE_MAX)
@@ -338,12 +339,24 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_UNLOCKFUNC,
                       curlUnlockCallback);
     curl_share_setopt(m_curlShareHandle, CURLSHOPT_USERDATA, this);
+
+    m_curlNonCookieShareHandle = curl_share_init();
+    curl_share_setopt(m_curlNonCookieShareHandle, CURLSHOPT_SHARE,
+                      CURL_LOCK_DATA_DNS);
+    curl_share_setopt(m_curlNonCookieShareHandle, CURLSHOPT_SHARE,
+                      CURL_LOCK_DATA_SSL_SESSION);
+    curl_share_setopt(m_curlNonCookieShareHandle, CURLSHOPT_LOCKFUNC,
+                      curlLockCallback);
+    curl_share_setopt(m_curlNonCookieShareHandle, CURLSHOPT_UNLOCKFUNC,
+                      curlUnlockCallback);
+    curl_share_setopt(m_curlNonCookieShareHandle, CURLSHOPT_USERDATA, this);
 }
 
 NetworkSharedResourceManager::~NetworkSharedResourceManager()
 {
     clearAllCurlHandleDataCache();
     curl_share_cleanup(m_curlShareHandle);
+    curl_share_cleanup(m_curlNonCookieShareHandle);
     curl_global_cleanup();
 
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
@@ -363,6 +376,11 @@ void NetworkSharedResourceManager::initMutexes()
 CURLSH* NetworkSharedResourceManager::curlShareHandle() const
 {
     return m_curlShareHandle;
+}
+
+CURLSH* NetworkSharedResourceManager::curlNonCookieShareHandle() const
+{
+    return m_curlNonCookieShareHandle;
 }
 
 std::string NetworkSharedResourceManager::cookieStoreFilePath() const

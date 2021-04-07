@@ -33,7 +33,6 @@ HTTPTransaction::HTTPTransaction()
     : m_httpRequest()
     , m_timeout(0)
     , m_curl(nullptr)
-    , m_curlsh(nullptr)
     , m_res(CURLE_OK)
     , m_procCB(nullptr)
     , m_procData(nullptr)
@@ -55,19 +54,14 @@ HTTPTransaction::~HTTPTransaction()
 {
 }
 
-void HTTPTransaction::preprocess(bool useNewHandle)
+void HTTPTransaction::preprocess()
 {
     m_httpResponse.reset(new HTTPResponse());
-    m_curlsh = NetworkSharedResourceManager::getInstance()->curlShareHandle();
 
-    if (useNewHandle) {
-        m_curl = curl_easy_init();
-    } else {
-        CurlHandleData cd =
-            NetworkSharedResourceManager::getInstance()->getCurlHandleData(
-                m_httpRequest->baseURL());
-        m_curl = cd.curl;
-    }
+    CurlHandleData cd =
+        NetworkSharedResourceManager::getInstance()->getCurlHandleData(
+            m_httpRequest->baseURL());
+    m_curl = cd.curl;
 
 #ifdef STARFISH_ENABLE_TEST
     const char* verbose = getenv("NETWORK_LOG_VERBOSE");
@@ -101,6 +95,11 @@ void HTTPTransaction::preprocess(bool useNewHandle)
     curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
+    curl_easy_setopt(m_curl, CURLOPT_BUFFERSIZE, 1024 * 64);
+#ifdef CURLOPT_UPLOAD_BUFFERSIZE
+    curl_easy_setopt(m_curl, CURLOPT_UPLOAD_BUFFERSIZE, 1024 * 64);
+#endif
+
     if (m_proxyURL.size()) {
         curl_easy_setopt(m_curl, CURLOPT_PROXY, m_proxyURL.data());
     }
@@ -111,32 +110,28 @@ void HTTPTransaction::preprocess(bool useNewHandle)
     registerCurlHandlers();
 
     STARFISH_ASSERT(m_curl);
-    STARFISH_ASSERT(m_curlsh);
 }
 
-void HTTPTransaction::postprocess(bool preflight)
+void HTTPTransaction::postprocess()
 {
     STARFISH_ASSERT(m_curl);
 
 #ifdef STARFISH_ENABLE_TEST
     printCurlRequestDump();
 #endif
-    if (preflight) {
-        curl_easy_cleanup(m_curl);
-    } else {
-        CurlHandleData cd = { m_curl, 0 };
-        NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
-            m_httpRequest->baseURL(), cd);
-    }
+
+    CurlHandleData cd = { m_curl, 0 };
+    NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
+        m_httpRequest->baseURL(), cd);
+
     m_curl = nullptr;
-    m_curlsh = nullptr; // Do not free;
 }
 
 void HTTPTransaction::start()
 {
     bool includeCredentials = m_httpRequest->includeCredentials();
 
-    preprocess(!includeCredentials);
+    preprocess();
 
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -149,12 +144,10 @@ void HTTPTransaction::start()
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
-
-    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
-    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
-
     if (includeCredentials) {
-        curl_easy_setopt(m_curl, CURLOPT_SHARE, m_curlsh);
+        curl_easy_setopt(
+            m_curl, CURLOPT_SHARE,
+            NetworkSharedResourceManager::getInstance()->curlShareHandle());
         if (NetworkSharedResourceManager::getInstance()
                 ->cookieStoreFilePath()
                 .compare("") != 0) {
@@ -162,12 +155,33 @@ void HTTPTransaction::start()
                              NetworkSharedResourceManager::getInstance()
                                  ->cookieStoreFilePath()
                                  .data());
+            curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE,
+                             NetworkSharedResourceManager::getInstance()
+                                 ->cookieStoreFilePath()
+                                 .data());
+        }
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_SHARE,
+                         NetworkSharedResourceManager::getInstance()
+                             ->curlNonCookieShareHandle());
+    }
+
+    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
+    // Disable Expect: 100-contiune
+    // https://gms.tf/when-curl-sends-100-continue.html
+    if (m_httpRequest->method().compare("POST") == 0 ||
+        m_httpRequest->method().compare("PUT") == 0) {
+        if (m_httpRequest->headers().find(HTTPHeaderMap::kExpect) ==
+            m_httpRequest->headers().headerMap().end()) {
+            list = curl_slist_append(list, "Expect:");
         }
     }
+    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
+
     if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
                          m_httpRequest->entityBody().length());
-        curl_easy_setopt(m_curl, CURLOPT_COPYPOSTFIELDS,
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS,
                          m_httpRequest->entityBody().data());
     } else if (m_httpRequest->method().compare("GET") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L);
@@ -192,19 +206,25 @@ void HTTPTransaction::start()
     }
 #endif
     m_httpResponse->setResponseTime(timestamp() / 1000);
+
     updateTransactionStatus();
     curl_slist_free_all(list);
-    postprocess(!includeCredentials);
+    postprocess();
 }
 
 void HTTPTransaction::startPreFlightRequest()
 {
-    preprocess(true);
+    preprocess();
 
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 0L);
     curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 0);
     curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
+    curl_easy_setopt(m_curl, CURLOPT_SHARE,
+                     NetworkSharedResourceManager::getInstance()
+                         ->curlNonCookieShareHandle());
+    curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR, "");
+    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");
 
     curl_slist* list =
         m_httpRequest->headers().generateCurlListToPreflightRequest();
@@ -233,7 +253,7 @@ void HTTPTransaction::startPreFlightRequest()
     curl_slist_free_all(list);
     list = nullptr;
 
-    postprocess(true);
+    postprocess();
 }
 
 void HTTPTransaction::didReceiveHeader(const std::string& header)
@@ -336,6 +356,11 @@ void HTTPTransaction::printCurlRequestDump()
         res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_DOWNLOAD, &val);
         if ((CURLE_OK == res) && (val > 0)) {
             STARFISH_LOG_INFO("[Data downloaded: %.0fbytes]\n", val);
+        }
+
+        res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_UPLOAD, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Data uploaded: %.0fbytes]\n", val);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_TOTAL_TIME, &val);

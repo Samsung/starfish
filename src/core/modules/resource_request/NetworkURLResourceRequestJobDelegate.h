@@ -34,7 +34,7 @@ struct NetworkURLWorkerData {
     NetworkURLWorkerData(ResourceRequest* orgRequest);
     ~NetworkURLWorkerData();
 
-    bool isAborted;
+    std::atomic<bool> isAborted;
     bool needsToHandleError;
     long lastTransactionResponseCode;
 

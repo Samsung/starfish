@@ -43,7 +43,8 @@ public:
     static NetworkSharedResourceManager* getInstance();
     static void destroy();
 
-    CURLSH* curlShareHandle() const; // Do not free
+    CURLSH* curlShareHandle() const;          // Do not free
+    CURLSH* curlNonCookieShareHandle() const; // Do not free
     std::string cookieStoreFilePath() const;
     void setCookieStoreFilePath(const std::string& name);
     Mutex* resourceMutex(curl_lock_data data);
@@ -78,6 +79,7 @@ private:
     void initMutexes();
 
     CURLSH* m_curlShareHandle;
+    CURLSH* m_curlNonCookieShareHandle;
     CurlHandleDataMultiMap m_curlHandleDataCache;
     uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;
