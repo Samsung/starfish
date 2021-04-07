@@ -30,11 +30,12 @@ public:
                                                const std::string& baseURL,
                                                const std::string& method,
                                                const HTTPHeaderMap& headers,
-                                               const std::string& entityBody,
+                                               std::string&& entityBody,
                                                bool includeCredentials)
     {
-        return std::unique_ptr<HTTPRequest>(new HTTPRequest(
-            url, baseURL, method, headers, entityBody, includeCredentials));
+        return std::unique_ptr<HTTPRequest>(
+            new HTTPRequest(url, baseURL, method, headers,
+                            std::move(entityBody), includeCredentials));
     }
 
     ~HTTPRequest();
@@ -97,7 +98,7 @@ public:
 private:
     HTTPRequest(const std::string& url, const std::string& baseURL,
                 const std::string& method, const HTTPHeaderMap& headers,
-                const std::string& entityBody, bool includeCredentials);
+                std::string&& entityBody, bool includeCredentials);
     // Use std::string because it does not inherit gc
     std::string m_url;
     std::string m_baseURL;

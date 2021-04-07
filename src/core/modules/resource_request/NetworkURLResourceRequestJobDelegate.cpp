@@ -432,11 +432,11 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
-    nwd->httpTransaction->setHTTPRequest(
-        HTTPRequest::create(m_orgProxy->url()->urlString()->toUTF8NonGCString(),
-                            m_orgProxy->url()->host()->toUTF8NonGCString(),
-                            m_orgProxy->method()->toUTF8NonGCString(), headers,
-                            body->toUTF8NonGCString(), includeCredentials));
+    nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
+        m_orgProxy->url()->urlString()->toUTF8NonGCString(),
+        m_orgProxy->url()->host()->toUTF8NonGCString(),
+        m_orgProxy->method()->toUTF8NonGCString(), headers,
+        std::move(body->toUTF8NonGCString()), includeCredentials));
     nwd->httpTransaction->httpRequest().setUnsafeRequestHeaderNames(
         unsafeHeaders);
     nwd->httpTransaction->setTimeout(
@@ -670,11 +670,11 @@ int NetworkURLResourceRequestJobDelegate::curlProgressCallback(
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)clientp;
     ResourceRequest* request = nwd->request;
-    Locker<Mutex> locker(*request->m_mutex);
     if (nwd->isAborted) {
         return 1;
     }
 
+    Locker<Mutex> locker(*request->m_mutex);
     request->m_loaded = static_cast<uint32_t>(dlnow);
     request->m_total = static_cast<uint32_t>(dltotal);
     return 0;
@@ -687,10 +687,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     ResourceRequest* request = nwd->request;
-    Locker<Mutex> locker(*request->m_mutex);
     if (nwd->isAborted) {
         return 0;
     }
+
+    Locker<Mutex> locker(*request->m_mutex);
 
     size_t realSize = size * nmemb;
     if (nwd->httpTransaction->inPreflightRequest()) {
@@ -733,21 +734,24 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                             NetworkURLWorkerData* nwd =
                                 (NetworkURLWorkerData*)data;
                             ResourceRequest* request = nwd->request;
-                            Locker<Mutex> locker(*request->m_mutex);
                             {
-                                STARFISH_ASSERT(
-                                    handle ==
+                                Locker<Mutex> locker(*request->m_mutex);
+                                {
+                                    STARFISH_ASSERT(
+                                        handle ==
+                                        request
+                                            ->m_pendingOnProgressEventIdlerHandle);
                                     request
-                                        ->m_pendingOnProgressEventIdlerHandle);
-                                request->m_pendingOnProgressEventIdlerHandle =
-                                    MessageLoopInvalidID;
-                            }
-                            if (!request->isSync()) {
-                                request->response().insert(
-                                    request->response().end(),
-                                    nwd->pendingResponseData.begin(),
-                                    nwd->pendingResponseData.end());
-                                nwd->pendingResponseData.clear();
+                                        ->m_pendingOnProgressEventIdlerHandle =
+                                        MessageLoopInvalidID;
+                                }
+                                if (!request->isSync()) {
+                                    request->response().insert(
+                                        request->response().end(),
+                                        nwd->pendingResponseData.begin(),
+                                        nwd->pendingResponseData.end());
+                                    nwd->pendingResponseData.clear();
+                                }
                             }
 
                             request->changeReadyState(ReadyState::Loading,
@@ -939,7 +943,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     ResourceRequest* request = nwd->request;
 
     Locker<Mutex> locker(*request->m_mutex);
-
     nwd->httpTransaction->updateTransactionStatus();
     size_t realSize = size * nmemb;
     std::string rawHeader(static_cast<const char*>(ptr), realSize);
@@ -1003,11 +1006,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlUploadBufferDataCallback(
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     ResourceRequest* request = nwd->request;
 
-    Locker<Mutex> locker(*request->m_mutex);
-
     if (nwd->isAborted) {
         return 0;
     }
+
+    Locker<Mutex> locker(*request->m_mutex);
 
     size_t bufferSize = size * nmemb;
     if (nwd->sizeleftToUpload) {

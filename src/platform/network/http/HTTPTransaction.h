@@ -121,8 +121,8 @@ public:
 
 private:
     HTTPTransaction();
-    void preprocess(bool useNewHandle);
-    void postprocess(bool useNewHandle);
+    void preprocess();
+    void postprocess();
     void registerCurlHandlers();
 
     std::unique_ptr<HTTPRequest> m_httpRequest;
@@ -130,7 +130,6 @@ private:
 
     unsigned long m_timeout;
     CURL* m_curl;
-    CURLSH* m_curlsh;
     CURLcode m_res;
 
     std::string m_proxyURL;

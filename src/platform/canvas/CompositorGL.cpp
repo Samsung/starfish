@@ -2328,7 +2328,7 @@ public:
 
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
-        LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
+        // LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
         webView->platformWindow()->glMakeCurrent();
 
         m_seenFBOUsage = false;
@@ -2382,7 +2382,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr) override
     {
-        LongTaskFinder p("CompositorImplGL::clearColor", 1);
+        // LongTaskFinder p("CompositorImplGL::clearColor", 1);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
         glClear(GL_COLOR_BUFFER_BIT);
     }

@@ -34,22 +34,14 @@ public:
     {
     }
 
-    void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
-    {
-        ProgressState progState = request->progressState();
-
-        if (progState == ProgressState::InError) {
-            m_fetch->fail();
-        }
-    }
-
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
     {
         if (fromExplicit) {
             if (request->readyState() == ReadyState::Done) {
-                if (!request->isError()) {
+                if (request->isError()) {
+                    m_fetch->fail();
+                } else {
                     m_fetch->success(request);
-
                     request->response().clear();
                     request->response().shrink_to_fit();
                 }
