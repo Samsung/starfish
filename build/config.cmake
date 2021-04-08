@@ -219,7 +219,12 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "flutter")
     IF (${HOST} STREQUAL "tizen")
-        SET (LWE_DEFINES_BACKEND -DSTARFISH_FLUTTER)
+        SET (LWE_DEFINES_BACKEND
+            -DSTARFISH_FLUTTER
+            -DSTARFISH_ENABLE_MULTIMEDIA
+            -DSTARFISH_ENABLE_CANVAS
+            -DSTARFISH_ENABLE_MULTI_THREAD_IMAGE_DECODING
+        )
     ENDIF()
 ENDIF()
 
@@ -383,7 +388,7 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tize
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
+    pkg_check_modules (STARFISH_BACKEND REQUIRED capi-media-player capi-media-sound-manager libpng freetype2 fontconfig harfbuzz elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20 )
     pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
