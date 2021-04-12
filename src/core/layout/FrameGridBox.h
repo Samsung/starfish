@@ -36,7 +36,7 @@ class GridLine : public gc {
 public:
     bool isDefinite()
     {
-        if (m_value.hasValue() && !m_hasSpan) {
+        if (m_value.hasValue() && !hasSpan()) {
             return true;
         }
         return false;
@@ -48,7 +48,7 @@ public:
             return false;
         }
 
-        if (m_hasSpan) {
+        if (hasSpan()) {
             return false;
         }
 
@@ -76,12 +76,15 @@ public:
 
     bool hasSpan()
     {
-        return m_hasSpan;
+        return m_spanValue > 1;
     }
 
-    void setHasSpan(bool v)
-    {
-        m_hasSpan = v;
+    size_t spanValue() {
+        return m_spanValue;
+    }
+
+    void setSpanValue(size_t v) {
+        m_spanValue = v;
     }
 
     bool hasCustomIdent()
@@ -100,8 +103,8 @@ public:
     }
 
 private:
-    bool m_hasSpan{ false };
     Nullable<size_t> m_value;
+    size_t m_spanValue{ 1 };
     String* m_customIdent{ String::emptyString };
 };
 
@@ -192,6 +195,8 @@ public:
     void parseGridRowAndColumnValues(GridFormattingContext& ctx);
     GridLine* parseGridLine(String* gridLineValue);
     void resolveDefinitePositionValues();
+    size_t rowSpanValue();
+    size_t columnSpanValue();
 
 private:
     FrameBox* m_box;
