@@ -337,6 +337,7 @@ test/cairo/internal-test/dom/HTMLScriptElement08.html
 test/cairo/internal-test/dom/HTMLScriptElement09.html
 test/cairo/internal-test/dom/HTMLScriptElement10.html
 test/cairo/internal-test/dom/focused-element-removed.html
+test/cairo/internal-test/dom/text-decoder.html
 test/cairo/internal-test/css/background/background_lineargradient1.html
 test/cairo/internal-test/css/background/background_lineargradient2.html
 test/cairo/internal-test/css/background/background_lineargradient3.html

@@ -1,0 +1,22 @@
+// https://encoding.spec.whatwg.org/#interface-textdecoder
+
+
+dictionary TextDecoderOptions {
+  boolean fatal = false;
+  boolean ignoreBOM = false;
+};
+
+dictionary TextDecodeOptions {
+  boolean stream = false;
+};
+
+[Exposed=(Window,Worker),
+ ConstructorCallWith=ExecutionContext,
+ RaisesException=Constructor,
+ Constructor(optional DOMString label = "utf-8", optional TextDecoderOptions options),
+] interface TextDecoder {
+  readonly attribute DOMString encoding;
+  readonly attribute boolean fatal;
+  readonly attribute boolean ignoreBOM;
+  [RaisesException] DOMString decode(optional BufferSource input, optional TextDecodeOptions options);
+};
