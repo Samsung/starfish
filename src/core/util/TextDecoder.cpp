@@ -87,7 +87,6 @@ String* TextDecoder::decode(const uint8_t* data, size_t length,
                             TextDecodeOptions options)
 {
     if (m_ignoreBOM) {
-        size_t length;
         uint8_t c, c2, c3, c4;
 
         bool found = false;
