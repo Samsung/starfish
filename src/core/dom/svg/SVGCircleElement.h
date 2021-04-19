@@ -52,7 +52,7 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void updateAttributeNeeded(QualifiedName name);
+    virtual void updateSVGAttributeNeeded(QualifiedName name);
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
@@ -65,6 +65,9 @@ public:
 
 private:
     SVGAnimatedTransformList* m_transform;
+    SVGAnimatedLength* m_cx;
+    SVGAnimatedLength* m_cy;
+    SVGAnimatedLength* m_r;
 };
 } // namespace Starfish
 

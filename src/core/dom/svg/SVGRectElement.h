@@ -56,8 +56,13 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
+    virtual void updateSVGAttributeNeeded(QualifiedName name);
+
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
@@ -65,6 +70,14 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(rx);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(ry);
+
+private:
+    SVGAnimatedLength* m_x;
+    SVGAnimatedLength* m_y;
+    SVGAnimatedLength* m_width;
+    SVGAnimatedLength* m_height;
+    SVGAnimatedLength* m_rx;
+    SVGAnimatedLength* m_ry;
 };
 } // namespace Starfish
 

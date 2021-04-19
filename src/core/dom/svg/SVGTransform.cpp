@@ -183,7 +183,7 @@ void SVGTransform::setMatrix(DOMMatrixReadOnly* matrix)
     }
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setTranslate(float tx, float ty)
@@ -216,7 +216,7 @@ void SVGTransform::setTranslate(float tx, float ty)
 
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setScale(float sx, float sy)
@@ -246,7 +246,7 @@ void SVGTransform::setScale(float sx, float sy)
 
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setRotate(float angle, float cx, float cy)
@@ -283,7 +283,7 @@ void SVGTransform::setRotate(float angle, float cx, float cy)
 
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setSkewX(float angle)
@@ -313,7 +313,7 @@ void SVGTransform::setSkewX(float angle)
 
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 void SVGTransform::setSkewY(float angle)
@@ -343,7 +343,7 @@ void SVGTransform::setSkewY(float angle)
 
     updateMatrixByValue();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 bool SVGTransform::isReadOnly()

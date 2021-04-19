@@ -32,6 +32,10 @@ void* SVGMaskElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGMaskElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_x1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_x2));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGMaskElement, m_y2));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGMaskElement));
         typeInited = true;
     }
@@ -49,6 +53,21 @@ void SVGMaskElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+}
+
+void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x1 == name) {
+        setAttribute(ss->m_x1, x1()->baseVal()->valueAsString());
+    } else if (ss->m_y1 == name) {
+        setAttribute(ss->m_y1, y1()->baseVal()->valueAsString());
+    } else if (ss->m_x2 == name) {
+        setAttribute(ss->m_x2, x2()->baseVal()->valueAsString());
+    } else if (ss->m_y2 == name) {
+        setAttribute(ss->m_y2, y2()->baseVal()->valueAsString());
+    }
 }
 
 void SVGMaskElement::styleForPresentationAttribute(

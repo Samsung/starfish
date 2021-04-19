@@ -30,21 +30,39 @@ void SVGLineElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
+}
 
+void SVGLineElement::updateSVGAttributeNeeded(QualifiedName name)
+{
     StaticStrings* ss = starfish()->staticStrings();
+
     if (ss->m_x1 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
-    } else if (ss->m_x2 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        setAttribute(ss->m_x1, x1()->baseVal()->valueAsString());
     } else if (ss->m_y1 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        setAttribute(ss->m_y1, y1()->baseVal()->valueAsString());
+    } else if (ss->m_x2 == name) {
+        setAttribute(ss->m_x2, x2()->baseVal()->valueAsString());
     } else if (ss->m_y2 == name) {
-        setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-        setNeedsPainting();
+        setAttribute(ss->m_y2, y2()->baseVal()->valueAsString());
     }
+}
+
+void* SVGLineElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SVGLineElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(SVGLineElement)] = { 0 };
+        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLineElement, m_x1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLineElement, m_y1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLineElement, m_x2));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLineElement, m_y2));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGLineElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 void SVGLineElement::styleForPresentationAttribute(

@@ -56,6 +56,11 @@ public:
         return true;
     }
 
+    virtual bool needsSizingAttributes() override
+    {
+        return true;
+    }
+
     virtual bool needsClipPathAttributes()
     {
         return false;
@@ -80,6 +85,8 @@ public:
     virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
         override;
 
+    virtual void updateSVGAttributeNeeded(QualifiedName name);
+
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(x);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(y);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
@@ -93,6 +100,11 @@ public:
 protected:
     bool m_hasViewBox;
     Unit::Rect m_viewBox;
+
+    SVGAnimatedLength* m_x;
+    SVGAnimatedLength* m_y;
+    SVGAnimatedLength* m_width;
+    SVGAnimatedLength* m_height;
 };
 } // namespace Starfish
 

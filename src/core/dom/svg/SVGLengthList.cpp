@@ -38,7 +38,6 @@ SVGLengthList::SVGLengthList(SVGElement* sourceElement,
     , m_targetAttribute(targetAttribute)
     , m_isUpdated(false)
     , m_isReadOnly(false)
-    , m_isBaseVal(false)
 {
 }
 
@@ -78,8 +77,7 @@ void SVGLengthList::clear()
     // object that reflects an attribute, then reserialize the reflected
     // attribute.
     if (m_targetAttribute.toString()->equals(
-            AtomicString::emptyAtomicString()) != true &&
-        isBaseVal() == true) {
+            AtomicString::emptyAtomicString()) != true) {
         updateAttributeByList();
     }
 }
@@ -120,8 +118,7 @@ SVGLength* SVGLengthList::initialize(SVGLength* newItem)
     // object that reflects an attribute, then reserialize the reflected
     // attribute.
     if (m_targetAttribute.toString()->equals(
-            AtomicString::emptyAtomicString()) != true &&
-        isBaseVal() == true) {
+            AtomicString::emptyAtomicString()) != true) {
         updateAttributeByList();
     }
 
@@ -180,8 +177,7 @@ SVGLength* SVGLengthList::insertItemBefore(SVGLength* newItem,
     // object that reflects an attribute, then reserialize the reflected
     // attribute.
     if (m_targetAttribute.toString()->equals(
-            AtomicString::emptyAtomicString()) != true &&
-        isBaseVal() == true) {
+            AtomicString::emptyAtomicString()) != true) {
         updateAttributeByList();
     }
     // 7. return newItem
@@ -229,8 +225,7 @@ SVGLength* SVGLengthList::replaceItem(SVGLength* newItem, unsigned long index)
     // object that reflects an attribute, then reserialize the reflected
     // attribute.
     if (m_targetAttribute.toString()->equals(
-            AtomicString::emptyAtomicString()) != true &&
-        isBaseVal() == true) {
+            AtomicString::emptyAtomicString()) != true) {
         updateAttributeByList();
     }
 
@@ -300,8 +295,7 @@ SVGLength* SVGLengthList::appendItem(SVGLength* newItem)
     // object that reflects an attribute, then reserialize the reflected
     // attribute.
     if (m_targetAttribute.toString()->equals(
-            AtomicString::emptyAtomicString()) != true &&
-        isBaseVal() == true) {
+            AtomicString::emptyAtomicString()) != true) {
         updateAttributeByList();
     }
 
@@ -355,6 +349,7 @@ void SVGLengthList::updateAttributeByList()
             sb.appendChar(' ');
         }
     }
+
     m_sourceElement->setAttribute(m_targetAttribute, sb.finalize());
 }
 
@@ -395,15 +390,5 @@ bool SVGLengthList::isReadOnly()
 void SVGLengthList::setReadOnly()
 {
     m_isReadOnly = true;
-}
-
-bool SVGLengthList::isBaseVal()
-{
-    return m_isBaseVal;
-}
-
-void SVGLengthList::setBaseVal()
-{
-    m_isBaseVal = true;
 }
 } // namespace Starfish

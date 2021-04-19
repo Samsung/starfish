@@ -55,12 +55,18 @@ void SVGCircleElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
-void SVGCircleElement::updateAttributeNeeded(QualifiedName name)
+void SVGCircleElement::updateSVGAttributeNeeded(QualifiedName name)
 {
     StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_transform == name) {
         transform()->baseVal()->updateAttributeByList();
+    } else if (ss->m_r == name) {
+        setAttribute(ss->m_r, r()->baseVal()->valueAsString());
+    } else if (ss->m_cx == name) {
+        setAttribute(ss->m_cx, cx()->baseVal()->valueAsString());
+    } else if (ss->m_cy == name) {
+        setAttribute(ss->m_cy, cy()->baseVal()->valueAsString());
     }
 }
 
@@ -74,6 +80,9 @@ void* SVGCircleElement::operator new(size_t size)
         SVGElement::fillGCDescriptor(desc);
 
         GC_set_bit(desc, GC_WORD_OFFSET(SVGCircleElement, m_transform));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGCircleElement, m_cx));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGCircleElement, m_cy));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGCircleElement, m_r));
 
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGCircleElement));
         typeInited = true;

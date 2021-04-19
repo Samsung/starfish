@@ -81,6 +81,17 @@ void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+void SVGTextElement::updateAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x == name) {
+        x()->baseVal()->updateAttributeByList();
+    } else if (ss->m_y == name) {
+        x()->baseVal()->updateAttributeByList();
+    }
+}
+
 void SVGTextElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
@@ -113,7 +124,6 @@ SVGAnimatedLengthList* SVGTextElement::x()
 
         xBaseVal->updateListByAttribute();
         xAnimVal->updateListByAttribute();
-        xBaseVal->setBaseVal();
 
         for (size_t i = 0; i < xAnimVal->length(); ++i) {
             xAnimVal->getItem(i)->setReadOnly();
@@ -136,7 +146,6 @@ SVGAnimatedLengthList* SVGTextElement::y()
 
         yBaseVal->updateListByAttribute();
         yAnimVal->updateListByAttribute();
-        yBaseVal->setBaseVal();
 
         for (size_t i = 0; i < yAnimVal->length(); ++i) {
             yAnimVal->getItem(i)->setReadOnly();

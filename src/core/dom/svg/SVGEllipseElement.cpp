@@ -54,6 +54,39 @@ void SVGEllipseElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+void SVGEllipseElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_cx == name) {
+        setAttribute(ss->m_cx, cx()->baseVal()->valueAsString());
+    } else if (ss->m_cy == name) {
+        setAttribute(ss->m_cy, cy()->baseVal()->valueAsString());
+    } else if (ss->m_rx == name) {
+        setAttribute(ss->m_rx, rx()->baseVal()->valueAsString());
+    } else if (ss->m_ry == name) {
+        setAttribute(ss->m_ry, ry()->baseVal()->valueAsString());
+    }
+}
+
+void* SVGEllipseElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SVGEllipseElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(SVGEllipseElement)] = { 0 };
+        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGEllipseElement, m_cx));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGEllipseElement, m_cy));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGEllipseElement, m_rx));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGEllipseElement, m_ry));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGEllipseElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void SVGEllipseElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {

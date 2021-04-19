@@ -73,6 +73,18 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
         } else if (ss->m_y == name) {
             setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
             setNeedsLayout();
+        } else if (ss->m_x1 == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+        } else if (ss->m_y1 == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+        } else if (ss->m_x2 == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
+        } else if (ss->m_y2 == name) {
+            setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
+            setNeedsLayout();
         }
     }
 

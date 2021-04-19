@@ -42,6 +42,45 @@ void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+void SVGRectElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x == name) {
+        setAttribute(ss->m_x, x()->baseVal()->valueAsString());
+    } else if (ss->m_y == name) {
+        setAttribute(ss->m_y, y()->baseVal()->valueAsString());
+    } else if (ss->m_width == name) {
+        setAttribute(ss->m_width, width()->baseVal()->valueAsString());
+    } else if (ss->m_height == name) {
+        setAttribute(ss->m_height, height()->baseVal()->valueAsString());
+    } else if (ss->m_rx == name) {
+        setAttribute(ss->m_rx, rx()->baseVal()->valueAsString());
+    } else if (ss->m_ry == name) {
+        setAttribute(ss->m_ry, ry()->baseVal()->valueAsString());
+    }
+}
+
+void* SVGRectElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SVGRectElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(SVGRectElement)] = { 0 };
+        SVGElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_x));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_y));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_width));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_height));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_rx));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGRectElement, m_ry));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGRectElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void SVGRectElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
