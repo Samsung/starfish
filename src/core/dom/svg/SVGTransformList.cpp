@@ -63,7 +63,7 @@ void SVGTransformList::clear()
     }
     clearWithoutUpdateAttribute();
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 }
 
 SVGTransform* SVGTransformList::initialize(SVGTransform* newItem)
@@ -91,7 +91,7 @@ SVGTransform* SVGTransformList::initialize(SVGTransform* newItem)
 
     appendItemWithoutUpdateAttribute(item);
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
     return item;
 }
 
@@ -131,7 +131,7 @@ SVGTransform* SVGTransformList::insertItemBefore(SVGTransform* newItem,
         appendItemWithoutUpdateAttribute(item);
     }
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 
     return item;
 }
@@ -165,7 +165,7 @@ SVGTransform* SVGTransformList::replaceItem(SVGTransform* newItem,
     m_v.erase(index);
     m_v.insert(index, item);
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 
     return item;
 }
@@ -190,7 +190,7 @@ SVGTransform* SVGTransformList::removeItem(unsigned long index)
     item->detach();
 
     removeItemWithoutUpdateAttribute(index);
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 
     return item;
 }
@@ -215,7 +215,7 @@ SVGTransform* SVGTransformList::appendItem(SVGTransform* newItem)
 
     appendItemWithoutUpdateAttribute(item);
 
-    m_sourceElement->updateAttributeNeeded(m_targetAttribute);
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
 
     return item;
 }

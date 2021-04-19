@@ -37,6 +37,10 @@ void* SVGImageElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(SVGImageElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_imageData));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_imageResource));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_x));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_y));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_width));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_height));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGImageElement));
         typeInited = true;
@@ -139,6 +143,21 @@ void SVGImageElement::didAttributeChanged(QualifiedName name, String* old,
         }
     } else if (name == ss->m_preserveAspectRatio) {
         setNeedsPainting();
+    }
+}
+
+void SVGImageElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x == name) {
+        setAttribute(ss->m_x, x()->baseVal()->valueAsString());
+    } else if (ss->m_y == name) {
+        setAttribute(ss->m_y, y()->baseVal()->valueAsString());
+    } else if (ss->m_width == name) {
+        setAttribute(ss->m_width, width()->baseVal()->valueAsString());
+    } else if (ss->m_height == name) {
+        setAttribute(ss->m_height, height()->baseVal()->valueAsString());
     }
 }
 

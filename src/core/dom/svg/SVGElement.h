@@ -29,12 +29,16 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 
 // TODO implement animVal
-#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)               \
-    SVGAnimatedLength* attrName()                                   \
-    {                                                               \
-        SVGLength* baseVal =                                        \
-            new SVGLength(this, staticStrings()->m_##attrName);     \
-        return new SVGAnimatedLength(document(), baseVal, nullptr); \
+#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                \
+    SVGAnimatedLength* attrName()                                    \
+    {                                                                \
+        if (m_##attrName == nullptr) {                               \
+            SVGLength* baseVal =                                     \
+                new SVGLength(this, staticStrings()->m_##attrName);  \
+            m_##attrName =                                           \
+                new SVGAnimatedLength(document(), baseVal, nullptr); \
+        }                                                            \
+        return m_##attrName;                                         \
     }
 
 #define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)        \
@@ -90,7 +94,7 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
 
-    virtual void updateAttributeNeeded(QualifiedName name){};
+    virtual void updateSVGAttributeNeeded(QualifiedName name){};
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;

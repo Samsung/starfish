@@ -193,6 +193,8 @@ void SVGLength::setValueInSpecifiedUnits(float v)
 
     m_valueInSpecifiedUnits = v;
 
+    m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
+
     if (m_targetAttribute.localName()->length()) {
         if (m_sourceElement->isSVGTextElement()) {
             SVGLengthList* list;

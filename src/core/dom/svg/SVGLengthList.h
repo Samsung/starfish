@@ -62,9 +62,6 @@ public:
     bool isReadOnly();
     void setReadOnly();
 
-    bool isBaseVal();
-    void setBaseVal();
-
 protected:
     void clearWithoutUpdateAttribute()
     {
@@ -102,7 +99,6 @@ protected:
 
     bool m_isUpdated;
     bool m_isReadOnly;
-    bool m_isBaseVal;
     GCVector<SVGLength*> m_v;
 };
 } // namespace Starfish
