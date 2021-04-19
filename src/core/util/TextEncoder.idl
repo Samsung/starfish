@@ -1,4 +1,12 @@
 // https://encoding.spec.whatwg.org/#interface-textencoder
+
+/*
+dictionary TextEncoderEncodeIntoResult {
+  unsigned long long read;
+  unsigned long long written;
+};
+*/
+
 [
  Exposed=(Window,Worker),
  ConstructorCallWith=ExecutionContext,
@@ -7,4 +15,5 @@
 ] interface TextEncoder {
   readonly attribute DOMString encoding;
   Uint8Array encode(optional USVString input = "");
+  [Unimplemented] TextEncoderEncodeIntoResult encodeInto(USVString source, [AllowShared] Uint8Array destination);
 };
