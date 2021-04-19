@@ -393,6 +393,15 @@ public:
         setLen(oldSize);
     }
 
+    T* takeBuffer()
+    {
+        T* buf = m_buffer;
+        m_buffer = nullptr;
+        m_size = 0;
+        m_capacity = 0;
+        return buf;
+    }
+
 protected:
     void makeEmpty()
     {

@@ -888,6 +888,22 @@ ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance)
         .result->asInt8ArrayObject();
 }
 
+ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
+                                          void* scriptFreeableBuffer, size_t len)
+{
+    ContextRef* ctx = instance->scriptContext();
+    return Evaluator::execute(ctx,
+                              [](ExecutionStateRef* state, void* scriptFreeableBuffer,
+                                      size_t len) -> ValueRef* {
+                                  auto buf = ArrayBufferObjectRef::create(state);
+                                  buf->attachBuffer(state, scriptFreeableBuffer, len);
+                                  auto arr = Uint8ArrayObjectRef::create(state);
+                                  arr->setBuffer(buf, 0, len, len);
+                                  return arr;
+                              }, scriptFreeableBuffer, len)
+        .result->asUint8ArrayObject();
+}
+
 ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance)
 {
     ContextRef* ctx = instance->scriptContext();
