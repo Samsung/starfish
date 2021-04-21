@@ -88,14 +88,14 @@ protected:
     void loadImage(String* src);
     ResourceURL* origin();
 
-    ImageResource* m_imageResource;
-    NativeImageData* m_imageData;
+    ImageResource* m_imageResource{ nullptr };
+    NativeImageData* m_imageData{ nullptr };
     RequestErrorType m_requestErrorType;
 
-    SVGAnimatedLength* m_x;
-    SVGAnimatedLength* m_y;
-    SVGAnimatedLength* m_width;
-    SVGAnimatedLength* m_height;
+    SVGAnimatedLength* m_x{ nullptr };
+    SVGAnimatedLength* m_y{ nullptr };
+    SVGAnimatedLength* m_width{ nullptr };
+    SVGAnimatedLength* m_height{ nullptr };
 };
 } // namespace Starfish
 

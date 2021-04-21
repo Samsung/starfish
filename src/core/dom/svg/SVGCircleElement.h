@@ -64,10 +64,10 @@ public:
     SVGAnimatedTransformList* transform();
 
 private:
-    SVGAnimatedTransformList* m_transform;
-    SVGAnimatedLength* m_cx;
-    SVGAnimatedLength* m_cy;
-    SVGAnimatedLength* m_r;
+    SVGAnimatedTransformList* m_transform{ nullptr };
+    SVGAnimatedLength* m_cx{ nullptr };
+    SVGAnimatedLength* m_cy{ nullptr };
+    SVGAnimatedLength* m_r{ nullptr };
 };
 } // namespace Starfish
 
