@@ -98,13 +98,13 @@ public:
     SVGTransform* createSVGTransform();
 
 protected:
-    bool m_hasViewBox;
+    bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;
 
-    SVGAnimatedLength* m_x;
-    SVGAnimatedLength* m_y;
-    SVGAnimatedLength* m_width;
-    SVGAnimatedLength* m_height;
+    SVGAnimatedLength* m_x{ nullptr };
+    SVGAnimatedLength* m_y{ nullptr };
+    SVGAnimatedLength* m_width{ nullptr };
+    SVGAnimatedLength* m_height{ nullptr };
 };
 } // namespace Starfish
 
