@@ -227,7 +227,9 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
                 String::fromUTF8(value.data(), value.size()));
         }
 
-        // TODO : https://fetch.spec.whatwg.org/#ref-for-concept-response-type
+        // https://fetch.spec.whatwg.org/#main-fetch
+        // 14. If response is not a network error and response is not a filtered
+        // response, then:
         ResourceURL* resURL = nullptr;
         if (m_lastLocation == "") {
             resURL = m_requestData->m_url;
@@ -242,11 +244,14 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
         if (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&
             !resWebOrigin->isOpaque()) {
+            // 14.1 If request's response tainting is "cors", then:
             m_responseData->m_type = ResponseType::Cors;
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            // 14.2 Set response to the following filtered response with
+            // response as its internal response, depending on request's
+            // response tainting:
+            // TODO
         }
-
     } else if (readyState == ReadyState::Done) {
         if (m_containsBase64Content) {
             m_responseData->m_responseBody =

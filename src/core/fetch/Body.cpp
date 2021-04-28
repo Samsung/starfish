@@ -92,6 +92,15 @@ Promise* Body::arrayBuffer()
                     value->length());
 
                 m_promise->fulfill(createScriptValue(scriptArrayBuffer));
+            } else if (body.isArrayBufferViewOrArrayBufferValue()) {
+                auto arrayValue = body.getArrayBufferViewOrArrayBufferValue();
+                // FIXME getting ArrayBuffer of ArrayBufferView
+                ScriptValue value =
+                    arrayValue.isArrayBufferValue()
+                        ? createScriptValue(arrayValue.getArrayBufferValue())
+                        : createScriptValue(
+                              arrayValue.getArrayBufferViewValue());
+                m_promise->fulfill(value);
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }

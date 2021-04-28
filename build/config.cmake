@@ -32,8 +32,6 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 #######################################################
 
 # DEFINITION Description
-# ESCARGOT_ENABLE_TYPEDARRAY : enable typed array es6 feature [default: enabled]
-# ESCARGOT_ENABLE_PROMISE : enable promise es6 feature [default: enabled]
 # STARFISH_ENABLE_MULTIMEDIA : enable multimedia element (video, audio, track) features
 # STARFISH_ENABLE_INSPECTOR : enable inspector which is used for message sender in separate thread
 # STARFISH_ENABLE_TTS : enable TTS (Text-To-Speech)
@@ -64,6 +62,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_BATTERY_STATUS : enable battery status api
 # STARFISH_ENABLE_WEBRTC: enable WebRTC
 # STARFISH_ENABLE_WEBSOCKET: enable WebSocket spec
+# ENABLE_WASM : enable WebAssembly
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -256,6 +255,9 @@ ELSE()
     SET (STARFISH_CAIRO_ADDITIONAL_INCLUDE_DIRS)
 ENDIF()
 
+IF (${WEBASSEMBLY} STREQUAL "1")
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DENABLE_WASM)
+ENDIF()
 
 #######################################################
 # CXXFLAGS & LDFLAGS

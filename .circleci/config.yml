@@ -80,6 +80,22 @@ jobs:
             no_output_timeout: 10m
             name : Run test
             command: /root/workspace/run_test.sh
+  build_x64_glfw_debug_wasm:
+    docker:
+      - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
+    working_directory: ~/starfish-workflows
+    environment:
+    resource_class: xlarge
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
+      - run: curl -sL https://art.sec.samsung.net/artifactory/tools/CircleCI/scripts/set_proxy_setting.sh | sh
+      - checkout
+      - run:
+            name : Run build script
+            no_output_timeout: 20m
+            command: /root/workspace/build.sh x64_glfw_debug_wasm
   build_x64_glfw_release:
     docker:
       - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
@@ -117,5 +133,6 @@ workflows:
   build_All:
     jobs:
       - build_x64_glfw_debug
+      - build_x64_glfw_debug_wasm
       - build_x64_glfw_release
       - build_x64_efl_headless_debug
