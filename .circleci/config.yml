@@ -96,6 +96,10 @@ jobs:
             name : Run build script
             no_output_timeout: 20m
             command: /root/workspace/build.sh x64_glfw_debug_wasm
+      - run:
+            name : Run simple demo app
+            no_output_timeout: 10m
+            command: xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://liona24.github.io/wasm-tetris/ --crash-test || exit 1
   build_x64_glfw_release:
     docker:
       - image: art.sec.samsung.net/ci-docker/lws/starfish:latest
