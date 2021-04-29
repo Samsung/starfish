@@ -856,7 +856,12 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                   size_t len) -> ValueRef* {
                    ArrayBufferObjectRef* obj =
                        ArrayBufferObjectRef::create(state);
-                   obj->attachBuffer(state, bufferSrc, len);
+                   BackingStoreRef* backingStore = BackingStoreRef::create(bufferSrc, len, [](void* data, size_t length, void* deleterData) {
+                           // bufferSrc is not a shared buffer case
+                           // free it when BackingStore is released
+                           free(data);
+                           }, nullptr);
+                   obj->attachBuffer(backingStore);
                    return obj;
                },
                bufferSrc, len)
@@ -896,7 +901,12 @@ ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
                               [](ExecutionStateRef* state, void* scriptFreeableBuffer,
                                       size_t len) -> ValueRef* {
                                   auto buf = ArrayBufferObjectRef::create(state);
-                                  buf->attachBuffer(state, scriptFreeableBuffer, len);
+                                  BackingStoreRef* backingStore = BackingStoreRef::create(scriptFreeableBuffer, len, [](void* data, size_t length, void* deleterData) {
+                                          // scriptFreeableBuffer is not a shared buffer case
+                                          // free it when BackingStore is released
+                                          free(data);
+                                          }, nullptr);
+                                  buf->attachBuffer(backingStore);
                                   auto arr = Uint8ArrayObjectRef::create(state);
                                   arr->setBuffer(buf, 0, len, len);
                                   return arr;
