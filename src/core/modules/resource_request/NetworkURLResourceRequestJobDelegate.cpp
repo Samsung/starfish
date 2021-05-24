@@ -432,6 +432,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
+    nwd->httpTransaction->setUseHttp2(m_orgProxy->webBase()->useHttp2());
     nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
         m_orgProxy->url()->urlString()->toUTF8NonGCString(),
         m_orgProxy->url()->host()->toUTF8NonGCString(),

@@ -39,6 +39,7 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_timer(new Timer(this))
     , m_console(new Console(this))
     , m_webSecurityMode(LWE::WebSecurityMode::Enable)
+    , m_useHttp2(false)
 {
     STARFISH_ASSERT(starfish != nullptr && locale != nullptr &&
                     timezoneID != nullptr && customUserAgentString != nullptr);

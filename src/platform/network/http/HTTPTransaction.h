@@ -109,6 +109,11 @@ public:
         m_uploadData = data;
     }
 
+    void setUseHttp2(bool b)
+    {
+        m_useHttp2 = b;
+    }
+
     bool inPreflightRequest()
     {
         return m_inPreflightRequest;
@@ -148,6 +153,7 @@ private:
 
     bool m_inPreflightRequest;
     bool m_isPreflightReqeustDone;
+    bool m_useHttp2;
 
 #ifdef STARFISH_ENABLE_TEST
     void printCurlRequestDump();
