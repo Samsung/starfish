@@ -32,7 +32,8 @@ class SVGAnimatedEnumeration : public ScriptWrappable {
 public:
     SVGAnimatedEnumeration(SVGElement* sourceElement,
                            QualifiedName targetAttribute,
-                           unsigned short baseVal, unsigned short animVal);
+                           unsigned short baseVal, unsigned short animVal,
+                           unsigned short maxEnumValue = 2);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedEnumeration)
 
@@ -43,6 +44,7 @@ public:
 
     bool isUpdated();
     void unsetUpdated();
+    void updateAttribute();
 
 private:
     SVGElement* m_sourceElement;

@@ -46,7 +46,8 @@ public:
 
     SVGTransform(SVGElement* sourceElement, QualifiedName targetAttribute,
                  CSSTransformFunction value =
-                     CSSTransformFunction(CSSTransformFunction::Matrix));
+                     CSSTransformFunction(CSSTransformFunction::Matrix),
+                 bool readOnly = false);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -65,7 +66,6 @@ public:
     void setSkewY(float angle);
 
     bool isReadOnly();
-    void setReadOnly(bool readOnly);
     void updateMatrixByValue();
 
     void detach();

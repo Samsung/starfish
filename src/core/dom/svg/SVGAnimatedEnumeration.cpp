@@ -21,19 +21,20 @@
 #include "SVGElement.h"
 #include "SVGAnimatedEnumeration.h"
 #include "SVGMarkerElement.h"
+#include "SVGGradientElement.h"
 
 namespace Starfish {
 
-SVGAnimatedEnumeration::SVGAnimatedEnumeration(SVGElement* sourceElement,
-                                               QualifiedName targetAttribute,
-                                               unsigned short baseVal,
-                                               unsigned short animVal)
+SVGAnimatedEnumeration::SVGAnimatedEnumeration(
+    SVGElement* sourceElement, QualifiedName targetAttribute,
+    unsigned short baseVal, unsigned short animVal,
+    unsigned short maxEnumValue /* = 2*/)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
     , m_baseVal(baseVal)
     , m_animVal(animVal)
-    , m_maxEnumValue(2)
+    , m_maxEnumValue(maxEnumValue)
     , m_updated(false)
 {
 }
@@ -57,44 +58,17 @@ void SVGAnimatedEnumeration::setBaseVal(unsigned short baseVal)
             "The provided enumeration value is not settable.");
     }
 
-    m_updated = true;
-
-    if (m_targetAttribute.localName()->equals("orient")) {
-        if (baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
-            m_sourceElement->setAttribute(m_targetAttribute,
-                                          String::fromUTF8("0"));
-        } else if (baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_AUTO) {
-            m_sourceElement->setAttribute(m_targetAttribute,
-                                          String::fromUTF8("auto"));
-        }
-    } else if (m_targetAttribute.localName()->equals("markerUnits")) {
-        if (baseVal == SVGMarkerElement::SVG_MARKERUNITS_USERSPACEONUSE) {
-            m_sourceElement->setAttribute(m_targetAttribute,
-                                          String::fromUTF8("userSpaceOnUse"));
-        } else if (baseVal == SVGMarkerElement::SVG_MARKERUNITS_STROKEWIDTH) {
-            m_sourceElement->setAttribute(m_targetAttribute,
-                                          String::fromUTF8("strokeWidth"));
-        }
-    } else {
-        if (m_targetAttribute.localName()->equals(String::emptyString) ==
-            false) {
-            if (baseVal ==
-                SVGUnitTypes::UnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
-                m_sourceElement->setAttribute(
-                    m_targetAttribute, String::fromUTF8("userSpaceOnUse"));
-            } else {
-                m_sourceElement->setAttribute(
-                    m_targetAttribute, String::fromUTF8("objectBoundingBox"));
-            }
-        }
-    }
     m_baseVal = baseVal;
+    m_animVal = baseVal;
+
+    updateAttribute();
 }
 
 void SVGAnimatedEnumeration::setBaseValWithoutUpdateAttribute(
     unsigned short baseVal)
 {
     m_baseVal = baseVal;
+    m_animVal = baseVal;
 }
 
 unsigned short SVGAnimatedEnumeration::animVal()
@@ -110,6 +84,52 @@ bool SVGAnimatedEnumeration::isUpdated()
 void SVGAnimatedEnumeration::unsetUpdated()
 {
     m_updated = false;
+}
+
+void SVGAnimatedEnumeration::updateAttribute()
+{
+    m_updated = true;
+
+    if (m_targetAttribute.localName()->equals("orient")) {
+        if (m_baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("0"));
+        } else if (m_baseVal == SVGMarkerElement::SVG_MARKER_ORIENT_AUTO) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("auto"));
+        }
+    } else if (m_targetAttribute.localName()->equals("markerUnits")) {
+        if (m_baseVal == SVGMarkerElement::SVG_MARKERUNITS_USERSPACEONUSE) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("userSpaceOnUse"));
+        } else if (m_baseVal == SVGMarkerElement::SVG_MARKERUNITS_STROKEWIDTH) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("strokeWidth"));
+        }
+    } else if (m_targetAttribute.localName()->equals("spreadMethod")) {
+        if (m_baseVal == SVGGradientElement::SVG_SPREADMETHOD_PAD) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("pad"));
+        } else if (m_baseVal == SVGGradientElement::SVG_SPREADMETHOD_REFLECT) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("reflect"));
+        } else if (m_baseVal == SVGGradientElement::SVG_SPREADMETHOD_REPEAT) {
+            m_sourceElement->setAttribute(m_targetAttribute,
+                                          String::fromUTF8("repeat"));
+        }
+    } else {
+        if (m_targetAttribute.localName()->equals(String::emptyString) ==
+            false) {
+            if (m_baseVal ==
+                SVGUnitTypes::UnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE) {
+                m_sourceElement->setAttribute(
+                    m_targetAttribute, String::fromUTF8("userSpaceOnUse"));
+            } else {
+                m_sourceElement->setAttribute(
+                    m_targetAttribute, String::fromUTF8("objectBoundingBox"));
+            }
+        }
+    }
 }
 
 } // namespace Starfish

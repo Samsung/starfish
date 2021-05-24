@@ -21,6 +21,8 @@
 #define __StarfishSVGGradientElement__
 
 #include "core/dom/svg/SVGElement.h"
+#include "core/dom/svg/SVGAnimatedEnumeration.h"
+#include "core/dom/svg/SVGAnimatedTransformList.h"
 
 namespace Starfish {
 
@@ -28,14 +30,36 @@ class SVGSVGElement;
 
 class SVGGradientElement : public SVGElement {
 public:
-    SVGGradientElement(Document* document, const QualifiedName& qname)
-        : SVGElement(document, qname)
-    {
-    }
+    enum SpreadMethod {
+        SVG_SPREADMETHOD_UNKNOWN = 0,
+        SVG_SPREADMETHOD_PAD,
+        SVG_SPREADMETHOD_REFLECT,
+        SVG_SPREADMETHOD_REPEAT
+    };
+
+    SVGGradientElement(Document* document, const QualifiedName& qname);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGGradientElement() const override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGGradientElement, m_gradientUnits));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(SVGGradientElement, m_gradientTransform));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGGradientElement, m_spreadMethod));
+        SVGElement::fillGCDescriptor(desc);
+    }
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    virtual void updateSVGAttributeNeeded(QualifiedName name) override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual bool needsGeometryAttributes() override
     {
@@ -51,6 +75,15 @@ public:
     {
         return false;
     }
+
+    SVGAnimatedEnumeration* gradientUnits();
+    SVGAnimatedTransformList* gradientTransform();
+    SVGAnimatedEnumeration* spreadMethod();
+
+protected:
+    SVGAnimatedEnumeration* m_gradientUnits{ nullptr };
+    SVGAnimatedTransformList* m_gradientTransform{ nullptr };
+    SVGAnimatedEnumeration* m_spreadMethod{ nullptr };
 };
 } // namespace Starfish
 

@@ -29,12 +29,12 @@ namespace Starfish {
 
 SVGTransform::SVGTransform(SVGElement* sourceElement,
                            QualifiedName targetAttribute,
-                           CSSTransformFunction value)
+                           CSSTransformFunction value, bool readOnly)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
     , m_value(value)
-    , m_readOnly(false)
+    , m_readOnly(readOnly)
 {
     m_matrixObject = new DOMMatrix(m_sourceElement->executionContext());
     m_matrixComparisonTarget =
@@ -349,11 +349,6 @@ void SVGTransform::setSkewY(float angle)
 bool SVGTransform::isReadOnly()
 {
     return m_readOnly;
-}
-
-void SVGTransform::setReadOnly(bool readOnly)
-{
-    m_readOnly = readOnly;
 }
 
 void SVGTransform::updateMatrixByValue()

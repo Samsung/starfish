@@ -25,11 +25,11 @@
 namespace Starfish {
 
 SVGTransformList::SVGTransformList(SVGElement* sourceElement,
-                                   QualifiedName targetAttribute)
+                                   QualifiedName targetAttribute, bool readOnly)
     : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
-    , m_isReadOnly(false)
+    , m_readOnly(readOnly)
 {
     updateListByAttribute();
 }
@@ -274,12 +274,14 @@ void SVGTransformList::updateListByAttribute()
         CSSStyleValuePair* value = new CSSStyleValuePair;
         if (value->updateValueTransform(tokens, true,
                                         Separator::SpaceSeparator) == false) {
+            STARFISH_ASSERT_NOT_REACHED();
         }
 
         for (size_t i = 0; i < tokens.size(); ++i) {
             CSSTransformFunction f = value->transformValue()->at(i);
             SVGTransform* newItem = new SVGTransform(
-                m_sourceElement, AtomicString::emptyAtomicString(), f);
+                m_sourceElement, AtomicString::emptyAtomicString(), f,
+                isReadOnly());
 
             appendItemWithoutUpdateAttribute(newItem);
         }
@@ -288,12 +290,7 @@ void SVGTransformList::updateListByAttribute()
 
 bool SVGTransformList::isReadOnly()
 {
-    return m_isReadOnly;
-}
-
-void SVGTransformList::setReadOnly()
-{
-    m_isReadOnly = true;
+    return m_readOnly;
 }
 
 String* SVGTransformList::toString()

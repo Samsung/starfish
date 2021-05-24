@@ -40,4 +40,65 @@ GCVector<ColorStop*> SVGLinearGradientElement::colorStops()
 
     return colorStops;
 }
+
+void SVGLinearGradientElement::didAttributeChanged(QualifiedName name,
+                                                   String* old, String* value,
+                                                   bool attributeCreated,
+                                                   bool attributeRemoved)
+{
+    SVGGradientElement::didAttributeChanged(name, old, value, attributeCreated,
+                                            attributeRemoved);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x1 == name) {
+        if (value->equals(x1()->baseVal()->valueAsString()) == false) {
+            x1()->baseVal()->setValueAsString(value);
+        }
+    } else if (ss->m_y1 == name) {
+        if (value->equals(y1()->baseVal()->valueAsString()) == false) {
+            y1()->baseVal()->setValueAsString(value);
+        }
+    } else if (ss->m_x2 == name) {
+        if (value->equals(x2()->baseVal()->valueAsString()) == false) {
+            x2()->baseVal()->setValueAsString(value);
+        }
+    } else if (ss->m_y2 == name) {
+        if (value->equals(y2()->baseVal()->valueAsString()) == false) {
+            y2()->baseVal()->setValueAsString(value);
+        }
+    }
+}
+
+void SVGLinearGradientElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    SVGGradientElement::updateSVGAttributeNeeded(name);
+
+    StaticStrings* ss = starfish()->staticStrings();
+
+    if (ss->m_x1 == name) {
+        setAttribute(ss->m_x1, x1()->baseVal()->valueAsString());
+    } else if (ss->m_y1 == name) {
+        setAttribute(ss->m_y1, y1()->baseVal()->valueAsString());
+    } else if (ss->m_x2 == name) {
+        setAttribute(ss->m_x2, x2()->baseVal()->valueAsString());
+    } else if (ss->m_y2 == name) {
+        setAttribute(ss->m_y2, y2()->baseVal()->valueAsString());
+    }
+}
+
+void* SVGLinearGradientElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(SVGLinearGradientElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(SVGLinearGradientElement)] = { 0 };
+        fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGLinearGradientElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 } // namespace Starfish

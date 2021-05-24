@@ -43,6 +43,7 @@ public:
         STARFISH_ASSERT(size == sizeof(SVGTextElement));
         static bool typeInited = false;
         static GC_descr descr;
+
         if (!typeInited) {
             GC_word desc[GC_BITMAP_SIZE(SVGTextElement)] = { 0 };
             SVGElement::fillGCDescriptor(desc);

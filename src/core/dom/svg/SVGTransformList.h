@@ -31,7 +31,8 @@ class SVGElement;
 
 class SVGTransformList : public ScriptWrappable {
 public:
-    SVGTransformList(SVGElement* sourceElement, QualifiedName targetAttribute);
+    SVGTransformList(SVGElement* sourceElement, QualifiedName targetAttribute,
+                     bool readOnly = false);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -57,7 +58,6 @@ public:
     void updateAttributeByList();
 
     bool isReadOnly();
-    void setReadOnly();
 
     String* toString();
 
@@ -96,7 +96,7 @@ protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;
 
-    bool m_isReadOnly;
+    bool m_readOnly;
     GCVector<SVGTransform*> m_v;
 };
 } // namespace Starfish

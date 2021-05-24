@@ -194,24 +194,6 @@ void SVGLength::setValueInSpecifiedUnits(float v)
     m_valueInSpecifiedUnits = v;
 
     m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
-
-    if (m_targetAttribute.localName()->length()) {
-        if (m_sourceElement->isSVGTextElement()) {
-            SVGLengthList* list;
-            StaticStrings* ss =
-                m_sourceElement->document()->starfish()->staticStrings();
-
-            if (m_targetAttribute == ss->m_x) {
-                list = ((SVGTextElement*)m_sourceElement)->x()->baseVal();
-                list->updateAttributeByList();
-            } else if (m_targetAttribute == ss->m_y) {
-                list = ((SVGTextElement*)m_sourceElement)->y()->baseVal();
-                list->updateAttributeByList();
-            }
-        } else {
-            m_sourceElement->setAttribute(m_targetAttribute, valueAsString());
-        }
-    }
 }
 
 String* SVGLength::valueAsString()
@@ -255,7 +237,8 @@ void SVGLength::setValueAsString(String* valueAsString)
         } else if (CSSPropertyParser::parseLength(
                        s.data(),
                        CSSPropertyParser::AllowPercent |
-                           CSSPropertyParser::AllowWithoutUnit,
+                           CSSPropertyParser::AllowWithoutUnit |
+                           CSSPropertyParser::AllowNegative,
                        &pair)) {
             // unimplemented EMS, EXS
             if (pair.valueKind() == CSSStyleValuePair::Length) {
