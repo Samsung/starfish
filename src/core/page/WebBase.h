@@ -213,6 +213,16 @@ public:
     LWE::WebSecurityMode getWebSecurityMode() const;
     void setWebSecurityMode(LWE::WebSecurityMode value);
 
+    void setUseHttp2(bool b)
+    {
+        m_useHttp2 = b;
+    }
+
+    bool useHttp2()
+    {
+        return m_useHttp2;
+    }
+
     std::mt19937& randomEngine();
 
 protected:
@@ -237,6 +247,7 @@ protected:
     Console* m_console;
 
     LWE::WebSecurityMode m_webSecurityMode;
+    bool m_useHttp2;
 
 public:
     // function sets for implementing custom file IO for resource request

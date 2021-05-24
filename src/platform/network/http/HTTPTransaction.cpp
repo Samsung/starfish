@@ -44,6 +44,7 @@ HTTPTransaction::HTTPTransaction()
     , m_uploadData(nullptr)
     , m_inPreflightRequest(false)
     , m_isPreflightReqeustDone(false)
+    , m_useHttp2(false)
 #ifdef STARFISH_ENABLE_TEST
     , m_enableLog(false)
 #endif
@@ -83,7 +84,11 @@ void HTTPTransaction::preprocess()
     STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
     curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
 #endif
-    curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+    if (m_useHttp2) {
+        curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+    }
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     if (m_timeout) {
         curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);

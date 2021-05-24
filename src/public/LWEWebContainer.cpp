@@ -122,6 +122,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_idleModeJob(IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS)
     , m_needsDownloadWebFontsEarly(false)
+    , m_useHttp2(false)
     , m_needsDownScaleImageResourceLargerThan(0)
 {
 }
@@ -149,6 +150,11 @@ TTSMode Settings::GetTTSMode() const
 bool Settings::NeedsDownloadWebFontsEarly() const
 {
     return m_needsDownloadWebFontsEarly;
+}
+
+bool Settings::UseHttp2() const
+{
+    return m_useHttp2;
 }
 
 uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
@@ -249,6 +255,11 @@ void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
 void Settings::SetNeedsDownloadWebFontsEarly(bool b)
 {
     m_needsDownloadWebFontsEarly = b;
+}
+
+void Settings::SetUseHttp2(bool b)
+{
+    m_useHttp2 = b;
 }
 
 void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
@@ -1050,6 +1061,7 @@ void WebContainer::SetSettings(const Settings& settings)
         settings.GetIdleModeCheckIntervalInMS());
     TO_WEBVIEW(m_impl)->setNeedsDownloadWebFontsEarly(
         settings.NeedsDownloadWebFontsEarly());
+    TO_WEBVIEW(m_impl)->setUseHttp2(settings.UseHttp2());
     TO_WEBVIEW(m_impl)->setNeedsDownScaleImageResourceLargerThan(
         settings.NeedsDownScaleImageResourceLargerThan());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
