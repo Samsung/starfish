@@ -313,6 +313,12 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "marginheight"));
     m_dialog =
         QualifiedName(AtomicString::createAtomicString(starfish, "dialog"));
+    m_gradientUnits = QualifiedName(
+        AtomicString::createAtomicString(starfish, "gradientUnits"));
+    m_gradientTransform = QualifiedName(
+        AtomicString::createAtomicString(starfish, "gradientTransform"));
+    m_spreadMethod = QualifiedName(
+        AtomicString::createAtomicString(starfish, "spreadMethod"));
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =

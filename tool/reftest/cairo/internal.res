@@ -383,6 +383,7 @@ test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/bixby_logo_search.html
 test/cairo/internal-test/svg/svg_length-setValueAsString.html
 test/cairo/internal-test/svg/svg_animatedTransformList.html
+test/cairo/internal-test/svg/svg_linearGradient02.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html

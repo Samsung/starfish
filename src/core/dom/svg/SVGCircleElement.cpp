@@ -105,8 +105,7 @@ SVGAnimatedTransformList* SVGCircleElement::transform()
         SVGTransformList* baseVal = new SVGTransformList(
             this, starfish()->staticStrings()->m_transform);
         SVGTransformList* animVal = new SVGTransformList(
-            this, starfish()->staticStrings()->m_transform);
-        animVal->setReadOnly();
+            this, starfish()->staticStrings()->m_transform, true);
         m_transform =
             new SVGAnimatedTransformList(document(), baseVal, animVal);
     }

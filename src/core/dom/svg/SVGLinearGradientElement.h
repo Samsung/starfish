@@ -20,6 +20,7 @@
 #ifndef __StarfishSVGLinearGradientElement__
 #define __StarfishSVGLinearGradientElement__
 
+#include "SVGAnimatedLength.h"
 #include "core/dom/svg/SVGGradientElement.h"
 
 namespace Starfish {
@@ -32,11 +33,27 @@ public:
     SVGLinearGradientElement(Document* document, const QualifiedName& qname)
         : SVGGradientElement(document, qname)
     {
+        x2()->baseVal()->setValueAsString(String::createASCIIString("100%"));
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGLinearGradientElement() const override;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLinearGradientElement, m_x1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLinearGradientElement, m_y1));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLinearGradientElement, m_x2));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGLinearGradientElement, m_y2));
+        SVGGradientElement::fillGCDescriptor(desc);
+    }
+
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    virtual void updateSVGAttributeNeeded(QualifiedName name) override;
 
     virtual bool needsGeometryAttributes() override
     {
@@ -53,7 +70,21 @@ public:
         return false;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     GCVector<ColorStop*> colorStops();
+
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x1);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y1);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(x2);
+    STARFISH_SVG_ANIMATED_LENGTH_GETTER(y2);
+
+private:
+    SVGAnimatedLength* m_x1{ nullptr };
+    SVGAnimatedLength* m_y1{ nullptr };
+    SVGAnimatedLength* m_x2{ nullptr };
+    SVGAnimatedLength* m_y2{ nullptr };
 };
 } // namespace Starfish
 

@@ -422,6 +422,9 @@ public:
     QualifiedName m_marginwidth;
     QualifiedName m_marginheight;
     QualifiedName m_dialog;
+    QualifiedName m_gradientUnits;
+    QualifiedName m_gradientTransform;
+    QualifiedName m_spreadMethod;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
