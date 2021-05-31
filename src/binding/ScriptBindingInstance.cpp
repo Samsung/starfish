@@ -216,7 +216,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
     ObjectRef::NativeDataAccessorPropertyData* newData##exportName =           \
         new ObjectRef::NativeDataAccessorPropertyData(                         \
             true, false, true,                                                 \
-            [](ExecutionStateRef* state, ObjectRef* self,                      \
+            [](ExecutionStateRef* state, ObjectRef* self, ValueRef* receiver,  \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
                 ScriptBindingInstance* instance;                               \
                 if (self->isGlobalObject() == true &&                          \
@@ -229,7 +229,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                 }                                                              \
                 return instance->value##exportName();                          \
             },                                                                 \
-            [](ExecutionStateRef* state, ObjectRef* self,                      \
+            [](ExecutionStateRef* state, ObjectRef* self, ValueRef* receiver,  \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
                 ScriptBindingInstance* instance;                               \
