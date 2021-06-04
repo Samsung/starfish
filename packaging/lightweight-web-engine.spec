@@ -51,6 +51,11 @@ Requires(postun): /sbin/ldconfig
 %define use_embedded_image_decoder 0
 %endif
 
+%if 0%{?skip_dali_build:1}
+%else
+%define skip_dali_build 0
+%endif
+
 %if 0%{?tizen_version_major:1}
 %else
 %define tizen_version_major 4
@@ -75,13 +80,15 @@ Requires(postun): /sbin/ldconfig
 %define rpm wearable
 %endif
 
+%if (0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5) && %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
+%define using_lto 0
+%else
 %if 0%{?tizen_version_major} >= 5
 %define using_lto 1
 %else
 %define using_lto 0
 %endif
-
-
+%endif
 
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
@@ -341,6 +348,14 @@ CXXFLAGS+=' -fno-lto '
 %endif
 
 ##############################################
+# Disable lto option
+##############################################
+%if 0%{?using_lto} == 0
+CFLAGS+=' -fno-lto '
+CXXFLAGS+=' -fno-lto '
+%endif
+
+##############################################
 ## Build rules for each profile
 ##############################################
 %ifarch armv7l
@@ -357,10 +372,12 @@ CXXFLAGS+=' -fno-lto '
 %endif
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%if "%{?skip_dali_build}" == "0"
 # For Dali
 rm -f CMakeCache.txt
 cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.tv -G Ninja
 ninja starfish.shared_library
+%endif
 
 # For Cairo
 rm -f CMakeCache.txt
@@ -410,10 +427,12 @@ cd -
 
 %endif
 
+%if "%{?skip_dali_build}" == "0"
 # For Dali
 rm -f CMakeCache.txt
 cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.dali.tv -G Ninja
 ninja starfish.shared_library
+%endif
 
 # For Cairo
 rm -f CMakeCache.txt
@@ -431,10 +450,12 @@ ninja starfish.executable
 %endif # "%{rpm}" == "prod_tv"
 
 %if "%{rpm}" == "headless"
+%if "%{?skip_dali_build}" == "0"
 # For Dali
 #rm -f CMakeCache.txt
 #cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=headless -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.headless -G Ninja
 #ninja starfish.shared_library
+%endif
 
 # For Cairo
 rm -f CMakeCache.txt
@@ -448,10 +469,12 @@ ninja starfish.executable
 
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%if "%{?skip_dali_build}" == "0"
 # For Dali
 rm -f CMakeCache.txt
 cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile -G Ninja
 ninja starfish.shared_library
+%endif
 
 # For Cairo
 rm -f CMakeCache.txt
@@ -465,10 +488,12 @@ ninja starfish.executable
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
 
+%if "%{?skip_dali_build}" == "0"
 # For Dali
 rm -f CMakeCache.txt
 cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_wearable -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable -G Ninja
 ninja starfish.shared_library
+%endif
 
 # For Cairo
 rm -f CMakeCache.txt
@@ -556,7 +581,10 @@ cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
-cp lightweight-web-engine.pc lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
+cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
+%if "%{?skip_dali_build}" == "0"
+cp lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
+%endif
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 
@@ -564,12 +592,16 @@ cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 pushd %{buildroot}%{_libdir}/lwe
 rm -fr *.so*
 ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
+%if "%{?skip_dali_build}" == "0"
 ln -s liblightweight-web-engine-dali-plugin.so.1 liblightweight-web-engine-dali-plugin.so
+%endif
 popd
 
 pushd %{buildroot}%{_libdir}
 ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
+%if "%{?skip_dali_build}" == "0"
 ln -s lwe/liblightweight-web-engine-dali-plugin.so liblightweight-web-engine-dali-plugin.so
+%endif
 popd
 
 ##############################################
@@ -588,11 +620,15 @@ for FILE in `ls tv/*.so* | grep -v 'tv.so'`; do
 done
 %if "%{rpm}" == "tv"
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
+%if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
+%endif
 %endif
 %if "%{rpm}" == "prod_tv"
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
+%if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine.prod.dali.tv.so liblightweight-web-engine-dali-plugin.so.1
+%endif
 %endif
 popd
 %endif
@@ -636,7 +672,9 @@ for FILE in `ls mobile/*.so* | grep -v 'mobile.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
+%if "%{?skip_dali_build}" == "0"
 ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so.1
+%endif
 popd
 %endif
 %if "%{rpm}" == "mobile"
@@ -655,7 +693,9 @@ for FILE in `ls wearable/*.so* | grep -v 'wearable.so'`; do
     ln -sf "$FILE" .
 done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
+%if "%{?skip_dali_build}" == "0"
 ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so.1
+%endif
 popd
 %endif
 %if "%{rpm}" == "wearable"
