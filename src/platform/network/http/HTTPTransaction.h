@@ -26,6 +26,7 @@ namespace Starfish {
 
 class HTTPRequest;
 class HTTPResponse;
+struct CurlMultiRequestData;
 
 typedef int (*ProgressCallBack)(void* clientp, curl_off_t dltotal,
                                 curl_off_t dlnow, curl_off_t ultotal,
@@ -35,9 +36,11 @@ typedef size_t (*Callback)(void* ptr, size_t size, size_t nmemb, void* data);
 
 class HTTPTransaction {
 public:
-    static std::unique_ptr<HTTPTransaction> create()
+    static std::unique_ptr<HTTPTransaction> create(
+        CurlMultiRequestData* curlMultiRequestData)
     {
-        return std::unique_ptr<HTTPTransaction>(new HTTPTransaction());
+        return std::unique_ptr<HTTPTransaction>(
+            new HTTPTransaction(curlMultiRequestData));
     }
 
     ~HTTPTransaction();
@@ -114,6 +117,11 @@ public:
         m_useHttp2 = b;
     }
 
+    bool useHttp2()
+    {
+        return m_useHttp2;
+    }
+
     bool inPreflightRequest()
     {
         return m_inPreflightRequest;
@@ -125,10 +133,11 @@ public:
     }
 
 private:
-    HTTPTransaction();
+    HTTPTransaction(CurlMultiRequestData* curlMultiRequestData);
     void preprocess();
     void postprocess();
     void registerCurlHandlers();
+    void startRequest();
 
     std::unique_ptr<HTTPRequest> m_httpRequest;
     std::unique_ptr<HTTPResponse> m_httpResponse;
@@ -136,6 +145,8 @@ private:
     unsigned long m_timeout;
     CURL* m_curl;
     CURLcode m_res;
+
+    CurlMultiRequestData* m_curlMultiRequestData;
 
     std::string m_proxyURL;
 

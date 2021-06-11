@@ -29,6 +29,7 @@
 #include "platform/network/http/HTTPCacheEntry.h"
 #endif
 #include "binding/ScriptWrappable.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPRequest.h"
 #include "platform/network/http/HTTPResponse.h"
@@ -71,7 +72,11 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , sizeleftToUpload(0)
     , request(orgRequest)
     , helper(nullptr)
-    , httpTransaction(HTTPTransaction::create())
+    , curlMultiRequestData(orgRequest->webBase()->useHttp2() &&
+                                   !orgRequest->isSync()
+                               ? new (NoGC) CurlMultiRequestData(new Mutex())
+                               : nullptr)
+    , httpTransaction(HTTPTransaction::create(curlMultiRequestData))
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , cachedEntry(nullptr)
 #endif
@@ -92,6 +97,9 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
         cachedEntry->deref();
     }
 #endif
+    if (curlMultiRequestData) {
+        delete curlMultiRequestData;
+    }
 }
 
 void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
@@ -455,6 +463,13 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
             nwd->httpTransaction->httpRequest().entityBody().length();
         nwd->httpTransaction->setUploadBufferDataCallbackAndData(
             curlUploadBufferDataCallback, nwd);
+    }
+
+    if (nwd->curlMultiRequestData) {
+        NetworkSharedResourceManager::getInstance()
+            ->startMultiRequestThreadIfNeeds(
+                m_orgProxy->webBase()->messageLoop(),
+                nwd->httpTransaction->httpRequest().baseURL());
     }
 
     if (m_orgProxy->isSync()) {

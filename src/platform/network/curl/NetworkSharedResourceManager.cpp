@@ -24,7 +24,11 @@
 #include "NetworkSharedResourceManager.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
+
+#include <unistd.h>
 
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 #include <openssl/crypto.h>
@@ -354,6 +358,23 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
 
 NetworkSharedResourceManager::~NetworkSharedResourceManager()
 {
+    CurlMultiRequestDataMap multiData;
+    {
+        Locker<Mutex> l(*m_curlMultiRequestDataMutex);
+        multiData = std::move(m_curlMultiRequestData);
+    }
+    auto iter = multiData.begin();
+    while (iter != multiData.end()) {
+        auto d = iter->second;
+        d->m_running = false;
+        d->m_thread->joinIfNeeds();
+        curl_multi_cleanup(d->m_curlMultiHandle);
+        delete d;
+        iter++;
+    }
+
+    multiData.clear();
+
     clearAllCurlHandleDataCache();
     curl_share_cleanup(m_curlShareHandle);
     curl_share_cleanup(m_curlNonCookieShareHandle);
@@ -371,6 +392,8 @@ void NetworkSharedResourceManager::initMutexes()
             g_mutexes[i] = new (NoGC) Mutex();
         }
     }
+
+    m_curlMultiRequestDataMutex = new (NoGC) Mutex();
 }
 
 CURLSH* NetworkSharedResourceManager::curlShareHandle() const
@@ -578,5 +601,136 @@ void NetworkSharedResourceManager::clearCookies()
     curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
     curl_easy_setopt(curl, CURLOPT_COOKIELIST, "ALL");
     curl_easy_cleanup(curl);
+}
+
+void* NetworkSharedResourceManager::curlMultiWorker(void* data)
+{
+    CurlMultiData* d = (CurlMultiData*)data;
+    std::vector<Mutex*> remainedRequest;
+    int waitCount = 0;
+    while (d->m_running.load()) {
+        {
+            Locker<Mutex> l(*d->m_globalDataMutex);
+            while (d->m_pendingRequests.size()) {
+                auto error =
+                    curl_easy_setopt(d->m_pendingRequests[0]->m_curl,
+                                     CURLOPT_PRIVATE, d->m_pendingRequests[0]);
+                STARFISH_ASSERT(error == CURLE_OK);
+                curl_multi_add_handle(d->m_curlMultiHandle,
+                                      d->m_pendingRequests[0]->m_curl);
+                remainedRequest.push_back(d->m_pendingRequests[0]->m_mutex);
+                d->m_pendingRequests.erase(d->m_pendingRequests.begin());
+            }
+        }
+
+        int numfds = 0;
+        const int waitTime =
+            1000; // waiting time for curl_multi_wait when numfds != 0
+        const int sleepTime =
+            1000 * 50; // if numfds == 0, curl_multi_wait function returns
+                       // instantly. so we need to sleep 50ms
+
+        curl_multi_wait(d->m_curlMultiHandle, NULL, 0, waitTime, &numfds);
+
+        int stillRunning = 0;
+        curl_multi_perform(d->m_curlMultiHandle, &stillRunning);
+        if (stillRunning == 0) {
+            waitCount++;
+            usleep(sleepTime);
+        } else {
+            waitCount = 0;
+        }
+
+        CURLMsg* msg;
+        int msgs_left;
+        while ((msg = curl_multi_info_read(d->m_curlMultiHandle, &msgs_left))) {
+            if (msg->msg == CURLMSG_DONE) {
+                CurlMultiRequestData* r;
+                curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &r);
+                r->m_result = msg->data.result;
+                Mutex* m = r->m_mutex;
+                auto iter = std::find(remainedRequest.begin(),
+                                      remainedRequest.end(), m);
+                remainedRequest.erase(iter);
+                curl_multi_remove_handle(d->m_curlMultiHandle,
+                                         msg->easy_handle);
+                m->unlock();
+            }
+        }
+
+        // wait for 3 sec for next request
+        if (waitCount > (3 * 1000 * 1000 / sleepTime)) {
+            Locker<Mutex> l(*d->m_globalDataMutex);
+            if (!d->m_pendingRequests.size()) {
+                d->m_finishing = true;
+                break;
+            }
+        }
+    }
+
+    while (remainedRequest.size()) {
+        remainedRequest.back()->unlock();
+        remainedRequest.pop_back();
+    }
+
+    return nullptr;
+}
+
+NetworkSharedResourceManager::CurlMultiData::CurlMultiData(
+    MessageLoop* ml, Mutex* curlMultiRequestDataMutex)
+{
+    m_running = true;
+    m_ml = ml;
+    m_globalDataMutex = curlMultiRequestDataMutex;
+    m_curlMultiHandle = curl_multi_init();
+#ifndef CURLPIPE_MULTIPLEX
+#define CURLPIPE_MULTIPLEX 0
+#endif
+    curl_multi_setopt(m_curlMultiHandle, CURLMOPT_PIPELINING,
+                      CURLPIPE_MULTIPLEX);
+    curl_multi_setopt(m_curlMultiHandle, CURLMOPT_MAX_HOST_CONNECTIONS, 1L);
+    m_thread = new Thread(nullptr);
+    m_thread->run(ml, NetworkSharedResourceManager::curlMultiWorker, this);
+}
+
+void NetworkSharedResourceManager::startMultiRequestThreadIfNeeds(
+    MessageLoop* ml, const std::string& origin)
+{
+    Locker<Mutex> l(*m_curlMultiRequestDataMutex);
+
+    auto iter = m_curlMultiRequestData.find(origin);
+    if (iter == m_curlMultiRequestData.end()) {
+        CurlMultiData* d =
+            new (NoGC) CurlMultiData(ml, m_curlMultiRequestDataMutex);
+        m_curlMultiRequestData.insert(std::make_pair(origin, d));
+    } else {
+        if (iter->second->m_finishing) {
+            iter->second->m_finishing = false;
+            iter->second->m_thread->run(ml, curlMultiWorker, iter->second);
+        }
+    }
+}
+
+void NetworkSharedResourceManager::appendPendingMultiRequest(
+    const std::string& origin, CurlMultiRequestData* r)
+{
+    Locker<Mutex> l(*m_curlMultiRequestDataMutex);
+    auto iter = m_curlMultiRequestData.find(origin);
+    if (iter != m_curlMultiRequestData.end()) {
+        iter->second->m_pendingRequests.push_back(r);
+        if (iter->second->m_finishing) {
+            // restart thread if finished
+            iter->second->m_finishing = false;
+            iter->second->m_ml->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t, void* data) {
+                    CurlMultiData* d = (CurlMultiData*)data;
+                    d->m_thread->run(d->m_ml, curlMultiWorker, d);
+                },
+                iter->second);
+        }
+    } else {
+        // thread ended!
+    }
 }
 } // namespace Starfish

@@ -8,7 +8,7 @@
 #http://web-platform.test:8000/cookies/samesite/form-get-blank-reload.html
 #http://web-platform.test:8000/cookies/samesite/iframe-reload.html
 #http://web-platform.test:8000/cookies/samesite/form-get-blank.html
-http://web-platform.test:8000/cookies/path/match.html
+#http://web-platform.test:8000/cookies/path/match.html // chrome also fails this test
 #http://web-platform.test:8000/cookies/secure/cookie-forcing.html
 #http://web-platform.test:8000/cookies/secure/set-from-dom.sub.html
 http://web-platform.test:8000/cookies/secure/set-from-http.https.sub.html

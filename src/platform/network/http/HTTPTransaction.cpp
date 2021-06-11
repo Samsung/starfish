@@ -25,15 +25,17 @@
 #include "HTTPUtil.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
+#include "core/modules/threading/Mutex.h"
 #include "core/modules/profiling/Profiling.h"
 
 namespace Starfish {
 
-HTTPTransaction::HTTPTransaction()
+HTTPTransaction::HTTPTransaction(CurlMultiRequestData* curlMultiRequestData)
     : m_httpRequest()
     , m_timeout(0)
     , m_curl(nullptr)
     , m_res(CURLE_OK)
+    , m_curlMultiRequestData(curlMultiRequestData)
     , m_procCB(nullptr)
     , m_procData(nullptr)
     , m_writeHeaderCB(nullptr)
@@ -111,6 +113,19 @@ void HTTPTransaction::preprocess()
 
     // Enable all encoding (zlib, gzip)
     curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
+
+    if (m_curlMultiRequestData) {
+#ifndef CURLPIPE_MULTIPLEX
+/* This little trick will just make sure that we don't enable pipelining for
+   libcurls old enough to not have this symbol. It is _not_ defined to zero in
+   a recent libcurl header. */
+#define CURLPIPE_MULTIPLEX 0
+#endif
+#if (CURLPIPE_MULTIPLEX > 0)
+        /* wait for pipe connection to confirm */
+        curl_easy_setopt(m_curl, CURLOPT_PIPEWAIT, 1L);
+#endif
+    }
 
     registerCurlHandlers();
 
@@ -201,7 +216,8 @@ void HTTPTransaction::start()
                          m_httpRequest->method().c_str());
     }
     m_httpRequest->setRequestTime(timestamp() / 1000);
-    m_res = curl_easy_perform(m_curl);
+
+    startRequest();
 
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     if (m_res == CURLE_RECV_ERROR) {
@@ -248,7 +264,7 @@ void HTTPTransaction::startPreFlightRequest()
 
     m_inPreflightRequest = true;
 
-    m_res = curl_easy_perform(m_curl);
+    startRequest();
 
     m_inPreflightRequest = false;
     m_isPreflightReqeustDone = true;
@@ -347,6 +363,25 @@ void HTTPTransaction::registerCurlHandlers()
 
     if (m_uploadData) {
         curl_easy_setopt(m_curl, CURLOPT_READDATA, m_uploadData);
+    }
+}
+
+void HTTPTransaction::startRequest()
+{
+    if (m_curlMultiRequestData) {
+        m_curlMultiRequestData->m_mutex->lock();
+
+        m_curlMultiRequestData->m_curl = m_curl;
+
+        NetworkSharedResourceManager::getInstance()->appendPendingMultiRequest(
+            httpRequest().baseURL(), m_curlMultiRequestData);
+
+        // wait until end
+        m_curlMultiRequestData->m_mutex->lock();
+        m_res = m_curlMultiRequestData->m_result;
+        m_curlMultiRequestData->m_mutex->unlock();
+    } else {
+        m_res = curl_easy_perform(m_curl);
     }
 }
 
