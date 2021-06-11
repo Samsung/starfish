@@ -26,13 +26,28 @@ namespace Starfish {
 
 class Document;
 class HTTPTransaction;
+class MessageLoop;
 class Mutex;
 class ResourceURL;
 class String;
+class Thread;
 
 struct CurlHandleData {
     CURL* curl;
     uint64_t lastUsedTime;
+};
+
+struct CurlMultiRequestData : public gc {
+    CURL* m_curl;
+    Mutex* m_mutex;
+    CURLcode m_result;
+
+    CurlMultiRequestData(Mutex* mutex)
+        : m_curl(nullptr)
+        , m_mutex(mutex)
+        , m_result(CURLcode::CURLE_OK)
+    {
+    }
 };
 
 class NetworkSharedResourceManager {
@@ -72,6 +87,11 @@ public:
         m_cacheClearTimerID = timerID;
     }
 
+    void startMultiRequestThreadIfNeeds(MessageLoop* ml,
+                                        const std::string& origin);
+    void appendPendingMultiRequest(const std::string& origin,
+                                   CurlMultiRequestData* r);
+
 private:
     NetworkSharedResourceManager();
     ~NetworkSharedResourceManager();
@@ -80,6 +100,24 @@ private:
 
     CURLSH* m_curlShareHandle;
     CURLSH* m_curlNonCookieShareHandle;
+
+    struct CurlMultiData : public gc {
+        MessageLoop* m_ml;
+        CURLM* m_curlMultiHandle;
+        Thread* m_thread;
+        Mutex* m_globalDataMutex;
+        std::atomic<bool> m_running;
+        std::atomic<bool> m_finishing;
+        std::vector<CurlMultiRequestData*> m_pendingRequests;
+
+        CurlMultiData(MessageLoop* ml, Mutex* curlMultiRequestDataMutex);
+    };
+    typedef std::unordered_map<std::string, CurlMultiData*>
+        CurlMultiRequestDataMap;
+    CurlMultiRequestDataMap m_curlMultiRequestData;
+    Mutex* m_curlMultiRequestDataMutex;
+    static void* curlMultiWorker(void* data);
+
     CurlHandleDataMultiMap m_curlHandleDataCache;
     uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;

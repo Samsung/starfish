@@ -30,6 +30,8 @@ class HTTPCacheEntry;
 class HTTPHeaderMap;
 class HTTPTransaction;
 
+struct CurlMultiRequestData;
+
 struct NetworkURLWorkerData {
     NetworkURLWorkerData(ResourceRequest* orgRequest);
     ~NetworkURLWorkerData();
@@ -51,6 +53,7 @@ struct NetworkURLWorkerData {
     size_t sizeleftToUpload;
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;
+    CurlMultiRequestData* curlMultiRequestData;
     std::unique_ptr<HTTPTransaction> httpTransaction;
     std::vector<char> pendingResponseData;
 #ifdef STARFISH_ENABLE_HTTPCACHE
