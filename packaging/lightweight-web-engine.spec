@@ -90,6 +90,16 @@ Requires(postun): /sbin/ldconfig
 %endif
 %endif
 
+%if 0%{?enable_codecache:1}
+%else
+%define enable_codecache 0
+%endif
+
+%if 0%{?enable_wasm:1}
+%else
+%define enable_wasm 0
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -430,7 +440,7 @@ cd -
 %if "%{?skip_dali_build}" == "0"
 # For Dali
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.dali.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.dali.tv -G Ninja
 ninja starfish.shared_library
 %endif
 
@@ -438,12 +448,12 @@ ninja starfish.shared_library
 rm -f CMakeCache.txt
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_wayland2_backend"
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %else
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif # "%{build_option}" == "ecore_wayland2_backend"
 %else # 0%{?build_option:1}
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif
 ninja starfish.shared_library
 ninja starfish.executable
