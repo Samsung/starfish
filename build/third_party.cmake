@@ -13,7 +13,7 @@ IF (${HOST} STREQUAL "linux" AND ((${BACKEND} STREQUAL "glfw_cairo_gl") OR (${BA
     )
 
     # Patch wabt update
-    IF (${WEBASSEMBLY} STREQUAL "1")
+    IF (${ENABLE_WASM} STREQUAL "1")
         EXECUTE_PROCESS (
             WORKING_DIRECTORY ${ESCARGOT_THIRD_PARTY_ROOT}/wasm/wabt
             COMMAND patch -p0 --forward -r /dev/null -i ../../../tools/test/wasm-js/wabt_patch
@@ -298,8 +298,11 @@ ENDIF()
 SET (ESCARGOT_MODE ${MODE})
 SET (ESCARGOT_ARCH ${ARCH})
 SET (ESCARGOT_OUTPUT static_lib)
-IF (${WEBASSEMBLY} STREQUAL "1")
+IF (${ENABLE_WASM} STREQUAL "1")
     SET (ESCARGOT_WASM ON)
+ENDIF()
+IF (${ENABLE_CODECACHE} STREQUAL "1")
+    SET (ESCARGOT_CODE_CACHE ON)
 ENDIF()
 
 IF (${HOST} STREQUAL "linux")

@@ -65,8 +65,8 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
         }
     }
 
-    uint32_t idx = key->toArrayIndex(state);
-    if (idx != ValueRef::InvalidArrayIndexValue) {
+    uint32_t idx = key->tryToUseAsIndexProperty(state);
+    if (idx != ValueRef::InvalidIndexPropertyValue) {
         Window* result = self->defaultIndexedGetter(idx);
         if (result != nullptr) {
             return result->scriptValue();

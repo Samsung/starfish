@@ -229,7 +229,7 @@ static SerializedTypedData* serializeInternal(
             data = new SerializedPrimitiveValueData(value->asInt32());
         } else if (value->isUInt32()) {
             type = SerializedTypedData::Uint32Primitive;
-            data = new SerializedPrimitiveValueData(value->asUint32());
+            data = new SerializedPrimitiveValueData(value->asUInt32());
         } else if (value->isNumber()) {
             type = SerializedTypedData::NumberPrimitive;
             data = new SerializedPrimitiveValueData(value->asNumber());
@@ -262,7 +262,7 @@ static SerializedTypedData* serializeInternal(
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
                 state, StringRef::createFromASCII("length"));
-            data = new SerializedArrayData(length->asUint32());
+            data = new SerializedArrayData(length->asUInt32());
             deep = true;
         } else if (obj->extraData()) {
             ScriptWrappable* scriptWrappable =
