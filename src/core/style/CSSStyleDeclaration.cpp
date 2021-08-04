@@ -142,6 +142,11 @@ namespace Starfish {
         ADD_PAIRS(PRE, __VA_ARGS__);                               \
     }
 
+#define GEN_ATTRIBUTE_REMOVER_FOURSIDE(PRE, ...) \
+    {                                            \
+        RM_PAIRS(PRE, __VA_ARGS__);              \
+    }
+
 #define GEN_ATTRIBUTE_GETTER_BORDER(POS)                               \
     {                                                                  \
         String* width = Border##POS##Width();                          \
@@ -170,6 +175,11 @@ namespace Starfish {
             color.setFlagImportant(isImportant);                           \
             addBorder##POS##CSSValuePairs(this, width, style, color);      \
         }                                                                  \
+    }
+
+#define GEN_ATTRIBUTE_REMOVER_BORDER(POS)       \
+    {                                           \
+        removeBorder##POS##CSSValuePairs(this); \
     }
 
 static bool seperatorContains(const char* seperator, size_t seperatorCount,
@@ -443,14 +453,33 @@ static String* printBackground(String* image, String* position, String* size,
                                String* repeat, String* attachment,
                                String* origin, String* clip, String* color)
 {
-    if (image->equals(String::inheritString) ||
-        position->equals(String::inheritString) ||
-        size->equals(String::inheritString) ||
-        repeat->equals(String::inheritString) ||
-        attachment->equals(String::inheritString) ||
-        origin->equals(String::inheritString) ||
-        clip->equals(String::inheritString) ||
-        color->equals(String::inheritString)) {
+    const int maxCount = 8;
+    int initialCount = 0, inheritCount = 0;
+    initialCount += (image->equals(String::initialString) ? 1 : 0);
+    initialCount += (position->equals(String::initialString) ? 1 : 0);
+    initialCount += (size->equals(String::initialString) ? 1 : 0);
+    initialCount += (repeat->equals(String::initialString) ? 1 : 0);
+    initialCount += (attachment->equals(String::initialString) ? 1 : 0);
+    initialCount += (origin->equals(String::initialString) ? 1 : 0);
+    initialCount += (clip->equals(String::initialString) ? 1 : 0);
+    initialCount += (color->equals(String::initialString) ? 1 : 0);
+
+    inheritCount += (image->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (position->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (size->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (repeat->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (attachment->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (origin->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (clip->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (color->equals(String::inheritString) ? 1 : 0);
+
+    if (initialCount == maxCount) {
+        return String::initialString;
+    }
+    if (inheritCount == maxCount) {
+        return String::inheritString;
+    }
+    if (inheritCount > 0) {
         return String::emptyString;
     }
 
@@ -1437,6 +1466,17 @@ void CSSStyleDeclaration::setCustomProperty(String* key, String* value)
     m_cssCustomValues.push_back(custom);
 }
 
+void CSSStyleDeclaration::removeCustomProperty(String* key)
+{
+    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
+        MutablePropertyValue property = m_cssCustomValues[i];
+        if (property.name()->equals(key)) {
+            m_cssCustomValues.erase(m_cssCustomValues.begin() + i);
+            return;
+        }
+    }
+}
+
 void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                                            const char* data, size_t length,
                                            const char* seperator,
@@ -1721,6 +1761,15 @@ FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
 #undef DEFINE_ATTRIBUTE_SETTER
 
+#define DEFINE_ATTRIBUTE_REMOVER(name, ...)                   \
+    void CSSStyleDeclaration::remove##name()                  \
+    {                                                         \
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::name); \
+    }
+
+FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_REMOVER)
+#undef DEFINE_ATTRIBUTE_REMOVER
+
 uint32_t CSSStyleDeclaration::length() const
 {
     return m_cssValues.size();
@@ -1832,7 +1881,7 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
 
     CSSStyleValuePair::KeyKind kind = sender.kind;
 
-    if (prior->length() > 0) {
+    if (!prior->equals("undefined") && prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
@@ -1874,6 +1923,53 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
             return 0;
         },
         &sender2);
+}
+
+String* CSSStyleDeclaration::removeProperty(String* name)
+{
+    if (isComputedStyle()) {
+        throw new DOMException(m_node->executionContext(),
+                               DOMException::NO_MODIFICATION_ALLOWED_ERR,
+                               "Computed property is read-only");
+    }
+
+    struct Sender {
+        CSSStyleValuePair::KeyKind kind;
+    } sender;
+
+    name->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            Sender* s = (Sender*)data;
+
+            char* mutableBuf = ALLOCA(len, char);
+            memcpy(mutableBuf, buf, len);
+
+            for (size_t i = 0; i < len; i++) {
+                mutableBuf[i] = tolower(mutableBuf[i]);
+            }
+
+            s->kind = lookupCSSStyle(mutableBuf, len);
+            return 0;
+        },
+        &sender);
+
+    CSSStyleValuePair::KeyKind kind = sender.kind;
+    String* value = String::emptyString;
+    switch (kind) {
+#define MATCH_KEY(Name, ...)               \
+    case CSSStyleValuePair::KeyKind::Name: \
+        value = Name();                    \
+        remove##Name();                    \
+        break;
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
+#undef MATCH_KEY
+    default:
+        value = customProperty(name);
+        removeCustomProperty(name);
+        break;
+    }
+
+    return value;
 }
 
 String* CSSStyleDeclaration::cssText() const
@@ -2257,6 +2353,11 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
 #undef APPEND_NEW_LAYER
 }
 
+void CSSStyleDeclaration::removeBackground()
+{
+    removeBackgroundCSSValuePairs(this);
+}
+
 bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
     const CSSTokenVector& tokens, CSSStyleValuePair* retx,
     CSSStyleValuePair* rety, bool allowComma)
@@ -2406,6 +2507,12 @@ void CSSStyleDeclaration::setBackgroundPosition(const char* value,
     }
 }
 
+void CSSStyleDeclaration::removeBackgroundPosition()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+}
+
 String* CSSStyleDeclaration::BackgroundRepeat()
 {
     String* repeatX = BackgroundRepeatX();
@@ -2461,6 +2568,12 @@ void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeBackgroundRepeat()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+}
+
 String* CSSStyleDeclaration::Border()
 {
     bool isWidthCombined;
@@ -2495,6 +2608,10 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
         addBorderCSSValuePairs(this, width, style, color);
     }
 }
+void CSSStyleDeclaration::removeBorder()
+{
+    removeBorderCSSValuePairs(this);
+}
 
 String* CSSStyleDeclaration::BorderColor(bool* isCombined)
 {
@@ -2502,8 +2619,13 @@ String* CSSStyleDeclaration::BorderColor(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderColor(const char* value, size_t length,
-                                         bool isImportant){
+                                         bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Color)
+}
+
+void CSSStyleDeclaration::removeBorderColor(){
+    GEN_ATTRIBUTE_REMOVER_FOURSIDE(Border, Color)
 }
 
 String* CSSStyleDeclaration::BorderStyle(bool* isCombined)
@@ -2512,8 +2634,13 @@ String* CSSStyleDeclaration::BorderStyle(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderStyle(const char* value, size_t length,
-                                         bool isImportant){
+                                         bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Style)
+}
+
+void CSSStyleDeclaration::removeBorderStyle(){
+    GEN_ATTRIBUTE_REMOVER_FOURSIDE(Border, Style)
 }
 
 String* CSSStyleDeclaration::BorderWidth(bool* isCombined)
@@ -2522,8 +2649,13 @@ String* CSSStyleDeclaration::BorderWidth(bool* isCombined)
 }
 
 void CSSStyleDeclaration::setBorderWidth(const char* value, size_t length,
-                                         bool isImportant){
+                                         bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Border, Width)
+}
+
+void CSSStyleDeclaration::removeBorderWidth(){
+    GEN_ATTRIBUTE_REMOVER_FOURSIDE(Border, Width)
 }
 
 String* CSSStyleDeclaration::BorderTop()
@@ -2532,9 +2664,12 @@ String* CSSStyleDeclaration::BorderTop()
 }
 
 void CSSStyleDeclaration::setBorderTop(const char* value, size_t len,
-                                       bool isImportant){
+                                       bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_BORDER(Top)
 }
+
+void CSSStyleDeclaration::removeBorderTop(){ GEN_ATTRIBUTE_REMOVER_BORDER(Top) }
 
 String* CSSStyleDeclaration::BorderRight()
 {
@@ -2542,8 +2677,13 @@ String* CSSStyleDeclaration::BorderRight()
 }
 
 void CSSStyleDeclaration::setBorderRight(const char* value, size_t len,
-                                         bool isImportant){
+                                         bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_BORDER(Right)
+}
+
+void CSSStyleDeclaration::removeBorderRight(){
+    GEN_ATTRIBUTE_REMOVER_BORDER(Right)
 }
 
 String* CSSStyleDeclaration::BorderBottom()
@@ -2552,8 +2692,13 @@ String* CSSStyleDeclaration::BorderBottom()
 }
 
 void CSSStyleDeclaration::setBorderBottom(const char* value, size_t len,
-                                          bool isImportant){
+                                          bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_BORDER(Bottom)
+}
+
+void CSSStyleDeclaration::removeBorderBottom(){
+    GEN_ATTRIBUTE_REMOVER_BORDER(Bottom)
 }
 
 String* CSSStyleDeclaration::BorderLeft()
@@ -2562,8 +2707,13 @@ String* CSSStyleDeclaration::BorderLeft()
 }
 
 void CSSStyleDeclaration::setBorderLeft(const char* value, size_t len,
-                                        bool isImportant){
+                                        bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_BORDER(Left)
+}
+
+void CSSStyleDeclaration::removeBorderLeft(){
+    GEN_ATTRIBUTE_REMOVER_BORDER(Left)
 }
 
 String* CSSStyleDeclaration::BorderRadius()
@@ -2765,6 +2915,14 @@ void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
     addCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius, bottomLeft);
 }
 
+void CSSStyleDeclaration::removeBorderRadius()
+{
+    removeCSSValuePair(CSSStyleValuePair::BorderTopLeftRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderTopRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomRightRadius);
+    removeCSSValuePair(CSSStyleValuePair::BorderBottomLeftRadius);
+}
+
 String* CSSStyleDeclaration::BorderImage()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -2797,6 +2955,11 @@ void CSSStyleDeclaration::setBorderImage(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeBorderImage()
+{
+    removeBorderImageCSSValuePairs(this);
+}
+
 void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
 {
     if (len == 0) {
@@ -2827,6 +2990,11 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
     CSSStyleValuePair pair;
     pair.setPathFunctionValue(mayQuoteBlock.getValue().toGCString());
     addCSSValuePair(CSSStyleValuePair::KeyKind::D, pair);
+}
+
+void CSSStyleDeclaration::removeD()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::D);
 }
 
 String* CSSStyleDeclaration::Flex()
@@ -2892,6 +3060,11 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeFlex()
+{
+    removeFlexCSSValuePairs(this);
+}
+
 void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
                                       bool isImportant)
 {
@@ -2913,6 +3086,11 @@ void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
         flexWrap.setFlagImportant(isImportant);
         addFlexFlowCSSValuePairs(this, flexDirection, flexWrap);
     }
+}
+
+void CSSStyleDeclaration::removeFlexFlow()
+{
+    removeFlexFlowCSSValuePairs(this);
 }
 
 String* CSSStyleDeclaration::FlexFlow()
@@ -2946,7 +3124,7 @@ String* CSSStyleDeclaration::Font()
     initialCount += (style->equals(String::initialString) ? 1 : 0);
     initialCount += (weight->equals(String::initialString) ? 1 : 0);
     initialCount += (size->equals(String::initialString) ? 1 : 0);
-    initialCount += (lineHeight->equals(String::inheritString) ? 1 : 0);
+    initialCount += (lineHeight->equals(String::initialString) ? 1 : 0);
     inheritCount += (style->equals(String::inheritString) ? 1 : 0);
     inheritCount += (weight->equals(String::inheritString) ? 1 : 0);
     inheritCount += (size->equals(String::inheritString) ? 1 : 0);
@@ -3034,6 +3212,15 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeFont()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight);
+}
+
 void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
                                         bool isImportant)
 {
@@ -3052,6 +3239,11 @@ void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
     }
+}
+
+void CSSStyleDeclaration::removeFontFamily()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
 }
 
 String* CSSStyleDeclaration::ListStyle()
@@ -3119,14 +3311,26 @@ void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
     }
 }
 
+void CSSStyleDeclaration::removeListStyle()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleImage);
+}
+
 String* CSSStyleDeclaration::Margin(bool* isCombined)
 {
     GEN_ATTRIBUTE_GETTER_FOURSIDE(Margin)
 }
 
 void CSSStyleDeclaration::setMargin(const char* value, size_t length,
-                                    bool isImportant){
+                                    bool isImportant)
+{
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Margin)
+}
+
+void CSSStyleDeclaration::removeMargin(){
+    GEN_ATTRIBUTE_REMOVER_FOURSIDE(Margin)
 }
 
 String* CSSStyleDeclaration::Outline()
@@ -3166,6 +3370,13 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeOutline()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor);
+}
+
 String* CSSStyleDeclaration::Overflow()
 {
     // TODO: Should find the specific rule for composing overflow
@@ -3202,6 +3413,11 @@ void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
     }
 }
 
+void CSSStyleDeclaration::removeOverflow()
+{
+    removeOverflowCSSValuePairs(this);
+}
+
 String* CSSStyleDeclaration::Padding(bool* isCombined)
 {
     GEN_ATTRIBUTE_GETTER_FOURSIDE(Padding)
@@ -3211,6 +3427,11 @@ void CSSStyleDeclaration::setPadding(const char* value, size_t length,
                                      bool isImportant)
 {
     GEN_ATTRIBUTE_SETTER_FOURSIDE(Padding)
+}
+
+void CSSStyleDeclaration::removePadding()
+{
+    GEN_ATTRIBUTE_REMOVER_FOURSIDE(Padding)
 }
 
 void CSSStyleDeclaration::setSrc(const char* value, size_t len,
@@ -3227,6 +3448,11 @@ void CSSStyleDeclaration::setSrc(const char* value, size_t len,
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
     }
+}
+
+void CSSStyleDeclaration::removeSrc()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::Src);
 }
 
 String* CSSStyleDeclaration::TextDecoration()
@@ -3339,6 +3565,13 @@ void CSSStyleDeclaration::setTextDecoration(const char* value, size_t len,
     }
 }
 
+void CSSStyleDeclaration::removeTextDecoration()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationColor);
+}
+
 void CSSStyleDeclaration::setTransitionProperty(const char* value,
                                                 size_t length, bool isImportant)
 {
@@ -3369,6 +3602,11 @@ void CSSStyleDeclaration::setTransitionProperty(const char* value,
     addCSSValuePair(CSSStyleValuePair::TransitionProperty, result);
 }
 
+void CSSStyleDeclaration::removeTransitionProperty()
+{
+    removeCSSValuePair(CSSStyleValuePair::TransitionProperty);
+}
+
 void CSSStyleDeclaration::setTransitionDuration(const char* value,
                                                 size_t length, bool isImportant)
 {
@@ -3397,6 +3635,11 @@ void CSSStyleDeclaration::setTransitionDuration(const char* value,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::TransitionDuration, result);
+}
+
+void CSSStyleDeclaration::removeTransitionDuration()
+{
+    removeCSSValuePair(CSSStyleValuePair::TransitionDuration);
 }
 
 void CSSStyleDeclaration::setTransitionTimingFunction(const char* value,
@@ -3430,6 +3673,11 @@ void CSSStyleDeclaration::setTransitionTimingFunction(const char* value,
     addCSSValuePair(CSSStyleValuePair::TransitionTimingFunction, result);
 }
 
+void CSSStyleDeclaration::removeTransitionTimingFunction()
+{
+    removeCSSValuePair(CSSStyleValuePair::TransitionTimingFunction);
+}
+
 void CSSStyleDeclaration::setTransitionDelay(const char* value, size_t length,
                                              bool isImportant)
 {
@@ -3458,6 +3706,11 @@ void CSSStyleDeclaration::setTransitionDelay(const char* value, size_t length,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::TransitionDelay, result);
+}
+
+void CSSStyleDeclaration::removeTransitionDelay()
+{
+    removeCSSValuePair(CSSStyleValuePair::TransitionDelay);
 }
 
 String* CSSStyleDeclaration::Transition()
@@ -3571,6 +3824,15 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
     addCSSValuePair(CSSStyleValuePair::TransitionDelay, r3);
 }
 
+void CSSStyleDeclaration::removeTransition()
+{
+    // There are not arguments.
+    removeCSSValuePair(CSSStyleValuePair::TransitionProperty);
+    removeCSSValuePair(CSSStyleValuePair::TransitionDuration);
+    removeCSSValuePair(CSSStyleValuePair::TransitionDelay);
+    removeCSSValuePair(CSSStyleValuePair::TransitionTimingFunction);
+}
+
 String* CSSStyleDeclaration::Animation()
 {
     const size_t kKeySize = 7;
@@ -3662,6 +3924,11 @@ void CSSStyleDeclaration::setAnimationName(const char* value, size_t length,
     addCSSValuePair(CSSStyleValuePair::AnimationName, result);
 }
 
+void CSSStyleDeclaration::removeAnimationName()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationName);
+}
+
 void CSSStyleDeclaration::setAnimationDuration(const char* value, size_t length,
                                                bool isImportant)
 {
@@ -3691,6 +3958,11 @@ void CSSStyleDeclaration::setAnimationDuration(const char* value, size_t length,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::AnimationDuration, result);
+}
+
+void CSSStyleDeclaration::removeAnimationDuration()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationDuration);
 }
 
 void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
@@ -3725,6 +3997,11 @@ void CSSStyleDeclaration::setAnimationTimingFunction(const char* value,
     addCSSValuePair(CSSStyleValuePair::AnimationTimingFunction, result);
 }
 
+void CSSStyleDeclaration::removeAnimationTimingFunction()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationTimingFunction);
+}
+
 void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
                                             bool isImportant)
 {
@@ -3754,6 +4031,11 @@ void CSSStyleDeclaration::setAnimationDelay(const char* value, size_t length,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::AnimationDelay, result);
+}
+
+void CSSStyleDeclaration::removeAnimationDelay()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
 }
 
 void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
@@ -3788,6 +4070,11 @@ void CSSStyleDeclaration::setAnimationIterationCount(const char* value,
     addCSSValuePair(CSSStyleValuePair::AnimationIterationCount, result);
 }
 
+void CSSStyleDeclaration::removeAnimationIterationCount()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
+}
+
 void CSSStyleDeclaration::setAnimationDirection(const char* value,
                                                 size_t length, bool isImportant)
 {
@@ -3817,6 +4104,11 @@ void CSSStyleDeclaration::setAnimationDirection(const char* value,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::AnimationDirection, result);
+}
+
+void CSSStyleDeclaration::removeAnimationDirection()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
 }
 
 void CSSStyleDeclaration::setAnimationPlayState(const char* value,
@@ -3850,6 +4142,11 @@ void CSSStyleDeclaration::setAnimationPlayState(const char* value,
     addCSSValuePair(CSSStyleValuePair::AnimationPlayState, result);
 }
 
+void CSSStyleDeclaration::removeAnimationPlayState()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
+}
+
 void CSSStyleDeclaration::setAnimationFillMode(const char* value, size_t length,
                                                bool isImportant)
 {
@@ -3879,6 +4176,11 @@ void CSSStyleDeclaration::setAnimationFillMode(const char* value, size_t length,
     result.setFlagImportant(isImportant);
     result.setValueList(list);
     addCSSValuePair(CSSStyleValuePair::AnimationFillMode, result);
+}
+
+void CSSStyleDeclaration::removeAnimationFillMode()
+{
+    removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
 }
 
 void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
@@ -3967,6 +4269,19 @@ void CSSStyleDeclaration::setAnimation(const char* value, size_t length,
     addCSSValuePair(CSSStyleValuePair::AnimationFillMode, r7);
 }
 
+void CSSStyleDeclaration::removeAnimation()
+{
+    // There are not arguments.
+    removeCSSValuePair(CSSStyleValuePair::AnimationName);
+    removeCSSValuePair(CSSStyleValuePair::AnimationDuration);
+    removeCSSValuePair(CSSStyleValuePair::AnimationTimingFunction);
+    removeCSSValuePair(CSSStyleValuePair::AnimationDelay);
+    removeCSSValuePair(CSSStyleValuePair::AnimationIterationCount);
+    removeCSSValuePair(CSSStyleValuePair::AnimationDirection);
+    removeCSSValuePair(CSSStyleValuePair::AnimationPlayState);
+    removeCSSValuePair(CSSStyleValuePair::AnimationFillMode);
+}
+
 String* CSSStyleDeclaration::Mask()
 {
     // Mask is only supported as SVG attribute.
@@ -3979,6 +4294,11 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
 {
     // Mask is only supported as SVG attribute.
     STARFISH_ASSERT(value != nullptr);
+}
+
+void CSSStyleDeclaration::removeMask()
+{
+    // Mask is only supported as SVG attribute.
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(

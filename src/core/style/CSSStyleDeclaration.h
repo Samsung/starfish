@@ -172,6 +172,37 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_SETTER)
 #undef DECLARE_ATTRIBUTE_SETTER
 
+    void removeBorder();
+    void removeBorderTop();
+    void removeBorderRight();
+    void removeBorderBottom();
+    void removeBorderLeft();
+    void removeBorderRadius();
+    void removeBackground();
+    void removeBackgroundRepeat();
+    void removeBackgroundPosition();
+    void removeMargin();
+    void removePadding();
+    void removeBorderWidth();
+    void removeBorderStyle();
+    void removeBorderColor();
+    void removeBorderImage();
+    void removeFont();
+    void removeTextDecoration();
+    void removeTransition();
+    void removeAnimation();
+    void removeOverflow();
+    void removeFlexFlow();
+    void removeFlex();
+    void removeOutline();
+    void removeListStyle();
+    void removeMask();
+    void removeCustomProperty(String* key);
+#define DECLARE_ATTRIBUTE_REMOVER(name, ...) void remove##name();
+    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_REMOVER)
+    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_REMOVER)
+#undef DECLARE_ATTRIBUTE_REMOVER
+
 #define DECLARE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
     String* PRE##__VA_ARGS__(bool* isCombined = nullptr);
 
@@ -195,6 +226,8 @@ public:
     String* getPropertyValue(String* name);
     String* getPropertyPriority(String* name);
     void setProperty(String* name, String* value, String* priority);
+
+    String* removeProperty(String* name);
 
     // NOTE Based on IDL,
     // CSSStyleDeclaration has namedGetter, namedEnumerator, namedSetter
