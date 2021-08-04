@@ -2181,7 +2181,7 @@ String* CSSStyleDeclaration::generateCSSText() const
             txt.appendString("; ");
         }
     }
-    return txt.finalize();
+    return txt.finalize()->trim();
 }
 
 String* CSSStyleDeclaration::Background()

@@ -75,7 +75,7 @@ String* CSSStyleRule::cssText()
 
     String* decls = m_styleRule->styleDeclaration()->generateCSSText();
     result.appendString(decls);
-    result.appendChar('}');
+    result.appendString(" }");
     return result.finalize();
 }
 
@@ -278,7 +278,7 @@ String* CSSMediaRule::cssText()
     }
     result.appendString("{ \n");
     appendCSSTextForItems(result);
-    result.appendChar('}');
+    result.appendString(" }");
     return result.finalize();
 }
 
@@ -386,7 +386,7 @@ String* CSSFontFaceRule::cssText()
 
     String* decls = m_fontFaceRule->styleDeclaration()->generateCSSText();
     result.appendString(decls);
-    result.appendChar('}');
+    result.appendString(" }");
     return result.finalize();
 }
 
@@ -403,7 +403,7 @@ String* CSSSupportsRule::cssText()
     result.appendString(conditionText());
     result.appendString(" {\n");
     appendCSSTextForItems(result);
-    result.appendChar('}');
+    result.appendString(" }");
     return result.finalize();
 }
 
@@ -444,7 +444,7 @@ String* CSSCounterStyleRule::cssText()
     // TODO: print @counter-style after parsing the rule
     StringBuilder ret;
     ret.appendString("@counter-style { ");
-    ret.appendChar('}');
+    ret.appendString(" }");
     return ret.finalize();
 }
 
@@ -558,7 +558,7 @@ String* CSSKeyframesRule::cssText()
         result.appendChar('\n');
     }
 
-    result.appendString("}");
+    result.appendString(" }");
     return result.finalize();
 }
 

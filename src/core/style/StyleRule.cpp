@@ -409,7 +409,7 @@ String* StyleRuleKeyframe::cssText()
     result.appendString(" { ");
     String* decls = styleDeclaration()->cssText();
     result.appendString(decls);
-    result.appendChar('}');
+    result.appendString(" }");
 
     return result.finalize();
 }
