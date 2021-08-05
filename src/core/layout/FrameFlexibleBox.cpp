@@ -1210,7 +1210,9 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
 
     // A. If the item has a definite used flex basis, that’s the flex
     // base size.
-    if (!applyLineClamp && flexBasis.isWidth()) {
+    if (!applyLineClamp && flexBasis.isWidth() &&
+        flexBasis.width().isDefinite(
+            shouldRespectPercentageWidthOnComputingBasisSize)) {
         Length basisWidth = flexBasis.width();
         if (basisWidth.isDefinite(availableMainSize != intMaxForLayoutUnit)) {
             computeBorderMarginPaddingWithinFlexContext(
@@ -1295,7 +1297,8 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
                     width.isPercent()) {
                     width = Length();
                 }
-            } else {
+            } else if (width.isDefinite(
+                           shouldRespectPercentageWidthOnComputingBasisSize)) {
                 width = flexBasis.width();
             }
         }
