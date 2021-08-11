@@ -1753,8 +1753,8 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
         return;
     }
 
-    if (imagedata->data()->asArrayBufferView()->buffer()->isDetachedBuffer() ==
-        true) {
+    if (imagedata->data()->isArrayBufferObject() &&
+        imagedata->data()->asArrayBufferObject()->isDetachedBuffer()) {
         throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR,
                                "ImageData's data has a detached buffer");

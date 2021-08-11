@@ -333,6 +333,11 @@ namespace WindowOrWorkerGlobalScope {
             if (imageData->data()
                     ->asArrayBufferView()
                     ->buffer()
+                    ->isArrayBufferObject() &&
+                imageData->data()
+                    ->asArrayBufferView()
+                    ->buffer()
+                    ->asArrayBufferObject()
                     ->isDetachedBuffer()) {
                 return rejectPromiseWithDOMException(
                     executionContext, promise,

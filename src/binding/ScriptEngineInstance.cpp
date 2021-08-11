@@ -36,110 +36,13 @@ namespace Starfish {
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
                                            const char* timezone, WebView* wv)
 {
-    class EscargotStarfishPlatform : public Escargot::PlatformRef {
-    public:
-        EscargotStarfishPlatform(WebView* wv)
-            : m_webView(wv)
-        {
-        }
-
-        virtual void markJSJobEnqueued(
-            Escargot::ContextRef* relatedContext) override
-        {
-            Window* window =
-                (Window*)relatedContext->globalObject()->extraData();
-
-            window->webView()->messageLoop()->addMicroTask(
-                window,
-                [](size_t handle, void* data) {
-                    VMInstanceRef* vm = (VMInstanceRef*)data;
-                    if (vm->hasPendingJob()) {
-                        auto jobResult = vm->executePendingJob();
-                        if (jobResult.error) {
-                            STARFISH_LOG_ERROR(
-                                "Uncaught Error in JS job\n");
-                        }
-                    }
-                },
-                relatedContext->vmInstance());
-        }
-
-        virtual LoadModuleResult onLoadModule(
-            Escargot::ContextRef* relatedContext,
-            Escargot::ScriptRef* whereRequestFrom,
-            Escargot::StringRef* moduleSrc) override
-        {
-            return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
-                                    Escargot::StringRef::emptyString());
-        }
-
-        virtual void didLoadModule(
-            Escargot::ContextRef* relatedContext,
-            Escargot::OptionalRef<Escargot::ScriptRef> referrer,
-            Escargot::ScriptRef* loadedModule) override
-        {
-        }
-
-        virtual void hostImportModuleDynamically(
-            ContextRef* relatedContext, ScriptRef* referrer, StringRef* src,
-            PromiseObjectRef* promise) override
-        {
-            LoadModuleResult loadedModuleResult =
-                onLoadModule(relatedContext, referrer, src);
-
-            Evaluator::EvaluatorResult executionResult = Evaluator::execute(
-                relatedContext,
-                [](ExecutionStateRef* state,
-                   LoadModuleResult loadedModuleResult,
-                   PromiseObjectRef* promise) -> ValueRef* {
-                    if (loadedModuleResult.script) {
-                        if (loadedModuleResult.script.value()->isExecuted()) {
-                            if (loadedModuleResult.script.value()
-                                    ->wasThereErrorOnModuleEvaluation()) {
-                                state->throwException(
-                                    loadedModuleResult.script.value()
-                                        ->moduleEvaluationError());
-                            }
-                        } else {
-                            loadedModuleResult.script.value()->execute(state);
-                        }
-                    } else {
-                        state->throwException(ErrorObjectRef::create(
-                            state, loadedModuleResult.errorCode,
-                            loadedModuleResult.errorMessage));
-                    }
-                    return loadedModuleResult.script.value()->moduleNamespace(
-                        state);
-                },
-                loadedModuleResult, promise);
-
-            Evaluator::execute(
-                relatedContext,
-                [](ExecutionStateRef* state, bool isSuccessful, ValueRef* value,
-                   PromiseObjectRef* promise) -> ValueRef* {
-                    if (isSuccessful) {
-                        promise->fulfill(state, value);
-                    } else {
-                        promise->reject(state, value);
-                    }
-                    return ValueRef::createUndefined();
-                },
-                executionResult.isSuccessful(),
-                executionResult.isSuccessful() ? executionResult.result
-                                               : executionResult.error.value(),
-                promise);
-        }
-
-        WebView* m_webView;
-    };
-
 #ifdef STARFISH_TIZEN_PROD_TV
     // add argument for CodeCache directory
     m_engineInstance = Escargot::VMInstanceRef::create(
-        new EscargotStarfishPlatform(wv), locale, timezone, app_get_data_path());
+        locale, timezone, app_get_data_path());
 #else
     m_engineInstance = Escargot::VMInstanceRef::create(
-        new EscargotStarfishPlatform(wv), locale, timezone);
+        locale, timezone);
 #endif
 }
 

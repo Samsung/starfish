@@ -19,13 +19,110 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
+#include "core/page/Window.h"
 
 #include "LWEWebView.h"
 #include <EscargotPublic.h>
 
 #define THREAD_MINIMUM_STACK_SIZE \
     4 * 1024 * 1024 // we need at least 4MB for stack
+
+namespace Starfish {
+class EscargotStarfishPlatform : public Escargot::PlatformRef {
+public:
+    EscargotStarfishPlatform()
+    {
+    }
+
+    virtual void markJSJobEnqueued(
+        Escargot::ContextRef* relatedContext) override
+    {
+        Window* window = (Window*)relatedContext->globalObject()->extraData();
+
+        window->webView()->messageLoop()->addMicroTask(
+            window,
+            [](size_t handle, void* data) {
+                VMInstanceRef* vm = (VMInstanceRef*)data;
+                if (vm->hasPendingJob()) {
+                    auto jobResult = vm->executePendingJob();
+                    if (jobResult.error) {
+                        STARFISH_LOG_ERROR("Uncaught Error in JS job\n");
+                    }
+                }
+            },
+            relatedContext->vmInstance());
+    }
+
+    virtual LoadModuleResult onLoadModule(
+        Escargot::ContextRef* relatedContext,
+        Escargot::ScriptRef* whereRequestFrom,
+        Escargot::StringRef* moduleSrc) override
+    {
+        return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
+                                Escargot::StringRef::emptyString());
+    }
+
+    virtual void didLoadModule(
+        Escargot::ContextRef* relatedContext,
+        Escargot::OptionalRef<Escargot::ScriptRef> referrer,
+        Escargot::ScriptRef* loadedModule) override
+    {
+    }
+
+    virtual void hostImportModuleDynamically(ContextRef* relatedContext,
+                                             ScriptRef* referrer,
+                                             StringRef* src,
+                                             PromiseObjectRef* promise) override
+    {
+        LoadModuleResult loadedModuleResult =
+            onLoadModule(relatedContext, referrer, src);
+
+        Evaluator::EvaluatorResult executionResult = Evaluator::execute(
+            relatedContext,
+            [](ExecutionStateRef* state, LoadModuleResult loadedModuleResult,
+               PromiseObjectRef* promise) -> ValueRef* {
+                if (loadedModuleResult.script) {
+                    if (loadedModuleResult.script.value()->isExecuted()) {
+                        if (loadedModuleResult.script.value()
+                                ->wasThereErrorOnModuleEvaluation()) {
+                            state->throwException(
+                                loadedModuleResult.script.value()
+                                    ->moduleEvaluationError());
+                        }
+                    } else {
+                        loadedModuleResult.script.value()->execute(state);
+                    }
+                } else {
+                    state->throwException(ErrorObjectRef::create(
+                        state, loadedModuleResult.errorCode,
+                        loadedModuleResult.errorMessage));
+                }
+                return loadedModuleResult.script.value()->moduleNamespace(
+                    state);
+            },
+            loadedModuleResult, promise);
+
+        Evaluator::execute(
+            relatedContext,
+            [](ExecutionStateRef* state, bool isSuccessful, ValueRef* value,
+               PromiseObjectRef* promise) -> ValueRef* {
+                if (isSuccessful) {
+                    promise->fulfill(state, value);
+                } else {
+                    promise->reject(state, value);
+                }
+                return ValueRef::createUndefined();
+            },
+            executionResult.isSuccessful(),
+            executionResult.isSuccessful() ? executionResult.result
+                                           : executionResult.error.value(),
+            promise);
+    }
+};
+} // namespace Starfish
 
 namespace LWE {
 
@@ -67,7 +164,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     }
 
     Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        Escargot::Globals::initialize();
+        Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
         g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
             httpCacheDataDirectorypath);
@@ -107,7 +204,7 @@ void LWE::Initialize(const char* localStorageDataFilePath,
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
 
-    Escargot::Globals::initialize();
+    Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
     g_starfishInstance = new (NoGC)
         Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
                            httpCacheDataDirectorypath);
