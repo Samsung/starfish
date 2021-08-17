@@ -1518,23 +1518,45 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     }
 
     LayoutUnit widthWillBe = width;
-    style->setMarginLeft(
-        Length(Length::Fixed,
-               style->margin().left().specifiedValue(width, m_container)));
-    widthWillBe -= style->margin().left().fixed();
-    style->setMarginRight(
-        Length(Length::Fixed,
-               style->margin().right().specifiedValue(width, m_container)));
-    widthWillBe -= style->margin().right().fixed();
 
-    style->setPaddingLeft(
-        Length(Length::Fixed,
-               style->padding().left().specifiedValue(width, m_container)));
-    widthWillBe -= style->padding().left().fixed();
-    style->setPaddingRight(
-        Length(Length::Fixed,
-               style->padding().right().specifiedValue(width, m_container)));
-    widthWillBe -= style->padding().right().fixed();
+    // ref: https://www.w3.org/TR/css-grid-1/#auto-margins
+    // TODO: auto margins absorb positive free space prior to alignment via the
+    // box alignment properties.
+    if (style->margin().left().isAuto()) {
+        style->setMarginLeft(Length(Length::Fixed, 0));
+    } else {
+        style->setMarginLeft(
+            Length(Length::Fixed,
+                   style->margin().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().left().fixed();
+    }
+
+    if (style->margin().right().isAuto()) {
+        style->setMarginRight(Length(Length::Fixed, 0));
+    } else {
+        style->setMarginRight(
+            Length(Length::Fixed,
+                   style->margin().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->margin().right().fixed();
+    }
+
+    if (style->padding().left().isAuto()) {
+        style->setPaddingLeft(Length(Length::Fixed, 0));
+    } else {
+        style->setPaddingLeft(
+            Length(Length::Fixed,
+                   style->padding().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().left().fixed();
+    }
+
+    if (style->padding().right().isAuto()) {
+        style->setPaddingRight(Length(Length::Fixed, 0));
+    } else {
+        style->setPaddingRight(Length(
+            Length::Fixed,
+            style->padding().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().right().fixed();
+    }
 
     style->setBorderLeftWidth(Length(
         Length::Fixed,
@@ -1574,23 +1596,42 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     }
 
     LayoutUnit heightWillBe = height;
-    style->setMarginTop(
-        Length(Length::Fixed,
-               style->margin().top().specifiedValue(height, m_container)));
-    heightWillBe -= style->margin().top().fixed();
-    style->setMarginBottom(
-        Length(Length::Fixed,
-               style->margin().bottom().specifiedValue(height, m_container)));
-    heightWillBe -= style->margin().bottom().fixed();
 
-    style->setPaddingTop(
-        Length(Length::Fixed,
-               style->padding().top().specifiedValue(height, m_container)));
-    heightWillBe -= style->padding().top().fixed();
-    style->setPaddingBottom(
-        Length(Length::Fixed,
-               style->padding().bottom().specifiedValue(height, m_container)));
-    heightWillBe -= style->padding().bottom().fixed();
+    if (style->margin().top().isAuto()) {
+        style->setMarginTop(Length(Length::Fixed, 0));
+    } else {
+        style->setMarginTop(
+            Length(Length::Fixed,
+                   style->margin().top().specifiedValue(height, m_container)));
+        heightWillBe -= style->margin().top().fixed();
+    }
+
+    if (style->margin().bottom().isAuto()) {
+        style->setMarginBottom(Length(Length::Fixed, 0));
+    } else {
+        style->setMarginBottom(Length(
+            Length::Fixed,
+            style->margin().bottom().specifiedValue(height, m_container)));
+        heightWillBe -= style->margin().bottom().fixed();
+    }
+
+    if (style->padding().top().isAuto()) {
+        style->setPaddingTop(Length(Length::Fixed, 0));
+    } else {
+        style->setPaddingTop(
+            Length(Length::Fixed,
+                   style->padding().top().specifiedValue(height, m_container)));
+        heightWillBe -= style->padding().top().fixed();
+    }
+
+    if (style->padding().bottom().isAuto()) {
+        style->setPaddingBottom(Length(Length::Fixed, 0));
+    } else {
+        style->setPaddingBottom(Length(
+            Length::Fixed,
+            style->padding().bottom().specifiedValue(height, m_container)));
+        heightWillBe -= style->padding().bottom().fixed();
+    }
 
     style->setBorderTopWidth(Length(
         Length::Fixed,
