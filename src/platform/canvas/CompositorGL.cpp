@@ -65,9 +65,24 @@ using Point = std::array<Coord, 2>;
 #include <GLES2/gl2ext.h>
 #include <EGL/eglext.h>
 #include <tbm_surface.h>
+
+#include <tbm_bufmgr.h>
+#include <tbm_surface_internal.h>
+#ifndef EGL_DMA_BUF_PLANE3_FD_EXT
+#define EGL_DMA_BUF_PLANE3_FD_EXT 0x3440
+#endif
+#ifndef EGL_DMA_BUF_PLANE3_OFFSET_EXT
+#define EGL_DMA_BUF_PLANE3_OFFSET_EXT 0x3441
+#endif
+#ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
+#define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
+#endif
+
 static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
 static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
+
+static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 #define EGL_NATIVE_SURFACE_TIZEN 0x32A1
 #elif defined(STARFISH_WINDOWS)
 #include <GL/glew.h>
@@ -479,6 +494,58 @@ static bool g_needsRGBShuffle = false;
 #endif
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
 
+#if defined(STARFISH_TIZEN)
+static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
+                                    tbm_surface_h tbm_surface)
+{
+    int atti = 0;
+    tbm_bo tbo = NULL;
+    int bo_idx, num_planes, i;
+    int plane_fd_ext[4] = { EGL_DMA_BUF_PLANE0_FD_EXT,
+                            EGL_DMA_BUF_PLANE1_FD_EXT,
+                            EGL_DMA_BUF_PLANE2_FD_EXT,
+                            EGL_DMA_BUF_PLANE3_FD_EXT };
+    int plane_offset_ext[4] = { EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+                                EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+                                EGL_DMA_BUF_PLANE2_OFFSET_EXT,
+                                EGL_DMA_BUF_PLANE3_OFFSET_EXT };
+    int plane_pitch_ext[4] = { EGL_DMA_BUF_PLANE0_PITCH_EXT,
+                               EGL_DMA_BUF_PLANE1_PITCH_EXT,
+                               EGL_DMA_BUF_PLANE2_PITCH_EXT,
+                               EGL_DMA_BUF_PLANE3_PITCH_EXT };
+
+    tbm_surface_info_s info;
+    if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
+        return false;
+    }
+
+    attribs[atti++] = EGL_WIDTH;
+    attribs[atti++] = info.width;
+    attribs[atti++] = EGL_HEIGHT;
+    attribs[atti++] = info.height;
+    attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+    attribs[atti++] = info.format;
+
+    num_planes = tbm_surface_internal_get_num_planes(info.format);
+    for (i = 0; i < num_planes; i++) {
+        bo_idx = tbm_surface_internal_get_plane_bo_idx(tbm_surface, i);
+        tbo = tbm_surface_internal_get_bo(tbm_surface, bo_idx);
+        attribs[atti++] = plane_fd_ext[i];
+        attribs[atti++] =
+            (int)(size_t)tbm_bo_get_handle(tbo, TBM_DEVICE_3D).ptr;
+        attribs[atti++] = plane_offset_ext[i];
+        attribs[atti++] = info.planes[i].offset;
+        attribs[atti++] = plane_pitch_ext[i];
+        attribs[atti++] = info.planes[i].stride;
+    }
+    attribs[atti++] = EGL_NONE;
+
+    if (atti < attrib_max)
+        return true;
+
+    return false;
+}
+#endif
 static void checkError()
 {
     volatile auto error = glGetError();
@@ -800,11 +867,20 @@ public:
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
         EGLDisplay display = eglGetCurrentDisplay();
-        EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
 
-        m_mainViewImage = g_eglCreateImageKHRProc(
-            display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-            (void*)(intptr_t)externalSurface, attribs);
+        if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
+            EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+            m_mainViewImage = g_eglCreateImageKHRProc(
+                display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
+                (void*)(intptr_t)externalSurface, attribs);
+
+        } else {
+            EGLint attribs[50];
+            prepareEglAttributeList(attribs, 50,
+                                    (tbm_surface_h)externalSurface);
+            m_mainViewImage = g_eglCreateImageKHRProc(
+                display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+        }
 
         glGenTextures(1, &m_mainViewTexture);
         glBindTexture(GL_TEXTURE_2D, m_mainViewTexture);
@@ -1491,6 +1567,9 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         g_glEGLImageTargetTexture2DOESProc =
             reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
                 eglGetProcAddress("glEGLImageTargetTexture2DOES"));
+        g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
+            strstr(eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS),
+                   "EGL_TIZEN_image_native_surface");
 #endif
 
 #if defined(STARFISH_TIZEN)
@@ -1745,12 +1824,21 @@ public:
             {
                 STARFISH_RELEASE_ASSERT(m_tbmSurface);
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
-                EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-                                     EGL_NONE };
+
                 EGLDisplay display = eglGetCurrentDisplay();
-                m_eglImage = g_eglCreateImageKHRProc(
-                    display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
-                    (void*)(intptr_t)m_tbmSurface, attribs);
+                if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
+                    EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+                                         EGL_NONE };
+                    m_eglImage = g_eglCreateImageKHRProc(
+                        display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
+                        (void*)(intptr_t)m_tbmSurface, attribs);
+                } else {
+                    EGLint attribs[50];
+                    prepareEglAttributeList(attribs, 50, m_tbmSurface);
+                    m_eglImage = g_eglCreateImageKHRProc(
+                        display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL,
+                        attribs);
+                }
                 checkError();
             }
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
