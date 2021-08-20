@@ -58,10 +58,7 @@ uint32_t HTMLCanvasElement::width()
 
 void HTMLCanvasElement::setWidth(uint32_t value)
 {
-    if (value >= 0) {
-        setAttribute(starfish()->staticStrings()->m_width,
-                     String::fromInt(value));
-    }
+    setAttribute(starfish()->staticStrings()->m_width, String::fromInt(value));
 }
 
 uint32_t HTMLCanvasElement::height()
@@ -76,10 +73,7 @@ uint32_t HTMLCanvasElement::height()
 
 void HTMLCanvasElement::setHeight(uint32_t value)
 {
-    if (value >= 0) {
-        setAttribute(starfish()->staticStrings()->m_height,
-                     String::fromInt(value));
-    }
+    setAttribute(starfish()->staticStrings()->m_height, String::fromInt(value));
 }
 
 Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
