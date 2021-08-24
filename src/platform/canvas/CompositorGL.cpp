@@ -77,6 +77,7 @@ using Point = std::array<Coord, 2>;
 #ifndef EGL_DMA_BUF_PLANE3_PITCH_EXT
 #define EGL_DMA_BUF_PLANE3_PITCH_EXT 0x3442
 #endif
+#define EGL_ATTRIBUTE_MAX 50
 
 static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
 static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
@@ -495,24 +496,29 @@ static bool g_needsRGBShuffle = false;
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
 
 #if defined(STARFISH_TIZEN)
+
+#define RETURN_IF_INVALID_INDEX(atti, attrib_max) \
+    if ((atti) >= (attrib_max)) {                 \
+        return false;                             \
+    }
+
 static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
                                     tbm_surface_h tbm_surface)
 {
     int atti = 0;
-    tbm_bo tbo = NULL;
+    tbm_bo tbo = nullptr;
     int bo_idx, num_planes, i;
-    int plane_fd_ext[4] = { EGL_DMA_BUF_PLANE0_FD_EXT,
-                            EGL_DMA_BUF_PLANE1_FD_EXT,
-                            EGL_DMA_BUF_PLANE2_FD_EXT,
-                            EGL_DMA_BUF_PLANE3_FD_EXT };
-    int plane_offset_ext[4] = { EGL_DMA_BUF_PLANE0_OFFSET_EXT,
-                                EGL_DMA_BUF_PLANE1_OFFSET_EXT,
-                                EGL_DMA_BUF_PLANE2_OFFSET_EXT,
-                                EGL_DMA_BUF_PLANE3_OFFSET_EXT };
-    int plane_pitch_ext[4] = { EGL_DMA_BUF_PLANE0_PITCH_EXT,
-                               EGL_DMA_BUF_PLANE1_PITCH_EXT,
-                               EGL_DMA_BUF_PLANE2_PITCH_EXT,
-                               EGL_DMA_BUF_PLANE3_PITCH_EXT };
+    int plane_fd_ext[] = { EGL_DMA_BUF_PLANE0_FD_EXT, EGL_DMA_BUF_PLANE1_FD_EXT,
+                           EGL_DMA_BUF_PLANE2_FD_EXT,
+                           EGL_DMA_BUF_PLANE3_FD_EXT };
+    int plane_offset_ext[] = { EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+                               EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+                               EGL_DMA_BUF_PLANE2_OFFSET_EXT,
+                               EGL_DMA_BUF_PLANE3_OFFSET_EXT };
+    int plane_pitch_ext[] = { EGL_DMA_BUF_PLANE0_PITCH_EXT,
+                              EGL_DMA_BUF_PLANE1_PITCH_EXT,
+                              EGL_DMA_BUF_PLANE2_PITCH_EXT,
+                              EGL_DMA_BUF_PLANE3_PITCH_EXT };
 
     tbm_surface_info_s info;
     if (tbm_surface_get_info(tbm_surface, &info) != TBM_SURFACE_ERROR_NONE) {
@@ -520,31 +526,52 @@ static bool prepareEglAttributeList(EGLint* attribs, int attrib_max,
     }
 
     attribs[atti++] = EGL_WIDTH;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
     attribs[atti++] = info.width;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
     attribs[atti++] = EGL_HEIGHT;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
     attribs[atti++] = info.height;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
     attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
     attribs[atti++] = info.format;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
 
     num_planes = tbm_surface_internal_get_num_planes(info.format);
     for (i = 0; i < num_planes; i++) {
         bo_idx = tbm_surface_internal_get_plane_bo_idx(tbm_surface, i);
         tbo = tbm_surface_internal_get_bo(tbm_surface, bo_idx);
         attribs[atti++] = plane_fd_ext[i];
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
         attribs[atti++] =
             (int)(size_t)tbm_bo_get_handle(tbo, TBM_DEVICE_3D).ptr;
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
         attribs[atti++] = plane_offset_ext[i];
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
         attribs[atti++] = info.planes[i].offset;
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
         attribs[atti++] = plane_pitch_ext[i];
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
+
         attribs[atti++] = info.planes[i].stride;
+        RETURN_IF_INVALID_INDEX(atti, attrib_max);
     }
     attribs[atti++] = EGL_NONE;
+    RETURN_IF_INVALID_INDEX(atti, attrib_max);
 
-    if (atti < attrib_max)
-        return true;
-
-    return false;
+    return true;
 }
+#undef RETURN_IF_INVALID_INDEX
 #endif
 static void checkError()
 {
@@ -875,11 +902,15 @@ public:
                 (void*)(intptr_t)externalSurface, attribs);
 
         } else {
-            EGLint attribs[50];
-            prepareEglAttributeList(attribs, 50,
-                                    (tbm_surface_h)externalSurface);
-            m_mainViewImage = g_eglCreateImageKHRProc(
-                display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+            EGLint attribs[EGL_ATTRIBUTE_MAX];
+            if (!prepareEglAttributeList(
+                    attribs, EGL_ATTRIBUTE_MAX,
+                    static_cast<tbm_surface_h>(externalSurface))) {
+                return;
+            }
+            m_mainViewImage = g_eglCreateImageKHRProc(display, EGL_NO_CONTEXT,
+                                                      EGL_LINUX_DMA_BUF_EXT,
+                                                      nullptr, attribs);
         }
 
         glGenTextures(1, &m_mainViewTexture);
@@ -1567,9 +1598,13 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         g_glEGLImageTargetTexture2DOESProc =
             reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
                 eglGetProcAddress("glEGLImageTargetTexture2DOES"));
-        g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
-            strstr(eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS),
-                   "EGL_TIZEN_image_native_surface");
+
+        const char* eglExtensions =
+            eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+        if (eglExtensions) {
+            g_isSupported_EGL_NATIVE_SURFACE_TIZEN =
+                strstr(eglExtensions, "EGL_TIZEN_image_native_surface");
+        }
 #endif
 
 #if defined(STARFISH_TIZEN)
@@ -1833,10 +1868,13 @@ public:
                         display, EGL_NO_CONTEXT, EGL_NATIVE_SURFACE_TIZEN,
                         (void*)(intptr_t)m_tbmSurface, attribs);
                 } else {
-                    EGLint attribs[50];
-                    prepareEglAttributeList(attribs, 50, m_tbmSurface);
+                    EGLint attribs[EGL_ATTRIBUTE_MAX];
+                    if (!prepareEglAttributeList(attribs, EGL_ATTRIBUTE_MAX,
+                                                 m_tbmSurface)) {
+                        return;
+                    }
                     m_eglImage = g_eglCreateImageKHRProc(
-                        display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL,
+                        display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, nullptr,
                         attribs);
                 }
                 checkError();
