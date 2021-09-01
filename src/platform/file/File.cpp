@@ -224,7 +224,7 @@ std::unique_ptr<File> File::open(const std::string& filePath, FileMode mode)
     struct stat s;
     memset(&s, 0, sizeof(struct stat));
     int r = stat(filePath.data(), &s);
-    if (r < 0) {
+    if (r < 0 && mode == FileMode::Read) {
         return nullptr;
     }
 
