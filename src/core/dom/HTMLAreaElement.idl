@@ -5,8 +5,8 @@
  HTMLConstructor]
 interface HTMLAreaElement : HTMLElement {
     [Unimplemented, CEReactions] attribute DOMString alt;
-    [Unimplemented, CEReactions] attribute DOMString coords;
-    [Unimplemented, CEReactions] attribute DOMString shape;
+    [CEReactions, Reflect] attribute DOMString coords;
+    [CEReactions, Reflect] attribute DOMString shape;
     [CEReactions, Reflect] attribute DOMString target;
     [Unimplemented, CEReactions, Reflect] attribute DOMString download;
     [Unimplemented, CEReactions, Reflect] attribute USVString ping;

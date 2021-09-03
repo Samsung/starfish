@@ -205,6 +205,7 @@ public:
     void setFocusedNode(Node* n, bool byMouseEvent);
     void releaseFocusedNode(Node* n, bool resetActiveElement = true);
     Element* activeElement();
+    Node* imageAreaForImage(Frame* cb, float x, float y);
 
     void setKeydownEventDefaultPrevented(bool b)
     {

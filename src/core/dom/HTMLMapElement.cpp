@@ -19,6 +19,10 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+
+#include "core/dom/Document.h"
+#include "core/dom/HTMLAreaElement.h"
+#include "core/dom/HTMLImageElement.h"
 #include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLCollection.h"
 
@@ -38,13 +42,69 @@ void* HTMLMapElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+String* HTMLMapElement::nameAttr()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_name);
+}
+
+void HTMLMapElement::setNameAttr(String* name)
+{
+    setAttribute(starfish()->staticStrings()->m_name, name);
+}
+
 HTMLCollection* HTMLMapElement::areas()
 {
-    if (m_areas) {
-        return m_areas;
+    if (!m_areas) {
+        m_areas = new HTMLCollection(this, NodeListImpl::MapAreasElementFilter,
+                                     nullptr);
     }
-    m_areas = new HTMLCollection(this, NodeListImpl::MapAreasElementFilter,
-                                 nullptr, false);
     return m_areas;
+}
+
+void HTMLMapElement::gatherDescendants(GCVector<HTMLAreaElement*>* collection,
+                                       Node* root)
+{
+    Node* child = root->firstChild();
+    while (child) {
+        if (child->isHTMLAreaElement()) {
+            collection->push_back(child->asHTMLAreaElement());
+        }
+        gatherDescendants(collection, child);
+        child = child->nextSibling();
+    }
+}
+
+Node* HTMLMapElement::areaIncludingPoint(Frame* cb, float x, float y)
+{
+    Node* defaultArea = nullptr;
+
+    GCVector<HTMLAreaElement*> collection;
+    gatherDescendants(&collection, this->asNode());
+
+    for (HTMLAreaElement* area : collection) {
+        if (area->isDefault() && !defaultArea) {
+            defaultArea = area->asNode();
+        } else if (area->includePoint(cb, x, y)) {
+            return area->asNode();
+        }
+    }
+
+    return defaultArea;
+}
+
+HTMLImageElement* HTMLMapElement::imageElement()
+{
+    NodeList* images = document()->querySelectorAll(
+        starfish()->staticStrings()->m_imageTagName.localName());
+    for (unsigned i = 0; Node* cur = images->item(i); ++i) {
+        HTMLImageElement* image = cur->asHTMLImageElement();
+        String* usemap = image->usemap();
+        if (!usemap->isEmpty() &&
+            usemap->substring(1, usemap->length() - 1)->equals(nameAttr())) {
+            return image;
+        }
+    }
+
+    return nullptr;
 }
 } // namespace Starfish

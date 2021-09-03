@@ -49,6 +49,8 @@
 #include "core/dom/HTMLTitleElement.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLDialogElement.h"
+#include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
@@ -803,6 +805,31 @@ Element* Document::getElementById(String* id)
             return false;
         }
     });
+}
+
+HTMLMapElement* Document::imageMapElement(String* url)
+{
+    if (url->isEmpty()) {
+        return nullptr;
+    }
+
+    size_t hashPos = url->find("#");
+    if (hashPos == SIZE_MAX) {
+        return nullptr;
+    }
+
+    String* usemap = url->substring(hashPos + 1, url->length() - 1);
+    NodeList* maps =
+        querySelectorAll(starfish()->staticStrings()->m_mapTagName.localName());
+    for (size_t i = 0; Node* node = maps->item(i); ++i) {
+        HTMLMapElement* map = node->asHTMLMapElement();
+        String* name = map->nameAttr();
+        if (!name->isEmpty() && name->equals(usemap)) {
+            return map;
+        }
+    }
+
+    return nullptr;
 }
 
 NodeList* Document::getElementsByName(String* elementName)

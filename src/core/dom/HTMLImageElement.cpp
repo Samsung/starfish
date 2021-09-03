@@ -394,6 +394,16 @@ void HTMLImageElement::setNameAttr(String* name)
     setAttribute(starfish()->staticStrings()->m_name, name);
 }
 
+String* HTMLImageElement::usemap()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_usemap);
+}
+
+void HTMLImageElement::setUsemap(String* usemap)
+{
+    setAttribute(starfish()->staticStrings()->m_usemap, usemap);
+}
+
 WebOrigin* HTMLImageElement::webOrigin()
 {
     return WebOrigin::createDocumentOrigin(origin());

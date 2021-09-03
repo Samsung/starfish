@@ -11,7 +11,7 @@ interface HTMLImageElement : HTMLElement {
   [Unimplemented, CEReactions] attribute DOMString srcset;
   [Unimplemented, CEReactions] attribute DOMString sizes;
   [CEReactions] attribute DOMString? crossOrigin;
-  [Unimplemented, CEReactions, Reflect] attribute DOMString useMap;
+  [CEReactions, Rename=usemap] attribute DOMString useMap;
   [Unimplemented, CEReactions] attribute boolean isMap;
   [CEReactions] attribute unsigned long width;
   [CEReactions] attribute unsigned long height;

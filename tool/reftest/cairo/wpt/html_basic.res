@@ -786,6 +786,8 @@ http://web-platform.test:8000/html/semantics/forms/autofocus/not-on-first-task.h
 #http://web-platform.test:8000/html/semantics/forms/attributes-common-to-form-controls/formaction.html
 #http://web-platform.test:8000/html/semantics/forms/attributes-common-to-form-controls/disabled-elements-01.html
 #http://web-platform.test:8000/html/semantics/forms/attributes-common-to-form-controls/dirname-ltr.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-area-element/area-shape.html
+http://web-platform.test:8000/html/semantics/embedded-content/the-area-element/area-coords.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-video-element/video-tabindex.html
 #http://web-platform.test:8000/html/semantics/embedded-content/the-object-element/usemap-casing.html
 #http://web-platform.test:8000/html/semantics/embedded-content/the-object-element/object-in-object-fallback-2.html

@@ -318,6 +318,20 @@ inline bool isHTMLSpaceOrComma(CharType character)
     return isHTMLSpace<CharType>(character) || character == ',';
 }
 
+template <typename CharType>
+inline bool isSpaceOrDelimiter(CharType character)
+{
+    return isHTMLSpace<CharType>(character) || character == ',' ||
+           character == ';';
+}
+
+template <typename CharType>
+static bool isNotSpaceDelimiterOrNumberStart(CharType character)
+{
+    return !(isSpaceOrDelimiter(character) || isASCIIDigit(character) ||
+             character == '.' || character == '-');
+}
+
 inline bool isHTMLLineBreak(UChar character)
 {
     return character <= '\r' && (character == '\n' || character == '\r');

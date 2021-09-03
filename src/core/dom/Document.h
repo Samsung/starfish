@@ -41,6 +41,7 @@ class Element;
 class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
+class HTMLMapElement;
 class MediaQueryListMatcher;
 class NativeGradient;
 class NativeImageData;
@@ -192,6 +193,8 @@ public:
     HTMLCollection* forms();
     HTMLCollection* scripts();
     HTMLCollection* anchors();
+
+    HTMLMapElement* imageMapElement(String* url);
 
 // TODO : Return empty string on getting and do nothing on setting when body is
 // HTMLFrameSetElement
