@@ -24,11 +24,17 @@
 
 namespace Starfish {
 
+class Path;
+
 class HTMLAreaElement : public HTMLHyperlinkContainer {
 public:
+    enum class Shape { Default, Poly, Rect, Circle };
+
     HTMLAreaElement(Document* document, const QualifiedName& qname)
         : HTMLHyperlinkContainer(document, qname)
         , m_relList(nullptr)
+        , m_path(nullptr)
+        , m_shape(Shape::Rect)
     {
     }
 
@@ -44,8 +50,27 @@ public:
     String* referrerPolicy();
     void setReferrerPolicy(String* policy);
 
+    virtual bool handleDefaultEvent(Event* event) override;
+    virtual void didAttributeChanged(QualifiedName name, String* old,
+                                     String* value, bool attributeCreated,
+                                     bool attributeRemoved) override;
+
+    void invalidatePath();
+    HTMLImageElement* imageElement();
+    bool supportsFocus() override;
+    bool isDefault()
+    {
+        return m_shape == Shape::Default;
+    }
+    bool includePoint(Frame* cb, float x, float y);
+
 private:
     DOMTokenList* m_relList;
+    Path* m_path;
+    Shape m_shape;
+    std::vector<double> m_coords;
+
+    Path* areaPath(Frame* f);
 };
 } // namespace Starfish
 #endif

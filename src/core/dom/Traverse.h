@@ -141,6 +141,16 @@ public:
         return nullptr;
     }
 
+    template <typename Func>
+    static Node* firstAncestor(Node* current, Func matchingRule)
+    {
+        Node* ancestor = current->parentNode();
+        while (ancestor && !matchingRule(ancestor)) {
+            ancestor = ancestor->parentNode();
+        }
+        return ancestor;
+    }
+
     static Node* nextAncestorSibling(const Node* current,
                                      const Node* stayWithin)
     {

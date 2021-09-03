@@ -219,7 +219,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "download"));
     m_ping = QualifiedName(AtomicString::createAtomicString(starfish, "ping"));
     m_usemap =
-        QualifiedName(AtomicString::createAtomicString(starfish, "useMap"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "usemap"));
     m_charoff =
         QualifiedName(AtomicString::createAtomicString(starfish, "charoff"));
     m_valign =

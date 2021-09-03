@@ -39,10 +39,16 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLMapElement() const override;
 
+    String* nameAttr();
+    void setNameAttr(String* name);
     HTMLCollection* areas();
+    Node* areaIncludingPoint(Frame* cb, float x, float y);
+    HTMLImageElement* imageElement();
 
 private:
     HTMLCollection* m_areas;
+
+    void gatherDescendants(GCVector<HTMLAreaElement*>* collection, Node* root);
 };
 } // namespace Starfish
 

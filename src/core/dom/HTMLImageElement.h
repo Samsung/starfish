@@ -70,6 +70,9 @@ public:
     String* nameAttr();
     void setNameAttr(String* name);
 
+    String* usemap();
+    void setUsemap(String* usemap);
+
     bool complete()
     {
         return !!m_imageData;

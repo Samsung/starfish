@@ -37,6 +37,8 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLDialogElement.h"
+#include "core/dom/HTMLImageElement.h"
+#include "core/dom/HTMLMapElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
@@ -896,14 +898,16 @@ Node* BrowsingContext::hitTest(float x, float y)
         while (frame->isAnonymous()) {
             frame = frame->parent();
         }
+
+        Node* imageArea = imageAreaForImage(frame, x, y);
 #ifdef STARFISH_ENABLE_TEST
         if (webView()->startUpFlag() & StarfishStartUpFlag::enableHitTestDump) {
             printf("hitTest Result-> ");
-            frame->node()->dump();
+            imageArea ? imageArea->dump() : frame->node()->dump();
             puts("");
         }
 #endif
-        return frame->node();
+        return imageArea ? imageArea : frame->node();
     }
 
     return nullptr;
@@ -930,6 +934,28 @@ static void releaseFocusFN(BrowsingContext* ctx)
 {
     ctx->releaseFocusedNode(nullptr, true);
     ctx->iterateChildContext(releaseFocusFN);
+}
+
+Node* BrowsingContext::imageAreaForImage(Frame* cb, float x, float y)
+{
+    STARFISH_ASSERT(cb && cb->node());
+
+    if (!cb->node()->isHTMLImageElement() || !cb->isFrameBox()) {
+        return nullptr;
+    }
+
+    HTMLMapElement* map =
+        document()->imageMapElement(cb->node()->asHTMLImageElement()->usemap());
+    if (!map) {
+        return nullptr;
+    }
+
+    LayoutLocation l =
+        cb->asFrameBox()->absolutePoint(document()->frame()->asFrameBox());
+    float newX = x - l.x().toFloat();
+    float newY = y - l.y().toFloat();
+
+    return map->areaIncludingPoint(cb, newX, newY);
 }
 
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
