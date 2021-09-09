@@ -79,133 +79,7 @@ public:
         , m_isShowing(false)
         , m_lastInputTime(0)
     {
-        g_eglCreateSyncKHRProc = reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(
-            eglGetProcAddress("eglCreateSyncKHR"));
-        g_eglDestroySyncKHRProc = reinterpret_cast<PFNEGLDESTROYSYNCKHRPROC>(
-            eglGetProcAddress("eglDestroySyncKHR"));
-        g_eglClientWaitSyncKHRProc =
-            reinterpret_cast<PFNEGLCLIENTWAITSYNCKHRPROC>(
-                eglGetProcAddress("eglClientWaitSyncKHR"));
-
-        m_ecoreWlDisplay = ecore_wl2_display_connect(nullptr);
-        m_wlDisplay = ecore_wl2_display_get(m_ecoreWlDisplay);
-
-        EGLint major, minor, count, n, size;
-        EGLConfig* configs;
-        int i;
-        EGLint config_attribs[] = { EGL_SURFACE_TYPE,
-                                    EGL_WINDOW_BIT,
-                                    EGL_RED_SIZE,
-                                    8,
-                                    EGL_GREEN_SIZE,
-                                    8,
-                                    EGL_BLUE_SIZE,
-                                    8,
-                                    EGL_ALPHA_SIZE,
-                                    8,
-                                    EGL_DEPTH_SIZE,
-                                    0,
-                                    EGL_STENCIL_SIZE,
-                                    0,
-                                    EGL_RENDERABLE_TYPE,
-                                    EGL_OPENGL_ES2_BIT,
-                                    EGL_NONE };
-
-        m_display = eglGetDisplay((EGLNativeDisplayType)m_wlDisplay);
-        if (m_display == EGL_NO_DISPLAY) {
-            STARFISH_LOG_ERROR("Can't create egl display\n");
-            exit(1);
-        } else {
-            STARFISH_LOG_INFO("Created egl display\n");
-        }
-
-        if (eglInitialize(m_display, &major, &minor) != EGL_TRUE) {
-            STARFISH_LOG_ERROR("Can't initialise egl display\n");
-            exit(1);
-        }
-        STARFISH_LOG_INFO("EGL major: %d, minor %d\n", major, minor);
-
-        if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) {
-            STARFISH_LOG_ERROR("Can't bind egl api\n");
-        }
-
-        eglGetConfigs(m_display, NULL, 0, &count);
-        STARFISH_LOG_INFO("EGL has %d configs\n", count);
-
-        configs = ALLOCA(count * sizeof(*configs), void*);
-
-        eglChooseConfig(m_display, config_attribs, configs, count, &n);
-
-        EGLConfig eglConf = configs[0];
-        for (i = 0; i < n; i++) {
-            eglGetConfigAttrib(m_display, configs[i], EGL_BUFFER_SIZE, &size);
-            STARFISH_LOG_INFO("Buffer size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_RED_SIZE, &size);
-            STARFISH_LOG_INFO("Red size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_GREEN_SIZE, &size);
-            STARFISH_LOG_INFO("Green size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_BLUE_SIZE, &size);
-            STARFISH_LOG_INFO("Blue size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_ALPHA_SIZE, &size);
-            STARFISH_LOG_INFO("Alpha size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_STENCIL_SIZE, &size);
-            STARFISH_LOG_INFO("Stencil size for config %d is %d\n", i, size);
-            eglGetConfigAttrib(m_display, configs[i], EGL_DEPTH_SIZE, &size);
-            STARFISH_LOG_INFO("Depth size for config %d is %d\n", i, size);
-            // just choose the first one
-            eglConf = configs[i];
-            break;
-        }
-
-        // test version 3 first
-        EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
-        m_context = eglCreateContext(m_display, eglConf, EGL_NO_CONTEXT,
-                                     contextAttribs);
-        if (!m_context) {
-            EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
-                                        EGL_NONE };
-            STARFISH_LOG_INFO(
-                "failed to create opengl es 3+ context. use 2 instead\n");
-            m_context = eglCreateContext(m_display, eglConf, EGL_NO_CONTEXT,
-                                         contextAttribs);
-        }
-
-        {
-            const EGLint attribs[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
-            m_surface = eglCreatePbufferSurface(m_display, eglConf, attribs);
-            if (m_surface == EGL_NO_SURFACE) {
-                STARFISH_LOG_ERROR(
-                    "eglCreatePbufferSurface fail error code:  %d\n ",
-                    (int)eglGetError());
-            }
-        }
-
-        if (eglMakeCurrent(m_display, m_surface, m_surface, m_context)) {
-            STARFISH_LOG_INFO("Made current\n");
-        } else {
-            STARFISH_LOG_ERROR("Made current failed\n");
-        }
-
-        m_fence = nullptr;
-
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glFlush();
-
-        if (eglSwapBuffers(m_display, m_surface)) {
-            STARFISH_LOG_INFO("Swapped buffers\n");
-        } else {
-            STARFISH_LOG_ERROR("Swapped buffers failed\n");
-        }
-
-        STARFISH_LOG_INFO("wl_display_dispatch few times\n");
-        size_t dispatchCount = 0;
-        while (dispatchCount < 3) {
-            if (wl_display_dispatch_pending(m_wlDisplay) > 0) {
-                wl_display_dispatch(m_wlDisplay);
-            }
-            dispatchCount++;
-        }
+        initEGL();
 
         eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                        EGL_NO_CONTEXT);
@@ -213,6 +87,24 @@ public:
             ::LWE::WebContainer::CreateGLWithPlatformImage(
                 width, height,
                 [this](WebContainer* wc) {
+                    if (m_isBufferSwapped) {
+                        if (m_fence) {
+                            Starfish::LongTaskFinder p(
+                                "WebViewFlutter - eglClientWaitSyncKHRProc", 1);
+                            EGLint result = g_eglClientWaitSyncKHRProc(
+                                m_display, m_fence,
+                                EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
+                                EGL_FOREVER_KHR);
+                            if (result == EGL_FALSE) {
+                                STARFISH_LOG_INFO(
+                                    "EGL FENCE: error waiting for fence: %d\n",
+                                    (int)eglGetError());
+                            }
+                            g_eglDestroySyncKHRProc(m_display, m_fence);
+                            m_fence = nullptr;
+                        }
+                        m_isBufferSwapped = false;
+                    }
                     {
                         Starfish::LongTaskFinder p(
                             "WebViewFlutter - eglMakeCurrent", 1);
@@ -248,11 +140,162 @@ public:
                         m_lastInputTime = 0;
                         ANNOTATE_CHANNEL_END(3002);
                     }
+                    if (mayNeedsSync) {
+                        m_fence = g_eglCreateSyncKHRProc(
+                            m_display, EGL_SYNC_FENCE_KHR, NULL);
+                        if (!m_fence) {
+                            STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d\n",
+                                              (int)eglGetError());
+                        }
+                    }
                     m_isBufferSwapped = true;
                 },
                 prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
                 locale, timezoneID);
         m_impl = webContainer;
+    }
+    void initEGL()
+    {
+        bool needsEGLInitization = false;
+        if (!m_ecoreWlDisplay) {
+            g_eglCreateSyncKHRProc = reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(
+                eglGetProcAddress("eglCreateSyncKHR"));
+            g_eglDestroySyncKHRProc =
+                reinterpret_cast<PFNEGLDESTROYSYNCKHRPROC>(
+                    eglGetProcAddress("eglDestroySyncKHR"));
+            g_eglClientWaitSyncKHRProc =
+                reinterpret_cast<PFNEGLCLIENTWAITSYNCKHRPROC>(
+                    eglGetProcAddress("eglClientWaitSyncKHR"));
+
+            m_ecoreWlDisplay = ecore_wl2_display_connect(nullptr);
+            needsEGLInitization = true;
+        }
+
+        wl_display* m_wlDisplay = ecore_wl2_display_get(m_ecoreWlDisplay);
+
+        EGLint major, minor, count, n, size;
+        EGLConfig* configs;
+        int i;
+        EGLint config_attribs[] = { EGL_SURFACE_TYPE,
+                                    EGL_WINDOW_BIT,
+                                    EGL_RED_SIZE,
+                                    8,
+                                    EGL_GREEN_SIZE,
+                                    8,
+                                    EGL_BLUE_SIZE,
+                                    8,
+                                    EGL_ALPHA_SIZE,
+                                    8,
+                                    EGL_DEPTH_SIZE,
+                                    0,
+                                    EGL_STENCIL_SIZE,
+                                    0,
+                                    EGL_RENDERABLE_TYPE,
+                                    EGL_OPENGL_ES2_BIT,
+                                    EGL_NONE };
+
+        if (!m_display) {
+            m_display = eglGetDisplay((EGLNativeDisplayType)m_wlDisplay);
+            if (m_display == EGL_NO_DISPLAY) {
+                STARFISH_LOG_ERROR("Can't create egl display\n");
+                exit(1);
+            } else {
+                STARFISH_LOG_INFO("Created egl display\n");
+            }
+
+            if (eglInitialize(m_display, &major, &minor) != EGL_TRUE) {
+                STARFISH_LOG_ERROR("Can't initialise egl display\n");
+                exit(1);
+            }
+            STARFISH_LOG_INFO("EGL major: %d, minor %d\n", major, minor);
+
+            if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) {
+                STARFISH_LOG_ERROR("Can't bind egl api\n");
+            }
+        }
+
+        eglGetConfigs(m_display, NULL, 0, &count);
+        STARFISH_LOG_INFO("EGL has %d configs\n", count);
+
+        configs = ALLOCA(count * sizeof(*configs), void*);
+
+        eglChooseConfig(m_display, config_attribs, configs, count, &n);
+
+        EGLConfig eglConf = configs[0];
+        for (i = 0; i < n; i++) {
+            eglGetConfigAttrib(m_display, configs[i], EGL_BUFFER_SIZE, &size);
+            STARFISH_LOG_INFO("Buffer size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_RED_SIZE, &size);
+            STARFISH_LOG_INFO("Red size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_GREEN_SIZE, &size);
+            STARFISH_LOG_INFO("Green size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_BLUE_SIZE, &size);
+            STARFISH_LOG_INFO("Blue size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_ALPHA_SIZE, &size);
+            STARFISH_LOG_INFO("Alpha size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_STENCIL_SIZE, &size);
+            STARFISH_LOG_INFO("Stencil size for config %d is %d\n", i, size);
+            eglGetConfigAttrib(m_display, configs[i], EGL_DEPTH_SIZE, &size);
+            STARFISH_LOG_INFO("Depth size for config %d is %d\n", i, size);
+            // just choose the first one
+            eglConf = configs[i];
+            break;
+        }
+
+        if (!m_context) {
+            // Create EGL Context
+
+            // test version 3 first
+            EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3,
+                                        EGL_NONE };
+            m_context = eglCreateContext(m_display, eglConf, EGL_NO_CONTEXT,
+                                         contextAttribs);
+            if (!m_context) {
+                EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
+                                            EGL_NONE };
+                STARFISH_LOG_INFO(
+                    "failed to create opengl es 3+ context. use 2 instead\n");
+                m_context = eglCreateContext(m_display, eglConf, EGL_NO_CONTEXT,
+                                             contextAttribs);
+            }
+        }
+
+        const EGLint attribs[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+        m_surface = eglCreatePbufferSurface(m_display, eglConf, attribs);
+        if (m_surface == EGL_NO_SURFACE) {
+            STARFISH_LOG_ERROR(
+                "eglCreatePbufferSurface fail error code:  %d\n ",
+                (int)eglGetError());
+        }
+
+        if (eglMakeCurrent(m_display, m_surface, m_surface, m_context)) {
+            STARFISH_LOG_INFO("Made current\n");
+        } else {
+            STARFISH_LOG_ERROR("Made current failed\n");
+        }
+
+        if (needsEGLInitization) {
+            m_fence = nullptr;
+
+            glClearColor(0.0, 0.0, 0.0, 0.0);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glFlush();
+
+            if (eglSwapBuffers(m_display, m_surface)) {
+                STARFISH_LOG_INFO("Swapped buffers\n");
+            } else {
+                STARFISH_LOG_ERROR("Swapped buffers failed\n");
+            }
+
+            STARFISH_LOG_INFO("wl_display_dispatch few times\n");
+            size_t dispatchCount = 0;
+            while (dispatchCount < 3) {
+                if (wl_display_dispatch_pending(m_wlDisplay) > 0) {
+                    wl_display_dispatch(m_wlDisplay);
+                }
+                dispatchCount++;
+            }
+        }
     }
 
     virtual void Destroy() override
@@ -290,18 +333,23 @@ public:
     bool m_hasFocus;
     bool m_isShowing;
     uint64_t m_lastInputTime;
-    wl_display* m_wlDisplay;
-    EGLDisplay m_display;
+
+    static EGLDisplay m_display;
     EGLSurface m_surface;
-    EGLContext m_context;
+    static EGLContext m_context;
     EGLSyncKHR m_fence;
-    Ecore_Wl2_Display* m_ecoreWlDisplay;
+    static Ecore_Wl2_Display* m_ecoreWlDisplay;
 
     virtual ::LWE::WebContainer* FetchWebContainer() override
     {
         return (::LWE::WebContainer*)m_impl;
     }
 };
+
+EGLDisplay WebViewFlutter::m_display = nullptr;
+EGLContext WebViewFlutter::m_context = nullptr;
+Ecore_Wl2_Display* WebViewFlutter::m_ecoreWlDisplay = nullptr;
+
 WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          unsigned height, float devicePixelRatio,
                          const char* defaultFontName, const char* locale,
