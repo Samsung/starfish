@@ -937,7 +937,7 @@ public:
 
         EGLDisplay display = eglGetCurrentDisplay();
         if (isRendered) {
-            glFlush();
+            glFinish();
         }
         cb(isRendered);
         g_eglDestroyImageKHRProc(display, m_mainViewImage);
