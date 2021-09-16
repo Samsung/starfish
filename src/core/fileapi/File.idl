@@ -1,0 +1,17 @@
+// https://w3c.github.io/FileAPI/#file-section
+
+// Note : binding_generator doesn't support "= {}"
+
+[Exposed=(Window,Worker), Serializable]
+interface File : Blob {
+  [Unimplemented] constructor(sequence<BlobPart> fileBits,
+              USVString fileName,
+              optional FilePropertyBag options /* = {} */);
+  [Unimplemented] readonly attribute DOMString name;
+  [Unimplemented] readonly attribute long long lastModified;
+};
+
+// Note : BlobPropertyBag must be implemented first
+// dictionary FilePropertyBag : BlobPropertyBag {
+//   long long lastModified;
+// };
