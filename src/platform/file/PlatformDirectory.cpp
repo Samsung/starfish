@@ -345,7 +345,8 @@ PlatformDirectory* PlatformDirectory::create()
 
 PlatformDirectory* PlatformDirectory::createInNonGCArea()
 {
-    PlatformDirectoryPosix* dir = new (malloc(sizeof(PlatformDirectoryPosix))) PlatformDirectoryPosix();
+    PlatformDirectoryPosix* dir =
+        new (malloc(sizeof(PlatformDirectoryPosix))) PlatformDirectoryPosix();
     return dir;
 }
 }; // namespace Starfish

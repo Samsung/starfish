@@ -22,7 +22,7 @@
 
 #include "core/fileapi/Blob.h"
 
-namespace Starfish{
+namespace Starfish {
 
 class File : public Blob {
 public:
@@ -34,7 +34,8 @@ public:
 
     virtual Serializable* toSerializable() const override;
 
-    virtual SerializedData* serialize(SerializingMap& memory) override {
+    virtual SerializedData* serialize(SerializingMap& memory) override
+    {
         return nullptr;
     }
 

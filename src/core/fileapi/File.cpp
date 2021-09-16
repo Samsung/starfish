@@ -21,10 +21,10 @@
 #include "core/fileapi/File.h"
 #include "core/dom/ExecutionContext.h"
 
-namespace Starfish{
+namespace Starfish {
 
 File::File(ExecutionContext* executionContext, BlobData blobData)
- : Blob(executionContext, blobData)
+    : Blob(executionContext, blobData)
 {
 }
 
@@ -33,4 +33,4 @@ ScriptBindingInstance* File::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
-}
+} // namespace Starfish

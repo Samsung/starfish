@@ -47,7 +47,7 @@ public:
         return open(filePath->toUTF8NonGCString().data(), mode);
     }
     static std::unique_ptr<PlatformFile> open(const std::string& filePath,
-                                      FileMode mode);
+                                              FileMode mode);
 
     virtual ~PlatformFile()
     {

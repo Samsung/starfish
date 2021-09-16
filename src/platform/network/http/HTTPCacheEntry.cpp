@@ -114,7 +114,8 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
         return m_good = false;
     }
 
-    auto out = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Write);
+    auto out =
+        PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Write);
     if (!out) {
         return m_good = false;
     }
@@ -137,7 +138,8 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
     STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
 
-    auto in = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
+    auto in =
+        PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
     if (!in) {
         return m_good = false;
     }
@@ -339,7 +341,8 @@ bool HTTPCacheEntry::isConsistent()
         return m_good;
     }
 
-    auto file = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
+    auto file =
+        PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
 
     if (file) {
         if (file->lastModificationTime() ==
