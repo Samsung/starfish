@@ -1,6 +1,7 @@
 # Build generated
 out
-./StarFish
+Starfish
+core
 build/windows/StarFish/Debug
 build/windows/StarFish/Release
 build/windows/StarFish/StarFish/Release/
