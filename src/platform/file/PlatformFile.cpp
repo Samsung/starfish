@@ -103,7 +103,8 @@ bool PlatformFileUtil::removeFile(const std::string& filePath)
     return remove(filePath.data()) == 0;
 }
 
-Nullable<std::string> PlatformFileUtil::absolutePath(const std::string& filePath)
+Nullable<std::string> PlatformFileUtil::absolutePath(
+    const std::string& filePath)
 {
     std::string prefix("file://");
     if (filePath.find("file://") == 0) {
@@ -219,7 +220,8 @@ private:
     FILE* m_fp;
 };
 
-std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath, FileMode mode)
+std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
+                                                 FileMode mode)
 {
     struct stat s;
     memset(&s, 0, sizeof(struct stat));
@@ -240,7 +242,8 @@ std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath, Fi
     }
     FILE* fp = fopen(filePath.data(), m);
     if (fp) {
-        return std::unique_ptr<PlatformFile>(new PlatformFilePosix(fp, filePath));
+        return std::unique_ptr<PlatformFile>(
+            new PlatformFilePosix(fp, filePath));
     }
     return nullptr;
 }

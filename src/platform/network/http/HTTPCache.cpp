@@ -456,7 +456,8 @@ bool HTTPCache::flush()
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 #endif
-    auto out = PlatformFile::open(m_indexFilePath, PlatformFile::FileMode::Write);
+    auto out =
+        PlatformFile::open(m_indexFilePath, PlatformFile::FileMode::Write);
     if (!out) {
         return false;
     }
@@ -495,13 +496,15 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
                 continue;
             }
 
-            auto fio = PlatformFile::open(cacheEntry->entryFileInfo().entryFilePath,
-                                  PlatformFile::ReadWrite);
+            auto fio =
+                PlatformFile::open(cacheEntry->entryFileInfo().entryFilePath,
+                                   PlatformFile::ReadWrite);
             if (fio) {
                 auto info = cacheEntry->entryFileInfo();
                 size_t sizeOfBlock = calcBlocksSize(info.byteLength);
                 fio.reset();
-                PlatformFileUtil::removeFile(cacheEntry->entryFileInfo().entryFilePath);
+                PlatformFileUtil::removeFile(
+                    cacheEntry->entryFileInfo().entryFilePath);
 
                 m_currentTotalSizeOfBlocks -= sizeOfBlock;
                 removedSize += sizeOfBlock;
@@ -554,7 +557,8 @@ void HTTPCache::expire()
     for (auto it = m_cacheEntryTable->begin();
          it != m_cacheEntryTable->end();) {
         if (it->second->shouldExpire() || !it->second->good()) {
-            PlatformFileUtil::removeFile(it->second->entryFileInfo().entryFilePath);
+            PlatformFileUtil::removeFile(
+                it->second->entryFileInfo().entryFilePath);
 
             size_t size =
                 calcBlocksSize(it->second->entryFileInfo().byteLength);
@@ -597,8 +601,8 @@ void HTTPCache::remove(HTTPCacheEntry* entry)
         return;
     }
 
-    auto fio =
-        PlatformFile::open(entry->entryFileInfo().entryFilePath, PlatformFile::ReadWrite);
+    auto fio = PlatformFile::open(entry->entryFileInfo().entryFilePath,
+                                  PlatformFile::ReadWrite);
 
     if (fio) {
         fio.reset();
