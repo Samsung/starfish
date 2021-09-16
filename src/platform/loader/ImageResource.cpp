@@ -39,7 +39,7 @@
 #include "core/modules/canvas/image/SVGNativeImageData.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 
 namespace Starfish {
 
