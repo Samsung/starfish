@@ -17,21 +17,21 @@
  *  USA
  */
 
-#ifndef __StarfishDirectory__
-#define __StarfishDirectory__
+#ifndef __StarfishPaltformDirectory__
+#define __StarfishPaltformDirectory__
 
 namespace Starfish {
 
-class Directory : public gc_cleanup {
+class PlatformDirectory : public gc_cleanup {
 public:
-    static Directory* create();
-    static Directory* createInNonGCArea();
-    Directory()
+    static PlatformDirectory* create();
+    static PlatformDirectory* createInNonGCArea();
+    PlatformDirectory()
         : m_path(String::emptyString)
         , m_isOpen(false)
     {
     }
-    virtual ~Directory()
+    virtual ~PlatformDirectory()
     {
     }
 

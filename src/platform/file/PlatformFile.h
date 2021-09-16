@@ -17,18 +17,18 @@
  *  USA
  */
 
-#ifndef __StarfishFile__
-#define __StarfishFile__
+#ifndef __StarfishPlatformFile__
+#define __StarfishPlatformFile__
 
 namespace Starfish {
 
-class FileUtil {
+class PlatformFileUtil {
 public:
     static bool removeFile(const std::string& filePath);
     static Nullable<std::string> absolutePath(const std::string& filePath);
 };
 
-class File {
+class PlatformFile {
 public:
     enum FileMode {
         Read = 1,
@@ -42,14 +42,14 @@ public:
         End = SEEK_END,
     };
 
-    static std::unique_ptr<File> open(String* filePath, FileMode mode)
+    static std::unique_ptr<PlatformFile> open(String* filePath, FileMode mode)
     {
         return open(filePath->toUTF8NonGCString().data(), mode);
     }
-    static std::unique_ptr<File> open(const std::string& filePath,
+    static std::unique_ptr<PlatformFile> open(const std::string& filePath,
                                       FileMode mode);
 
-    virtual ~File()
+    virtual ~PlatformFile()
     {
     }
 
@@ -130,7 +130,7 @@ public:
     virtual int64_t lastChangeTime() = 0;
 
 protected:
-    File()
+    PlatformFile()
     {
     }
 

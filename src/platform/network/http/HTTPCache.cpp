@@ -32,8 +32,8 @@
 #include "platform/network/http/HTTPTransaction.h"
 #include "platform/network/http/HTTPUtil.h"
 #include "platform/loader/ResourceURL.h"
-#include "platform/file/File.h"
-#include "platform/file/Directory.h"
+#include "platform/file/PlatformFile.h"
+#include "platform/file/PlatformDirectory.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
@@ -109,7 +109,7 @@ void HTTPCache::unlock()
 
 bool HTTPCache::createOrOpenCacheDir()
 {
-    Directory* dir = Directory::create();
+    PlatformDirectory* dir = PlatformDirectory::create();
     if (dir->open(m_cacheDirPath)) {
         return dir->close();
     } else {
@@ -128,7 +128,7 @@ void HTTPCache::clearCacheDir()
     HTTPCacheLRUList().swap(m_cacheLRUList);
     m_currentTotalSizeOfBlocks = 0;
 
-    Directory* dir = Directory::create();
+    PlatformDirectory* dir = PlatformDirectory::create();
     dir->open(m_cacheDirPath);
     dir->clearDir();
     dir->close();
@@ -138,7 +138,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
 {
     STARFISH_ASSERT(isMainThread());
 
-    auto in = File::open(m_indexFilePath, File::FileMode::Read);
+    auto in = PlatformFile::open(m_indexFilePath, PlatformFile::FileMode::Read);
 
     if (!in) {
         return false;
@@ -147,7 +147,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
     Nullable<String*> data = in->readAll();
     in.reset();
 
-    FileUtil::removeFile(m_indexFilePath->toUTF8NonGCString());
+    PlatformFileUtil::removeFile(m_indexFilePath->toUTF8NonGCString());
 
     if (!data.hasValue()) {
         return false;
@@ -158,7 +158,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
 
     StringUtils::tokenize(index, "\n", 1, table);
 
-    Directory* dir = Directory::create();
+    PlatformDirectory* dir = PlatformDirectory::create();
     if (dir->open(m_cacheDirPath)) {
         if (dir->fileCount() != (table.size() - 1)) {
             dir->close();
@@ -456,7 +456,7 @@ bool HTTPCache::flush()
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 #endif
-    auto out = File::open(m_indexFilePath, File::FileMode::Write);
+    auto out = PlatformFile::open(m_indexFilePath, PlatformFile::FileMode::Write);
     if (!out) {
         return false;
     }
@@ -495,13 +495,13 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
                 continue;
             }
 
-            auto fio = File::open(cacheEntry->entryFileInfo().entryFilePath,
-                                  File::ReadWrite);
+            auto fio = PlatformFile::open(cacheEntry->entryFileInfo().entryFilePath,
+                                  PlatformFile::ReadWrite);
             if (fio) {
                 auto info = cacheEntry->entryFileInfo();
                 size_t sizeOfBlock = calcBlocksSize(info.byteLength);
                 fio.reset();
-                FileUtil::removeFile(cacheEntry->entryFileInfo().entryFilePath);
+                PlatformFileUtil::removeFile(cacheEntry->entryFileInfo().entryFilePath);
 
                 m_currentTotalSizeOfBlocks -= sizeOfBlock;
                 removedSize += sizeOfBlock;
@@ -526,7 +526,7 @@ bool HTTPCache::isConsistent()
 {
     STARFISH_ASSERT(isMainThread());
 
-    Directory* dir = Directory::create();
+    PlatformDirectory* dir = PlatformDirectory::create();
 
     if (!dir->open(m_cacheDirPath) ||
         (dir->fileCount()) != m_cacheLRUList.size()) {
@@ -554,7 +554,7 @@ void HTTPCache::expire()
     for (auto it = m_cacheEntryTable->begin();
          it != m_cacheEntryTable->end();) {
         if (it->second->shouldExpire() || !it->second->good()) {
-            FileUtil::removeFile(it->second->entryFileInfo().entryFilePath);
+            PlatformFileUtil::removeFile(it->second->entryFileInfo().entryFilePath);
 
             size_t size =
                 calcBlocksSize(it->second->entryFileInfo().byteLength);
@@ -598,11 +598,11 @@ void HTTPCache::remove(HTTPCacheEntry* entry)
     }
 
     auto fio =
-        File::open(entry->entryFileInfo().entryFilePath, File::ReadWrite);
+        PlatformFile::open(entry->entryFileInfo().entryFilePath, PlatformFile::ReadWrite);
 
     if (fio) {
         fio.reset();
-        FileUtil::removeFile(entry->entryFileInfo().entryFilePath);
+        PlatformFileUtil::removeFile(entry->entryFileInfo().entryFilePath);
         size_t size = calcBlocksSize(entry->entryFileInfo().byteLength);
         m_currentTotalSizeOfBlocks -= size;
     }

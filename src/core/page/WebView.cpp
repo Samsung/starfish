@@ -81,7 +81,7 @@
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"
 #include "core/style/ComputedStyle.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 
 #if defined(OS_POSIX)
@@ -620,7 +620,7 @@ static String* resolvePath(String* filePath)
         !filePath->startsWith("data:")) {
         String* prefix = String::fromUTF8("file://");
         Nullable<std::string> result =
-            FileUtil::absolutePath(filePath->toUTF8NonGCString());
+            PlatformFileUtil::absolutePath(filePath->toUTF8NonGCString());
         if (result.hasValue()) {
             resolvedPath = prefix->concat(String::fromUTF8(
                 result.getValue().data(), result.getValue().length()));

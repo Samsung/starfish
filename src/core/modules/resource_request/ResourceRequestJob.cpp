@@ -23,7 +23,7 @@
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fileapi/Blob.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
@@ -282,7 +282,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->handleResponseEOF();
         return;
     }
-    auto fio = File::open(u8Path, File::Read);
+    auto fio = PlatformFile::open(u8Path, PlatformFile::Read);
     if (fio) {
         request->m_responseData->m_status = 200;
         request->changeReadyState(ReadyState::HeadersReceived, true);

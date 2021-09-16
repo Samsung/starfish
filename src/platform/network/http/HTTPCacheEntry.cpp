@@ -19,7 +19,7 @@
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "StarfishConfig.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 #include "HTTPCacheEntry.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/threading/Mutex.h"
@@ -114,7 +114,7 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
         return m_good = false;
     }
 
-    auto out = File::open(m_entryFileInfo.entryFilePath, File::Write);
+    auto out = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Write);
     if (!out) {
         return m_good = false;
     }
@@ -137,7 +137,7 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
     STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
 
-    auto in = File::open(m_entryFileInfo.entryFilePath, File::Read);
+    auto in = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
     if (!in) {
         return m_good = false;
     }
@@ -339,7 +339,7 @@ bool HTTPCacheEntry::isConsistent()
         return m_good;
     }
 
-    auto file = File::open(m_entryFileInfo.entryFilePath, File::Read);
+    auto file = PlatformFile::open(m_entryFileInfo.entryFilePath, PlatformFile::Read);
 
     if (file) {
         if (file->lastModificationTime() ==

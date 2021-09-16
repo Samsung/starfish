@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#include "Directory.h"
+#include "PlatformDirectory.h"
 #if defined(OS_WINDOWS)
 #include <direct.h>
 #define mkdir(a, b) _mkdir(a)
@@ -166,15 +166,15 @@ void rewinddir(DIR* dir)
 
 namespace Starfish {
 
-class DirectoryPosix : public Directory {
+class PlatformDirectoryPosix : public PlatformDirectory {
 public:
-    DirectoryPosix()
-        : Directory()
+    PlatformDirectoryPosix()
+        : PlatformDirectory()
         , m_dir(nullptr)
     {
     }
 
-    ~DirectoryPosix()
+    ~PlatformDirectoryPosix()
     {
         close();
     }
@@ -337,15 +337,15 @@ private:
     }
 };
 
-Directory* Directory::create()
+PlatformDirectory* PlatformDirectory::create()
 {
-    DirectoryPosix* dir = new DirectoryPosix();
+    PlatformDirectoryPosix* dir = new PlatformDirectoryPosix();
     return dir;
 }
 
-Directory* Directory::createInNonGCArea()
+PlatformDirectory* PlatformDirectory::createInNonGCArea()
 {
-    DirectoryPosix* dir = new (malloc(sizeof(DirectoryPosix))) DirectoryPosix();
+    PlatformDirectoryPosix* dir = new (malloc(sizeof(PlatformDirectoryPosix))) PlatformDirectoryPosix();
     return dir;
 }
 }; // namespace Starfish

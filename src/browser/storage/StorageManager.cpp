@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "StorageManager.h"
 #include "core/dom/WebOrigin.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 
 #include "rapidjson/writer.h"
 #include "rapidjson/encodings.h"
@@ -157,7 +157,7 @@ unsigned long StorageManager::size(WebOrigin* webOrigin)
 
 void StorageManager::loadFromFileToJsonDocument()
 {
-    auto fileIO = File::open(m_localStoragePath, File::Read);
+    auto fileIO = PlatformFile::open(m_localStoragePath, PlatformFile::Read);
     if (fileIO) {
         Nullable<String*> filedata = fileIO->readAll();
         if (filedata.hasValue()) {
@@ -178,7 +178,7 @@ void StorageManager::writeJsonDocumentAsFile()
     rapidjson::Writer<JosnStringBuffer> writer(buffer);
     m_jsonDocument->Accept(writer);
 
-    auto fileIO = File::open(m_localStoragePath, File::Write);
+    auto fileIO = PlatformFile::open(m_localStoragePath, PlatformFile::Write);
     if (fileIO) {
         fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
     }

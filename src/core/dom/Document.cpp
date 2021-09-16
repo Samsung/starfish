@@ -88,7 +88,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/loader/ImageResource.h"
-#include "platform/file/File.h"
+#include "platform/file/PlatformFile.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
@@ -1916,7 +1916,7 @@ void Document::loadBuiltinPolyfill(String* localPath)
         return;
     }
     STARFISH_LOG_INFO("Load built-in javascript polyfill\n");
-    auto in = File::open(localPath, File::FileMode::Read);
+    auto in = PlatformFile::open(localPath, PlatformFile::FileMode::Read);
     if (!in) {
         STARFISH_LOG_INFO("Invalid built-in polyfill path.\n");
         return;
