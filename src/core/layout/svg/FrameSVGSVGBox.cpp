@@ -155,6 +155,11 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     LayoutUnit svgHeight = contentHeight();
     IntrinsicSize intrinsicSizeInfo = intrinsicSize();
 
+    if (svgWidth == 0 || svgHeight == 0) {
+        canvas->restore();
+        return;
+    }
+
     Unit::Rect viewport;
     if (m_containerViewport.hasValue() &&
         !m_containerViewport.value().isEmpty()) {
@@ -173,7 +178,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     double syToViewport = viewport.height() / svgHeight;
     double sToViewport = 1;
     if (sxToViewport == 0 || syToViewport == 0 ||
-        std::isnan(sxToViewport == 0) || std::isnan(syToViewport == 0)) {
+        std::isnan(sxToViewport) || std::isnan(syToViewport)) {
         canvas->restore();
         return;
     }
