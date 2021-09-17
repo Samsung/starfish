@@ -495,7 +495,7 @@ static bool g_needsRGBShuffle = false;
 #endif
 static size_t g_maxTextureSize = MIN_MAX_TEXTURE_SIZE;
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
 
 #define RETURN_IF_INVALID_INDEX(atti, attrib_max) \
     if ((atti) >= (attrib_max)) {                 \
