@@ -680,6 +680,7 @@ NetworkSharedResourceManager::CurlMultiData::CurlMultiData(
     MessageLoop* ml, Mutex* curlMultiRequestDataMutex)
 {
     m_running = true;
+    m_finishing = false;
     m_ml = ml;
     m_globalDataMutex = curlMultiRequestDataMutex;
     m_curlMultiHandle = curl_multi_init();
