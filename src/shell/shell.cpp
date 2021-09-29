@@ -92,12 +92,23 @@ void bt_sighandler(int sig, struct sigcontext ctx)
     /* skip first stack frame (points here) */
     printf("[bt] Execution path:\n");
     for (i = 1; i < trace_size; ++i) {
-        printf("[bt] #%d %s\n", i, messages[i]);
+        printf("[bt] #%d %s ", i, messages[i]);
 
         char syscom[256];
-        sprintf(syscom, "addr2line %p -e Starfish",
-                trace[i]); // last parameter is the name of this app
-        system(syscom);
+        std::string temp = messages[i];
+        auto moduleEnd = temp.find("(");
+        auto addrStart = temp.find("+");
+        auto addrEnd = temp.find(")");
+        if (moduleEnd != std::string::npos && addrStart != std::string::npos &&
+            addrEnd != std::string::npos) {
+            std::string modulePath = temp.substr(0, moduleEnd);
+            std::string addr = temp.substr(addrStart, addrEnd - addrStart);
+            sprintf(syscom, "addr2line %s -e %s", addr.c_str(),
+                    modulePath.c_str());
+            system(syscom);
+        } else {
+            printf("\n");
+        }
     }
 
     fflush(stdout);
