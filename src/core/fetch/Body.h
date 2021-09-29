@@ -30,6 +30,8 @@ typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
 
 class DOMException;
 class ReadableStream;
+class ArrayBuffer;
+class ArrayBufferView;
 
 enum class BodyType {
     Empty,
@@ -47,6 +49,13 @@ public:
     Promise* formData();
     Promise* json();
     Promise* text();
+
+    String* extract();
+
+    bool isArrayBufferType();
+    bool isArrayBufferViewType();
+    bool isBlobType();
+    bool isTextType();
 
     bool bodyUsed();
 
@@ -76,6 +85,13 @@ public:
     }
 
 private:
+    ArrayBuffer* extractArrayBuffer();
+    ArrayBufferView* extractArrayBufferView();
+    Blob* extractBlob();
+    String* extractText();
+
+    String* extractTextFromBodyInit();
+
 protected:
     Body(ExecutionContext* executionContext);
     Body(ExecutionContext* executionContext, Nullable<BodyInit>& bodyInitValue);
