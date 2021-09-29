@@ -62,6 +62,11 @@ public:
         return m_executionContext;
     }
 
+    HeadersData* headersData()
+    {
+        return m_headersData;
+    }
+
 private:
     ExecutionContext* m_executionContext;
     HeadersData* m_headersData;

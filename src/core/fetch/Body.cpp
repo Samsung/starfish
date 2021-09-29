@@ -249,7 +249,7 @@ Promise* Body::text()
                 reqData->m_url = new ResourceURL(
                     url, executionContext()->baseURL()->baseURI());
                 reqData->m_syncLevel = RequestSyncLevel::NeverSync;
-                m_resourceRequest->open(reqData);
+                m_resourceRequest->open(reqData, new HeadersData());
                 m_resourceRequest->send();
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

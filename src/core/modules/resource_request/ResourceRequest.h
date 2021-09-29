@@ -128,7 +128,7 @@ public:
     }
 
     ResourceRequest(ExecutionContext* executionContext);
-    void open(RequestData* reqData);
+    void open(RequestData* reqData, HeadersData* headersData);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);

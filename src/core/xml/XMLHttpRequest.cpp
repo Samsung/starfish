@@ -426,7 +426,7 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
         reqData->m_credentials = RequestCredentials::SameOrigin;
     }
 
-    m_resourceRequest->open(reqData);
+    m_resourceRequest->open(reqData, new HeadersData());
 
     initResponseData();
 }

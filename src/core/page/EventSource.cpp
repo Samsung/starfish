@@ -297,7 +297,7 @@ void EventSource::start(String* method)
         reqData->m_credentials = RequestCredentials::SameOrigin;
     }
 
-    m_resourceRequest->open(reqData);
+    m_resourceRequest->open(reqData, new HeadersData());
 
     m_resourceRequest->setRequestHeader(
         String::createASCIIString(HTTPHeaderMap::kAccept,

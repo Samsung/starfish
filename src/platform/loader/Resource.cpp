@@ -44,7 +44,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
         // cache miss
         m_resourceRequest =
             new ResourceRequest(loader()->document()->executionContext());
-        m_resourceRequest->open(requestData);
+        m_resourceRequest->open(requestData, new HeadersData());
         String* entityBody = String::emptyString;
 
         ResourceURL* url = requestData->m_url;

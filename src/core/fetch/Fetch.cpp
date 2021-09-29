@@ -82,7 +82,8 @@ void* Fetch::operator new(size_t size)
 void Fetch::start()
 {
     m_response = new Response(executionContext());
-    m_resourceRequest->open(m_request->requestData());
+    m_resourceRequest->open(m_request->requestData(),
+                            m_request->headers()->headersData());
     m_resourceRequest->send();
 }
 
@@ -96,8 +97,8 @@ void Fetch::success(ResourceRequest* request)
     m_response->setType(request->responseType());
     m_response->setMimeType(request->responseMimeType());
     m_response->setUrl(request->url()->urlString());
+    m_response->setHeadersFromHeaderMap(request->responseHeaderMap());
     m_response->pushResponseData(request);
-
     m_promise->fulfill(m_response->scriptValue());
 }
 
