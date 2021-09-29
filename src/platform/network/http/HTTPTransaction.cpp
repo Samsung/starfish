@@ -211,6 +211,12 @@ void HTTPTransaction::start()
         curl_easy_setopt(m_curl, CURLOPT_UPLOAD, 1L);
         curl_easy_setopt(m_curl, CURLOPT_INFILESIZE_LARGE,
                          m_httpRequest->entityBody().length());
+    } else if (m_httpRequest->method().compare("PATCH") == 0) {
+        curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "PATCH");
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
+                         m_httpRequest->entityBody().length());
+        curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS,
+                         m_httpRequest->entityBody().data());
     } else {
         curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST,
                          m_httpRequest->method().c_str());

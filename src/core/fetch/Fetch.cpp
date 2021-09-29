@@ -84,7 +84,15 @@ void Fetch::start()
     m_response = new Response(executionContext());
     m_resourceRequest->open(m_request->requestData(),
                             m_request->headers()->headersData());
-    m_resourceRequest->send();
+    if (m_request->method()->equals("GET") ||
+        m_request->method()->equals("HEAD")) {
+        // This is a method that cannot have a body
+        m_resourceRequest->send();
+    } else if (m_request->isTextType()) {
+        // Currently, it is possible only in case of text because resource
+        // request supports only string type.
+        m_resourceRequest->send(m_request->extract());
+    }
 }
 
 void Fetch::success(ResourceRequest* request)

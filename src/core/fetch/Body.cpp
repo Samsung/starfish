@@ -218,26 +218,10 @@ Promise* Body::text()
             m_readableStream->lock();
 
             BodyInit body = m_bodyInit.getValue();
-            if (body.isUSVStringValue()) {
-                m_promise->fulfill(createScriptValue(body.getUSVStringValue()));
-
-            } else if (body.isArrayBufferViewOrArrayBufferValue()) {
-                auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
-                String* text;
-                if (byteBuffer.isArrayBufferValue()) {
-                    auto arrayBuffer = byteBuffer.getArrayBufferValue();
-                    auto buffer = arrayBufferRawData(arrayBuffer);
-                    auto size = arrayBufferSize(arrayBuffer);
-                    text = String::fromUTF8((const char*)buffer, size);
-                } else {
-                    // ArrayBufferView case
-                    auto arrayBufferView = byteBuffer.getArrayBufferViewValue();
-                    auto buffer = arrayBufferViewRawData(arrayBufferView);
-                    auto size = arrayBufferViewSize(arrayBufferView);
-                    text = String::fromUTF8((const char*)buffer, size);
-                }
+            if (body.isUSVStringValue() ||
+                body.isArrayBufferViewOrArrayBufferValue()) {
+                String* text = extractTextFromBodyInit();
                 m_promise->fulfill(createScriptValue(text));
-
             } else if (body.isBlobValue()) {
                 String* url = URL::createObjectURL(body.getBlobValue());
                 if (!m_resourceRequest) {
@@ -259,9 +243,82 @@ Promise* Body::text()
                                           BodyType::Text);
         }
     }
-
     m_readableStream->close();
     return m_promise;
+}
+
+ArrayBuffer* Body::extractArrayBuffer()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+ArrayBufferView* Body::extractArrayBufferView()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+Blob* Body::extractBlob()
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
+}
+
+String* Body::extractText()
+{
+    String* result = String::emptyString;
+    createReadableStream();
+    if (m_readableStream->isDisturbedOrLocked()) {
+        return result;
+    }
+    m_readableStream->lock();
+    result = extractTextFromBodyInit();
+    m_readableStream->close();
+    return result;
+}
+
+String* Body::extract()
+{
+    String* result = String::emptyString;
+    if (isTextType()) {
+        // Currently, it is possible only in case of text because resource
+        // request supports only string type.
+        result = extractText();
+    } else if (isArrayBufferType()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (isArrayBufferViewType()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (isBlobType()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+    return result;
+}
+
+String* Body::extractTextFromBodyInit()
+{
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isUSVStringValue()) {
+            return body.getUSVStringValue();
+        } else if (body.isArrayBufferViewOrArrayBufferValue()) {
+            auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
+            if (byteBuffer.isArrayBufferValue()) {
+                auto arrayBuffer = byteBuffer.getArrayBufferValue();
+                auto buffer = arrayBufferRawData(arrayBuffer);
+                auto size = arrayBufferSize(arrayBuffer);
+                return String::fromUTF8((const char*)buffer, size);
+            } else {
+                auto arrayBufferView = byteBuffer.getArrayBufferViewValue();
+                auto buffer = arrayBufferViewRawData(arrayBufferView);
+                auto size = arrayBufferViewSize(arrayBufferView);
+                return String::fromUTF8((const char*)buffer, size);
+            }
+        }
+    }
+    return String::emptyString;
 }
 
 // NOTE: consider creating `ResourceRequestClient` class for Body
@@ -346,5 +403,50 @@ void Body::copyBody(Body* body)
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
+}
+
+bool Body::isArrayBufferType()
+{
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isArrayBufferViewOrArrayBufferValue()) {
+            if (body.getArrayBufferViewOrArrayBufferValue()
+                    .isArrayBufferValue()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Body::isArrayBufferViewType()
+{
+    if (m_bodyInit.hasValue()) {
+        BodyInit body = m_bodyInit.getValue();
+        if (body.isArrayBufferViewOrArrayBufferValue()) {
+            if (body.getArrayBufferViewOrArrayBufferValue()
+                    .isArrayBufferViewValue()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Body::isBlobType()
+{
+    if (m_bodyInit.hasValue() && m_bodyInit.getValue().isBlobValue()) {
+        return true;
+    }
+    return false;
+}
+
+bool Body::isTextType()
+{
+    String* contentTypeStr = contentType();
+    if (contentTypeStr) {
+        return contentTypeStr->equals(kTextPlainContentType);
+    }
+    return false;
 }
 }; // namespace Starfish
