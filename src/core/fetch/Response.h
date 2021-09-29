@@ -93,6 +93,8 @@ public:
         return &m_headers;
     }
 
+    void setHeadersFromHeaderMap(const HeaderMap& map);
+
     Response* clone();
 
     void setBody(String* string);

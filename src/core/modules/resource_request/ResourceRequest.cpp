@@ -299,11 +299,11 @@ void ResourceRequest::changeProgress(ProgressState progress,
     }
 }
 
-void ResourceRequest::open(RequestData* reqData)
+void ResourceRequest::open(RequestData* reqData, HeadersData* headersData)
 {
     bool shouldAbort = false;
     m_requestData = reqData;
-    m_requestHeaders = new HeadersData();
+    m_requestHeaders = headersData;
 
     m_preflightRequestData = new RequestData();
     m_preflightRequestData->m_method = String::createASCIIString("OPTIONS");

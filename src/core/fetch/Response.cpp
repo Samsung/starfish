@@ -254,4 +254,16 @@ void Response::setMimeType(String* mimeType)
 {
     m_responseData->m_mimeType = mimeType;
 }
+
+void Response::setHeadersFromHeaderMap(const HeaderMap& map)
+{
+    for (auto pair : map) {
+        auto key =
+            String::createASCIIString(pair.first.c_str(), pair.first.length());
+        auto value = String::createASCIIString(pair.second.c_str(),
+                                               pair.second.length());
+        m_headers.append(key, value);
+    }
+}
+
 } // namespace Starfish
