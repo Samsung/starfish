@@ -230,8 +230,8 @@ public:
         m_index = 0;
     }
 
-    bool next(ExecutionStateRef* state, Nullable<String*>& key,
-              Nullable<String*>& value)
+    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
+                      Nullable<String*>& value) override
     {
         if (m_index >= m_params->length()) {
             return false;

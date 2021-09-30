@@ -48,8 +48,8 @@ public:
         m_iterator = m_headerMap.begin();
     }
 
-    bool next(ExecutionStateRef* state, Nullable<String*>& key,
-              Nullable<String*>& value)
+    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
+                      Nullable<String*>& value) override
     {
         if (m_iterator == m_headerMap.end()) {
             return false;
