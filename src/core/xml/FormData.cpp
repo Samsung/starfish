@@ -189,8 +189,8 @@ public:
     {
     }
 
-    bool next(ExecutionStateRef* state, Nullable<String*>& key,
-              Nullable<FormDataEntryValue*>& value)
+    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
+                      Nullable<FormDataEntryValue*>& value) override
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return true;
