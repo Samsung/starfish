@@ -382,6 +382,10 @@ private:
         LayoutUnit remainingWidth,
         std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
         LayoutUnit* sumOfPercentageWidth);
+    void calSpecifiedWidthInPixel(
+        LayoutUnit remainingWidth, LayoutUnit sumOfAdjustedSpecifiedCellWidths,
+        std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+        LayoutUnit* sumOfFixedWidth);
 
     void collectColBoxes();
     bool hasColBox(size_t i);

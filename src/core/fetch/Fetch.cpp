@@ -105,7 +105,7 @@ void Fetch::success(ResourceRequest* request)
 void Fetch::fail()
 {
     auto error = scriptError(executionContext()->scriptBindingInstance(),
-                             String::fromUTF8("NetworkError"));
+                             String::fromUTF8("Failed to fetch"));
     m_promise->reject(createScriptValue(error));
 }
 
