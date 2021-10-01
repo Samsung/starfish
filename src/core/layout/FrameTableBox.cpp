@@ -389,6 +389,33 @@ void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
     }
 }
 
+void FrameTableBox::calSpecifiedWidthInPixel(
+    LayoutUnit remainingWidth, LayoutUnit sumOfAdjustedSpecifiedCellWidths,
+    std::vector<ColSizeStruct*> columnsMayNeedToAdjustWidths,
+    LayoutUnit* sumOfFixedWidth)
+{
+    // calculate widths specified in pixels
+    for (auto& c : columnsMayNeedToAdjustWidths) {
+        ColSizeStruct& col = *c;
+
+        if (col.hasSpecifiedWidth()) {
+            LayoutUnit newCellWidth(
+                remainingWidth.toDouble() *
+                (col.cellWidth.toDouble() /
+                 sumOfAdjustedSpecifiedCellWidths.toDouble()));
+
+            if (newCellWidth < col.cellWidth) {
+                // Cells with specified width can only
+                // reduce its width if there is no room. It
+                // cannot grow larger than its specified
+                // width
+                col.cellWidth = std::max(col.minCellWidth, newCellWidth);
+            }
+            *sumOfFixedWidth += col.cellWidth;
+        }
+    }
+}
+
 void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
     resetIfNeeds(ctx);
@@ -801,6 +828,69 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         calCellWidthsWithPercentageWidths(
                             remainingWidth, columnsMayNeedToAdjustWidths,
                             &sumOfPercentageWidth);
+
+                        remainingWidth -= sumOfPercentageWidth;
+
+                        // cal widths specified in pixels
+                        LayoutUnit sumOfFixedWidth = 0;
+                        calSpecifiedWidthInPixel(
+                            remainingWidth, sumOfAdjustedSpecifiedCellWidths,
+                            columnsMayNeedToAdjustWidths, &sumOfFixedWidth);
+
+                        // Adjust widths specified in percentage
+                        // Reduce cell widths specified in percentage if all
+                        // other cells are reduced to min width, and there are
+                        // rooms in the cells specified in percentage.
+                        if (remainingWidth - sumOfFixedWidth < 0) {
+                            LayoutUnit remainingWidthForPercentageWidth =
+                                remainingWidth - sumOfFixedWidth +
+                                sumOfPercentageWidth;
+
+                            double sumOfPercentage = 0;
+                            std::vector<ColSizeStruct*>
+                                columnsMayNeedToAdjustWidthsAgain;
+
+                            for (auto& c : columnsMayNeedToAdjustWidths) {
+                                ColSizeStruct& col = *c;
+
+                                if (col.hasPercentageWidth()) {
+                                    if (col.cellWidth > col.minCellWidth) {
+                                        if (sumOfPercentage +
+                                                col.maxPercentageWidth <=
+                                            1) {
+                                            columnsMayNeedToAdjustWidthsAgain
+                                                .push_back(c);
+                                            sumOfPercentage +=
+                                                col.maxPercentageWidth;
+                                        } else {
+                                            col.cellWidth = std::max(
+                                                remainingWidthForPercentageWidth
+                                                        .toDouble() *
+                                                    (1 - sumOfPercentage),
+                                                col.minCellWidth.toDouble());
+                                            remainingWidthForPercentageWidth -=
+                                                col.cellWidth;
+                                            sumOfPercentage = 1;
+                                        }
+                                    }
+                                }
+                            }
+
+                            for (auto& c : columnsMayNeedToAdjustWidthsAgain) {
+                                ColSizeStruct& col = *c;
+
+                                if (col.hasPercentageWidth() &&
+                                    (col.cellWidth > col.minCellWidth)) {
+                                    LayoutUnit newCellWidth =
+                                        remainingWidthForPercentageWidth
+                                            .toDouble() *
+                                        col.maxPercentageWidth /
+                                        sumOfPercentage;
+                                    col.cellWidth = std::max(col.minCellWidth,
+                                                             newCellWidth);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -922,25 +1012,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
 
                 // cal widths specified in pixels
                 LayoutUnit sumOfFixedWidth = 0;
-                for (auto& c : columnsMayNeedToAdjustWidths) {
-                    ColSizeStruct& col = *c;
-
-                    if (col.hasSpecifiedWidth()) {
-                        LayoutUnit newCellWidth(
-                            remainingWidth.toDouble() *
-                            (col.cellWidth.toDouble() /
-                             sumOfAdjustedSpecifiedCellWidths.toDouble()));
-
-                        if (newCellWidth < col.cellWidth) {
-                            // Cells with specified width can only reduce its
-                            // width if there is no room. It cannot grow larger
-                            // than its specified width
-                            col.cellWidth =
-                                std::max(col.minCellWidth, newCellWidth);
-                        }
-                        sumOfFixedWidth += col.cellWidth;
-                    }
-                }
+                calSpecifiedWidthInPixel(
+                    remainingWidth, sumOfAdjustedSpecifiedCellWidths,
+                    columnsMayNeedToAdjustWidths, &sumOfFixedWidth);
 
                 // Adjust widths specified in percentage
                 // Reduce cell widths specified in percentage if all other
