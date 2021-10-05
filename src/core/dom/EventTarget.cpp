@@ -323,7 +323,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         }
         if (eventTarget->isNode()) {
             Node* node = eventTarget->asNode();
-            if (node->isHTMLElement()) {
+            if (node->isHTMLElement() || node->isSVGElement()) {
                 eventPath.push_back(eventTarget);
             } else if (node->isDocument()) {
                 eventPath.push_back(eventTarget);
