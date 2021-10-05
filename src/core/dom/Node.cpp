@@ -797,7 +797,7 @@ void Node::append(const GCVector<NodeOrDOMString>& nodes)
 Node* Node::nearestParentElement()
 {
     Node* t = this;
-    while (t && !t->isHTMLElement() && !t->isDocument()) {
+    while (t && !t->isHTMLElement() && !t->isDocument() && !t->isSVGElement()) {
         t = t->parentNode();
     }
 
