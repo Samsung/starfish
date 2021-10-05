@@ -336,13 +336,15 @@ void Scrolling::onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
         }
         for (size_t i = 1; i < m_lastScrollingData.size(); i++) {
             auto td = m_lastScrollingData[i].first - t;
-            float speed = m_lastScrollingData[i].second / (td / 1000.f);
-            if (speed > 0) {
-                postiveAverage += speed;
-            } else {
-                negativeAverage += speed;
+            if (td != 0) {
+                float speed = m_lastScrollingData[i].second / (td / 1000.f);
+                if (speed > 0) {
+                    postiveAverage += speed;
+                } else {
+                    negativeAverage += speed;
+                }
+                t = m_lastScrollingData[i].first;
             }
-            t = m_lastScrollingData[i].first;
         }
 
         if (m_lastScrollingData.size() > 1) {
