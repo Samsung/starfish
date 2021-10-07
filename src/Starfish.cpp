@@ -48,14 +48,6 @@ int g_referenceTestState = 0;
 #endif
 
 static bool g_starfishGlobalInit = false;
-static void StarfishGCMemoryLogger(GC_EventType evtType, void* data)
-{
-    if (GC_EVENT_RECLAIM_END == evtType) {
-        STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
-                          GC_get_memory_use() / 1024.f / 1024.f,
-                          GC_get_heap_size() / 1024.f / 1024.f);
-    }
-}
 
 Starfish::Starfish(const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
@@ -84,10 +76,6 @@ Starfish::Starfish(const char* localStorageFilePath,
             STARFISH_LOG_ERROR("Starfish: GC warning\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
-
-        // remove if exists
-        GC_remove_event_callback(StarfishGCMemoryLogger, nullptr);
-        GC_add_event_callback(StarfishGCMemoryLogger, nullptr);
 
         GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
         GC_set_force_unmap_on_gcollect(1);
