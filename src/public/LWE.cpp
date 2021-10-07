@@ -128,6 +128,13 @@ namespace LWE {
 
 Starfish::Starfish* g_starfishInstance;
 
+static void StarfishGCMemoryLogger(void* data)
+{
+    STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
+                      GC_get_memory_use() / 1024.f / 1024.f,
+                      GC_get_heap_size() / 1024.f / 1024.f);
+}
+
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
 
 static bool g_isLWEThreadStarted;
@@ -168,6 +175,11 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
             httpCacheDataDirectorypath);
+        // add gc event listener
+        Escargot::Memory::removeGCEventListener(
+            Escargot::Memory::RECLAIM_END, StarfishGCMemoryLogger, nullptr);
+        Escargot::Memory::addGCEventListener(Escargot::Memory::RECLAIM_END,
+                                             StarfishGCMemoryLogger, nullptr);
         return 0;
     });
 }
@@ -208,6 +220,11 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     g_starfishInstance = new (NoGC)
         Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
                            httpCacheDataDirectorypath);
+    // add gc event listener
+    Escargot::Memory::removeGCEventListener(Escargot::Memory::RECLAIM_END,
+                                            StarfishGCMemoryLogger, nullptr);
+    Escargot::Memory::addGCEventListener(Escargot::Memory::RECLAIM_END,
+                                         StarfishGCMemoryLogger, nullptr);
 }
 
 void LWE::Finalize()
