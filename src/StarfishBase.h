@@ -329,43 +329,60 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_TAG ""
 #endif
 
-#define STARFISH_LOG_INFO(...) fprintf(stdout, STARFISH_LOG_TAG __VA_ARGS__);
+#ifndef __MODULE__
+#define __MODULE__ \
+    (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+
+#define LOG_FUNCTION_TYPE(functionName, param1, param2, ansi1, ansi2, fmt,   \
+                          arg...)                                            \
+    functionName(param1, param2 ansi1 "%s: %s(%d) > " fmt ansi2, __MODULE__, \
+                 __func__, __LINE__, ##arg);
+#define LOG_FUNCTION_TYPE2(functionName, param1, param2, ansi1, ansi2, fmt,    \
+                           arg...)                                             \
+    functionName(param1, param2, ansi1 "%s: %s(%d) > " VERSION ": " fmt ansi2, \
+                 __MODULE__, __func__, __LINE__, ##arg);
+
+#define STARFISH_LOG_INFO(fmt, arg...) \
+    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt, ##arg)
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
-#define STARFISH_LOG_INFO(...) \
-    dlog_print(DLOG_INFO, STARFISH_NAME, VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_INFO(fmt, arg...) \
+    LOG_FUNCTION_TYPE2(dlog_print, DLOG_INFO, STARFISH_NAME, "", "", fmt, ##arg)
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_INFO
-#define STARFISH_LOG_INFO(...)                           \
-    __android_log_print(ANDROID_LOG_INFO, STARFISH_NAME, \
-                        VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_INFO(fmt, arg...)                                       \
+    LOG_FUNCTION_TYPE2(__android_log_print, ANDROID_LOG_INFO, STARFISH_NAME, \
+                       "", "", fmt, ##arg)
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_INFO
 #define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_ERROR(fmt, ...)                                 \
-    do {                                                             \
-        fprintf(stderr, "\033[0;31m" STARFISH_LOG_TAG fmt "\033[0m", \
-                ##__VA_ARGS__);                                      \
+#define STARFISH_LOG_ERROR(fmt, arg...)                                    \
+    do {                                                                   \
+        LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;31m", \
+                          "\033[0m", fmt, ##arg)                           \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
-#define STARFISH_LOG_ERROR(...) \
-    dlog_print(DLOG_ERROR, STARFISH_NAME, VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_ERROR(fmt, arg...)                                    \
+    LOG_FUNCTION_TYPE2(dlog_print, DLOG_ERROR, STARFISH_NAME, "", "", fmt, \
+                       ##arg)
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_ERROR
-#define STARFISH_LOG_ERROR(...)                           \
-    __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, \
-                        VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_ERROR(fmt, arg...)                                       \
+    LOG_FUNCTION_TYPE2(__android_log_print, ANDROID_LOG_ERROR, STARFISH_NAME, \
+                       "", "", fmt, ##arg)
+
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_ERROR
@@ -373,23 +390,23 @@ const char* getWindowsTempDir();
     ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_WARN(fmt, ...)                                  \
-    do {                                                             \
-        fprintf(stderr, "\033[0;33m" STARFISH_LOG_TAG fmt "\033[0m", \
-                ##__VA_ARGS__);                                      \
+#define STARFISH_LOG_WARN(fmt, arg...)                                     \
+    do {                                                                   \
+        LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;33m", \
+                          "\033[0m", fmt, ##arg)                           \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN
 #include <dlog.h>
-#define STARFISH_LOG_WARN(...) \
-    dlog_print(DLOG_WARN, STARFISH_NAME, VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_WARN(fmt, arg...) \
+    LOG_FUNCTION_TYPE2(dlog_print, DLOG_WARN, STARFISH_NAME, "", "", fmt, ##arg)
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_WARN
-#define STARFISH_LOG_WARN(...)                           \
-    __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, \
-                        VERSION ": " __VA_ARGS__);
+#define STARFISH_LOG_WARN(fmt, arg...)                                       \
+    LOG_FUNCTION_TYPE2(__android_log_print, ANDROID_LOG_WARN, STARFISH_NAME, \
+                       "", "", fmt, ##arg)
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_WARN
