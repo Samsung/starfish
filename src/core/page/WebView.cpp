@@ -312,6 +312,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_idleCheckTimerID(TimerInvalidID)
     , m_needsDownloadWebFontsEarly(false)
     , m_needsDownScaleImageResourceLargerThan(0)
+    , m_scrollbarVisible(true)
 {
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);
@@ -1372,11 +1373,15 @@ RenderResult WebView::rendering(bool force)
                 }
 
                 canvas->translate(scrollX, scrollY);
-                mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                    mainBrowsingContext()->window()->scrolling(), canvas,
-                    mainFrame, mainFrame->appliedOverflowX(),
-                    mainFrame->appliedOverflowY());
-
+                if (scrollbarVisible()) {
+                    mainBrowsingContext()
+                        ->window()
+                        ->scrolling()
+                        ->paintScrollbars(
+                            mainBrowsingContext()->window()->scrolling(),
+                            canvas, mainFrame, mainFrame->appliedOverflowX(),
+                            mainFrame->appliedOverflowY());
+                }
                 canvas->restore();
                 m_didCompositeBefore = false;
             } else {
@@ -1472,11 +1477,12 @@ RenderResult WebView::rendering(bool force)
             }
 
             compositor->restore();
-
-            mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                mainBrowsingContext()->window()->scrolling(), compositor,
-                mainFrame, mainFrame->appliedOverflowX(),
-                mainFrame->appliedOverflowY());
+            if (scrollbarVisible()) {
+                mainBrowsingContext()->window()->scrolling()->paintScrollbars(
+                    mainBrowsingContext()->window()->scrolling(), compositor,
+                    mainFrame, mainFrame->appliedOverflowX(),
+                    mainFrame->appliedOverflowY());
+            }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
             platformWindow()->paintVirtualCursor(compositor);

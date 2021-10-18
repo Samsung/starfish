@@ -162,6 +162,11 @@ uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
     return m_needsDownScaleImageResourceLargerThan;
 }
 
+bool Settings::ScrollbarVisible() const
+{
+    return m_scrollbarVisible;
+}
+
 void Settings::SetUserAgentString(const std::string& ua)
 {
     m_userAgent = ua;
@@ -265,6 +270,11 @@ void Settings::SetUseHttp2(bool b)
 void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
 {
     m_needsDownScaleImageResourceLargerThan = demention;
+}
+
+void Settings::SetScrollbarVisible(bool visible)
+{
+    m_scrollbarVisible = visible;
 }
 
 ResourceError::ResourceError(int code, const std::string& description,
@@ -814,6 +824,7 @@ Settings WebContainer::GetSettings()
         TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
     result.SetNeedsDownScaleImageResourceLargerThan(
         TO_WEBVIEW(m_impl)->needsDownScaleImageResourceLargerThan());
+    result.SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -1064,6 +1075,7 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setUseHttp2(settings.UseHttp2());
     TO_WEBVIEW(m_impl)->setNeedsDownScaleImageResourceLargerThan(
         settings.NeedsDownScaleImageResourceLargerThan());
+    TO_WEBVIEW(m_impl)->setScrollbarVisible(settings.ScrollbarVisible());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
