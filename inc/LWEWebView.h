@@ -85,6 +85,7 @@ public:
     bool NeedsDownloadWebFontsEarly() const;
     bool UseHttp2() const;
     uint32_t NeedsDownScaleImageResourceLargerThan() const;
+    bool ScrollbarVisible() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -101,6 +102,7 @@ public:
     void SetUseHttp2(bool b);
     void SetNeedsDownScaleImageResourceLargerThan(
         uint32_t demention); // Experimental
+    void SetScrollbarVisible(bool visible);
 
 private:
     std::string m_defaultUserAgent;
@@ -117,6 +119,7 @@ private:
     bool m_needsDownloadWebFontsEarly;
     bool m_useHttp2; // default value is false
     uint32_t m_needsDownScaleImageResourceLargerThan;
+    bool m_scrollbarVisible;
 };
 
 class LWE_EXPORT ResourceError {

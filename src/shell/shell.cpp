@@ -303,6 +303,7 @@ int main(int argc, char* argv[])
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
     bool needsDownloadWebFontsEarly = false;
     uint32_t needsDownScaleImageResourceLargerThan = 0;
+    bool scrollbarVisible = true;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -382,6 +383,8 @@ int main(int argc, char* argv[])
             needsDownScaleImageResourceLargerThan = std::atoi(
                 argv[i] +
                 strlen("--needs-downscale-image-resource-larger-than="));
+        } else if (strstr(argv[i], "--scrollbar-unvisible")) {
+            scrollbarVisible = false;
         }
     }
 
@@ -545,6 +548,9 @@ int main(int argc, char* argv[])
         if (needsDownScaleImageResourceLargerThan) {
             settings.SetNeedsDownScaleImageResourceLargerThan(
                 needsDownScaleImageResourceLargerThan);
+        }
+        if (!scrollbarVisible) {
+            settings.SetScrollbarVisible(scrollbarVisible);
         }
         settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);
