@@ -154,6 +154,10 @@ public:
         size_t bufferStride;
     };
 
+    struct ExternalImageInfo {
+        void* imageAddress;
+    };
+
     struct RenderResult {
         size_t updatedX;
         size_t updatedY;
@@ -168,6 +172,13 @@ public:
     void RegisterOnRenderedHandler(
         const std::function<void(WebContainer*,
                                  const RenderResult& renderResult)>& cb);
+
+    static WebContainer* CreateWithPlatformImage(
+        unsigned width, unsigned height,
+        const std::function<ExternalImageInfo(void)>& prepareImageCb,
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        const char* timezoneID);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
@@ -179,10 +190,6 @@ public:
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
 
-    struct ExternalImageInfo {
-        void* imageAddress;
-    };
-
     static WebContainer* CreateGLWithPlatformImage(
         unsigned width, unsigned height,
         const std::function<void(WebContainer*)>& onGLMakeCurrent,
@@ -192,6 +199,7 @@ public:
         const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
+
     // <--- end of function set for render with OpenGL
 
     // Function set for headless

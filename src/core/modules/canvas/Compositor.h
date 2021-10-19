@@ -26,6 +26,7 @@ class NativeImageData;
 class PlatformWindow;
 class Canvas;
 class CanvasSurface;
+class Compositor;
 
 class CompositorContext {
 public:
@@ -55,8 +56,8 @@ public:
     static CompositorContext* initCompositorContext(PlatformWindow* wnd);
     static void destroyCompositorContext(PlatformWindow* wnd,
                                          CompositorContext* ctx);
-    static size_t maximumTextureSize();
 
+    static size_t maximumTextureSize();
     virtual ~Compositor()
     {
     }

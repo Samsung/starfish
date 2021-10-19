@@ -626,6 +626,74 @@ WebContainer* WebContainer::CreateGL(
 #endif
 }
 
+#ifdef STARFISH_FLUTTER
+#include <tbm_surface.h>
+#endif
+
+WebContainer* WebContainer::CreateWithPlatformImage(
+    unsigned width, unsigned height,
+    const std::function<ExternalImageInfo(void)>& prepareImageCb,
+    const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID)
+{
+#if defined(PORT_NEEDS_THREADED_PUBLIC_API)
+    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
+        [=]() -> size_t {
+            auto webView =
+                createWebViewInstance(width, height, devicePixelRatio,
+                                      defaultFontName, locale, timezoneID);
+
+            WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+            webView->platformWindow()->registerRenderingPrepareCallback(
+                [prepareImageCb](void) -> Starfish::RenderInfo {
+                    WebContainer::ExternalImageInfo buffer = prepareImageCb();
+                    Starfish::RenderInfo result;
+#ifdef STARFISH_FLUTTER
+                    tbm_surface_info_s tbmSurfaceInfo;
+                    if (tbm_surface_map((tbm_surface_h)buffer.imageAddress,
+                                        TBM_SURF_OPTION_WRITE,
+                                        &tbmSurfaceInfo) ==
+                        TBM_SURFACE_ERROR_NONE) {
+                        result.updatedBufferAddress =
+                            tbmSurfaceInfo.planes[0].ptr;
+                        result.bufferStride = tbmSurfaceInfo.planes[0].stride;
+                    }
+#endif
+                    return result;
+                });
+
+            webView->platformWindow()->registerRenderingFinishedCallback(
+                [newWebContainer,
+                 flushCb](const Starfish::RenderResult& renderResult) {
+                    flushCb(newWebContainer,
+                            renderResult.didPaintingOrCompositing);
+                });
+
+            return (size_t)newWebContainer;
+        });
+#else
+    auto webView = createWebViewInstance(width, height, devicePixelRatio,
+                                         defaultFontName, locale, timezoneID);
+
+    WebContainer* newWebContainer = new (NoGC) WebContainer(webView);
+    webView->platformWindow()->registerRenderingPrepareCallback(
+        [prepareImageCb](void) -> Starfish::RenderInfo {
+            WebContainer::ExternalImageInfo tmp = prepareImageCb();
+            Starfish::RenderInfo result;
+            result.updatedBufferAddress = tmp.imageAddress;
+            result.bufferStride = 0;
+            return result;
+        });
+
+    webView->platformWindow()->registerRenderingFinishedCallback(
+        [newWebContainer, flushCb](const Starfish::RenderResult& renderResult) {
+            flushCb(newWebContainer, renderResult.didPaintingOrCompositing);
+        });
+    return newWebContainer;
+#endif
+}
+
 WebContainer* WebContainer::CreateGLWithPlatformImage(
     unsigned width, unsigned height,
     const std::function<void(WebContainer*)>& onGLMakeCurrent,

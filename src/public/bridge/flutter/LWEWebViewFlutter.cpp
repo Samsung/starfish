@@ -45,6 +45,11 @@
 #define ANNOTATE_GREEN 0x00ff001b
 #endif
 
+namespace Starfish {
+extern int g_portWindowBackend;
+extern int g_portCompositorBackend;
+}; // namespace Starfish
+
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
 typedef EGLBoolean(EGLAPIENTRYP PFNEGLDESTROYSYNCKHRPROC)(EGLDisplay dpy,
@@ -63,6 +68,9 @@ static int g_arrowKeyDownTimestamp[4];
 
 namespace LWE {
 
+enum class PORT_WINDOW_BACKEND : int { GB, GL, HEADLESS };
+enum class PORT_COMPOSITOR_BACKEND : int { CAIRO, GL, MOCK, SKIA };
+
 class WebViewFlutter : public WebView {
 public:
     WebViewFlutter(
@@ -71,20 +79,34 @@ public:
         const char* timezoneID,
         const std::function<WebContainer::ExternalImageInfo(void)>&
             prepareImageCb,
-        const std::function<void(WebContainer*, bool needsFlush)>& flushCb)
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+        bool useSWBackend = false)
         : WebView(nullptr)
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
         , m_hasFocus(true)
         , m_isShowing(false)
+        , m_useSWBackend(useSWBackend)
         , m_lastInputTime(0)
     {
-        initEGL();
+        ::LWE::WebContainer* webContainer;
+        if (m_useSWBackend) {
+            Starfish::g_portWindowBackend =
+                static_cast<int>(PORT_WINDOW_BACKEND::GB);
+            Starfish::g_portCompositorBackend =
+                static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
+        } else {
+            Starfish::g_portWindowBackend =
+                static_cast<int>(PORT_WINDOW_BACKEND::GL);
+            Starfish::g_portCompositorBackend =
+                static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+        }
+        if (!useSWBackend) {
+            initEGL();
 
-        eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                       EGL_NO_CONTEXT);
-        ::LWE::WebContainer* webContainer =
-            ::LWE::WebContainer::CreateGLWithPlatformImage(
+            eglMakeCurrent(m_display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                           EGL_NO_CONTEXT);
+            webContainer = ::LWE::WebContainer::CreateGLWithPlatformImage(
                 width, height,
                 [this](WebContainer* wc) {
                     if (m_isBufferSwapped) {
@@ -97,7 +119,8 @@ public:
                                 EGL_FOREVER_KHR);
                             if (result == EGL_FALSE) {
                                 STARFISH_LOG_INFO(
-                                    "EGL FENCE: error waiting for fence: %d\n",
+                                    "EGL FENCE: error waiting for fence: "
+                                    "%d\n",
                                     (int)eglGetError());
                             }
                             g_eglDestroySyncKHRProc(m_display, m_fence);
@@ -152,6 +175,11 @@ public:
                 },
                 prepareImageCb, flushCb, devicePixelRatio, defaultFontName,
                 locale, timezoneID);
+        } else {
+            webContainer = ::LWE::WebContainer::CreateWithPlatformImage(
+                width, height, prepareImageCb, flushCb, devicePixelRatio,
+                defaultFontName, locale, timezoneID);
+        }
         m_impl = webContainer;
     }
     void initEGL()
@@ -332,6 +360,7 @@ public:
     bool m_isBufferSwapped;
     bool m_hasFocus;
     bool m_isShowing;
+    bool m_useSWBackend;
     uint64_t m_lastInputTime;
 
     static EGLDisplay m_display;
@@ -375,11 +404,12 @@ extern "C" size_t LWE_EXPORT createWebViewInstance(
     const char* timezoneID,
     const std::function<::LWE::WebContainer::ExternalImageInfo(void)>&
         prepareImageCb,
-    const std::function<void(::LWE::WebContainer*, bool needsFlush)>& flushCb)
+    const std::function<void(::LWE::WebContainer*, bool needsFlush)>& flushCb,
+    bool useSWBackend)
 {
     ::LWE::WebViewFlutter* wv = new ::LWE::WebViewFlutter(
         x, y, width, height, devicePixelRatio, defaultFontName, locale,
-        timezoneID, prepareImageCb, flushCb);
+        timezoneID, prepareImageCb, flushCb, useSWBackend);
     return (size_t)wv->FetchWebContainer();
 }
 #endif

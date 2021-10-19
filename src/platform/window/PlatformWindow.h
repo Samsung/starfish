@@ -149,16 +149,16 @@ public:
 
     virtual bool glMakeCurrent()
     {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return true;
     }
     virtual void glSwapBuffers()
     {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     virtual void glMayNeedsSync()
     {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        // STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     void registerRenderingPrepareCallback(

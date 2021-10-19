@@ -47,6 +47,44 @@ bool g_DumpAsText_Async = false;
 int g_referenceTestState = 0;
 #endif
 
+#if defined(STARFISH_EFL_CAIRO)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
+#elif defined(STARFISH_EFL_CAIRO_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_ECORE_WAYLAND2_CAIRO_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_GLFW_CAIRO_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_EFL_HEADLESS)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::HEADLESS);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::MOCK);
+#elif defined(STARFISH_EFL_SKIA_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_EFL_SKIA_GB)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::SKIA);
+#elif defined(STARFISH_DALI)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
+#elif defined(STARFISH_TIZEN_WEARABLE_WIDGET)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
+#elif defined(STARFISH_ANDROID)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_WINDOWS)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_FLUTTER)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#endif
+
 static bool g_starfishGlobalInit = false;
 
 Starfish::Starfish(const char* localStorageFilePath,

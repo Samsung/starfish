@@ -40,6 +40,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
+#include "platform/window/PlatformWindowFactory.h"
 
 namespace Starfish {
 
@@ -303,8 +304,8 @@ Compositor* WindowImplGL::prepareCompositor()
     return Compositor::create3D(webView(), m_compostiorContext);
 }
 
-PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
-                                       uint32_t height)
+PlatformWindow* PlatformWindowFactory::createGl(Starfish* starfish,
+                                                uint32_t width, uint32_t height)
 {
     return new WindowImplGL(starfish, width, height);
 }

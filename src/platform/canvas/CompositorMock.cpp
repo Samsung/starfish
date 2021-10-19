@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include <SkMatrix.h>
 #include "core/modules/canvas/Compositor.h"
+#include "core/modules/canvas/CompositorFactory.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_MOCK)
 
@@ -141,26 +142,41 @@ public:
     }
 };
 
-size_t Compositor::maximumTextureSize()
+size_t CompositorFactory::maximumTextureSizeMock()
 {
     return 65535;
 }
 
-Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
-                                 CanvasSurface* surface)
+Compositor* CompositorFactory::create2dMock(WebView* webview,
+                                            CompositorContext* ctx,
+                                            CanvasSurface* surface)
 {
     return new CompositorMock(webview, surface);
 }
 
-Compositor* Compositor::create3D(WebView* starfish, CompositorContext* ctx)
+Compositor* CompositorFactory::create3dMock(WebView* starfish,
+                                            CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+bool CompositorFactory::supportsFilterEffectMock(size_t textureWidth,
+                                                 size_t textureHeight)
 {
     return false;
 }
+
+void CompositorFactory::destroyCompositorContextMock(
+    PlatformWindow* wnd, CompositorContext* ctxInput)
+{
+}
+
+CompositorContext* CompositorFactory::initCompositorContextMock(
+    PlatformWindow* wnd)
+{
+    return nullptr;
+}
+
 } // namespace Starfish
 
 #endif

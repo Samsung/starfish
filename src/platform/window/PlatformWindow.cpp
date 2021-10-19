@@ -38,6 +38,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
+#include "platform/window/PlatformWindowFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 Starfish::CanvasSurface* g_surfaceForScreehShot;
@@ -46,6 +47,34 @@ bool g_forceRendering = false;
 #endif
 
 namespace Starfish {
+
+extern int g_portWindowBackend;
+
+// The if-def statements below are temporary soluation to avoid affecting other
+// ports of LWE except flutter. In the future, It will be removed when LWE's all
+// ports are changed to a single binary.
+PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
+                                       uint32_t height)
+{
+    switch (static_cast<PORT_WINDOW_BACKEND>(g_portWindowBackend)) {
+#ifdef PORT_WINDOW_BACKEND_GB
+    case PORT_WINDOW_BACKEND::GB:
+        return PlatformWindowFactory::createGb(starfish, width, height);
+#endif
+#ifdef PORT_WINDOW_BACKEND_GL
+    case PORT_WINDOW_BACKEND::GL:
+        return PlatformWindowFactory::createGl(starfish, width, height);
+#endif
+#ifdef PORT_WINDOW_BACKEND_HEADLESS
+    case PORT_WINDOW_BACKEND::HEADLESS:
+        return PlatformWindowFactory::createHeadless(starfish, width, height);
+#endif
+    default:
+        break;
+    }
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
+}
 
 PlatformWindow::PlatformWindow(Starfish* starfish)
     : m_starfish(starfish)

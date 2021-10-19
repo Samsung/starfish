@@ -250,6 +250,20 @@ protected:
     float m_additionalPixelRatio;
 };
 
+namespace CanvasSurfaceFactory {
+#ifdef PORT_WINDOW_BACKEND_GL
+    CanvasSurface* createGl(PlatformWindow* window, size_t w, size_t h,
+                            float additionalPixelRatio,
+                            CanvasSurface::CanvasSurfaceFlag flag);
+#else
+    CanvasSurface* createSimple(PlatformWindow* window, size_t w, size_t h,
+                                float additionalPixelRatio,
+                                CanvasSurface::CanvasSurfaceFlag flag);
+#endif
+    CanvasSurface* createCanvasTargetSimple(uint8_t* buffer, size_t w, size_t h,
+                                            size_t stride);
+}; // namespace CanvasSurfaceFactory
+
 struct DrawImageInfo {
     double hScale;
     double vScale;
