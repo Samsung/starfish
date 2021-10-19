@@ -36,6 +36,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "platform/window/PlatformWindowFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -104,8 +105,8 @@ public:
     size_t m_stride;
 };
 
-PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
-                                       uint32_t height)
+PlatformWindow* PlatformWindowFactory::createGb(Starfish* starfish,
+                                                uint32_t width, uint32_t height)
 {
     return new WindowImplGB(starfish, width, height);
 }

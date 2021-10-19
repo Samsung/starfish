@@ -36,6 +36,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "platform/window/PlatformWindowFactory.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
@@ -95,8 +96,9 @@ public:
     uint32_t m_height;
 };
 
-PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
-                                       uint32_t height)
+PlatformWindow* PlatformWindowFactory::createHeadless(Starfish* starfish,
+                                                      uint32_t width,
+                                                      uint32_t height)
 {
     return new WindowImplHeadless(starfish, width, height);
 }

@@ -150,6 +150,10 @@ public:
                                 const char* defaultFontName, const char* locale,
                                 const char* timezoneID);
 
+    struct ExternalImageInfo {
+        void* imageAddress;
+    };
+
     struct RenderResult {
         size_t updatedX;
         size_t updatedY;
@@ -165,6 +169,13 @@ public:
                                  const RenderResult& renderResult)>& cb);
     void UpdateBuffer(void* buffer, unsigned width, unsigned height,
                       unsigned stride);
+
+    static WebContainer* CreateWithPlatformImage(
+        unsigned width, unsigned height,
+        const std::function<ExternalImageInfo(void)>& prepareImageCb,
+        const std::function<void(WebContainer*, bool needsFlush)>& flushCb,
+        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        const char* timezoneID);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
@@ -175,10 +186,6 @@ public:
             onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
-
-    struct ExternalImageInfo {
-        void* imageAddress;
-    };
 
     static WebContainer* CreateGLWithPlatformImage(
         unsigned width, unsigned height,

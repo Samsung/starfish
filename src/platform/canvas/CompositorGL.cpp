@@ -33,6 +33,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/modules/canvas/CompositorFactory.h"
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
@@ -716,6 +717,7 @@ public:
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     GLuint m_mainViewTexture;
     GLuint m_mainViewFBO;
+    GLuint m_mainViewRBO;
     EGLImageKHR m_mainViewImage;
 #endif
 
@@ -773,6 +775,7 @@ public:
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
         m_mainViewTexture = 0;
         m_mainViewFBO = 0;
+        m_mainViewRBO = 0;
 #endif
     }
 
@@ -849,6 +852,9 @@ public:
         glDeleteBuffers(1, &m_texTexPosBuffer);
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+        if (m_mainViewRBO) {
+            glDeleteRenderbuffers(1, &m_mainViewRBO);
+        }
         if (m_mainViewFBO) {
             glDeleteFramebuffers(1, &m_mainViewFBO);
         }
@@ -893,6 +899,8 @@ public:
     virtual void prepareExternalSurface(void* externalSurface) override
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_mainViewFBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_mainViewRBO);
+
         EGLDisplay display = eglGetCurrentDisplay();
 
         if (g_isSupported_EGL_NATIVE_SURFACE_TIZEN) {
@@ -1504,8 +1512,8 @@ public:
     }
 };
 
-void Compositor::destroyCompositorContext(PlatformWindow* wnd,
-                                          CompositorContext* ctxInput)
+void CompositorFactory::destroyCompositorContextGl(PlatformWindow* wnd,
+                                                   CompositorContext* ctxInput)
 {
     if (ctxInput) {
         CompositorContextGL* ctx = (CompositorContextGL*)ctxInput;
@@ -1513,7 +1521,8 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
     }
 }
 
-CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
+CompositorContext* CompositorFactory::initCompositorContextGl(
+    PlatformWindow* wnd)
 {
     wnd->glMakeCurrent();
 
@@ -1628,11 +1637,12 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
     glGenFramebuffers(1, &compositorContext->m_mainViewFBO);
+    glGenRenderbuffers(1, &compositorContext->m_mainViewRBO);
 #endif
     return compositorContext;
 }
 
-size_t Compositor::maximumTextureSize()
+size_t CompositorFactory::maximumTextureSizeGl()
 {
     return g_maxTextureSize;
 }
@@ -2345,9 +2355,9 @@ protected:
 #endif
 };
 
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
-                                     float additionalPixelRatio,
-                                     CanvasSurfaceFlag flag)
+CanvasSurface* CanvasSurfaceFactory::createGl(
+    PlatformWindow* wnd, size_t w, size_t h, float additionalPixelRatio,
+    CanvasSurface::CanvasSurfaceFlag flag)
 {
     return new CanvasSurfaceGL(wnd, w, h, additionalPixelRatio, flag);
 }
@@ -3780,13 +3790,17 @@ public:
             glViewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
                        s.viewport.height());
         } else {
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
 #if defined(PORT_BACKEND_GL_WITH_EXTERNAL_TBM)
+            if (m_compositorContext->m_mainViewRBO) {
+                glBindRenderbuffer(GL_RENDERBUFFER,
+                                   m_compositorContext->m_mainViewRBO);
+            }
             if (m_compositorContext->m_mainViewFBO) {
                 glBindFramebuffer(GL_FRAMEBUFFER,
                                   m_compositorContext->m_mainViewFBO);
             }
 #else
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
             setViewport();
@@ -3811,18 +3825,21 @@ protected:
     SkMatrix m_screenMatrix;
 };
 
-Compositor* Compositor::create3D(WebView* webView, CompositorContext* ctx)
+Compositor* CompositorFactory::create3dGl(WebView* webView,
+                                          CompositorContext* ctx)
 {
     return new CompositorImplGL(webView, ctx);
 }
 
-Compositor* Compositor::create2D(WebView* webView, CompositorContext* ctx,
-                                 CanvasSurface* surface)
+Compositor* CompositorFactory::create2dGl(WebView* webView,
+                                          CompositorContext* ctx,
+                                          CanvasSurface* surface)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+bool CompositorFactory::supportsFilterEffectGl(size_t textureWidth,
+                                               size_t textureHeight)
 {
     if (g_needsRGBShuffle) {
         return false;

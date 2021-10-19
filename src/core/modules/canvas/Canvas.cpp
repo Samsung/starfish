@@ -38,6 +38,8 @@
 
 namespace Starfish {
 
+extern int g_portWindowBackend;
+
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 #ifndef STARFISH_CANVAS_SURFACE_TILE_SIZE
 #define STARFISH_CANVAS_SURFACE_TILE_SIZE 128
@@ -45,7 +47,6 @@ size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 size_t CanvasSurface::g_canvasSurfaceTileSize =
     STARFISH_CANVAS_SURFACE_TILE_SIZE;
 
-#if !defined(PORT_COMPOSITOR_BACKEND_GL)
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
     CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h,
@@ -160,15 +161,39 @@ protected:
     size_t m_bufferStride;
 };
 
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
-                                     float additionalPixelRatio,
-                                     CanvasSurfaceFlag flag)
+#ifndef PORT_WINDOW_BACKEND_GL
+CanvasSurface* CanvasSurfaceFactory::createSimple(
+    PlatformWindow* wnd, size_t w, size_t h, float additionalPixelRatio,
+    CanvasSurface::CanvasSurfaceFlag flag)
 {
     return new CanvasSurfaceSimple(wnd, w, h, additionalPixelRatio);
 }
 #endif
 
-#if defined(PORT_WINDOW_BACKEND_GB)
+// The if-def statements below are temporary soluation to avoid affecting other
+// ports of LWE except flutter. In the future, It will be removed when LWE's all
+// ports are changed to a single binary.
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
+                                     float additionalPixelRatio,
+                                     CanvasSurfaceFlag flag)
+{
+    switch (static_cast<PORT_WINDOW_BACKEND>(g_portWindowBackend)) {
+#ifdef PORT_WINDOW_BACKEND_GL
+    case PORT_WINDOW_BACKEND::GL:
+        return CanvasSurfaceFactory::createGl(wnd, w, h, additionalPixelRatio,
+                                              flag);
+#else
+    case PORT_WINDOW_BACKEND::GB:
+    case PORT_WINDOW_BACKEND::HEADLESS:
+        return CanvasSurfaceFactory::createSimple(wnd, w, h,
+                                                  additionalPixelRatio, flag);
+#endif
+    default:
+        break;
+    }
+    return nullptr;
+}
+
 class CanvasSurfaceCanvasTarget : public CanvasSurface {
 public:
     CanvasSurfaceCanvasTarget(uint8_t* buffer, size_t w, size_t h,
@@ -267,13 +292,19 @@ protected:
     size_t m_pixelRatio;
 };
 
-CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
-                                                 size_t h, size_t stride)
+CanvasSurface* CanvasSurfaceFactory::createCanvasTargetSimple(uint8_t* buffer,
+                                                              size_t w,
+                                                              size_t h,
+                                                              size_t stride)
 {
     return new CanvasSurfaceCanvasTarget(buffer, w, h, stride);
 }
 
-#endif
+CanvasSurface* CanvasSurface::createCanvasTarget(uint8_t* buffer, size_t w,
+                                                 size_t h, size_t stride)
+{
+    return CanvasSurfaceFactory::createCanvasTargetSimple(buffer, w, h, stride);
+}
 
 CanvasState::CanvasState()
     : m_fillSource(new CanvasFillStrokeSource(Unit::Color()))

@@ -27,6 +27,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/modules/canvas/CompositorFactory.h"
 
 #include "SkCanvas.h"
 #include "SkPath.h"
@@ -338,25 +339,37 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-size_t Compositor::maximumTextureSize()
+size_t CompositorFactory::maximumTextureSizeSkia()
 {
     return 65535;
 }
 
-Compositor* Compositor::create2D(WebView* wv, CompositorContext* ctx,
-                                 CanvasSurface* surface)
+Compositor* CompositorFactory::create2dSkia(WebView* wv, CompositorContext* ctx,
+                                            CanvasSurface* surface)
 {
     return new CompositorImplSkia(wv, surface);
 }
 
-Compositor* Compositor::create3D(WebView* wv, CompositorContext* ctx)
+Compositor* CompositorFactory::create3dSkia(WebView* wv, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+bool CompositorFactory::supportsFilterEffectSkia(size_t textureWidth,
+                                                 size_t textureHeight)
 {
     return false;
+}
+
+void CompositorFactory::destroyCompositorContextSkia(
+    PlatformWindow* wnd, CompositorContext* ctxInput)
+{
+}
+
+CompositorContext* CompositorFactory::initCompositorContextSkia(
+    PlatformWindow* wnd)
+{
+    return nullptr;
 }
 
 } // namespace Starfish
