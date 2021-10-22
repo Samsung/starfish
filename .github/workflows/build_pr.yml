@@ -1,0 +1,116 @@
+name: Build Starfish
+
+on:
+  pull_request:
+
+jobs:
+  check_source:
+    runs-on: [ code-default ]
+    container:
+      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Check tidy
+        run: ./tool/check_tidy.py
+
+  build_x64:
+    needs: check_source
+    runs-on: [ self-hosted, code-2xlarge ]
+    container:
+      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      options: --user root
+    strategy:
+      matrix:
+        mode: [x64_glfw_debug]
+
+    # Set reasonable timeout value.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
+
+      - name: Build Starfish
+        run: /root/workspace/build.sh ${{ matrix.mode }}
+
+      - uses: CODE-Actions/upload-artifact@v2
+        if: matrix.mode == 'x64_glfw_debug'
+        with:
+          name: starfish-${{ matrix.mode }}
+          path: | 
+            ./out/debug/bin/lightweight-web-engine
+            ./out/debug/lib/*.so
+            ./build.ninja
+            ./rules.ninja
+
+      - name: Leave comment
+        if: ${{ failure() }}
+        uses: CODE-Actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Please check the build status.'
+            })
+
+  test:
+    needs: build_x64
+    timeout-minutes: 30
+    # After the firewall registraion is done, a code runner should also be added to test work.
+    # runs-on: [ self-hosted, code-2xlarge ]
+    runs-on: [ self-hosted ]
+    container:
+      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      options: --user root
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: false
+      - name: Checkout Testcase..
+        run: |
+          git submodule init
+          git submodule update test
+
+      - uses: CODE-Actions/download-artifact@v2
+        with:
+          name: starfish-x64_glfw_debug
+      
+      - name: Prepare Test
+        run: |
+          mkdir -p ~/.fonts
+          cp /root/workspace/Ahem.ttf ~/.fonts
+          chmod a+x $PWD/out/debug/bin/lightweight-web-engine
+          ln -s -f $PWD/out/debug/bin/lightweight-web-engine Starfish
+          ln -s $PWD/out/debug/lib/libnanomsg.so ./out/debug/lib/libnanomsg.so.5
+          ln -s $PWD/out/debug/lib/libcrypto.so ./out/debug/lib/libcrypto.so.1.1
+          ln -s $PWD/out/debug/lib/libssl.so ./out/debug/lib/libssl.so.1.1
+          /root/workspace/set_up_hosts.sh
+
+      - name: Build image diff tool
+        run: ninja install_pixel_test_dep
+ 
+      - name: Run internal_test
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py internal_test || exit 1
+
+      - name: Run reftest_all
+        run: |
+          xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1
+
