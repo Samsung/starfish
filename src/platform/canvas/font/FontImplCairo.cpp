@@ -468,6 +468,7 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     }
 
     size_t length = sv.length();
+    char32_t prev = UCHAR_INVALID_CODE;
     auto accessData = sv.bufferAccessData();
     for (size_t i = 0; i < length; i++) {
         char32_t ch = accessData.charAt(i);
@@ -479,6 +480,25 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
             (property == U_RIGHT_TO_LEFT_OVERRIDE) ||
             (property == U_DIR_NON_SPACING_MARK)) {
             return false;
+        }
+
+        if (i == 0) {
+            prev = ch;
+        } else {
+            auto c1 = u_getIntPropertyValue(ch, UCHAR_GRAPHEME_CLUSTER_BREAK);
+            auto c2 = u_getIntPropertyValue(prev, UCHAR_GRAPHEME_CLUSTER_BREAK);
+
+            // Rule GB9, x (Extend | ZWJ)
+            // Rule GB9a, x SpacingMark
+            if (c1 == U_GCB_EXTEND || c1 == U_GCB_SPACING_MARK ||
+                ch == 0x200D) {
+                return false;
+            }
+
+            // Rule GB9b, Prepend x
+            if (c2 == U_GCB_PREPEND) {
+                return false;
+            }
         }
 
         if (charMayContainsGraphicSymbol(ch)) {
