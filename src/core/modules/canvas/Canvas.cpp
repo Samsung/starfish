@@ -161,7 +161,7 @@ protected:
     size_t m_bufferStride;
 };
 
-#ifndef PORT_WINDOW_BACKEND_GL
+#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
 CanvasSurface* CanvasSurfaceFactory::createSimple(
     PlatformWindow* wnd, size_t w, size_t h, float additionalPixelRatio,
     CanvasSurface::CanvasSurfaceFlag flag)
@@ -182,7 +182,8 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
     case PORT_WINDOW_BACKEND::GL:
         return CanvasSurfaceFactory::createGl(wnd, w, h, additionalPixelRatio,
                                               flag);
-#else
+#endif
+#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
     case PORT_WINDOW_BACKEND::GB:
     case PORT_WINDOW_BACKEND::HEADLESS:
         return CanvasSurfaceFactory::createSimple(wnd, w, h,

@@ -255,7 +255,8 @@ namespace CanvasSurfaceFactory {
     CanvasSurface* createGl(PlatformWindow* window, size_t w, size_t h,
                             float additionalPixelRatio,
                             CanvasSurface::CanvasSurfaceFlag flag);
-#else
+#endif
+#if defined(PORT_WINDOW_BACKEND_GB) || defined(PORT_WINDOW_BACKEND_HEADLESS)
     CanvasSurface* createSimple(PlatformWindow* window, size_t w, size_t h,
                                 float additionalPixelRatio,
                                 CanvasSurface::CanvasSurfaceFlag flag);
