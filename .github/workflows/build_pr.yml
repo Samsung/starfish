@@ -37,7 +37,7 @@ jobs:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: false
+          submodules: true
 
       - name: Reset Submodule
         run: git submodule foreach --recursive git reset --hard

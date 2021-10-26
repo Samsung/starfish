@@ -1,0 +1,27 @@
+# Publishing
+'needs-publishing':
+  - inc/**/*
+
+# android
+'webview for android':
+  - src/public/bridge/android/**/*
+
+# dali
+'webview for dali':
+  - src/public/bridge/dali/**/*
+
+# ecore_wayland2
+'webview for ecore_wayland2':
+  - src/public/bridge/ecore_wayland2/**/*
+
+# efl
+'webview for efl':
+  - src/public/bridge/efl/**/*
+
+# flutter
+'webview for flutter':
+  - src/public/bridge/flutter/**/*
+
+# glfw
+'webview for glfw':
+  - src/public/bridge/glfw/**/*
