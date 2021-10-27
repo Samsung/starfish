@@ -46,7 +46,7 @@ public:
     virtual String* value() override;
     virtual void setValue(String* value) override;
 
-    size_t selectedIndex();
+    int selectedIndex();
     void setSelectedIndex(size_t index);
 
     String* type() override;
@@ -97,6 +97,22 @@ public:
 private:
     void resetFromOption(GCVector<HTMLOptionElement*>& list,
                          HTMLOptionElement* resetFrom);
+    void addSelectedIndex(StringBuilder& data);
+    void addBaseStyle(StringBuilder& data);
+    void addChildren(StringBuilder& data);
+    void addOption(HTMLOptionElement* option, StringBuilder& data);
+    void addSeparator(HTMLBRElement* br, StringBuilder& data);
+    void addElementStyle(HTMLElement* option, StringBuilder& data);
+
+    void addProperty(const char* name, String* value, StringBuilder& data);
+    void addProperty(const char* name, int value, StringBuilder& data);
+    void addProperty(const char* name, bool value, StringBuilder& data);
+    void addProperty(const char* name, float value, StringBuilder& data);
+    void addProperty(const char* name, double value, StringBuilder& data);
+    void addProperty(const char* name, const GCVector<String*>& value,
+                     StringBuilder& data);
+    void addProperty(const char* name, const Unit::Rect& value,
+                     StringBuilder& data);
 
     void showDropdownMenu();
     void onDropdownMenuItemSelected(int position);

@@ -333,11 +333,11 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_controlsList = QualifiedName(
         AtomicString::createAtomicString(starfish, "controlsList"));
     m_kind = QualifiedName(AtomicString::createAtomicString(starfish, "kind"));
-    m_label =
-        QualifiedName(AtomicString::createAtomicString(starfish, "label"));
     m_srclang =
         QualifiedName(AtomicString::createAtomicString(starfish, "srclang"));
 #endif
+    m_label =
+        QualifiedName(AtomicString::createAtomicString(starfish, "label"));
     m_fill = QualifiedName(AtomicString::createAtomicString(starfish, "fill"));
     m_fillRule =
         QualifiedName(AtomicString::createAtomicString(starfish, "fill-rule"));

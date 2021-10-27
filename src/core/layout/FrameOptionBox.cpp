@@ -24,10 +24,23 @@
 #include "FrameOptionBox.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLSelectElement.h"
+#include "core/dom/PseudoElement.h"
+#include "core/dom/Text.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameSelectBox.h"
-
+#include "core/layout/Frame.h"
+#include "core/layout/FrameText.h"
+#include "core/layout/FrameTreeBuilder.h"
 namespace Starfish {
+
+static ComputedStyle* createStyleFrom(Node* node)
+{
+    ComputedStyle* childStyle = new ComputedStyle(node->style());
+    childStyle->loadResources(node);
+    childStyle->arrangeStyleValues(node->style(), node);
+    childStyle->setDisplay(DisplayValue::InlineDisplayValue);
+    return childStyle;
+}
 
 void* FrameOptionBox::operator new(size_t size)
 {
@@ -62,6 +75,53 @@ FrameSelectBox* FrameOptionBox::selectBox()
     }
 
     return nullptr;
+}
+
+FrameOptionBox* FrameOptionBox::buildFrameTree(Node* currentNode,
+                                               FrameTreeBuilderContext& ctx,
+                                               bool force)
+{
+    FrameOptionBox* currentFrame = nullptr;
+    FrameBlockBox* parent = ctx.currentBlockContainer();
+    if (currentNode->needsFrameTreeBuild() || force) {
+        currentFrame = new FrameOptionBox(currentNode, nullptr);
+        force = true;
+    } else {
+        currentFrame = currentNode->frame()->asFrameOptionBox();
+    }
+
+    if (currentNode->childNeedsFrameTreeBuild() || force) {
+        ctx.setCurrentBlockContainer(currentFrame);
+        if (currentNode->asHTMLOptionElement()->hasLabel()) {
+            // Generate pseudo element
+            PseudoElement* textElement =
+                new PseudoElement(currentNode->document(), nullptr,
+                                  PseudoElementType::PseudoElementFormOnly);
+            textElement->setParentNode(currentNode);
+
+            // Set style
+            ComputedStyle* pseudoStyle = createStyleFrom(currentNode);
+            pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
+            textElement->setStyle(pseudoStyle);
+
+            HTMLOptionElement* option = currentNode->asHTMLOptionElement();
+            // Edit text value to show
+            String* textValue = option->label();
+            // Generate text node
+            Text* textNode = new Text(currentNode->document(), textValue);
+            textNode->setParentNode(textElement);
+            ComputedStyle* textStyle = createStyleFrom(textElement);
+            textNode->setStyle(textStyle);
+
+            FrameText* frameText = new FrameText(textNode, textStyle);
+            textNode->setFrame(frameText);
+            currentFrame->appendChild(frameText);
+        }
+        ctx.setCurrentBlockContainer(parent);
+    }
+
+    STARFISH_ASSERT(currentFrame);
+    return currentFrame;
 }
 
 void FrameOptionBox::layout(LayoutContext& ctx,

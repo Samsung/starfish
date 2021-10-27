@@ -54,6 +54,8 @@ public:
     virtual void setValue(String* value) override;
     String* text();
     void setText(String* value);
+    String* label();
+    void setLabel(String* value);
     int index();
 
     // Other methods
@@ -85,9 +87,15 @@ public:
         return false;
     }
 
+    bool hasLabel()
+    {
+        return m_hasLabel;
+    }
+
 private:
     bool m_dirtiness;
     bool m_selectedness;
+    bool m_hasLabel;
 };
 } // namespace Starfish
 #endif

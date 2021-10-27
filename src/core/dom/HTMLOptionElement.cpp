@@ -60,6 +60,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document,
     : HTMLFormControl(document, qname)
     , m_dirtiness(false)
     , m_selectedness(false)
+    , m_hasLabel(false)
 {
     if (!text->equals(String::emptyString)) {
         setTextContent(text);
@@ -195,7 +196,26 @@ String* HTMLOptionElement::text()
 
 void HTMLOptionElement::setText(String* value)
 {
-    setTextContent(value);
+    if (value->isEmpty()) {
+        m_hasLabel = false;
+    } else {
+        m_hasLabel = true;
+        setTextContent(value);
+    }
+}
+
+String* HTMLOptionElement::label()
+{
+    String* val = getAttributeOrEmpty(starfish()->staticStrings()->m_label);
+    if (val->isEmpty()) {
+        return text();
+    }
+    return val;
+}
+
+void HTMLOptionElement::setLabel(String* value)
+{
+    setAttribute(starfish()->staticStrings()->m_label, value);
 }
 
 int HTMLOptionElement::index()
@@ -280,6 +300,10 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
             if (select) {
                 select->resetFromOption(this);
             }
+        }
+    } else if (name == starfish()->staticStrings()->m_label) {
+        if (!val->isEmpty()) {
+            m_hasLabel = true;
         }
     }
 }
