@@ -434,9 +434,9 @@ public:
     QualifiedName m_controls;
     QualifiedName m_controlsList;
     QualifiedName m_kind;
-    QualifiedName m_label;
     QualifiedName m_srclang;
 #endif
+    QualifiedName m_label;
     QualifiedName m_dirname;
     QualifiedName m_readonly;
     QualifiedName m_fill;

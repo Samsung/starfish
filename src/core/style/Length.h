@@ -301,6 +301,7 @@ public:
         return !operator==(src);
     }
 
+    String* toString() const;
     String* dumpString() const;
 
 protected:

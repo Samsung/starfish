@@ -43,7 +43,9 @@ public:
     }
 
     FrameSelectBox* selectBox();
-
+    static FrameOptionBox* buildFrameTree(Node* current,
+                                          FrameTreeBuilderContext& ctx,
+                                          bool force);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 

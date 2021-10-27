@@ -267,13 +267,18 @@ bool Length::compareWithSlowCase(const Length& src) const
 
 String* Length::dumpString() const
 {
+    return toString();
+}
+
+String* Length::toString() const
+{
     if (isCalc()) {
         return m_data.m_calcData->toString();
     }
 
     char temp[100];
     if (isFixed()) {
-        snprintf(temp, sizeof(temp), "%.1f", fixed());
+        snprintf(temp, sizeof(temp), "%.1fpx", fixed());
     } else if (isPercent()) {
         snprintf(temp, sizeof(temp), "%.1f%%", percent());
     } else if (isViewportPercent()) {

@@ -821,7 +821,7 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
     } else if (current->isHTMLOptGroupElement()) {
         return new FrameOptGroupBox(current, nullptr);
     } else if (current->isHTMLOptionElement()) {
-        return new FrameOptionBox(current, nullptr);
+        return FrameOptionBox::buildFrameTree(current, ctx, force);
     } else if (display == DisplayValue::FlexDisplayValue ||
                display == DisplayValue::InlineFlexDisplayValue) {
         return new FrameFlexibleBox(current, nullptr);
@@ -1037,10 +1037,15 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
     } else {
         currentFrame = current->frame();
-        if (currentFrame && currentFrame->isFrameInputBox() &&
-            current->childNeedsFrameTreeBuild()) {
-            FrameInputBox::buildFrameTree(current, ctx, false);
-            current->clearChildNeedsFrameTreeBuild();
+        if (currentFrame && current->childNeedsFrameTreeBuild()) {
+            if (currentFrame->isFrameInputBox()) {
+                FrameInputBox::buildFrameTree(current, ctx, false);
+                current->clearChildNeedsFrameTreeBuild();
+            } /*else if (currentFrame->isFrameOptionBox()){
+                FrameOptionBox::buildFrameTree(current, ctx, false);
+                current->clearChildNeedsFrameTreeBuild();
+            }
+            */
         }
     }
 

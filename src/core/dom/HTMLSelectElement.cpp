@@ -24,13 +24,18 @@
 
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
-#include "core/dom/HTMLOptionElement.h"
+#include "core/dom/DOMRect.h"
+#include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLOptionsCollection.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
+#include "core/layout/Frame.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
+#include "core/page/Window.h"
+#include "core/style/ComputedStyle.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
@@ -306,7 +311,7 @@ bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
     return true;
 }
 
-size_t HTMLSelectElement::selectedIndex()
+int HTMLSelectElement::selectedIndex()
 {
     GCVector<HTMLOptionElement*> list;
     computeListOfOptionElements(this, list);
@@ -462,6 +467,7 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
 
 void HTMLSelectElement::showDropdownMenu()
 {
+#ifdef EXTERNAL_POPUP_MENU
     // register the callback to be called when an item is selected
     webView()->platformWindow()->registerCallbackHandler(
         WindowHandlerOnDropdownMenuItemSelected, [this](void* param) -> void {
@@ -503,6 +509,353 @@ void HTMLSelectElement::showDropdownMenu()
 
     webView()->platformWindow()->callHandler(WindowHandlerShowDropdownMenu,
                                              (void*)p);
+#else
+    if (frame() == nullptr) {
+        return;
+    }
+
+    if (frame()->needsLayout()) {
+        setNeedsFrameTreeBuild();
+    }
+
+    StringBuilder builder;
+    builder.appendString("window.dialogArguments = {\n");
+    addSelectedIndex(builder);
+    addBaseStyle(builder);
+    addChildren(builder);
+    addProperty("anchorRectInScreen", getBoundingClientRect(), builder);
+    addProperty("zoomFactor", 1, builder);
+    addProperty("scaleFactor", webView()->screenInfo().devicePixelRatio,
+                builder);
+    addProperty("isRTL",
+                style()->direction() == DirectionValue::RtlDirectionValue,
+                builder);
+    builder.appendString("};\n");
+
+    builder.appendString("var iframeId = 'STARFISH_IFRAME';\n");
+    DOMRect* rect = getBoundingClientRect();
+    builder.appendString("var rect");
+    builder.appendString("= {");
+    addProperty("x", rect->x(), builder);
+    addProperty("y", rect->y(), builder);
+    addProperty("width", rect->width(), builder);
+    addProperty("height", rect->height(), builder);
+    builder.appendString("};\n");
+
+    const char pickerJs[] =
+#include "core/dom/picker.js"
+        ;
+    String* picker = String::createASCIIString(pickerJs);
+    builder.appendString(picker);
+
+    String* script = builder.finalize();
+    window()->webView()->evaluateJavaScript(script);
+#endif
+    // STARFISH_LOG_INFO("Picker Script:\n%s\n",
+    // script->toUTF8NonGCString().c_str());
+}
+
+static String* fontWeightToString(FontWeightValue weight)
+{
+    switch (weight) {
+    case FontWeightValue::NormalFontWeightValue:
+        return String::fromUTF8("normal");
+    case FontWeightValue::BoldFontWeightValue:
+        return String::fromUTF8("bold");
+    case FontWeightValue::BolderFontWeightValue:
+        return String::fromUTF8("bolder");
+    case FontWeightValue::LighterFontWeightValue:
+        return String::fromUTF8("lighter");
+    case FontWeightValue::OneHundredFontWeightValue:
+        return String::fromUTF8("100");
+    case FontWeightValue::TwoHundredsFontWeightValue:
+        return String::fromUTF8("200");
+    case FontWeightValue::ThreeHundredsFontWeightValue:
+        return String::fromUTF8("300");
+    case FontWeightValue::FourHundredsFontWeightValue:
+        return String::fromUTF8("400");
+    case FontWeightValue::FiveHundredsFontWeightValue:
+        return String::fromUTF8("500");
+    case FontWeightValue::SixHundredsFontWeightValue:
+        return String::fromUTF8("600");
+    case FontWeightValue::SevenHundredsFontWeightValue:
+        return String::fromUTF8("700");
+    case FontWeightValue::EightHundredsFontWeightValue:
+        return String::fromUTF8("800");
+    case FontWeightValue::NineHundredsFontWeightValue:
+        return String::fromUTF8("900");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
+    }
+}
+
+static String* fontStyleToString(FontStyleValue fontStyle)
+{
+    switch (fontStyle) {
+    case FontStyleValue::NormalFontStyleValue:
+        return String::fromUTF8("normal");
+    case FontStyleValue::ItalicFontStyleValue:
+        return String::fromUTF8("italic");
+    case FontStyleValue::ObliqueFontStyleValue:
+        return String::fromUTF8("oblique");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
+    }
+}
+
+static String* textTransformToString(TextTransformValue textTransform)
+{
+    switch (textTransform) {
+    case TextTransformValue::NoneTextTransformValue:
+        return String::fromUTF8("none");
+    case TextTransformValue::CapitalizeTextTransformValue:
+        return String::fromUTF8("capitalize");
+    case TextTransformValue::UppercaseTextTransformValue:
+        return String::fromUTF8("uppercase");
+    case TextTransformValue::LowercaseTextTransformValue:
+        return String::fromUTF8("lowercase");
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
+    }
+}
+
+void HTMLSelectElement::addSelectedIndex(StringBuilder& data)
+{
+    addProperty("selectedIndex", selectedIndex(), data);
+}
+
+void HTMLSelectElement::addBaseStyle(StringBuilder& data)
+{
+    ComputedStyle* s = style();
+    data.appendString("baseStyle: {\n");
+
+    addProperty("backgroundColor", s->backgroundColor().toHTMLColorCodeString(),
+                data);
+    addProperty("color", s->color().toHTMLColorCodeString(), data);
+    addProperty("textTransform", textTransformToString(s->textTransform()),
+                data);
+    addProperty("fontSize", s->fontSize().toString(), data);
+    addProperty("fontStyle", fontStyleToString(s->fontStyle()), data);
+    addProperty("fontVariant", "normal", data);
+
+    size_t len = s->fontFamily()->m_length;
+    data.appendString("fontFamily: [\n");
+    for (size_t i = 0; i < len; ++i) {
+        data.appendString("'");
+        data.appendString(s->fontFamily()[i + 1].m_familyName);
+        data.appendString("'");
+        if (i + i < len) {
+            data.appendString(", ");
+        }
+    }
+    data.appendString("]\n");
+
+    data.appendString("},\n");
+}
+
+void HTMLSelectElement::addChildren(StringBuilder& data)
+{
+    data.appendString("children: [\n");
+    size_t len = options()->length();
+    for (size_t i = 0; i < len; ++i) {
+        Element* child = options()->item(i);
+        if (child->isHTMLOptionElement()) {
+            addOption(child->asHTMLOptionElement(), data);
+        } else if (child->isHTMLBRElement()) {
+            addSeparator(child->asHTMLBRElement(), data);
+        } else if (child->isHTMLOptGroupElement()) {
+            // TODO: Implement optGroup
+        }
+    }
+    data.appendString("],\n");
+}
+
+void HTMLSelectElement::addOption(HTMLOptionElement* element,
+                                  StringBuilder& data)
+{
+    data.appendString("{");
+    addProperty("label", element->label(), data);
+    addProperty("value", element->value(), data);
+    if (!element->title()->isEmpty()) {
+        addProperty("title", element->title(), data);
+    }
+    String* ariaLabel =
+        element->getAttributeOrEmpty(starfish()->staticStrings()->m_ariaLabel);
+    if (!ariaLabel->isEmpty()) {
+        addProperty("ariaLabel", ariaLabel, data);
+    }
+    if (element->disabled()) {
+        addProperty("disabled", true, data);
+    }
+    addElementStyle(element, data);
+    data.appendString("},");
+}
+
+void HTMLSelectElement::addSeparator(HTMLBRElement* element,
+                                     StringBuilder& data)
+{
+    data.appendString("{\n");
+    data.appendString("type: \"separator\",\n");
+    addProperty("title", element->title(), data);
+    String* ariaLabel =
+        element->getAttributeOrEmpty(starfish()->staticStrings()->m_ariaLabel);
+    if (!ariaLabel->isEmpty()) {
+        addProperty("ariaLabel", ariaLabel, data);
+    }
+    if (element) {
+        addProperty("disabled", true, data);
+    }
+    addElementStyle(element, data);
+    data.appendString("},");
+}
+
+void HTMLSelectElement::addElementStyle(HTMLElement* element,
+                                        StringBuilder& data)
+{
+    ComputedStyle* s = style();
+    data.appendString("style: {\n");
+
+    if (s->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        addProperty("visibility", String::fromUTF8("hidden"), data);
+    }
+    if (s->display() == DisplayValue::NoneDisplayValue) {
+        addProperty("display", String::fromUTF8("none"), data);
+    }
+
+    ComputedStyle* baseStyle = element->parentElement()->style();
+    if (baseStyle->direction() == s->direction()) {
+        addProperty(
+            "direction",
+            String::fromUTF8(s->direction() == DirectionValue::RtlDirectionValue
+                                 ? "rtl"
+                                 : "ltr"),
+            data);
+    }
+    if (s->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
+        addProperty("unicodeBidi", String::fromUTF8("bidi-override"), data);
+    }
+
+    Unit::Color fgColor = s->color();
+    if (baseStyle->color() != fgColor) {
+        addProperty("color", fgColor.toHTMLColorCodeString(), data);
+    }
+    Unit::Color bgColor = s->backgroundColor();
+    if (baseStyle->color() != bgColor && bgColor != Unit::Color()) {
+        addProperty("backgroundColor", bgColor.toHTMLColorCodeString(), data);
+    }
+
+    if (baseStyle->fontSize() != s->fontSize()) {
+        addProperty("fontSize", s->fontSize().toString(), data);
+    }
+
+    if (baseStyle->fontWeight() != s->fontWeight()) {
+        addProperty("fontWeight", fontWeightToString(s->fontWeight()), data);
+    }
+
+    if (baseStyle->fontFamily() != s->fontFamily()) {
+        size_t len = s->fontFamily()->m_length;
+        data.appendString("fontFamily: [\n");
+        for (size_t i = 0; i < len; ++i) {
+            data.appendString("'");
+            data.appendString(s->fontFamily()[i + 1].m_familyName);
+            data.appendString("'");
+            if (i + i < len) {
+                data.appendString(", ");
+            }
+        }
+        data.appendString("]\n");
+    }
+
+    if (baseStyle->fontStyle() != s->fontStyle()) {
+        addProperty("fontStyle", fontStyleToString(s->fontStyle()), data);
+    }
+    if (baseStyle->textTransform() != s->textTransform()) {
+        addProperty("textTransform", textTransformToString(s->textTransform()),
+                    data);
+    }
+
+    data.appendString("},\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, String* value,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": '");
+    data.appendString(value);
+    data.appendString("',\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, int value,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": ");
+    data.appendString(String::fromInt(value));
+    data.appendString(",\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, bool value,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": ");
+    if (value) {
+        data.appendString("true");
+    } else {
+        data.appendString("false");
+    }
+    data.appendString(",\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, float value,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": ");
+    data.appendString(String::fromFloat(value));
+    data.appendString(",\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, double value,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": ");
+    data.appendString(String::fromDouble(value));
+    data.appendString(",\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name,
+                                    const GCVector<String*>& values,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": [");
+    for (size_t i = 0; i < values.size(); ++i) {
+        if (i) {
+            data.appendString(", ");
+        }
+        data.appendString("'");
+        data.appendString(values[i]);
+        data.appendString("'");
+    }
+    data.appendString("],\n");
+}
+
+void HTMLSelectElement::addProperty(const char* name, const Unit::Rect& rect,
+                                    StringBuilder& data)
+{
+    data.appendString(name, strlen(name));
+    data.appendString(": {");
+    addProperty("x", rect.x(), data);
+    addProperty("y", rect.y(), data);
+    addProperty("width", rect.width(), data);
+    addProperty("height", rect.height(), data);
+    data.appendString("},\n");
 }
 
 void HTMLSelectElement::onDropdownMenuItemSelected(int position)
