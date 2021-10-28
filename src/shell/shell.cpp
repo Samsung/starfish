@@ -549,9 +549,11 @@ int main(int argc, char* argv[])
             settings.SetNeedsDownScaleImageResourceLargerThan(
                 needsDownScaleImageResourceLargerThan);
         }
+#ifndef TIZEN_COMPAT_HEADER_5_0
         if (!scrollbarVisible) {
             settings.SetScrollbarVisible(scrollbarVisible);
         }
+#endif
         settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);
     }
