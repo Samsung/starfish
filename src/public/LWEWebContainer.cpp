@@ -272,10 +272,12 @@ void Settings::SetNeedsDownScaleImageResourceLargerThan(uint32_t demention)
     m_needsDownScaleImageResourceLargerThan = demention;
 }
 
+#ifndef TIZEN_COMPAT_HEADER_5_0
 void Settings::SetScrollbarVisible(bool visible)
 {
     m_scrollbarVisible = visible;
 }
+#endif
 
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
@@ -892,7 +894,9 @@ Settings WebContainer::GetSettings()
         TO_WEBVIEW(m_impl)->needsDownloadWebFontsEarly());
     result.SetNeedsDownScaleImageResourceLargerThan(
         TO_WEBVIEW(m_impl)->needsDownScaleImageResourceLargerThan());
+#ifndef TIZEN_COMPAT_HEADER_5_0
     result.SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
+#endif
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -1143,7 +1147,9 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setUseHttp2(settings.UseHttp2());
     TO_WEBVIEW(m_impl)->setNeedsDownScaleImageResourceLargerThan(
         settings.NeedsDownScaleImageResourceLargerThan());
+#ifndef TIZEN_COMPAT_HEADER_5_0
     TO_WEBVIEW(m_impl)->setScrollbarVisible(settings.ScrollbarVisible());
+#endif
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
