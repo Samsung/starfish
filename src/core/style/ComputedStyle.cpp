@@ -681,6 +681,12 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         setFill(s);
     }
 
+    if (stroke() != InheritedStylesRareData().m_stroke) {
+        auto s = stroke();
+        s->updateCurrentColorToFixedColorIfNeeds(color());
+        setStroke(s);
+    }
+
     StyleBackgroundData* background = this->background();
     if (background) {
         background->checkComputed(m_inheritedStyles.m_color);
