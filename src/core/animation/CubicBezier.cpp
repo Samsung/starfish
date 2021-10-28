@@ -23,7 +23,7 @@
 
 namespace Starfish {
 
-static const float bezierEpsilon = 1e-7;
+static const float bezierEpsilon = 1e-4;
 
 CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2)
 {

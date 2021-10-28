@@ -2449,7 +2449,9 @@ bool StackingContext::fillGraphicsBufferContents(
     } else {
         auto iter =
             globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
-        iter->second.graphicsBufferHolder = nullptr;
+        if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
+            iter->second.graphicsBufferHolder = nullptr;
+        }
     }
 
     if (m_owner->hasOwnGraphicsBufferMethod()) {

@@ -1506,7 +1506,8 @@ void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
                                             auto sum =
                                                 textWidth + overflowStringWidth;
 
-                                            while (sum > lineBoxContentWidth) {
+                                            while (text.length() &&
+                                                   sum > lineBoxContentWidth) {
                                                 text.setEnd(text.end() - 1);
                                                 textWidth =
                                                     fnt->measureText(text);
