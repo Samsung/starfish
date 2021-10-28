@@ -610,7 +610,14 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             } else if (!left.isAuto() && !right.isAuto()) {
                 computeContentWidth(ctx, cb, data.m_contentWidth);
                 if (width.isAuto()) {
-                    setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
+                    if (parent()->isAnonymous() &&
+                        parent()->parent()->isFrameFlexibleBox() &&
+                        !parent()->isFlexItem()) {
+                        moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
+                            this);
+                    } else {
+                        setX(data.m_left + FrameBox::marginLeft() - data.m_absX);
+                    }
                 } else {
                     computeHorizontalMargin(data.m_contentWidth - data.m_left -
                                                 data.m_right,
