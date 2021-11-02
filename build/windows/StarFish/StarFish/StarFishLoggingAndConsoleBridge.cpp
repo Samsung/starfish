@@ -58,7 +58,7 @@ __declspec(thread) bool g_postLogMessageToThreadMessageQueue = false;
 
 void forwardPrintingLogInfo(const char *fmt ...)
 {
-    char buf[1024];
+    char buf[4096];
     va_list myargs;
     va_start(myargs, fmt);
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);
@@ -77,7 +77,7 @@ void forwardPrintingLogInfo(const char *fmt ...)
 }
 void forwardPrintingLogError(const char *fmt ...)
 {
-    char buf[1024];
+    char buf[4096];
     va_list myargs;
     va_start(myargs, fmt);
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);
@@ -96,7 +96,7 @@ void forwardPrintingLogError(const char *fmt ...)
 }
 void forwardPrintingLogWarn(const char *fmt ...)
 {
-    char buf[1024];
+    char buf[4096];
     va_list myargs;
     va_start(myargs, fmt);
     int writtenLen = vsnprintf(buf, sizeof buf, fmt, myargs);

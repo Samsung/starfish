@@ -44,8 +44,6 @@
 #include "Starfish.h"
 #include "Profiling.h"
 
-#include <sys/time.h>
-
 #if defined(OS_WINDOWS)
 // https : // gist.github.com/ugovaretto/5875385
 #include <time.h>
@@ -60,6 +58,11 @@
 struct timezone {
     int tz_minuteswest; /* minutes W of Greenwich */
     int tz_dsttime;     /* type of dst correction */
+};
+
+struct timeval {
+    time_t tv_sec;
+    unsigned int tv_usec;
 };
 
 int gettimeofday(struct timeval *tv, struct timezone *tz)
@@ -93,6 +96,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
     return 0;
 }
+#else
+#include <sys/time.h>
 #endif
 
 namespace Starfish {

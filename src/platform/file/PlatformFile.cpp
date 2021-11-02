@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 
 #if defined(OS_WINDOWS)
+#include <Windows.h>
 #include <locale>
 #include <codecvt>
 #include <string>
@@ -108,7 +109,11 @@ Nullable<std::string> PlatformFileUtil::absolutePath(
 {
     std::string prefix("file://");
     if (filePath.find("file://") == 0) {
+#if defined(OS_WINDOWS)
+        auto s = sizeof("file://");
+#else
         auto s = sizeof("file://") - 1;
+#endif
         return absolutePath(filePath.substr(s, filePath.length() - s));
     }
 
@@ -220,12 +225,35 @@ private:
     FILE* m_fp;
 };
 
+#if defined(OS_WINDOWS)
+static std::wstring toUtf16(std::string str)
+{
+    std::wstring ret;
+    int len =
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), NULL, 0);
+    if (len > 0) {
+        ret.resize(len);
+        MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &ret[0],
+                            len);
+    }
+    return ret;
+}
+#endif
+
 std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
                                                  FileMode mode)
 {
+    // windows is cannot use utf-8 encoded filename if there is non-ASCII char
+    // we should convert it as utf-16
+#if defined(OS_WINDOWS)
+    struct _stat64i32 s;
+    memset(&s, 0, sizeof(struct _stat64i32));
+    int r = _wstat(toUtf16(filePath).data(), &s);
+#else
     struct stat s;
     memset(&s, 0, sizeof(struct stat));
     int r = stat(filePath.data(), &s);
+#endif
     if (r < 0 && mode == FileMode::Read) {
         return nullptr;
     }
@@ -234,6 +262,15 @@ std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
         return nullptr;
     }
 
+#if defined(OS_WINDOWS)
+    const wchar_t* m = L"rb";
+    if (mode == FileMode::Write) {
+        m = L"wb";
+    } else if (mode == FileMode::ReadWrite) {
+        m = L"wb+";
+    }
+    FILE* fp = _wfopen(toUtf16(filePath).data(), m);
+#else
     const char* m = "rb";
     if (mode == FileMode::Write) {
         m = "wb";
@@ -241,6 +278,8 @@ std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
         m = "wb+";
     }
     FILE* fp = fopen(filePath.data(), m);
+#endif
+
     if (fp) {
         return std::unique_ptr<PlatformFile>(
             new PlatformFilePosix(fp, filePath));

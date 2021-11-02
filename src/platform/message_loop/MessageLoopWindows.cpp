@@ -34,6 +34,7 @@ namespace Starfish {
 
 #define IDLE_MESSAGE (WM_USER + 20)
 #define IDLE_MESSAGE_FROM_OTHER_THREAD (WM_USER + 21)
+#define IDLE_MESSAGE_INVOKE_NAVIGATE (WM_USER + 22)
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -118,8 +119,14 @@ public:
             STARFISH_ASSERT(_CrtCheckMemory());
             delete id;
         } break;
+        case IDLE_MESSAGE_INVOKE_NAVIGATE: {
+            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
+                self->m_idlersFromOtherThread.size() == 0) {
+                PostMessage(NULL, WM_QUIT, 0, 0);
+            }
+        }
         default:
-            MessageLoopMixin::processMessage(message);
+            MessageLoopMixin::processMessage(self, message);
             break;
         }
     }

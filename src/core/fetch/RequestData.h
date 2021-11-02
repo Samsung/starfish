@@ -33,7 +33,7 @@ enum class MethodType {
     HEAD,
     POST,
     PUT,
-    DELETE,
+    DELETE_METHOD,
     CONNECT,
     OPTIONS,
     TRACE,

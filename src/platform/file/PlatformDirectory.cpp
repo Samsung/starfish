@@ -267,7 +267,8 @@ public:
                 !strncmp(entry->d_name, "..", 2)) {
                 continue;
             }
-            listFiles.push_back(String::fromUTF8(entry->d_name));
+            listFiles.push_back(
+                String::fromUTF8(entry->d_name, strlen(entry->d_name)));
         }
         return listFiles;
     }

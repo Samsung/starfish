@@ -25,6 +25,15 @@
 #include "core/modules/networking/SocketLWS.h"
 #include "core/modules/networking/LWSRunnable.h"
 
+#if defined(STARFISH_WINDOWS)
+extern "C" {
+errno_t strerror_r(char* buffer, size_t sizeInBytes, int errnum)
+{
+    return strerror_s(buffer, sizeInBytes, errnum);
+}
+}
+#endif
+
 namespace Starfish {
 
 LWSRunnable::LWSRunnable(MessageLoop* messageLoop, SocketLWS* socket)

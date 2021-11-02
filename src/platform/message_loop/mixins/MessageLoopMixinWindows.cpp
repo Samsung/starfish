@@ -63,7 +63,8 @@ void MessageLoopMixin::onDestroyed()
     g_invokeNavigateData = nullptr;
 }
 
-void MessageLoopMixin::processMessage(MessageLoop* self, const MSG& message);
+void MessageLoopMixin::processMessage(MessageLoopMixin* self,
+                                      const MSG& message)
 {
     switch (message.message) {
     case IDLE_MESSAGE_INVOKE_NAVIGATE: {
@@ -75,11 +76,6 @@ void MessageLoopMixin::processMessage(MessageLoop* self, const MSG& message);
             g_invokeNavigateData = nullptr;
         }
         GC_FREE((void*)message.wParam);
-
-        if (self->m_inClosingState && self->m_idlers.size() == 0 &&
-            self->m_idlersFromOtherThread.size() == 0) {
-            PostMessage(NULL, WM_QUIT, 0, 0);
-        }
     } break;
     default:
         break;

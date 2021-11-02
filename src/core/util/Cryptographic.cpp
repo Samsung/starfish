@@ -21,6 +21,7 @@
 #include "core/util/Cryptographic.h"
 
 #if defined(OS_WINDOWS)
+#include <Windows.h>
 #include <bcrypt.h>
 #define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #pragma comment(lib, "Bcrypt.lib")

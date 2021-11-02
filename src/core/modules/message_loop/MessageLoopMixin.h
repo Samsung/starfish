@@ -40,7 +40,7 @@ public:
     void onDestroyed();
 
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    static void processMessage(MessageLoop* self, const MSG& message);
+    static void processMessage(MessageLoopMixin* self, const MSG& message);
 #endif
 
 private:

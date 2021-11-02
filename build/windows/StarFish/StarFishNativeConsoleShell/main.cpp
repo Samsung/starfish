@@ -3,8 +3,8 @@
 #include <inttypes.h>
 #define STARFISH_EXPORT
 
-extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
-    uint32_t initialWidth, uint32_t initialHeight, void* initialBuffer, uint32_t initialBufferStride);
+extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(uint32_t initialWidth,
+                                    uint32_t initialHeight);
 extern "C" void STARFISH_EXPORT __stdcall loadURL(size_t webViewInstance,
                                                   size_t utf8URL,
                                                   uint32_t urlLength);
@@ -40,7 +40,7 @@ int main()
     InitializeCriticalSection(&cs);
     CreateThread(NULL, 1024 * 1024 * 4,
                  [](void*) -> DWORD {
-                     size_t starfishInstance = createWebViewInstance(1024, 768, malloc(1024 * 768 * 4), 1024 * 4);
+                     size_t starfishInstance = createWebViewInstance(1024, 768);
 
                      loadURL(starfishInstance, (size_t)("http://naver.com"),
                              sizeof("http://naver.com") - 1);

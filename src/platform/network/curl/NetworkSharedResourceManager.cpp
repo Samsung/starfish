@@ -28,7 +28,9 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
 
+#if !defined(OS_WINDOWS)
 #include <unistd.h>
+#endif
 
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 #include <openssl/crypto.h>
@@ -636,7 +638,7 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
         curl_multi_perform(d->m_curlMultiHandle, &stillRunning);
         if (stillRunning == 0) {
             waitCount++;
-            usleep(sleepTime);
+            std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
         } else {
             waitCount = 0;
         }

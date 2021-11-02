@@ -26,8 +26,8 @@ class Element;
 class TimingFunction;
 struct KeyframeAnimationOptions;
 
-enum class AnimationDirectionValue;
-enum class AnimationFillModeValue;
+enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED;
+enum class AnimationFillModeValue ENSURE_ENUM_UNSIGNED;
 
 struct TimingOutput {
     TimingOutput();

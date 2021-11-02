@@ -53,7 +53,7 @@ MethodType RequestData::methodTypeFromString(String* input)
     } else if (upper->equals("PUT")) {
         return MethodType::PUT;
     } else if (upper->equals("DELETE")) {
-        return MethodType::DELETE;
+        return MethodType::DELETE_METHOD;
     } else if (upper->equals("CONNECT")) {
         return MethodType::CONNECT;
     } else if (upper->equals("OPTIONS")) {
@@ -79,7 +79,7 @@ String* RequestData::methodTypeString(MethodType method)
         return String::createASCIIString("POST");
     case MethodType::PUT:
         return String::createASCIIString("PUT");
-    case MethodType::DELETE:
+    case MethodType::DELETE_METHOD:
         return String::createASCIIString("DELETE");
     case MethodType::CONNECT:
         return String::createASCIIString("CONNECT");

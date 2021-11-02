@@ -47,6 +47,36 @@
 #include "StarfishInfo.h"
 #include "StarfishPlatform.h"
 
+#include <atomic>
+#include <cstdlib>
+#include <cstdio>
+#include <cstdint>
+#include <vector>
+#include <deque>
+#include <list>
+#include <set>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <cassert>
+#include <functional>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <locale>
+#include <clocale>
+#include <cwchar>
+#include <numeric>
+#include <stdarg.h>
+#include <future>
+#include <type_traits>
+#include <random>
+#include <cfloat>
+
 #if defined(__clang__)
 #define COMPILER_CLANG 1
 #elif defined(_MSC_VER)
@@ -144,9 +174,6 @@
 #if defined(COMPILER_MSVC)
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
-#ifndef NDEBUG
-#define _ITERATOR_DEBUG_LEVEL 0
-#endif
 #endif
 
 #if defined(COMPILER_MSVC)
@@ -188,37 +215,9 @@ typedef SSIZE_T ssize_t;
 #define _INC_CTYPE // for preventing include windows version of ctype header
 #include <inttypes.h>
 typedef unsigned int uint;
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #endif
-
-#include <atomic>
-#include <cstdlib>
-#include <cstdio>
-#include <cstdint>
-#include <vector>
-#include <deque>
-#include <list>
-#include <set>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
-#include <memory>
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <cassert>
-#include <functional>
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <locale>
-#include <clocale>
-#include <cwchar>
-#include <numeric>
-#include <stdarg.h>
-#include <future>
-#include <type_traits>
-#include <random>
-#include <cfloat>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil
@@ -254,6 +253,9 @@ typedef unsigned int uint;
 #if defined(OS_WINDOWS)
 #ifdef DELETE
 #undef DELETE
+#endif
+#ifdef ERROR
+#undef ERROR
 #endif
 #endif
 
@@ -334,6 +336,7 @@ const char* getWindowsTempDir();
     (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
+#ifndef STARFISH_WINDOWS
 #define LOG_FUNCTION_TYPE(functionName, param1, param2, ansi1, ansi2, fmt,   \
                           arg...)                                            \
     functionName(param1, param2 ansi1 "%s: %s(%d) > " fmt ansi2, __MODULE__, \
@@ -342,6 +345,16 @@ const char* getWindowsTempDir();
                            arg...)                                             \
     functionName(param1, param2, ansi1 "%s: %s(%d) > " VERSION ": " fmt ansi2, \
                  __MODULE__, __func__, __LINE__, ##arg);
+#else
+#define LOG_FUNCTION_TYPE(functionName, param1, param2, ansi1, ansi2, fmt,   \
+                          arg, ...)                                          \
+    functionName(param1, param2 ansi1 "%s: %s(%d) > " fmt ansi2, __MODULE__, \
+                 __func__, __LINE__, ##arg);
+#define LOG_FUNCTION_TYPE2(functionName, param1, param2, ansi1, ansi2, fmt,    \
+                           arg, ...)                                           \
+    functionName(param1, param2, ansi1 "%s: %s(%d) > " VERSION ": " fmt ansi2, \
+                 __MODULE__, __func__, __LINE__, ##arg);
+#endif
 
 #define STARFISH_LOG_INFO(fmt, arg...) \
     LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt, ##arg)
@@ -904,6 +917,12 @@ inline Target castTo(void* source)
 
 template <typename Type>
 inline bool isInfOrNan(Type value)
+{
+    const double v = static_cast<double>(value);
+    return std::isinf(v) || std::isnan(v);
+}
+
+inline bool isInfOrNan(float value)
 {
     return std::isinf(value) || std::isnan(value);
 }
