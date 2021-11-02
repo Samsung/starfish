@@ -123,7 +123,8 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                          FlexDirectionValue::ColumnReverseFlexDirectionValue) &&
                     cb->style()->flexWrap() ==
                         FlexWrapValue::NoWrapFlexWrapValue &&
-                    cb->style()->alignItems() == StretchAlignItemValue;
+                    (cb->style()->alignItems() == StretchAlignItemValue ||
+                     cb->style()->alignItems() == CenterAlignItemValue);
             }
 
             if (isAbsolutePositioned() && left.isSpecified() &&
