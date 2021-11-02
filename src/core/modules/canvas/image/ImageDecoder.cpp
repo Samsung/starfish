@@ -481,9 +481,9 @@ static ImageDecoder::DecodeResult decodeJPG(
     if (Bitmap->GetSize(&Width, &Height) != S_OK) {
         return result;
     }
-    m_width = Width;
-    m_height = Height;
-    m_stride = Width * 4;
+    result.m_width = Width;
+    result.m_height = Height;
+    result.m_stride = Width * 4;
 
     if (needsDecoding) {
         WICRect Rect = { 0, 0, (int)Width, (int)Height };

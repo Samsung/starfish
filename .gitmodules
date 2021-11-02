@@ -136,3 +136,9 @@
 [submodule "third_party/libpng"]
 	path = third_party/libpng
 	url = git@github.sec.samsung.net:lws-submodules/libpng.git
+[submodule "third_party/windows/openssl"]
+	path = third_party/windows/openssl
+	url = git@github.sec.samsung.net:lws-submodules/openssl.git
+[submodule "third_party/windows/libwebsockets"]
+	path = third_party/windows/libwebsockets
+	url = git@github.sec.samsung.net:lws-submodules/libwebsockets.git

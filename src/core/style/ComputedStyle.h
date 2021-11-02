@@ -79,7 +79,7 @@ class FilterFunctions;
 
 class RareComputedStyleData : public gc {
 public:
-    enum KeyKind {
+    enum KeyKind : unsigned {
         Order,
         ZIndex,
         FlexGrow,

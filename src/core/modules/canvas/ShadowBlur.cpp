@@ -219,7 +219,7 @@ void ShadowBlur::process(float stdDeviation)
         return;
     }
 
-    LongTaskFinder timer(__PRETTY_FUNCTION__, 1);
+    LongTaskFinder timer("ShadowBlur::process", 1);
     int kernelSize = computeKernelSizeAtStdDeviation(stdDeviation);
     standardBoxBlur(m_source, m_workspace.get(), kernelSize, kernelSize,
                     m_stride, m_width, m_height);

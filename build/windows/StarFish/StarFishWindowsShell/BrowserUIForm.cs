@@ -38,6 +38,10 @@ namespace StarFishWindowsShell
                     url = "file:///" + Path.GetFullPath(url).Replace("\\\\", "\\").Replace("\\", "/");
                 }
             }
+
+            // url = "demo/index.html";
+            // url = "file:///" + Path.GetFullPath(url).Replace("\\\\", "\\").Replace("\\", "/");
+
             textBoxAddress.Text = url;
             panelBrowserContent.MouseWheel += PanelBrowserContent_MouseWheel;
             mStarFish = new StarFish(this, panelBrowserContent.Width, panelBrowserContent.Height, url);
@@ -51,6 +55,7 @@ namespace StarFishWindowsShell
             if (p.ToString() != testURL)
             {
                 mStarFish.setProxyURL(p.ToString());
+                MessageBox.Show("proxy URL " + p.ToString());
             }
             Application.AddMessageFilter(this);
         }
@@ -191,7 +196,7 @@ namespace StarFishWindowsShell
 
         private void BrowserUIForm_Resize(object sender, EventArgs e)
         {
-            if (this.WindowState != FormWindowState.Minimized)
+            if (this.WindowState != FormWindowState.Minimized && mStarFish != null)
             {
                 mStarFish.Resize(panelBrowserContent.Width * mPixelRatio, panelBrowserContent.Height * mPixelRatio);
                 this.Text = mInitialTitle + " " + panelBrowserContent.Width * mPixelRatio + "x" + panelBrowserContent.Height * mPixelRatio + "(x" + (1.0 / mPixelRatio) + ")";

@@ -229,12 +229,8 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                                 RequestErrorType::BadURLError);
         return;
     }
-#if defined(OS_WINDOWS)
-    String* filePath = path->substring(8, path->length() - 8);
-#else
-    String* filePath = path->substring(7, path->length() - 7);
-#endif
 
+    String* filePath = path->substring(7, path->length() - 7);
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, filePath);
     } else {
@@ -282,6 +278,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->handleResponseEOF();
         return;
     }
+
     auto fio = PlatformFile::open(u8Path, PlatformFile::Read);
     if (fio) {
         request->m_responseData->m_status = 200;

@@ -35,14 +35,16 @@
             this.buttonResizeFHD = new System.Windows.Forms.Button();
             this.textBoxFocusReceiver = new System.Windows.Forms.TextBox();
             this.panelBrowserContent = new System.Windows.Forms.Panel();
+            this.buttonSettings = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonNavigate
             // 
             this.buttonNavigate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonNavigate.Location = new System.Drawing.Point(981, 0);
+            this.buttonNavigate.Location = new System.Drawing.Point(1292, 0);
+            this.buttonNavigate.Margin = new System.Windows.Forms.Padding(4);
             this.buttonNavigate.Name = "buttonNavigate";
-            this.buttonNavigate.Size = new System.Drawing.Size(66, 22);
+            this.buttonNavigate.Size = new System.Drawing.Size(94, 33);
             this.buttonNavigate.TabIndex = 0;
             this.buttonNavigate.Text = "Navigate";
             this.buttonNavigate.UseVisualStyleBackColor = true;
@@ -52,9 +54,10 @@
             // 
             this.textBoxAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxAddress.Location = new System.Drawing.Point(1, 1);
+            this.textBoxAddress.Location = new System.Drawing.Point(1, 2);
+            this.textBoxAddress.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxAddress.Name = "textBoxAddress";
-            this.textBoxAddress.Size = new System.Drawing.Size(974, 21);
+            this.textBoxAddress.Size = new System.Drawing.Size(1283, 28);
             this.textBoxAddress.TabIndex = 1;
             this.textBoxAddress.Text = "about:blank";
             this.textBoxAddress.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAddress_KeyDown);
@@ -64,9 +67,10 @@
             // buttonConsole
             // 
             this.buttonConsole.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonConsole.Location = new System.Drawing.Point(1047, 0);
+            this.buttonConsole.Location = new System.Drawing.Point(1394, 0);
+            this.buttonConsole.Margin = new System.Windows.Forms.Padding(4);
             this.buttonConsole.Name = "buttonConsole";
-            this.buttonConsole.Size = new System.Drawing.Size(63, 22);
+            this.buttonConsole.Size = new System.Drawing.Size(90, 33);
             this.buttonConsole.TabIndex = 3;
             this.buttonConsole.Text = "Console";
             this.buttonConsole.UseVisualStyleBackColor = true;
@@ -75,9 +79,10 @@
             // buttonResizeFHDHalf
             // 
             this.buttonResizeFHDHalf.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(990, 0);
+            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(1561, 2);
+            this.buttonResizeFHDHalf.Margin = new System.Windows.Forms.Padding(4);
             this.buttonResizeFHDHalf.Name = "buttonResizeFHDHalf";
-            this.buttonResizeFHDHalf.Size = new System.Drawing.Size(120, 22);
+            this.buttonResizeFHDHalf.Size = new System.Drawing.Size(171, 33);
             this.buttonResizeFHDHalf.TabIndex = 4;
             this.buttonResizeFHDHalf.Text = "Resize to FHD-.5x";
             this.buttonResizeFHDHalf.UseVisualStyleBackColor = true;
@@ -87,9 +92,10 @@
             // buttonResizeFHD
             // 
             this.buttonResizeFHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHD.Location = new System.Drawing.Point(1110, 0);
+            this.buttonResizeFHD.Location = new System.Drawing.Point(1586, 0);
+            this.buttonResizeFHD.Margin = new System.Windows.Forms.Padding(4);
             this.buttonResizeFHD.Name = "buttonResizeFHD";
-            this.buttonResizeFHD.Size = new System.Drawing.Size(102, 22);
+            this.buttonResizeFHD.Size = new System.Drawing.Size(146, 33);
             this.buttonResizeFHD.TabIndex = 5;
             this.buttonResizeFHD.Text = "Resize to FHD";
             this.buttonResizeFHD.UseVisualStyleBackColor = true;
@@ -97,9 +103,10 @@
             // 
             // textBoxFocusReceiver
             // 
-            this.textBoxFocusReceiver.Location = new System.Drawing.Point(1088, 437);
+            this.textBoxFocusReceiver.Location = new System.Drawing.Point(1554, 656);
+            this.textBoxFocusReceiver.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxFocusReceiver.Name = "textBoxFocusReceiver";
-            this.textBoxFocusReceiver.Size = new System.Drawing.Size(100, 21);
+            this.textBoxFocusReceiver.Size = new System.Drawing.Size(141, 28);
             this.textBoxFocusReceiver.TabIndex = 6;
             this.textBoxFocusReceiver.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxFocusReceiver_KeyDown);
             this.textBoxFocusReceiver.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textBoxFocusReceiver_KeyUp);
@@ -109,9 +116,10 @@
             this.panelBrowserContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBrowserContent.Location = new System.Drawing.Point(1, 23);
+            this.panelBrowserContent.Location = new System.Drawing.Point(1, 34);
+            this.panelBrowserContent.Margin = new System.Windows.Forms.Padding(4);
             this.panelBrowserContent.Name = "panelBrowserContent";
-            this.panelBrowserContent.Size = new System.Drawing.Size(1211, 821);
+            this.panelBrowserContent.Size = new System.Drawing.Size(1730, 1232);
             this.panelBrowserContent.TabIndex = 7;
             this.panelBrowserContent.Click += new System.EventHandler(this.panelBrowserContent_Click);
             this.panelBrowserContent.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseDown);
@@ -120,13 +128,26 @@
             this.panelBrowserContent.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseMove);
             this.panelBrowserContent.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseUp);
             // 
+            // buttonSettings
+            // 
+            this.buttonSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSettings.Location = new System.Drawing.Point(1491, 0);
+            this.buttonSettings.Margin = new System.Windows.Forms.Padding(4);
+            this.buttonSettings.Name = "buttonSettings";
+            this.buttonSettings.Size = new System.Drawing.Size(90, 33);
+            this.buttonSettings.TabIndex = 8;
+            this.buttonSettings.Text = "Settings";
+            this.buttonSettings.UseVisualStyleBackColor = true;
+            this.buttonSettings.Click += new System.EventHandler(this.buttonSettings_Click);
+            // 
             // BrowserUIForm
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.ClientSize = new System.Drawing.Size(1215, 845);
+            this.ClientSize = new System.Drawing.Size(1736, 1268);
+            this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.panelBrowserContent);
             this.Controls.Add(this.buttonResizeFHD);
             this.Controls.Add(this.buttonConsole);
@@ -135,6 +156,7 @@
             this.Controls.Add(this.textBoxFocusReceiver);
             this.Controls.Add(this.buttonResizeFHDHalf);
             this.DoubleBuffered = true;
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "BrowserUIForm";
             this.Text = "StarFish Windows Shell";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.BrowserUIForm_FormClosed);
@@ -158,5 +180,6 @@
         private System.Windows.Forms.Button buttonResizeFHD;
         private System.Windows.Forms.TextBox textBoxFocusReceiver;
         private System.Windows.Forms.Panel panelBrowserContent;
+        private System.Windows.Forms.Button buttonSettings;
     }
 }

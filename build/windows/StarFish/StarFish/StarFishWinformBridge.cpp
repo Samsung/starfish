@@ -26,6 +26,7 @@
 #include "core/dom/MouseEvent.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "LWEWebView.h"
+#include <unicode/uclean.h>
 #include <fontconfig/fontconfig.h>
 
 #include <GL/glew.h>
@@ -118,9 +119,9 @@ extern "C" void __declspec(dllexport) __stdcall initGL(int* hWnd)
 extern "C" size_t LWE_EXPORT __stdcall createWebViewInstance(
     uint32_t initialWidth, uint32_t initialHeight)
 {
+    u_setDataDirectory("./");
     FcInitLoadConfig();
-    g_postLogMessageToThreadMessageQueue = true;
-
+    
     std::string localStorage = getWindowsTempDir();
     localStorage += "\\StarfishLocalStorage.txt";
 
@@ -180,6 +181,7 @@ extern "C" void LWE_EXPORT __stdcall startMessageLoop(size_t webViewInstance)
     while ((ret = GetMessage(&message, NULL, 0, 0)) != 0) {
         if (ret == -1) {
             // handle the error and possibly exit
+            break;
         } else {
             WebView* w = (WebView*)wv->GetUserData(
                 "__internalWebContainerImplementLayerVariable");
@@ -193,6 +195,16 @@ extern "C" void LWE_EXPORT __stdcall stopMessageLoop(size_t webViewInstance)
     ::LWE::WebContainer* wv = (::LWE::WebContainer*)webViewInstance;
     PostMessage(NULL, WM_QUIT, 0, 0);
 }
+
+extern "C" void LWE_EXPORT __stdcall giveMessage(size_t webViewInstance,
+                                                 MSG message)
+{
+    ::LWE::WebContainer* wv = (::LWE::WebContainer*)webViewInstance;
+    WebView* w = (WebView*)wv->GetUserData(
+        "__internalWebContainerImplementLayerVariable");
+    processMessage(w->messageLoop(), message);
+}
+
 
 extern "C" void LWE_EXPORT __stdcall resizeWindow(size_t webViewInstance,
                                                   uint32_t w, uint32_t h)

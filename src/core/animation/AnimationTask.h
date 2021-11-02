@@ -462,7 +462,7 @@ public:
         m_isRunning = isRunning;
     }
 
-    enum TYPE { TRANSITION_TYPE, ANIMATION_TYPE };
+    enum TYPE ENSURE_ENUM_UNSIGNED { TRANSITION_TYPE, ANIMATION_TYPE };
     TYPE type()
     {
         return m_type;
