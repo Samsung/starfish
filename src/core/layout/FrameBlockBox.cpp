@@ -1139,7 +1139,7 @@ void FrameBlockBox::dump(int depth)
                     printf("  ");
                 }
                 // print 'LineBox' keyword in blue for debugging readability
-                printf("\033[0;34mLineBox\033[0m[%p] (%g,%g,%g,%g)\n",
+                printf("\033[0;34mLineBox\033[0m[%p][%g,%g,%g,%g]\n",
                        m_lineBoxes[i], (float)m_lineBoxes[i]->m_frameRect.x(),
                        (float)m_lineBoxes[i]->m_frameRect.y(),
                        (float)m_lineBoxes[i]->m_frameRect.width(),

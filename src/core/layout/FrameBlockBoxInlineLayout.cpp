@@ -5320,7 +5320,7 @@ void InlineNonReplacedBox::dump(int depth)
 {
     FrameBox::dump(depth);
 
-    printf(" origin %p", m_origin);
+    printf(" Origin %p", m_origin);
 
     puts("");
     auto iter = boxes().begin();

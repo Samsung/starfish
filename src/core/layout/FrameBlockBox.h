@@ -113,7 +113,7 @@ public:
         FrameBox::dump(depth);
         StringView tv = text();
         auto s = tv.substring()->toUTF8NonGCString();
-        printf(" [(%s), dir: %d, start: %d, end %d] ", s.data(),
+        printf(" [(%s),DIR:%d, SRT:%d, End:%d]", s.data(),
                (int)charDirection(), (int)tv.start(), (int)tv.end());
     }
 #endif

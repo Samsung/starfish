@@ -91,7 +91,7 @@ public:
 
         auto utf8String = m_data->toUTF8NonGCString();
         utf8String = replaceAll(utf8String, "\n", "\\n");
-        printf("data:%s ", utf8String.data());
+        printf("Data:[%s]", utf8String.data());
     }
 #endif
 

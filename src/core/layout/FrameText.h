@@ -113,9 +113,7 @@ public:
 #ifndef NDEBUG
     virtual void dump(int depth) override
     {
-        UTF8StringDataNonGCStd str = text()->toUTF8NonGCString();
-        str = replaceAll(str, "\n", "\\n");
-        printf("text-> %s", str.data());
+        Frame::dump(depth);
     }
 #endif
 #endif

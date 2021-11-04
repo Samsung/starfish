@@ -241,7 +241,7 @@ public:
         Node::dump();
 
         auto s1 = id()->toUTF8NonGCString();
-        printf("id:%s, ", s1.data());
+        printf("Id:[%s] ", s1.data());
         UTF8StringDataNonGCStd className;
         for (unsigned i = 0; i < m_classNames.size(); i++) {
             auto s2 = m_classNames[i].string()->toUTF8NonGCString();
@@ -249,7 +249,7 @@ public:
             className += " ";
         }
 
-        printf("className:%s", className.data());
+        printf("Class:[%s] ", className.data());
     }
 #endif
 

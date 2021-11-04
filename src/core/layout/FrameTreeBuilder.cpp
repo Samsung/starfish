@@ -1480,34 +1480,13 @@ void dump(Frame* frm, unsigned depth)
     for (unsigned i = 0; i < depth; i++) {
         printf("  ");
     }
-    // print framenode in green for readability
-    if (frm->isFlexItem()) {
-        printf("\033[0;32m%s(FlexItem)[%d]\033[0m", frm->name(), (int)depth);
-    } else if (frm->isGridItem()) {
-        printf("\033[0;32m%s(GridItem)[%d]\033[0m", frm->name(), (int)depth);
-    } else {
-        printf("\033[0;32m%s[%d]\033[0m", frm->name(), (int)depth);
-    }
 
-    printf("[%p]", frm);
-    if (frm->isAnonymous()) {
-        printf("[anonymous block box] ");
-    } else {
+    printf("\033[0;33m[%u]\033[0m", depth);
+    frm->dump(depth);
+    if (frm->node()) {
+        printf(" ");
         frm->node()->dump();
     }
-
-    if (frm->needToEstablishBlockFormattingContext()) {
-        if (frm->needsPainting()) {
-            printf("BlockFormattingContext ");
-        }
-    }
-
-    if (frm->needsPainting()) {
-        printf("needsPainting ");
-    }
-
-    frm->dump(depth);
-
     printf("\n");
 
     Frame* f = frm->firstChild();

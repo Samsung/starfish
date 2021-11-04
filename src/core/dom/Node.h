@@ -576,8 +576,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
-        auto s = nodeName()->toUTF8NonGCString();
-        printf("[%s] ", s.data());
+        printf("%s[%p] ", nodeName()->toUTF8NonGCString().data(), this);
     }
 #endif
     void loadFontAndChangeFontPercentToFixedIfNeeded(Starfish* starfish,
