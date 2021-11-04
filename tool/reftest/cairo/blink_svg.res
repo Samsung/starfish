@@ -501,7 +501,7 @@ test/cairo/reftest/vendor/blink_original/svg/custom/svg-parse-overflow-2.html
 #test/cairo/reftest/vendor/blink_original/svg/custom/svg-parse-overflow-3.html
 test/cairo/reftest/vendor/blink_original/svg/custom/svg-parse-overflow-4.html
 test/cairo/reftest/vendor/blink_original/svg/custom/svg-parse-overflow-5.html
-test/cairo/reftest/vendor/blink_original/svg/custom/svg-pending-twice.html
+#test/cairo/reftest/vendor/blink_original/svg/custom/svg-pending-twice.html
 test/cairo/reftest/vendor/blink_original/svg/custom/svg-root-padding-border-margin.html
 test/cairo/reftest/vendor/blink_original/svg/custom/svg-root-padding-left.html
 test/cairo/reftest/vendor/blink_original/svg/custom/svg-root-padding-top.html
