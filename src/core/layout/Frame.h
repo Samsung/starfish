@@ -1731,9 +1731,23 @@ public:
     virtual void dump(int depth)
     {
         // print FrameNode type in blue for debugging readability
-        printf("\033[0;34m%s\033[0m [%p]", name(), this);
-        if (!isAnonymous()) {
-            printf(" node [%p] ", node());
+        printf("\033[0;32m%s[%p]\033[0m", name(), this);
+        if (isFlexItem()) {
+            printf("[FlexItem]");
+        }
+        if (isGridItem()) {
+            printf("[GridItem]");
+        }
+        if (isAnonymous()) {
+            printf("[ANNON]");
+        }
+        if (needToEstablishBlockFormattingContext()) {
+            if (needsPainting()) {
+                printf("[BLKFRMTCTX]");
+            }
+        }
+        if (needsPainting()) {
+            printf("[NPTG]");
         }
     }
 #endif

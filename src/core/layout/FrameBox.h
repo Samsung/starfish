@@ -117,18 +117,18 @@ public:
     virtual void dump(int depth)
     {
         Frame::dump(depth);
-        printf(" layoutParent(%p) ", layoutParent());
-        printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(),
-               (float)width(), (float)height());
-        printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(),
-               (float)paddingRight(), (float)paddingBottom(),
-               (float)paddingLeft());
-        printf(" border(%g,%g,%g,%g) ", (float)borderTop(),
-               (float)borderRight(), (float)borderBottom(),
-               (float)borderLeft());
-        printf(" margin(%g,%g,%g,%g) ", (float)marginTop(),
-               (float)marginRight(), (float)marginBottom(),
-               (float)marginLeft());
+        printf(" LYTP[%p] ", layoutParent());
+        printf("Box[%g,%g,%g,%g] ", x().toFloat(), y().toFloat(),
+               width().toFloat(), height().toFloat());
+        printf("PDD[%g,%g,%g,%g] ", paddingTop().toFloat(),
+               paddingRight().toFloat(), paddingBottom().toFloat(),
+               paddingLeft().toFloat());
+        printf("BDR[%g,%g,%g,%g] ", borderTop().toFloat(),
+               borderRight().toFloat(), borderBottom().toFloat(),
+               borderLeft().toFloat());
+        printf("MGN[%g,%g,%g,%g]", marginTop().toFloat(),
+               marginRight().toFloat(), marginBottom().toFloat(),
+               marginLeft().toFloat());
     }
 #endif
 
