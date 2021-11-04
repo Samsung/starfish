@@ -243,10 +243,14 @@ GradientDrawingInfo* FrameSVGPathBox::makeGradientDrawingInfo(String* url)
         GradientDrawingInfo* info = nullptr;
         if (matchingSvg->isSVGLinearGradientElement()) {
             info = new GradientDrawingInfo(GradientType::LinearGradient, rect);
-            info->x1 = matchingSvg->style()->x1().percentValue(rect.width());
-            info->y1 = matchingSvg->style()->y1().percentValue(rect.height());
-            info->x2 = matchingSvg->style()->x2().percentValue(rect.maxX());
-            info->y2 = matchingSvg->style()->y2().percentValue(rect.maxY());
+            info->x1 =
+                matchingSvg->style()->x1().specifiedValue(rect.width(), this);
+            info->y1 =
+                matchingSvg->style()->y1().specifiedValue(rect.height(), this);
+            info->x2 =
+                matchingSvg->style()->x2().specifiedValue(rect.maxX(), this);
+            info->y2 =
+                matchingSvg->style()->y2().specifiedValue(rect.maxY(), this);
             info->colorStops =
                 matchingSvg->asSVGLinearGradientElement()->colorStops();
         } else {

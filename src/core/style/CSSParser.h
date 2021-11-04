@@ -819,6 +819,9 @@ public:
         if (!allowNegative && num < 0) {
             return false;
         }
+        if (std::isinf(num)) {
+            return false;
+        }
         parser.consumeString(option & AllowPercent);
         const CSSTokenValue& str = parser.parsedString();
         if (allowWithoutUnit && str.length() == 0) {

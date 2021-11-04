@@ -52,7 +52,8 @@
             if (CSSPropertyParser::parseLength(                        \
                     s.data(),                                          \
                     CSSPropertyParser::AllowPercent |                  \
-                        CSSPropertyParser::AllowWithoutUnit,           \
+                        CSSPropertyParser::AllowWithoutUnit |          \
+                        CSSPropertyParser::AllowNegative,              \
                     &pair)) {                                          \
                 cssValues.push_back(pair);                             \
             }                                                          \
