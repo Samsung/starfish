@@ -514,10 +514,6 @@ void HTMLSelectElement::showDropdownMenu()
         return;
     }
 
-    if (frame()->needsLayout()) {
-        setNeedsFrameTreeBuild();
-    }
-
     StringBuilder builder;
     builder.appendString("window.dialogArguments = {\n");
     addSelectedIndex(builder);
