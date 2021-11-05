@@ -33,7 +33,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 namespace Starfish {
 
-static ComputedStyle* createStyleFrom(Node* node)
+static ComputedStyle* createTextStyleFrom(Node* node)
 {
     ComputedStyle* childStyle = new ComputedStyle(node->style());
     childStyle->loadResources(node);
@@ -100,7 +100,7 @@ FrameOptionBox* FrameOptionBox::buildFrameTree(Node* currentNode,
             textElement->setParentNode(currentNode);
 
             // Set style
-            ComputedStyle* pseudoStyle = createStyleFrom(currentNode);
+            ComputedStyle* pseudoStyle = createTextStyleFrom(currentNode);
             pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
             textElement->setStyle(pseudoStyle);
 
@@ -110,7 +110,7 @@ FrameOptionBox* FrameOptionBox::buildFrameTree(Node* currentNode,
             // Generate text node
             Text* textNode = new Text(currentNode->document(), textValue);
             textNode->setParentNode(textElement);
-            ComputedStyle* textStyle = createStyleFrom(textElement);
+            ComputedStyle* textStyle = createTextStyleFrom(textElement);
             textNode->setStyle(textStyle);
 
             FrameText* frameText = new FrameText(textNode, textStyle);
