@@ -45,6 +45,10 @@ extern "C" {
 #include <png.h>
 #include <gif_lib.h>
 
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
+#include <webp/decode.h>
+#endif
+
 #define GIF_DISPOSE_SHIFT 2
 #define GIF_TRANSPARENT_MASK 0x01
 #define GIF_DISPOSE_MASK 0x07
@@ -80,6 +84,17 @@ static bool isGIFFormat(const std::vector<char>& inputBuffer)
     unsigned char* data = (unsigned char*)inputBuffer.data();
     if (inputBuffer.size() > 3 && data[0] == 71 && data[1] == 73 &&
         data[2] == 70) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static bool isWebPFormat(const std::vector<char>& inputBuffer)
+{
+    unsigned char* data = (unsigned char*)inputBuffer.data();
+    if (inputBuffer.size() > 4 && data[0] == 'R' && data[1] == 'I' &&
+        data[2] == 'F' && data[3] == 'F') {
         return true;
     } else {
         return false;
@@ -728,6 +743,47 @@ static ImageDecoder::DecodeResult decodeGIF(
     return result;
 }
 
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
+static ImageDecoder::DecodeResult decodeWebP(
+    const std::vector<char>& inputBuffer, bool needsDecoding)
+{
+    ImageDecoder::DecodeResult result;
+
+    READ_DATA readData;
+    readData.mem = (unsigned char*)inputBuffer.data();
+    readData.size = inputBuffer.size();
+
+    int width = 0, height = 0;
+
+    if (needsDecoding) {
+        uint8_t* buf;
+#ifdef PORT_PIXEL_ORDER_RGBA
+        buf = WebPDecodeRGBA(readData.mem, readData.size, &width, &height);
+#else
+        buf = WebPDecodeBGRA(readData.mem, readData.size, &width, &height);
+#endif
+        if (buf == nullptr) {
+            return result;
+        }
+        result.m_buffer =
+            (uint8_t*)malloc(result.m_width * result.m_height * 4);
+        STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
+        memcpy(result.m_buffer, buf, width * height * 4);
+        free(buf);
+    } else {
+        if (!WebPGetInfo(readData.mem, readData.size, &width, &height)) {
+            return result;
+        }
+    }
+    result.m_width = width;
+    result.m_height = height;
+    result.m_stride = result.m_width * 4;
+    result.m_isSuccessful = true;
+
+    return result;
+}
+#endif
+
 static ImageDecoder::DecodeResult decodeBuffer(
     const std::vector<char>& inputBuffer, bool full,
     uint32_t needsDownScaleImageResourceLargerThan)
@@ -739,6 +795,10 @@ static ImageDecoder::DecodeResult decodeBuffer(
                          needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
         return decodeGIF(inputBuffer, full);
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
+    } else if (isWebPFormat(inputBuffer)) {
+        return decodeWebP(inputBuffer, full);
+#endif
     }
 
     return ImageDecoder::DecodeResult();

@@ -144,6 +144,10 @@ BuildRequires: giflib-devel
 BuildRequires: libjpeg-turbo-devel
 %endif
 
+%if (0%{?tizen_version_major} > 5) || ((0%{?tizen_version_major} == 5) && (0%{?tizen_version_minor} == 5))
+BuildRequires: pkgconfig(libwebp)
+%endif
+
 %%if (0%{?tizen_version_major} >= 6)
 BuildRequires: pkgconfig(openssl1.1)
 %else
