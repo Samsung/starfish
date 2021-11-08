@@ -441,9 +441,9 @@ ENDIF()
 
 IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter")
     IF (NOT (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1"))
-        SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
+        SET (STARFISH_LIBRARIES_BACKEND jpeg gif webp)
     ELSE()
-        SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png)
+        SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png webp)
     ENDIF()
 
     IF (${BACKEND} MATCHES "efl_cairo")
@@ -466,7 +466,7 @@ IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BAC
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl")
     SET (STARFISH_LIBRARIES_BACKEND GL GLESv2 glfw)
     IF (${ARCH} STREQUAL "x64")
-        SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib turbojpeg gif jpeg)
+        SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} -Llib turbojpeg gif jpeg webp)
     ENDIF()
 ENDIF()
 
