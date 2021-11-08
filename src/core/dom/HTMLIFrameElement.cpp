@@ -234,7 +234,8 @@ void HTMLIFrameElement::loadSrcDoc()
     GET_EFFECTIVE_REFERRERPOLICY();
     if (srcDoc.length()) {
         auto dataURI = Base64Utils::encodeBase64HTMLDataURI(srcDoc);
-        navigate(new ResourceURL(String::createASCIIString("about:srcdoc"),
+        navigate(new ResourceURL(String::createASCIIString(dataURI.c_str(),
+                                                           dataURI.length()),
                                  document()->baseURL()->baseURI()),
                  HistoryManagerAction::Intact,
                  new ReferrerURL(document()->documentURI(), policy));
