@@ -113,13 +113,17 @@ public:
     GridArea(FrameBox* box, size_t id)
         : m_box(box)
         , m_index(id)
-    {
+    {  
+        if (box) {
+            m_areMarginLeftRightAuto = (box->style()->margin().left().isAuto() &&
+                box->style()->margin().right().isAuto());
+            m_isWidthAuto = box->style()->width().isAuto();
+        }
     }
 
     GridArea(FrameBox* box, size_t idx, size_t rowStart, size_t rowEnd,
              size_t columnStart, size_t columnEnd)
-        : m_box(box)
-        , m_index(idx)
+        : GridArea(box, idx)
     {
         m_rowStartLine->setValue(rowStart);
         m_rowEndLine->setValue(rowEnd);
@@ -183,6 +187,14 @@ public:
         m_columnEndLine->setValue(v);
     }
 
+    bool areMarginLeftRightAuto() {
+        return m_areMarginLeftRightAuto;
+    }
+
+    bool isWidthAuto() {
+        return m_isWidthAuto;
+    }
+
     bool hasRowAndColumnValues()
     {
         if (m_rowStartLine->hasValue() && m_rowEndLine->hasValue() &&
@@ -197,13 +209,14 @@ public:
     void resolveDefinitePositionValues();
     size_t rowSpanValue();
     size_t columnSpanValue();
-
 private:
     FrameBox* m_box;
     size_t m_index{ 0 };
     LayoutUnit m_preferredWidth;
     LayoutUnit m_preferredMinWidth;
     LayoutUnit m_contentHeight;
+    bool m_areMarginLeftRightAuto = false;
+    bool m_isWidthAuto = false;
 
     GridLine* m_rowStartLine = new GridLine();
     GridLine* m_rowEndLine = new GridLine();

@@ -294,6 +294,8 @@ test/cairo/internal-test/css/grid/gridbox_example_01.html
 test/cairo/internal-test/css/grid/gridbox_span_01.html
 test/cairo/internal-test/css/grid/gridbox_span_02.html
 test/cairo/internal-test/css/grid/issue_759/index.partial.html
+test/cairo/internal-test/css/grid/girdbox_child_flexbox_simple.html
+test/cairo/internal-test/css/grid/gridbox_child_flexbox_with_margin_auto.html
 test/cairo/internal-test/css/dialog/dialog_modal_01.html
 test/cairo/internal-test/css/dialog/dialog_modal_02.html
 test/cairo/internal-test/css/dialog/dialog_modal_03.html
