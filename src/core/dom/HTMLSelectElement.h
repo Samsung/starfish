@@ -46,7 +46,7 @@ public:
     virtual String* value() override;
     virtual void setValue(String* value) override;
 
-    int selectedIndex();
+    int32_t selectedIndex();
     void setSelectedIndex(size_t index);
 
     String* type() override;

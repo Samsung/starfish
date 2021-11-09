@@ -1037,15 +1037,10 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
     } else {
         currentFrame = current->frame();
-        if (currentFrame && current->childNeedsFrameTreeBuild()) {
-            if (currentFrame->isFrameInputBox()) {
-                FrameInputBox::buildFrameTree(current, ctx, false);
-                current->clearChildNeedsFrameTreeBuild();
-            } /*else if (currentFrame->isFrameOptionBox()){
-                FrameOptionBox::buildFrameTree(current, ctx, false);
-                current->clearChildNeedsFrameTreeBuild();
-            }
-            */
+        if (currentFrame && currentFrame->isFrameInputBox() &&
+            current->childNeedsFrameTreeBuild()) {
+            FrameInputBox::buildFrameTree(current, ctx, false);
+            current->clearChildNeedsFrameTreeBuild();
         }
     }
 
@@ -1061,7 +1056,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
          (currentFrame->isFrameTableColBox() &&
           current->style()->display() ==
               DisplayValue::TableColumnDisplayValue) ||
-         current->isBeforePseudoElement() || current->isAfterPseudoElement());
+         current->isBeforePseudoElement() || current->isAfterPseudoElement() ||
+         currentFrame->isFrameOptionBox());
 
     FrameBlockBox* back = ctx.currentBlockContainer();
     FrameTableObjectBox* lastAnonymousTableObject = nullptr;

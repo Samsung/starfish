@@ -16,6 +16,9 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+// Copyright (c) 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
@@ -36,6 +39,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
+#include "core/style/StyleUtil.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
@@ -311,7 +315,7 @@ bool HTMLSelectElement::defaultIndexedSetter(unsigned index,
     return true;
 }
 
-int HTMLSelectElement::selectedIndex()
+int32_t HTMLSelectElement::selectedIndex()
 {
     GCVector<HTMLOptionElement*> list;
     computeListOfOptionElements(this, list);
@@ -551,73 +555,6 @@ void HTMLSelectElement::showDropdownMenu()
     // script->toUTF8NonGCString().c_str());
 }
 
-static String* fontWeightToString(FontWeightValue weight)
-{
-    switch (weight) {
-    case FontWeightValue::NormalFontWeightValue:
-        return String::fromUTF8("normal");
-    case FontWeightValue::BoldFontWeightValue:
-        return String::fromUTF8("bold");
-    case FontWeightValue::BolderFontWeightValue:
-        return String::fromUTF8("bolder");
-    case FontWeightValue::LighterFontWeightValue:
-        return String::fromUTF8("lighter");
-    case FontWeightValue::OneHundredFontWeightValue:
-        return String::fromUTF8("100");
-    case FontWeightValue::TwoHundredsFontWeightValue:
-        return String::fromUTF8("200");
-    case FontWeightValue::ThreeHundredsFontWeightValue:
-        return String::fromUTF8("300");
-    case FontWeightValue::FourHundredsFontWeightValue:
-        return String::fromUTF8("400");
-    case FontWeightValue::FiveHundredsFontWeightValue:
-        return String::fromUTF8("500");
-    case FontWeightValue::SixHundredsFontWeightValue:
-        return String::fromUTF8("600");
-    case FontWeightValue::SevenHundredsFontWeightValue:
-        return String::fromUTF8("700");
-    case FontWeightValue::EightHundredsFontWeightValue:
-        return String::fromUTF8("800");
-    case FontWeightValue::NineHundredsFontWeightValue:
-        return String::fromUTF8("900");
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return String::emptyString;
-    }
-}
-
-static String* fontStyleToString(FontStyleValue fontStyle)
-{
-    switch (fontStyle) {
-    case FontStyleValue::NormalFontStyleValue:
-        return String::fromUTF8("normal");
-    case FontStyleValue::ItalicFontStyleValue:
-        return String::fromUTF8("italic");
-    case FontStyleValue::ObliqueFontStyleValue:
-        return String::fromUTF8("oblique");
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return String::emptyString;
-    }
-}
-
-static String* textTransformToString(TextTransformValue textTransform)
-{
-    switch (textTransform) {
-    case TextTransformValue::NoneTextTransformValue:
-        return String::fromUTF8("none");
-    case TextTransformValue::CapitalizeTextTransformValue:
-        return String::fromUTF8("capitalize");
-    case TextTransformValue::UppercaseTextTransformValue:
-        return String::fromUTF8("uppercase");
-    case TextTransformValue::LowercaseTextTransformValue:
-        return String::fromUTF8("lowercase");
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return String::emptyString;
-    }
-}
-
 void HTMLSelectElement::addSelectedIndex(StringBuilder& data)
 {
     addProperty("selectedIndex", selectedIndex(), data);
@@ -631,10 +568,11 @@ void HTMLSelectElement::addBaseStyle(StringBuilder& data)
     addProperty("backgroundColor", s->backgroundColor().toHTMLColorCodeString(),
                 data);
     addProperty("color", s->color().toHTMLColorCodeString(), data);
-    addProperty("textTransform", textTransformToString(s->textTransform()),
-                data);
+    addProperty("textTransform",
+                StyleUtil::textTransformToString(s->textTransform()), data);
     addProperty("fontSize", s->fontSize().toString(), data);
-    addProperty("fontStyle", fontStyleToString(s->fontStyle()), data);
+    addProperty("fontStyle", StyleUtil::fontStyleToString(s->fontStyle()),
+                data);
     addProperty("fontVariant", "normal", data);
 
     size_t len = s->fontFamily()->m_length;
@@ -643,7 +581,7 @@ void HTMLSelectElement::addBaseStyle(StringBuilder& data)
         data.appendString("'");
         data.appendString(s->fontFamily()[i + 1].m_familyName);
         data.appendString("'");
-        if (i + i < len) {
+        if (i + 1 < len) {
             data.appendString(", ");
         }
     }
@@ -748,7 +686,8 @@ void HTMLSelectElement::addElementStyle(HTMLElement* element,
     }
 
     if (baseStyle->fontWeight() != s->fontWeight()) {
-        addProperty("fontWeight", fontWeightToString(s->fontWeight()), data);
+        addProperty("fontWeight",
+                    StyleUtil::fontWeightToString(s->fontWeight()), data);
     }
 
     if (baseStyle->fontFamily() != s->fontFamily()) {
@@ -758,7 +697,7 @@ void HTMLSelectElement::addElementStyle(HTMLElement* element,
             data.appendString("'");
             data.appendString(s->fontFamily()[i + 1].m_familyName);
             data.appendString("'");
-            if (i + i < len) {
+            if (i + 1 < len) {
                 data.appendString(", ");
             }
         }
@@ -766,11 +705,12 @@ void HTMLSelectElement::addElementStyle(HTMLElement* element,
     }
 
     if (baseStyle->fontStyle() != s->fontStyle()) {
-        addProperty("fontStyle", fontStyleToString(s->fontStyle()), data);
+        addProperty("fontStyle", StyleUtil::fontStyleToString(s->fontStyle()),
+                    data);
     }
     if (baseStyle->textTransform() != s->textTransform()) {
-        addProperty("textTransform", textTransformToString(s->textTransform()),
-                    data);
+        addProperty("textTransform",
+                    StyleUtil::textTransformToString(s->textTransform()), data);
     }
 
     data.appendString("},\n");
