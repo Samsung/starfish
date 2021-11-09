@@ -92,7 +92,7 @@ FrameOptionBox* FrameOptionBox::buildFrameTree(Node* currentNode,
 
     if (currentNode->childNeedsFrameTreeBuild() || force) {
         ctx.setCurrentBlockContainer(currentFrame);
-        if (currentNode->asHTMLOptionElement()->hasLabel()) {
+        if (currentNode->asHTMLOptionElement()->hasLabelOrText()) {
             // Generate pseudo element
             PseudoElement* textElement =
                 new PseudoElement(currentNode->document(), nullptr,

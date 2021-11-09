@@ -87,15 +87,11 @@ public:
         return false;
     }
 
-    bool hasLabel()
-    {
-        return m_hasLabel;
-    }
+    bool hasLabelOrText();
 
 private:
     bool m_dirtiness;
     bool m_selectedness;
-    bool m_hasLabel;
 };
 } // namespace Starfish
 #endif
