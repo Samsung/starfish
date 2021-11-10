@@ -534,8 +534,13 @@ ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tize
         ${THIRD_PARTY_ROOT}/libtuv/include
         ${THIRD_PARTY_ROOT}/libtuv/src
     )
-ELSEIF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl" OR ${BACKEND} STREQUAL "flutter")
+ELSEIF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl")
     SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS
+    )
+ELSEIF (${BACKEND} STREQUAL "flutter" AND ${HOST} STREQUAL "tizen")
+    SET (STARFISH_EFL_CAIRO_ADDITIONAL_INCLUDE_DIRS
+        ${THIRD_PARTY_ROOT}/libtuv/include
+        ${THIRD_PARTY_ROOT}/libtuv/src
     )
 ENDIF()
 
