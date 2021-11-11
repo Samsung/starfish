@@ -1740,10 +1740,10 @@ public:
         // print FrameNode type in blue for debugging readability
         printf("\033[0;32m%s[%p]\033[0m", name(), this);
         if (isFlexItem()) {
-            printf("[FlexItem]");
+            printf("\033[0;36m[FlexItem]\033[0m");
         }
         if (isGridItem()) {
-            printf("[GridItem]");
+            printf("\033[0;36m[GridItem]\033[0m");
         }
         if (isAnonymous()) {
             printf("[ANNON]");
