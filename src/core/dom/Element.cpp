@@ -1524,6 +1524,11 @@ static DocumentFragment* fragmentParsingAlgorithm(Document* document,
     return df;
 }
 
+Node* Element::createNodeWithHTML(String* html)
+{
+    return fragmentParsingAlgorithm(document(), html, this);
+}
+
 void Element::setInnerHTML(String* html)
 {
     while (firstChild()) {
