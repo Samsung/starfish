@@ -189,13 +189,17 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
 
+void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
+                                             String* attrName,
+                                             ScriptValue targetObject);
+
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           void* bufferSrc, size_t len);
 ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                                           size_t len);
 
 ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
-                                          void* scriptFreeableBuffer, size_t len);
+                                        void* scriptFreeableBuffer, size_t len);
 ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance);
 ScriptUint8Array createEmptyUint8Array(ScriptBindingInstance* instance);
 ScriptInt16Array createEmptyInt16Array(ScriptBindingInstance* instance);

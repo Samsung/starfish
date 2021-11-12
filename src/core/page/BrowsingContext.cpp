@@ -1488,6 +1488,14 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
                 ->dispatchMouseEvent(kind, newData)) {
             return true;
         }
+
+        // Because the iframe may be detached during an event, it will not be
+        // able to maintain an appropriate event path. Therefore, do a hit test
+        // again to validate event position.
+        targetNode = hitTest((float)data.clientX(), (float)data.clientY());
+        if (!targetNode) {
+            return false;
+        }
     }
 
     bool returnValue = false;

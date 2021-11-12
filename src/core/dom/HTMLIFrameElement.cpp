@@ -195,7 +195,7 @@ void HTMLIFrameElement::didNodeInsertedToDocumentTree()
 
 void HTMLIFrameElement::didNodeRemovedFromDocumentTree()
 {
-    HTMLElement::didNodeInsertedToDocumentTree();
+    HTMLElement::didNodeRemovedFromDocumentTree();
     unloadSrc();
 }
 

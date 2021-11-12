@@ -304,6 +304,7 @@ int main(int argc, char* argv[])
     bool needsDownloadWebFontsEarly = false;
     uint32_t needsDownScaleImageResourceLargerThan = 0;
     bool scrollbarVisible = true;
+    bool useExternalPopup = false;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -385,6 +386,8 @@ int main(int argc, char* argv[])
                 strlen("--needs-downscale-image-resource-larger-than="));
         } else if (strstr(argv[i], "--scrollbar-unvisible")) {
             scrollbarVisible = false;
+        } else if (strstr(argv[i], "--use-external-popup")) {
+            useExternalPopup = true;
         }
     }
 
@@ -554,6 +557,9 @@ int main(int argc, char* argv[])
             settings.SetScrollbarVisible(scrollbarVisible);
         }
 #endif
+        if (useExternalPopup) {
+            settings.SetUseExternalPopup(useExternalPopup);
+        }
         settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);
     }

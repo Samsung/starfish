@@ -124,6 +124,10 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_needsDownloadWebFontsEarly(false)
     , m_useHttp2(false)
     , m_needsDownScaleImageResourceLargerThan(0)
+#ifndef TIZEN_COMPAT_HEADER_5_0
+    , m_scrollbarVisible(true)
+#endif
+    , m_useExternalPopup(false)
 {
 }
 
@@ -165,6 +169,11 @@ uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
 bool Settings::ScrollbarVisible() const
 {
     return m_scrollbarVisible;
+}
+
+bool Settings::UseExternalPopup() const
+{
+    return m_useExternalPopup;
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
@@ -278,6 +287,11 @@ void Settings::SetScrollbarVisible(bool visible)
     m_scrollbarVisible = visible;
 }
 #endif
+
+void Settings::SetUseExternalPopup(bool useExternalPopup)
+{
+    m_useExternalPopup = useExternalPopup;
+}
 
 ResourceError::ResourceError(int code, const std::string& description,
                              const std::string& url)
@@ -897,6 +911,7 @@ Settings WebContainer::GetSettings()
 #ifndef TIZEN_COMPAT_HEADER_5_0
     result.SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
 #endif
+    result.SetUseExternalPopup(TO_WEBVIEW(m_impl)->useExternalPopup());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -1150,6 +1165,7 @@ void WebContainer::SetSettings(const Settings& settings)
 #ifndef TIZEN_COMPAT_HEADER_5_0
     TO_WEBVIEW(m_impl)->setScrollbarVisible(settings.ScrollbarVisible());
 #endif
+    TO_WEBVIEW(m_impl)->setUseExternalPopup(settings.UseExternalPopup());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

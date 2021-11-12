@@ -25,16 +25,19 @@
 
 #include "core/dom/HTMLSelectElement.h"
 
+#include "binding/WindowProxy.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLOptionsCollection.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -472,88 +475,119 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
 
 void HTMLSelectElement::showDropdownMenu()
 {
-#ifdef EXTERNAL_POPUP_MENU
-    // register the callback to be called when an item is selected
-    webView()->platformWindow()->registerCallbackHandler(
-        WindowHandlerOnDropdownMenuItemSelected, [this](void* param) -> void {
-            struct Param {
-                int position;
-            };
-            Param* p = (Param*)param;
-            onDropdownMenuItemSelected(p->position);
-            delete p;
-        });
+    if (webView()->useExternalPopup()) {
+        // register the callback to be called when an item is selected
+        webView()->platformWindow()->registerCallbackHandler(
+            WindowHandlerOnDropdownMenuItemSelected,
+            [this](void* param) -> void {
+                struct Param {
+                    int position;
+                };
+                Param* p = (Param*)param;
+                onDropdownMenuItemSelected(p->position);
+                delete p;
+            });
 
-    // calls the platform's dropdownmenu UI
-    struct Param {
-        std::vector<std::string>* list;
-        int checkedPosition;
-    };
+        // calls the platform's dropdownmenu UI
+        struct Param {
+            std::vector<std::string>* list;
+            int checkedPosition;
+        };
 
-    Param* p = new Param();
-    p->list = new std::vector<std::string>();
-    p->checkedPosition = selectedIndex();
+        Param* p = new Param();
+        p->list = new std::vector<std::string>();
+        p->checkedPosition = selectedIndex();
 
-    GCVector<HTMLOptionElement*> list;
-    computeListOfOptionElements(this, list);
-    for (auto item : list) {
-        if (item->isHTMLOptionElement()) {
-            auto o = item->asHTMLOptionElement();
-            GCVector<StringView> tokens;
-            StringUtils::wordTokenizer(o->text(), tokens);
-            StringBuilder sb;
-            for (size_t i = 0; i < tokens.size(); i++) {
-                sb.appendString(tokens[i].substring());
-                if (i < tokens.size() - 1) {
-                    sb.appendChar(' ');
+        GCVector<HTMLOptionElement*> list;
+        computeListOfOptionElements(this, list);
+        for (auto item : list) {
+            if (item->isHTMLOptionElement()) {
+                auto o = item->asHTMLOptionElement();
+                GCVector<StringView> tokens;
+                StringUtils::wordTokenizer(o->text(), tokens);
+                StringBuilder sb;
+                for (size_t i = 0; i < tokens.size(); i++) {
+                    sb.appendString(tokens[i].substring());
+                    if (i < tokens.size() - 1) {
+                        sb.appendChar(' ');
+                    }
                 }
+                p->list->push_back(sb.finalize()->toUTF8NonGCString().data());
             }
-            p->list->push_back(sb.finalize()->toUTF8NonGCString().data());
+        }
+
+        webView()->platformWindow()->callHandler(WindowHandlerShowDropdownMenu,
+                                                 (void*)p);
+    } else {
+        if (frame() == nullptr) {
+            return;
+        }
+
+        StringBuilder builder;
+        builder.appendString("window.dialogArguments = {\n");
+        addSelectedIndex(builder);
+        addBaseStyle(builder);
+        addChildren(builder);
+        addProperty("anchorRectInScreen", getBoundingClientRect(), builder);
+        addProperty("zoomFactor", 1, builder);
+        addProperty("scaleFactor", webView()->screenInfo().devicePixelRatio,
+                    builder);
+        bool isRTL = style()->direction() == DirectionValue::RtlDirectionValue;
+        addProperty("isRTL", isRTL, builder);
+        if (frame()->isFrameBox()) {
+            addProperty("paddingStart",
+                        isRTL ? frame()->asFrameBox()->paddingRight().toDouble()
+                              : frame()->asFrameBox()->paddingLeft().toDouble(),
+                        builder);
+        }
+        builder.appendString("};\n");
+
+        String* iframeId = String::fromUTF8("STARFISH_DROPDOWN_MENU");
+        builder.appendString("var iframeId ='");
+        builder.appendString(iframeId);
+        builder.appendString("';\n");
+
+        DOMRect* rect = getBoundingClientRect();
+        builder.appendString("var rect");
+        builder.appendString("= {");
+        addProperty("x", rect->x() + window()->scrollX(), builder);
+        addProperty("y", rect->y() + window()->scrollY(), builder);
+        addProperty("width", rect->width(), builder);
+        addProperty("height", rect->height(), builder);
+        builder.appendString("};\n");
+
+        int padding = static_cast<int>(
+            roundf(2 * webView()->screenInfo().devicePixelRatio));
+        int min_height = static_cast<int>(
+            roundf(12 * webView()->screenInfo().devicePixelRatio));
+        builder.appendString(String::fromUTF8("var optionStyle = '"));
+        builder.appendString(
+            String::fromUTF8("option, optgroup {padding-top:"));
+        builder.appendString(String::fromInt(padding));
+        builder.appendString(String::fromUTF8("px;} option {padding-bottom: "));
+        builder.appendString(String::fromInt(padding));
+        builder.appendString(String::fromUTF8("px;min-height: "));
+        builder.appendString(String::fromInt(min_height));
+        builder.appendString(
+            String::fromUTF8("px;display: flex;align-items: center;}'\n"));
+
+        const char pickerJs[] =
+#include "core/dom/picker.js"
+            ;
+        String* picker = String::createASCIIString(pickerJs);
+        builder.appendString(picker);
+
+        String* script = builder.finalize();
+        window()->webView()->evaluateJavaScript(script);
+
+        Element* e = document()->getElementById(iframeId);
+        if (e && e->isHTMLIFrameElement()) {
+            auto win = e->asHTMLIFrameElement()->contentWindow();
+            jsGlobalObjectDefinePropertyIfNotExists(
+                win->scriptBindingInstance(), String::fromUTF8("picker"),
+                scriptValue());
         }
     }
-
-    webView()->platformWindow()->callHandler(WindowHandlerShowDropdownMenu,
-                                             (void*)p);
-#else
-    if (frame() == nullptr) {
-        return;
-    }
-
-    StringBuilder builder;
-    builder.appendString("window.dialogArguments = {\n");
-    addSelectedIndex(builder);
-    addBaseStyle(builder);
-    addChildren(builder);
-    addProperty("anchorRectInScreen", getBoundingClientRect(), builder);
-    addProperty("zoomFactor", 1, builder);
-    addProperty("scaleFactor", webView()->screenInfo().devicePixelRatio,
-                builder);
-    addProperty("isRTL",
-                style()->direction() == DirectionValue::RtlDirectionValue,
-                builder);
-    builder.appendString("};\n");
-
-    builder.appendString("var iframeId = 'STARFISH_IFRAME';\n");
-    DOMRect* rect = getBoundingClientRect();
-    builder.appendString("var rect");
-    builder.appendString("= {");
-    addProperty("x", rect->x(), builder);
-    addProperty("y", rect->y(), builder);
-    addProperty("width", rect->width(), builder);
-    addProperty("height", rect->height(), builder);
-    builder.appendString("};\n");
-
-    const char pickerJs[] =
-#include "core/dom/picker.js"
-        ;
-    String* picker = String::createASCIIString(pickerJs);
-    builder.appendString(picker);
-
-    String* script = builder.finalize();
-    window()->webView()->evaluateJavaScript(script);
-#endif
-    // STARFISH_LOG_INFO("Picker Script:\n%s\n",
-    // script->toUTF8NonGCString().c_str());
 }
 
 void HTMLSelectElement::addSelectedIndex(StringBuilder& data)
