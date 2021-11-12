@@ -102,6 +102,7 @@ void HTMLSelectElement::setValue(String* value)
         HTMLOptionElement* opt = c->asHTMLOptionElement();
         if (opt->value()->equals(value)) {
             opt->setSelected(true);
+            opt->updateExtenedMarker();
             break;
         }
     }

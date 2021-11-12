@@ -28,6 +28,20 @@
 
 namespace Starfish {
 
+static String* g_markerStr = nullptr;
+
+static String* getMarkerStr()
+{
+    if (!g_markerStr) {
+        g_markerStr = String::createASCIIStringWithNoGC(
+            "<svg style=\"float:right;\" height=\"1em\" width=\"1em\" "
+            "viewBox=\"0 "
+            "0 10 10\"><polygon points=\"2,3 8,3 5,8\" "
+            "style=\"stroke:black;stroke-width:1;\"/></svg>");
+    }
+    return g_markerStr;
+}
+
 HTMLOptionElement::HTMLOptionElement(Document* document)
     : HTMLOptionElement(document,
                         document->starfish()->staticStrings()->m_optionTagName,
@@ -60,6 +74,8 @@ HTMLOptionElement::HTMLOptionElement(Document* document,
     : HTMLFormControl(document, qname)
     , m_dirtiness(false)
     , m_selectedness(false)
+    , m_showMarker(false)
+    , m_marker(nullptr)
 {
     if (!text->equals(String::emptyString)) {
         setTextContent(text);
@@ -77,6 +93,26 @@ HTMLOptionElement::HTMLOptionElement(Document* document,
     }
 }
 
+void HTMLOptionElement::updateExtenedMarker()
+{
+    if (m_selectedness) {
+        m_showMarker = true;
+        if (getMarkerStr() && !m_marker) {
+            Node* nd = createNodeWithHTML(getMarkerStr());
+
+            // If the content of g_markerStr is changed, this part must also be
+            // changed.
+            m_marker = nd->firstChild();
+        }
+        appendChild(m_marker);
+    } else {
+        if (m_marker && m_showMarker) {
+            removeChild(m_marker);
+        }
+        m_showMarker = false;
+    }
+}
+
 void* HTMLOptionElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLOptionElement));
@@ -84,6 +120,7 @@ void* HTMLOptionElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOptionElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLOptionElement, m_marker));
         HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLOptionElement));
         typeInited = true;
@@ -131,6 +168,7 @@ bool HTMLOptionElement::selectedness()
 void HTMLOptionElement::setSelectedness(bool selectedness)
 {
     m_selectedness = selectedness;
+    updateExtenedMarker();
 }
 
 // The value IDL attribute, on getting, must return the element's value.
@@ -312,4 +350,16 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
         }
     }
 }
+
+void HTMLOptionElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    if (newChild && newChild->isText()) {
+        if (m_showMarker) {
+            removeChild(m_marker);
+            appendChild(m_marker);
+        }
+    }
+}
+
 } // namespace Starfish

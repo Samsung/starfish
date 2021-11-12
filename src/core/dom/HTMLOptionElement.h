@@ -48,6 +48,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLOptionElement() const override;
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
 
     // Interface Option
     virtual String* value() override;
@@ -88,10 +89,13 @@ public:
     }
 
     bool hasLabelOrText();
+    void updateExtenedMarker();
 
 private:
     bool m_dirtiness;
     bool m_selectedness;
+    bool m_showMarker;
+    Node* m_marker;
 };
 } // namespace Starfish
 #endif

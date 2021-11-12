@@ -179,6 +179,8 @@ public:
 
     ShadowRoot* shadowRoot();
 
+    Node* createNodeWithHTML(String*);
+
 protected:
     size_t hasAttribute(const AttributeName& name) const;
     size_t hasAttributeNode(const AttributeName& name);
