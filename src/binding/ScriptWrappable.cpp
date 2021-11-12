@@ -776,6 +776,29 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
     return result;
 }
 
+void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
+                                             String* attrName,
+                                             ScriptValue targetObject)
+{
+    ContextRef* context = instance->scriptContext();
+    Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, String* attrName,
+           ScriptValue targetObject) -> ValueRef* {
+            ContextRef* context = state->context();
+            GlobalObjectRef* globalObject = context->globalObject();
+
+            ValueRef* name = toJSString(attrName);
+            if (!globalObject->hasOwnProperty(state, name)) {
+                globalObject->defineDataProperty(state, name, targetObject,
+                                                 false, false, true);
+            }
+
+            return ValueRef::createUndefined();
+        },
+        attrName, targetObject);
+}
+
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
@@ -856,11 +879,15 @@ ScriptArrayBuffer createScriptArrayBuffer(ScriptBindingInstance* instance,
                   size_t len) -> ValueRef* {
                    ArrayBufferObjectRef* obj =
                        ArrayBufferObjectRef::create(state);
-                   BackingStoreRef* backingStore = BackingStoreRef::createNonSharedBackingStore(bufferSrc, len, [](void* data, size_t length, void* deleterData) {
-                           // bufferSrc is not a shared buffer case
-                           // free it when BackingStore is released
-                           free(data);
-                           }, nullptr);
+                   BackingStoreRef* backingStore =
+                       BackingStoreRef::createNonSharedBackingStore(
+                           bufferSrc, len,
+                           [](void* data, size_t length, void* deleterData) {
+                               // bufferSrc is not a shared buffer case
+                               // free it when BackingStore is released
+                               free(data);
+                           },
+                           nullptr);
                    obj->attachBuffer(backingStore);
                    return obj;
                },
@@ -894,23 +921,29 @@ ScriptInt8Array createEmptyInt8Array(ScriptBindingInstance* instance)
 }
 
 ScriptUint8Array createScriptUint8Array(ScriptBindingInstance* instance,
-                                          void* scriptFreeableBuffer, size_t len)
+                                        void* scriptFreeableBuffer, size_t len)
 {
     ContextRef* ctx = instance->scriptContext();
-    return Evaluator::execute(ctx,
-                              [](ExecutionStateRef* state, void* scriptFreeableBuffer,
-                                      size_t len) -> ValueRef* {
-                                  auto buf = ArrayBufferObjectRef::create(state);
-                                  BackingStoreRef* backingStore = BackingStoreRef::createNonSharedBackingStore(scriptFreeableBuffer, len, [](void* data, size_t length, void* deleterData) {
-                                          // scriptFreeableBuffer is not a shared buffer case
-                                          // free it when BackingStore is released
-                                          free(data);
-                                          }, nullptr);
-                                  buf->attachBuffer(backingStore);
-                                  auto arr = Uint8ArrayObjectRef::create(state);
-                                  arr->setBuffer(buf, 0, len, len);
-                                  return arr;
-                              }, scriptFreeableBuffer, len)
+    return Evaluator::execute(
+               ctx,
+               [](ExecutionStateRef* state, void* scriptFreeableBuffer,
+                  size_t len) -> ValueRef* {
+                   auto buf = ArrayBufferObjectRef::create(state);
+                   BackingStoreRef* backingStore =
+                       BackingStoreRef::createNonSharedBackingStore(
+                           scriptFreeableBuffer, len,
+                           [](void* data, size_t length, void* deleterData) {
+                               // scriptFreeableBuffer is not a shared buffer
+                               // case free it when BackingStore is released
+                               free(data);
+                           },
+                           nullptr);
+                   buf->attachBuffer(backingStore);
+                   auto arr = Uint8ArrayObjectRef::create(state);
+                   arr->setBuffer(buf, 0, len, len);
+                   return arr;
+               },
+               scriptFreeableBuffer, len)
         .result->asUint8ArrayObject();
 }
 

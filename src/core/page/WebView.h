@@ -426,6 +426,16 @@ public:
         return m_scrollbarVisible;
     }
 
+    void setUseExternalPopup(bool useExternalPopup)
+    {
+        m_useExternalPopup = useExternalPopup;
+    }
+
+    bool useExternalPopup()
+    {
+        return m_useExternalPopup;
+    }
+
     void setBaseForegroundColor(Unit::Color color)
     {
         m_baseForegroundColor = color;
@@ -613,6 +623,7 @@ private:
     bool m_needsDownloadWebFontsEarly;
     uint32_t m_needsDownScaleImageResourceLargerThan;
     bool m_scrollbarVisible;
+    bool m_useExternalPopup;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };
