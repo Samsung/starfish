@@ -251,7 +251,7 @@ public:
             className += " ";
         }
 
-        printf("Class:[%s] ", className.data());
+        printf("Class:[%s]", className.data());
     }
 #endif
 

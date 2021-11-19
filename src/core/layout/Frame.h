@@ -1745,9 +1745,6 @@ public:
         if (isGridItem()) {
             printf("\033[0;36m[GridItem]\033[0m");
         }
-        if (isAnonymous()) {
-            printf("[ANNON]");
-        }
         if (needToEstablishBlockFormattingContext()) {
             if (needsPainting()) {
                 printf("[BLKFRMTCTX]");
@@ -1755,6 +1752,12 @@ public:
         }
         if (needsPainting()) {
             printf("[NPTG]");
+        }
+        if (isAnonymous()) {
+            printf("[ANNON]");
+        } else {
+            printf(" ");
+            node()->dump();
         }
     }
 #endif
