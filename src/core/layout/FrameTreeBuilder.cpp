@@ -1496,10 +1496,6 @@ void dump(Frame* frm, unsigned depth)
 
     printf("\033[0;33m[%u]\033[0m", depth);
     frm->dump(depth);
-    if (frm->node()) {
-        printf(" ");
-        frm->node()->dump();
-    }
     printf("\n");
 
     Frame* f = frm->firstChild();
