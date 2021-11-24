@@ -1522,16 +1522,23 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             width = gridArea.preferredWidth();
         } else {
             GridTrack& colTrack = m_gridTemplateColumns[gridArea.columnStart()];
-            for (size_t i = gridArea.columnStart(); i < gridArea.columnEnd(); i++) {
+            for (size_t i = gridArea.columnStart(); i < gridArea.columnEnd();
+                 i++) {
                 width += m_gridTemplateColumns[i].size();
             }
 
-            width +=
-                ((gridArea.columnEnd() - gridArea.columnStart() - 1) * m_columnGap);
+            width += ((gridArea.columnEnd() - gridArea.columnStart() - 1) *
+                      m_columnGap);
         }
     }
 
     LayoutUnit widthWillBe = width;
+
+    bool shouldPaddingAbsorbSpace = true;
+    if (gridItem->isFrameFlexibleBox() ||
+        style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+        shouldPaddingAbsorbSpace = false;
+    }
 
     // ref: https://www.w3.org/TR/css-grid-1/#auto-margins
     // TODO: auto margins absorb positive free space prior to alignment via the
@@ -1556,27 +1563,20 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().left().isAuto()) {
         style->setPaddingLeft(Length(Length::Fixed, 0));
-    } else {
-        // TODO: Another issue related to #3384 was found while solving #3384.
-        // Please refer to the test below for details.
-        // test/cairo/internal-test/css/grid/girdbox_child_flexbox_with_padding_2.html
-        if (!gridItem->isFrameFlexibleBox()) {
-            style->setPaddingLeft(
-                Length(Length::Fixed,
-                    style->padding().left().specifiedValue(width, m_container)));
-            widthWillBe -= style->padding().left().fixed();
-        }
+    } else if (shouldPaddingAbsorbSpace) {
+        style->setPaddingLeft(
+            Length(Length::Fixed,
+                   style->padding().left().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().left().fixed();
     }
 
     if (style->padding().right().isAuto()) {
         style->setPaddingRight(Length(Length::Fixed, 0));
-    } else {
-        if (!gridItem->isFrameFlexibleBox()) {
-            style->setPaddingRight(Length(
-                Length::Fixed,
-                style->padding().right().specifiedValue(width, m_container)));
-            widthWillBe -= style->padding().right().fixed();
-        }
+    } else if (shouldPaddingAbsorbSpace) {
+        style->setPaddingRight(Length(
+            Length::Fixed,
+            style->padding().right().specifiedValue(width, m_container)));
+        widthWillBe -= style->padding().right().fixed();
     }
 
     style->setBorderLeftWidth(Length(
@@ -1638,24 +1638,20 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().top().isAuto()) {
         style->setPaddingTop(Length(Length::Fixed, 0));
-    } else {
-        if (!gridItem->isFrameFlexibleBox()) {
-            style->setPaddingTop(
-                Length(Length::Fixed,
-                    style->padding().top().specifiedValue(height, m_container)));
-            heightWillBe -= style->padding().top().fixed();
-        }
+    } else if (shouldPaddingAbsorbSpace) {
+        style->setPaddingTop(
+            Length(Length::Fixed,
+                   style->padding().top().specifiedValue(height, m_container)));
+        heightWillBe -= style->padding().top().fixed();
     }
 
     if (style->padding().bottom().isAuto()) {
         style->setPaddingBottom(Length(Length::Fixed, 0));
-    } else {
-        if (!gridItem->isFrameFlexibleBox()) {
-            style->setPaddingBottom(Length(
-                Length::Fixed,
-                style->padding().bottom().specifiedValue(height, m_container)));
-            heightWillBe -= style->padding().bottom().fixed();
-        }
+    } else if (shouldPaddingAbsorbSpace) {
+        style->setPaddingBottom(Length(
+            Length::Fixed,
+            style->padding().bottom().specifiedValue(height, m_container)));
+        heightWillBe -= style->padding().bottom().fixed();
     }
 
     style->setBorderTopWidth(Length(
