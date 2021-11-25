@@ -107,6 +107,7 @@ public:
     void unprepare();
     int ttsPlay();
     int ttsState();
+    int ttsStop();
 
     void speech(Element* element, String* text);
     void speech(SpeechSynthesisUtterance* utterance);
