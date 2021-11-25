@@ -119,6 +119,12 @@ int TTS::ttsPlay()
 {
     return 0;
 }
+
+int TTS::ttsStop()
+{
+    return 0;
+}
+
 } // namespace Starfish
 
 #endif

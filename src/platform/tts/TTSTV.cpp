@@ -540,11 +540,7 @@ void TTS::unprepare()
     if (state != TTS_STATE_CREATED) {
         int ret = TTS_ERROR_NONE;
         if (state == TTS_STATE_PLAYING || state == TTS_STATE_PAUSED) {
-            STARFISH_LOG_INFO("[TTS] tts_stop\n");
-            ret = tts_stop(m_handle);
-            if (ret != TTS_ERROR_NONE) {
-                STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
-            }
+            ttsStop();
         }
 
         ret = tts_unprepare(m_handle);
@@ -581,11 +577,7 @@ int TTS::speechElementText()
     if (state == TTS_STATE_CREATED) {
         return prepare();
     } else {
-        STARFISH_LOG_ERROR("[TTS] tts_stop\n");
-        ret = tts_stop(m_handle);
-        if (ret != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
-        }
+        ttsStop();
     }
 
     ttsPlay();
@@ -619,6 +611,35 @@ int TTS::ttsPlay()
         return ret;
     }
 
+    return ret;
+}
+
+int TTS::ttsStop()
+{
+    bool needStop = false;
+    int ret = 0;
+    if (m_lweTTSMode != LWE::TTSMode::Forced) {
+        int accessibility = 0;
+        int error =
+            vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &accessibility);
+        if (error) {
+            STARFISH_LOG_ERROR("[TTS] vconf_get_bool failed : %s",
+                               get_error_message(error));
+        }
+        if (accessibility == 1) {
+            needStop = true;
+        }
+    } else {
+        needStop = true;
+    }
+
+    if (needStop) {
+        STARFISH_LOG_INFO("[TTS] tts_stop\n");
+        ret = tts_stop(m_handle);
+        if (ret != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("[TTS] tts_stop failed : %d", ret);
+        }
+    }
     return ret;
 }
 
@@ -772,12 +793,12 @@ void TTS::cancel()
     int utterId = currentUtterId();
     if (utteranceList().size() == 0) {
         // whatever we try to stop tts
-        tts_stop(m_handle);
+        ttsStop();
         return;
     }
 
     STARFISH_LOG_INFO("[TTS] Cancel speaking! [ID:%d] \n", utterId);
-    int ret = tts_stop(m_handle);
+    int ret = ttsStop();
     if (ret != TTS_ERROR_NONE) {
         dispatchErrorEvent(this, utterId, errorToString(ret),
                            errorToString(ret));
