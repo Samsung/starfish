@@ -45,6 +45,7 @@ LWSRunnable::LWSRunnable(MessageLoop* messageLoop, SocketLWS* socket)
 
 bool LWSRunnable::preRun()
 {
+    lws_client_connect_via_info(&m_socket->m_lwsClientConnectInfo);
     return true;
 }
 
