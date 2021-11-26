@@ -60,6 +60,7 @@ private:
 
 class SocketLWS : public Socket {
 public:
+    friend class LWSRunnable;
     enum LwsEvent { OPEN, ERROR, CLOSE, ONMESSAGE };
     class Exception : public Socket::Exception {
     public:
@@ -132,7 +133,6 @@ private:
     UTF8StringDataNonGCStd m_urlPath;
     UTF8StringDataNonGCStd m_protocol;
 
-    lws_context_creation_info m_lwsContextCreationInfo;
     lws_client_connect_info m_lwsClientConnectInfo;
     lws_context* m_lwsContext;
     lws* m_lwsClient;
@@ -144,8 +144,6 @@ private:
     std::string m_closeReasonStr;
     size_t m_closeReasonCode;
     uint64_t m_txBufferSize;
-
-    lws_protocols m_lwsProtocols[2];
 };
 
 } // namespace Starfish
