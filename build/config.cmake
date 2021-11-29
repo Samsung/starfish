@@ -441,17 +441,17 @@ ENDIF()
 
 IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter")
     IF (NOT (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1"))
-        IF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
-            SET (STARFISH_LIBRARIES_BACKEND jpeg gif webp)
+        IF (${HOST} STREQUAL "tizen")
+            IF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
+                SET (STARFISH_LIBRARIES_BACKEND jpeg gif webp)
+            ELSE()
+                SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
+            ENDIF()
         ELSE()
-            SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
+            SET (STARFISH_LIBRARIES_BACKEND jpeg gif webp)
         ENDIF()
     ELSE()
-        IF ((${TIZEN_MAJOR_VERSION} GREATER 6) OR (${TIZEN_MAJOR_VERSION} EQUAL 6))
-            SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png webp)
-        ELSE()
-            SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png)
-        ENDIF()
+        SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png)
     ENDIF()
 
     IF (${BACKEND} MATCHES "efl_cairo")
@@ -588,6 +588,9 @@ IF (${HOST} STREQUAL "tizen")
             ${THIRD_PARTY_ROOT}/giflib
             ${THIRD_PARTY_ROOT}/libjpeg-turbo
             ${THIRD_PARTY_ROOT}/libpng
+        )
+        SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+            -DSTARFISH_USE_EMBEDDED_IMAGE_DECODER
         )
     ENDIF()
 ENDIF()
