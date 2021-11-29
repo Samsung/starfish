@@ -452,6 +452,7 @@ private:
     void resolveMinMaxContentSize(size_t gridTrackIndex);
     void applyAlignItemsCenter();
 
+    LayoutSize fetchFixedMargin(FrameGridBox* grid, ComputedStyle* style);
     LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
                                              ComputedStyle* style);
 };

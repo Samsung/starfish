@@ -166,10 +166,12 @@ uint32_t Settings::NeedsDownScaleImageResourceLargerThan() const
     return m_needsDownScaleImageResourceLargerThan;
 }
 
+#ifndef TIZEN_COMPAT_HEADER_5_0
 bool Settings::ScrollbarVisible() const
 {
     return m_scrollbarVisible;
 }
+#endif
 
 bool Settings::UseExternalPopup() const
 {

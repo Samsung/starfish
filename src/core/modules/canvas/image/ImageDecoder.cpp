@@ -45,7 +45,7 @@ extern "C" {
 #include <png.h>
 #include <gif_lib.h>
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
+#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
 #include <webp/decode.h>
 #endif
 
@@ -743,7 +743,7 @@ static ImageDecoder::DecodeResult decodeGIF(
     return result;
 }
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
+#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
 static ImageDecoder::DecodeResult decodeWebP(
     const std::vector<char>& inputBuffer, bool needsDecoding)
 {
@@ -795,7 +795,7 @@ static ImageDecoder::DecodeResult decodeBuffer(
                          needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
         return decodeGIF(inputBuffer, full);
-#if !defined(STARFISH_TIZEN_VERSION_5_0)
+#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
     } else if (isWebPFormat(inputBuffer)) {
         return decodeWebP(inputBuffer, full);
 #endif

@@ -974,12 +974,11 @@ void GridFormattingContext::buildGridTrackTemplate()
     expandFrRowTracks();
     layoutGridItemFrameBoxes();
 }
-
-LayoutSize GridFormattingContext::fetchFixedMarginBorderPadding(
-    FrameGridBox* grid, ComputedStyle* style)
+LayoutSize GridFormattingContext::fetchFixedMargin(FrameGridBox* grid,
+                                                   ComputedStyle* style)
 {
     LayoutSize result;
-    // margin
+
     LengthData margin = style->margin();
     if (margin.left().isDefinite(false)) {
         result.setWidth(result.width() + margin.left().specifiedValue(0, grid));
@@ -996,6 +995,16 @@ LayoutSize GridFormattingContext::fetchFixedMarginBorderPadding(
         result.setHeight(result.height() +
                          margin.bottom().specifiedValue(0, grid));
     }
+
+    return result;
+}
+
+LayoutSize GridFormattingContext::fetchFixedMarginBorderPadding(
+    FrameGridBox* grid, ComputedStyle* style)
+{
+    LayoutSize result;
+    // margin
+    result = fetchFixedMargin(grid, style);
 
     // border
     BorderData border = style->border();
@@ -1356,10 +1365,16 @@ void GridFormattingContext::initializeContentHeights()
         GridLayoutScope scope(gridItem);
         ComputedStyle* style = gridItem->style();
         LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
+        LayoutSize margin = fetchFixedMargin(m_container, style);
 
         LayoutUnit contentHeight = 0;
+
         if (style->height().isFixed()) {
-            contentHeight = style->height().fixed() + mbp.height();
+            if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+                contentHeight = style->height().fixed() + margin.height();
+            } else {
+                contentHeight = style->height().fixed() + mbp.height();
+            }
         } else {
             layoutGridItemFrameBox(gridArea, true);
             contentHeight = gridItem->contentHeight() + mbp.height();
@@ -1511,6 +1526,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     GridLayoutScope scope(gridItem);
     ComputedStyle* style = gridItem->style();
 
+    LayoutSize margin = fetchFixedMargin(m_container, style);
     LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
 
     LayoutUnit width = 0;
@@ -1614,6 +1630,9 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         }
 
         height += ((gridArea.rowEnd() - gridArea.rowStart() - 1) * m_rowGap);
+        if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+            height += mbp.height() - margin.height();
+        }
     }
 
     LayoutUnit heightWillBe = height;
@@ -1638,7 +1657,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().top().isAuto()) {
         style->setPaddingTop(Length(Length::Fixed, 0));
-    } else if (shouldPaddingAbsorbSpace) {
+    } else {
         style->setPaddingTop(
             Length(Length::Fixed,
                    style->padding().top().specifiedValue(height, m_container)));
@@ -1647,7 +1666,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().bottom().isAuto()) {
         style->setPaddingBottom(Length(Length::Fixed, 0));
-    } else if (shouldPaddingAbsorbSpace) {
+    } else {
         style->setPaddingBottom(Length(
             Length::Fixed,
             style->padding().bottom().specifiedValue(height, m_container)));
@@ -1663,9 +1682,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         style->border().bottom().width().specifiedValue(height, m_container)));
     heightWillBe -= style->border().bottom().width().fixed();
 
-    if (!style->height().isFixed()) {
-        height = heightWillBe;
-    }
+    height = heightWillBe;
 
     if (height < 0) {
         height = 0;
