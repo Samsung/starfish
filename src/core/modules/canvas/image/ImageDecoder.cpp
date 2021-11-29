@@ -45,8 +45,11 @@ extern "C" {
 #include <png.h>
 #include <gif_lib.h>
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
+#if !defined(STARFISH_TIZEN_VERSION_5_0) && \
+    !defined(STARFISH_TIZEN_VERSION_5_5) && \
+    !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER)
 #include <webp/decode.h>
+#define STARFISH_ENABLE_WEBP
 #endif
 
 #define GIF_DISPOSE_SHIFT 2
@@ -90,6 +93,7 @@ static bool isGIFFormat(const std::vector<char>& inputBuffer)
     }
 }
 
+#if defined(STARFISH_ENABLE_WEBP)
 static bool isWebPFormat(const std::vector<char>& inputBuffer)
 {
     unsigned char* data = (unsigned char*)inputBuffer.data();
@@ -100,6 +104,7 @@ static bool isWebPFormat(const std::vector<char>& inputBuffer)
         return false;
     }
 }
+#endif
 
 typedef struct {
     const unsigned char* mem;
@@ -743,7 +748,7 @@ static ImageDecoder::DecodeResult decodeGIF(
     return result;
 }
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
+#if defined(STARFISH_ENABLE_WEBP)
 static ImageDecoder::DecodeResult decodeWebP(
     const std::vector<char>& inputBuffer, bool needsDecoding)
 {
@@ -795,7 +800,7 @@ static ImageDecoder::DecodeResult decodeBuffer(
                          needsDownScaleImageResourceLargerThan);
     } else if (isGIFFormat(inputBuffer)) {
         return decodeGIF(inputBuffer, full);
-#if !defined(STARFISH_TIZEN_VERSION_5_0) && !defined(STARFISH_TIZEN_VERSION_5_5)
+#if defined(STARFISH_ENABLE_WEBP)
     } else if (isWebPFormat(inputBuffer)) {
         return decodeWebP(inputBuffer, full);
 #endif
