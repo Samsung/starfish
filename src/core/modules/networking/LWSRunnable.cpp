@@ -20,10 +20,13 @@
 #ifdef STARFISH_ENABLE_WEBSOCKET
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/modules/networking/WebSocket.h"
 #include "core/modules/networking/SocketLWS.h"
 #include "core/modules/networking/LWSRunnable.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/page/WebBase.h"
 
 #if defined(STARFISH_WINDOWS)
 extern "C" {
@@ -40,7 +43,31 @@ LWSRunnable::LWSRunnable(MessageLoop* messageLoop, SocketLWS* socket)
     : BaseRunnable(messageLoop)
     , m_socket(socket)
 {
-    STARFISH_ASSERT(messageLoop != nullptr);
+    class LWSRunnableClient : public BaseRunnable::Client {
+    public:
+        LWSRunnableClient(SocketLWS* socket)
+            : m_socket(socket)
+        {
+            m_socket->parent()
+                ->executionContext()
+                ->webBase()
+                ->starfish()
+                ->addPointerInRootSet(m_socket);
+        }
+
+        virtual void onStopped() override
+        {
+            m_socket->parent()
+                ->executionContext()
+                ->webBase()
+                ->starfish()
+                ->removePointerFromRootSet(m_socket);
+        }
+
+    private:
+        SocketLWS* m_socket;
+    };
+    addClient(new LWSRunnableClient(socket));
 }
 
 bool LWSRunnable::preRun()
