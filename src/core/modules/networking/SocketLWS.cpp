@@ -269,7 +269,6 @@ SocketLWS::SocketLWS(WebSocket* socket)
     WebBase* webBase = parent()->executionContext()->webBase();
     m_thread = new AdaptedThread(webBase->threadPool());
     m_runnable = new LWSRunnable(webBase->messageLoop(), this);
-    webBase->starfish()->addPointerInRootSet(this);
 
     if (!strcmp(prot, "https") || !strcmp(prot, "wss")) {
         useSSL = LCCSCF_USE_SSL | LCCSCF_ALLOW_SELFSIGNED |
@@ -305,15 +304,6 @@ void SocketLWS::finalize()
                          m_lwsContext);
         m_lwsContext = nullptr;
         m_lwsClient = nullptr;
-        WebBase* webBase = parent()->executionContext()->webBase();
-        webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t handle, void* data) {
-                SocketLWS* self = (SocketLWS*)data;
-                self->parent()->executionContext()->removePointerFromRootSet(
-                    self);
-            },
-            this);
     }
 }
 

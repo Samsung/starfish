@@ -258,8 +258,8 @@ void WebSocket::dispose()
 {
     setReadyState(WebSocket::ReadyState::CLOSED);
     executionContext()->removeActiveWebSockets(this);
-    if (m_socketLWS) {
-        m_socketLWS->shutdown(0);
+    if (m_socketLWS && !m_socketLWS->needsToClose()) {
+        m_socketLWS->close("", 0, CloseCode::NormalClosure);
     }
 }
 
