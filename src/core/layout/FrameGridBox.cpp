@@ -1545,16 +1545,13 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
             width += ((gridArea.columnEnd() - gridArea.columnStart() - 1) *
                       m_columnGap);
+            if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+                width += mbp.width() - margin.width();
+            }
         }
     }
 
     LayoutUnit widthWillBe = width;
-
-    bool shouldPaddingAbsorbSpace = true;
-    if (gridItem->isFrameFlexibleBox() ||
-        style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
-        shouldPaddingAbsorbSpace = false;
-    }
 
     // ref: https://www.w3.org/TR/css-grid-1/#auto-margins
     // TODO: auto margins absorb positive free space prior to alignment via the
@@ -1579,7 +1576,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().left().isAuto()) {
         style->setPaddingLeft(Length(Length::Fixed, 0));
-    } else if (shouldPaddingAbsorbSpace) {
+    } else {
         style->setPaddingLeft(
             Length(Length::Fixed,
                    style->padding().left().specifiedValue(width, m_container)));
@@ -1588,7 +1585,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     if (style->padding().right().isAuto()) {
         style->setPaddingRight(Length(Length::Fixed, 0));
-    } else if (shouldPaddingAbsorbSpace) {
+    } else {
         style->setPaddingRight(Length(
             Length::Fixed,
             style->padding().right().specifiedValue(width, m_container)));
