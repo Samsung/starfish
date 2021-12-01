@@ -168,62 +168,6 @@ SocketLWSData::SocketLWSData(const char* buf, size_t size,
     memcpy(((char*)m_buffer) + LWS_PRE, buf, size);
 }
 
-static std::vector<
-    std::pair<std::tuple<int, UTF8StringDataNonGCStd>, lws_context*>>
-    g_lwsContexts;
-static std::mutex g_lwsContextsMutex;
-
-static void giveUpLwsContext(int useSSL, const UTF8StringDataNonGCStd& protocol,
-                             lws_context* ctx)
-{
-    std::lock_guard<std::mutex> g(g_lwsContextsMutex);
-    g_lwsContexts.push_back(
-        std::make_pair(std::make_tuple(useSSL, protocol), ctx));
-}
-
-static lws_context* lwsContext(int useSSL,
-                               const UTF8StringDataNonGCStd& protocol)
-{
-    {
-        std::lock_guard<std::mutex> g(g_lwsContextsMutex);
-        for (size_t i = 0; i < g_lwsContexts.size(); i++) {
-            if (std::get<0>(g_lwsContexts[i].first) == useSSL ||
-                std::get<1>(g_lwsContexts[i].first) == protocol) {
-                auto ret = g_lwsContexts[i].second;
-                g_lwsContexts.erase(i + g_lwsContexts.begin());
-                return ret;
-            }
-        }
-    }
-
-    lws_protocols* lwsProtocols = new lws_protocols[2];
-    lwsProtocols[0] = {
-        strdup(protocol.data()), SocketLWS::lwsEventCallback, 0, 0, 0, NULL, 0
-    };
-    lwsProtocols[1] = { nullptr, nullptr, 0, 0, 0, NULL, 0 };
-
-    lws_context_creation_info* lwsContextCreationInfo =
-        new lws_context_creation_info();
-    lwsContextCreationInfo->port = CONTEXT_PORT_NO_LISTEN;
-    lwsContextCreationInfo->protocols = lwsProtocols;
-    lwsContextCreationInfo->options = 0;
-
-    static bool sslInited = false;
-    if (!sslInited && useSSL) {
-        lwsContextCreationInfo->options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-        lwsContextCreationInfo->options |= LWS_SERVER_OPTION_UNIX_SOCK;
-        sslInited = true;
-    }
-
-    if (useSSL) {
-        lwsContextCreationInfo->client_ssl_ca_filepath =
-            SocketLWSDefaultCertPath;
-    }
-
-    lws_context* ctx = lws_create_context(lwsContextCreationInfo);
-    return ctx;
-}
-
 SocketLWS::SocketLWS(WebSocket* socket)
     : m_needsToClose(false)
     , m_workerStarted(false)
@@ -231,6 +175,8 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_isReady(false)
     , m_parent(socket)
     , m_lwsContext(nullptr)
+    , m_lwsProtocols(nullptr)
+    , m_lwsContextCreationInfo(nullptr)
     , m_lwsClient(nullptr)
     , m_txMutex(new Mutex())
     , m_closeReasonStr(std::string())
@@ -275,7 +221,31 @@ SocketLWS::SocketLWS(WebSocket* socket)
                  LCCSCF_SKIP_SERVER_CERT_HOSTNAME_CHECK;
     }
 
-    m_lwsContext = lwsContext(useSSL, m_protocol);
+    m_lwsProtocols = new lws_protocols[2];
+    m_lwsProtocols[0] = {
+        strdup(m_protocol.data()), SocketLWS::lwsEventCallback, 0, 0, 0, NULL, 0
+    };
+    m_lwsProtocols[1] = { nullptr, nullptr, 0, 0, 0, NULL, 0 };
+
+    m_lwsContextCreationInfo = new lws_context_creation_info();
+    m_lwsContextCreationInfo->port = CONTEXT_PORT_NO_LISTEN;
+    m_lwsContextCreationInfo->protocols = m_lwsProtocols;
+    m_lwsContextCreationInfo->options = 0;
+
+    static bool sslInited = false;
+    if (!sslInited && useSSL) {
+        m_lwsContextCreationInfo->options |=
+            LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+        m_lwsContextCreationInfo->options |= LWS_SERVER_OPTION_UNIX_SOCK;
+        sslInited = true;
+    }
+
+    if (useSSL) {
+        m_lwsContextCreationInfo->client_ssl_ca_filepath =
+            SocketLWSDefaultCertPath;
+    }
+
+    m_lwsContext = lws_create_context(m_lwsContextCreationInfo);
 
     m_lwsClientConnectInfo.context = m_lwsContext;
     m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
@@ -294,14 +264,16 @@ SocketLWS::SocketLWS(WebSocket* socket)
 }
 SocketLWS::~SocketLWS()
 {
+    waitForWorkerEnd();
+    delete[] m_lwsProtocols;
+    delete m_lwsContextCreationInfo;
 }
 
 void SocketLWS::finalize()
 {
     m_alive = false;
     if (m_lwsContext != nullptr) {
-        giveUpLwsContext(m_lwsClientConnectInfo.ssl_connection, m_protocol,
-                         m_lwsContext);
+        lws_context_destroy(m_lwsContext);
         m_lwsContext = nullptr;
         m_lwsClient = nullptr;
     }
@@ -409,6 +381,14 @@ short SocketLWS::getEvents()
 void SocketLWS::addToRxBuffer(char* param, size_t size)
 {
     m_rxBuffer.insert(m_rxBuffer.end(), param, param + size);
+}
+
+void SocketLWS::waitForWorkerEnd()
+{
+    if (m_workerStarted) {
+        m_thread->join();
+        m_workerStarted = false;
+    }
 }
 
 uint64_t SocketLWS::txBufferSize()
