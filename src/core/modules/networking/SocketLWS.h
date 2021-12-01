@@ -115,6 +115,8 @@ public:
         return m_closeReasonCode;
     }
 
+    void waitForWorkerEnd();
+
     uint64_t txBufferSize();
 
     static int lwsEventCallback(struct lws* wsi,
@@ -135,6 +137,9 @@ private:
 
     lws_client_connect_info m_lwsClientConnectInfo;
     lws_context* m_lwsContext;
+    lws_protocols* m_lwsProtocols;
+    lws_context_creation_info* m_lwsContextCreationInfo;
+
     lws* m_lwsClient;
 
     Mutex* m_txMutex;
