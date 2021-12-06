@@ -123,10 +123,12 @@ int SocketLWS::lwsEventCallback(struct lws* wsi,
 
                 WebBase* webBase =
                     socket->parent()->executionContext()->webBase();
+                socket->ref();
                 webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
                     nullptr,
                     [](size_t handle, void* data, void* data1) {
                         SocketLWS* socket = (SocketLWS*)data;
+                        socket->deref();
                         size_t siz = (size_t)data1;
                         socket->m_txBufferSize -= siz;
                     },
@@ -173,6 +175,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     , m_workerStarted(false)
     , m_alive(true)
     , m_isReady(false)
+    , m_refCount(0)
     , m_parent(socket)
     , m_lwsContext(nullptr)
     , m_lwsProtocols(nullptr)
@@ -192,6 +195,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((SocketLWS*)obj)->~SocketLWS(); },
         NULL, NULL, NULL);
+
     int useSSL = 0;
     const char* prot;
     m_url = parent()->url()->toUTF8NonGCString();
@@ -261,12 +265,32 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     m_workerStarted = true;
     m_thread->start(m_runnable);
+
+    ref();
+    parent()->executionContext()->webBase()->starfish()->addPointerInRootSet(
+        this);
+
+    STARFISH_LOG_ERROR("%p SocketLWS::SocketLWS called\n", this);
 }
 SocketLWS::~SocketLWS()
 {
     waitForWorkerEnd();
     delete[] m_lwsProtocols;
     delete m_lwsContextCreationInfo;
+
+    STARFISH_LOG_ERROR("%p SocketLWS::~SocketLWS called\n", this);
+}
+
+void SocketLWS::deref()
+{
+    STARFISH_RELEASE_ASSERT(m_refCount >= 1);
+    if (m_refCount.fetch_sub(1) == 1) {
+        parent()
+            ->executionContext()
+            ->webBase()
+            ->starfish()
+            ->removePointerFromRootSet(this);
+    }
 }
 
 void SocketLWS::finalize()
@@ -406,27 +430,31 @@ void SocketLWS::updateState(WebSocket::ReadyState state)
     switch (state) {
     case WebSocket::ReadyState::OPEN: {
         m_isReady = true;
+        ref();
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
             [](size_t handle, void* data) {
-                WebSocket* socket = (WebSocket*)data;
-                socket->setReadyState(WebSocket::ReadyState::OPEN);
+                SocketLWS* socket = (SocketLWS*)data;
+                socket->deref();
+                socket->parent()->setReadyState(WebSocket::ReadyState::OPEN);
             },
-            parent());
+            this);
         break;
     }
     case WebSocket::ReadyState::CLOSED: {
         m_isReady = false;
         // if there was error, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
-            WebSocket* socket = (WebSocket*)data;
-            socket->setReadyState(WebSocket::ReadyState::CLOSED);
+            SocketLWS* socket = (SocketLWS*)data;
+            socket->deref();
+            socket->parent()->setReadyState(WebSocket::ReadyState::CLOSED);
         };
+        ref();
         if (isMainThread()) {
-            webBase->messageLoop()->addIdler(nullptr, fn, parent());
+            webBase->messageLoop()->addIdler(nullptr, fn, this);
         } else {
             webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                nullptr, fn, parent());
+                nullptr, fn, this);
         }
         break;
     }
@@ -444,10 +472,12 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
 
     switch (eventType) {
     case LwsEvent::OPEN: {
+        ref();
         webBase->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
             [](size_t handle, void* data) {
                 SocketLWS* lws = (SocketLWS*)data;
+                lws->deref();
                 WebSocket* socket = lws->parent();
                 String* eventName = socket->executionContext()
                                         ->starfish()
@@ -462,6 +492,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         // if address is wrong, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
             SocketLWS* lws = (SocketLWS*)data;
+            lws->deref();
             WebSocket* socket = lws->parent();
             String* eventName = socket->executionContext()
                                     ->starfish()
@@ -470,6 +501,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
             Event* e = new Event(socket->executionContext(), eventName);
             socket->EventTarget::dispatchEventByUA(socket, e);
         };
+        ref();
         if (isMainThread()) {
             webBase->messageLoop()->addIdler(nullptr, fn, this);
         } else {
@@ -481,6 +513,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         // if there was error, the callback is fired by main thread
         auto fn = [](size_t handle, void* data) {
             SocketLWS* lws = (SocketLWS*)data;
+            lws->deref();
             WebSocket* socket = lws->parent();
             String* eventName = socket->executionContext()
                                     ->starfish()
@@ -496,6 +529,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                 lws->closeReason().c_str(), lws->closeReason().length()));
             socket->EventTarget::dispatchEventByUA(socket, e);
         };
+        ref();
         if (isMainThread()) {
             webBase->messageLoop()->addIdler(nullptr, fn, this);
         } else {
@@ -504,6 +538,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
         }
     } break;
     case LwsEvent::ONMESSAGE: {
+        ref();
         if (isBinary) {
             struct Param {
                 std::vector<char> data;
@@ -518,7 +553,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
-
+                    lws->deref();
                     WebSocket* socket = lws->parent();
                     String* eventName = socket->executionContext()
                                             ->starfish()
@@ -566,7 +601,7 @@ void SocketLWS::publishEvent(LwsEvent eventType, bool isBinary)
                 [](size_t handle, void* data) {
                     Param* p = (Param*)data;
                     SocketLWS* lws = p->lws;
-
+                    lws->deref();
                     WebSocket* socket = lws->parent();
                     String* eventName = socket->executionContext()
                                             ->starfish()

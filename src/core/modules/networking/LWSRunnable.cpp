@@ -48,20 +48,11 @@ LWSRunnable::LWSRunnable(MessageLoop* messageLoop, SocketLWS* socket)
         LWSRunnableClient(SocketLWS* socket)
             : m_socket(socket)
         {
-            m_socket->parent()
-                ->executionContext()
-                ->webBase()
-                ->starfish()
-                ->addPointerInRootSet(m_socket);
         }
 
         virtual void onStopped() override
         {
-            m_socket->parent()
-                ->executionContext()
-                ->webBase()
-                ->starfish()
-                ->removePointerFromRootSet(m_socket);
+            m_socket->deref();
         }
 
     private:
