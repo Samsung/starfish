@@ -123,11 +123,21 @@ public:
                                 enum lws_callback_reasons reason, void* user,
                                 void* in, size_t len);
 
+    void ref()
+    {
+        m_refCount++;
+    }
+
+    void deref();
+
 private:
     bool m_needsToClose;
     bool m_workerStarted;
     bool m_alive;
     bool m_isReady;
+
+    std::atomic<unsigned> m_refCount;
+
     IThread* m_thread{ nullptr };
     LWSRunnable* m_runnable{ nullptr };
     WebSocket* m_parent;
