@@ -62,10 +62,7 @@ public:
     {
         return m_readyState;
     }
-    void setReadyState(ReadyState state)
-    {
-        m_readyState = state;
-    }
+    void setReadyState(ReadyState state);
     uint64_t bufferedAmount();
 
     // networking

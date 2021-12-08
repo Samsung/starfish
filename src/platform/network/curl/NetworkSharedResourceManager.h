@@ -103,7 +103,6 @@ private:
 
     struct CurlMultiData : public gc {
         MessageLoop* m_ml;
-        CURLM* m_curlMultiHandle;
         Thread* m_thread;
         Mutex* m_globalDataMutex;
         std::atomic<bool> m_running;
