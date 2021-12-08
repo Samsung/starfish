@@ -370,7 +370,6 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
         auto d = iter->second;
         d->m_running = false;
         d->m_thread->joinIfNeeds();
-        curl_multi_cleanup(d->m_curlMultiHandle);
         delete d;
         iter++;
     }
@@ -609,6 +608,14 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
 {
     CurlMultiData* d = (CurlMultiData*)data;
     std::vector<Mutex*> remainedRequest;
+
+    CURLM* curlMultiHandle = curl_multi_init();
+#ifndef CURLPIPE_MULTIPLEX
+#define CURLPIPE_MULTIPLEX 0
+#endif
+    curl_multi_setopt(curlMultiHandle, CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
+    curl_multi_setopt(curlMultiHandle, CURLMOPT_MAX_HOST_CONNECTIONS, 1L);
+
     int waitCount = 0;
     while (d->m_running.load()) {
         {
@@ -618,7 +625,7 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
                     curl_easy_setopt(d->m_pendingRequests[0]->m_curl,
                                      CURLOPT_PRIVATE, d->m_pendingRequests[0]);
                 STARFISH_ASSERT(error == CURLE_OK);
-                curl_multi_add_handle(d->m_curlMultiHandle,
+                curl_multi_add_handle(curlMultiHandle,
                                       d->m_pendingRequests[0]->m_curl);
                 remainedRequest.push_back(d->m_pendingRequests[0]->m_mutex);
                 d->m_pendingRequests.erase(d->m_pendingRequests.begin());
@@ -632,10 +639,10 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
             1000 * 50; // if numfds == 0, curl_multi_wait function returns
                        // instantly. so we need to sleep 50ms
 
-        curl_multi_wait(d->m_curlMultiHandle, NULL, 0, waitTime, &numfds);
+        curl_multi_wait(curlMultiHandle, NULL, 0, waitTime, &numfds);
 
         int stillRunning = 0;
-        curl_multi_perform(d->m_curlMultiHandle, &stillRunning);
+        curl_multi_perform(curlMultiHandle, &stillRunning);
         if (stillRunning == 0) {
             waitCount++;
             std::this_thread::sleep_for(std::chrono::microseconds(sleepTime));
@@ -645,7 +652,7 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
 
         CURLMsg* msg;
         int msgs_left;
-        while ((msg = curl_multi_info_read(d->m_curlMultiHandle, &msgs_left))) {
+        while ((msg = curl_multi_info_read(curlMultiHandle, &msgs_left))) {
             if (msg->msg == CURLMSG_DONE) {
                 CurlMultiRequestData* r;
                 curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &r);
@@ -654,8 +661,7 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
                 auto iter = std::find(remainedRequest.begin(),
                                       remainedRequest.end(), m);
                 remainedRequest.erase(iter);
-                curl_multi_remove_handle(d->m_curlMultiHandle,
-                                         msg->easy_handle);
+                curl_multi_remove_handle(curlMultiHandle, msg->easy_handle);
                 m->unlock();
             }
         }
@@ -675,6 +681,8 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
         remainedRequest.pop_back();
     }
 
+    curl_multi_cleanup(curlMultiHandle);
+
     return nullptr;
 }
 
@@ -685,13 +693,6 @@ NetworkSharedResourceManager::CurlMultiData::CurlMultiData(
     m_finishing = false;
     m_ml = ml;
     m_globalDataMutex = curlMultiRequestDataMutex;
-    m_curlMultiHandle = curl_multi_init();
-#ifndef CURLPIPE_MULTIPLEX
-#define CURLPIPE_MULTIPLEX 0
-#endif
-    curl_multi_setopt(m_curlMultiHandle, CURLMOPT_PIPELINING,
-                      CURLPIPE_MULTIPLEX);
-    curl_multi_setopt(m_curlMultiHandle, CURLMOPT_MAX_HOST_CONNECTIONS, 1L);
     m_thread = new Thread(nullptr);
     m_thread->run(ml, NetworkSharedResourceManager::curlMultiWorker, this);
 }

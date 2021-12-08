@@ -140,6 +140,13 @@ void HTTPTransaction::postprocess()
     printCurlRequestDump();
 #endif
 
+    // do not cache handle if request failed
+    if (m_res != CURLE_OK) {
+        curl_easy_cleanup(m_curl);
+        m_curl = nullptr;
+        return;
+    }
+
     CurlHandleData cd = { m_curl, 0 };
     NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
         m_httpRequest->baseURL(), cd);

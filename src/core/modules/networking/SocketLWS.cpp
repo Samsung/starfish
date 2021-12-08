@@ -227,7 +227,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
 
     m_lwsProtocols = new lws_protocols[2];
     m_lwsProtocols[0] = {
-        strdup(m_protocol.data()), SocketLWS::lwsEventCallback, 0, 0, 0, NULL, 0
+        m_protocol.data(), SocketLWS::lwsEventCallback, 0, 0, 0, NULL, 0
     };
     m_lwsProtocols[1] = { nullptr, nullptr, 0, 0, 0, NULL, 0 };
 

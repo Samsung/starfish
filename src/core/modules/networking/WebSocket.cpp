@@ -206,6 +206,14 @@ uint64_t WebSocket::bufferedAmount()
     return 0;
 }
 
+void WebSocket::setReadyState(ReadyState state)
+{
+    m_readyState = state;
+    if (state == ReadyState::CLOSED) {
+        executionContext()->removeActiveWebSockets(this);
+    }
+}
+
 void WebSocket::close()
 {
     close(CloseCode::NormalClosure, String::emptyString);
@@ -257,7 +265,6 @@ DEFINE_EVENT_LISTENER(WebSocket, message);
 void WebSocket::dispose()
 {
     setReadyState(WebSocket::ReadyState::CLOSED);
-    executionContext()->removeActiveWebSockets(this);
     if (m_socketLWS) {
         m_socketLWS->close("", 0, CloseCode::NormalClosure);
         m_socketLWS->waitForWorkerEnd();
