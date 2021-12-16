@@ -809,8 +809,18 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     size_t parseStart = longTickCount();
 #endif
 
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    static size_t s_evalUniqueID;
+    std::string s = fileName->toUTF8NonGCString();
+    s += "_";
+    s += std::to_string(++s_evalUniqueID);
+    s += ".js";
+    auto scriptRef =
+        ctx->scriptParser()->initializeScript(source, toJSString(String::fromUTF8(s.data(), s.length())));
+#else
     auto scriptRef =
         ctx->scriptParser()->initializeScript(source, toJSString(fileName));
+#endif
 
     if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
@@ -827,6 +837,10 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     size_t parseEnd = longTickCount();
     float time = (float)((parseEnd - parseStart) / 1000.f);
     STARFISH_LOG_INFO("js parse %f ms\n", time);
+#endif
+
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    ctx->setAsAlwaysStopState();
 #endif
 
     auto sbresult = Evaluator::execute(

@@ -66,6 +66,10 @@ public:
     virtual void destroy();
 
     virtual void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) = 0;
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    virtual void startDebugger(unsigned port) { }
+    virtual void pumpDebuggerEvents() { }
+#endif
 
     // TODO: Remove ownerDocument and ownerWindow
     virtual Window* ownerWindow() = 0;

@@ -37,6 +37,20 @@ public:
     {
     }
 
+    virtual void customInfoLogger(const char* format, va_list arg)
+    {
+        char buf[1024];
+        vsnprintf(buf, sizeof(buf), format, arg);
+        STARFISH_LOG_INFO("%s\n", buf);
+    }
+
+    virtual void customErrorLogger(const char* format, va_list arg)
+    {
+        char buf[1024];
+        vsnprintf(buf, sizeof(buf), format, arg);
+        STARFISH_LOG_ERROR("%s\n", buf);
+    }
+
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
