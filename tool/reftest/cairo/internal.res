@@ -358,6 +358,7 @@ test/cairo/internal-test/css/background/background_lineargradient7.html
 test/cairo/internal-test/css/background/background_lineargradient8.html
 test/cairo/internal-test/css/background/background_lineargradient9.html
 test/cairo/internal-test/css/background/background_lineargradient10.html
+test/cairo/internal-test/css/background/background_lineargradient11.html
 test/cairo/internal-test/css/background/background_radialgradient1.html
 test/cairo/internal-test/css/background/background_radialgradient2.html
 test/cairo/internal-test/css/background/background_radialgradient3.html
