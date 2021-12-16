@@ -9884,7 +9884,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         parser.consumeWhitespaces();
         if (*(parser.curPos()) == 't' || *(parser.curPos()) == '-' ||
             isDigit(*(parser.curPos()))) {
-            if (!parser.consumeString(CSSPropertyParser::AllowNegative)) {
+            if (!parser.consumeString(CSSPropertyParser::AllowNegative |
+                                      CSSPropertyParser::AllowDot)) {
                 return false;
             }
             const CSSTokenValue& str = parser.parsedString();
@@ -9937,8 +9938,10 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                     linearGradientValue->setTopOrBottom(topOrBottom);
                 }
                 parser.consumeIfNext(',');
-            } else if (parser.parseAngle(
-                           str.c_str(), CSSPropertyParser::AllowNegative, &s)) {
+            } else if (parser.parseAngle(str.c_str(),
+                                         CSSPropertyParser::AllowNegative |
+                                             CSSPropertyParser::AllowDot,
+                                         &s)) {
                 angle = s.angleValue();
                 linearGradientValue->setAngle(angle);
                 parser.consumeIfNext(',');
