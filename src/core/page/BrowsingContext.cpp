@@ -72,6 +72,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/dom/InputEvent.h"
+#include "binding/ScriptBindingInstance.h"
 
 namespace Starfish {
 
@@ -136,12 +137,18 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
 {
     initFlags();
 
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    static unsigned port;
+#endif
     if (isTopLevelBrowsingContext()) {
         m_window = Window::create(this, url,
                                   webView()->platformWindow()->width() /
                                       webView()->screenInfo().devicePixelRatio,
                                   webView()->platformWindow()->height() /
                                       webView()->screenInfo().devicePixelRatio);
+#if defined(STARFISH_ENABLE_DEBUGGER)
+        port = 6501;
+#endif
     } else {
         if (m_sourceElement->frame()) {
             m_window = Window::create(this, url,
@@ -158,6 +165,15 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
         m_window->document()->executionContext()->initContentSecurityPolicy(
             m_sourceElement->document()->contentSecurityPolicy());
     }
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    m_window->scriptBindingInstance()->startDebugger(port++);
+    m_window->setInterval(
+        [](void* data) {
+            BrowsingContext* w = (BrowsingContext*)data;
+            w->scriptBindingInstance()->pumpDebuggerEvents();
+        },
+        100, this);
+#endif
 
     m_window->document()->init(referrerURL);
 

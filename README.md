@@ -77,6 +77,8 @@ Default values are in **bold**.
   Enable a touch UI.
 * -DLTO=[ **0** | 1 ]<br>
   Enable complier link time optimization
+* -DENABLE_DEBUGGER=[ **0** | 1 ]<br>
+  Enable debugger
 * -DTARGETNAME=[ Starfish | **lightweight-web-engine** ]<br>
   Define target output name
 
@@ -197,6 +199,11 @@ cd /home/developer
 ./bidi_test_run.sh
 ./bidi_test_clean.sh
 ```
+
+### JS Debugging
+If you enable debugger feature when build,
+You can debug JS with escargot vscode extension.
+See: [escargot-vscode-extension](https://github.com/Samsung/escargot-vscode-extension)
 
 ## Misc.
 

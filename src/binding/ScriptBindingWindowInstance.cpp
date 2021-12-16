@@ -30,7 +30,7 @@
 #include "core/extra/Avplay.h"
 #endif
 
-#if defined(ENABLE_WASM)
+#if defined(STARFISH_ENABLE_WASM)
 #include "core/fetch/Response.h"
 #include "core/fetch/ResponseData.h"
 #endif
@@ -237,7 +237,7 @@ static ValueRef* _seekToAvplayFunction(ExecutionStateRef* state,
 }
 #endif /* defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY) */
 
-#ifdef ENABLE_WASM
+#ifdef STARFISH_ENABLE_WASM
 static ValueRef* compilePotentialWASMResponse(ExecutionStateRef* state,
                                               ValueRef* thisValue, size_t argc,
                                               ValueRef** argv,
@@ -423,7 +423,7 @@ void ScriptBindingWindowInstance::initJavaScriptBinding(
         ValueRef::create(avplay), true, true, true);
 #endif /* defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY) */
 
-#ifdef ENABLE_WASM
+#ifdef STARFISH_ENABLE_WASM
     ValueRef* wasm = context->globalObject()->getOwnProperty(
         state, StringRef::createFromASCII("WebAssembly"));
     STARFISH_ASSERT(wasm->isObject());
@@ -484,4 +484,17 @@ void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
 {
     m_ownerWindow->dispatchErrorEvent(errorInfo);
 }
+#if defined(STARFISH_ENABLE_DEBUGGER)
+void ScriptBindingWindowInstance::startDebugger(unsigned port)
+{
+    std::string s = "--port=";
+    s += std::to_string(port);
+    m_scriptContext->initDebugger(s.data());
+}
+
+void ScriptBindingWindowInstance::pumpDebuggerEvents()
+{
+    m_scriptContext->pumpDebuggerEvents();
+}
+#endif
 } // namespace Starfish

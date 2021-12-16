@@ -33,7 +33,10 @@ public:
     Window* ownerWindow() override;
     Document* ownerDocument() override;
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
-
+#if defined(STARFISH_ENABLE_DEBUGGER)
+    void startDebugger(unsigned port) override;
+    void pumpDebuggerEvents() override;
+#endif
 private:
     Window* m_ownerWindow;
 
