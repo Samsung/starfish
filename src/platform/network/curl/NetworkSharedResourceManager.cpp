@@ -710,6 +710,9 @@ void NetworkSharedResourceManager::startMultiRequestThreadIfNeeds(
     } else {
         if (iter->second->m_finishing) {
             iter->second->m_finishing = false;
+            if (iter->second->m_thread->isAlive()) {
+                iter->second->m_thread->finishUnjoined();
+            }
             iter->second->m_thread->run(ml, curlMultiWorker, iter->second);
         }
     }
@@ -723,6 +726,9 @@ void NetworkSharedResourceManager::appendPendingMultiRequest(
     if (iter != m_curlMultiRequestData.end()) {
         iter->second->m_pendingRequests.push_back(r);
         if (iter->second->m_finishing) {
+            if (iter->second->m_thread->isAlive()) {
+                iter->second->m_thread->finishUnjoined();
+            }
             // restart thread if finished
             iter->second->m_finishing = false;
             iter->second->m_ml->addIdlerWithNoGCRootingInOtherThread(
