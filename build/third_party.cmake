@@ -414,6 +414,11 @@ IF (${WEBRTC} STREQUAL "1")
                 "rtc_ssl_root=\\\"/usr/include/openssl\\\""
             )
         ENDIF()
+        IF (${FP_MODE} STREQUAL "hard")
+            SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "use_hard_fp=true")
+        ELSE()
+            SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "use_hard_fp=false")
+        ENDIF()
     ENDIF()
 
     IF (${MODE} STREQUAL "debug")
