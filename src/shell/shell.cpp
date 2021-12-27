@@ -305,6 +305,7 @@ int main(int argc, char* argv[])
     uint32_t needsDownScaleImageResourceLargerThan = 0;
     bool scrollbarVisible = true;
     bool useExternalPopup = false;
+    bool useHTTP2 = false;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -388,6 +389,8 @@ int main(int argc, char* argv[])
             scrollbarVisible = false;
         } else if (strstr(argv[i], "--use-external-popup")) {
             useExternalPopup = true;
+        } else if (strcmp(argv[i], "--use-http2") == 0) {
+            useHTTP2 = true;
         }
     }
 
@@ -561,6 +564,7 @@ int main(int argc, char* argv[])
             settings.SetUseExternalPopup(useExternalPopup);
         }
         settings.SetTTSMode(ttsMode);
+        settings.SetUseHttp2(useHTTP2);
         webView->SetSettings(settings);
     }
 
