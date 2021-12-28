@@ -122,14 +122,16 @@ void GridFormattingContext::layoutGridItems()
 
         xPosSoFar += m_columnGap * (area.columnStart() - 1);
 
-        if (area.areMarginLeftRightAuto()) {
+        if (area.isMarginLeftAuto()) {
             LayoutUnit margin = 0;
             for (size_t i = area.columnStart(); i < area.columnEnd(); i++) {
                 margin += m_gridTemplateColumns[i].size();
             }
-            margin +=
-                ((area.columnEnd() - area.columnStart() - 1) * m_columnGap);
-            margin = (margin - gridItem->width()) / 2;
+            if (area.isMarginRightAuto()) {
+                margin = (margin - gridItem->width()) / 2;
+            } else {
+                margin -= gridItem->width() + gridItem->marginRight();
+            }
             xPosSoFar += margin;
         } else if (gridItem->marginLeft()) {
             if (gridItem->width() > gridItem->mbpWidth()) {
@@ -1533,8 +1535,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     if (style->width().isFixed()) {
         width = style->width().fixed() + mbp.width();
     } else {
-        if (gridItem->isFrameFlexibleBox() && gridArea.isWidthAuto() &&
-            gridArea.areMarginLeftRightAuto()) {
+        if (gridArea.isMarginLeftAuto() || gridArea.isMarginRightAuto()) {
             width = gridArea.preferredWidth();
         } else {
             GridTrack& colTrack = m_gridTemplateColumns[gridArea.columnStart()];
