@@ -115,9 +115,8 @@ public:
         , m_index(id)
     {  
         if (box) {
-            m_areMarginLeftRightAuto = (box->style()->margin().left().isAuto() &&
-                box->style()->margin().right().isAuto());
-            m_isWidthAuto = box->style()->width().isAuto();
+            m_isMarginLeftAuto = box->style()->margin().left().isAuto();
+            m_isMarginRightAuto = box->style()->margin().right().isAuto();
         }
     }
 
@@ -187,12 +186,12 @@ public:
         m_columnEndLine->setValue(v);
     }
 
-    bool areMarginLeftRightAuto() {
-        return m_areMarginLeftRightAuto;
+    bool isMarginLeftAuto() {
+        return m_isMarginLeftAuto;
     }
 
-    bool isWidthAuto() {
-        return m_isWidthAuto;
+    bool isMarginRightAuto() {
+        return m_isMarginRightAuto;
     }
 
     bool hasRowAndColumnValues()
@@ -215,8 +214,8 @@ private:
     LayoutUnit m_preferredWidth;
     LayoutUnit m_preferredMinWidth;
     LayoutUnit m_contentHeight;
-    bool m_areMarginLeftRightAuto = false;
-    bool m_isWidthAuto = false;
+    bool m_isMarginLeftAuto = false;
+    bool m_isMarginRightAuto = false;
 
     GridLine* m_rowStartLine = new GridLine();
     GridLine* m_rowEndLine = new GridLine();
