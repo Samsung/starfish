@@ -1430,6 +1430,40 @@ void WebContainer::RegisterOnProgressChangedHandler(
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
+void WebContainer::RegisterDebuggerShouldInitHandler(
+    const std::function<void(const std::string& url, int port, bool& ret)>& cb)
+{
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        Starfish::DebuggerShouldInit, [cb](void* param) -> void {
+            struct Param {
+                std::string url;
+                int port;
+                bool* ret;
+            };
+            Param* p = (Param*)param;
+            cb(p->url, p->port, *p->ret);
+        });
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+}
+
+void WebContainer::RegisterDebuggerShouldContinueWaitingHandler(
+    const std::function<void(const std::string& url, int port, bool& ret)>& cb)
+{
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    TO_WEBVIEW(m_impl)->registerPublicWebViewHandler(
+        Starfish::DebuggerShouldContinueWaiting, [cb](void* param) -> void {
+            struct Param {
+                std::string url;
+                int port;
+                bool* ret;
+            };
+            Param* p = (Param*)param;
+            cb(p->url, p->port, *p->ret);
+        });
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+}
+
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER

@@ -67,7 +67,8 @@ public:
 
     virtual void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) = 0;
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    virtual void startDebugger(unsigned port) { }
+    virtual bool isDebuggerEnabled() { return false; }
+    virtual void startDebugger(unsigned port, int acceptTimeout) { }
     virtual void pumpDebuggerEvents() { }
 #endif
 

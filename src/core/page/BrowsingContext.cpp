@@ -166,13 +166,48 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
             m_sourceElement->document()->contentSecurityPolicy());
     }
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    m_window->scriptBindingInstance()->startDebugger(port++);
-    m_window->setInterval(
-        [](void* data) {
-            BrowsingContext* w = (BrowsingContext*)data;
-            w->scriptBindingInstance()->pumpDebuggerEvents();
-        },
-        100, this);
+    struct DebuggerCallbackParam {
+        std::string url;
+        int port;
+        bool* ret;
+    };
+
+    DebuggerCallbackParam* param = new DebuggerCallbackParam();
+    bool shouldInit = true;
+    param->port = port;
+    param->url = url->urlString()->toUTF8NonGCString();
+    param->ret = &shouldInit;
+    webView()->callPublicWebViewHandler(DebuggerShouldInit, param, true);
+    delete param;
+
+    if (shouldInit) {
+        while (true) {
+            m_window->scriptBindingInstance()->startDebugger(port, 1000);
+            if (m_window->scriptBindingInstance()->isDebuggerEnabled()) {
+                port++;
+                m_window->setInterval(
+                    [](void* data) {
+                        BrowsingContext* w = (BrowsingContext*)data;
+                        w->scriptBindingInstance()->pumpDebuggerEvents();
+                    },
+                    100, this);
+                break;
+            }
+
+            DebuggerCallbackParam* param = new DebuggerCallbackParam();
+            bool shouldWait = true;
+            param->port = port;
+            param->url = url->urlString()->toUTF8NonGCString();
+            param->ret = &shouldWait;
+            webView()->callPublicWebViewHandler(DebuggerShouldContinueWaiting,
+                                                param, true);
+            delete param;
+
+            if (!shouldWait) {
+                break;
+            }
+        }
+    }
 #endif
 
     m_window->document()->init(referrerURL);

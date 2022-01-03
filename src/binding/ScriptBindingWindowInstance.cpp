@@ -485,16 +485,24 @@ void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
     m_ownerWindow->dispatchErrorEvent(errorInfo);
 }
 #if defined(STARFISH_ENABLE_DEBUGGER)
-void ScriptBindingWindowInstance::startDebugger(unsigned port)
+void ScriptBindingWindowInstance::startDebugger(unsigned port,
+	int acceptTimeout)
 {
     std::string s = "--port=";
     s += std::to_string(port);
-    m_scriptContext->initDebugger(s.data());
+    s += ";--accept-timeout=";
+    s += std::to_string(acceptTimeout);
+    m_scriptContext->initDebuggerRemote(s.data());
 }
 
 void ScriptBindingWindowInstance::pumpDebuggerEvents()
 {
     m_scriptContext->pumpDebuggerEvents();
+}
+
+bool ScriptBindingWindowInstance::isDebuggerEnabled()
+{
+	return m_scriptContext->isDebuggerRunning();
 }
 #endif
 } // namespace Starfish

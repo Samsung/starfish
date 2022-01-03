@@ -178,6 +178,18 @@ void WebView::RegisterCustomFileResourceRequestHandlers(
         fileLengthCallback, fileCloseCallback);
 }
 
+void WebView::RegisterDebuggerShouldInitHandler(
+    const std::function<void(const std::string& url, int port, bool& ret)>& cb)
+{
+    FetchWebContainer()->RegisterDebuggerShouldInitHandler(cb);
+}
+
+void WebView::RegisterDebuggerShouldContinueWaitingHandler(
+    const std::function<void(const std::string& url, int port, bool& ret)>& cb)
+{
+    FetchWebContainer()->RegisterDebuggerShouldContinueWaitingHandler(cb);
+}
+
 void WebView::SetUserData(const std::string& key, void* data)
 {
     FetchWebContainer()->SetUserData(key, data);

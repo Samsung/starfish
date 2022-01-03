@@ -49,6 +49,8 @@ enum StarfishPubicWebViewHandlerKind {
     OnProgressChanged,
     OnDownloadStart,
     ShouldOverrideUrlLoading,
+    DebuggerShouldInit,
+    DebuggerShouldContinueWaiting,
 };
 } // namespace Starfish
 
@@ -178,7 +180,7 @@ public:
     bool containsPublicWebViewHandler(
         StarfishPubicWebViewHandlerKind handlerKind);
     void callPublicWebViewHandler(StarfishPubicWebViewHandlerKind handlerKind,
-                                  void* data);
+                                  void* data, bool sync = false);
 
     void registerCustomFileResourceRequestCallbacks(
         std::function<const char*(const char* path)> resolveFilePathCallback,

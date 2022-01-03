@@ -285,6 +285,13 @@ public:
         std::function<long int(void* handle)> fileLengthCallback,
         std::function<void(void* handle)> fileCloseCallback);
 
+    void RegisterDebuggerShouldInitHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldInit)>& cb);
+    void RegisterDebuggerShouldContinueWaitingHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldWait)>& cb);
+
     void CallHandler(const std::string& handler, void* param);
 
     void SetUserAgentString(const std::string& userAgent);
@@ -396,6 +403,13 @@ public:
             fileReadCallback,
         std::function<long int(void* handle)> fileLengthCallback,
         std::function<void(void* handle)> fileCloseCallback);
+
+    void RegisterDebuggerShouldInitHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldInit)>& cb);
+    void RegisterDebuggerShouldContinueWaitingHandler(
+        const std::function<void(const std::string& url, int port,
+                                 bool& shouldWait)>& cb);
 
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
