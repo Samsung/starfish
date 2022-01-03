@@ -34,7 +34,8 @@ public:
     Document* ownerDocument() override;
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    void startDebugger(unsigned port) override;
+    bool isDebuggerEnabled() override;
+    void startDebugger(unsigned port, int acceptTimeout) override;
     void pumpDebuggerEvents() override;
 #endif
 private:

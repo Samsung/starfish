@@ -338,33 +338,38 @@ bool WebBase::containsPublicWebViewHandler(
 }
 
 void WebBase::callPublicWebViewHandler(
-    StarfishPubicWebViewHandlerKind handlerKind, void* param)
+    StarfishPubicWebViewHandlerKind handlerKind, void* param, bool sync)
 {
     auto it = m_publicWebViewHandlers.find(handlerKind);
     if (it == m_publicWebViewHandlers.end()) {
         return;
     }
 
-    struct Env : public gc {
-        WebBase* webBase;
-        StarfishPubicWebViewHandlerKind handlerKind;
-        void* param;
-    };
-    Env* env = new Env();
-    env->webBase = this;
-    env->handlerKind = handlerKind;
-    env->param = param;
+    if (sync) {
+        (it->second)(param);
+    } else {
+        struct Env : public gc {
+            WebBase* webBase;
+            StarfishPubicWebViewHandlerKind handlerKind;
+            void* param;
+        };
+        Env* env = new Env();
+        env->webBase = this;
+        env->handlerKind = handlerKind;
+        env->param = param;
 
-    messageLoop()->addIdler(
-        nullptr,
-        [](size_t, void* env) {
-            Env* e = (Env*)env;
-            auto it = e->webBase->m_publicWebViewHandlers.find(e->handlerKind);
-            if (it != e->webBase->m_publicWebViewHandlers.end()) {
-                (it->second)(e->param);
-            }
-        },
-        env);
+        messageLoop()->addIdler(
+            nullptr,
+            [](size_t, void* env) {
+                Env* e = (Env*)env;
+                auto it =
+                    e->webBase->m_publicWebViewHandlers.find(e->handlerKind);
+                if (it != e->webBase->m_publicWebViewHandlers.end()) {
+                    (it->second)(e->param);
+                }
+            },
+            env);
+    }
 }
 
 std::mt19937& WebBase::randomEngine()
