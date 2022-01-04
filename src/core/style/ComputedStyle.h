@@ -3971,14 +3971,14 @@ public:
     // Store Custom properties.
     void setCustomProperty(MutablePropertyValue v)
     {
-        auto cssCustomValues = m_inheritedStyles.m_cssCustomValues;
+        auto& cssCustomValues = m_inheritedStyles.m_cssCustomValues;
         for (size_t i = 0; i < cssCustomValues.size(); i++) {
-            MutablePropertyValue property = cssCustomValues[i];
-            if (property.name()->equals(v.name())) {
+            if (cssCustomValues[i].name()->equals(v.name())) {
+                cssCustomValues[i].setValue(v.value());
                 return;
             }
         }
-        m_inheritedStyles.m_cssCustomValues.push_back(v);
+        cssCustomValues.push_back(v);
     }
 
     static TimingFunction* knownTimingFunction(TimingFunctionValue v);

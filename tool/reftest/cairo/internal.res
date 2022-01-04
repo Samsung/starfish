@@ -1,3 +1,12 @@
+test/cairo/internal-test/css/css-variables/customproperty_00.html
+test/cairo/internal-test/css/css-variables/customproperty_01.html
+test/cairo/internal-test/css/css-variables/customproperty_02.html
+test/cairo/internal-test/css/css-variables/customproperty_03.html
+test/cairo/internal-test/css/css-variables/customproperty_05.html
+test/cairo/internal-test/css/css-variables/customproperty_11.html
+test/cairo/internal-test/css/css-variables/customproperty_13.html
+test/cairo/internal-test/css/css-variables/customproperty_14.html
+test/cairo/internal-test/css/css-variables/customproperty_19.html
 test/cairo/internal-test/css/position/rtl-position-internal-test.html
 test/cairo/internal-test/css/background/background_properties.html
 test/cairo/internal-test/css/background/background_shorthand.html

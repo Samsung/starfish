@@ -246,31 +246,39 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
         GCVector<Context> contexts;
         contexts.push_back(Context(parent, 0));
         bool isFind = false;
-        String* findValue = nullptr;
+        StringBuilder findValue;
 
         while (contexts.size()) {
             Context* c = &contexts.back();
             VariableBlock* parent = (VariableBlock*)c->block;
 
+            bool isFirst = true;
             for (size_t j = c->index; j < parent->variables.size(); j++) {
                 Block* block = parent->variables[j];
                 c->index++;
                 if (block->isVariable()) {
                     Variable* variable = (Variable*)block;
-                    String* key = String::fromUTF8(variable->m_value.data(),
-                                                   variable->m_value.size());
-
-                    for (size_t k = 0; k < cssCustomValues.size(); k++) {
-                        MutablePropertyValue customProperty =
-                            cssCustomValues[k];
-                        if (customProperty.name()->equals(key)) {
-                            findValue = customProperty.value();
-                            isFind = true;
+                    String* key =
+                        String::fromUTF8(variable->m_value.trim().data(),
+                                         variable->m_value.trim().size());
+                    if (isFirst) {
+                        for (size_t k = 0; k < cssCustomValues.size(); k++) {
+                            MutablePropertyValue customProperty =
+                                cssCustomValues[k];
+                            if (customProperty.name()->equals(key)) {
+                                findValue.appendString(customProperty.value());
+                                isFind = true;
+                            }
                         }
-                    }
 
-                    if (isFind) {
-                        break;
+                        if (isFind) {
+                            break;
+                        }
+                    } else {
+                        if (findValue.length() > 0) {
+                            findValue.appendString(" ,");
+                        }
+                        findValue.appendString(key);
                     }
 
                 } else if (block->isRawValue()) {
@@ -278,6 +286,7 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                     VariableBlock* variableBlock = (VariableBlock*)block;
                     contexts.push_back(Context(variableBlock, 0));
                 }
+                isFirst = false;
             }
 
             if (isFind) {
@@ -290,11 +299,12 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
             }
         }
 
-        if (findValue) {
+        if (findValue.length() > 0) {
             // FIXME : To support the full style with variableContainers
             // such as 'rgb(100, var(--foo1), var(--foo2))'.
             // Before that, we should solve a issue(#1132).
-            ret = CSSTokenValue(findValue->toUTF8NonGCString().data());
+            ret =
+                CSSTokenValue(findValue.finalize()->toUTF8NonGCString().data());
             break;
         }
     }
