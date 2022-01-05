@@ -287,6 +287,9 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
         unmarkContentDocumentDisabled();
 
         CSPDirectives directiveType;
+        bool allowScripting =
+            elementType ==
+            CustomHTMLIFrameElementType::NotCustomHTMLIFrameElement;
         if (elementType == CustomHTMLIFrameElementType::SVG) {
             directiveType = CSPDirectives::ImgSrc;
         } else {
@@ -313,7 +316,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
             m_browsingContext->dispose();
         }
 
-        m_browsingContext = BrowsingContext::create(this);
+        m_browsingContext = BrowsingContext::create(this, allowScripting);
         m_browsingContext->setName(name);
         m_browsingContext->open(url, type, referrerURL);
 

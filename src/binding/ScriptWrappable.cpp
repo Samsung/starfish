@@ -21,10 +21,12 @@
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
 #include "binding/ScriptBindingInstance.h"
+#include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
+#include "core/page/BrowsingContext.h"
 
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Window.h"
@@ -802,6 +804,69 @@ void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
+	if (UNLIKELY(!instance->isScriptingEnabled())) {
+        if (result) {
+            *result = false;
+        }
+        return scriptUndefined();
+	}
+
+#if defined(STARFISH_ENABLE_DEBUGGER)
+	// currently, debugger only supports ScriptBindingWindowInstance
+    if (instance->hasWindow() && instance->isScriptingEnabled() && !instance->isDebuggerEnabled()) {
+		static unsigned port;
+		Window* window = instance->ownerWindow();
+		if (window->browsingContext()->isTopLevelBrowsingContext()) {
+			port = 6501;
+		}
+		struct DebuggerCallbackParam {
+			std::string url;
+			int port;
+			bool* ret;
+		};
+
+		DebuggerCallbackParam* param = new DebuggerCallbackParam();
+		bool shouldInit = true;
+		param->port = port;
+		param->url = window->document()->urlString()->toUTF8NonGCString();
+		param->ret = &shouldInit;
+		window->webView()->callPublicWebViewHandler(
+			DebuggerShouldInit, param, true);
+		delete param;
+
+		if (shouldInit) {
+			while (true) {
+				window->scriptBindingInstance()->startDebugger(port, 1000);
+				if (window->scriptBindingInstance()->isDebuggerEnabled()) {
+					port++;
+					window->setInterval(
+						[](void* data) {
+							ScriptBindingInstance* w =
+								(ScriptBindingInstance*)data;
+							w->pumpDebuggerEvents();
+						},
+						100, instance);
+					break;
+				}
+
+				DebuggerCallbackParam* param = new DebuggerCallbackParam();
+				bool shouldWait = true;
+				param->port = port;
+				param->url = window->document()->urlString()->toUTF8NonGCString();
+				param->ret = &shouldWait;
+				window->webView()->callPublicWebViewHandler(
+					DebuggerShouldContinueWaiting, param, true);
+				delete param;
+
+				if (!shouldWait) {
+					break;
+				}
+			}
+		}
+    }
+
+#endif
+
     ContextRef* ctx = instance->scriptContext();
 
     StringRef* source = toJSString(string);

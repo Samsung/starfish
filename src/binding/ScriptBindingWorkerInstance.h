@@ -34,6 +34,10 @@ public:
                                          T* workerGlobalScope);
     Window* ownerWindow() override;
     Document* ownerDocument() override;
+    bool isScriptingEnabled() override
+    {
+        return true;
+    }
 
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
     void destroy() override;
