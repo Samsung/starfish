@@ -1208,10 +1208,9 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
-        } else if (!foundTimingFunction &&
-                   temp.updateVarValue(tok.c_str(), toks)) {
-            temp.setTemporaryKeyKind(
-                CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+        } else if (!foundTimingFunction && temp.updateValueVarValue(tok)) {
+            temp.setTemporaryValueKind(
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind);
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
@@ -1281,10 +1280,9 @@ static bool parseAnimationShorthand(
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
-        } else if (!foundTimingFunction &&
-                   temp.updateVarValue(tok.c_str(), toks)) {
-            temp.setTemporaryKeyKind(
-                CSSStyleValuePair::KeyKind::AnimationTimingFunction);
+        } else if (!foundTimingFunction && temp.updateValueVarValue(tok)) {
+            temp.setTemporaryValueKind(
+                CSSStyleValuePair::ValueKind::VarFunctionValueKind);
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
@@ -1568,32 +1566,6 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
     }
 }
 
-void CSSStyleDeclaration::addCSSValuePairForVar(CSSStyleValuePair::KeyKind name,
-                                                const CSSStyleValuePair& ret)
-{
-    for (unsigned i = 0; i < m_cssValues.size(); i++) {
-        if (m_cssValues[i].temporaryKeyKind() == name) {
-            if (isInlineStyle() || ret.flagImportant() == true ||
-                (ret.flagImportant() == false &&
-                 m_cssValues[i].flagImportant() == false)) {
-                removeRootPointerValue(m_cssValues[i]);
-                m_cssValues[i].setValueKind(ret.valueKind());
-                m_cssValues[i].setValue(ret.value());
-                m_cssValues[i].setFlagImportant(ret.flagImportant());
-                m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
-                rootPointerValueIfExists(ret);
-                notifyNeedsStyleRecalc();
-            }
-            return;
-        }
-    }
-
-    m_cssValues.push_back(CSSStyleValuePair(ret));
-    m_cssValues.back().setKeyKind(CSSStyleValuePair::KeyKind::VarValue);
-    rootPointerValueIfExists(ret);
-    notifyNeedsStyleRecalc();
-}
-
 void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
                                           const CSSStyleValuePair& ret)
 {
@@ -1607,7 +1579,8 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
                     m_cssValues[i].setValueKind(ret.valueKind());
                     m_cssValues[i].setValue(ret.value());
                     m_cssValues[i].setFlagImportant(ret.flagImportant());
-                    m_cssValues[i].setTemporaryKeyKind(ret.temporaryKeyKind());
+                    m_cssValues[i].setTemporaryValueKind(
+                        ret.temporaryValueKind());
                     rootPointerValueIfExists(ret);
                     notifyNeedsStyleRecalc();
                 }
@@ -1728,34 +1701,28 @@ FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_GETTER)
 FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
 #undef DEFINE_ATTRIBUTE_GETTER
 
-#define DEFINE_ATTRIBUTE_SETTER(name, ...)                                \
-    void CSSStyleDeclaration::set##name(const char* value, size_t len,    \
-                                        bool isImportant)                 \
-    {                                                                     \
-        if (len == 0) {                                                   \
-            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);         \
-            return;                                                       \
-        }                                                                 \
-        CSSTokenVector tokens;                                            \
-        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==                  \
-                     CSSStyleValuePair::KeyKind::Content)) {              \
-            tokenizeCSSValue(tokens, value, len, "", 0, true, true);      \
-        } else {                                                          \
-            tokenizeCSSValue(tokens, value, len, ",", 1);                 \
-        }                                                                 \
-        CSSStyleValuePair ret;                                            \
-        if (ret.updateVarValue(value, tokens)) {                          \
-            ret.setFlagImportant(isImportant);                            \
-            ret.setTemporaryKeyKind(CSSStyleValuePair::KeyKind::name);    \
-            addCSSValuePairForVar(CSSStyleValuePair::KeyKind::name, ret); \
-            return;                                                       \
-        }                                                                 \
-        if (ret.updateValueCommon(tokens) ||                              \
-            ret.updateValue##name(m_node->document(), tokens)) {          \
-            ret.setFlagImportant(isImportant);                            \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);       \
-        }                                                                 \
-        return;                                                           \
+#define DEFINE_ATTRIBUTE_SETTER(name, ...)                             \
+    void CSSStyleDeclaration::set##name(const char* value, size_t len, \
+                                        bool isImportant)              \
+    {                                                                  \
+        if (len == 0) {                                                \
+            removeCSSValuePair(CSSStyleValuePair::KeyKind::name);      \
+            return;                                                    \
+        }                                                              \
+        CSSTokenVector tokens;                                         \
+        if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==               \
+                     CSSStyleValuePair::KeyKind::Content)) {           \
+            tokenizeCSSValue(tokens, value, len, "", 0, true, true);   \
+        } else {                                                       \
+            tokenizeCSSValue(tokens, value, len, ",", 1);              \
+        }                                                              \
+        CSSStyleValuePair ret;                                         \
+        if (ret.updateValueCommon(tokens) ||                           \
+            ret.updateValue##name(m_node->document(), tokens)) {       \
+            ret.setFlagImportant(isImportant);                         \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);    \
+        }                                                              \
+        return;                                                        \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)

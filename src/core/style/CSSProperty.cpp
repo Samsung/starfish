@@ -156,7 +156,6 @@ const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::CustomProperty:
     case CSSStyleValuePair::KeyKindSize:
     case CSSStyleValuePair::Unknown:
-    case CSSStyleValuePair::VarValue:
         break;
     }
     return "";
@@ -183,7 +182,6 @@ const char* CSSPropertyHelper::toCamelCaseString(
     case CSSStyleValuePair::CustomProperty:
     case CSSStyleValuePair::KeyKindSize:
     case CSSStyleValuePair::Unknown:
-    case CSSStyleValuePair::VarValue:
         break;
     }
     return "";

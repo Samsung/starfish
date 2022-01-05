@@ -445,49 +445,29 @@ String* CSSStyleValuePair::keyName() const
     case CSSStyleValuePair::KeyKind::CustomProperty:
         // TODO
         return String::emptyString;
-    case CSSStyleValuePair::KeyKind::VarValue:
-        return temporaryKeyName();
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
-String* CSSStyleValuePair::temporaryKeyName() const
+static bool isValidVarFunction(const CSSTokenValue& token)
 {
-    switch (temporaryKeyKind()) {
-#define ADD_CASE_FOR_KEYNAME(Name, name, cssname) \
-    case CSSStyleValuePair::KeyKind::Name:        \
-        return String::createASCIIString(cssname);
-        FOR_EACH_STYLE_ATTRIBUTE_BASIC(ADD_CASE_FOR_KEYNAME)
-        FOR_EACH_STYLE_ATTRIBUTE_STICKY(ADD_CASE_FOR_KEYNAME)
-#undef ADD_CASE_FOR_KEYNAME
-    default:
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-}
+    CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+    variablesSyntaxBuilder.build(token);
 
-static bool isValidVariables(const CSSTokenVector& tokens)
-{
-    for (size_t k = 0; k < tokens.size(); k++) {
-        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
-        CSSTokenValue token(tokens[k]);
-        variablesSyntaxBuilder.build(token);
-
-        if (!variablesSyntaxBuilder.isValid())
-            return false;
-    }
-
+    if (!variablesSyntaxBuilder.isValid())
+        return false;
     return true;
 }
 
-bool CSSStyleValuePair::updateVarValue(const char* str,
-                                       const CSSTokenVector& tokens)
+bool CSSStyleValuePair::updateValueVarValue(const CSSTokenValue& token)
 {
-    STARFISH_ASSERT(str != nullptr);
-
-    if (isValidVariables(tokens)) {
-        m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
-        setVarFunctionValue(String::createASCIIString(str, strlen(str)));
+    if (isValidVarFunction(token)) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VarFunctionValueKind;
+        m_temporaryValueKind =
+            CSSStyleValuePair::ValueKind::VarFunctionValueKind;
+        setVarFunctionValue(String::createASCIIString(
+            std::string(token).c_str(), token.size()));
         return true;
     }
     return false;
@@ -1216,7 +1196,7 @@ bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src)
     if (m_keyKind != src.m_keyKind) {
         return false;
     }
-    if (m_temporaryKeyKind != src.m_temporaryKeyKind) {
+    if (m_temporaryValueKind != src.m_temporaryValueKind) {
         return false;
     }
 
@@ -2928,6 +2908,54 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
     }
 }
 
+CSSStyleValuePair StyleResolver::resolveVarValue(
+    CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
+    GCVector<MutablePropertyValue>& cssCustomValues)
+{
+    CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+    CSSStyleValuePair ret;
+
+    variablesSyntaxBuilder.build(
+        cssValuePair.varFunctionValue()->toUTF8NonGCString().c_str());
+    if (variablesSyntaxBuilder.isValid()) {
+        CSSTokenValue resolvedValue =
+            variablesSyntaxBuilder.generateStyle(cssCustomValues);
+
+        if (resolvedValue.empty()) {
+            return ret;
+        }
+
+        CSSTokenVector tokens;
+        CSSStyleDeclaration::tokenizeCSSValue(tokens, resolvedValue.c_str(),
+                                              resolvedValue.size(), ",", 1);
+
+#define SET_CASES(name, ...)                                  \
+    case CSSStyleValuePair::KeyKind::name:                    \
+        if (ret.updateValueCommon(tokens) ||                  \
+            ret.updateValue##name(document(), tokens)) {      \
+            ret.setKeyKind(CSSStyleValuePair::KeyKind::name); \
+        }                                                     \
+        break;
+
+        switch (keyKind) {
+            FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
+        case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+            if (ret.updateValueCommon(tokens) ||
+                ret.updateValueLayerTransitionTimingFunction(tokens)) {
+                ret.setKeyKind(
+                    CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Unknown:
+            break;
+        default:
+            break;
+        }
+    }
+
+    return ret;
+}
+
 void StyleResolver::apply(Element* element,
                           GCAtomicVector<CSSStyleValuePair>& cssValues,
                           GCVector<MutablePropertyValue>& cssCustomValues,
@@ -2971,120 +2999,51 @@ void StyleResolver::apply(Element* element,
             continue;
         }
 
-        CSSStyleValuePair newCssValue;
-        newCssValue.setKeyKind(cssValues[k].keyKind());
-        newCssValue.setTemporaryKeyKind(cssValues[k].temporaryKeyKind());
-        newCssValue.setValueKind(cssValues[k].valueKind());
-        newCssValue.setValue(cssValues[k].value());
-
-        if (newCssValue.keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
-            // TODO: Define the new value again.
-            String* keyword = newCssValue.varFunctionValue();
-            size_t len = keyword->length();
-            CSSTokenVector tokens;
-            if (UNLIKELY(newCssValue.temporaryKeyKind() ==
-                         CSSStyleValuePair::KeyKind::Content)) {
-                CSSStyleDeclaration::tokenizeCSSValue(
-                    tokens, keyword->toUTF8NonGCString().data(), len, "", 0,
-                    true);
-            } else {
-                CSSStyleDeclaration::tokenizeCSSValue(
-                    tokens, keyword->toUTF8NonGCString().data(), len, ",", 1);
+        CSSStyleValuePair newCssValue = cssValues[k];
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+            CSSStyleValuePair resolvedValue = resolveVarValue(
+                newCssValue, newCssValue.keyKind(), cssCustomValues);
+            if (resolvedValue.keyKind() != newCssValue.keyKind()) {
+                continue;
             }
 
-            for (size_t i = 0; i < tokens.size(); i++) {
-                CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
-                CSSTokenValue token(tokens[i]);
-                variablesSyntaxBuilder.build(token);
-                if (variablesSyntaxBuilder.isValid()) {
-                    // Replace a old style with a new style converted with the
-                    // variable syntax builder.
-                    tokens[i] =
-                        variablesSyntaxBuilder.generateStyle(cssCustomValues);
-                }
-            }
-
-#define SET_CASES(name, ...)                                          \
-    case CSSStyleValuePair::KeyKind::name:                            \
-        if (CSSStyleValuePair::KeyKind::name ==                       \
-            CSSStyleValuePair::KeyKind::VarValue) {                   \
-            break;                                                    \
-        }                                                             \
-                                                                      \
-        if (newCssValue.updateValueCommon(tokens) ||                  \
-            newCssValue.updateValue##name(document(), tokens)) {      \
-            newCssValue.setKeyKind(CSSStyleValuePair::KeyKind::name); \
-        }                                                             \
-        break;
-
-            switch (newCssValue.temporaryKeyKind()) {
-                FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
-            case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-                if (newCssValue.updateValueCommon(tokens) ||
-                    newCssValue.updateValueLayerTransitionTimingFunction(
-                        tokens)) {
-                    newCssValue.setKeyKind(
-                        CSSStyleValuePair::KeyKind::TransitionTimingFunction);
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::Unknown:
-                break;
-            default:
-                break;
-            }
+            newCssValue = resolvedValue;
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueListKind) {
             ValueList* list = newCssValue.multiValue();
-            for (unsigned int i = 0; i < list->size(); i++) {
+            ValueList* multiValue = new ValueList(list->separator());
+            bool isResolved = true;
+            for (size_t i = 0; i < list->size(); i++) {
                 CSSStyleValuePair pair = (*list)[i];
-                if (pair.keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
-                    String* keyword = pair.varFunctionValue();
-                    size_t len = keyword->length();
-                    CSSTokenVector tokens;
-                    if (UNLIKELY(newCssValue.temporaryKeyKind() ==
-                                 CSSStyleValuePair::KeyKind::Content)) {
-                        CSSStyleDeclaration::tokenizeCSSValue(
-                            tokens, keyword->toUTF8NonGCString().data(), len,
-                            "", 0, true);
+                if (pair.valueKind() ==
+                    CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+                    CSSStyleValuePair resolvedValue = resolveVarValue(
+                        pair, newCssValue.keyKind(), cssCustomValues);
+                    if (resolvedValue.keyKind() != newCssValue.keyKind()) {
+                        isResolved = false;
+                        break;
+                    }
+
+                    if (resolvedValue.valueKind() ==
+                        CSSStyleValuePair::ValueKind::ValueListKind) {
+                        ValueList* returnValues = resolvedValue.multiValue();
+                        for (size_t i = 0; i < returnValues->size(); ++i) {
+                            multiValue->push_back((*returnValues)[i]);
+                        }
                     } else {
-                        CSSStyleDeclaration::tokenizeCSSValue(
-                            tokens, keyword->toUTF8NonGCString().data(), len,
-                            ",", 1);
+                        multiValue->push_back(resolvedValue);
                     }
-
-                    for (size_t l = 0; l < tokens.size(); l++) {
-                        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
-                        CSSTokenValue token(tokens[l]);
-                        variablesSyntaxBuilder.build(token);
-                        if (variablesSyntaxBuilder.isValid()) {
-                            // Replace a old style with a new style converted
-                            // with the
-                            // variable syntax builder.
-                            tokens[i] = CSSTokenValue(
-                                variablesSyntaxBuilder.generateStyle(
-                                    cssCustomValues));
-                        }
-                    }
-
-                    CSSStyleValuePair ret;
-                    switch (pair.temporaryKeyKind()) {
-                    // TODO: Add other properties.
-                    case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-                        if (ret.updateValueCommon(tokens) ||
-                            ret.updateValueLayerTransitionTimingFunction(
-                                tokens)) {
-                            ret.setKeyKind(CSSStyleValuePair::KeyKind::
-                                               TransitionTimingFunction);
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                    (*list)[i].setKeyKind(ret.keyKind());
-                    (*list)[i].setValueKind(ret.valueKind());
-                    (*list)[i].setValue(ret.value());
+                } else {
+                    multiValue->push_back(pair);
                 }
             }
+
+            if (!isResolved) {
+                continue;
+            }
+
+            newCssValue.setValue(multiValue);
         }
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                \
@@ -9064,7 +9023,7 @@ bool CSSStyleValuePair::updateValueColor(Document* document,
         return false;
     }
 
-    return updateValueUnitColor(tokens[0]);
+    return updateValueUnitColor(tokens[0]) || updateValueVarValue(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundColor(Document* document,
@@ -10127,7 +10086,8 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
             continue;
         }
         CSSStyleValuePair ret;
-        if (shouldBeComma || !ret.updateValueUnitCSSImage(value)) {
+        if (shouldBeComma || !(ret.updateValueUnitCSSImage(value) ||
+                               ret.updateValueVarValue(value))) {
             return false;
         }
         shouldBeComma = true;
@@ -11153,7 +11113,7 @@ bool CSSStyleValuePair::updateValueFontSize(Document* document,
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitFontSize(tokens[0]);
+    return updateValueUnitFontSize(tokens[0]) || updateValueVarValue(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
