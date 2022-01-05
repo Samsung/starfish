@@ -479,6 +479,11 @@ Document* ScriptBindingWindowInstance::ownerDocument()
     return m_ownerWindow->document();
 }
 
+bool ScriptBindingWindowInstance::isScriptingEnabled()
+{
+    return m_ownerWindow->browsingContext()->isScriptingEnabled();
+}
+
 void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
     ErrorEventInit& errorInfo)
 {

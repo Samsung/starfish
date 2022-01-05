@@ -64,7 +64,8 @@ class BrowsingContext : public gc, public WebViewHoldable {
 
 public:
     static BrowsingContext* create(WebView* webView);
-    static BrowsingContext* create(HTMLIFrameElement* sourceElement);
+    static BrowsingContext* create(HTMLIFrameElement* sourceElement,
+                                   bool isScriptingEnabled = true);
     virtual ~BrowsingContext()
     {
     }
@@ -252,6 +253,10 @@ public:
     void buildFrameTreeIfNeeds();
     // return did layout
     bool layoutIfNeeded();
+    bool isScriptingEnabled()
+    {
+        return m_isScriptingEnabled;
+    }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     void registerMediaElement(HTMLMediaElement* element);
 #endif
@@ -291,7 +296,8 @@ private:
 #endif
     void focusNavigation(bool forward = true);
 
-    BrowsingContext(WebView* webView, HTMLIFrameElement* source = nullptr);
+    BrowsingContext(WebView* webView, HTMLIFrameElement* source = nullptr,
+                    bool isScriptingEnabled = true);
 
     void setNeedsRendering();
     void registerNeedsLayoutInWebView();
@@ -308,11 +314,19 @@ private:
     BrowsingContext* m_parentBrowsingContext;
     HTMLIFrameElement* m_sourceElement;
 
-    bool m_needsStyleRecalc;
-    bool m_needsStyleRecalcForWholeDocument;
-    bool m_needsStyleSheetsRecalc;
-    bool m_needsFrameTreeBuild;
-    bool m_needsLayout;
+    bool m_needsStyleRecalc : 1;
+    bool m_needsStyleRecalcForWholeDocument : 1;
+    bool m_needsStyleSheetsRecalc : 1;
+    bool m_needsFrameTreeBuild : 1;
+    bool m_needsLayout : 1;
+
+    bool m_keydownEventDefaultPrevented : 1;
+    bool m_compositionStartEventDefeaultPrevented : 1;
+
+    bool m_hasRootElementBackground : 1;
+    bool m_hasBodyElementBackground : 1;
+
+    bool m_isScriptingEnabled : 1;
 
     size_t m_pendingStyleSheetCount;
     size_t m_pendingRenderingCount;
@@ -330,12 +344,6 @@ private:
 
     Node* m_focusedNode;
     Element* m_activeElement;
-
-    bool m_keydownEventDefaultPrevented;
-    bool m_compositionStartEventDefeaultPrevented;
-
-    bool m_hasRootElementBackground;
-    bool m_hasBodyElementBackground;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     GCVector<HTMLMediaElement*> m_existingMediaElements;

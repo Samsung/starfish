@@ -82,18 +82,22 @@ BrowsingContext* BrowsingContext::create(WebView* webView)
     return new BrowsingContext(webView);
 }
 
-BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
+BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement,
+                                         bool isScriptingEnabled)
 {
-    return new BrowsingContext(sourceElement->webView(), sourceElement);
+    return new BrowsingContext(sourceElement->webView(), sourceElement,
+                               isScriptingEnabled);
 }
 
-BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
+BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source,
+                                 bool isScriptingEnabled)
     : WebViewHoldable(webView)
     , m_webView(webView)
     , m_window(nullptr)
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
                                      : nullptr)
     , m_sourceElement(source)
+    , m_isScriptingEnabled(isScriptingEnabled)
     , m_pendingStyleSheetCount(0)
     , m_pendingRenderingCount(0)
     , m_touchDownPoint(0, 0)
@@ -137,18 +141,12 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
 {
     initFlags();
 
-#if defined(STARFISH_ENABLE_DEBUGGER)
-    static unsigned port;
-#endif
     if (isTopLevelBrowsingContext()) {
         m_window = Window::create(this, url,
                                   webView()->platformWindow()->width() /
                                       webView()->screenInfo().devicePixelRatio,
                                   webView()->platformWindow()->height() /
                                       webView()->screenInfo().devicePixelRatio);
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        port = 6501;
-#endif
     } else {
         if (m_sourceElement->frame()) {
             m_window = Window::create(this, url,
@@ -165,50 +163,6 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
         m_window->document()->executionContext()->initContentSecurityPolicy(
             m_sourceElement->document()->contentSecurityPolicy());
     }
-#if defined(STARFISH_ENABLE_DEBUGGER)
-    struct DebuggerCallbackParam {
-        std::string url;
-        int port;
-        bool* ret;
-    };
-
-    DebuggerCallbackParam* param = new DebuggerCallbackParam();
-    bool shouldInit = true;
-    param->port = port;
-    param->url = url->urlString()->toUTF8NonGCString();
-    param->ret = &shouldInit;
-    webView()->callPublicWebViewHandler(DebuggerShouldInit, param, true);
-    delete param;
-
-    if (shouldInit) {
-        while (true) {
-            m_window->scriptBindingInstance()->startDebugger(port, 1000);
-            if (m_window->scriptBindingInstance()->isDebuggerEnabled()) {
-                port++;
-                m_window->setInterval(
-                    [](void* data) {
-                        BrowsingContext* w = (BrowsingContext*)data;
-                        w->scriptBindingInstance()->pumpDebuggerEvents();
-                    },
-                    100, this);
-                break;
-            }
-
-            DebuggerCallbackParam* param = new DebuggerCallbackParam();
-            bool shouldWait = true;
-            param->port = port;
-            param->url = url->urlString()->toUTF8NonGCString();
-            param->ret = &shouldWait;
-            webView()->callPublicWebViewHandler(DebuggerShouldContinueWaiting,
-                                                param, true);
-            delete param;
-
-            if (!shouldWait) {
-                break;
-            }
-        }
-    }
-#endif
 
     m_window->document()->init(referrerURL);
 

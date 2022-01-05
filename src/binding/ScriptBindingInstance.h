@@ -75,6 +75,11 @@ public:
     // TODO: Remove ownerDocument and ownerWindow
     virtual Window* ownerWindow() = 0;
     virtual Document* ownerDocument() = 0;
+    virtual bool hasWindow()
+    {
+        return false;
+    }
+    virtual bool isScriptingEnabled() = 0;
 
 #define FOR_EACH_GETTER_FN(exportName)                                   \
     Escargot::FunctionObjectRef* fn##exportName()                        \

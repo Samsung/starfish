@@ -32,6 +32,11 @@ public:
 
     Window* ownerWindow() override;
     Document* ownerDocument() override;
+    bool hasWindow() override
+    {
+        return true;
+    }
+    bool isScriptingEnabled() override;
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
 #if defined(STARFISH_ENABLE_DEBUGGER)
     bool isDebuggerEnabled() override;
