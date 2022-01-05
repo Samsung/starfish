@@ -27,8 +27,9 @@ class VariableTokenizer {
 public:
     enum TokenType {
         VARIABLE,
-        VARIABLEBLOCK,
+        VARIABLEBLOCKOPEN,
         VARIABLEBLOCKCLOSE,
+        COMMA,
         RAWVALUE,
         EMPTY,
         END
@@ -54,26 +55,39 @@ public:
     VariableToken next()
     {
         VariableToken token(END, "");
+        int parenthesisCount = 0;
+        bool hadParenthesis = false;
         while (m_cursorEnd <= m_data.size()) {
             CSSTokenValue sub = m_data.substring(
                 m_cursorStart, m_cursorEnd - m_cursorStart + 1);
             if (sub.equals("var(")) {
                 m_cursorStart += 4;
                 m_cursorEnd++;
-                token.m_type = VARIABLEBLOCK;
+                token.m_type = VARIABLEBLOCKOPEN;
                 token.m_value = "var(";
                 break;
-            }
-
-            if (sub.equals(")")) {
+            } else if (sub.equals(")") && parenthesisCount == 0) {
                 token.m_type = VARIABLEBLOCKCLOSE;
                 token.m_value = ")";
                 m_cursorStart = m_cursorEnd + 1;
                 m_cursorEnd += 1;
                 break;
+            } else if (sub.trim().equals(",") && parenthesisCount == 0) {
+                token.m_type = COMMA;
+                token.m_value = ", ";
+                m_cursorStart = m_cursorEnd + 1;
+                m_cursorEnd += 1;
+                break;
             }
 
-            if (m_data[m_cursorEnd] == ',' && m_data[m_cursorEnd - 1] != ')') {
+            if (m_data[m_cursorEnd] == '(') {
+                parenthesisCount++;
+                hadParenthesis = true;
+            } else if (m_data[m_cursorEnd] == ')' && parenthesisCount > 0) {
+                parenthesisCount--;
+            }
+
+            if (m_data[m_cursorEnd] == ',' && parenthesisCount == 0) {
                 CSSTokenValue var = m_data.substring(
                     m_cursorStart, m_cursorEnd - m_cursorStart);
                 token.m_type = VARIABLE;
@@ -83,13 +97,22 @@ public:
                 break;
             }
 
-            if (m_data[m_cursorEnd] == ')' && m_data[m_cursorEnd - 1] != ')') {
-                CSSTokenValue var = m_data.substring(
-                    m_cursorStart, m_cursorEnd - m_cursorStart);
+            if (m_data[m_cursorEnd] == ')' && parenthesisCount == 0) {
+                CSSTokenValue var;
+                if (hadParenthesis) {
+                    var = m_data.substring(m_cursorStart,
+                                           m_cursorEnd - m_cursorStart + 1);
+                    m_cursorStart = m_cursorEnd + 1;
+                    m_cursorEnd += 2;
+                } else {
+                    var = m_data.substring(m_cursorStart,
+                                           m_cursorEnd - m_cursorStart);
+                    m_cursorStart = m_cursorEnd;
+                }
+
                 token.m_type = VARIABLE;
                 token.m_value = var;
 
-                m_cursorStart = m_cursorEnd;
                 break;
             }
 
@@ -125,6 +148,9 @@ void CSSVariableSyntaxTreeBuilder::build(const CSSTokenValue& src)
             }
             parenthesisCount++;
             cursor += 4;
+        } else if (src[cursor] == '(') {
+            parenthesisCount++;
+            cursor++;
         } else if (src[cursor] == ')') {
             parenthesisCount--;
 
@@ -186,7 +212,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
     VariableTokenizer tokenizer(str);
     VariableTokenizer::VariableToken token = tokenizer.next();
 
-    if (token.m_type != VariableTokenizer::TokenType::VARIABLEBLOCK) {
+    if (token.m_type != VariableTokenizer::TokenType::VARIABLEBLOCKOPEN) {
         m_valid = false;
         return;
     }
@@ -200,7 +226,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
             parent->variables.push_back(new Variable(token.m_value));
             c->index++;
         } else if (token.m_type ==
-                   VariableTokenizer::TokenType::VARIABLEBLOCK) {
+                   VariableTokenizer::TokenType::VARIABLEBLOCKOPEN) {
             if (c->index == 0) {
                 m_valid = false;
                 return;

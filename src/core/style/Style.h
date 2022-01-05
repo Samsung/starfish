@@ -941,8 +941,7 @@ public:
 #define ADD_CSS_KEYKIND(Name, ...) Name,
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
-            VarValue,
-        CustomProperty,
+            CustomProperty,
         KeyKindSize,
     };
     // font related properties must be followed end of this enum(KeyKind)
@@ -1092,7 +1091,7 @@ public:
 
     CSSStyleValuePair()
         : m_keyKind(KeyKind::Unknown)
-        , m_temporaryKeyKind(KeyKind::Unknown)
+        , m_temporaryValueKind(ValueKind::None)
         , m_valueKind(ValueKind::None)
         , m_flagImportant(false)
         , m_value(0.0f)
@@ -1101,7 +1100,7 @@ public:
 
     CSSStyleValuePair(const CSSStyleValuePair& o)
         : m_keyKind(o.m_keyKind)
-        , m_temporaryKeyKind(o.m_temporaryKeyKind)
+        , m_temporaryValueKind(o.m_temporaryValueKind)
         , m_valueKind(o.m_valueKind)
         , m_flagImportant(o.m_flagImportant)
         , m_value(o.m_value)
@@ -1118,18 +1117,17 @@ public:
         m_keyKind = kind;
     }
 
-    KeyKind temporaryKeyKind() const
+    ValueKind temporaryValueKind() const
     {
-        return m_temporaryKeyKind;
+        return m_temporaryValueKind;
     }
 
-    void setTemporaryKeyKind(KeyKind kind)
+    void setTemporaryValueKind(ValueKind kind)
     {
-        m_temporaryKeyKind = kind;
+        m_temporaryValueKind = kind;
     }
 
     String* keyName() const;
-    String* temporaryKeyName() const;
 
     ValueKind valueKind() const
     {
@@ -1156,7 +1154,7 @@ public:
         m_flagImportant = isImportant;
     }
 
-    bool updateVarValue(const char*, const CSSTokenVector&);
+    bool updateValueVarValue(const CSSTokenValue&);
 
     bool updateValueCommon(const CSSTokenVector& tokens);
 
@@ -2172,7 +2170,7 @@ public:
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
         : m_keyKind(KeyKind::Unknown)
-        , m_temporaryKeyKind(KeyKind::Unknown)
+        , m_temporaryValueKind(ValueKind::None)
         , m_valueKind(kind)
         , m_flagImportant(false)
         , m_value(value)
@@ -2521,7 +2519,7 @@ public:
 
 protected:
     KeyKind m_keyKind : 8;
-    KeyKind m_temporaryKeyKind : 8;
+    ValueKind m_temporaryValueKind : 8;
     ValueKind m_valueKind : 8;
     bool m_flagImportant : 1;
     ValueData m_value;
@@ -2729,6 +2727,11 @@ public:
             }
         }
         return builder.finalize();
+    }
+
+    Separator separator()
+    {
+        return m_separator;
     }
 
 protected:
@@ -3219,6 +3222,9 @@ public:
                               bool inheritedStyleChanged = false);
 
 protected:
+    CSSStyleValuePair resolveVarValue(
+        CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
+        GCVector<MutablePropertyValue>& cssCustomValues);
     void apply(Element* element, GCAtomicVector<CSSStyleValuePair>& cssValues,
                GCVector<MutablePropertyValue>& cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,

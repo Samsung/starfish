@@ -136,7 +136,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         IGNORE_SHORTHANDS_AND_ETC(KeyKindSize)
         IGNORE_SHORTHANDS_AND_ETC(Src)
         IGNORE_SHORTHANDS_AND_ETC(Unknown)
-        IGNORE_SHORTHANDS_AND_ETC(VarValue)
 #undef IGNORE_SHORTHANDS_ETC
 
 #define ADD_ABSOLUTE_LENGTH_PAIR(keyKind, getter)                     \
