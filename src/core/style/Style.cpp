@@ -4292,28 +4292,6 @@ void StyleResolver::apply(Element* element,
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
-        case CSSStyleValuePair::KeyKind::Mask:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setMask(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setMask(parentStyle->mask());
-            } else {
-                if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::None) {
-                    style->setMask(String::emptyString);
-                } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::UrlValueKind) {
-                    style->setMask(newCssValue.urlStringValue());
-                } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                }
-            }
-            break;
         case CSSStyleValuePair::KeyKind::MaskImage:
             if ((newCssValue.valueKind() ==
                  CSSStyleValuePair::ValueKind::Initial) ||
@@ -9529,9 +9507,10 @@ bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
     }
 }
 
-bool CSSStyleValuePair::updateValueUnitCSSImage(const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitImageValue(const CSSTokenValue& value)
 {
-    // <image> = <url> | <image-list> | <element-reference>  | <gradient>
+    // https://drafts.csswg.org/css-images-3/#typedef-image
+    // <<image> = <url> | <gradient>
     return updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value);
 }
 
@@ -10086,7 +10065,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
             continue;
         }
         CSSStyleValuePair ret;
-        if (shouldBeComma || !(ret.updateValueUnitCSSImage(value) ||
+        if (shouldBeComma || !(ret.updateValueUnitImageValue(value) ||
                                ret.updateValueVarValue(value))) {
             return false;
         }
@@ -14348,32 +14327,27 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueMask(Document* document,
-                                        const CSSTokenVector& tokens)
-{
-    // none | <image> | <url>
-    if (tokens.size() != 1) {
-        return false;
-    }
-
-    const CSSTokenValue& value = tokens[0];
-    if (updateValueUnitUrlOrNone(value)) {
-        return true;
-    }
-
-    return false;
-}
-
 bool CSSStyleValuePair::updateValueMaskImage(Document* document,
                                              const CSSTokenVector& tokens)
 {
-    // none | <image> | <url>
+    return updateValueMaskImage(tokens, true);
+}
+
+bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens,
+                                             bool allowComma)
+{
+    // TODO : Apply comma separator
+    // <mask-reference>#
+
+    // <mask-reference> = none | <image> | <mask-source>
+    // <mask-source> = <url>
+
     if (tokens.size() != 1) {
         return false;
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (updateValueUnitUrlOrNone(value) || updateValueUnitGradient(value)) {
+    if (updateValueUnitImageValue(value)) {
         return true;
     }
 

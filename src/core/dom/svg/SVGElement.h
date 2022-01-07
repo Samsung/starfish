@@ -165,7 +165,7 @@ public:
 
     bool hasMask()
     {
-        return !style()->mask()->equals(String::emptyString);
+        return !style()->maskImage()->equals(String::emptyString);
     }
 
     SVGElement* clipPathElement();
