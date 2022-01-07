@@ -41,6 +41,7 @@ private:
     bool appendFromAriaLabelIfNeeds(Node* node);
     bool appendFromAltAttributeIfNeeds(Node* node);
     bool appendFromEmbeddedControlIfNeeds(Node* node);
+    bool appendFromRoleAttributeIfNeeds(Node* node);
     bool isEmbeddedControl(Node* node);
     String* finalize();
 

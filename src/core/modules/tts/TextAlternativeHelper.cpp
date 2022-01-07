@@ -172,6 +172,10 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
         child = child->nextSibling();
     }
 
+    // Note : Starfish doesn't support role attribute, but adds "button" only if
+    // "role = button". This was requested by VD.
+    appendFromRoleAttributeIfNeeds(node);
+
     // 6.1.2. Description Computation
     if (!m_inAriaLabelledbyOrArialDescribedBy) {
         if (appendFromAriaByTypeIfNeeds(node, AriaByType::ArialDescribedBy)) {
@@ -183,7 +187,7 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
 bool TextAlternativeHelper::appendTextAlterNative(String* text)
 {
     String* textAlt = text->trim();
-    if (textAlt != String::emptyString) {
+    if (!textAlt->isEmpty()) {
         m_textAlts.push_back(textAlt);
         return true;
     }
@@ -309,6 +313,21 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
         return appendTextAlterNative(value);
     }
 
+    return false;
+}
+
+bool TextAlternativeHelper::appendFromRoleAttributeIfNeeds(Node* node)
+{
+    if (!node->isElement()) {
+        return false;
+    }
+
+    String* value = node->asElement()->getAttributeOrEmpty(
+        webView()->starfish()->staticStrings()->m_role);
+
+    if (value->equals("button")) {
+        return appendTextAlterNative(value);
+    }
     return false;
 }
 
