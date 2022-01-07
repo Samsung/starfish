@@ -403,6 +403,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "xml"),
                       AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(starfish, "base"));
+    m_role = QualifiedName(AtomicString::createAtomicString(starfish, "role"));
     m_ariaHidden = QualifiedName(
         AtomicString::createAtomicString(starfish, "aria-hidden"));
     m_ariaLabel =

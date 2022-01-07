@@ -485,6 +485,7 @@ public:
     // xml:base
     QualifiedName m_xmlBase;
     // WAI-ARIA
+    QualifiedName m_role;
     QualifiedName m_ariaHidden;
     QualifiedName m_ariaLabel;
     QualifiedName m_ariaLabelledby;
