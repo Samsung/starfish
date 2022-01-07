@@ -384,18 +384,20 @@ void SVGElement::styleForPresentationAttribute(
         }
     }
 
+    // https://www.w3.org/TR/SVG11/masking.html#MaskProperty
     if (needsMaskAttributes()) {
-        String* maskStr =
+        // Value:  <funciri> | none | inherit
+        // <FuncIRI> : Functional notation for an IRI: "url(" <IRI> ")".
+        String* value =
             getAttributeOrEmpty(starfish()->staticStrings()->m_mask);
+        if (!value->isEmpty()) {
+            pair.setKeyKind(CSSStyleValuePair::MaskImage);
 
-        if (maskStr->length()) {
-            pair.setKeyKind(CSSStyleValuePair::Mask);
-
-            auto str = maskStr->toUTF8NonGCString();
+            auto str = value->toUTF8NonGCString();
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
-            if (pair.updateValueMask(document(), tokens)) {
+            if (pair.updateValueMaskImage(tokens, false)) {
                 cssValues.push_back(pair);
             }
         }
@@ -445,7 +447,7 @@ SVGElement* SVGElement::maskElement()
     }
 
     if (!m_maskElement) {
-        String* maskStr = style()->mask();
+        String* maskStr = style()->maskImage();
         ResourceURL* maskURL;
         // In case that SVG element is loaded as an image resource through
         // MockHTMLIFrameElement. At this case, we can find baseURI at its

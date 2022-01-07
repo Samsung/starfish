@@ -2486,7 +2486,7 @@ public:
     bool updateValueUnitFlexShrink(const CSSTokenValue& value);
     bool updateValueUnitFlexBasis(const CSSTokenValue& value);
     bool updateValueUnitWordSpacing(const CSSTokenValue& value);
-    bool updateValueUnitCSSImage(const CSSTokenValue& value);
+    bool updateValueUnitImageValue(const CSSTokenValue& value);
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit,
                               Separator sep = Separator::CommaSeparator);
@@ -2515,7 +2515,7 @@ public:
     bool updateValueUnitAnimationPlayState(const CSSTokenValue& value);
     bool updateValueUnitAnimationFillMode(const CSSTokenValue& value);
 
-    bool updateValueMask(Document* document, const CSSTokenVector& tokens);
+    bool updateValueMaskImage(const CSSTokenVector& tokens, bool allowComma);
 
 protected:
     KeyKind m_keyKind : 8;

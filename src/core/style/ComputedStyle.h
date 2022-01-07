@@ -881,11 +881,6 @@ public:
         *m_rareComputedStyleData.ensureClipPath() = url;
     }
 
-    void setMask(String* url)
-    {
-        rareComputedStyleData()->ensurePositionedMask()->setImage(url);
-    }
-
     void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
     {
         *m_rareComputedStyleData.ensureGridTemplateColumns() = *gridTemplate;
@@ -3195,24 +3190,12 @@ public:
         return String::emptyString;
     }
 
-    String* mask()
+    PositionedMaskData* mask()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return String::emptyString;
+            return nullptr;
         }
-
-        PositionedMaskData* positionedMask =
-            m_rareComputedStyleData.positionedMask();
-        if (positionedMask) {
-            return positionedMask->image();
-        }
-
-        return String::emptyString;
-    }
-
-    bool hasMask()
-    {
-        return mask()->equals(String::emptyString);
+        return m_rareComputedStyleData.positionedMask();
     }
 
     bool hasZeroClipRect()
@@ -3678,6 +3661,7 @@ public:
 
     String* maskImage()
     {
+        // TODO : Apply layer and return image value not string.
         if (!m_rareComputedStyleData.m_styles.size()) {
             return String::emptyString;
         }
@@ -3698,6 +3682,8 @@ public:
 
     void setMaskImage(CSSGradientValue* gradient)
     {
+        // TODO : Replace both setMaskImage with a method that takes an image
+        // value as an argument.
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
