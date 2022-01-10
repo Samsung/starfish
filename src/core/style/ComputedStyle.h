@@ -3949,7 +3949,7 @@ public:
     }
 
     // Inherited Custom properties.
-    std::vector<MutablePropertyValue> customProperty()
+    const GCVector<MutablePropertyValue>& customProperty()
     {
         return m_inheritedStyles.m_cssCustomValues;
     }
@@ -4046,7 +4046,7 @@ protected:
         Length m_fontSize;
         Length m_lineHeight;
         InheritedStylesRareData* m_rareData;
-        std::vector<MutablePropertyValue> m_cssCustomValues;
+        GCVector<MutablePropertyValue> m_cssCustomValues;
     } m_inheritedStyles;
 
     bool m_seenViewPortUnitInStyle : 1;

@@ -183,7 +183,15 @@ private:
         size_t size = info->colorStops.size();
         for (size_t i = 0; i < size; ++i) {
             const auto& color = info->colorStops[i]->color();
-            const auto& offset = info->colorStops[i]->offset().percent();
+            float offset;
+            if (info->colorStops[i]->offset().isPercent()) {
+                offset = info->colorStops[i]->offset().percent();
+            } else if (info->colorStops[i]->offset().isFixed()) {
+                offset = info->colorStops[i]->offset().fixed();
+            } else {
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+
             addColorStop(offset, color);
         }
     }
