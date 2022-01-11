@@ -1584,15 +1584,35 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::MaskImage: {
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
-        String* url = style->maskImage();
-        if (url->length()) {
-            p.setUrlValue(url);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        CSSStyleValuePair maskImage;
+        maskImage.setKeyKind(CSSStyleValuePair::KeyKind::MaskImage);
+        if (!style->maskLayerSize()) {
+            maskImage.setValueKind(CSSStyleValuePair::None);
+            addValuePair(maskImage);
+            return;
         }
-        addValuePair(p);
+        maskImage.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* maskImageValues;
+        maskImageValues = new ValueList(Separator::CommaSeparator);
+
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            auto imageValue = style->maskImage(i);
+            if (!imageValue) {
+                item.setValueKind(CSSStyleValuePair::None);
+            } else if (imageValue->type().isURL()) {
+                item.setUrlValue(imageValue->urlValue());
+            } else if (imageValue->type().isGradient()) {
+                item.setGradientValue(
+                    imageValue->gradientValue()->convertToCSSGradientValue());
+            } else {
+                item.setValueKind(CSSStyleValuePair::None);
+            }
+            maskImageValues->push_back(item);
+        }
+        maskImage.setValueList(maskImageValues);
+        addValuePair(maskImage);
     } break;
     case CSSStyleValuePair::KeyKind::MaskSize: {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

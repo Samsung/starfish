@@ -3198,6 +3198,15 @@ public:
         return m_rareComputedStyleData.positionedMask();
     }
 
+    uint32_t maskLayerSize()
+    {
+        PositionedMaskData* positionedMaskData = this->mask();
+        if (positionedMaskData == nullptr) {
+            return 0;
+        }
+        return positionedMaskData->sizeOfLayers();
+    }
+
     bool hasZeroClipRect()
     {
         auto c = clip();
@@ -3659,32 +3668,18 @@ public:
         rareComputedStyleData()->ensureOutline()->setOffset(v);
     }
 
-    String* maskImage()
+    ImageValue* maskImage(uint32_t layer)
     {
-        // TODO : Apply layer and return image value not string.
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return String::emptyString;
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return nullptr;
         }
-
-        PositionedMaskData* positionedMask =
-            m_rareComputedStyleData.positionedMask();
-        if (positionedMask) {
-            return positionedMask->image();
-        }
-
-        return String::emptyString;
+        return positionedMaskData->image(layer);
     }
 
-    void setMaskImage(String* url)
+    void setMaskImage(ImageValue* image, uint32_t layer)
     {
-        rareComputedStyleData()->ensurePositionedMask()->setImage(url);
-    }
-
-    void setMaskImage(CSSGradientValue* gradient)
-    {
-        // TODO : Replace both setMaskImage with a method that takes an image
-        // value as an argument.
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        rareComputedStyleData()->ensurePositionedMask()->setImage(image, layer);
     }
 
     void setMaskSize(MaskSizeValue size, unsigned int layer = 0)
@@ -3750,6 +3745,14 @@ public:
         }
 
         return 0;
+    }
+
+    void resetMaskImage()
+    {
+        PositionedMaskData* data = mask();
+        if (data) {
+            data->shrinkImages(0);
+        }
     }
 
     const ListStyleData listStyleData()
