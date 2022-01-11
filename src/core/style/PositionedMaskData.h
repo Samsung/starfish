@@ -27,7 +27,7 @@ namespace Starfish {
 class MaskLayer : public gc {
 public:
     MaskLayer()
-        : m_image(String::emptyString)
+        : m_image(nullptr)
         , m_sizeIsLength(true)
     {
     }
@@ -52,12 +52,12 @@ public:
         }
     };
 
-    String* image()
+    ImageValue* image()
     {
         return m_image;
     }
 
-    void setImage(String* uri)
+    void setImage(ImageValue* uri)
     {
         m_image = uri;
     }
@@ -96,7 +96,7 @@ public:
         return m_size.m_typeValue;
     }
 
-    String* m_image;
+    ImageValue* m_image;
 
     // mask-size
     bool m_sizeIsLength;
@@ -107,48 +107,48 @@ class PositionedMaskData : public gc {
 public:
     PositionedMaskData()
         : m_maskImage(nullptr)
-        , m_maxLayerSizes(0)
-        , m_maxLayerImages(0)
+        , m_maxLayerSize(0)
+        , m_maxLayerImage(0)
     {
     }
 
-    String* image(unsigned int layer = 0)
+    ImageValue* image(uint32_t layer)
     {
         if (m_layers.size() <= layer) {
-            return String::emptyString;
+            return nullptr;
         }
         return m_layers[layer].image();
     }
 
-    void setImage(String* url, unsigned int layer = 0)
+    void setImage(ImageValue* value, uint32_t layer)
     {
         // Note: transparent black image layer by default
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerImages < layer + 1) {
-            m_maxLayerImages = layer + 1;
+        if (m_maxLayerImage < layer + 1) {
+            m_maxLayerImage = layer + 1;
         }
-        m_layers[layer].setImage(url);
+        m_layers[layer].setImage(value);
     }
 
-    void setSize(MaskSizeValue size, unsigned int layer)
+    void setSize(MaskSizeValue size, uint32_t layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerSizes < layer + 1) {
-            m_maxLayerSizes = layer + 1;
+        if (m_maxLayerSize < layer + 1) {
+            m_maxLayerSize = layer + 1;
         }
         m_layers[layer].setSize(size);
     }
 
-    void setSize(LengthSize size, unsigned int layer)
+    void setSize(LengthSize size, uint32_t layer)
     {
         resizeLayerIfNeeded(layer);
-        if (m_maxLayerSizes < layer + 1) {
-            m_maxLayerSizes = layer + 1;
+        if (m_maxLayerSize < layer + 1) {
+            m_maxLayerSize = layer + 1;
         }
         m_layers[layer].setSize(size);
     }
 
-    bool maskSizeIsLength(unsigned int layer = 0) const
+    bool maskSizeIsLength(uint32_t layer) const
     {
         if (m_layers.size() <= layer) {
             return true;
@@ -156,7 +156,7 @@ public:
         return m_layers[layer].m_sizeIsLength;
     }
 
-    LengthSize maskSizeLengthValue(unsigned int layer = 0) const
+    LengthSize maskSizeLengthValue(uint32_t layer) const
     {
         if (m_layers.size() <= layer) {
             return LengthSize();
@@ -164,7 +164,7 @@ public:
         return m_layers[layer].sizeLengthValue();
     }
 
-    MaskSizeValue maskSizeTypeValue(unsigned int layer = 0) const
+    MaskSizeValue maskSizeTypeValue(uint32_t layer) const
     {
         if (m_layers.size() <= layer) {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -173,9 +173,24 @@ public:
         return m_layers[layer].sizeTypeValue();
     }
 
+    void shrinkImages(uint32_t size)
+    {
+        STARFISH_ASSERT(m_layers.size() >= m_maxLayerImage);
+        for (uint32_t i = 0; i < m_maxLayerImage; i++) {
+            m_layers[i].setImage(nullptr);
+        }
+        m_maxLayerImage = size;
+    }
+
     size_t size() const
     {
         return m_layers.size();
+    }
+
+    uint32_t sizeOfLayers()
+    {
+        STARFISH_ASSERT(m_maxLayerImage <= m_layers.size());
+        return m_maxLayerImage;
     }
 
     bool operator==(const PositionedMaskData& o)
@@ -192,7 +207,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    void resizeLayerIfNeeded(unsigned int layer)
+    void resizeLayerIfNeeded(uint32_t layer)
     {
         if (m_layers.size() <= layer) {
             m_layers.resize(layer + 1);
@@ -200,8 +215,8 @@ private:
     }
 
     NativeImageData* m_maskImage;
-    unsigned int m_maxLayerSizes;
-    unsigned int m_maxLayerImages;
+    uint32_t m_maxLayerSize;
+    uint32_t m_maxLayerImage;
 
     GCVector<MaskLayer> m_layers;
 };

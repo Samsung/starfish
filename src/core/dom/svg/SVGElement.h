@@ -165,7 +165,8 @@ public:
 
     bool hasMask()
     {
-        return !style()->maskImage()->equals(String::emptyString);
+        // Note : mask property in SVG doesn't allow multi layer
+        return style()->maskImage(0) != nullptr;
     }
 
     SVGElement* clipPathElement();

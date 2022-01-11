@@ -4293,27 +4293,26 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::MaskImage:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setMaskImage(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setMaskImage(parentStyle->maskImage());
-            } else {
-                if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::None) {
-                    style->setMaskImage(String::emptyString);
-                } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::UrlValueKind) {
-                    style->setMaskImage(newCssValue.urlValue(origin));
-                } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::GradientValueKind) {
-                    style->setMaskImage(newCssValue.gradientValue());
-                } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            // NOTE Do nothing for Initial, Unset, None, Inherit
+            style->resetMaskImage();
+            if (newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::ValueListKind) {
+                ValueList* list = newCssValue.multiValue();
+                for (unsigned int i = 0; i < list->size(); i++) {
+                    const CSSStyleValuePair& item = (*list)[i];
+                    auto vKind = item.valueKind();
+                    ImageValue* imageValue = nullptr;
+                    if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
+                        imageValue = new ImageValue(item.urlValue(origin));
+                        style->setMaskImage(imageValue, i);
+                    } else if (vKind == CSSStyleValuePair::ValueKind::
+                                            GradientValueKind) {
+                        imageValue = new ImageValue(
+                            item.gradientValue()->convertToGradientData());
+                        style->setMaskImage(imageValue, i);
+                    } else {
+                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    }
                 }
             }
             break;
@@ -14336,22 +14335,30 @@ bool CSSStyleValuePair::updateValueMaskImage(Document* document,
 bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens,
                                              bool allowComma)
 {
-    // TODO : Apply comma separator
     // <mask-reference>#
-
     // <mask-reference> = none | <image> | <mask-source>
     // <mask-source> = <url>
-
-    if (tokens.size() != 1) {
-        return false;
+    bool shouldBeComma = false;
+    ValueList* values = new ValueList(Separator::CommaSeparator);
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& value = tokens[i];
+        if (value.equals(",")) {
+            if (!allowComma || !shouldBeComma) {
+                return false;
+            }
+            shouldBeComma = false;
+            continue;
+        }
+        CSSStyleValuePair pair;
+        if (shouldBeComma || !pair.updateValueUnitImageValue(value)) {
+            return false;
+        }
+        shouldBeComma = true;
+        values->push_back(pair);
     }
-
-    const CSSTokenValue& value = tokens[0];
-    if (updateValueUnitImageValue(value)) {
-        return true;
-    }
-
-    return false;
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    m_value.m_multiValue = values;
+    return shouldBeComma;
 }
 
 bool CSSStyleValuePair::updateValueMaskSize(Document* document,

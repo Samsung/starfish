@@ -398,7 +398,14 @@ void SVGElement::styleForPresentationAttribute(
             CSSStyleDeclaration::tokenizeCSSValue(tokens, str.data(),
                                                   str.length());
             if (pair.updateValueMaskImage(tokens, false)) {
-                cssValues.push_back(pair);
+                STARFISH_ASSERT(pair.valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
+                STARFISH_ASSERT(pair.multiValue()->size() == 1);
+
+                if (pair.multiValue()->at(0).valueKind() ==
+                    CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    cssValues.push_back(pair);
+                }
             }
         }
     }
@@ -447,15 +454,19 @@ SVGElement* SVGElement::maskElement()
     }
 
     if (!m_maskElement) {
-        String* maskStr = style()->maskImage();
+        ImageValue* image = style()->maskImage(0);
+        STARFISH_RELEASE_ASSERT(image->type() ==
+                                ImageValueType::ValueType::URL);
+
         ResourceURL* maskURL;
         // In case that SVG element is loaded as an image resource through
         // MockHTMLIFrameElement. At this case, we can find baseURI at its
         // referrerURL.
         if (document()->baseURL()->isDataURL()) {
-            maskURL = new ResourceURL(maskStr, document()->referrer());
+            maskURL =
+                new ResourceURL(image->urlValue(), document()->referrer());
         } else {
-            maskURL = new ResourceURL(maskStr, document()->baseURI());
+            maskURL = new ResourceURL(image->urlValue(), document()->baseURI());
         }
         String* id = maskURL->getFragmentIdValue();
         if (!id->isEmpty()) {
