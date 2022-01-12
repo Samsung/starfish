@@ -52,7 +52,7 @@ public:
         }
     };
 
-    ImageValue* image()
+    ImageValue* image() const
     {
         return m_image;
     }
@@ -111,8 +111,37 @@ public:
         , m_maxLayerImage(0)
     {
     }
+    static bool damaged(const PositionedMaskData* lhs,
+                        const PositionedMaskData* rhs, bool* damagedKeys)
+    {
+        // TODO : Implement the rest of the css masking properties.
+        damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] = false;
 
-    ImageValue* image(uint32_t layer)
+        if (!lhs && !rhs) {
+            return false;
+        }
+
+        PositionedMaskData temp;
+        lhs = lhs ? lhs : &temp;
+        rhs = rhs ? rhs : &temp;
+        uint32_t maxLayer =
+            std::max(lhs->m_maxLayerImage, rhs->m_maxLayerImage);
+        bool hasDamage = false;
+        for (uint32_t i = 0; i < maxLayer; i++) {
+            if (damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] == false) {
+                const ImageValue* lImage = lhs->image(i);
+                const ImageValue* rImage = rhs->image(i);
+                if (lImage != rImage &&
+                    (!lImage || !rImage || *lImage != *rImage)) {
+                    damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] =
+                        hasDamage = true;
+                }
+            }
+        }
+        return hasDamage;
+    }
+
+    ImageValue* image(uint32_t layer) const
     {
         if (m_layers.size() <= layer) {
             return nullptr;
