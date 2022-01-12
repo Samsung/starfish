@@ -797,7 +797,7 @@ protected:
                    std::hash<GradientDrawingInfo*>,
                    std::equal_to<GradientDrawingInfo*>>* m_nativeGradientCache;
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
-    size_t m_nativeGradientCacheToTalSize;
+    size_t m_nativeGradientCacheTotalSize;
     size_t m_webFontResolveVersionForCanvas;
     GCVector<SVGUseElement*> m_useElementListNeedUpdating;
     bool m_isMiddleOfUseElementUpdating;

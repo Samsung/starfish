@@ -20,6 +20,9 @@
 #ifndef __StarfishNativeGradient__
 #define __StarfishNativeGradient__
 
+#include "core/style/GradientData.h"
+#include "core/modules/canvas/image/NativeImageData.h"
+
 namespace Starfish {
 
 struct GradientDrawingInfo;
@@ -36,6 +39,7 @@ public:
 
     virtual ~NativeGradient()
     {
+        removeGradientImageDataCached();
     }
 
     NativeImageData* gradientImageDataCached()
@@ -72,6 +76,18 @@ protected:
         , m_gradientImageDataCached(nullptr)
     {
         STARFISH_ASSERT(info != nullptr);
+    }
+
+    void removeGradientImageDataCached()
+    {
+        if (m_gradientDrawingInfo) {
+            delete m_gradientDrawingInfo;
+            m_gradientDrawingInfo = nullptr;
+        }
+        if (m_gradientImageDataCached) {
+            delete m_gradientImageDataCached;
+            m_gradientImageDataCached = nullptr;
+        }
     }
 
     GradientDrawingInfo* m_gradientDrawingInfo;

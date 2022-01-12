@@ -140,7 +140,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_tizenWidgetTransparentBackground(0)
 #endif
     , m_nativeGradientCache(nullptr)
-    , m_nativeGradientCacheToTalSize(0)
+    , m_nativeGradientCacheTotalSize(0)
     , m_webFontResolveVersionForCanvas(0)
     , m_isMiddleOfUseElementUpdating(false)
 {
@@ -2212,11 +2212,11 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
             iter->second = value;
         }
         m_nativeGradientCacheLRUList.push_back(key);
-        m_nativeGradientCacheToTalSize += bufferSize;
+        m_nativeGradientCacheTotalSize += bufferSize;
     }
 #ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO("NativeGradient cache size : %d KB\n",
-                      (int)m_nativeGradientCacheToTalSize / 1024);
+                      (int)m_nativeGradientCacheTotalSize / 1024);
 #endif
 }
 
@@ -2228,7 +2228,7 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
         return false;
     }
     size_t removedSize = 0;
-    if (m_nativeGradientCacheToTalSize + reserve >
+    if (m_nativeGradientCacheTotalSize + reserve >
         STARFISH_NATIVEGRADIENT_CACHE_SIZE) {
         auto iter = m_nativeGradientCacheLRUList.begin();
         while (iter != m_nativeGradientCacheLRUList.end() &&
@@ -2241,7 +2241,7 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
                 iter = m_nativeGradientCacheLRUList.erase(iter);
             }
         }
-        m_nativeGradientCacheToTalSize -= removedSize;
+        m_nativeGradientCacheTotalSize -= removedSize;
     }
     return true;
 }
