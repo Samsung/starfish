@@ -2160,6 +2160,25 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    {
+        auto oldPositionedMask =
+            oldStyle->rareComputedStyleData()->positionedMask();
+        auto newPositionedMask =
+            newStyle->rareComputedStyleData()->positionedMask();
+
+        if (oldPositionedMask || newPositionedMask) {
+            if (PositionedMaskData::damaged(oldPositionedMask,
+                                            newPositionedMask, damagedKeys)) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageEstablishesStackingContext |
+                    damage);
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+        }
+    }
+
     return damage;
 }
 
