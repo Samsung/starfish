@@ -49,7 +49,7 @@ ColorStop* SVGStopElement::colorStop()
     String* offsetStr =
         getAttributeOrEmpty(starfish()->staticStrings()->m_offset);
 
-    Length offset(Length::Type::Fixed, 0);
+    Length offset(Length::Type::Percent, 0);
     if (offsetStr->length() > 0) {
         CSSStyleValuePair pair;
         if (CSSPropertyParser::parseNumberOrPercentage(
@@ -57,7 +57,7 @@ ColorStop* SVGStopElement::colorStop()
             float offsetVal = 0;
             Length::Type offsetType = Length::Type::Auto;
             if (pair.valueKind() == CSSStyleValuePair::ValueKind::Number) {
-                offsetType = Length::Type::Fixed;
+                offsetType = Length::Type::Percent;
                 offsetVal = pair.numberValue();
             } else if (pair.valueKind() ==
                        CSSStyleValuePair::ValueKind::Percentage) {
