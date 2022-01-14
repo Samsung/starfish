@@ -24,10 +24,13 @@
 
 namespace Starfish {
 
+class ImageResource;
+
 class MaskLayer : public gc {
 public:
     MaskLayer()
         : m_image(nullptr)
+        , m_imageResource(nullptr)
         , m_sizeIsLength(true)
     {
     }
@@ -60,6 +63,16 @@ public:
     void setImage(ImageValue* uri)
     {
         m_image = uri;
+    }
+
+    void setImageResource(ImageResource* imageResource)
+    {
+        m_imageResource = imageResource;
+    }
+
+    ImageResource* imageResource() const
+    {
+        return m_imageResource;
     }
 
     void setSize(LengthSize size)
@@ -97,6 +110,7 @@ public:
     }
 
     ImageValue* m_image;
+    ImageResource* m_imageResource;
 
     // mask-size
     bool m_sizeIsLength;
@@ -149,6 +163,14 @@ public:
         return m_layers[layer].image();
     }
 
+    ImageResource* imageResource(uint32_t layer) const
+    {
+        if (m_layers.size() <= layer) {
+            return nullptr;
+        }
+        return m_layers[layer].imageResource();
+    }
+
     void setImage(ImageValue* value, uint32_t layer)
     {
         // Note: transparent black image layer by default
@@ -157,6 +179,15 @@ public:
             m_maxLayerImage = layer + 1;
         }
         m_layers[layer].setImage(value);
+    }
+
+    void setImageResource(ImageResource* imageResource, uint32_t layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerImage < layer + 1) {
+            m_maxLayerImage = layer + 1;
+        }
+        m_layers[layer].setImageResource(imageResource);
     }
 
     void setSize(MaskSizeValue size, uint32_t layer)
