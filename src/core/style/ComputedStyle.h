@@ -2857,6 +2857,10 @@ public:
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
             nullptr);
+    void loadMaskImage(
+        Node* consumer,
+        ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
+            nullptr);
     void loadResources(
         Node* consumer,
         ComputedStyle* prevComputedStyleValueForReferenceLoadedResources =
@@ -3680,6 +3684,12 @@ public:
     void setMaskImage(ImageValue* image, uint32_t layer)
     {
         rareComputedStyleData()->ensurePositionedMask()->setImage(image, layer);
+    }
+
+    void setMaskImageResource(ImageResource* image, uint32_t layer)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setImageResource(
+            image, layer);
     }
 
     void setMaskSize(MaskSizeValue size, unsigned int layer = 0)

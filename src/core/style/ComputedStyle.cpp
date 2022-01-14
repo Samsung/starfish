@@ -582,6 +582,57 @@ void ComputedStyle::loadListStyleImage(
     }
 }
 
+void ComputedStyle::loadMaskImage(
+    Node* consumer,
+    ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
+{
+    for (uint32_t i = 0; i < maskLayerSize(); i++) {
+        ImageValue* imageValue = maskImage(i);
+        if (imageValue && imageValue->type().isURL()) {
+            ResourceURL* resourceURL =
+                new ResourceURL(imageValue->urlValue(),
+                                consumer->document()->baseURL()->baseURI());
+            ImageResource* imageResource = nullptr;
+            if (prevComputedStyleValueForReferenceLoadedResources &&
+                prevComputedStyleValueForReferenceLoadedResources->mask() &&
+                prevComputedStyleValueForReferenceLoadedResources->mask()
+                    ->imageResource(i) &&
+                *(prevComputedStyleValueForReferenceLoadedResources->mask()
+                      ->imageResource(i)
+                      ->url()) == *resourceURL) {
+                imageResource =
+                    prevComputedStyleValueForReferenceLoadedResources->mask()
+                        ->imageResource(i);
+                consumer->document()
+                    ->resourceLoader()
+                    .notifyImageResourceActiveState(imageResource);
+                setMaskImageResource(imageResource, i);
+            } else {
+                imageResource =
+                    consumer->document()->resourceLoader().fetchImage(
+                        resourceURL);
+                setMaskImageResource(imageResource, i);
+                imageResource->markThisResourceIsDoesNotAffectWindowOnLoad();
+                // Use BackgroundImageResourceClient instead of dedicated
+                // resource client. That's enough for now, but consider
+                // introducing a dedicated resource client if needed later.
+                imageResource->addResourceClient(
+                    new BackgroundImageResourceClient(imageResource, consumer));
+
+                RequestData* requestData = new RequestData();
+                requestData->m_url = resourceURL;
+                requestData->m_referrer =
+                    new ReferrerURL(consumer->document()->documentURI());
+                requestData->m_destination = RequestDestination::Image;
+                requestData->m_syncLevel =
+                    RequestSyncLevel::SyncIfAlreadyLoaded;
+
+                imageResource->request(requestData, true);
+            }
+        }
+    }
+}
+
 void ComputedStyle::loadResources(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
@@ -592,6 +643,7 @@ void ComputedStyle::loadResources(
                     prevComputedStyleValueForReferenceLoadedResources);
     loadListStyleImage(consumer,
                        prevComputedStyleValueForReferenceLoadedResources);
+    loadMaskImage(consumer, prevComputedStyleValueForReferenceLoadedResources);
     loadFont(consumer);
 }
 
