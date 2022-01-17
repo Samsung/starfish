@@ -1546,9 +1546,9 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
             width += ((gridArea.columnEnd() - gridArea.columnStart() - 1) *
                       m_columnGap);
-            if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
-                width += mbp.width() - margin.width();
-            }
+        }
+        if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+            width += mbp.width() - margin.width();
         }
     }
 
@@ -1591,6 +1591,12 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             Length::Fixed,
             style->padding().right().specifiedValue(width, m_container)));
         widthWillBe -= style->padding().right().fixed();
+    }
+
+    // Initialize the border to avoid setting an unintended value when setting
+    // the border in layout GridItem() in a situation where no border is given.
+    if (style->nullableBorder().hasValue() == false) {
+        style->rareComputedStyleData()->ensureBorder()->makeZeroWidth();
     }
 
     style->setBorderLeftWidth(Length(
