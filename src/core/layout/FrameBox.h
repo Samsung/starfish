@@ -662,7 +662,10 @@ public:
             return true;
         } else if (style()->hasAvailableFilter()) {
             return true;
+        } else if (style()->maskLayerSize()) {
+            return true;
         }
+
         return false;
     }
     bool needsToPaintBackgroundOrBorderOrBoxShadow();

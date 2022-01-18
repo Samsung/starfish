@@ -2484,6 +2484,12 @@ private:
         cairo_surface_mark_dirty_rectangle(m_surface, xx, yy, ww, hh);
     }
 
+#if defined(STARFISH_ENABLE_TEST)
+    virtual void dump(const char* path) override
+    {
+        cairo_surface_write_to_png(m_surface, path);
+    }
+#endif
 protected:
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;

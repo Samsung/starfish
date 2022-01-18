@@ -5,7 +5,7 @@ on:
 
 jobs:
   check_source:
-    runs-on: [ code-default ]
+    runs-on: [rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
     # Set reasonable timeout value.
@@ -22,7 +22,7 @@ jobs:
 
   build_x64:
     needs: check_source
-    runs-on: [ self-hosted, code-2xlarge ]
+    runs-on: [rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
       options: --user root
@@ -49,7 +49,7 @@ jobs:
         if: matrix.mode == 'x64_glfw_debug'
         with:
           name: starfish-${{ matrix.mode }}
-          path: | 
+          path: |
             ./out/debug/bin/lightweight-web-engine
             ./out/debug/lib/*.so
             ./build.ninja
@@ -70,10 +70,10 @@ jobs:
 
   test:
     needs: build_x64
-    timeout-minutes: 30
+    timeout-minutes: 60
     # After the firewall registraion is done, a code runner should also be added to test work.
     # runs-on: [ self-hosted, code-2xlarge ]
-    runs-on: [ self-hosted ]
+    runs-on: [rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
       options: --user root
@@ -91,7 +91,7 @@ jobs:
       - uses: CODE-Actions/download-artifact@v2
         with:
           name: starfish-x64_glfw_debug
-      
+
       - name: Prepare Test
         run: |
           mkdir -p ~/.fonts
@@ -105,7 +105,7 @@ jobs:
 
       - name: Build image diff tool
         run: ninja install_pixel_test_dep
- 
+
       - name: Run internal_test
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py internal_test || exit 1
@@ -113,4 +113,3 @@ jobs:
       - name: Run reftest_all
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/test_runner.py reftest_all || exit 1
-
