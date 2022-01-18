@@ -1482,6 +1482,7 @@ void Frame::computeStyleFlags()
     if (wc && (wc->transform() || wc->opacity())) {
         m_flags.m_needToEstablishStackingContext |= true;
     }
+    m_flags.m_needToEstablishStackingContext |= (style->maskLayerSize() > 0);
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));

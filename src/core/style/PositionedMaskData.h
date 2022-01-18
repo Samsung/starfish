@@ -109,6 +109,23 @@ public:
         return m_size.m_typeValue;
     }
 
+    bool operator==(const MaskLayer& other)
+    {
+        if ((m_image && other.m_image) && !(*m_image == *other.m_image)) {
+            return false;
+        } else if (m_image == nullptr || other.m_image == nullptr) {
+            return false;
+        }
+        // TODO : Add implementations for the rest of the CSS masking properties
+
+        return true;
+    }
+
+    bool operator!=(const MaskLayer& other)
+    {
+        return !operator==(other);
+    }
+
     ImageValue* m_image;
     ImageResource* m_imageResource;
 
@@ -120,8 +137,7 @@ public:
 class PositionedMaskData : public gc {
 public:
     PositionedMaskData()
-        : m_maskImage(nullptr)
-        , m_maxLayerSize(0)
+        : m_maxLayerSize(0)
         , m_maxLayerImage(0)
     {
     }
@@ -253,14 +269,23 @@ public:
         return m_maxLayerImage;
     }
 
-    bool operator==(const PositionedMaskData& o)
+    bool operator==(const PositionedMaskData& other)
     {
-        return m_maskImage == o.m_maskImage;
+        if (m_layers.size() != other.m_layers.size()) {
+            return false;
+        }
+        for (uint32_t i = 0; i < m_layers.size(); i++) {
+            if (m_layers[i] != other.m_layers[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    bool operator!=(const PositionedMaskData& o)
+    bool operator!=(const PositionedMaskData& other)
     {
-        return !operator==(o);
+        return !operator==(other);
     }
 
     void* operator new(size_t size);
@@ -274,7 +299,6 @@ private:
         }
     }
 
-    NativeImageData* m_maskImage;
     uint32_t m_maxLayerSize;
     uint32_t m_maxLayerImage;
 
