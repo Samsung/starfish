@@ -41,16 +41,11 @@ namespace Starfish {
 
 const char* getWindowsTempDir()
 {
-    CoInitialize(NULL);
     static char pBuffer[MAX_PATH];
     if (!pBuffer[0]) {
-        PWSTR path = 0;
-        SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_SIMPLE_IDLIST, NULL, &path);
-        wcstombs(pBuffer, path, wcslen(path));
-        CoTaskMemFree(path);
+        GetEnvironmentVariableA("LOCALAPPDATA", pBuffer, sizeof pBuffer);
         strcat(pBuffer, "\\");
     }
-
     return pBuffer;
 }
 

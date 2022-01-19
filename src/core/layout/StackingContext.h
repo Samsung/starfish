@@ -72,7 +72,7 @@ public:
         return m_verticalTileCount;
     }
 
-    uint32_t additionalPixelRatio() const
+    float additionalPixelRatio() const
     {
         return m_additionalPixelRatio;
     }
@@ -91,7 +91,7 @@ protected:
     size_t m_tileDataHeight;
     size_t m_horizontalTileCount;
     size_t m_verticalTileCount;
-    uint32_t m_additionalPixelRatio;
+    float m_additionalPixelRatio;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -104,7 +104,7 @@ class StackingContextChild : public GCVector<StackingContext*> {
 
 struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;
-    uint32_t m_additionalPixelRatio;
+    float m_additionalPixelRatio;
     GraphicsBufferHolder* m_graphicsBufferHolder;
     SkMatrix m_matrix;
     TextDecorationData m_textDecorationData;
@@ -158,7 +158,7 @@ public:
     }
 
     LayoutRect visibleRect();
-    uint32_t additionalPixelRatio();
+    float additionalPixelRatio();
 
     LayoutLocation transformOrigin();
     void computeTransformMatrix();
@@ -268,7 +268,7 @@ protected:
             : baseAdditionalPixelRatio(1)
         {
         }
-        uint32_t baseAdditionalPixelRatio;
+        float baseAdditionalPixelRatio;
         GCVector<StackingContext*> stackingContextsNeedsGraphicsBuffer;
     };
     void applyStackingContextPropertiesPostProcessing(

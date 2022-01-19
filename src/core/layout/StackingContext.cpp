@@ -223,18 +223,22 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
         size_t tileSize =
             ceil(CanvasSurface::g_canvasSurfaceTileSize /
                  sc->owner()->node()->webView()->screenInfo().devicePixelRatio);
+
+        float effectiveWidth = m_bufferWidth * sc->additionalPixelRatio();
+        float effectiveHeight = m_bufferHeight * sc->additionalPixelRatio();
+
         size_t wTextureCount = 1;
-        while (m_bufferWidth / wTextureCount > tileSize) {
+        while (effectiveWidth / wTextureCount > tileSize) {
             wTextureCount++;
         }
-        m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
+        m_tileDataWidth = ceil(effectiveWidth / (float)wTextureCount);
         m_horizontalTileCount = wTextureCount;
 
         size_t hTextureCount = 1;
-        while (m_bufferHeight / hTextureCount > tileSize) {
+        while (effectiveHeight / hTextureCount > tileSize) {
             hTextureCount++;
         }
-        m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);
+        m_tileDataHeight = ceil(effectiveHeight / (float)hTextureCount);
         m_verticalTileCount = hTextureCount;
 
         m_surfaces.resize(wTextureCount * hTextureCount);
@@ -1490,13 +1494,13 @@ void StackingContext::applyStackingContextProperties(
 void StackingContext::applyStackingContextPropertiesPostProcessing(
     ApplyPropertiesPostProcessingContext& ctx)
 {
-    uint32_t orgBaseAdditionalPixelRatio = ctx.baseAdditionalPixelRatio;
+    float orgBaseAdditionalPixelRatio = ctx.baseAdditionalPixelRatio;
 
     if (needsComposite()) {
         ctx.stackingContextsNeedsGraphicsBuffer.push_back(this);
         if (!m_owner->hasOwnGraphicsBufferMethod()) {
             STARFISH_ASSERT(m_rareData);
-            uint32_t oldAdditionalPixelRatio =
+            float oldAdditionalPixelRatio =
                 m_rareData->m_additionalPixelRatio;
             m_rareData->m_additionalPixelRatio = ctx.baseAdditionalPixelRatio;
 
@@ -1543,7 +1547,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                 }
                 m_rareData->m_additionalPixelRatio =
                     std::max(ctx.baseAdditionalPixelRatio,
-                             (uint32_t)transformScaleMaxValue);
+                             transformScaleMaxValue);
                 ctx.baseAdditionalPixelRatio =
                     std::max(ctx.baseAdditionalPixelRatio,
                              m_rareData->m_additionalPixelRatio);
@@ -1551,19 +1555,44 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                 auto matrix = m_owner->style()->transformsToMatrix(
                     m_owner->width(), m_owner->height(), m_owner,
                     m_owner->isTransformable());
-                float scale = std::max(matrix.getScaleX(), matrix.getScaleY());
 
-                if (scale < minScale) {
-                    scale = minScale;
-                } else if (scale > maxScale) {
-                    scale = maxScale;
+                int32_t windowWidth = m_owner->node()->window()->innerWidth();
+                int32_t windowHeight = m_owner->node()->window()->innerHeight();
+                LayoutUnit visibleWidth = m_rareData->m_visibleRect.width();
+                LayoutUnit visibleHeight = m_rareData->m_visibleRect.height();
+                // additional
+#ifndef STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE
+#define STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE 4
+#endif
+                const int32_t minimumScale =
+                    STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
+
+                if ((visibleWidth > windowWidth * minimumScale) ||
+                    (visibleHeight > windowHeight * minimumScale)) {
+                    int m = std::max(visibleWidth / windowWidth,
+                        visibleHeight / windowHeight);
+                    float scale = std::min(matrix.getScaleX(), matrix.getScaleY());
+                    scale = std::min(1.f/m, scale);
+                    // respect org scale
+                    m_rareData->m_additionalPixelRatio =
+                        std::min(ctx.baseAdditionalPixelRatio, scale);
+                    ctx.baseAdditionalPixelRatio =
+                        std::min(ctx.baseAdditionalPixelRatio,
+                            m_rareData->m_additionalPixelRatio);
+                } else {
+                    float scale = std::max(matrix.getScaleX(), matrix.getScaleY());
+                    if (scale < minScale) {
+                        scale = minScale;
+                    } else if (scale > maxScale) {
+                        scale = maxScale;
+                    }
+
+                    m_rareData->m_additionalPixelRatio =
+                        std::max(ctx.baseAdditionalPixelRatio, scale);
+                    ctx.baseAdditionalPixelRatio =
+                        std::max(ctx.baseAdditionalPixelRatio,
+                            m_rareData->m_additionalPixelRatio);
                 }
-
-                m_rareData->m_additionalPixelRatio =
-                    std::max(ctx.baseAdditionalPixelRatio, (uint32_t)scale);
-                ctx.baseAdditionalPixelRatio =
-                    std::max(ctx.baseAdditionalPixelRatio,
-                             m_rareData->m_additionalPixelRatio);
             }
 
             if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
@@ -1959,7 +1988,7 @@ LayoutRect StackingContext::visibleRect()
     return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
 }
 
-uint32_t StackingContext::additionalPixelRatio()
+float StackingContext::additionalPixelRatio()
 {
     return m_rareData ? m_rareData->m_additionalPixelRatio : 1;
 }

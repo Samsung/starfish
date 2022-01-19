@@ -45,9 +45,10 @@ extern "C" {
 #include <png.h>
 #include <gif_lib.h>
 
-#if !defined(STARFISH_TIZEN_VERSION_5_0) && \
-    !defined(STARFISH_TIZEN_VERSION_5_5) && \
-    !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER)
+#if !defined(STARFISH_TIZEN_VERSION_5_0) &&          \
+    !defined(STARFISH_TIZEN_VERSION_5_5) &&          \
+    !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER) && \
+    !defined(STARFISH_WINDOWS)
 #include <webp/decode.h>
 #define STARFISH_ENABLE_WEBP
 #endif

@@ -61,8 +61,8 @@ struct timezone {
 };
 
 struct timeval {
-    time_t tv_sec;
-    unsigned int tv_usec;
+    long tv_sec;  /* seconds */
+    long tv_usec; /* and microseconds */
 };
 
 int gettimeofday(struct timeval *tv, struct timezone *tz)
@@ -87,7 +87,9 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
     if (NULL != tz) {
         if (!tzflag) {
+#if !defined(STARFISH_WINDOWS_UWP)
             _tzset();
+#endif
             tzflag++;
         }
         tz->tz_minuteswest = _timezone / 60;
