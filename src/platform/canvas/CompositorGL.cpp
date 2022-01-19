@@ -86,6 +86,16 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 
 static bool g_isSupported_EGL_NATIVE_SURFACE_TIZEN = false;
 #define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+#elif defined(STARFISH_WINDOWS_UWP)
+// Enable function definitions in the GL headers below
+#define GL_GLEXT_PROTOTYPES
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <EGL/eglplatform.h>
+#include <angle_windowsstore.h>
 #elif defined(STARFISH_WINDOWS)
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -1990,12 +2000,12 @@ public:
             for (size_t x = 0; x < m_wTextureCount; x++) {
                 size_t texureDataX = coveredColsCount;
                 size_t texureDataY = coveredRowsCount;
-                size_t texureDataWidth =
-                    std::min((size_t)m_textureTileSize,
-                             m_bufferWidth - coveredColsCount);
-                size_t texureDataHeight =
-                    std::min((size_t)m_textureTileSize,
-                             m_bufferHeight - coveredRowsCount);
+                size_t texureDataWidth = std::max(
+                    (size_t)1, std::min((size_t)m_textureTileSize,
+                                        m_bufferWidth - coveredColsCount));
+                size_t texureDataHeight = std::max(
+                    (size_t)1, std::min((size_t)m_textureTileSize,
+                                        m_bufferHeight - coveredRowsCount));
 
                 if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
                     texureDataWidth = m_bufferWidth;

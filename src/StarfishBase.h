@@ -212,6 +212,8 @@
 #define setenv(a, b, c) _putenv_s(a, b)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
+#define _SSIZE_T_
+#define _SSIZE_T_DEFINED
 #define _INC_CTYPE // for preventing include windows version of ctype header
 #include <inttypes.h>
 typedef unsigned int uint;
@@ -229,6 +231,9 @@ typedef unsigned int uint;
 #include <RuntimeICUBinder.h>
 #include <ICUPolyfill.h>
 #else
+#if defined(STARFISH_WINDOWS_UWP)
+#include <icu.h>
+#else
 #include <unicode/locid.h>
 #include <unicode/brkiter.h>
 #include <unicode/ubidi.h>
@@ -237,6 +242,7 @@ typedef unsigned int uint;
 #include <unicode/ucsdet.h>
 #include <unicode/uscript.h>
 #include <unicode/rbbi.h>
+#endif
 #endif
 
 #ifndef TRUE
@@ -336,7 +342,7 @@ const char* getWindowsTempDir();
     (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#ifndef STARFISH_WINDOWS
+#if !defined(STARFISH_WINDOWS)
 #define LOG_FUNCTION_TYPE(functionName, param1, param2, ansi1, ansi2, fmt,   \
                           arg...)                                            \
     functionName(param1, param2 ansi1 "%s: %s(%d) > " fmt ansi2, __MODULE__, \
@@ -356,8 +362,8 @@ const char* getWindowsTempDir();
                  __MODULE__, __func__, __LINE__, ##arg);
 #endif
 
-#define STARFISH_LOG_INFO(fmt, arg...) \
-    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt, ##arg)
+#define STARFISH_LOG_INFO(...) \
+    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", __VA_ARGS__)
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
@@ -377,10 +383,10 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_ERROR(fmt, arg...)                                    \
+#define STARFISH_LOG_ERROR(...)                                            \
     do {                                                                   \
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;31m", \
-                          "\033[0m", fmt, ##arg)                           \
+                          "\033[0m", __VA_ARGS__)                          \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
@@ -403,10 +409,10 @@ const char* getWindowsTempDir();
     ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_WARN(fmt, arg...)                                     \
+#define STARFISH_LOG_WARN(...)                                             \
     do {                                                                   \
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;33m", \
-                          "\033[0m", fmt, ##arg)                           \
+                          "\033[0m", __VA_ARGS__)                          \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN

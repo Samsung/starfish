@@ -77,6 +77,9 @@ int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::CAIRO);
 #elif defined(STARFISH_ANDROID)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_WINDOWS_UWP)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_WINDOWS)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);

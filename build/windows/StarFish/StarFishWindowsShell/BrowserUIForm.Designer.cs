@@ -41,6 +41,8 @@
             // buttonNavigate
             // 
             this.buttonNavigate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonNavigate.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.buttonNavigate.Enabled = false;
             this.buttonNavigate.Location = new System.Drawing.Point(1292, 0);
             this.buttonNavigate.Margin = new System.Windows.Forms.Padding(4);
             this.buttonNavigate.Name = "buttonNavigate";
@@ -54,6 +56,7 @@
             // 
             this.textBoxAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBoxAddress.Enabled = false;
             this.textBoxAddress.Location = new System.Drawing.Point(1, 2);
             this.textBoxAddress.Margin = new System.Windows.Forms.Padding(4);
             this.textBoxAddress.Name = "textBoxAddress";
@@ -67,6 +70,7 @@
             // buttonConsole
             // 
             this.buttonConsole.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonConsole.Enabled = false;
             this.buttonConsole.Location = new System.Drawing.Point(1394, 0);
             this.buttonConsole.Margin = new System.Windows.Forms.Padding(4);
             this.buttonConsole.Name = "buttonConsole";
@@ -92,6 +96,7 @@
             // buttonResizeFHD
             // 
             this.buttonResizeFHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonResizeFHD.Enabled = false;
             this.buttonResizeFHD.Location = new System.Drawing.Point(1586, 0);
             this.buttonResizeFHD.Margin = new System.Windows.Forms.Padding(4);
             this.buttonResizeFHD.Name = "buttonResizeFHD";
@@ -116,10 +121,10 @@
             this.panelBrowserContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBrowserContent.Location = new System.Drawing.Point(1, 34);
+            this.panelBrowserContent.Location = new System.Drawing.Point(1, 38);
             this.panelBrowserContent.Margin = new System.Windows.Forms.Padding(4);
             this.panelBrowserContent.Name = "panelBrowserContent";
-            this.panelBrowserContent.Size = new System.Drawing.Size(1730, 1232);
+            this.panelBrowserContent.Size = new System.Drawing.Size(1730, 1228);
             this.panelBrowserContent.TabIndex = 7;
             this.panelBrowserContent.Click += new System.EventHandler(this.panelBrowserContent_Click);
             this.panelBrowserContent.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseDown);
@@ -131,6 +136,7 @@
             // buttonSettings
             // 
             this.buttonSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonSettings.Enabled = false;
             this.buttonSettings.Location = new System.Drawing.Point(1491, 0);
             this.buttonSettings.Margin = new System.Windows.Forms.Padding(4);
             this.buttonSettings.Name = "buttonSettings";
@@ -147,15 +153,16 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(1736, 1268);
-            this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.panelBrowserContent);
             this.Controls.Add(this.buttonResizeFHD);
             this.Controls.Add(this.buttonConsole);
             this.Controls.Add(this.textBoxAddress);
             this.Controls.Add(this.buttonNavigate);
             this.Controls.Add(this.textBoxFocusReceiver);
+            this.Controls.Add(this.buttonSettings);
             this.Controls.Add(this.buttonResizeFHDHalf);
             this.DoubleBuffered = true;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "BrowserUIForm";
             this.Text = "StarFish Windows Shell";

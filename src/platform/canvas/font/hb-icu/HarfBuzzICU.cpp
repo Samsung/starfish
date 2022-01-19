@@ -32,11 +32,15 @@
 #if defined(PORT_CANVAS_BACKEND_SKIA) || defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #if !defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
+#if defined(STARFISH_WINDOWS_UWP)
+#include <icu.h>
+#else
 #include <unicode/uchar.h>
 #include <unicode/unorm2.h>
 #include <unicode/ustring.h>
 #include <unicode/utf16.h>
 #include <unicode/uversion.h>
+#endif
 #endif
 
 #include "HarfBuzzICU.h"

@@ -367,32 +367,19 @@ public:
 
     void removeBlockFormattingContext()
     {
-        if (m_blockFormattingContextInfo.back().m_isRoot ||
-            !m_blockFormattingContextInfo.back().m_isNormalFlow) {
-            std::vector<FrameBlockBox*>().swap(
-                *m_blockFormattingContextInfo.back().m_inlineBlockBoxStack);
-            std::unordered_map<FrameBlockBox*, LayoutUnit>().swap(
-                *m_blockFormattingContextInfo.back().m_lineBoxAscenders);
-            std::unordered_map<Frame*, FrameBlockBox*>().swap(
-                *m_blockFormattingContextInfo.back().m_firstLineCandidates);
-            std::vector<FrameBlockBox*>().swap(
-                *m_blockFormattingContextInfo.back()
-                     .m_blockBoxAligningAtFirstBaselineStack);
-            std::unordered_map<FrameBlockBox*,
-                               std::pair<AscenderInfo, LayoutUnit>>()
-                .swap(
-                    *m_blockFormattingContextInfo.back().m_firstLineAscenders);
-            std::unordered_map<FrameTableCellBox*,
-                               std::pair<AscenderInfo, LayoutUnit>>()
-                .swap(*m_blockFormattingContextInfo.back().m_tempAscenders);
-            std::unordered_map<PreferredWidthKey, PreferredWidthValue>().swap(
-                *m_blockFormattingContextInfo.back().m_preferredWidthValues);
-            std::unordered_map<FrameBox*, LayoutUnit>().swap(
-                *m_blockFormattingContextInfo.back().m_contentHeights);
+        auto lastBFC = m_blockFormattingContextInfo.back();
+        if (lastBFC.m_isRoot || !lastBFC.m_isNormalFlow) {
+            lastBFC.m_inlineBlockBoxStack->~vector();
+            lastBFC.m_lineBoxAscenders->~unordered_map();
+            lastBFC.m_firstLineCandidates->~unordered_map();
+            lastBFC.m_blockBoxAligningAtFirstBaselineStack->~vector();
+            lastBFC.m_firstLineAscenders->~unordered_map();
+            lastBFC.m_tempAscenders->~unordered_map();
+            lastBFC.m_preferredWidthValues->~unordered_map();
+            lastBFC.m_contentHeights->~unordered_map();
         }
 
-        std::vector<FloatingBoxInfo>().swap(
-            *m_blockFormattingContextInfo.back().m_floatBoxes);
+        lastBFC.m_floatBoxes->~vector();
         m_blockFormattingContextInfo.pop_back();
     }
 

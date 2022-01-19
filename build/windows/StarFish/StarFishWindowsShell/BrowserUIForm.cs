@@ -27,7 +27,6 @@ namespace StarFishWindowsShell
         public BrowserUIForm()
         {
             InitializeComponent();
-            StarFish.initGL(panelBrowserContent.Handle);
             string[] args = Environment.GetCommandLineArgs();
             string url = "about:blank";
             if (args.Length > 1)
@@ -39,8 +38,11 @@ namespace StarFishWindowsShell
                 }
             }
 
-            // url = "demo/index.html";
-            // url = "file:///" + Path.GetFullPath(url).Replace("\\\\", "\\").Replace("\\", "/");
+            url = "demo/index.html";
+            url = "file:///" + Path.GetFullPath(url).Replace("\\\\", "\\").Replace("\\", "/");
+            panelBrowserContent.Size = this.ClientSize;
+            panelBrowserContent.Location = this.Location;
+            StarFish.initGL(panelBrowserContent.Handle);
 
             textBoxAddress.Text = url;
             panelBrowserContent.MouseWheel += PanelBrowserContent_MouseWheel;

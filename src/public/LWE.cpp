@@ -27,6 +27,10 @@
 #include "LWEWebView.h"
 #include <EscargotPublic.h>
 
+#if defined(STARFISH_WINDOWS)
+#include <fontconfig/fontconfig.h>
+#endif
+
 #define THREAD_MINIMUM_STACK_SIZE \
     4 * 1024 * 1024 // we need at least 4MB for stack
 
@@ -185,6 +189,9 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     }
 
     Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
+#if defined(STARFISH_WINDOWS)
+        FcInitLoadConfigAndFonts();
+#endif
         Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
         g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
@@ -229,6 +236,10 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
+
+#if defined(STARFISH_WINDOWS)
+    FcInitLoadConfigAndFonts();
+#endif
 
     Escargot::Globals::initialize(new Starfish::EscargotStarfishPlatform());
     g_starfishInstance = new (NoGC)

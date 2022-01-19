@@ -696,12 +696,12 @@ void HTMLSelectElement::addElementStyle(HTMLElement* element,
 
     ComputedStyle* baseStyle = element->parentElement()->style();
     if (baseStyle->direction() == s->direction()) {
-        addProperty(
-            "direction",
-            String::fromUTF8(s->direction() == DirectionValue::RtlDirectionValue
-                                 ? "rtl"
-                                 : "ltr"),
-            data);
+        if (s->direction() == DirectionValue::RtlDirectionValue) {
+            addProperty("direction", String::fromUTF8("rtl"), data);
+
+        } else {
+            addProperty("direction", String::fromUTF8("ltr"), data);
+        }
     }
     if (s->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
         addProperty("unicodeBidi", String::fromUTF8("bidi-override"), data);
