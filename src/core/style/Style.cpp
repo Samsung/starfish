@@ -450,26 +450,26 @@ String* CSSStyleValuePair::keyName() const
     }
 }
 
-static bool isValidVarFunction(const CSSTokenValue& token)
+static bool hasValidVarFunction(const CSSTokenValue& token)
 {
     CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
     variablesSyntaxBuilder.build(token);
-
-    if (!variablesSyntaxBuilder.isValid())
-        return false;
-    return true;
-}
-
-bool CSSStyleValuePair::updateValueVarValue(const CSSTokenValue& token)
-{
-    if (isValidVarFunction(token)) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VarFunctionValueKind;
-        m_temporaryValueKind =
-            CSSStyleValuePair::ValueKind::VarFunctionValueKind;
-        setVarFunctionValue(String::createASCIIString(
-            std::string(token).c_str(), token.size()));
+    if (variablesSyntaxBuilder.isValid()) {
         return true;
     }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueVarReferences(const CSSTokenVector& tokens)
+{
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        const CSSTokenValue& token = tokens[i];
+        if (hasValidVarFunction(token)) {
+            m_valueKind = CSSStyleValuePair::ValueKind::VarFunctionValueKind;
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -1194,9 +1194,6 @@ bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src)
         return false;
     }
     if (m_keyKind != src.m_keyKind) {
-        return false;
-    }
-    if (m_temporaryValueKind != src.m_temporaryValueKind) {
         return false;
     }
 
@@ -2912,48 +2909,49 @@ CSSStyleValuePair StyleResolver::resolveVarValue(
     CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
     GCVector<MutablePropertyValue>& cssCustomValues)
 {
-    CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
-    CSSStyleValuePair ret;
+    CSSTokenVector cssTokenValues;
+    CSSStyleDeclaration::tokenizeCSSValue(
+        cssTokenValues,
+        cssValuePair.varFunctionValue()->toUTF8NonGCString().c_str(),
+        cssValuePair.varFunctionValue()->length(), ",", 1);
 
-    variablesSyntaxBuilder.build(
-        cssValuePair.varFunctionValue()->toUTF8NonGCString().c_str());
-    if (variablesSyntaxBuilder.isValid()) {
-        CSSTokenValue resolvedValue =
-            variablesSyntaxBuilder.generateStyle(cssCustomValues);
-
-        if (resolvedValue.empty()) {
-            return ret;
-        }
-
-        CSSTokenVector tokens;
-        CSSStyleDeclaration::tokenizeCSSValue(tokens, resolvedValue.c_str(),
-                                              resolvedValue.size(), ",", 1);
-
-#define SET_CASES(name, ...)                                  \
-    case CSSStyleValuePair::KeyKind::name:                    \
-        if (ret.updateValueCommon(tokens) ||                  \
-            ret.updateValue##name(document(), tokens)) {      \
-            ret.setKeyKind(CSSStyleValuePair::KeyKind::name); \
-        }                                                     \
-        break;
-
-        switch (keyKind) {
-            FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
-        case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-            if (ret.updateValueCommon(tokens) ||
-                ret.updateValueLayerTransitionTimingFunction(tokens)) {
-                ret.setKeyKind(
-                    CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+    std::string cssValue;
+    for (size_t i = 0; i < cssTokenValues.size(); ++i) {
+        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+        variablesSyntaxBuilder.build(cssTokenValues[i]);
+        if (variablesSyntaxBuilder.isValid()) {
+            cssTokenValues[i] =
+                variablesSyntaxBuilder.generateStyle(cssCustomValues);
+            CSSTokenVector tempTokenValues;
+            CSSStyleDeclaration::tokenizeCSSValue(
+                tempTokenValues, cssTokenValues[i].c_str(),
+                cssTokenValues[i].size(), ",", 1);
+            for (size_t j = 0; j < tempTokenValues.size(); ++j) {
+                cssValue.append(tempTokenValues[j] + " ");
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Unknown:
-            break;
-        default:
-            break;
+        } else {
+            cssValue.append(cssTokenValues[i] + " ");
         }
     }
 
-    return ret;
+    CSSStyleDeclaration* self = new CSSStyleDeclaration(document());
+    switch (keyKind) {
+#define SET_ATTR(name, ...)                                        \
+    case CSSStyleValuePair::KeyKind::name: {                       \
+        self->set##name(cssValue.c_str(), cssValue.size(), false); \
+        break;                                                     \
+    }
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+#undef SET_ATTR
+    default:
+        break;
+    }
+
+    if (self->hasCSSValuePair(keyKind)) {
+        return self->getCSSValuePair(keyKind);
+    } else {
+        return CSSStyleValuePair();
+    }
 }
 
 void StyleResolver::apply(Element* element,
@@ -3002,48 +3000,11 @@ void StyleResolver::apply(Element* element,
         CSSStyleValuePair newCssValue = cssValues[k];
         if (newCssValue.valueKind() ==
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
-            CSSStyleValuePair resolvedValue = resolveVarValue(
-                newCssValue, newCssValue.keyKind(), cssCustomValues);
-            if (resolvedValue.keyKind() != newCssValue.keyKind()) {
+            newCssValue = resolveVarValue(newCssValue, newCssValue.keyKind(),
+                                          cssCustomValues);
+            if (newCssValue.keyKind() != cssValues[k].keyKind()) {
                 continue;
             }
-
-            newCssValue = resolvedValue;
-        } else if (newCssValue.valueKind() ==
-                   CSSStyleValuePair::ValueListKind) {
-            ValueList* list = newCssValue.multiValue();
-            ValueList* multiValue = new ValueList(list->separator());
-            bool isResolved = true;
-            for (size_t i = 0; i < list->size(); i++) {
-                CSSStyleValuePair pair = (*list)[i];
-                if (pair.valueKind() ==
-                    CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
-                    CSSStyleValuePair resolvedValue = resolveVarValue(
-                        pair, newCssValue.keyKind(), cssCustomValues);
-                    if (resolvedValue.keyKind() != newCssValue.keyKind()) {
-                        isResolved = false;
-                        break;
-                    }
-
-                    if (resolvedValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::ValueListKind) {
-                        ValueList* returnValues = resolvedValue.multiValue();
-                        for (size_t i = 0; i < returnValues->size(); ++i) {
-                            multiValue->push_back((*returnValues)[i]);
-                        }
-                    } else {
-                        multiValue->push_back(resolvedValue);
-                    }
-                } else {
-                    multiValue->push_back(pair);
-                }
-            }
-
-            if (!isResolved) {
-                continue;
-            }
-
-            newCssValue.setValue(multiValue);
         }
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                \
@@ -9000,7 +8961,7 @@ bool CSSStyleValuePair::updateValueColor(Document* document,
         return false;
     }
 
-    return updateValueUnitColor(tokens[0]) || updateValueVarValue(tokens[0]);
+    return updateValueUnitColor(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundColor(Document* document,
@@ -10064,8 +10025,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
             continue;
         }
         CSSStyleValuePair ret;
-        if (shouldBeComma || !(ret.updateValueUnitImageValue(value) ||
-                               ret.updateValueVarValue(value))) {
+        if (shouldBeComma || !ret.updateValueUnitImageValue(value)) {
             return false;
         }
         shouldBeComma = true;
@@ -11091,7 +11051,7 @@ bool CSSStyleValuePair::updateValueFontSize(Document* document,
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitFontSize(tokens[0]) || updateValueVarValue(tokens[0]);
+    return updateValueUnitFontSize(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)

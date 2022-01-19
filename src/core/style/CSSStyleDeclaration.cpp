@@ -1208,9 +1208,8 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
-        } else if (!foundTimingFunction && temp.updateValueVarValue(tok)) {
-            temp.setTemporaryValueKind(
-                CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+        } else if (!foundTimingFunction &&
+                   temp.updateValueVarReferences(toks)) {
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
@@ -1280,9 +1279,8 @@ static bool parseAnimationShorthand(
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
-        } else if (!foundTimingFunction && temp.updateValueVarValue(tok)) {
-            temp.setTemporaryValueKind(
-                CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+        } else if (!foundTimingFunction &&
+                   temp.updateValueVarReferences(toks)) {
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
@@ -1579,8 +1577,6 @@ void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind name,
                     m_cssValues[i].setValueKind(ret.valueKind());
                     m_cssValues[i].setValue(ret.value());
                     m_cssValues[i].setFlagImportant(ret.flagImportant());
-                    m_cssValues[i].setTemporaryValueKind(
-                        ret.temporaryValueKind());
                     rootPointerValueIfExists(ret);
                     notifyNeedsStyleRecalc();
                 }
@@ -1721,8 +1717,11 @@ FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
             ret.updateValue##name(m_node->document(), tokens)) {       \
             ret.setFlagImportant(isImportant);                         \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);    \
+        } else if (ret.updateValueVarReferences(tokens)) {             \
+            ret.setValue(String::fromUTF8(value, len));                \
+            ret.setFlagImportant(isImportant);                         \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);    \
         }                                                              \
-        return;                                                        \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
@@ -2943,6 +2942,17 @@ void CSSStyleDeclaration::setD(const char* value, size_t len, bool isImportant)
         return;
     }
 
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, ",", 1);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::D, v);
+        return;
+    }
+
     Nullable<CSSTokenValue> mayFunctionBlock =
         CSSPropertyParser::parseFunctionBlock(value, "path");
     if (!mayFunctionBlock.hasValue()) {
@@ -3202,7 +3212,12 @@ void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
     }
 
     CSSStyleValuePair ret;
-    if (ret.updateValueCommon(layers) || ret.updateValueFontFamily(layers)) {
+    if (ret.updateValueVarReferences(layers)) {
+        ret.setValue(String::fromUTF8(value, len));
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
+    } else if (ret.updateValueCommon(layers) ||
+               ret.updateValueFontFamily(layers)) {
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
     }
@@ -3412,6 +3427,10 @@ void CSSStyleDeclaration::setSrc(const char* value, size_t len,
     tokenizeCSSValue(tokens, value, len, ",", 1, true);
     CSSStyleValuePair ret;
     if (ret.updateValueSrc(tokens)) {
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
+    } else if (ret.updateValueVarReferences(tokens)) {
+        ret.setValue(String::fromUTF8(value, len));
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
     }
