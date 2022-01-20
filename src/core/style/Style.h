@@ -3208,13 +3208,20 @@ public:
                               bool inheritedStyleChanged = false);
 
 protected:
-    CSSStyleValuePair resolveVarValue(
-        CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
-        GCVector<MutablePropertyValue>& cssCustomValues);
-    void apply(Element* element, GCAtomicVector<CSSStyleValuePair>& cssValues,
+    CSSStyleDeclaration* resolveVarValue(
+        const CSSStyleValuePair& cssValuePair,
+        CSSStyleValuePair::KeyKind keyKind,
+        GCVector<MutablePropertyValue>& cssCustomValues, bool isImportant);
+    void apply(Element* element,
+               const GCAtomicVector<CSSStyleValuePair>& cssValues,
                GCVector<MutablePropertyValue>& cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
+
+    void applyProperty(Element* element, const CSSStyleValuePair& cssValues,
+                       GCVector<MutablePropertyValue>& cssCustomValues,
+                       ResourceURL* origin, ComputedStyle* style,
+                       ComputedStyle* parentStyle, bool isImportant = false);
 
     void applyAllProperty(Element* element,
                           CSSStyleValuePair::ValueKind valueKind,
