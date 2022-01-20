@@ -275,6 +275,7 @@ protected:
         ApplyPropertiesPostProcessingContext& ctx);
     void fillGraphicsBufferContents(Canvas* canvas,
                                     PaintingStackingContextContext& ctx);
+    void applyMask(Canvas* canvas, PaintingStackingContextContext& ctx);
 
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;

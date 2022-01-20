@@ -757,7 +757,6 @@ void Document::dispose()
     if (m_nativeGradientCache) {
         m_nativeGradientCache->clear();
         m_nativeGradientCacheLRUList.clear();
-        m_nativeGradientCache = nullptr;
     }
 
     if (m_animationExecutor != nullptr) {

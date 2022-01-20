@@ -43,11 +43,16 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
+#include "core/style/CSSGradientValue.h"
+#include "core/style/GradientData.h"
+#include "core/modules/canvas/NativeGradient.h"
 
 namespace Starfish {
 
-inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY, LayoutUnit maxX, LayoutUnit maxY,
-        size_t& bufferWidth, size_t& bufferHeight)
+inline void computeBufferSizeFromVisibleRect(LayoutUnit minX, LayoutUnit minY,
+                                             LayoutUnit maxX, LayoutUnit maxY,
+                                             size_t& bufferWidth,
+                                             size_t& bufferHeight)
 {
 #if defined(STARFISH_ENABLE_TEST)
     bufferWidth = (int)(maxX - minX);
@@ -1669,7 +1674,8 @@ public:
 
             size_t bufferWidth;
             size_t bufferHeight;
-            computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
+            computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY,
+                                             bufferWidth, bufferHeight);
 
             if (owner->owner()->node()->webView()->needsComposite()) {
                 auto& renderTarget = m_originCanvas->renderTargetInfo();
@@ -1849,6 +1855,7 @@ void StackingContext::fillGraphicsBufferContents(
         canvas->canRejectPainting(StackingContext::visibleRect());
 
     if (!canRejectPainting) {
+        applyMask(canvas, ctx);
         m_owner->paintBackgroundAndBorders(canvas);
     }
 
@@ -2087,7 +2094,8 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
         LayoutUnit maxY = visibleRect.maxY();
         size_t bufferWidth;
         size_t bufferHeight;
-        computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
+        computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth,
+                                         bufferHeight);
 
         if (owner()->hasOwnGraphicsBufferMethod()) {
             CanvasSurface* s = nullptr;
@@ -2420,7 +2428,8 @@ bool StackingContext::fillGraphicsBufferContents(
 
     size_t bufferWidth;
     size_t bufferHeight;
-    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
+    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth,
+                                     bufferHeight);
 
     if (canSkipFillGraphicsBufferDueToOpacityIsZero(this)) {
         return false;
@@ -2738,6 +2747,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             canvas->canRejectPainting(StackingContext::visibleRect());
     }
 
+    applyMask(canvas, ctx);
+
     if (!canRejectPainting) {
         if (m_hasFilterEffect) {
             FilterContext filterContext(&canvas, this, ctx);
@@ -2965,7 +2976,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     size_t bufferWidth;
     size_t bufferHeight;
-    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth, bufferHeight);
+    computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY, bufferWidth,
+                                     bufferHeight);
 
     bool thereIsNoBufferBecauseThereIsNoVisibleContent =
         !bufferWidth || !bufferHeight;
@@ -3370,4 +3382,92 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y,
 
     return nullptr;
 }
+
+void StackingContext::applyMask(Canvas* canvas,
+                                PaintingStackingContextContext& ctx)
+{
+    if (m_owner->isFrameSVGBox()) {
+        return;
+    }
+
+    if (m_owner->style() == nullptr || m_owner->style()->maskLayerSize() == 0) {
+        return;
+    }
+
+    auto style = m_owner->style();
+    auto document = m_owner->document();
+    for (uint32_t i = 0; i < m_owner->style()->maskLayerSize(); i++) {
+        if (style->maskImage(i) == nullptr) {
+            continue;
+        }
+
+        auto type = style->maskImage(i)->type();
+        if (!type.isGradient()) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            continue;
+        }
+
+        ImageValue* imageValue = style->maskImage(i);
+        auto gradientValue = imageValue->gradientValue();
+        Unit::Rect rect =
+            m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
+        bool cacheable =
+            (gradientValue->isCacheable() &&
+             ((rect.width() * rect.height()) >= CACHEABLE_GRADIENT_SIZE) &&
+             ((rect.width() * rect.height() * 4) <=
+              STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+        auto info =
+            imageValue->gradientValue()->makeGradientDrawingInfo(rect, m_owner);
+        NativeImageData* gradientNativeImageData = nullptr;
+        if (cacheable) {
+            std::shared_ptr<NativeGradient> gradient =
+                document->findInNativeGradientCache(info);
+
+            if (gradient.get() == nullptr) {
+                gradient = NativeGradient::create(info);
+            }
+
+            if (gradient->gradientImageDataCached() == nullptr) {
+                auto imageData = BufferedNativeImageData::create(rect.width(),
+                                                                 rect.height());
+                Canvas* gradientCanvas =
+                    Canvas::create(m_owner->node()->webView(), imageData);
+                gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+                if (imageValue->gradientValue()->type() ==
+                    GradientType::LinearGradient) {
+                    gradientCanvas->drawLinearGradient(rect, info,
+                                                       gradient.get());
+                } else if (imageValue->gradientValue()->type() ==
+                           GradientType::RadialGradient) {
+                    gradientCanvas->drawRadialGradient(rect, info,
+                                                       gradient.get());
+                }
+                gradientCanvas->fill();
+                delete gradientCanvas;
+                gradient->setGradientImageDataCached(imageData);
+                document->cacheNativeGradient(info, gradient);
+            }
+            gradientNativeImageData = gradient->gradientImageDataCached();
+        } else {
+            auto gradient = NativeGradient::create(info);
+            auto imageData =
+                BufferedNativeImageData::create(rect.width(), rect.height());
+            Canvas* gradientCanvas =
+                Canvas::create(m_owner->node()->webView(), imageData);
+            gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+            if (imageValue->gradientValue()->type() ==
+                GradientType::LinearGradient) {
+                gradientCanvas->drawLinearGradient(rect, info, gradient.get());
+            } else if (imageValue->gradientValue()->type() ==
+                       GradientType::RadialGradient) {
+                gradientCanvas->drawRadialGradient(rect, info, gradient.get());
+            }
+            gradientCanvas->fill();
+            delete gradientCanvas;
+            gradientNativeImageData = imageData;
+        }
+        canvas->maskNativeImage(gradientNativeImageData, rect);
+    }
+}
+
 } // namespace Starfish
