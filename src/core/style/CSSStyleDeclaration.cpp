@@ -101,45 +101,49 @@ namespace Starfish {
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__); \
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__);
 
-#define GEN_ATTRIBUTE_SETTER_FOURSIDE(PRE, ...)                    \
-    {                                                              \
-        if (length == 0) {                                         \
-            RM_PAIRS(PRE, __VA_ARGS__);                            \
-            return;                                                \
-        }                                                          \
-        CSSTokenVector tokens;                                     \
-        tokenizeCSSValue(tokens, value, length);                   \
-                                                                   \
-        CSSStyleValuePair c, top, right, bottom, left;             \
-        if (c.updateValueCommon(tokens)) {                         \
-            c.setFlagImportant(isImportant);                       \
-            top = right = bottom = left = c;                       \
-            ADD_PAIRS(PRE, __VA_ARGS__);                           \
-            return;                                                \
-        }                                                          \
-        size_t len = tokens.size();                                \
-        if (len < 1 || len > 4) {                                  \
-            return;                                                \
-        }                                                          \
-                                                                   \
-        GCVector<CSSStyleValuePair> result;                        \
-        for (size_t i = 0; i < len; i++) {                         \
-            CSSStyleValuePair v;                                   \
-            v.setFlagImportant(isImportant);                       \
-            if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) { \
-                return;                                            \
-            }                                                      \
-            result.push_back(v);                                   \
-        }                                                          \
-        top = result[0];                                           \
-        right = len < 2 ? top : result[1];                         \
-        bottom = len < 3 ? top : result[2];                        \
-        left = len < 4 ? right : result[3];                        \
-        top.setFlagImportant(isImportant);                         \
-        right.setFlagImportant(isImportant);                       \
-        bottom.setFlagImportant(isImportant);                      \
-        left.setFlagImportant(isImportant);                        \
-        ADD_PAIRS(PRE, __VA_ARGS__);                               \
+#define GEN_ATTRIBUTE_SETTER_FOURSIDE(PRE, ...)                               \
+    {                                                                         \
+        if (length == 0) {                                                    \
+            RM_PAIRS(PRE, __VA_ARGS__);                                       \
+            return;                                                           \
+        }                                                                     \
+        CSSTokenVector tokens;                                                \
+        tokenizeCSSValue(tokens, value, length);                              \
+                                                                              \
+        CSSStyleValuePair c, top, right, bottom, left;                        \
+        if (c.updateValueVarReferences(tokens)) {                             \
+            c.setValue(String::fromUTF8(value, length));                      \
+            c.setFlagImportant(isImportant);                                  \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##__VA_ARGS__, c); \
+        } else if (c.updateValueCommon(tokens)) {                             \
+            c.setFlagImportant(isImportant);                                  \
+            top = right = bottom = left = c;                                  \
+            ADD_PAIRS(PRE, __VA_ARGS__);                                      \
+            return;                                                           \
+        }                                                                     \
+        size_t len = tokens.size();                                           \
+        if (len < 1 || len > 4) {                                             \
+            return;                                                           \
+        }                                                                     \
+                                                                              \
+        GCVector<CSSStyleValuePair> result;                                   \
+        for (size_t i = 0; i < len; i++) {                                    \
+            CSSStyleValuePair v;                                              \
+            v.setFlagImportant(isImportant);                                  \
+            if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) {            \
+                return;                                                       \
+            }                                                                 \
+            result.push_back(v);                                              \
+        }                                                                     \
+        top = result[0];                                                      \
+        right = len < 2 ? top : result[1];                                    \
+        bottom = len < 3 ? top : result[2];                                   \
+        left = len < 4 ? right : result[3];                                   \
+        top.setFlagImportant(isImportant);                                    \
+        right.setFlagImportant(isImportant);                                  \
+        bottom.setFlagImportant(isImportant);                                 \
+        left.setFlagImportant(isImportant);                                   \
+        ADD_PAIRS(PRE, __VA_ARGS__);                                          \
     }
 
 #define GEN_ATTRIBUTE_REMOVER_FOURSIDE(PRE, ...) \
@@ -166,7 +170,11 @@ namespace Starfish {
         tokenizeCSSValue(tokens, value, len);                              \
                                                                            \
         CSSStyleValuePair v, width, style, color;                          \
-        if (v.updateValueCommon(tokens)) {                                 \
+        if (v.updateValueVarReferences(tokens)) {                          \
+            v.setValue(String::fromUTF8(value, len));                      \
+            v.setFlagImportant(isImportant);                               \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS, v);   \
+        } else if (v.updateValueCommon(tokens)) {                          \
             v.setFlagImportant(isImportant);                               \
             addBorder##POS##CSSValuePairs(this, v, v, v);                  \
         } else if (parseBorderShorthand(tokens, &width, &style, &color)) { \
@@ -2233,7 +2241,12 @@ void CSSStyleDeclaration::setBackground(const char* value, size_t length,
     // TODO: should check comma-separated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY,
         size, attachment, origin, clip;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Background, v);
+        return;
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v, v, v, v);
     } else {
@@ -2461,7 +2474,11 @@ void CSSStyleDeclaration::setBackgroundPosition(const char* value,
     tokenizeCSSValue(tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
-    if (c.updateValueCommon(tokens)) {
+    if (c.updateValueVarReferences(tokens)) {
+        c.setValue(String::fromUTF8(value, length));
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, c);
+    } else if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
@@ -2522,7 +2539,11 @@ void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
     tokenizeCSSValue(tokens, value, length, ",", 1);
 
     CSSStyleValuePair c, x, y;
-    if (c.updateValueCommon(tokens)) {
+    if (c.updateValueVarReferences(tokens)) {
+        c.setValue(String::fromUTF8(value, length));
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeat, c);
+    } else if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
@@ -2564,7 +2585,11 @@ void CSSStyleDeclaration::setBorder(const char* value, size_t len,
     tokenizeCSSValue(tokens, value, len);
 
     CSSStyleValuePair v, width, style, color;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addBorderCSSValuePairs(this, v, v, v);
     } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
@@ -2778,6 +2803,14 @@ void CSSStyleDeclaration::setBorderRadius(const char* value, size_t len,
         return;
     }
 
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRadius, v);
+        return;
+    }
+
     bool seenSlash = false;
     size_t beforeSlash = 0;
     size_t afterSlash = 0;
@@ -2907,7 +2940,11 @@ void CSSStyleDeclaration::setBorderImage(const char* value, size_t length,
     tokenizeCSSValue(tokens, value, length, "/", 1);
 
     CSSStyleValuePair v, source, slice, width, outset, repeat;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderImage, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addBorderImageCSSValuePairs(this, v, v, v, v, v);
     } else if (parseBorderImageShorthand(tokens, &source, &slice, &width,
@@ -3006,7 +3043,11 @@ void CSSStyleDeclaration::setFlex(const char* str, size_t length,
     // TODO comma separation
     CSSStyleValuePair v, flexGrow, flexShrink, flexBasis;
     float f;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(str, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Flex, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addFlexCSSValuePairs(this, v, v, v);
     } else if (STRING_VALUE_IS_AUTO()) {
@@ -3055,7 +3096,11 @@ void CSSStyleDeclaration::setFlexFlow(const char* value, size_t length,
 
     // TODO comma separation
     CSSStyleValuePair v, flexDirection, flexWrap;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FlexFlow, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addFlexFlowCSSValuePairs(this, v, v);
     } else if (parseFlexFlowShorthand(tokens, &flexDirection, &flexWrap)) {
@@ -3162,7 +3207,12 @@ void CSSStyleDeclaration::setFont(const char* value, size_t length,
 
     CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size,
         lineHeight, fontFamily;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Font, v);
+        return;
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
@@ -3278,7 +3328,11 @@ void CSSStyleDeclaration::setListStyle(const char* value, size_t len,
     CSSTokenVector tokens;
     tokenizeCSSValue(tokens, value, len, ",", 1);
     CSSStyleValuePair c, t, p, i;
-    if (c.updateValueCommon(tokens)) {
+    if (c.updateValueVarReferences(tokens)) {
+        c.setValue(String::fromUTF8(value, len));
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyle, c);
+    } else if (c.updateValueCommon(tokens)) {
         c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::ListStyleType, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::ListStylePosition, c);
@@ -3337,7 +3391,11 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
     tokenizeCSSValue(tokens, value, length);
 
     CSSStyleValuePair v, width, style, color;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Outline, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, v);
@@ -3385,7 +3443,11 @@ void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
 
     // TODO comma separation
     CSSStyleValuePair v, overflowX, overflowY;
-    if (v.updateValueCommon(tokens)) {
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, length));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Overflow, v);
+    } else if (v.updateValueCommon(tokens)) {
         v.setFlagImportant(isImportant);
         addOverflowCSSValuePairs(this, v, v);
     } else if (parseOverflowShorthand(tokens, &overflowX, &overflowY)) {
@@ -3484,7 +3546,12 @@ void CSSStyleDeclaration::setTextDecoration(const char* value, size_t len,
     tokenizeCSSValue(tokens, value, len, "", 0);
 
     CSSStyleValuePair ret;
-    if (ret.updateValueCommon(tokens)) {
+    if (ret.updateValueVarReferences(tokens)) {
+        ret.setValue(String::fromUTF8(value, len));
+        ret.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecoration, ret);
+        return;
+    } else if (ret.updateValueCommon(tokens)) {
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationLine, ret);
         addCSSValuePair(CSSStyleValuePair::KeyKind::TextDecorationStyle, ret);

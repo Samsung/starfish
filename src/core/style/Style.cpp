@@ -2524,7 +2524,7 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
 
 static void applyTransitionProperty(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
-                                    CSSStyleValuePair& item, size_t layer)
+                                    const CSSStyleValuePair& item, size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2552,7 +2552,7 @@ static void applyTransitionProperty(Element* element, ComputedStyle* style,
 
 static void applyTransitionDuration(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
-                                    CSSStyleValuePair& item, size_t layer)
+                                    const CSSStyleValuePair& item, size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2591,7 +2591,8 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
 static void applyTransitionTimingFunction(Element* element,
                                           ComputedStyle* style,
                                           ComputedStyle* parentStyle,
-                                          CSSStyleValuePair& item, size_t layer)
+                                          const CSSStyleValuePair& item,
+                                          size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2624,7 +2625,7 @@ static void applyTransitionTimingFunction(Element* element,
 
 static void applyTransitionDelay(Element* element, ComputedStyle* style,
                                  ComputedStyle* parentStyle,
-                                 CSSStyleValuePair& item, size_t layer)
+                                 const CSSStyleValuePair& item, size_t layer)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2662,7 +2663,7 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
 
 static void applyAnimationName(Element* element, ComputedStyle* style,
                                ComputedStyle* parentStyle,
-                               CSSStyleValuePair& item, size_t index)
+                               const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2689,7 +2690,7 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
 
 static void applyAnimationDuration(Element* element, ComputedStyle* style,
                                    ComputedStyle* parentStyle,
-                                   CSSStyleValuePair& item, size_t index)
+                                   const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2726,7 +2727,7 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
 
 static void applyAnimationDelay(Element* element, ComputedStyle* style,
                                 ComputedStyle* parentStyle,
-                                CSSStyleValuePair& item, size_t index)
+                                const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2763,7 +2764,8 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
 
 static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
                                          ComputedStyle* parentStyle,
-                                         CSSStyleValuePair& item, size_t index)
+                                         const CSSStyleValuePair& item,
+                                         size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2795,7 +2797,8 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
 
 static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
                                          ComputedStyle* parentStyle,
-                                         CSSStyleValuePair& item, size_t index)
+                                         const CSSStyleValuePair& item,
+                                         size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2823,7 +2826,7 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
 
 static void applyAnimationDirection(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
-                                    CSSStyleValuePair& item, size_t index)
+                                    const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2851,7 +2854,7 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
 
 static void applyAnimationPlayState(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
-                                    CSSStyleValuePair& item, size_t index)
+                                    const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2879,7 +2882,7 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
 
 static void applyAnimationFillMode(Element* element, ComputedStyle* style,
                                    ComputedStyle* parentStyle,
-                                   CSSStyleValuePair& item, size_t index)
+                                   const CSSStyleValuePair& item, size_t index)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(style != nullptr);
@@ -2905,9 +2908,9 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
     }
 }
 
-CSSStyleValuePair StyleResolver::resolveVarValue(
-    CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
-    GCVector<MutablePropertyValue>& cssCustomValues)
+CSSStyleDeclaration* StyleResolver::resolveVarValue(
+    const CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
+    GCVector<MutablePropertyValue>& cssCustomValues, bool isImportant)
 {
     CSSTokenVector cssTokenValues;
     CSSStyleDeclaration::tokenizeCSSValue(
@@ -2934,12 +2937,13 @@ CSSStyleValuePair StyleResolver::resolveVarValue(
         }
     }
 
-    CSSStyleDeclaration* self = new CSSStyleDeclaration(document());
+    CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
     switch (keyKind) {
-#define SET_ATTR(name, ...)                                        \
-    case CSSStyleValuePair::KeyKind::name: {                       \
-        self->set##name(cssValue.c_str(), cssValue.size(), false); \
-        break;                                                     \
+#define SET_ATTR(name, ...)                                       \
+    case CSSStyleValuePair::KeyKind::name: {                      \
+        declaration->set##name(cssValue.c_str(), cssValue.size(), \
+                               isImportant);                      \
+        break;                                                    \
     }
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
@@ -2947,15 +2951,11 @@ CSSStyleValuePair StyleResolver::resolveVarValue(
         break;
     }
 
-    if (self->hasCSSValuePair(keyKind)) {
-        return self->getCSSValuePair(keyKind);
-    } else {
-        return CSSStyleValuePair();
-    }
+    return declaration;
 }
 
 void StyleResolver::apply(Element* element,
-                          GCAtomicVector<CSSStyleValuePair>& cssValues,
+                          const GCAtomicVector<CSSStyleValuePair>& cssValues,
                           GCVector<MutablePropertyValue>& cssCustomValues,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
@@ -3000,12 +3000,27 @@ void StyleResolver::apply(Element* element,
         CSSStyleValuePair newCssValue = cssValues[k];
         if (newCssValue.valueKind() ==
             CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
-            newCssValue = resolveVarValue(newCssValue, newCssValue.keyKind(),
-                                          cssCustomValues);
-            if (newCssValue.keyKind() != cssValues[k].keyKind()) {
-                continue;
-            }
+            CSSStyleDeclaration* declaration =
+                resolveVarValue(newCssValue, newCssValue.keyKind(),
+                                cssCustomValues, newCssValue.flagImportant());
+            apply(element, declaration->cssValues(), cssCustomValues, origin,
+                  style, parentStyle, isImportant);
+        } else {
+            applyProperty(element, newCssValue, cssCustomValues, origin, style,
+                          parentStyle, isImportant);
         }
+    }
+}
+
+void StyleResolver::applyProperty(
+    Element* element, const CSSStyleValuePair& newCssValue,
+    GCVector<MutablePropertyValue>& cssCustomValues, ResourceURL* origin,
+    ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant)
+{
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(origin != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                \
     if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
@@ -3013,1923 +3028,1819 @@ void StyleResolver::apply(Element* element,
             ->style()                                                       \
             ->markSomeNonInheritMemberExplicitlyInherited();                \
     }
-        switch (newCssValue.keyKind()) {
-        case CSSStyleValuePair::KeyKind::Display:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_display = parentStyle->m_display;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_display = DisplayValue::InlineDisplayValue;
-            } else {
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::DisplayValueKind ==
-                    newCssValue.valueKind());
-                style->m_display = newCssValue.displayValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Position:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_position = parentStyle->m_position;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_position = PositionValue::StaticPositionValue;
-            } else {
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::PositionValueKind ==
-                    newCssValue.valueKind());
-                style->m_position = newCssValue.positionValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::All:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
 
-                applyAllProperty(element, newCssValue.valueKind(),
-                                 cssCustomValues, origin, style, parentStyle,
-                                 isImportant);
+    switch (newCssValue.keyKind()) {
+    case CSSStyleValuePair::KeyKind::Display:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_display = parentStyle->m_display;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_display = DisplayValue::InlineDisplayValue;
+        } else {
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::DisplayValueKind ==
+                            newCssValue.valueKind());
+            style->m_display = newCssValue.displayValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Position:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_position = parentStyle->m_position;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_position = PositionValue::StaticPositionValue;
+        } else {
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::PositionValueKind ==
+                            newCssValue.valueKind());
+            style->m_position = newCssValue.positionValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::All:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+
+            applyAllProperty(element, newCssValue.valueKind(), cssCustomValues,
+                             origin, style, parentStyle, isImportant);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Float:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_float = parentStyle->m_float;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_float = FloatValue::NoneFloatValue;
+        } else {
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::FloatValueKind ==
+                            newCssValue.valueKind());
+            style->m_float = newCssValue.floatValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Clear:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_clear = parentStyle->m_clear;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_clear = ClearValue::NoneClearValue;
+        } else {
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ClearValueKind ==
+                            newCssValue.valueKind());
+            style->m_clear = newCssValue.clearValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Width:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setWidth(parentStyle->width());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setWidth(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setWidth(length.getValue());
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Float:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_float = parentStyle->m_float;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_float = FloatValue::NoneFloatValue;
-            } else {
-                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::FloatValueKind ==
-                                newCssValue.valueKind());
-                style->m_float = newCssValue.floatValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Clear:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_clear = parentStyle->m_clear;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_clear = ClearValue::NoneClearValue;
-            } else {
-                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ClearValueKind ==
-                                newCssValue.valueKind());
-                style->m_clear = newCssValue.clearValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Width:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setWidth(parentStyle->width());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
                 style->setWidth(Length());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::
-                           WidthHeightKeywordValueKind) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setWidth(length.getValue());
-                } else {
-                    style->setWidth(Length());
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::MaxWidth:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setMaxWidth(parentStyle->maxWidth());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setMaxWidth(Length());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setMaxWidth(Length());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaxWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMaxWidth(parentStyle->maxWidth());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaxWidth(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setMaxWidth(Length());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMaxWidth(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setMaxWidth(length.getValue());
-                } else {
-                    style->setMaxWidth(Length());
-                }
+                style->setMaxWidth(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::MinWidth:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setMinWidth(parentStyle->minWidth());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MinWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMinWidth(parentStyle->minWidth());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMinWidth(Length());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMinWidth(length.getValue());
+            } else {
                 style->setMinWidth(Length());
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setMinWidth(length.getValue());
-                } else {
-                    style->setMinWidth(Length());
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Height:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setHeight(parentStyle->height());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Height:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setHeight(parentStyle->height());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setHeight(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setHeight(length.getValue());
+            } else {
                 style->setHeight(Length());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::
-                           WidthHeightKeywordValueKind) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setHeight(length.getValue());
-                } else {
-                    style->setHeight(Length());
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::MaxHeight:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setMaxHeight(parentStyle->maxHeight());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setMaxHeight(Length());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setMaxHeight(Length());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaxHeight:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMaxHeight(parentStyle->maxHeight());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaxHeight(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setMaxHeight(Length());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMaxHeight(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setMaxHeight(length.getValue());
-                } else {
-                    style->setMaxHeight(Length());
-                }
+                style->setMaxHeight(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::MinHeight:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setMinHeight(parentStyle->minHeight());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MinHeight:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMinHeight(parentStyle->minHeight());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMinHeight(Length());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMinHeight(length.getValue());
+            } else {
                 style->setMinHeight(Length());
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setMinHeight(length.getValue());
-                } else {
-                    style->setMinHeight(Length());
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Color:
-            style->m_gotInheritedColor = false;
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setColor(parentStyle->m_inheritedStyles.m_color);
-                style->m_gotInheritedColor = true;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->setColor(Unit::Color(0, 0, 0, 255));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setColor(newCssValue.colorValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Color:
+        style->m_gotInheritedColor = false;
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setColor(parentStyle->m_inheritedStyles.m_color);
+            style->m_gotInheritedColor = true;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setColor(Unit::Color(0, 0, 0, 255));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->m_inheritedStyles.m_color =
+                    parentStyle->m_inheritedStyles.m_color;
             } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (newCssValue.namedColorValue() ==
-                    NamedColor::NamedColorValue::currentColor) {
-                    style->m_inheritedStyles.m_color =
-                        parentStyle->m_inheritedStyles.m_color;
-                } else {
-                    style->setColor(NamedColor::namedColorToColor(
-                        newCssValue.namedColorValue()));
-                }
+                style->setColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FontSize:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFontSize(parentStyle->fontSize());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FontSize:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFontSize(parentStyle->fontSize());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setFontSize(
+                parseAbsoluteFontSize(3, this->m_mediumFontSize));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FontSizeValueKind) {
+            if (newCssValue.fontSizeValue() ==
+                FontSizeValue::XXSmallFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(0, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::XSmallFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(1, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::SmallFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(2, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::MediumFontSizeValue) {
                 style->setFontSize(
                     parseAbsoluteFontSize(3, this->m_mediumFontSize));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FontSizeValueKind) {
-                if (newCssValue.fontSizeValue() ==
-                    FontSizeValue::XXSmallFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(0, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::XSmallFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(1, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::SmallFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(2, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::MediumFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(3, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::LargeFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(4, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::XLargeFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(5, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::XXLargeFontSizeValue) {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(6, this->m_mediumFontSize));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::XXXLargeFontSizeValue) {
-                    style->setFontSize(
-                        Length(Length::Fixed,
-                               parseAbsoluteFontSize(6, this->m_mediumFontSize)
-                                       .fixed() *
-                                   1.5f));
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::LargerFontSizeValue) {
-                    style->setFontSize(parentStyle->fontSize() * 1.2f);
-                } else if (newCssValue.fontSizeValue() ==
-                           FontSizeValue::SmallerFontSizeValue) {
-                    style->setFontSize(parentStyle->fontSize() / 1.2f);
-                }
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    Length l = length.getValue();
-                    if (l.isViewportPercent()) {
-                        style->m_seenViewPortUnitInStyle = true;
-                    }
-                    style->setFontSize(l);
-                } else {
-                    style->setFontSize(
-                        parseAbsoluteFontSize(3, this->m_mediumFontSize));
-                }
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::LargeFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(4, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::XLargeFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(5, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::XXLargeFontSizeValue) {
+                style->setFontSize(
+                    parseAbsoluteFontSize(6, this->m_mediumFontSize));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::XXXLargeFontSizeValue) {
+                style->setFontSize(Length(
+                    Length::Fixed,
+                    parseAbsoluteFontSize(6, this->m_mediumFontSize).fixed() *
+                        1.5f));
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::LargerFontSizeValue) {
+                style->setFontSize(parentStyle->fontSize() * 1.2f);
+            } else if (newCssValue.fontSizeValue() ==
+                       FontSizeValue::SmallerFontSizeValue) {
+                style->setFontSize(parentStyle->fontSize() / 1.2f);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FontStyle:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_fontStyle =
-                    parentStyle->m_inheritedStyles.m_fontStyle;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_fontStyle =
-                    FontStyleValue::NormalFontStyleValue;
-            } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::FontStyleValueKind);
-                style->m_inheritedStyles.m_fontStyle =
-                    newCssValue.fontStyleValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FontFamily:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_fontFamilyDatas =
-                    parentStyle->m_inheritedStyles.m_fontFamilyDatas;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_fontFamilyDatas =
-                    element->document()->webView()->initialFontFamilyDatas();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::KeywordValueKind) {
-                FontFamilyData* data = (FontFamilyData*)GC_MALLOC_ATOMIC(
-                    sizeof(FontFamilyData) * 2);
-                data[0].m_length = 1;
-                data[1].m_familyName = AtomicString::createAtomicString(
-                    element->starfish(), newCssValue.keywordValue());
-                style->m_inheritedStyles.m_fontFamilyDatas = data;
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* val = newCssValue.multiValue();
-                FontFamilyData* data = (FontFamilyData*)GC_MALLOC_ATOMIC(
-                    sizeof(FontFamilyData) * (val->size() + 1));
-                data[0].m_length = val->size();
-                for (size_t i = 0; i < val->size(); i++) {
-                    data[i + 1].m_familyName = AtomicString::createAtomicString(
-                        element->starfish(), val->at(i).keywordValue());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                Length l = length.getValue();
+                if (l.isViewportPercent()) {
+                    style->m_seenViewPortUnitInStyle = true;
                 }
-                style->m_inheritedStyles.m_fontFamilyDatas = data;
+                style->setFontSize(l);
+            } else {
+                style->setFontSize(
+                    parseAbsoluteFontSize(3, this->m_mediumFontSize));
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FontKerning:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFontKerning(parentStyle->fontKerning());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FontStyle:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_fontStyle =
+                parentStyle->m_inheritedStyles.m_fontStyle;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_fontStyle =
+                FontStyleValue::NormalFontStyleValue;
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::FontStyleValueKind);
+            style->m_inheritedStyles.m_fontStyle = newCssValue.fontStyleValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FontFamily:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_fontFamilyDatas =
+                parentStyle->m_inheritedStyles.m_fontFamilyDatas;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_fontFamilyDatas =
+                element->document()->webView()->initialFontFamilyDatas();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::KeywordValueKind) {
+            FontFamilyData* data =
+                (FontFamilyData*)GC_MALLOC_ATOMIC(sizeof(FontFamilyData) * 2);
+            data[0].m_length = 1;
+            data[1].m_familyName = AtomicString::createAtomicString(
+                element->starfish(), newCssValue.keywordValue());
+            style->m_inheritedStyles.m_fontFamilyDatas = data;
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* val = newCssValue.multiValue();
+            FontFamilyData* data = (FontFamilyData*)GC_MALLOC_ATOMIC(
+                sizeof(FontFamilyData) * (val->size() + 1));
+            data[0].m_length = val->size();
+            for (size_t i = 0; i < val->size(); i++) {
+                data[i + 1].m_familyName = AtomicString::createAtomicString(
+                    element->starfish(), val->at(i).keywordValue());
+            }
+            style->m_inheritedStyles.m_fontFamilyDatas = data;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FontKerning:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFontKerning(parentStyle->fontKerning());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setFontKerning(FontKerningValue::FontKerningAutoValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FontKerningValueKind) {
+            if (newCssValue.fontKerningValue() ==
+                FontKerningValue::FontKerningAutoValue) {
                 style->setFontKerning(FontKerningValue::FontKerningAutoValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FontKerningValueKind) {
-                if (newCssValue.fontKerningValue() ==
-                    FontKerningValue::FontKerningAutoValue) {
-                    style->setFontKerning(
-                        FontKerningValue::FontKerningAutoValue);
-                } else if (newCssValue.fontKerningValue() ==
-                           FontKerningValue::FontKerningNormalValue) {
-                    style->setFontKerning(
-                        FontKerningValue::FontKerningNormalValue);
-                } else {
-                    style->setFontKerning(
-                        FontKerningValue::FontKerningNoneValue);
-                }
+            } else if (newCssValue.fontKerningValue() ==
+                       FontKerningValue::FontKerningNormalValue) {
+                style->setFontKerning(FontKerningValue::FontKerningNormalValue);
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->setFontKerning(FontKerningValue::FontKerningNoneValue);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FontWeight:
-            // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500
-            // | 600 | 700 | 800 | 900 | inherit // initial -> normal
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_fontWeight =
-                    parentStyle->m_inheritedStyles.m_fontWeight;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FontWeight:
+        // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500
+        // | 600 | 700 | 800 | 900 | inherit // initial -> normal
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_fontWeight =
+                parentStyle->m_inheritedStyles.m_fontWeight;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_fontWeight =
+                FontWeightValue::NormalFontWeightValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FontWeightValueKind) {
+            if (newCssValue.fontWeightValue() ==
+                FontWeightValue::FourHundredsFontWeightValue) {
                 style->m_inheritedStyles.m_fontWeight =
                     FontWeightValue::NormalFontWeightValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FontWeightValueKind) {
-                if (newCssValue.fontWeightValue() ==
-                    FontWeightValue::FourHundredsFontWeightValue) {
-                    style->m_inheritedStyles.m_fontWeight =
-                        FontWeightValue::NormalFontWeightValue;
-                } else if (newCssValue.fontWeightValue() ==
-                           FontWeightValue::SevenHundredsFontWeightValue) {
-                    style->m_inheritedStyles.m_fontWeight =
-                        FontWeightValue::BoldFontWeightValue;
-                } else if (newCssValue.fontWeightValue() ==
-                           FontWeightValue::BolderFontWeightValue) {
-                    style->m_inheritedStyles.m_fontWeight = bolderWeight(
-                        parentStyle->m_inheritedStyles.m_fontWeight);
-                } else if (newCssValue.fontWeightValue() ==
-                           FontWeightValue::LighterFontWeightValue) {
-                    style->m_inheritedStyles.m_fontWeight = lighterWeight(
-                        parentStyle->m_inheritedStyles.m_fontWeight);
-                } else {
-                    style->m_inheritedStyles.m_fontWeight =
-                        newCssValue.fontWeightValue();
-                }
+            } else if (newCssValue.fontWeightValue() ==
+                       FontWeightValue::SevenHundredsFontWeightValue) {
+                style->m_inheritedStyles.m_fontWeight =
+                    FontWeightValue::BoldFontWeightValue;
+            } else if (newCssValue.fontWeightValue() ==
+                       FontWeightValue::BolderFontWeightValue) {
+                style->m_inheritedStyles.m_fontWeight =
+                    bolderWeight(parentStyle->m_inheritedStyles.m_fontWeight);
+            } else if (newCssValue.fontWeightValue() ==
+                       FontWeightValue::LighterFontWeightValue) {
+                style->m_inheritedStyles.m_fontWeight =
+                    lighterWeight(parentStyle->m_inheritedStyles.m_fontWeight);
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->m_inheritedStyles.m_fontWeight =
+                    newCssValue.fontWeightValue();
             }
-            break;
-        case CSSStyleValuePair::KeyKind::WordWrap:
-        case CSSStyleValuePair::KeyKind::OverflowWrap:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_wordWrap =
-                    parentStyle->m_inheritedStyles.m_wordWrap;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_wordWrap =
-                    WordWrapValue::NormalWordWrapValue;
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::WordWrap:
+    case CSSStyleValuePair::KeyKind::OverflowWrap:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_wordWrap =
+                parentStyle->m_inheritedStyles.m_wordWrap;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_wordWrap =
+                WordWrapValue::NormalWordWrapValue;
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::WordWrapValueKind);
+            style->m_inheritedStyles.m_wordWrap = newCssValue.wordWrapValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::VerticalAlign:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setVerticalAlign(parentStyle->verticalAlign());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            if (style->isNumericVerticalAlign())
+                style->setVerticalAlignLength(
+                    parentStyle->verticalAlignLength());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setVerticalAlign(VerticalAlignValue::BaselineVAlignValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::VerticalAlignValueKind) {
+            STARFISH_ASSERT(newCssValue.verticalAlignValue() !=
+                            VerticalAlignValue::NumericVAlignValue);
+            style->setVerticalAlign(newCssValue.verticalAlignValue());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setVerticalAlignLength(length.getValue());
             } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::WordWrapValueKind);
-                style->m_inheritedStyles.m_wordWrap =
-                    newCssValue.wordWrapValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::VerticalAlign:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setVerticalAlign(parentStyle->verticalAlign());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                if (style->isNumericVerticalAlign())
-                    style->setVerticalAlignLength(
-                        parentStyle->verticalAlignLength());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
                 style->setVerticalAlign(
                     VerticalAlignValue::BaselineVAlignValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::VerticalAlignValueKind) {
-                STARFISH_ASSERT(newCssValue.verticalAlignValue() !=
-                                VerticalAlignValue::NumericVAlignValue);
-                style->setVerticalAlign(newCssValue.verticalAlignValue());
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setVerticalAlignLength(length.getValue());
-                } else {
-                    style->setVerticalAlign(
-                        VerticalAlignValue::BaselineVAlignValue);
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::ImageRendering:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setImageRendering(parentStyle->imageRendering());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ImageRendering:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setImageRendering(parentStyle->imageRendering());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setImageRendering(
+                ImageRenderingValue::ImageRenderingAutoValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ImageRenderingValueKind) {
+            if (newCssValue.imageRenderingValue() ==
+                ImageRenderingValue::ImageRenderingAutoValue) {
                 style->setImageRendering(
                     ImageRenderingValue::ImageRenderingAutoValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ImageRenderingValueKind) {
-                if (newCssValue.imageRenderingValue() ==
-                    ImageRenderingValue::ImageRenderingAutoValue) {
-                    style->setImageRendering(
-                        ImageRenderingValue::ImageRenderingAutoValue);
-                } else if (newCssValue.imageRenderingValue() ==
-                           ImageRenderingValue::ImageRenderingCrispEdgesValue) {
-                    style->setImageRendering(
-                        ImageRenderingValue::ImageRenderingCrispEdgesValue);
-                } else {
-                    style->setImageRendering(
-                        ImageRenderingValue::ImageRenderingPixelatedValue);
-                }
+            } else if (newCssValue.imageRenderingValue() ==
+                       ImageRenderingValue::ImageRenderingCrispEdgesValue) {
+                style->setImageRendering(
+                    ImageRenderingValue::ImageRenderingCrispEdgesValue);
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->setImageRendering(
+                    ImageRenderingValue::ImageRenderingPixelatedValue);
             }
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TableLayout:
+        // auto | fixed | initial | inherit
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->m_tableLayout = parentStyle->m_tableLayout;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
             break;
-        case CSSStyleValuePair::KeyKind::TableLayout:
-            // auto | fixed | initial | inherit
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->m_tableLayout = parentStyle->m_tableLayout;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTableLayout(TableLayoutValue::AutoTableLayoutValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::TableLayoutValueKind ==
-                    newCssValue.valueKind());
-                style->setTableLayout(newCssValue.tableLayoutValue());
-            }
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setTableLayout(TableLayoutValue::AutoTableLayoutValue);
             break;
-        case CSSStyleValuePair::KeyKind::TextAlign:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextAlign(parentStyle->textAlign());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->setTextAlign(TextAlignValue::StartTextAlignValue);
+        default:
+            STARFISH_ASSERT(
+                CSSStyleValuePair::ValueKind::TableLayoutValueKind ==
+                newCssValue.valueKind());
+            style->setTableLayout(newCssValue.tableLayoutValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextAlign:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextAlign(parentStyle->textAlign());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setTextAlign(TextAlignValue::StartTextAlignValue);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::TextAlignValueKind);
+            style->setTextAlign(newCssValue.textAlignValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextIndent:
+        // length | percentage | inherit
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextIndent(parentStyle->textIndent());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setTextIndent(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> len = convertValueToLength(newCssValue.valueKind(),
+                                                        newCssValue.value());
+            if (len.hasValue()) {
+                style->setTextIndent(len.getValue());
             } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::TextAlignValueKind);
-                style->setTextAlign(newCssValue.textAlignValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TextIndent:
-            // length | percentage | inherit
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextIndent(parentStyle->textIndent());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
                 style->setTextIndent(Length(Length::Fixed, 0));
-            } else {
-                Nullable<Length> len = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (len.hasValue()) {
-                    style->setTextIndent(len.getValue());
-                } else {
-                    style->setTextIndent(Length(Length::Fixed, 0));
-                }
             }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextOverflow:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit)) {
+            style->setTextOverflow(parentStyle->textOverflow());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextOverflow(TextOverflowData());
+        } else {
+            style->setTextOverflow(newCssValue.textOverflowValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextDecorationLine:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setTextDecorationLine(parentStyle->textDecorationLine());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            CSSStyleValuePair p;
+            p.setValueKind(CSSStyleValuePair::TextDecorationLineValueKind);
+            p.setValue(NoneTextDecorationLineValue);
+            style->ensureTextDecorationLine()->push_back(p);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            style->setTextDecorationLine(newCssValue.multiValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextDecorationColor:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->setTextDecorationColor(parentStyle->textDecorationColor());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
             break;
-        case CSSStyleValuePair::KeyKind::TextOverflow:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit)) {
-                style->setTextOverflow(parentStyle->textOverflow());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextOverflow(TextOverflowData());
-            } else {
-                style->setTextOverflow(newCssValue.textOverflowValue());
-            }
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setTextDecorationColor(Unit::Color(0, 0, 0, 255));
             break;
-        case CSSStyleValuePair::KeyKind::TextDecorationLine:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setTextDecorationLine(parentStyle->textDecorationLine());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                CSSStyleValuePair p;
-                p.setValueKind(CSSStyleValuePair::TextDecorationLineValueKind);
-                p.setValue(NoneTextDecorationLineValue);
-                style->ensureTextDecorationLine()->push_back(p);
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                style->setTextDecorationLine(newCssValue.multiValue());
-            }
+        case CSSStyleValuePair::ValueKind::ColorValueKind:
+            style->setTextDecorationColor(newCssValue.colorValue());
             break;
-        case CSSStyleValuePair::KeyKind::TextDecorationColor:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
+        default:
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
                 style->setTextDecorationColor(
                     parentStyle->textDecorationColor());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTextDecorationColor(Unit::Color(0, 0, 0, 255));
-                break;
-            case CSSStyleValuePair::ValueKind::ColorValueKind:
-                style->setTextDecorationColor(newCssValue.colorValue());
-                break;
-            default:
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (newCssValue.namedColorValue() ==
-                    NamedColor::NamedColorValue::currentColor) {
-                    style->setTextDecorationColor(
-                        parentStyle->textDecorationColor());
-                } else {
-                    style->setTextDecorationColor(NamedColor::namedColorToColor(
-                        newCssValue.namedColorValue()));
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TextDecorationStyle:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setTextDecorationStyle(
-                    parentStyle->textDecorationStyle());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTextDecorationStyle(
-                    TextDecorationStyleValue::SolidTextDecorationStyleValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind);
-                style->setTextDecorationStyle(
-                    newCssValue.textDecorationStyleValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TextUnderlinePosition:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setTextUnderlinePosition(
-                    parentStyle->textUnderlinePosition());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->setTextUnderlinePosition(
-                    TextUnderlinePositionValue::AutoTextUnderlinePositionValue);
-                break;
-            default:
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::
-                                    TextUnderlinePositionValueKind);
-                style->setTextUnderlinePosition(
-                    newCssValue.textUnderlinePositionValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Resize:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setResize(parentStyle->resize());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setResize(ResizeValue::NoneResizeValue);
-                break;
-            default:
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ResizeValueKind);
-                style->setResize(newCssValue.resizeValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TextShadow: {
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                if (parentStyle->textShadow()) {
-                    style->setTextShadow(*parentStyle->textShadow());
-                } else {
-                    style->setTextShadow(ShadowDataList());
-                }
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::None)) {
-                style->setTextShadow(ShadowDataList());
             } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
+                style->setTextDecorationColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextDecorationStyle:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->setTextDecorationStyle(parentStyle->textDecorationStyle());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setTextDecorationStyle(
+                TextDecorationStyleValue::SolidTextDecorationStyleValue);
+            break;
+        default:
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind);
+            style->setTextDecorationStyle(
+                newCssValue.textDecorationStyleValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextUnderlinePosition:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setTextUnderlinePosition(
+                parentStyle->textUnderlinePosition());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setTextUnderlinePosition(
+                TextUnderlinePositionValue::AutoTextUnderlinePositionValue);
+            break;
+        default:
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind);
+            style->setTextUnderlinePosition(
+                newCssValue.textUnderlinePositionValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Resize:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->setResize(parentStyle->resize());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setResize(ResizeValue::NoneResizeValue);
+            break;
+        default:
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ResizeValueKind);
+            style->setResize(newCssValue.resizeValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextShadow: {
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            if (parentStyle->textShadow()) {
+                style->setTextShadow(*parentStyle->textShadow());
+            } else {
+                style->setTextShadow(ShadowDataList());
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::None)) {
+            style->setTextShadow(ShadowDataList());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* shadows = newCssValue.multiValue();
+            style->setTextShadow(ShadowDataList());
+
+            for (size_t i = 0; i < shadows->size(); i++) {
+                STARFISH_ASSERT((*shadows)[i].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* shadows = newCssValue.multiValue();
-                style->setTextShadow(ShadowDataList());
 
-                for (size_t i = 0; i < shadows->size(); i++) {
-                    STARFISH_ASSERT(
-                        (*shadows)[i].valueKind() ==
-                        CSSStyleValuePair::ValueKind::ValueListKind);
-
-                    ValueList* shadow = (*shadows)[i].multiValue();
-                    ShadowData sd;
-                    for (size_t j = 0; j < shadow->size(); j++) {
-                        switch ((*shadow)[j].valueKind()) {
-                        case CSSStyleValuePair::ValueKind::ValueListKind: {
-                            sd.setLengths((*shadow)[j].multiValue());
-                        } break;
-                        case CSSStyleValuePair::ValueKind::
-                            NamedColorValueKind: {
-                            Unit::Color color = NamedColor::namedColorToColor(
-                                (*shadow)[j].namedColorValue());
-                            sd.setColor(color);
-                        } break;
-                        case CSSStyleValuePair::ValueKind::ColorValueKind: {
-                            Unit::Color color = (*shadow)[j].colorValue();
-                            sd.setColor(color);
-                        } break;
-                        case CSSStyleValuePair::ValueKind::KeywordValueKind: {
-                            sd.setInset();
-                        } break;
-                        default:
-                            STARFISH_ASSERT_NOT_REACHED();
-                            break;
-                        }
+                ValueList* shadow = (*shadows)[i].multiValue();
+                ShadowData sd;
+                for (size_t j = 0; j < shadow->size(); j++) {
+                    switch ((*shadow)[j].valueKind()) {
+                    case CSSStyleValuePair::ValueKind::ValueListKind: {
+                        sd.setLengths((*shadow)[j].multiValue());
+                    } break;
+                    case CSSStyleValuePair::ValueKind::NamedColorValueKind: {
+                        Unit::Color color = NamedColor::namedColorToColor(
+                            (*shadow)[j].namedColorValue());
+                        sd.setColor(color);
+                    } break;
+                    case CSSStyleValuePair::ValueKind::ColorValueKind: {
+                        Unit::Color color = (*shadow)[j].colorValue();
+                        sd.setColor(color);
+                    } break;
+                    case CSSStyleValuePair::ValueKind::KeywordValueKind: {
+                        sd.setInset();
+                    } break;
+                    default:
+                        STARFISH_ASSERT_NOT_REACHED();
+                        break;
                     }
-                    style->addTextShadow(sd);
                 }
+                style->addTextShadow(sd);
             }
-        } break;
-        case CSSStyleValuePair::KeyKind::BoxShadow: {
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::BoxShadow: {
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBoxShadow(ShadowDataList());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            if (parentStyle->boxShadow()) {
+                style->setBoxShadow(*parentStyle->boxShadow());
+            } else {
                 style->setBoxShadow(ShadowDataList());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                if (parentStyle->boxShadow()) {
-                    style->setBoxShadow(*parentStyle->boxShadow());
-                } else {
-                    style->setBoxShadow(ShadowDataList());
-                }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* shadows = newCssValue.multiValue();
-                style->setBoxShadow(ShadowDataList());
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* shadows = newCssValue.multiValue();
+            style->setBoxShadow(ShadowDataList());
 
-                for (size_t i = 0; i < shadows->size(); i++) {
-                    STARFISH_ASSERT(
-                        (*shadows)[i].valueKind() ==
-                        CSSStyleValuePair::ValueKind::ValueListKind);
+            for (size_t i = 0; i < shadows->size(); i++) {
+                STARFISH_ASSERT((*shadows)[i].valueKind() ==
+                                CSSStyleValuePair::ValueKind::ValueListKind);
 
-                    ValueList* shadow = (*shadows)[i].multiValue();
-                    ShadowData sd;
-                    for (size_t j = 0; j < shadow->size(); j++) {
-                        switch ((*shadow)[j].valueKind()) {
-                        case CSSStyleValuePair::ValueKind::ValueListKind: {
-                            sd.setLengths((*shadow)[j].multiValue());
-                        } break;
-                        case CSSStyleValuePair::ValueKind::
-                            NamedColorValueKind: {
-                            Unit::Color color = NamedColor::namedColorToColor(
-                                (*shadow)[j].namedColorValue());
-                            sd.setColor(color);
-                        } break;
-                        case CSSStyleValuePair::ValueKind::ColorValueKind: {
-                            Unit::Color color = (*shadow)[j].colorValue();
-                            sd.setColor(color);
-                        } break;
-                        case CSSStyleValuePair::ValueKind::KeywordValueKind: {
-                            sd.setInset();
-                        } break;
-                        default:
-                            STARFISH_ASSERT_NOT_REACHED();
-                            break;
-                        }
+                ValueList* shadow = (*shadows)[i].multiValue();
+                ShadowData sd;
+                for (size_t j = 0; j < shadow->size(); j++) {
+                    switch ((*shadow)[j].valueKind()) {
+                    case CSSStyleValuePair::ValueKind::ValueListKind: {
+                        sd.setLengths((*shadow)[j].multiValue());
+                    } break;
+                    case CSSStyleValuePair::ValueKind::NamedColorValueKind: {
+                        Unit::Color color = NamedColor::namedColorToColor(
+                            (*shadow)[j].namedColorValue());
+                        sd.setColor(color);
+                    } break;
+                    case CSSStyleValuePair::ValueKind::ColorValueKind: {
+                        Unit::Color color = (*shadow)[j].colorValue();
+                        sd.setColor(color);
+                    } break;
+                    case CSSStyleValuePair::ValueKind::KeywordValueKind: {
+                        sd.setInset();
+                    } break;
+                    default:
+                        STARFISH_ASSERT_NOT_REACHED();
+                        break;
                     }
-                    style->addBoxShadow(sd);
                 }
-            } else {
-                style->setBoxShadow(ShadowDataList());
+                style->addBoxShadow(sd);
             }
-        } break;
-        case CSSStyleValuePair::KeyKind::PointerEvents:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setPointerEvents(parentStyle->pointerEvents());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->setPointerEvents(PointerEventsAutoValue);
+        } else {
+            style->setBoxShadow(ShadowDataList());
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::PointerEvents:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setPointerEvents(parentStyle->pointerEvents());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setPointerEvents(PointerEventsAutoValue);
+        } else {
+            style->setPointerEvents(newCssValue.pointerEventsValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Direction:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_direction =
+                parentStyle->m_inheritedStyles.m_direction;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_direction =
+                DirectionValue::LtrDirectionValue;
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::DirectionValueKind);
+            style->m_inheritedStyles.m_direction = newCssValue.directionValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::WhiteSpace:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_whiteSpace =
+                parentStyle->m_inheritedStyles.m_whiteSpace;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_whiteSpace =
+                WhiteSpaceValue::NormalWhiteSpaceValue;
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
+            style->m_inheritedStyles.m_whiteSpace =
+                newCssValue.whiteSpaceValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::WordSpacing:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setWordSpacing(parentStyle->wordSpacing());
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Normal) {
+            style->setWordSpacing(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setWordSpacing(length.getValue());
             } else {
-                style->setPointerEvents(newCssValue.pointerEventsValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Direction:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_direction =
-                    parentStyle->m_inheritedStyles.m_direction;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_direction =
-                    DirectionValue::LtrDirectionValue;
-            } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::DirectionValueKind);
-                style->m_inheritedStyles.m_direction =
-                    newCssValue.directionValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::WhiteSpace:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_whiteSpace =
-                    parentStyle->m_inheritedStyles.m_whiteSpace;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_whiteSpace =
-                    WhiteSpaceValue::NormalWhiteSpaceValue;
-            } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
-                style->m_inheritedStyles.m_whiteSpace =
-                    newCssValue.whiteSpaceValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::WordSpacing:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setWordSpacing(parentStyle->wordSpacing());
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Normal) {
                 style->setWordSpacing(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Length ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::CalcValueKind) {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setWordSpacing(length.getValue());
-                } else {
-                    style->setWordSpacing(Length(Length::Fixed, 0));
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::LetterSpacing:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setLetterSpacing(parentStyle->wordSpacing());
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Normal) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::LetterSpacing:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setLetterSpacing(parentStyle->wordSpacing());
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Normal) {
+            style->setLetterSpacing(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Length ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setLetterSpacing(length.getValue());
+            } else {
                 style->setLetterSpacing(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Length ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::CalcValueKind) {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setLetterSpacing(length.getValue());
-                } else {
-                    style->setLetterSpacing(Length(Length::Fixed, 0));
-                }
             }
-            break;
+        }
+        break;
 
-        case CSSStyleValuePair::KeyKind::BackgroundColor:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundColor(parentStyle->backgroundColor());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundColor(Unit::Color(0, 0, 0, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setBackgroundColor(newCssValue.colorValue());
+    case CSSStyleValuePair::KeyKind::BackgroundColor:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setBackgroundColor(parentStyle->backgroundColor());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBackgroundColor(Unit::Color(0, 0, 0, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setBackgroundColor(newCssValue.colorValue());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                // currentColor : represents the calculated value of the
+                // element's color property
+                // --> change to valid value when arrangeStyleValues()
+                style->setBackgroundColorToCurrentColor();
             } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (newCssValue.namedColorValue() ==
-                    NamedColor::NamedColorValue::currentColor) {
-                    // currentColor : represents the calculated value of the
-                    // element's color property
-                    // --> change to valid value when arrangeStyleValues()
-                    style->setBackgroundColorToCurrentColor();
+                style->setBackgroundColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundImage:
+        style->resetBackgroundImages();
+        // NOTE Do nothing for Initial, Unset, None
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundImage(parentStyle->backgroundImage(i), i);
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                auto vKind = item.valueKind();
+                if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    style->setBackgroundImage(
+                        new ImageValue(item.urlValue(origin)), i);
+                } else if (vKind ==
+                           CSSStyleValuePair::ValueKind::GradientValueKind) {
+                    style->setBackgroundImage(
+                        new ImageValue(
+                            item.gradientValue()->convertToGradientData()),
+                        i);
                 } else {
-                    style->setBackgroundColor(NamedColor::namedColorToColor(
-                        newCssValue.namedColorValue()));
+                    // NOTE Do nothing for Initial, None
+                    STARFISH_RELEASE_ASSERT(
+                        vKind == CSSStyleValuePair::ValueKind::Initial ||
+                        vKind == CSSStyleValuePair::ValueKind::None);
                 }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundImage:
-            style->resetBackgroundImages();
-            // NOTE Do nothing for Initial, Unset, None
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundImage(parentStyle->backgroundImage(i),
-                                              i);
-                }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    auto vKind = item.valueKind();
-                    if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-                        style->setBackgroundImage(
-                            new ImageValue(item.urlValue(origin)), i);
-                    } else if (vKind == CSSStyleValuePair::ValueKind::
-                                            GradientValueKind) {
-                        style->setBackgroundImage(
-                            new ImageValue(
-                                item.gradientValue()->convertToGradientData()),
-                            i);
-                    } else {
-                        // NOTE Do nothing for Initial, None
-                        STARFISH_RELEASE_ASSERT(
-                            vKind == CSSStyleValuePair::ValueKind::Initial ||
-                            vKind == CSSStyleValuePair::ValueKind::None);
-                    }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
+        style->resetBackgroundPositionXs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundPositionX(
+                    parentStyle->backgroundPositionX(i), i);
+            }
+        } else {
+            setComputedStyleBackgroundPositionX(style, newCssValue);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+        style->resetBackgroundPositionYs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundPositionY(
+                    parentStyle->backgroundPositionY(i), i);
+            }
+        } else {
+            setComputedStyleBackgroundPositionY(style, newCssValue);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundSize:
+        style->resetBackgroundSizes();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundPositionY(
+                    parentStyle->backgroundPositionY(i), i);
+                if (parentStyle->backgroundSizeIsLength(i)) {
+                    style->setBackgroundSize(
+                        parentStyle->backgroundSizeLengthValue(i), i);
+                } else {
+                    style->setBackgroundSize(
+                        parentStyle->backgroundSizeTypeValue(i), i);
                 }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundPositionX:
-            style->resetBackgroundPositionXs();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundPositionX(
-                        parentStyle->backgroundPositionX(i), i);
-                }
-            } else {
-                setComputedStyleBackgroundPositionX(style, newCssValue);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundPositionY:
-            style->resetBackgroundPositionYs();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundPositionY(
-                        parentStyle->backgroundPositionY(i), i);
-                }
-            } else {
-                setComputedStyleBackgroundPositionY(style, newCssValue);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundSize:
-            style->resetBackgroundSizes();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundPositionY(
-                        parentStyle->backgroundPositionY(i), i);
-                    if (parentStyle->backgroundSizeIsLength(i)) {
-                        style->setBackgroundSize(
-                            parentStyle->backgroundSizeLengthValue(i), i);
-                    } else {
-                        style->setBackgroundSize(
-                            parentStyle->backgroundSizeTypeValue(i), i);
-                    }
-                }
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundSize(LengthSize(), 0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* layers = newCssValue.multiValue();
-                for (unsigned int l = 0; l < layers->size(); l++) {
-                    const CSSStyleValuePair& layer = (*layers)[l];
-                    if (layer.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundSize(LengthSize(), l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   BackgroundSizeValueKind) {
-                        style->setBackgroundSize(layer.backgroundSizeValue(),
-                                                 l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Auto) {
-                        style->setBackgroundSize(LengthSize(), l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueListKind) {
-                        ValueList* list = layer.multiValue();
-                        LengthSize result;
-                        if (list->size() >= 1) {
-                            Nullable<Length> width = convertValueToLength(
-                                (*list)[0].valueKind(), (*list)[0].value());
-                            if (width.hasValue()) {
-                                result.m_width = width.getValue();
-                            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBackgroundSize(LengthSize(), 0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* layers = newCssValue.multiValue();
+            for (unsigned int l = 0; l < layers->size(); l++) {
+                const CSSStyleValuePair& layer = (*layers)[l];
+                if (layer.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) {
+                    style->setBackgroundSize(LengthSize(), l);
+                } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::
+                                                    BackgroundSizeValueKind) {
+                    style->setBackgroundSize(layer.backgroundSizeValue(), l);
+                } else if (layer.valueKind() ==
+                           CSSStyleValuePair::ValueKind::Auto) {
+                    style->setBackgroundSize(LengthSize(), l);
+                } else if (layer.valueKind() ==
+                           CSSStyleValuePair::ValueListKind) {
+                    ValueList* list = layer.multiValue();
+                    LengthSize result;
+                    if (list->size() >= 1) {
+                        Nullable<Length> width = convertValueToLength(
+                            (*list)[0].valueKind(), (*list)[0].value());
+                        if (width.hasValue()) {
+                            result.m_width = width.getValue();
                         }
-                        if (list->size() >= 2) {
-                            Nullable<Length> height = convertValueToLength(
-                                (*list)[1].valueKind(), (*list)[1].value());
-                            if (height.hasValue()) {
-                                result.m_height = height.getValue();
-                            }
-                        }
-                        style->setBackgroundSize(result, l);
-                    } else {
-                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
+                    if (list->size() >= 2) {
+                        Nullable<Length> height = convertValueToLength(
+                            (*list)[1].valueKind(), (*list)[1].value());
+                        if (height.hasValue()) {
+                            result.m_height = height.getValue();
+                        }
+                    }
+                    style->setBackgroundSize(result, l);
+                } else {
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundRepeatX:
-            style->resetBackgroundRepeatXs();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundRepeatX:
+        style->resetBackgroundRepeatXs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundRepeatX(parentStyle->backgroundRepeatX(i),
+                                            i);
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBackgroundRepeatX(
+                BackgroundRepeatValue::RepeatRepeatValue, 0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
+            style->setBackgroundRepeatX(newCssValue.backgroundRepeatValue(), 0);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatX(
-                        parentStyle->backgroundRepeatX(i), i);
-                }
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundRepeatX(
-                    BackgroundRepeatValue::RepeatRepeatValue, 0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::
-                           BackgroundRepeatValueKind) {
-                style->setBackgroundRepeatX(newCssValue.backgroundRepeatValue(),
-                                            0);
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundRepeatX(
-                            BackgroundRepeatValue::RepeatRepeatValue, i);
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   BackgroundRepeatValueKind) {
-                        style->setBackgroundRepeatX(
-                            item.backgroundRepeatValue(), i);
-                    }
+                        BackgroundRepeatValue::RepeatRepeatValue, i);
+                } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
+                                                   BackgroundRepeatValueKind) {
+                    style->setBackgroundRepeatX(item.backgroundRepeatValue(),
+                                                i);
                 }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundRepeatY:
-            style->resetBackgroundRepeatYs();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundRepeatY:
+        style->resetBackgroundRepeatYs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundRepeatY(parentStyle->backgroundRepeatY(i),
+                                            i);
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBackgroundRepeatY(
+                BackgroundRepeatValue::RepeatRepeatValue, 0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
+            style->setBackgroundRepeatY(newCssValue.backgroundRepeatValue(), 0);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatY(
-                        parentStyle->backgroundRepeatY(i), i);
-                }
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundRepeatY(
-                    BackgroundRepeatValue::RepeatRepeatValue, 0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::
-                           BackgroundRepeatValueKind) {
-                style->setBackgroundRepeatY(newCssValue.backgroundRepeatValue(),
-                                            0);
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundRepeatY(
-                            BackgroundRepeatValue::RepeatRepeatValue, i);
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   BackgroundRepeatValueKind) {
-                        style->setBackgroundRepeatY(
-                            item.backgroundRepeatValue(), i);
-                    }
+                        BackgroundRepeatValue::RepeatRepeatValue, i);
+                } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
+                                                   BackgroundRepeatValueKind) {
+                    style->setBackgroundRepeatY(item.backgroundRepeatValue(),
+                                                i);
                 }
             }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundAttachment:
+        style->resetBackgroundAttachments();
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setBackgroundAttachment(
+                BackgroundAttachmentValue::ScrollBackgroundAttachmentValue, 0);
             break;
-        case CSSStyleValuePair::KeyKind::BackgroundAttachment:
-            style->resetBackgroundAttachments();
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
+        case CSSStyleValuePair::ValueKind::Inherit: {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
                 style->setBackgroundAttachment(
-                    BackgroundAttachmentValue::ScrollBackgroundAttachmentValue,
-                    0);
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit: {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
+                    parentStyle->backgroundAttachment(i), i);
+            }
+        } break;
+        case CSSStyleValuePair::ValueKind::ValueListKind: {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundAttachment(
-                        parentStyle->backgroundAttachment(i), i);
-                }
-            } break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundAttachment(
-                            BackgroundAttachmentValue::
-                                ScrollBackgroundAttachmentValue,
-                            i);
-                    } else {
-                        STARFISH_ASSERT(item.valueKind() ==
-                                        CSSStyleValuePair::ValueKind::
-                                            BackgroundAttachmentValueKind);
-                        style->setBackgroundAttachment(
-                            item.backgroundAttachmentValue(), i);
-                    }
-                }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundClip:
-            style->resetBackgroundClips();
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setBackgroundClip(BoxValue::BorderBoxBoxValue, 0);
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit: {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundClip(parentStyle->backgroundClip(i), i);
-                }
-            } break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundClip(BoxValue::BorderBoxBoxValue,
-                                                 i);
-                    } else {
-                        STARFISH_ASSERT(
-                            item.valueKind() ==
-                            CSSStyleValuePair::ValueKind::BoxValueKind);
-                        style->setBackgroundClip(item.boxValue(), i);
-                    }
-                }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BackgroundOrigin:
-            style->resetBackgroundOrigins();
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue, 0);
-                break;
-            case CSSStyleValuePair::ValueKind::Inherit: {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                uint32_t size = parentStyle->backgroundLayerSize();
-                for (uint32_t i = 0; i < size; i++) {
-                    style->setBackgroundOrigin(parentStyle->backgroundOrigin(i),
-                                               i);
-                }
-            } break;
-            case CSSStyleValuePair::ValueKind::ValueListKind: {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue,
-                                                   i);
-                    } else {
-                        STARFISH_ASSERT(
-                            item.valueKind() ==
-                            CSSStyleValuePair::ValueKind::BoxValueKind);
-                        style->setBackgroundOrigin(item.boxValue(), i);
-                    }
-                }
-                break;
-            }
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::MaskImage:
-            // NOTE Do nothing for Initial, Unset, None, Inherit
-            style->resetMaskImage();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    auto vKind = item.valueKind();
-                    ImageValue* imageValue = nullptr;
-                    if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-                        imageValue = new ImageValue(item.urlValue(origin));
-                        style->setMaskImage(imageValue, i);
-                    } else if (vKind == CSSStyleValuePair::ValueKind::
-                                            GradientValueKind) {
-                        imageValue = new ImageValue(
-                            item.gradientValue()->convertToGradientData());
-                        style->setMaskImage(imageValue, i);
-                    } else {
-                        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                    }
+                        BackgroundAttachmentValue::
+                            ScrollBackgroundAttachmentValue,
+                        i);
+                } else {
+                    STARFISH_ASSERT(item.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::
+                                        BackgroundAttachmentValueKind);
+                    style->setBackgroundAttachment(
+                        item.backgroundAttachmentValue(), i);
                 }
             }
             break;
-        case CSSStyleValuePair::KeyKind::MaskSize:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setMaskSize(LengthSize());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                size_t size = parentStyle->maskSizeLayerLength();
-                for (size_t i = 0; i < size; i++) {
-                    if (style->maskSizeIsLength(i)) {
-                        style->setMaskSize(parentStyle->maskSizeLengthValue(i),
-                                           i);
-                    } else {
-                        style->setMaskSize(parentStyle->maskSizeTypeValue(i),
-                                           i);
-                    }
+        }
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundClip:
+        style->resetBackgroundClips();
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setBackgroundClip(BoxValue::BorderBoxBoxValue, 0);
+            break;
+        case CSSStyleValuePair::ValueKind::Inherit: {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundClip(parentStyle->backgroundClip(i), i);
+            }
+        } break;
+        case CSSStyleValuePair::ValueKind::ValueListKind: {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setBackgroundClip(BoxValue::BorderBoxBoxValue, i);
+                } else {
+                    STARFISH_ASSERT(item.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::BoxValueKind);
+                    style->setBackgroundClip(item.boxValue(), i);
                 }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* layers = newCssValue.multiValue();
-                for (unsigned int l = 0; l < layers->size(); l++) {
-                    const CSSStyleValuePair& layer = (*layers)[l];
-                    if (layer.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) {
-                        style->setMaskSize(LengthSize(), l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   MaskSizeValueKind) {
-                        style->setMaskSize(layer.maskSizeValue(), l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Auto) {
-                        style->setMaskSize(LengthSize(), l);
-                    } else if (layer.valueKind() ==
-                               CSSStyleValuePair::ValueListKind) {
-                        ValueList* list = layer.multiValue();
-                        LengthSize result;
-                        if (list->size() >= 1) {
-                            Nullable<Length> width = convertValueToLength(
-                                (*list)[0].valueKind(), (*list)[0].value());
-                            if (width.hasValue()) {
-                                result.m_width = width.getValue();
-                            }
+            }
+            break;
+        }
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BackgroundOrigin:
+        style->resetBackgroundOrigins();
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue, 0);
+            break;
+        case CSSStyleValuePair::ValueKind::Inherit: {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->backgroundLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setBackgroundOrigin(parentStyle->backgroundOrigin(i), i);
+            }
+        } break;
+        case CSSStyleValuePair::ValueKind::ValueListKind: {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue, i);
+                } else {
+                    STARFISH_ASSERT(item.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::BoxValueKind);
+                    style->setBackgroundOrigin(item.boxValue(), i);
+                }
+            }
+            break;
+        }
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskImage:
+        // NOTE Do nothing for Initial, Unset, None, Inherit
+        style->resetMaskImage();
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                auto vKind = item.valueKind();
+                ImageValue* imageValue = nullptr;
+                if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    imageValue = new ImageValue(item.urlValue(origin));
+                    style->setMaskImage(imageValue, i);
+                } else if (vKind ==
+                           CSSStyleValuePair::ValueKind::GradientValueKind) {
+                    imageValue = new ImageValue(
+                        item.gradientValue()->convertToGradientData());
+                    style->setMaskImage(imageValue, i);
+                } else {
+                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                }
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskSize:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaskSize(LengthSize());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            size_t size = parentStyle->maskSizeLayerLength();
+            for (size_t i = 0; i < size; i++) {
+                if (style->maskSizeIsLength(i)) {
+                    style->setMaskSize(parentStyle->maskSizeLengthValue(i), i);
+                } else {
+                    style->setMaskSize(parentStyle->maskSizeTypeValue(i), i);
+                }
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* layers = newCssValue.multiValue();
+            for (unsigned int l = 0; l < layers->size(); l++) {
+                const CSSStyleValuePair& layer = (*layers)[l];
+                if (layer.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) {
+                    style->setMaskSize(LengthSize(), l);
+                } else if (layer.valueKind() ==
+                           CSSStyleValuePair::ValueKind::MaskSizeValueKind) {
+                    style->setMaskSize(layer.maskSizeValue(), l);
+                } else if (layer.valueKind() ==
+                           CSSStyleValuePair::ValueKind::Auto) {
+                    style->setMaskSize(LengthSize(), l);
+                } else if (layer.valueKind() ==
+                           CSSStyleValuePair::ValueListKind) {
+                    ValueList* list = layer.multiValue();
+                    LengthSize result;
+                    if (list->size() >= 1) {
+                        Nullable<Length> width = convertValueToLength(
+                            (*list)[0].valueKind(), (*list)[0].value());
+                        if (width.hasValue()) {
+                            result.m_width = width.getValue();
                         }
-                        if (list->size() >= 2) {
-                            Nullable<Length> height = convertValueToLength(
-                                (*list)[1].valueKind(), (*list)[1].value());
-                            if (height.hasValue()) {
-                                result.m_height = height.getValue();
-                            }
-                        }
-                        style->setMaskSize(result, l);
-                    } else {
-                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
-                }
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TransitionProperty:
-            style->resetTransitionProperties();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionProperty(element, style, parentStyle,
-                                        newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionProperty(element, style, parentStyle,
-                                            (*list)[i], i);
+                    if (list->size() >= 2) {
+                        Nullable<Length> height = convertValueToLength(
+                            (*list)[1].valueKind(), (*list)[1].value());
+                        if (height.hasValue()) {
+                            result.m_height = height.getValue();
+                        }
+                    }
+                    style->setMaskSize(result, l);
+                } else {
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::TransitionDuration:
-            style->resetTransitionDurations();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionDuration(element, style, parentStyle,
-                                        newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionDuration(element, style, parentStyle,
-                                            (*list)[i], i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
-            style->resetTransitionTimingFunctions();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionTimingFunction(element, style, parentStyle,
-                                              newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionTimingFunction(element, style, parentStyle,
-                                                  (*list)[i], i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TransitionDelay:
-            style->resetTransitionDelays();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionDelay(element, style, parentStyle, newCssValue,
-                                     0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionDelay(element, style, parentStyle,
-                                         (*list)[i], i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationName:
-            style->resetAnimationNames();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationName(element, style, parentStyle, newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationName(element, style, parentStyle, (*list)[i],
-                                       i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationDuration:
-            style->resetAnimationDurations();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationDuration(element, style, parentStyle, newCssValue,
-                                       0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationDuration(element, style, parentStyle,
-                                           (*list)[i], i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationTimingFunction:
-            style->resetAnimationTimingFunctions();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationTimingFunction(element, style, parentStyle,
-                                             newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationTimingFunction(element, style, parentStyle,
-                                                 (*list)[i], i);
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationDelay:
-            style->resetAnimationDelays();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationDelay(element, style, parentStyle, newCssValue,
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TransitionProperty:
+        style->resetTransitionProperties();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyTransitionProperty(element, style, parentStyle, newCssValue,
                                     0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationDelay(element, style, parentStyle, (*list)[i],
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyTransitionProperty(element, style, parentStyle, (*list)[i],
                                         i);
-                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationIterationCount:
-            style->resetAnimationIterationCount();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TransitionDuration:
+        style->resetTransitionDurations();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyTransitionDuration(element, style, parentStyle, newCssValue,
+                                    0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyTransitionDuration(element, style, parentStyle, (*list)[i],
+                                        i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+        style->resetTransitionTimingFunctions();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyTransitionTimingFunction(element, style, parentStyle,
+                                          newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyTransitionTimingFunction(element, style, parentStyle,
+                                              (*list)[i], i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TransitionDelay:
+        style->resetTransitionDelays();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyTransitionDelay(element, style, parentStyle, newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyTransitionDelay(element, style, parentStyle, (*list)[i],
+                                     i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationName:
+        style->resetAnimationNames();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationName(element, style, parentStyle, newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationName(element, style, parentStyle, (*list)[i], i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationDuration:
+        style->resetAnimationDurations();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationDuration(element, style, parentStyle, newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationDuration(element, style, parentStyle, (*list)[i],
+                                       i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationTimingFunction:
+        style->resetAnimationTimingFunctions();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationTimingFunction(element, style, parentStyle,
+                                         newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationTimingFunction(element, style, parentStyle,
+                                             (*list)[i], i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationDelay:
+        style->resetAnimationDelays();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationDelay(element, style, parentStyle, newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationDelay(element, style, parentStyle, (*list)[i], i);
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationIterationCount:
+        style->resetAnimationIterationCount();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationIterationCount(element, style, parentStyle,
+                                         newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
                 applyAnimationIterationCount(element, style, parentStyle,
-                                             newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationIterationCount(element, style, parentStyle,
-                                                 (*list)[i], i);
-                }
+                                             (*list)[i], i);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationDirection:
-            style->resetAnimationDirection();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationDirection(element, style, parentStyle,
-                                        newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationDirection(element, style, parentStyle,
-                                            (*list)[i], i);
-                }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationDirection:
+        style->resetAnimationDirection();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationDirection(element, style, parentStyle, newCssValue,
+                                    0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationDirection(element, style, parentStyle, (*list)[i],
+                                        i);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationPlayState:
-            style->resetAnimationPlayState();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationPlayState(element, style, parentStyle,
-                                        newCssValue, 0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationPlayState(element, style, parentStyle,
-                                            (*list)[i], i);
-                }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationPlayState:
+        style->resetAnimationPlayState();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationPlayState(element, style, parentStyle, newCssValue,
+                                    0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationPlayState(element, style, parentStyle, (*list)[i],
+                                        i);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::AnimationFillMode:
-            style->resetAnimationFillMode();
-            if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyAnimationFillMode(element, style, parentStyle, newCssValue,
-                                       0);
-            } else {
-                ValueList* list = newCssValue.multiValue();
-                STARFISH_ASSERT(list != nullptr);
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    applyAnimationFillMode(element, style, parentStyle,
-                                           (*list)[i], i);
-                }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AnimationFillMode:
+        style->resetAnimationFillMode();
+        if (newCssValue.valueKind() != CSSStyleValuePair::ValueListKind) {
+            applyAnimationFillMode(element, style, parentStyle, newCssValue, 0);
+        } else {
+            ValueList* list = newCssValue.multiValue();
+            STARFISH_ASSERT(list != nullptr);
+            for (unsigned int i = 0; i < list->size(); i++) {
+                applyAnimationFillMode(element, style, parentStyle, (*list)[i],
+                                       i);
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BorderImageSlice:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageSlices(
-                    BorderImageLengthBox(Length(Length::Percent, 1.0)));
-                style->setBorderImageSliceFill(false);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBorderImageSlices(
-                    parentStyle->border().image().slices());
-                style->setBorderImageSliceFill(
-                    parentStyle->border().image().sliceFill());
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                BorderImageLength t, r, b, l;
-                ValueList* values = newCssValue.multiValue();
-                unsigned int size = values->size();
-                if ((*values)[size - 1].valueKind() ==
-                    CSSStyleValuePair::ValueKind::KeywordValueKind) {
-                    style->setBorderImageSliceFill(true);
-                    size--;
-                }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderImageSlice:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderImageSlices(
+                BorderImageLengthBox(Length(Length::Percent, 1.0)));
+            style->setBorderImageSliceFill(false);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setBorderImageSlices(parentStyle->border().image().slices());
+            style->setBorderImageSliceFill(
+                parentStyle->border().image().sliceFill());
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            BorderImageLength t, r, b, l;
+            ValueList* values = newCssValue.multiValue();
+            unsigned int size = values->size();
+            if ((*values)[size - 1].valueKind() ==
+                CSSStyleValuePair::ValueKind::KeywordValueKind) {
+                style->setBorderImageSliceFill(true);
+                size--;
+            }
 
-                if ((*values)[0].valueKind() ==
-                    CSSStyleValuePair::ValueKind::Number) {
-                    t.setValue((*values)[0].numberValue());
-                } else {
-                    Nullable<Length> nTop = convertValueToLength(
-                        (*values)[0].valueKind(), (*values)[0].value());
-                    if (nTop.hasValue()) {
-                        t = nTop.getValue();
-                    }
-                }
-                if (size > 1) {
-                    if ((*values)[1].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        r.setValue((*values)[1].numberValue());
-                    } else {
-                        Nullable<Length> nRight = convertValueToLength(
-                            (*values)[1].valueKind(), (*values)[1].value());
-                        if (nRight.hasValue()) {
-                            r = nRight.getValue();
-                        }
-                    }
-                } else {
-                    r = t;
-                }
-                if (size > 2) {
-                    if ((*values)[2].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        b.setValue((*values)[2].numberValue());
-                    } else {
-                        Nullable<Length> nBottom = convertValueToLength(
-                            (*values)[2].valueKind(), (*values)[2].value());
-                        if (nBottom.hasValue()) {
-                            b = nBottom.getValue();
-                        }
-                    }
-                } else {
-                    b = t;
-                }
-                if (size > 3) {
-                    if ((*values)[3].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        l.setValue((*values)[3].numberValue());
-                    } else {
-                        Nullable<Length> nLeft = convertValueToLength(
-                            (*values)[3].valueKind(), (*values)[3].value());
-                        if (nLeft.hasValue()) {
-                            l = nLeft.getValue();
-                        }
-                    }
-                } else {
-                    l = r;
-                }
-                style->setBorderImageSlices(BorderImageLengthBox(l, r, t, b));
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BorderImageSource:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                BorderData pBorder = parentStyle->border();
-                style->setBorderImageSource(pBorder.image().url());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageSource(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setBorderImageSource(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::GradientValueKind) {
-                style->setBorderImageSource(newCssValue.gradientValue());
+            if ((*values)[0].valueKind() ==
+                CSSStyleValuePair::ValueKind::Number) {
+                t.setValue((*values)[0].numberValue());
             } else {
-                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UrlValueKind ==
-                                newCssValue.valueKind());
-                style->setBorderImageSource(newCssValue.urlValue(origin));
+                Nullable<Length> nTop = convertValueToLength(
+                    (*values)[0].valueKind(), (*values)[0].value());
+                if (nTop.hasValue()) {
+                    t = nTop.getValue();
+                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BorderImageRepeat:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                BorderImageData borderImage = parentStyle->border().image();
-                style->setBorderImageRepeatX(borderImage.repeatX());
-                style->setBorderImageRepeatY(borderImage.repeatY());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
+            if (size > 1) {
+                if ((*values)[1].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    r.setValue((*values)[1].numberValue());
+                } else {
+                    Nullable<Length> nRight = convertValueToLength(
+                        (*values)[1].valueKind(), (*values)[1].value());
+                    if (nRight.hasValue()) {
+                        r = nRight.getValue();
+                    }
+                }
+            } else {
+                r = t;
+            }
+            if (size > 2) {
+                if ((*values)[2].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    b.setValue((*values)[2].numberValue());
+                } else {
+                    Nullable<Length> nBottom = convertValueToLength(
+                        (*values)[2].valueKind(), (*values)[2].value());
+                    if (nBottom.hasValue()) {
+                        b = nBottom.getValue();
+                    }
+                }
+            } else {
+                b = t;
+            }
+            if (size > 3) {
+                if ((*values)[3].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    l.setValue((*values)[3].numberValue());
+                } else {
+                    Nullable<Length> nLeft = convertValueToLength(
+                        (*values)[3].valueKind(), (*values)[3].value());
+                    if (nLeft.hasValue()) {
+                        l = nLeft.getValue();
+                    }
+                }
+            } else {
+                l = r;
+            }
+            style->setBorderImageSlices(BorderImageLengthBox(l, r, t, b));
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderImageSource:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            BorderData pBorder = parentStyle->border();
+            style->setBorderImageSource(pBorder.image().url());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderImageSource(String::emptyString);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setBorderImageSource(String::emptyString);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::GradientValueKind) {
+            style->setBorderImageSource(newCssValue.gradientValue());
+        } else {
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UrlValueKind ==
+                            newCssValue.valueKind());
+            style->setBorderImageSource(newCssValue.urlValue(origin));
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderImageRepeat:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            BorderImageData borderImage = parentStyle->border().image();
+            style->setBorderImageRepeatX(borderImage.repeatX());
+            style->setBorderImageRepeatY(borderImage.repeatY());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderImageRepeatX(BorderImageRepeatValue::StretchValue);
+            style->setBorderImageRepeatY(BorderImageRepeatValue::StretchValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            if (list->size() == 1) {
                 style->setBorderImageRepeatX(
-                    BorderImageRepeatValue::StretchValue);
+                    (*list)[0].borderImageRepeatValue());
                 style->setBorderImageRepeatY(
-                    BorderImageRepeatValue::StretchValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                if (list->size() == 1) {
-                    style->setBorderImageRepeatX(
-                        (*list)[0].borderImageRepeatValue());
-                    style->setBorderImageRepeatY(
-                        (*list)[0].borderImageRepeatValue());
-                } else if (list->size() == 2) {
-                    style->setBorderImageRepeatX(
-                        (*list)[0].borderImageRepeatValue());
-                    style->setBorderImageRepeatY(
-                        (*list)[1].borderImageRepeatValue());
-                }
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                    (*list)[0].borderImageRepeatValue());
+            } else if (list->size() == 2) {
+                style->setBorderImageRepeatX(
+                    (*list)[0].borderImageRepeatValue());
+                style->setBorderImageRepeatY(
+                    (*list)[1].borderImageRepeatValue());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BorderImageOutset:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBorderImageOutsets(
-                    parentStyle->border().image().outsets());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageOutsets(
-                    BorderImageLengthBox(Length(Length::Fixed, 0)));
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                BorderImageLength t, r, b, l;
-                ValueList* values = newCssValue.multiValue();
-                unsigned int size = values->size();
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderImageOutset:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setBorderImageOutsets(
+                parentStyle->border().image().outsets());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderImageOutsets(
+                BorderImageLengthBox(Length(Length::Fixed, 0)));
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            BorderImageLength t, r, b, l;
+            ValueList* values = newCssValue.multiValue();
+            unsigned int size = values->size();
 
-                if ((*values)[0].valueKind() ==
+            if ((*values)[0].valueKind() ==
+                CSSStyleValuePair::ValueKind::Number) {
+                t.setValue((*values)[0].numberValue());
+            } else {
+                t = (*values)[0].toLengthValue();
+            }
+            if (size > 1) {
+                if ((*values)[1].valueKind() ==
                     CSSStyleValuePair::ValueKind::Number) {
-                    t.setValue((*values)[0].numberValue());
+                    r.setValue((*values)[1].numberValue());
                 } else {
-                    t = (*values)[0].toLengthValue();
+                    r = (*values)[1].toLengthValue();
                 }
-                if (size > 1) {
-                    if ((*values)[1].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        r.setValue((*values)[1].numberValue());
-                    } else {
-                        r = (*values)[1].toLengthValue();
-                    }
-                } else {
-                    r = t;
-                }
-                if (size > 2) {
-                    if ((*values)[2].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        b.setValue((*values)[2].numberValue());
-                    } else {
-                        b = (*values)[2].toLengthValue();
-                    }
-                } else {
-                    b = t;
-                }
-                if (size > 3) {
-                    if ((*values)[3].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        l.setValue((*values)[3].numberValue());
-                    } else {
-                        l = (*values)[3].toLengthValue();
-                    }
-                } else {
-                    l = r;
-                }
-                style->setBorderImageOutsets(BorderImageLengthBox(l, r, t, b));
-            }
-
-            break;
-        case CSSStyleValuePair::KeyKind::BorderImageWidth:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBorderImageWidths(
-                    parentStyle->border().image().widths());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBorderImageWidths(BorderImageLengthBox(1.0));
             } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                BorderImageLength t, r, b, l;
-                ValueList* values = newCssValue.multiValue();
-                unsigned int size = values->size();
-
-                if ((*values)[0].valueKind() ==
+                r = t;
+            }
+            if (size > 2) {
+                if ((*values)[2].valueKind() ==
                     CSSStyleValuePair::ValueKind::Number) {
-                    t.setValue((*values)[0].numberValue());
+                    b.setValue((*values)[2].numberValue());
                 } else {
-                    Nullable<Length> nTop = convertValueToLength(
-                        (*values)[0].valueKind(), (*values)[0].value());
-                    if (nTop.hasValue()) {
-                        t = nTop.getValue();
-                    }
+                    b = (*values)[2].toLengthValue();
                 }
-                if (size > 1) {
-                    if ((*values)[1].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        r.setValue((*values)[1].numberValue());
-                    } else {
-                        Nullable<Length> nRight = convertValueToLength(
-                            (*values)[1].valueKind(), (*values)[1].value());
-                        if (nRight.hasValue()) {
-                            r = nRight.getValue();
-                        }
-                    }
-                } else {
-                    r = t;
-                }
-                if (size > 2) {
-                    if ((*values)[2].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        b.setValue((*values)[2].numberValue());
-                    } else {
-                        Nullable<Length> nBottom = convertValueToLength(
-                            (*values)[2].valueKind(), (*values)[2].value());
-                        if (nBottom.hasValue()) {
-                            b = nBottom.getValue();
-                        }
-                    }
-                } else {
-                    b = t;
-                }
-                if (size > 3) {
-                    if ((*values)[3].valueKind() ==
-                        CSSStyleValuePair::ValueKind::Number) {
-                        l.setValue((*values)[3].numberValue());
-                    } else {
-                        Nullable<Length> nLeft = convertValueToLength(
-                            (*values)[3].valueKind(), (*values)[3].value());
-                        if (nLeft.hasValue()) {
-                            l = nLeft.getValue();
-                        }
-                    }
-                } else {
-                    l = r;
-                }
-                style->setBorderImageWidths(BorderImageLengthBox(l, r, t, b));
+            } else {
+                b = t;
             }
-
-            break;
-        case CSSStyleValuePair::KeyKind::BorderCollapse:
-            // separate | collapse | initial | inherit
-
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->m_inheritedStyles.m_borderCollapse =
-                    parentStyle->m_inheritedStyles.m_borderCollapse;
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->m_inheritedStyles.m_borderCollapse =
-                    BorderCollapseValue::SeparateBorderCollapseValue;
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::BorderCollapseValueKind ==
-                    newCssValue.valueKind());
-                style->m_inheritedStyles.m_borderCollapse =
-                    newCssValue.borderCollapseValue();
+            if (size > 3) {
+                if ((*values)[3].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    l.setValue((*values)[3].numberValue());
+                } else {
+                    l = (*values)[3].toLengthValue();
+                }
+            } else {
+                l = r;
             }
-            break;
-        case CSSStyleValuePair::KeyKind::BorderSpacing:
-            // Length | initial | inherit
+            style->setBorderImageOutsets(BorderImageLengthBox(l, r, t, b));
+        }
 
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setHorizontalBorderSpacing(
-                    parentStyle->horizontalBorderSpacing());
-                style->setVerticalBorderSpacing(
-                    parentStyle->verticalBorderSpacing());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
+        break;
+    case CSSStyleValuePair::KeyKind::BorderImageWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setBorderImageWidths(parentStyle->border().image().widths());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setBorderImageWidths(BorderImageLengthBox(1.0));
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            BorderImageLength t, r, b, l;
+            ValueList* values = newCssValue.multiValue();
+            unsigned int size = values->size();
+
+            if ((*values)[0].valueKind() ==
+                CSSStyleValuePair::ValueKind::Number) {
+                t.setValue((*values)[0].numberValue());
+            } else {
+                Nullable<Length> nTop = convertValueToLength(
+                    (*values)[0].valueKind(), (*values)[0].value());
+                if (nTop.hasValue()) {
+                    t = nTop.getValue();
+                }
+            }
+            if (size > 1) {
+                if ((*values)[1].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    r.setValue((*values)[1].numberValue());
+                } else {
+                    Nullable<Length> nRight = convertValueToLength(
+                        (*values)[1].valueKind(), (*values)[1].value());
+                    if (nRight.hasValue()) {
+                        r = nRight.getValue();
+                    }
+                }
+            } else {
+                r = t;
+            }
+            if (size > 2) {
+                if ((*values)[2].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    b.setValue((*values)[2].numberValue());
+                } else {
+                    Nullable<Length> nBottom = convertValueToLength(
+                        (*values)[2].valueKind(), (*values)[2].value());
+                    if (nBottom.hasValue()) {
+                        b = nBottom.getValue();
+                    }
+                }
+            } else {
+                b = t;
+            }
+            if (size > 3) {
+                if ((*values)[3].valueKind() ==
+                    CSSStyleValuePair::ValueKind::Number) {
+                    l.setValue((*values)[3].numberValue());
+                } else {
+                    Nullable<Length> nLeft = convertValueToLength(
+                        (*values)[3].valueKind(), (*values)[3].value());
+                    if (nLeft.hasValue()) {
+                        l = nLeft.getValue();
+                    }
+                }
+            } else {
+                l = r;
+            }
+            style->setBorderImageWidths(BorderImageLengthBox(l, r, t, b));
+        }
+
+        break;
+    case CSSStyleValuePair::KeyKind::BorderCollapse:
+        // separate | collapse | initial | inherit
+
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->m_inheritedStyles.m_borderCollapse =
+                parentStyle->m_inheritedStyles.m_borderCollapse;
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->m_inheritedStyles.m_borderCollapse =
+                BorderCollapseValue::SeparateBorderCollapseValue;
+            break;
+        default:
+            STARFISH_ASSERT(
+                CSSStyleValuePair::ValueKind::BorderCollapseValueKind ==
+                newCssValue.valueKind());
+            style->m_inheritedStyles.m_borderCollapse =
+                newCssValue.borderCollapseValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BorderSpacing:
+        // Length | initial | inherit
+
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setHorizontalBorderSpacing(
+                parentStyle->horizontalBorderSpacing());
+            style->setVerticalBorderSpacing(
+                parentStyle->verticalBorderSpacing());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
+            style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
+            break;
+        case CSSStyleValuePair::ValueKind::Length:
+        case CSSStyleValuePair::ValueKind::CalcValueKind: {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setHorizontalBorderSpacing(length.getValue());
+                style->setVerticalBorderSpacing(length.getValue());
+            } else {
                 style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
                 style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
-                break;
-            case CSSStyleValuePair::ValueKind::Length:
-            case CSSStyleValuePair::ValueKind::CalcValueKind: {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setHorizontalBorderSpacing(length.getValue());
-                    style->setVerticalBorderSpacing(length.getValue());
-                } else {
-                    style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
-                    style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
-                }
-                break;
-            }
-            default:
-                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
-                                newCssValue.valueKind());
-                ValueList* list = newCssValue.multiValue();
-                Nullable<Length> hbLength = convertValueToLength(
-                    (*list)[0].valueKind(), (*list)[0].value());
-                Nullable<Length> vbLength = convertValueToLength(
-                    (*list)[1].valueKind(), (*list)[1].value());
-                if (hbLength.hasValue()) {
-                    style->setHorizontalBorderSpacing(hbLength.getValue());
-                } else {
-                    style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
-                }
-
-                if (vbLength.hasValue()) {
-                    style->setVerticalBorderSpacing(vbLength.getValue());
-                } else {
-                    style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
-                }
             }
             break;
-        case CSSStyleValuePair::KeyKind::CaptionSide:
-            // top | bottom | initial | inherit
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->m_inheritedStyles.m_captionSide =
-                    parentStyle->m_inheritedStyles.m_captionSide;
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->m_inheritedStyles.m_captionSide =
-                    CaptionSideValue::TopCaptionSideValue;
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::CaptionSideValueKind ==
-                    newCssValue.valueKind());
-                style->m_inheritedStyles.m_captionSide =
-                    newCssValue.captionSideValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::EmptyCells:
-            // show | hide | initial | inherit
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->m_inheritedStyles.m_emptyCells =
-                    parentStyle->m_inheritedStyles.m_emptyCells;
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->m_inheritedStyles.m_emptyCells =
-                    EmptyCellsValue::ShowEmptyCellsValue;
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::EmptyCellsValueKind ==
-                    newCssValue.valueKind());
-                style->m_inheritedStyles.m_emptyCells =
-                    newCssValue.emptyCellsValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::LineHeight:
-            // <normal> | number | length | percentage | inherit
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setLineHeight(parentStyle->lineHeight());
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Normal) {
-                // The compute value should be 'normal'.
-                // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
-                style->setLineHeight(Length(Length::Percent, -100));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                // The computed value should be same as the specified value.
-                style->setLineHeight(Length(Length::InheritableNumber,
-                                            newCssValue.numberValue()));
+        }
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ValueListKind ==
+                            newCssValue.valueKind());
+            ValueList* list = newCssValue.multiValue();
+            Nullable<Length> hbLength = convertValueToLength(
+                (*list)[0].valueKind(), (*list)[0].value());
+            Nullable<Length> vbLength = convertValueToLength(
+                (*list)[1].valueKind(), (*list)[1].value());
+            if (hbLength.hasValue()) {
+                style->setHorizontalBorderSpacing(hbLength.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    auto value = length.getValue();
-                    if (value.isCalc() &&
-                        value.calcData()->type().m_type ==
-                            CalcValueType::CalcValueType::Number) {
-                        // The computed value should be same as the specified
-                        // value.
-                        style->setLineHeight(Length(
-                            Length::InheritableNumber,
-                            value.calcData()->specifiedValue(0, element)));
-                    } else {
-                        style->setLineHeight(length.getValue());
-                    }
+                style->setHorizontalBorderSpacing(Length(Length::Fixed, 0));
+            }
+
+            if (vbLength.hasValue()) {
+                style->setVerticalBorderSpacing(vbLength.getValue());
+            } else {
+                style->setVerticalBorderSpacing(Length(Length::Fixed, 0));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CaptionSide:
+        // top | bottom | initial | inherit
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->m_inheritedStyles.m_captionSide =
+                parentStyle->m_inheritedStyles.m_captionSide;
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->m_inheritedStyles.m_captionSide =
+                CaptionSideValue::TopCaptionSideValue;
+            break;
+        default:
+            STARFISH_ASSERT(
+                CSSStyleValuePair::ValueKind::CaptionSideValueKind ==
+                newCssValue.valueKind());
+            style->m_inheritedStyles.m_captionSide =
+                newCssValue.captionSideValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::EmptyCells:
+        // show | hide | initial | inherit
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->m_inheritedStyles.m_emptyCells =
+                parentStyle->m_inheritedStyles.m_emptyCells;
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->m_inheritedStyles.m_emptyCells =
+                EmptyCellsValue::ShowEmptyCellsValue;
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::EmptyCellsValueKind ==
+                            newCssValue.valueKind());
+            style->m_inheritedStyles.m_emptyCells =
+                newCssValue.emptyCellsValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::LineHeight:
+        // <normal> | number | length | percentage | inherit
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setLineHeight(parentStyle->lineHeight());
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Normal) {
+            // The compute value should be 'normal'.
+            // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
+            style->setLineHeight(Length(Length::Percent, -100));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            // The computed value should be same as the specified value.
+            style->setLineHeight(
+                Length(Length::InheritableNumber, newCssValue.numberValue()));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                auto value = length.getValue();
+                if (value.isCalc() &&
+                    value.calcData()->type().m_type ==
+                        CalcValueType::CalcValueType::Number) {
+                    // The computed value should be same as the specified
+                    // value.
+                    style->setLineHeight(
+                        Length(Length::InheritableNumber,
+                               value.calcData()->specifiedValue(0, element)));
                 } else {
-                    style->setLineHeight(Length(Length::Percent, -100));
+                    style->setLineHeight(length.getValue());
                 }
+            } else {
+                style->setLineHeight(Length(Length::Percent, -100));
             }
-            break;
-        case CSSStyleValuePair::KeyKind::LineClamp:
-            if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::None) {
-                style->setLineClamp(0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                style->setLineClamp(newCssValue.numberValue());
-            }
-            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::LineClamp:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            style->setLineClamp(0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            style->setLineClamp(newCssValue.numberValue());
+        }
+        break;
 #define ADD_RESOLVE_STYLE_POS(POS, pos)                                  \
     case CSSStyleValuePair::KeyKind::POS:                                \
         if (newCssValue.valueKind() ==                                   \
@@ -4965,10 +4876,10 @@ void StyleResolver::apply(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                \
         }                                                                \
         break;
-            ADD_RESOLVE_STYLE_POS(Top, top)
-            ADD_RESOLVE_STYLE_POS(Right, right)
-            ADD_RESOLVE_STYLE_POS(Bottom, bottom)
-            ADD_RESOLVE_STYLE_POS(Left, left)
+        ADD_RESOLVE_STYLE_POS(Top, top)
+        ADD_RESOLVE_STYLE_POS(Right, right)
+        ADD_RESOLVE_STYLE_POS(Bottom, bottom)
+        ADD_RESOLVE_STYLE_POS(Left, left)
 #undef ADD_RESOLVE_STYLE_POS
 #define ADD_RESOLVE_STYLE_BORDER_STYLE(POS, pos)                          \
     case CSSStyleValuePair::KeyKind::Border##POS##Style:                  \
@@ -4995,10 +4906,10 @@ void StyleResolver::apply(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                 \
         }                                                                 \
         break;
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Top, top)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Right, right)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom, bottom)
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Left, left)
+        ADD_RESOLVE_STYLE_BORDER_STYLE(Top, top)
+        ADD_RESOLVE_STYLE_BORDER_STYLE(Right, right)
+        ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom, bottom)
+        ADD_RESOLVE_STYLE_BORDER_STYLE(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_STYLE
 #define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS, pos)                         \
     case CSSStyleValuePair::KeyKind::Border##POS##Width:                 \
@@ -5034,10 +4945,10 @@ void StyleResolver::apply(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                \
         }                                                                \
         break;
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Top, top)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Right, right)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom, bottom)
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Left, left)
+        ADD_RESOLVE_STYLE_BORDER_WIDTH(Top, top)
+        ADD_RESOLVE_STYLE_BORDER_WIDTH(Right, right)
+        ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom, bottom)
+        ADD_RESOLVE_STYLE_BORDER_WIDTH(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_WIDTH
 #define ADD_RESOLVE_STYLE_BORDER_COLOR(POS, pos)                            \
     case CSSStyleValuePair::KeyKind::Border##POS##Color:                    \
@@ -5069,10 +4980,10 @@ void StyleResolver::apply(Element* element,
             }                                                               \
         }                                                                   \
         break;
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Top, top)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Right, right)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom, bottom)
-            ADD_RESOLVE_STYLE_BORDER_COLOR(Left, left)
+        ADD_RESOLVE_STYLE_BORDER_COLOR(Top, top)
+        ADD_RESOLVE_STYLE_BORDER_COLOR(Right, right)
+        ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom, bottom)
+        ADD_RESOLVE_STYLE_BORDER_COLOR(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
 #define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Margin##POS:                \
@@ -5098,10 +5009,10 @@ void StyleResolver::apply(Element* element,
             }                                                    \
         }                                                        \
         break;
-            ADD_RESOLVE_STYLE_MARGIN(Top, top)
-            ADD_RESOLVE_STYLE_MARGIN(Right, right)
-            ADD_RESOLVE_STYLE_MARGIN(Bottom, bottom)
-            ADD_RESOLVE_STYLE_MARGIN(Left, left)
+        ADD_RESOLVE_STYLE_MARGIN(Top, top)
+        ADD_RESOLVE_STYLE_MARGIN(Right, right)
+        ADD_RESOLVE_STYLE_MARGIN(Bottom, bottom)
+        ADD_RESOLVE_STYLE_MARGIN(Left, left)
 #undef ADD_RESOLVE_STYLE_MARGIN
 #define ADD_RESOLVE_STYLE_PADDING(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Padding##POS:                \
@@ -5127,1059 +5038,999 @@ void StyleResolver::apply(Element* element,
             }                                                     \
         }                                                         \
         break;
-            ADD_RESOLVE_STYLE_PADDING(Top, top)
-            ADD_RESOLVE_STYLE_PADDING(Right, right)
-            ADD_RESOLVE_STYLE_PADDING(Bottom, bottom)
-            ADD_RESOLVE_STYLE_PADDING(Left, left)
+        ADD_RESOLVE_STYLE_PADDING(Top, top)
+        ADD_RESOLVE_STYLE_PADDING(Right, right)
+        ADD_RESOLVE_STYLE_PADDING(Bottom, bottom)
+        ADD_RESOLVE_STYLE_PADDING(Left, left)
 #undef ADD_RESOLVE_STYLE_PADDING
-        case CSSStyleValuePair::KeyKind::Opacity:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOpacity(parentStyle->opacity());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setOpacity(1.0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                float beforeClip = newCssValue.numberValue();
-                style->setOpacity(
-                    beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::OverflowX:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_overflowX = parentStyle->overflowX();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_overflowX = OverflowValue::VisibleOverflow;
-            } else {
-                style->m_overflowX = newCssValue.overflowValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::OverflowY:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_overflowY = parentStyle->overflowY();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_overflowY = OverflowValue::VisibleOverflow;
-            } else {
-                style->m_overflowY = newCssValue.overflowValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Visibility:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_inheritedStyles.m_visibility =
-                    parentStyle->visibility();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->m_inheritedStyles.m_visibility =
-                    VisibilityValue::VisibleVisibilityValue;
-            } else {
-                style->m_inheritedStyles.m_visibility =
-                    newCssValue.visibilityValue();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::ZIndex:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setZIndex(parentStyle->zIndex());
-                style->m_zIndexSpecifiedByUser = false;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Unset ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Auto) {
-                style->setZIndex(0);
-                style->m_zIndexSpecifiedByUser = false;
-            } else {
-                style->setZIndex(newCssValue.int32Value());
-                style->m_zIndexSpecifiedByUser = true;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Transform:
-            style->clearTransform();
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setTransform(parentStyle->transforms());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Unset ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::None) {
-            } else {
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::TransformFunctions);
-                CSSTransformFunctions* funcs = newCssValue.transformValue();
-                funcs->toTransformDataGroup(style);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TransformOrigin:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->setTransformOrigin(parentStyle->transformOrigin());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTransformOriginValue(Length(Length::Percent, 0.5f),
-                                               Length(Length::Percent, 0.5f),
-                                               Length(Length::Fixed, 0.f));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                Length xAxis, yAxis, zAxis;
-
-                xAxis = Length(Length::Percent, 0.5f);
-                yAxis = Length(Length::Percent, 0.5f);
-                zAxis = Length(Length::Fixed, 0.f);
-
-                for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
-                     i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                        CSSStyleValuePair::ValueKind::SideValueKind) {
-                        if (item.sideValue() == SideValue::LeftSideValue) {
-                            xAxis = Length(Length::Percent, 0.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::RightSideValue) {
-                            xAxis = Length(Length::Percent, 1.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::CenterSideValue) {
-                        } else if (item.sideValue() ==
-                                   SideValue::TopSideValue) {
-                            yAxis = Length(Length::Percent, 0.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::BottomSideValue) {
-                            yAxis = Length(Length::Percent, 1.0f);
-                        }
-                    } else {
-                        if (i == 0) {
-                            Nullable<Length> nXAxis = convertValueToLength(
-                                item.valueKind(), item.value());
-                            if (nXAxis.hasValue()) {
-                                xAxis = nXAxis.getValue();
-                            }
-                        } else {
-                            Nullable<Length> nYAxis = convertValueToLength(
-                                item.valueKind(), item.value());
-                            if (nYAxis.hasValue()) {
-                                yAxis = nYAxis.getValue();
-                            }
-                        }
-                    }
-                }
-
-                if (list->size() == 3) {
-                    Nullable<Length> nZAxis = convertValueToLength(
-                        (*list)[2].valueKind(), (*list)[2].value());
-                    if (nZAxis.hasValue()) {
-                        zAxis = nZAxis.getValue();
-                    }
-                }
-
-                style->setTransformOriginValue(xAxis, yAxis, zAxis);
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-
-            break;
-        case CSSStyleValuePair::KeyKind::UnicodeBidi:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_unicodeBidi = parentStyle->m_unicodeBidi;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::UnicodeBidiValueKind) {
-                style->setUnicodeBidi(newCssValue.unicodeBidiValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BoxSizing:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                style->m_boxSizing = parentStyle->m_boxSizing;
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::BoxSizingValueKind) {
-                style->setBoxSizing(newCssValue.boxSizingValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Content:
-            // Initial value is normal and it computes to 'none' for the
-            // :before and :after pseudo-elements.
-            style->clearContent();
-            if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Initial ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Inherit ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else {
-                STARFISH_ASSERT(newCssValue.valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
-                ValueList* list = newCssValue.multiValue();
-                for (unsigned int i = 0; i < list->size(); i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
-                            CSSStyleValuePair::ValueKind::None ||
-                        item.valueKind() ==
-                            CSSStyleValuePair::ValueKind::Normal) {
-                        return;
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::UrlValueKind) {
-                        style->setContentImage(item.urlValue(origin));
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::StringValueKind) {
-                        style->setContentText(item.stringValue());
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::Attr) {
-                        Nullable<String*> attrValue = element->getAttribute(
-                            element->document()->createAttributeName(
-                                item.attrValue()));
-                        if (attrValue.hasValue()) {
-                            style->setContentText(attrValue.getValue());
-                        }
-                        style->m_styleDamageSource =
-                            (StyleDamageSource)(style->m_styleDamageSource |
-                                                StyleDamageFromAttribute);
-
-                        m_ruleSetAttrFilter.push_back(
-                            element->document()
-                                ->createAttributeName(item.attrValue())
-                                .localNameAtomic());
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::
-                                   CounterFunctionValueKind) {
-                        CSSCounterFunction* v = item.counterFunctionValue();
-                        Nullable<String*> sp = v->separator();
-                        Nullable<AtomicString> counterName = v->style();
-                        const CounterStyle* counter = nullptr;
-                        if (counterName.hasValue()) {
-                            counter = CounterStyle::getKnownCounter(
-                                counterName.getValue().string());
-                        }
-                        if (!counter) {
-                            counter = CounterStyle::getDecimalCounter();
-                        }
-                        if (sp.hasValue()) {
-                            style->setContentCounters(v->name(), sp.getValue(),
-                                                      counter);
-                        } else {
-                            style->setContentCounter(v->name(), counter);
-                        }
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::QuoteValueKind) {
-                        style->setContentQuote(item.quoteValue());
-                    } else {
-                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-                    }
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FlexDirection:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_flexDirection =
-                    FlexDirectionValue::RowFlexDirectionValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_flexDirection = parentStyle->m_flexDirection;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FlexDirectionValueKind) {
-                style->setFlexDirection(newCssValue.flexDirectionValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FlexWrap:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_flexWrap = parentStyle->m_flexWrap;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FlexWrapValueKind) {
-                style->setFlexWrap(newCssValue.flexWrapValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Order:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setOrder(0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOrder(parentStyle->order());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Int32) {
-                style->setOrder(newCssValue.int32Value());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::JustifyContent:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_justifyContent =
-                    JustifyContentValue::FlexStartJustifyContentValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_justifyContent = parentStyle->m_justifyContent;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::JustifyContentValueKind) {
-                style->setJustifyContent(newCssValue.justifyContentValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AlignItems:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_alignItems = AlignItemValue::StretchAlignItemValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_alignItems = parentStyle->m_alignItems;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::AlignItemValueKind) {
-                style->setAlignItems(newCssValue.alignItemValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AlignSelf:
-            if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Initial ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset ||
-                newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                style->m_alignSelfSpecifiedByUser = false;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_alignSelfSpecifiedByUser = false;
-                style->m_alignSelf = parentStyle->m_alignSelf;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::AlignItemValueKind) {
-                style->m_alignSelfSpecifiedByUser = true;
-                style->setAlignSelf(newCssValue.alignItemValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::AlignContent:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->m_alignContent =
-                    AlignContentValue::StretchAlignContentValue;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->m_alignContent = parentStyle->m_alignContent;
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::AlignContentValueKind) {
-                style->setAlignContent(newCssValue.alignContentValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FlexGrow:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFlexGrow(0);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setFlexGrow(parentStyle->flexGrow());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                style->setFlexGrow(newCssValue.numberValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FlexShrink:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFlexShrink(1);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setFlexShrink(parentStyle->flexShrink());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                style->setFlexShrink(newCssValue.numberValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::FlexBasis:
-            if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Initial ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset ||
-                newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                style->setFlexBasis(FlexBasisData(false));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setFlexBasis(parentStyle->flexBasis());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
-                style->setFlexBasis(FlexBasisData(true));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                Length length = newCssValue.cssLengthValue().toLength();
-                if (length.isAuto()) {
-                    style->setFlexBasis(FlexBasisData(false));
-                } else {
-                    style->setFlexBasis(FlexBasisData(false, length));
-                }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Percentage) {
-                Length length =
-                    Length(Length::Percent, newCssValue.percentageValue());
-                style->setFlexBasis(FlexBasisData(false, length));
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Fill:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
-                style->setFill(new StylePaintData());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Inherit) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFill(parentStyle->fill());
-            } else if (newCssValue.valueKind() ==
+    case CSSStyleValuePair::KeyKind::Opacity:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOpacity(parentStyle->opacity());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setOpacity(1.0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            float beforeClip = newCssValue.numberValue();
+            style->setOpacity(
+                beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OverflowX:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_overflowX = parentStyle->overflowX();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_overflowX = OverflowValue::VisibleOverflow;
+        } else {
+            style->m_overflowX = newCssValue.overflowValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OverflowY:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_overflowY = parentStyle->overflowY();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_overflowY = OverflowValue::VisibleOverflow;
+        } else {
+            style->m_overflowY = newCssValue.overflowValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Visibility:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_inheritedStyles.m_visibility = parentStyle->visibility();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->m_inheritedStyles.m_visibility =
+                VisibilityValue::VisibleVisibilityValue;
+        } else {
+            style->m_inheritedStyles.m_visibility =
+                newCssValue.visibilityValue();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ZIndex:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setZIndex(parentStyle->zIndex());
+            style->m_zIndexSpecifiedByUser = false;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Unset ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Auto) {
+            style->setZIndex(0);
+            style->m_zIndexSpecifiedByUser = false;
+        } else {
+            style->setZIndex(newCssValue.int32Value());
+            style->m_zIndexSpecifiedByUser = true;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Transform:
+        style->clearTransform();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setTransform(parentStyle->transforms());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Unset ||
+                   newCssValue.valueKind() ==
                        CSSStyleValuePair::ValueKind::None) {
-                style->setFill(new StylePaintData(Unit::Color(0, 0, 0, 0)));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setFill(new StylePaintData(newCssValue.colorValue()));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                if (newCssValue.namedColorValue() == NamedColor::currentColor) {
-                    style->setFill(
-                        new StylePaintData(NamedColor::currentColor));
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::TransformFunctions);
+            CSSTransformFunctions* funcs = newCssValue.transformValue();
+            funcs->toTransformDataGroup(style);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TransformOrigin:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setTransformOrigin(parentStyle->transformOrigin());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTransformOriginValue(Length(Length::Percent, 0.5f),
+                                           Length(Length::Percent, 0.5f),
+                                           Length(Length::Fixed, 0.f));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            Length xAxis, yAxis, zAxis;
+
+            xAxis = Length(Length::Percent, 0.5f);
+            yAxis = Length(Length::Percent, 0.5f);
+            zAxis = Length(Length::Fixed, 0.f);
+
+            for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
+                 i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() ==
+                    CSSStyleValuePair::ValueKind::SideValueKind) {
+                    if (item.sideValue() == SideValue::LeftSideValue) {
+                        xAxis = Length(Length::Percent, 0.0f);
+                    } else if (item.sideValue() == SideValue::RightSideValue) {
+                        xAxis = Length(Length::Percent, 1.0f);
+                    } else if (item.sideValue() == SideValue::CenterSideValue) {
+                    } else if (item.sideValue() == SideValue::TopSideValue) {
+                        yAxis = Length(Length::Percent, 0.0f);
+                    } else if (item.sideValue() == SideValue::BottomSideValue) {
+                        yAxis = Length(Length::Percent, 1.0f);
+                    }
                 } else {
-                    style->setFill(
-                        new StylePaintData(NamedColor::namedColorToColor(
-                            newCssValue.namedColorValue())));
+                    if (i == 0) {
+                        Nullable<Length> nXAxis = convertValueToLength(
+                            item.valueKind(), item.value());
+                        if (nXAxis.hasValue()) {
+                            xAxis = nXAxis.getValue();
+                        }
+                    } else {
+                        Nullable<Length> nYAxis = convertValueToLength(
+                            item.valueKind(), item.value());
+                        if (nYAxis.hasValue()) {
+                            yAxis = nYAxis.getValue();
+                        }
+                    }
                 }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::UrlValueKind) {
-                style->setFill(
-                    new StylePaintData(newCssValue.urlStringValue()));
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FillRule:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
-                style->setFillRule(FillRuleValue::FillRuleNonZero);
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Inherit) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFillRule(parentStyle->fillRule());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::FillRuleValueKind) {
-                style->setFillRule(newCssValue.fillRuleValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+
+            if (list->size() == 3) {
+                Nullable<Length> nZAxis = convertValueToLength(
+                    (*list)[2].valueKind(), (*list)[2].value());
+                if (nZAxis.hasValue()) {
+                    zAxis = nZAxis.getValue();
+                }
             }
-            break;
-        case CSSStyleValuePair::KeyKind::FillOpacity:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
-                style->setFillOpacity(1);
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Inherit) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setFillOpacity(parentStyle->fillOpacity());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                style->setFillOpacity(newCssValue.numberValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+
+            style->setTransformOriginValue(xAxis, yAxis, zAxis);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+
+        break;
+    case CSSStyleValuePair::KeyKind::UnicodeBidi:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_unicodeBidi = parentStyle->m_unicodeBidi;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::UnicodeBidiValueKind) {
+            style->setUnicodeBidi(newCssValue.unicodeBidiValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BoxSizing:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->m_boxSizing = parentStyle->m_boxSizing;
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BoxSizingValueKind) {
+            style->setBoxSizing(newCssValue.boxSizingValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Content:
+        // Initial value is normal and it computes to 'none' for the
+        // :before and :after pseudo-elements.
+        style->clearContent();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::None ||
+                    item.valueKind() == CSSStyleValuePair::ValueKind::Normal) {
+                    return;
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::UrlValueKind) {
+                    style->setContentImage(item.urlValue(origin));
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::StringValueKind) {
+                    style->setContentText(item.stringValue());
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::Attr) {
+                    Nullable<String*> attrValue = element->getAttribute(
+                        element->document()->createAttributeName(
+                            item.attrValue()));
+                    if (attrValue.hasValue()) {
+                        style->setContentText(attrValue.getValue());
+                    }
+                    style->m_styleDamageSource = (StyleDamageSource)(
+                        style->m_styleDamageSource | StyleDamageFromAttribute);
+
+                    m_ruleSetAttrFilter.push_back(
+                        element->document()
+                            ->createAttributeName(item.attrValue())
+                            .localNameAtomic());
+                } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
+                                                   CounterFunctionValueKind) {
+                    CSSCounterFunction* v = item.counterFunctionValue();
+                    Nullable<String*> sp = v->separator();
+                    Nullable<AtomicString> counterName = v->style();
+                    const CounterStyle* counter = nullptr;
+                    if (counterName.hasValue()) {
+                        counter = CounterStyle::getKnownCounter(
+                            counterName.getValue().string());
+                    }
+                    if (!counter) {
+                        counter = CounterStyle::getDecimalCounter();
+                    }
+                    if (sp.hasValue()) {
+                        style->setContentCounters(v->name(), sp.getValue(),
+                                                  counter);
+                    } else {
+                        style->setContentCounter(v->name(), counter);
+                    }
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::QuoteValueKind) {
+                    style->setContentQuote(item.quoteValue());
+                } else {
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                }
             }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FlexDirection:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_flexDirection = parentStyle->m_flexDirection;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FlexDirectionValueKind) {
+            style->setFlexDirection(newCssValue.flexDirectionValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FlexWrap:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_flexWrap = parentStyle->m_flexWrap;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FlexWrapValueKind) {
+            style->setFlexWrap(newCssValue.flexWrapValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Order:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setOrder(0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOrder(parentStyle->order());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Int32) {
+            style->setOrder(newCssValue.int32Value());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::JustifyContent:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_justifyContent =
+                JustifyContentValue::FlexStartJustifyContentValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_justifyContent = parentStyle->m_justifyContent;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::JustifyContentValueKind) {
+            style->setJustifyContent(newCssValue.justifyContentValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AlignItems:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_alignItems = AlignItemValue::StretchAlignItemValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_alignItems = parentStyle->m_alignItems;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+            style->setAlignItems(newCssValue.alignItemValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AlignSelf:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+            style->m_alignSelfSpecifiedByUser = false;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_alignSelfSpecifiedByUser = false;
+            style->m_alignSelf = parentStyle->m_alignSelf;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AlignItemValueKind) {
+            style->m_alignSelfSpecifiedByUser = true;
+            style->setAlignSelf(newCssValue.alignItemValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::AlignContent:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_alignContent = AlignContentValue::StretchAlignContentValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_alignContent = parentStyle->m_alignContent;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::AlignContentValueKind) {
+            style->setAlignContent(newCssValue.alignContentValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FlexGrow:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFlexGrow(0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setFlexGrow(parentStyle->flexGrow());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            style->setFlexGrow(newCssValue.numberValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FlexShrink:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFlexShrink(1);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setFlexShrink(parentStyle->flexShrink());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            style->setFlexShrink(newCssValue.numberValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FlexBasis:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+            style->setFlexBasis(FlexBasisData(false));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setFlexBasis(parentStyle->flexBasis());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
+            style->setFlexBasis(FlexBasisData(true));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Length) {
+            Length length = newCssValue.cssLengthValue().toLength();
+            if (length.isAuto()) {
+                style->setFlexBasis(FlexBasisData(false));
+            } else {
+                style->setFlexBasis(FlexBasisData(false, length));
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Percentage) {
+            Length length =
+                Length(Length::Percent, newCssValue.percentageValue());
+            style->setFlexBasis(FlexBasisData(false, length));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Fill:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+            style->setFill(new StylePaintData());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFill(parentStyle->fill());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setFill(new StylePaintData(Unit::Color(0, 0, 0, 0)));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setFill(new StylePaintData(newCssValue.colorValue()));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            if (newCssValue.namedColorValue() == NamedColor::currentColor) {
+                style->setFill(new StylePaintData(NamedColor::currentColor));
+            } else {
+                style->setFill(new StylePaintData(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue())));
+            }
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::UrlValueKind) {
+            style->setFill(new StylePaintData(newCssValue.urlStringValue()));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FillRule:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+            style->setFillRule(FillRuleValue::FillRuleNonZero);
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFillRule(parentStyle->fillRule());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::FillRuleValueKind) {
+            style->setFillRule(newCssValue.fillRuleValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::FillOpacity:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+            style->setFillOpacity(1);
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setFillOpacity(parentStyle->fillOpacity());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            style->setFillOpacity(newCssValue.numberValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StopColor:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::None:
+            style->setStopColor(new StylePaintData(Unit::Color(0, 0, 0, 0xff)));
             break;
-        case CSSStyleValuePair::KeyKind::StopColor:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::None:
-                style->setStopColor(
-                    new StylePaintData(Unit::Color(0, 0, 0, 0xff)));
-                break;
-            case CSSStyleValuePair::ValueKind::ColorValueKind:
-                style->setStopColor(
-                    new StylePaintData(newCssValue.colorValue()));
-                break;
-            case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-                style->setStopColor(
+        case CSSStyleValuePair::ValueKind::ColorValueKind:
+            style->setStopColor(new StylePaintData(newCssValue.colorValue()));
+            break;
+        case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+            style->setStopColor(new StylePaintData(
+                NamedColor::namedColorToColor(newCssValue.namedColorValue())));
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StopOpacity: {
+        CSSStyleValuePair::ValueKind valueKind = newCssValue.valueKind();
+        if ((valueKind == CSSStyleValuePair::ValueKind::Inherit) ||
+            (valueKind == CSSStyleValuePair::ValueKind::Unset) ||
+            (valueKind == CSSStyleValuePair::ValueKind::Initial)) {
+            style->setStopOpacity(1.0);
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Number) {
+            float rawValue = newCssValue.numberValue();
+            style->setStopOpacity(
+                rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
+        } else if (valueKind == CSSStyleValuePair::ValueKind::Percentage) {
+            float rawValue = newCssValue.percentageValue();
+            style->setStopOpacity(
+                rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+    } break;
+    case CSSStyleValuePair::KeyKind::Stroke:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+            style->setStroke(new StylePaintData());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStroke(parentStyle->stroke());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setStroke(new StylePaintData(Unit::Color(0, 0, 0, 0)));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setStroke(new StylePaintData(newCssValue.colorValue()));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            if (newCssValue.namedColorValue() == NamedColor::currentColor) {
+                style->setStroke(new StylePaintData(NamedColor::currentColor));
+            } else {
+                style->setStroke(
                     new StylePaintData(NamedColor::namedColorToColor(
                         newCssValue.namedColorValue())));
-                break;
-            default:
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
-            break;
-        case CSSStyleValuePair::KeyKind::StopOpacity: {
-            CSSStyleValuePair::ValueKind valueKind = newCssValue.valueKind();
-            if ((valueKind == CSSStyleValuePair::ValueKind::Inherit) ||
-                (valueKind == CSSStyleValuePair::ValueKind::Unset) ||
-                (valueKind == CSSStyleValuePair::ValueKind::Initial)) {
-                style->setStopOpacity(1.0);
-            } else if (valueKind == CSSStyleValuePair::ValueKind::Number) {
-                float rawValue = newCssValue.numberValue();
-                style->setStopOpacity(
-                    rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
-            } else if (valueKind == CSSStyleValuePair::ValueKind::Percentage) {
-                float rawValue = newCssValue.percentageValue();
-                style->setStopOpacity(
-                    rawValue < 0 ? 0 : (rawValue > 1.0 ? 1.0 : rawValue));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::StrokeWidth:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+            style->setStrokeWidth(Length(Length::Fixed, 1));
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Inherit) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setStrokeWidth(parentStyle->strokeWidth());
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setStrokeWidth(length.getValue());
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->setStrokeWidth(Length());
             }
-        } break;
-        case CSSStyleValuePair::KeyKind::Stroke:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
-                style->setStroke(new StylePaintData());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Inherit) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setStroke(parentStyle->stroke());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setStroke(new StylePaintData(Unit::Color(0, 0, 0, 0)));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setStroke(new StylePaintData(newCssValue.colorValue()));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                if (newCssValue.namedColorValue() == NamedColor::currentColor) {
-                    style->setStroke(
-                        new StylePaintData(NamedColor::currentColor));
-                } else {
-                    style->setStroke(
-                        new StylePaintData(NamedColor::namedColorToColor(
-                            newCssValue.namedColorValue())));
-                }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::X:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setX(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setX(parentStyle->x());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setX(length.getValue());
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->setX(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::StrokeWidth:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Initial) {
-                style->setStrokeWidth(Length(Length::Fixed, 1));
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Inherit) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setStrokeWidth(parentStyle->strokeWidth());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Y:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setY(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setY(parentStyle->y());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setY(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setStrokeWidth(length.getValue());
-                } else {
-                    style->setStrokeWidth(Length());
-                }
+                style->setY(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::X:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setX(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setX(parentStyle->x());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::X1:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setX1(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setX1(parentStyle->x1());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setX1(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setX(length.getValue());
-                } else {
-                    style->setX(Length());
-                }
+                style->setX1(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Y:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setY(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setY(parentStyle->y());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Y1:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setY1(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setY1(parentStyle->y1());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setY1(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setY(length.getValue());
-                } else {
-                    style->setY(Length());
-                }
+                style->setY1(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::X1:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setX1(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setX1(parentStyle->x1());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::X2:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setX2(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setX2(parentStyle->x2());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setX2(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setX1(length.getValue());
-                } else {
-                    style->setX1(Length());
-                }
+                style->setX2(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Y1:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setY1(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setY1(parentStyle->y1());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Y2:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setY2(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setY2(parentStyle->y2());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setY2(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setY1(length.getValue());
-                } else {
-                    style->setY1(Length());
-                }
+                style->setY2(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::X2:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setX2(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setX2(parentStyle->x2());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::R:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setR(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setR(parentStyle->r());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setR(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setX2(length.getValue());
-                } else {
-                    style->setX2(Length());
-                }
+                style->setR(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::Y2:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setY2(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setY2(parentStyle->y2());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::D:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setD(String::emptyString);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setD(parentStyle->d());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            style->setD(newCssValue.pathFunctionValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CX:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setCX(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setCX(parentStyle->cx());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setCX(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setY2(length.getValue());
-                } else {
-                    style->setY2(Length());
-                }
+                style->setCX(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::R:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setR(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setR(parentStyle->r());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CY:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setCY(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setCY(parentStyle->cy());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setCY(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setR(length.getValue());
-                } else {
-                    style->setR(Length());
-                }
+                style->setCY(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::D:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setD(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setD(parentStyle->d());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::RX:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setRX(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setRX(parentStyle->rx());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setRX(length.getValue());
             } else {
-                style->setD(newCssValue.pathFunctionValue());
+                style->setRX(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::CX:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setCX(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setCX(parentStyle->cx());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::RY:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setRY(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setRY(parentStyle->ry());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setRY(length.getValue());
             } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setCX(length.getValue());
-                } else {
-                    style->setCX(Length());
-                }
+                style->setRY(Length());
             }
-            break;
-        case CSSStyleValuePair::KeyKind::CY:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setCY(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setCY(parentStyle->cy());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setCY(length.getValue());
-                } else {
-                    style->setCY(Length());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::RX:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setRX(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setRX(parentStyle->rx());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setRX(length.getValue());
-                } else {
-                    style->setRX(Length());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::RY:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setRY(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setRY(parentStyle->ry());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else {
-                Nullable<Length> length = convertValueToLength(
-                    newCssValue.valueKind(), newCssValue.value());
-                if (length.hasValue()) {
-                    style->setRY(length.getValue());
-                } else {
-                    style->setRY(Length());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::ObjectFit:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setObjectFit(ObjectFitValue::FillObjectFitValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setObjectFit(parentStyle->objectFit());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ObjectFitValueKind) {
-                style->setObjectFit(newCssValue.objectFitValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::ObjectPosition:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Inherit) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setObjectPosition(parentStyle->objectPositionX(),
-                                         parentStyle->objectPositionY());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->setObjectPosition(Length(Length::Percent, 0.5f),
-                                         Length(Length::Percent, 0.5f));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                Length x, y;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ObjectFit:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setObjectFit(ObjectFitValue::FillObjectFitValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setObjectFit(parentStyle->objectFit());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ObjectFitValueKind) {
+            style->setObjectFit(newCssValue.objectFitValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ObjectPosition:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Inherit) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setObjectPosition(parentStyle->objectPositionX(),
+                                     parentStyle->objectPositionY());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setObjectPosition(Length(Length::Percent, 0.5f),
+                                     Length(Length::Percent, 0.5f));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            Length x, y;
 
-                x = Length(Length::Percent, 0.5f);
-                y = Length(Length::Percent, 0.5f);
+            x = Length(Length::Percent, 0.5f);
+            y = Length(Length::Percent, 0.5f);
 
-                for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
-                     i++) {
-                    const CSSStyleValuePair& item = (*list)[i];
-                    if (item.valueKind() ==
+            for (unsigned int i = 0; i < std::min(list->size(), (size_t)2);
+                 i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() ==
+                    CSSStyleValuePair::ValueKind::SideValueKind) {
+                    if (item.sideValue() == SideValue::LeftSideValue) {
+                        x = Length(Length::Percent, 0.0f);
+                    } else if (item.sideValue() == SideValue::RightSideValue) {
+                        x = Length(Length::Percent, 1.0f);
+                    } else if (item.sideValue() == SideValue::CenterSideValue) {
+                    } else if (item.sideValue() == SideValue::TopSideValue) {
+                        y = Length(Length::Percent, 0.0f);
+                    } else if (item.sideValue() == SideValue::BottomSideValue) {
+                        y = Length(Length::Percent, 1.0f);
+                    }
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::ValuePairKind) {
+                    const CSSStyleValuePair& first = item.pairValue()->first();
+                    const CSSStyleValuePair& second =
+                        item.pairValue()->second();
+                    if (first.valueKind() ==
                         CSSStyleValuePair::ValueKind::SideValueKind) {
-                        if (item.sideValue() == SideValue::LeftSideValue) {
-                            x = Length(Length::Percent, 0.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::RightSideValue) {
-                            x = Length(Length::Percent, 1.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::CenterSideValue) {
-                        } else if (item.sideValue() ==
-                                   SideValue::TopSideValue) {
-                            y = Length(Length::Percent, 0.0f);
-                        } else if (item.sideValue() ==
-                                   SideValue::BottomSideValue) {
-                            y = Length(Length::Percent, 1.0f);
-                        }
-                    } else if (item.valueKind() ==
-                               CSSStyleValuePair::ValueKind::ValuePairKind) {
-                        const CSSStyleValuePair& first =
-                            item.pairValue()->first();
-                        const CSSStyleValuePair& second =
-                            item.pairValue()->second();
-                        if (first.valueKind() ==
-                            CSSStyleValuePair::ValueKind::SideValueKind) {
-                            if (i == 0) {
-                                if (first.sideValue() ==
-                                    SideValue::LeftSideValue) {
-                                    Nullable<Length> nX = convertValueToLength(
-                                        second.valueKind(), second.value());
-                                    if (nX.hasValue()) {
-                                        x = nX.getValue();
-                                    }
-                                } else if (first.sideValue() ==
-                                           SideValue::RightSideValue) {
-                                    CalcData* data = new CalcData();
-                                    CalcValue val;
-                                    CalcTerm* term1 = new CalcTerm();
-                                    if (second.valueKind() ==
-                                        CSSStyleValuePair::ValueKind::
-                                            Percentage) {
-                                        val.setType(CalcValueType::Percentage);
-                                        val.setValue(-1 *
-                                                     second.percentageValue());
-                                    } else {
-                                        val.setType(CalcValueType::Length);
-                                        val.setValue(-1 *
-                                                     second.cssLengthValue());
-                                    }
-                                    term1->appendValue(val);
-
-                                    CalcTerm* term2 = new CalcTerm();
-                                    val.setType(CalcValueType::Percentage);
-                                    val.setValue(1.0f);
-                                    term2->appendValue(val);
-
-                                    data->appendTerm(term1);
-                                    data->appendTerm(term2);
-                                    x = Length(data);
-                                }
-                            } else {
-                                if (first.sideValue() ==
-                                    SideValue::TopSideValue) {
-                                    Nullable<Length> nY = convertValueToLength(
-                                        second.valueKind(), second.value());
-                                    if (nY.hasValue()) {
-                                        y = nY.getValue();
-                                    }
-                                } else if (first.sideValue() ==
-                                           SideValue::BottomSideValue) {
-                                    CalcData* data = new CalcData();
-                                    CalcValue val;
-                                    CalcTerm* term1 = new CalcTerm();
-                                    if (second.valueKind() ==
-                                        CSSStyleValuePair::ValueKind::
-                                            Percentage) {
-                                        val.setType(CalcValueType::Percentage);
-                                        val.setValue(-1 *
-                                                     second.percentageValue());
-                                    } else {
-                                        val.setType(CalcValueType::Length);
-                                        val.setValue(-1 *
-                                                     second.cssLengthValue());
-                                    }
-                                    term1->appendValue(val);
-
-                                    CalcTerm* term2 = new CalcTerm();
-                                    val.setType(CalcValueType::Percentage);
-                                    val.setValue(1.0f);
-                                    term2->appendValue(val);
-
-                                    data->appendTerm(term1);
-                                    data->appendTerm(term2);
-                                    y = Length(data);
-                                }
-                            }
-                        }
-                    } else {
                         if (i == 0) {
-                            Nullable<Length> nX = convertValueToLength(
-                                item.valueKind(), item.value());
-                            if (nX.hasValue()) {
-                                x = nX.getValue();
+                            if (first.sideValue() == SideValue::LeftSideValue) {
+                                Nullable<Length> nX = convertValueToLength(
+                                    second.valueKind(), second.value());
+                                if (nX.hasValue()) {
+                                    x = nX.getValue();
+                                }
+                            } else if (first.sideValue() ==
+                                       SideValue::RightSideValue) {
+                                CalcData* data = new CalcData();
+                                CalcValue val;
+                                CalcTerm* term1 = new CalcTerm();
+                                if (second.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::Percentage) {
+                                    val.setType(CalcValueType::Percentage);
+                                    val.setValue(-1 * second.percentageValue());
+                                } else {
+                                    val.setType(CalcValueType::Length);
+                                    val.setValue(-1 * second.cssLengthValue());
+                                }
+                                term1->appendValue(val);
+
+                                CalcTerm* term2 = new CalcTerm();
+                                val.setType(CalcValueType::Percentage);
+                                val.setValue(1.0f);
+                                term2->appendValue(val);
+
+                                data->appendTerm(term1);
+                                data->appendTerm(term2);
+                                x = Length(data);
                             }
                         } else {
-                            Nullable<Length> nY = convertValueToLength(
-                                item.valueKind(), item.value());
-                            if (nY.hasValue()) {
-                                y = nY.getValue();
+                            if (first.sideValue() == SideValue::TopSideValue) {
+                                Nullable<Length> nY = convertValueToLength(
+                                    second.valueKind(), second.value());
+                                if (nY.hasValue()) {
+                                    y = nY.getValue();
+                                }
+                            } else if (first.sideValue() ==
+                                       SideValue::BottomSideValue) {
+                                CalcData* data = new CalcData();
+                                CalcValue val;
+                                CalcTerm* term1 = new CalcTerm();
+                                if (second.valueKind() ==
+                                    CSSStyleValuePair::ValueKind::Percentage) {
+                                    val.setType(CalcValueType::Percentage);
+                                    val.setValue(-1 * second.percentageValue());
+                                } else {
+                                    val.setType(CalcValueType::Length);
+                                    val.setValue(-1 * second.cssLengthValue());
+                                }
+                                term1->appendValue(val);
+
+                                CalcTerm* term2 = new CalcTerm();
+                                val.setType(CalcValueType::Percentage);
+                                val.setValue(1.0f);
+                                term2->appendValue(val);
+
+                                data->appendTerm(term1);
+                                data->appendTerm(term2);
+                                y = Length(data);
                             }
                         }
                     }
+                } else {
+                    if (i == 0) {
+                        Nullable<Length> nX = convertValueToLength(
+                            item.valueKind(), item.value());
+                        if (nX.hasValue()) {
+                            x = nX.getValue();
+                        }
+                    } else {
+                        Nullable<Length> nY = convertValueToLength(
+                            item.valueKind(), item.value());
+                        if (nY.hasValue()) {
+                            y = nY.getValue();
+                        }
+                    }
                 }
+            }
 
-                style->setObjectPosition(x, y);
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            style->setObjectPosition(x, y);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OutlineWidth:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setOutlineWidth(Length(Length::Fixed, 2));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOutlineWidth(parentStyle->outlineWidth());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Length) {
+            style->setOutlineWidth(newCssValue.lengthValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
+            if (newCssValue.borderWidthValue() ==
+                BorderWidthValue::ThinBorderWidthValue) {
+                style->setOutlineWidth(Length(Length::Fixed, 1));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::MediumBorderWidthValue) {
+                style->setOutlineWidth(Length(Length::Fixed, 3));
+            } else if (newCssValue.borderWidthValue() ==
+                       BorderWidthValue::ThickBorderWidthValue) {
+                style->setOutlineWidth(Length(Length::Fixed, 5));
             }
-            break;
-        case CSSStyleValuePair::KeyKind::OutlineWidth:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setOutlineWidth(Length(Length::Fixed, 2));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOutlineWidth(parentStyle->outlineWidth());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setOutlineWidth(newCssValue.lengthValue());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::BorderWidthValueKind) {
-                if (newCssValue.borderWidthValue() ==
-                    BorderWidthValue::ThinBorderWidthValue) {
-                    style->setOutlineWidth(Length(Length::Fixed, 1));
-                } else if (newCssValue.borderWidthValue() ==
-                           BorderWidthValue::MediumBorderWidthValue) {
-                    style->setOutlineWidth(Length(Length::Fixed, 3));
-                } else if (newCssValue.borderWidthValue() ==
-                           BorderWidthValue::ThickBorderWidthValue) {
-                    style->setOutlineWidth(Length(Length::Fixed, 5));
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OutlineColor:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            if (style->hasRareComputeStyleData()) {
+                OutlineData* outline =
+                    style->rareComputedStyleData()->outline();
+                if (outline) {
+                    outline->border().clearColor();
                 }
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
-            break;
-        case CSSStyleValuePair::KeyKind::OutlineColor:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOutlineColor(parentStyle->outlineColor());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::ColorValueKind) {
+            style->setOutlineColor(newCssValue.colorValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            if (newCssValue.namedColorValue() == NamedColor::currentColor) {
                 if (style->hasRareComputeStyleData()) {
                     OutlineData* outline =
                         style->rareComputedStyleData()->outline();
@@ -6187,81 +6038,61 @@ void StyleResolver::apply(Element* element,
                         outline->border().clearColor();
                     }
                 }
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOutlineColor(parentStyle->outlineColor());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::ColorValueKind) {
-                style->setOutlineColor(newCssValue.colorValue());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                if (newCssValue.namedColorValue() == NamedColor::currentColor) {
-                    if (style->hasRareComputeStyleData()) {
-                        OutlineData* outline =
-                            style->rareComputedStyleData()->outline();
-                        if (outline) {
-                            outline->border().clearColor();
-                        }
-                    }
-                } else {
-                    style->setOutlineColor(NamedColor::namedColorToColor(
-                        newCssValue.namedColorValue()));
-                }
             } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                style->setOutlineColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
             }
-            break;
-        case CSSStyleValuePair::KeyKind::OutlineStyle:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOutlineStyle(parentStyle->outlineStyle());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Unset)) {
-                style->setOutlineStyle(BorderStyleValue::NoneBorderStyleValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
-                style->setOutlineStyle(newCssValue.borderStyleValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::OutlineOffset:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setOutlineOffset(Length(Length::Fixed, 0));
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setOutlineOffset(parentStyle->outlineOffset());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Length) {
-                style->setOutlineOffset(newCssValue.lengthValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::TextTransform:
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setTextTransform(NoneTextTransformValue);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setTextTransform(parentStyle->textTransform());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::TextTransformValueKind) {
-                style->setTextTransform(newCssValue.textTransformValue());
-            } else {
-                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            }
-            break;
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OutlineStyle:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOutlineStyle(parentStyle->outlineStyle());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setOutlineStyle(BorderStyleValue::NoneBorderStyleValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
+            style->setOutlineStyle(newCssValue.borderStyleValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::OutlineOffset:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setOutlineOffset(Length(Length::Fixed, 0));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setOutlineOffset(parentStyle->outlineOffset());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Length) {
+            style->setOutlineOffset(newCssValue.lengthValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::TextTransform:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->setTextTransform(NoneTextTransformValue);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setTextTransform(parentStyle->textTransform());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::TextTransformValueKind) {
+            style->setTextTransform(newCssValue.textTransformValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
 
 #define BORDER_RADIUS_APPLY(AB, ab, AA, BB)                                   \
     case CSSStyleValuePair::KeyKind::Border##AB##Radius:                      \
@@ -6310,457 +6141,439 @@ void StyleResolver::apply(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                     \
         }                                                                     \
         break;
-            BORDER_RADIUS_APPLY(TopLeft, topLeft, Horizontal, Vertical)
-            BORDER_RADIUS_APPLY(TopRight, topRight, Horizontal, Vertical)
-            BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
-            BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
-        case CSSStyleValuePair::KeyKind::Clip:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::RectValueKind) {
-                style->setClip(newCssValue.clip());
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Unset) {
-                style->setClip(nullptr);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setClip(parentStyle->clip());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setClip(nullptr);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::ClipPath:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::UrlValueKind) {
-                style->setClipPath(newCssValue.urlStringValue());
-            } else if (newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Initial ||
-                       newCssValue.valueKind() ==
-                           CSSStyleValuePair::ValueKind::Unset) {
-                style->setClipPath(String::emptyString);
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setClipPath(String::emptyString);
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Auto) {
-                style->setClipPath(String::emptyString);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::ListStyleType:
-            if (newCssValue.valueKind() == CSSStyleValuePair::Inherit ||
-                newCssValue.valueKind() == CSSStyleValuePair::Unset) {
-                style->setListStyleType(
-                    parentStyle->listStyleData().typeData());
-            } else if (newCssValue.valueKind() == CSSStyleValuePair::None) {
-                style->setListStyleType(CounterStyle::getNoneCounter());
-            } else if (newCssValue.valueKind() == CSSStyleValuePair::Initial) {
-                style->setListStyleType(CounterStyle::getDiscCounter());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::AtomicStringValueKind) {
-                const AtomicString& counterName =
-                    newCssValue.atomicStringValue();
-                auto counterStyle =
-                    CounterStyle::getKnownCounter(counterName.string());
-                if (counterStyle) {
-                    style->setListStyleType(counterStyle);
-                } else {
-                    style->setListStyleType(CounterStyle::getDecimalCounter());
-                }
+        BORDER_RADIUS_APPLY(TopLeft, topLeft, Horizontal, Vertical)
+        BORDER_RADIUS_APPLY(TopRight, topRight, Horizontal, Vertical)
+        BORDER_RADIUS_APPLY(BottomRight, bottomRight, Horizontal, Vertical)
+        BORDER_RADIUS_APPLY(BottomLeft, bottomLeft, Horizontal, Vertical)
+    case CSSStyleValuePair::KeyKind::Clip:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::RectValueKind) {
+            style->setClip(newCssValue.clip());
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Unset) {
+            style->setClip(nullptr);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setClip(parentStyle->clip());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Auto) {
+            style->setClip(nullptr);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ClipPath:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::UrlValueKind) {
+            style->setClipPath(newCssValue.urlStringValue());
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Initial ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::Unset) {
+            style->setClipPath(String::emptyString);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            style->setClipPath(String::emptyString);
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Auto) {
+            style->setClipPath(String::emptyString);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ListStyleType:
+        if (newCssValue.valueKind() == CSSStyleValuePair::Inherit ||
+            newCssValue.valueKind() == CSSStyleValuePair::Unset) {
+            style->setListStyleType(parentStyle->listStyleData().typeData());
+        } else if (newCssValue.valueKind() == CSSStyleValuePair::None) {
+            style->setListStyleType(CounterStyle::getNoneCounter());
+        } else if (newCssValue.valueKind() == CSSStyleValuePair::Initial) {
+            style->setListStyleType(CounterStyle::getDiscCounter());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::AtomicStringValueKind) {
+            const AtomicString& counterName = newCssValue.atomicStringValue();
+            auto counterStyle =
+                CounterStyle::getKnownCounter(counterName.string());
+            if (counterStyle) {
+                style->setListStyleType(counterStyle);
             } else {
-                style->setListStyleType(newCssValue.stringValue());
+                style->setListStyleType(CounterStyle::getDecimalCounter());
             }
+        } else {
+            style->setListStyleType(newCssValue.stringValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ListStyleImage:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
+            style->setListStyleImage(parentStyle->listStyleData().image());
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::None)) {
+            style->setListStyleImage(String::emptyString);
+        } else {
+            style->setListStyleImage(newCssValue.urlValue(origin));
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ListStylePosition:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit ||
+            newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
+            style->setListStylePosition(parentStyle->listStylePosition());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Initial) {
+            style->setListStylePosition(
+                ListStylePositionValue::ListStylePositionOutside);
+        } else {
+            style->setListStylePosition(newCssValue.listStylePositionValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::UserSelect:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            style->setUserSelect(parentStyle->userSelect());
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
             break;
-        case CSSStyleValuePair::KeyKind::ListStyleImage:
-            if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Inherit ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset) {
-                style->setListStyleImage(parentStyle->listStyleData().image());
-            } else if ((newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::Initial) ||
-                       (newCssValue.valueKind() ==
-                        CSSStyleValuePair::ValueKind::None)) {
-                style->setListStyleImage(String::emptyString);
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+        case CSSStyleValuePair::ValueKind::Auto:
+            style->setUserSelect(UserSelectValue::NoneUserSelectValue);
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UserSelectValueKind ==
+                            newCssValue.valueKind());
+            style->setUserSelect(newCssValue.userSelectValue());
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Hyphens:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setHyphens(parentStyle->hyphens());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Auto:
+            style->setHyphens(HyphensValue::NoneHyphensValue);
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::HyphensValueKind ==
+                            newCssValue.valueKind());
+            style->setHyphens(newCssValue.hyphensValue());
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::LineBreak:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setLineBreak(parentStyle->lineBreak());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Auto:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setLineBreak(LineBreakValue::NormalLineBreakValue);
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::LineBreakValueKind ==
+                            newCssValue.valueKind());
+            style->setLineBreak(newCssValue.lineBreakValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::WordBreak:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setWordBreak(parentStyle->wordBreak());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setWordBreak(WordBreakValue::NormalWordBreakValue);
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::WordBreakValueKind ==
+                            newCssValue.valueKind());
+            style->setWordBreak(newCssValue.wordBreakValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Appearance:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setAppearance(parentStyle->appearance());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setAppearance(AppearanceValue::AutoAppearanceValue);
+            break;
+        default:
+            STARFISH_ASSERT(CSSStyleValuePair::ValueKind::AppearanceValueKind ==
+                            newCssValue.valueKind());
+            style->setAppearance(newCssValue.appearanceValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridTemplateColumns:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::GridTemplateUnits) {
+            style->setGridTemplateColumns(newCssValue.gridTemplateUnits());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridTemplateRows:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::GridTemplateUnits) {
+            style->setGridTemplateRows(newCssValue.gridTemplateUnits());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CaretColor:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setCaretColor(parentStyle->caretColor());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setCaretColor(Unit::Color(0, 0, 0, 255));
+            break;
+        case CSSStyleValuePair::ValueKind::ColorValueKind:
+            style->setCaretColor(newCssValue.colorValue());
+            break;
+        default:
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::NamedColorValueKind);
+            if (newCssValue.namedColorValue() ==
+                NamedColor::NamedColorValue::currentColor) {
+                style->ensureInheritedRareData()->m_caretColor =
+                    parentStyle->ensureInheritedRareData()->m_caretColor;
             } else {
-                style->setListStyleImage(newCssValue.urlValue(origin));
+                style->setCaretColor(NamedColor::namedColorToColor(
+                    newCssValue.namedColorValue()));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CounterReset:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setCounterReset(parentStyle->counterReset());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::None:
+            style->setCounterReset(nullptr);
+            break;
+        default:
+            ValueList* list = newCssValue.multiValue();
+            size_t size = list->size();
+            STARFISH_ASSERT(size % 2 == 0);
+            for (size_t i = 0; i < size; i += 2) {
+                style->setCounterResetItem(list->at(i).atomicStringValue(),
+                                           list->at(i + 1).int32Value());
             }
             break;
-        case CSSStyleValuePair::KeyKind::ListStylePosition:
-            if (newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Inherit ||
-                newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::Unset) {
-                style->setListStylePosition(parentStyle->listStylePosition());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Initial) {
-                style->setListStylePosition(
-                    ListStylePositionValue::ListStylePositionOutside);
-            } else {
-                style->setListStylePosition(
-                    newCssValue.listStylePositionValue());
-            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::CounterIncrement:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setCounterIncrement(parentStyle->counterIncrement());
             break;
-        case CSSStyleValuePair::KeyKind::UserSelect:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                style->setUserSelect(parentStyle->userSelect());
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Unset:
-            case CSSStyleValuePair::ValueKind::Auto:
-                style->setUserSelect(UserSelectValue::NoneUserSelectValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::UserSelectValueKind ==
-                    newCssValue.valueKind());
-                style->setUserSelect(newCssValue.userSelectValue());
-                break;
-            }
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::None:
+            style->setCounterIncrement(nullptr);
             break;
-        case CSSStyleValuePair::KeyKind::Hyphens:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setHyphens(parentStyle->hyphens());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Auto:
-                style->setHyphens(HyphensValue::NoneHyphensValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::HyphensValueKind ==
-                    newCssValue.valueKind());
-                style->setHyphens(newCssValue.hyphensValue());
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::LineBreak:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setLineBreak(parentStyle->lineBreak());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Auto:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setLineBreak(LineBreakValue::NormalLineBreakValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::LineBreakValueKind ==
-                    newCssValue.valueKind());
-                style->setLineBreak(newCssValue.lineBreakValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::WordBreak:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setWordBreak(parentStyle->wordBreak());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->setWordBreak(WordBreakValue::NormalWordBreakValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::WordBreakValueKind ==
-                    newCssValue.valueKind());
-                style->setWordBreak(newCssValue.wordBreakValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Appearance:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setAppearance(parentStyle->appearance());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->setAppearance(AppearanceValue::AutoAppearanceValue);
-                break;
-            default:
-                STARFISH_ASSERT(
-                    CSSStyleValuePair::ValueKind::AppearanceValueKind ==
-                    newCssValue.valueKind());
-                style->setAppearance(newCssValue.appearanceValue());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridTemplateColumns:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::GridTemplateUnits) {
-                style->setGridTemplateColumns(newCssValue.gridTemplateUnits());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridTemplateRows:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::GridTemplateUnits) {
-                style->setGridTemplateRows(newCssValue.gridTemplateUnits());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::CaretColor:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setCaretColor(parentStyle->caretColor());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->setCaretColor(Unit::Color(0, 0, 0, 255));
-                break;
-            case CSSStyleValuePair::ValueKind::ColorValueKind:
-                style->setCaretColor(newCssValue.colorValue());
-                break;
-            default:
-                STARFISH_ASSERT(
-                    newCssValue.valueKind() ==
-                    CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (newCssValue.namedColorValue() ==
-                    NamedColor::NamedColorValue::currentColor) {
-                    style->ensureInheritedRareData()->m_caretColor =
-                        parentStyle->ensureInheritedRareData()->m_caretColor;
-                } else {
-                    style->setCaretColor(NamedColor::namedColorToColor(
-                        newCssValue.namedColorValue()));
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::CounterReset:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setCounterReset(parentStyle->counterReset());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::None:
-                style->setCounterReset(nullptr);
-                break;
-            default:
-                ValueList* list = newCssValue.multiValue();
-                size_t size = list->size();
-                STARFISH_ASSERT(size % 2 == 0);
-                for (size_t i = 0; i < size; i += 2) {
-                    style->setCounterResetItem(list->at(i).atomicStringValue(),
+        default:
+            ValueList* list = newCssValue.multiValue();
+            size_t size = list->size();
+            STARFISH_ASSERT(size % 2 == 0);
+            for (size_t i = 0; i < size; i += 2) {
+                style->setCounterIncrementItem(list->at(i).atomicStringValue(),
                                                list->at(i + 1).int32Value());
-                }
-                break;
             }
             break;
-        case CSSStyleValuePair::KeyKind::CounterIncrement:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setCounterIncrement(parentStyle->counterIncrement());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::None:
-                style->setCounterIncrement(nullptr);
-                break;
-            default:
-                ValueList* list = newCssValue.multiValue();
-                size_t size = list->size();
-                STARFISH_ASSERT(size % 2 == 0);
-                for (size_t i = 0; i < size; i += 2) {
-                    style->setCounterIncrementItem(
-                        list->at(i).atomicStringValue(),
-                        list->at(i + 1).int32Value());
-                }
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridColumnStart:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::StringValueKind:
-                style->setGridColumnStart(newCssValue.stringValue());
-                break;
-            default:
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridColumnEnd:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::StringValueKind:
-                style->setGridColumnEnd(newCssValue.stringValue());
-                break;
-            default:
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridRowStart:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::StringValueKind:
-                style->setGridRowStart(newCssValue.stringValue());
-                break;
-            default:
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridRowEnd:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::StringValueKind:
-                style->setGridRowEnd(newCssValue.stringValue());
-                break;
-            default:
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridGap:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::ValueListKind) {
-                ValueList* list = newCssValue.multiValue();
-                if (list->size() == 1) {
-                    CSSLength length = list->at(0).cssLengthValue();
-                    style->setGridRowGap(length.toLength());
-                    style->setGridColumnGap(length.toLength());
-                } else if (list->size() == 2) {
-                    CSSLength row = list->at(0).cssLengthValue();
-                    CSSLength column = list->at(1).cssLengthValue();
-
-                    style->setGridRowGap(row.toLength());
-                    style->setGridColumnGap(column.toLength());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridRowGap:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Length) {
-                CSSLength row = newCssValue.cssLengthValue();
-                style->setGridRowGap(row.toLength());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridColumnGap:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::Length) {
-                CSSLength column = newCssValue.cssLengthValue();
-                style->setGridColumnGap(column.toLength());
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridTemplateAreas:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::StringValueKind) {
-                style->setGridTemplateAreas(newCssValue.stringValue());
-            } else if (newCssValue.valueKind() ==
-                       CSSStyleValuePair::ValueKind::None) {
-                style->setGridTemplateAreas(String::emptyString);
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridArea:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::ValueListKind) {
-                auto list = newCssValue.multiValue();
-                if (list) {
-                    style->setGridRowStart(list->at(0).stringValue());
-                    style->setGridColumnStart(list->at(1).stringValue());
-                    style->setGridRowEnd(list->at(2).stringValue());
-                    style->setGridColumnEnd(list->at(3).stringValue());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridRow:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::ValueListKind) {
-                auto list = newCssValue.multiValue();
-                if (list) {
-                    style->setGridRowStart(list->at(0).stringValue());
-                    style->setGridRowEnd(list->at(1).stringValue());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::GridColumn:
-            if (newCssValue.valueKind() ==
-                CSSStyleValuePair::ValueKind::ValueListKind) {
-                auto list = newCssValue.multiValue();
-                if (list) {
-                    style->setGridColumnStart(list->at(0).stringValue());
-                    style->setGridColumnEnd(list->at(1).stringValue());
-                }
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::WillChange:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setWillChange(parentStyle->willChange());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::Auto:
-                style->setWillChange(nullptr);
-                break;
-            default:
-                ValueList* list = newCssValue.multiValue();
-                size_t size = list->size();
-                auto willChangeData = new WillChangeData();
-                for (size_t i = 0; i < size; i++) {
-                    const AtomicString& item = list->at(i).atomicStringValue();
-                    if (item.string()->equals("contents")) {
-                        willChangeData->setContents();
-                        continue;
-                    }
-                    if (item.string()->equals("scroll-position")) {
-                        willChangeData->setScrollPosition();
-                        continue;
-                    }
-
-                    if (item.string()->equals("transform")) {
-                        willChangeData->setTransform();
-                    }
-
-                    if (item.string()->equals("opacity")) {
-                        willChangeData->setOpacity();
-                    }
-
-                    willChangeData->push_back(item);
-                }
-                style->setWillChange(willChangeData);
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::BoxDecorationBreak:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-            case CSSStyleValuePair::ValueKind::Unset:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBoxDecorationBreak(parentStyle->boxDecorationBreak());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-                style->setBoxDecorationBreak(SliceBoxDecorationBreakValue);
-                break;
-            default:
-                style->setBoxDecorationBreak(
-                    newCssValue.boxDecorationBreakValue());
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Filter:
-            switch (newCssValue.valueKind()) {
-            case CSSStyleValuePair::ValueKind::Inherit:
-                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setFilter(parentStyle->filter());
-                break;
-            case CSSStyleValuePair::ValueKind::Initial:
-            case CSSStyleValuePair::ValueKind::None:
-            case CSSStyleValuePair::ValueKind::Unset:
-                style->setFilter(nullptr);
-                break;
-            case CSSStyleValuePair::ValueKind::ValueListKind:
-                style->setFilter(FilterFunctions::create(newCssValue));
-                break;
-            default:
-                break;
-            }
-            break;
-        case CSSStyleValuePair::KeyKind::Unknown:
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridColumnStart:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::StringValueKind:
+            style->setGridColumnStart(newCssValue.stringValue());
             break;
         default:
             break;
         }
+        break;
+    case CSSStyleValuePair::KeyKind::GridColumnEnd:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::StringValueKind:
+            style->setGridColumnEnd(newCssValue.stringValue());
+            break;
+        default:
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridRowStart:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::StringValueKind:
+            style->setGridRowStart(newCssValue.stringValue());
+            break;
+        default:
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridRowEnd:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::StringValueKind:
+            style->setGridRowEnd(newCssValue.stringValue());
+            break;
+        default:
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridGap:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::ValueListKind) {
+            ValueList* list = newCssValue.multiValue();
+            if (list->size() == 1) {
+                CSSLength length = list->at(0).cssLengthValue();
+                style->setGridRowGap(length.toLength());
+                style->setGridColumnGap(length.toLength());
+            } else if (list->size() == 2) {
+                CSSLength row = list->at(0).cssLengthValue();
+                CSSLength column = list->at(1).cssLengthValue();
+
+                style->setGridRowGap(row.toLength());
+                style->setGridColumnGap(column.toLength());
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridRowGap:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            CSSLength row = newCssValue.cssLengthValue();
+            style->setGridRowGap(row.toLength());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridColumnGap:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            CSSLength column = newCssValue.cssLengthValue();
+            style->setGridColumnGap(column.toLength());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridTemplateAreas:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::StringValueKind) {
+            style->setGridTemplateAreas(newCssValue.stringValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::None) {
+            style->setGridTemplateAreas(String::emptyString);
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridArea:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::ValueListKind) {
+            auto list = newCssValue.multiValue();
+            if (list) {
+                style->setGridRowStart(list->at(0).stringValue());
+                style->setGridColumnStart(list->at(1).stringValue());
+                style->setGridRowEnd(list->at(2).stringValue());
+                style->setGridColumnEnd(list->at(3).stringValue());
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridRow:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::ValueListKind) {
+            auto list = newCssValue.multiValue();
+            if (list) {
+                style->setGridRowStart(list->at(0).stringValue());
+                style->setGridRowEnd(list->at(1).stringValue());
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::GridColumn:
+        if (newCssValue.valueKind() ==
+            CSSStyleValuePair::ValueKind::ValueListKind) {
+            auto list = newCssValue.multiValue();
+            if (list) {
+                style->setGridColumnStart(list->at(0).stringValue());
+                style->setGridColumnEnd(list->at(1).stringValue());
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::WillChange:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setWillChange(parentStyle->willChange());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Auto:
+            style->setWillChange(nullptr);
+            break;
+        default:
+            ValueList* list = newCssValue.multiValue();
+            size_t size = list->size();
+            auto willChangeData = new WillChangeData();
+            for (size_t i = 0; i < size; i++) {
+                const AtomicString& item = list->at(i).atomicStringValue();
+                if (item.string()->equals("contents")) {
+                    willChangeData->setContents();
+                    continue;
+                }
+                if (item.string()->equals("scroll-position")) {
+                    willChangeData->setScrollPosition();
+                    continue;
+                }
+
+                if (item.string()->equals("transform")) {
+                    willChangeData->setTransform();
+                }
+
+                if (item.string()->equals("opacity")) {
+                    willChangeData->setOpacity();
+                }
+
+                willChangeData->push_back(item);
+            }
+            style->setWillChange(willChangeData);
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BoxDecorationBreak:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+        case CSSStyleValuePair::ValueKind::Unset:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setBoxDecorationBreak(parentStyle->boxDecorationBreak());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+            style->setBoxDecorationBreak(SliceBoxDecorationBreakValue);
+            break;
+        default:
+            style->setBoxDecorationBreak(newCssValue.boxDecorationBreakValue());
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Filter:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->setFilter(parentStyle->filter());
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::None:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setFilter(nullptr);
+            break;
+        case CSSStyleValuePair::ValueKind::ValueListKind:
+            style->setFilter(FilterFunctions::create(newCssValue));
+            break;
+        default:
+            break;
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::Unknown:
+        break;
+    default:
+        break;
     }
 }
 
