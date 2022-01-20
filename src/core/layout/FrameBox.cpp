@@ -1587,9 +1587,10 @@ static inline void paintRepeatGradient(
     }
     ImageValue* imageValue = style->backgroundImage(idx);
     auto value = imageValue->gradientValue();
-    bool cacheable = (value->isCacheable() &&
-                      ((width * height) >= CACHEABLE_GRADIENT_SIZE) &&
-                      ((width * height) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+    bool cacheable =
+        (value->isCacheable() &&
+         ((width * height) >= CACHEABLE_GRADIENT_SIZE) &&
+         ((width * height * 4) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
 
     if (cacheable) {
         Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
