@@ -277,7 +277,7 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
         dHandle->dct_method = JDCT_IFAST;
         STARFISH_LOG_INFO(
             "Try to downscale large size image(width: %u, height: %u, "
-            "scale_num: %u, scale_denom: %u)\n",
+            "scale_num: %u, scale_denom: %u)",
             dHandle->image_width, dHandle->image_height, dHandle->scale_num,
             dHandle->scale_denom);
     }
@@ -378,7 +378,7 @@ static void jpeg_error_handle(j_common_ptr cinfo)
 {
     custom_error_ptr c_err = (custom_error_ptr)cinfo->err;
     STARFISH_LOG_ERROR(
-        "Error in jpeglib : %s \n",
+        "Error in jpeglib : %s ",
         c_err->pub.jpeg_message_table[c_err->pub.last_jpeg_message]);
     longjmp(c_err->setjmp_buffer, 1);
 }

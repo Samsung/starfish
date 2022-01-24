@@ -168,7 +168,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn,
     msgLoop->increaseUnjoinedThreadCount();
     STARFISH_LOG_INFO(
         "[%p] Run thread: runningThread(%d), unjoinedThread(%d), "
-        "runningWorkers(%d)\n",
+        "runningWorkers(%d)",
         this, msgLoop->runningThreadCount(), msgLoop->unjoinedThreadCount(),
         msgLoop->runningPoolWorkerCount());
 #endif
@@ -232,7 +232,7 @@ void Thread::joinIfNeeds()
 
 void Thread::cleanupHandler(void* data)
 {
-    STARFISH_LOG_INFO("Thread::cleanupHandler\n");
+    STARFISH_LOG_INFO("Thread::cleanupHandler");
     ThreadData* td = (ThreadData*)data;
     td->m_thread->joinIfNeeds();
 }

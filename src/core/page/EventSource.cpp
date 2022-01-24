@@ -156,7 +156,7 @@ public:
                         "connection.");
                 }
                 auto s = msg.finalize()->toUTF8NonGCString();
-                STARFISH_LOG_ERROR("console.error: %s\n", s.data());
+                STARFISH_LOG_ERROR("console.error: %s", s.data());
                 m_eventSource->cancel();
 
                 String* eventName =
@@ -381,7 +381,7 @@ void EventSource::failedAccessControlCheck()
         "Cross origin requests are only supported for protocol schemes: http, "
         "https, data.");
     auto s = msg.finalize()->toUTF8NonGCString();
-    STARFISH_LOG_ERROR("console.error: %s\n", s.data());
+    STARFISH_LOG_ERROR("console.error: %s", s.data());
 
     m_readyState = CLOSED;
     m_resourceRequest->abort(true);

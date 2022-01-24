@@ -74,7 +74,7 @@ public:
                                "[TRACE_MSE_GC] "
                                "MediaPlayerMediaSourceClient::~"
                                "MediaPlayerMediaSourceClient "
-                               "\n");
+                               "");
             },
             NULL, NULL, NULL);
 #endif
@@ -108,11 +108,11 @@ void MockMediaPlayer::prepareMediaSource()
                 0, activeMediaSource()->activeVideoStreamIndex());
         m_videoWidth = v->videoWidth();
         m_videoHeight = v->videoHeight();
-        MOCKPLAYER_LOG(this, "Video Info-----------------------------\n");
-        MOCKPLAYER_LOG(this, "> codec     : %s\n", v->codecString());
-        MOCKPLAYER_LOG(this, "> size      : %dx%d\n", v->videoWidth(),
+        MOCKPLAYER_LOG(this, "Video Info-----------------------------");
+        MOCKPLAYER_LOG(this, "> codec     : %s", v->codecString());
+        MOCKPLAYER_LOG(this, "> size      : %dx%d", v->videoWidth(),
                        v->videoHeight());
-        MOCKPLAYER_LOG(this, "---------------------------------------\n");
+        MOCKPLAYER_LOG(this, "---------------------------------------");
     }
     if (activeMediaSource()->activeAudioSourceBuffer()) {
         m_audioStream = new MockMediaPlayerSourceStream(StreamTypeAudio);
@@ -136,7 +136,7 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
     uint64_t streamIdx = activeStreamIndex(stream->type());
     size_t currentInitIndex = stream->initSegmentIndex();
     uint64_t lastDTS = stream->lastSubmittedDTS();
-    MOCKPLAYER_LOG(this, "fillBuffer start %lums (%s)\n", lastDTS,
+    MOCKPLAYER_LOG(this, "fillBuffer start %lums (%s)", lastDTS,
                    stream->isAudio() ? "AUDIO" : "VIDEO");
 
     uint64_t submitMS = 0;
@@ -150,7 +150,7 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
             if (std::isinf(m_activeMediaSource->duration())) {
                 endTime = std::numeric_limits<uint64_t>::max();
             }
-            MOCKPLAYER_LOG(this, "fillBuffer try to detect end -> %d %d\n",
+            MOCKPLAYER_LOG(this, "fillBuffer try to detect end -> %d %d",
                            (int)endTime, (int)lastDTS);
             uint64_t lastBufferedTime = sb->lastBufferedTimestamp(streamIdx);
             if ((endTime - lastDTS) < 10 ||
@@ -158,10 +158,10 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
                  (endTime - lastBufferedTime) < 1000)) {
                 stream->setBufferState(
                     MockMediaPlayerSourceStream::BUFFERSTATE_EOS);
-                MOCKPLAYER_LOG(this, "fillBuffer detect EOS\n");
+                MOCKPLAYER_LOG(this, "fillBuffer detect EOS");
                 break;
             }
-            MOCKPLAYER_LOG(this, "fillBuffer runs into under run state[1]\n");
+            MOCKPLAYER_LOG(this, "fillBuffer runs into under run state[1]");
             stream->setWaitingDemuxer(true);
             break;
         }
@@ -171,7 +171,7 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
             MOCKPLAYER_LOG(
                 this,
                 "fillBuffer runs into under run state[2] - requested(%lu) but "
-                "returned(%lu)\n",
+                "returned(%lu)",
                 lastDTS, packet.first->m_dts);
             stream->setWaitingDemuxer(true);
             break;
@@ -181,13 +181,13 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
             if (!packet.first->m_hasIdr) {
                 lastDTS = packet.first->m_dts + packet.first->m_duration;
                 MOCKPLAYER_LOG(
-                    this, "fillBuffer drops non-idr packet (config changed)\n");
+                    this, "fillBuffer drops non-idr packet (config changed)");
                 continue;
             } else {
                 MOCKPLAYER_LOG(
                     this,
                     "fillBuffer detect changed config (and will submit packet "
-                    "including idr. DTS:%d)\n",
+                    "including idr. DTS:%d)",
                     (int)packet.first->m_dts);
                 if (stream->isVideo()) {
                     StreamInfo* info = sb->streamInfo(
@@ -195,11 +195,11 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
                     m_videoWidth = info->videoWidth();
                     m_videoHeight = info->videoHeight();
                     MOCKPLAYER_LOG(this,
-                                   "New Video Info-------------------------\n");
-                    MOCKPLAYER_LOG(this, "> size      : %dx%d\n",
+                                   "New Video Info-------------------------");
+                    MOCKPLAYER_LOG(this, "> size      : %dx%d",
                                    info->videoWidth(), info->videoHeight());
                     MOCKPLAYER_LOG(this,
-                                   "---------------------------------------\n");
+                                   "---------------------------------------");
                 }
                 stream->setInitSegmentIndex(packet.second);
                 currentInitIndex = packet.second;
@@ -211,8 +211,8 @@ void MockMediaPlayer::fillBuffer(MockMediaPlayerSourceStream* stream)
         lastDTS = packet.first->m_dts + packet.first->m_duration;
     }
     stream->setLastSubmittedDTS(lastDTS);
-    MOCKPLAYER_LOG(this, "fillBuffer end %lums (count:%d, size:%d)\n\n",
-                   lastDTS, (int)submitCount, (int)submitBytes);
+    MOCKPLAYER_LOG(this, "fillBuffer end %lums (count:%d, size:%d)", lastDTS,
+                   (int)submitCount, (int)submitBytes);
 }
 
 const uint64_t forwardDuration = 1000;
@@ -220,7 +220,7 @@ const uint64_t timerInterval = 250;
 
 void MockMediaPlayer::play()
 {
-    MOCKPLAYER_LOG(this, "MockMediaPlayer::%s\n", __func__);
+    MOCKPLAYER_LOG(this, "MockMediaPlayer::%s", __func__);
 
     if (m_playbackState != PLAYBACK_STATE_PLAYING) {
         m_playbackState = PLAYBACK_STATE_PLAYING;
@@ -243,7 +243,7 @@ void MockMediaPlayer::play()
                                        currentTime + forwardDuration) {
                     self->fillBuffer(audioStream);
                     if (audioStream->lastSubmittedDTS() < targetTime) {
-                        MOCKPLAYER_LOG(self, "AUDIO underrun state\n");
+                        MOCKPLAYER_LOG(self, "AUDIO underrun state");
                         return;
                     }
                 }
@@ -251,7 +251,7 @@ void MockMediaPlayer::play()
                                        currentTime + forwardDuration) {
                     self->fillBuffer(videoStream);
                     if (videoStream->lastSubmittedDTS() < targetTime) {
-                        MOCKPLAYER_LOG(self, "VIDEO underrun state\n");
+                        MOCKPLAYER_LOG(self, "VIDEO underrun state");
                         return;
                     }
                 }
@@ -334,13 +334,13 @@ void MockMediaPlayer::didDrawVideo(Compositor* canvas,
 
 void MockMediaPlayer::seek(double time)
 {
-    MOCKPLAYER_LOG(this, "seek(%f)\n", time);
+    MOCKPLAYER_LOG(this, "seek(%f)", time);
     STARFISH_ASSERT(!m_seeking);
     double dur = duration();
     if (time < 0) {
         time = 0;
     } else if (dur != 0 && !std::isnan(dur) && time >= dur) {
-        MOCKPLAYER_LOG(this, "seek() reaches EOS\n");
+        MOCKPLAYER_LOG(this, "seek() reaches EOS");
         m_container->mediaPlayerNotifySeekedItsContainer(duration());
         handleEnded();
         return;

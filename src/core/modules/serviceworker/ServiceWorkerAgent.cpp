@@ -180,7 +180,7 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
         workerGlobalScope->workerScriptController()->loadJavaScript(
             workerGlobalScope->executionContext()->documentURI());
     if (evaluationStatus != ScriptLoadResult::Success) {
-        STARFISH_LOG_WARN("Fail to load script: %s\n",
+        STARFISH_LOG_WARN("Fail to load script: %s",
                           CSTR(serviceWorker->scriptURL));
         return;
     }

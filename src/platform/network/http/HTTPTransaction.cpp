@@ -402,41 +402,41 @@ void HTTPTransaction::startRequest()
 void HTTPTransaction::printCurlRequestDump()
 {
     if (m_enableLog) {
-        STARFISH_LOG_INFO("==============Dump Request info==============\n");
-        STARFISH_LOG_INFO("[Request url : %s]\n", m_httpRequest->url().data());
+        STARFISH_LOG_INFO("==============Dump Request info==============");
+        STARFISH_LOG_INFO("[Request url : %s]", m_httpRequest->url().data());
         double val = 0.0;
         CURLcode res;
         res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_DOWNLOAD, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Data downloaded: %.0fbytes]\n", val);
+            STARFISH_LOG_INFO("[Data downloaded: %.0fbytes]", val);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_UPLOAD, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Data uploaded: %.0fbytes]\n", val);
+            STARFISH_LOG_INFO("[Data uploaded: %.0fbytes]", val);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_TOTAL_TIME, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Total download time: %.5f sec]\n", val);
+            STARFISH_LOG_INFO("[Total download time: %.5f sec]", val);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_SPEED_DOWNLOAD, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Average download speed: %.0f kbyte/sec]\n",
+            STARFISH_LOG_INFO("[Average download speed: %.0f kbyte/sec]",
                               val / 1024);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_NAMELOOKUP_TIME, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Name lookup time: %.5f sec]\n", val);
+            STARFISH_LOG_INFO("[Name lookup time: %.5f sec]", val);
         }
 
         res = curl_easy_getinfo(m_curl, CURLINFO_CONNECT_TIME, &val);
         if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Connect time: %.5f sec]\n", val);
+            STARFISH_LOG_INFO("[Connect time: %.5f sec]", val);
         }
-        STARFISH_LOG_INFO("=============================================\n");
+        STARFISH_LOG_INFO("=============================================");
     }
 }
 #endif

@@ -177,7 +177,7 @@ private:
             initializePatternToRadialGradient(info->x1, info->y1, info->r1,
                                               info->x2, info->y2, info->r2);
         } else {
-            STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
 
         size_t size = info->colorStops.size();
@@ -539,7 +539,7 @@ public:
 #ifndef NDEBUG
         auto status = cairo_status(m_canvas);
         if (status != CAIRO_STATUS_SUCCESS) {
-            STARFISH_LOG_ERROR("%s\n", cairo_status_to_string(status));
+            STARFISH_LOG_ERROR("%s", cairo_status_to_string(status));
             STARFISH_ASSERT_NOT_REACHED();
         }
 #endif

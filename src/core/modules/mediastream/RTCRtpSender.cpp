@@ -115,7 +115,7 @@ bool RTCRtpSender::setTrack(MediaStreamTrack* track)
 
     bool r = backend()->SetTrack(newTrack);
     if (!r) {
-        STARFISH_LOG_ERROR("%s: failed\n", __func__);
+        STARFISH_LOG_ERROR("%s: failed", __func__);
     }
     return r;
 }
@@ -123,19 +123,19 @@ bool RTCRtpSender::setTrack(MediaStreamTrack* track)
 #if 0 // Disable functions in progress
 RTCDtlsTransport* RTCRtpSender::transport()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
 Promise* RTCRtpSender::setParameters(RTCRtpSendParameters parameters)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
 RTCRtpSendParameters RTCRtpSender::getParameters()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     RTCRtpSendParameters result;
     return result;
 }
@@ -161,7 +161,7 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
     }
 
     if (!hasValidMediaType) {
-        STARFISH_LOG_ERROR("%s: media types do not match\n", __func__);
+        STARFISH_LOG_ERROR("%s: media types do not match", __func__);
         auto exception =
             new DOMException(m_executionContext, DOMException::SCRIPT_TYPE_ERR,
                              "media types do not match");
@@ -171,7 +171,7 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
 
     // 6.1
     if (m_transceiver->stopped()) {
-        STARFISH_LOG_ERROR("%s: transceiver is stopped\n", __func__);
+        STARFISH_LOG_ERROR("%s: transceiver is stopped", __func__);
         auto exception = new DOMException(m_executionContext,
                                           DOMException::INVALID_STATE_ERR,
                                           "transceiver is stopped");
@@ -208,7 +208,7 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
             Params* p = (Params*)data;
 
             if (!p->self->m_transceiver->canSend()) {
-                STARFISH_LOG_ERROR("replaceTrack: inactive %d\n",
+                STARFISH_LOG_ERROR("replaceTrack: inactive %d",
                                    p->self->m_transceiver->direction());
                 auto exception =
                     new DOMException(p->self->m_executionContext,
@@ -222,7 +222,7 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
 
             bool r = p->self->setTrack(p->withTrack);
             if (!r) {
-                STARFISH_LOG_ERROR("replaceTrack: failed\n");
+                STARFISH_LOG_ERROR("replaceTrack: failed");
                 auto exception = new DOMException(
                     p->self->m_executionContext,
                     DOMException::INVALID_STATE_ERR, "replaceTrack: failed");

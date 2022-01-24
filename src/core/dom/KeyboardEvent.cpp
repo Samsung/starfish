@@ -129,7 +129,7 @@ String* keyValueToKey(KeyValue v)
 #endif
     } else {
         if (v == UnidentifiedKey) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         return String::createASCIIString("undefined");
     }
@@ -247,7 +247,7 @@ String* keyValueToCode(KeyValue v)
 #endif
     } else {
         if (v == UnidentifiedKey) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         return String::createASCIIString("undefined");
     }

@@ -46,19 +46,19 @@ MediaPlayerAudioLinux::MediaPlayerAudioLinux(HTMLMediaElement* element)
 
 void MediaPlayerAudioLinux::play()
 {
-    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s", __func__);
     MediaPlayerAudio::play();
 }
 
 void MediaPlayerAudioLinux::destroy()
 {
-    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s", __func__);
     MediaPlayerAudio::destroy();
 }
 
 void MediaPlayerAudioLinux::prepare(ResourceURL* url)
 {
-    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudioLinux::%s", __func__);
     MediaPlayerAudio::prepare(url);
 }
 

@@ -141,7 +141,7 @@ float SVGLength::value()
         } else if (m_unitType == SVG_LENGTHTYPE_PC) {
             return UnitHelper::convertFromPcToPx(valueInSpecifiedUnits());
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
     return 0;
@@ -165,7 +165,7 @@ void SVGLength::setValue(float v)
     } else if (m_unitType == SVG_LENGTHTYPE_PC) {
         setValueInSpecifiedUnits(UnitHelper::convertFromPxToPc(v));
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -217,7 +217,7 @@ String* SVGLength::valueAsString()
     } else if (m_unitType == SVG_LENGTHTYPE_PERCENTAGE) {
         str = str->concat("%");
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     return str;
@@ -255,7 +255,7 @@ void SVGLength::setValueAsString(String* valueAsString)
                 } else if (pair.cssLengthValue().kind() == CSSLength::PT) {
                     setUnitType(SVG_LENGTHTYPE_PT);
                 } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    STARFISH_UNIMPLEMENTED();
                     setUnitType(SVG_LENGTHTYPE_PX);
                 }
                 setValueInSpecifiedUnits(pair.cssLengthValue().value());

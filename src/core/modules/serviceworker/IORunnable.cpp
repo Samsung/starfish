@@ -143,7 +143,7 @@ void IORunnable::run()
 
         } catch (const Socket::Exception& e) {
             if (e.num() != ETIMEDOUT) {
-                STARFISH_LOG_INFO("Networking failed due to %s\n", e.what());
+                STARFISH_LOG_INFO("Networking failed due to %s", e.what());
                 break;
             }
         }

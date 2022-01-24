@@ -200,7 +200,7 @@ public:
         if (m_glPaintingSurface) {
             STARFISH_LOG_INFO(
                 "WindowImplGL::willCompositing - remove "
-                "m_glPaintingSurface\n");
+                "m_glPaintingSurface");
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
         }
@@ -249,7 +249,7 @@ public:
 
     virtual void onClearDrawnBuffers() override
     {
-        STARFISH_LOG_INFO("WindowImplGL::onClearDrawnBuffers\n");
+        STARFISH_LOG_INFO("WindowImplGL::onClearDrawnBuffers");
 
         if (m_compostiorContext) {
             glMakeCurrent();
@@ -297,7 +297,7 @@ Compositor* WindowImplGL::prepareCompositor()
     if (m_glPaintingSurface) {
         STARFISH_LOG_INFO(
             "WindowImplGL::prepareCompositor - remove "
-            "m_glPaintingSurface\n");
+            "m_glPaintingSurface");
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }

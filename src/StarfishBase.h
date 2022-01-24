@@ -362,8 +362,9 @@ const char* getWindowsTempDir();
                  __MODULE__, __func__, __LINE__, ##arg);
 #endif
 
-#define STARFISH_LOG_INFO(...) \
-    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", __VA_ARGS__)
+#define STARFISH_LOG_INFO(fmt, arg...)                                     \
+    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt "\n", \
+                      ##arg)
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
@@ -383,10 +384,10 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_ERROR(...)                                            \
+#define STARFISH_LOG_ERROR(fmt, arg...)                                    \
     do {                                                                   \
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;31m", \
-                          "\033[0m", __VA_ARGS__)                          \
+                          "\033[0m", fmt "\n", ##arg)                      \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
@@ -409,10 +410,10 @@ const char* getWindowsTempDir();
     ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_WARN(...)                                             \
+#define STARFISH_LOG_WARN(fmt, arg...)                                     \
     do {                                                                   \
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;33m", \
-                          "\033[0m", __VA_ARGS__)                          \
+                          "\033[0m", fmt "\n", ##arg)                      \
     } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN
@@ -430,6 +431,30 @@ const char* getWindowsTempDir();
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_WARN
 #define STARFISH_LOG_WARN(...) ::Starfish::forwardPrintingLogWarn(__VA_ARGS__);
+#endif
+
+#define STARFISH_LOG_DEBUG(fmt, arg...)                                        \
+    do {                                                                       \
+        LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "", "", fmt "\n", \
+                          ##arg)                                               \
+    } while (0);
+#ifdef STARFISH_TIZEN
+#undef STARFISH_LOG_DEBUG
+#include <dlog.h>
+#define STARFISH_LOG_DEBUG(fmt, arg...)                                    \
+    LOG_FUNCTION_TYPE2(dlog_print, DLOG_DEBUG, STARFISH_NAME, "", "", fmt, \
+                       ##arg)
+#endif
+#ifdef STARFISH_ANDROID
+#include <android/log.h>
+#undef STARFISH_LOG_DEBUG
+#define STARFISH_LOG_DEBUG(fmt, arg...)                                       \
+    LOG_FUNCTION_TYPE2(__android_log_print, ANDROID_LOG_DEBUG, STARFISH_NAME, \
+                       "", "", fmt, ##arg)
+#endif
+#ifdef STARFISH_WINDOWS
+#undef STARFISH_LOG_DEBUG
+#define STARFISH_LOG_DEBUG(...) ::Starfish::forwardPrintingLogWarn(__VA_ARGS__);
 #endif
 
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
@@ -455,40 +480,23 @@ const char* getWindowsTempDir();
 #define STARFISH_COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #endif
 
-#define STARFISH_RELEASE_ASSERT(assertion)                              \
-    do {                                                                \
-        if (!(assertion)) {                                             \
-            STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, \
-                               __LINE__);                               \
-            ::abort();                                                  \
-        }                                                               \
+#define STARFISH_RELEASE_ASSERT(assertion)        \
+    do {                                          \
+        if (!(assertion)) {                       \
+            STARFISH_LOG_ERROR("RELEASE_ASSERT"); \
+            ::abort();                            \
+        }                                         \
     } while (0);
-#define STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE()                  \
-    do {                                                              \
-        STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", \
-                           __FILE__, __LINE__);                       \
-        ::abort();                                                    \
+#define STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE()      \
+    do {                                                  \
+        STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED"); \
+        ::abort();                                        \
     } while (0)
 
-#ifdef STARFISH_ENABLE_TEST
-#define STARFISH_RELEASE_ASSERT_UNIMPLEMENTED()                      \
-    do {                                                             \
-        STARFISH_LOG_ERROR(                                          \
-            "STARFISH_RELEASE_ASSERT_UNIMPLEMENTED at %s (%s:%d)\n", \
-            __PRETTY_FUNCTION__, __FILE__, __LINE__);                \
+#define STARFISH_UNIMPLEMENTED(...)                       \
+    do {                                                  \
+        STARFISH_LOG_WARN("UNIMPLEMENTED! " __VA_ARGS__); \
     } while (0)
-
-#define STARFISH_BINDING_ASSERT_UNIMPLEMENTED(...)                   \
-    do {                                                             \
-        STARFISH_LOG_ERROR(                                          \
-            "STARFISH_BINDING_ASSERT_UNIMPLEMENTED at %s (%s:%d)\n", \
-            __PRETTY_FUNCTION__, __FILE__, __LINE__);                \
-        STARFISH_LOG_ERROR(__VA_ARGS__);                             \
-    } while (0)
-#else
-#define STARFISH_RELEASE_ASSERT_UNIMPLEMENTED()
-#define STARFISH_BINDING_ASSERT_UNIMPLEMENTED(...)
-#endif
 
 #define DEFINE_GETTER(Type, MemberName) \
     Type MemberName() const             \

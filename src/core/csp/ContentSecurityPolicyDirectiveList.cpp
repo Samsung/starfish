@@ -108,7 +108,7 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* value)
     } else if (name->equalsIgnoreCase("frame-src")) {
         STARFISH_LOG_INFO(
             "'frame-src' is deprecated. Using 'child-src' is recommended "
-            "instead.\n");
+            "instead.");
         setDirective(m_childSrc, name, tokens);
     } else if (name->equalsIgnoreCase("img-src")) {
         setDirective(m_imgSrc, name, tokens);

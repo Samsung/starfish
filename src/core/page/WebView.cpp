@@ -145,7 +145,7 @@ static void rtShouldTrue(bool condition, WebView* wv, const char* msg)
     STARFISH_ASSERT(msg != nullptr);
 
     if (!condition) {
-        STARFISH_LOG_INFO("STARFISH_RTERROR %s\n", msg);
+        STARFISH_LOG_INFO("STARFISH_RTERROR %s", msg);
         exit(0);
     }
 }
@@ -173,7 +173,7 @@ static void rtScreenShot(WebView* wv)
 
     std::string capturePng = rtCreatePngName(g_referenceTestState);
     screenShotInRendering(wv, capturePng.c_str(), [capturePng]() {
-        STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
+        STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s", capturePng.c_str());
     });
 }
 // WPT Reference Test
@@ -220,9 +220,9 @@ static void rtDoTest(Document* document)
         rtShouldLoaded(document, "REF_LOAD_FAIL");
         rtScreenShot(wv);
         if (rtPixelDiff(wv)) {
-            STARFISH_LOG_INFO("STARFISH_RTPASS\n");
+            STARFISH_LOG_INFO("STARFISH_RTPASS");
         } else {
-            STARFISH_LOG_INFO("STARFISH_RTFAIL\n");
+            STARFISH_LOG_INFO("STARFISH_RTFAIL");
         }
         exit(0);
     }
@@ -414,7 +414,7 @@ void WebView::clearDrawnBuffers()
 
 void WebView::enterIdleMode()
 {
-    STARFISH_LOG_INFO("enter idle mode\n");
+    STARFISH_LOG_INFO("enter idle mode");
     m_inIdleMode = true;
     m_didFirstRenderingAfterWakeup = false;
 
@@ -508,7 +508,7 @@ void WebView::applyJavaScriptNativeInterface(ScriptBindingInstance* instance)
 
 void WebView::destroy()
 {
-    STARFISH_LOG_INFO("WebView::destroy\n");
+    STARFISH_LOG_INFO("WebView::destroy");
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
     m_inspector = nullptr;
@@ -782,7 +782,7 @@ void WebView::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 
 #ifndef NDEBUG
     STARFISH_LOG_INFO(
-        "[TRACE_MSE_GC] WebView::removeMediaSourceFromBlobURLStore\n");
+        "[TRACE_MSE_GC] WebView::removeMediaSourceFromBlobURLStore");
     {
         BlobURLStore s;
         s.m_blob = ptr;
@@ -1160,7 +1160,7 @@ RenderResult WebView::rendering(bool force)
                             ->document()
                             ->resourceLoader()
                             .documentOpenTime()) < 1000)) {
-        STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
+        STARFISH_LOG_INFO("delay rendering due to pending stylesheet");
         m_needsRendering = false;
         Canvas* canvas = platformWindow()->preparePainting();
         mainBrowsingContext()->clearingBeforePaint(canvas);
@@ -1219,10 +1219,10 @@ RenderResult WebView::rendering(bool force)
         }
 
         if (!m_didCompositeBefore && m_needsComposite) {
-            STARFISH_LOG_INFO("Start composite mode\n");
+            STARFISH_LOG_INFO("Start composite mode");
 
         } else if (m_didCompositeBefore && !m_needsComposite) {
-            STARFISH_LOG_INFO("End composite mode\n");
+            STARFISH_LOG_INFO("End composite mode");
         }
 
         bool needsFullPainting =
@@ -1285,7 +1285,7 @@ RenderResult WebView::rendering(bool force)
                     if (iter->first) {
                         STARFISH_LOG_INFO(
                             "repaint region node %s #%s className(%s) %f %f %f "
-                            "%f\n",
+                            "%f",
                             iter->first->localName()
                                 ->toUTF8NonGCString()
                                 .data(),
@@ -1301,11 +1301,11 @@ RenderResult WebView::rendering(bool force)
                             (float)iter->second.width(),
                             (float)iter->second.height());
                     } else {
-                        STARFISH_LOG_INFO(
-                            "repaint region (screen) %f %f %f %f\n",
-                            (float)iter->second.x(), (float)iter->second.y(),
-                            (float)iter->second.width(),
-                            (float)iter->second.height());
+                        STARFISH_LOG_INFO("repaint region (screen) %f %f %f %f",
+                                          (float)iter->second.x(),
+                                          (float)iter->second.y(),
+                                          (float)iter->second.width(),
+                                          (float)iter->second.height());
                     }
                     iter++;
                 }
@@ -1400,7 +1400,7 @@ RenderResult WebView::rendering(bool force)
             }
 
             /*
-            STARFISH_LOG_INFO("repaint region(device) %f %f %f %f\n",
+            STARFISH_LOG_INFO("repaint region(device) %f %f %f %f",
                               (float)renderResult.updateRect.x(),
                               (float)renderResult.updateRect.y(),
                               (float)renderResult.updateRect.width(),
@@ -1516,7 +1516,7 @@ RenderResult WebView::rendering(bool force)
 
     if (totalAllocatedCanvasSurfaceSizeBefore !=
         totalAllocatedCanvasSurfaceSizeAfter) {
-        STARFISH_LOG_INFO("totalAllocatedCanvasSurfaceSize %fMB\n",
+        STARFISH_LOG_INFO("totalAllocatedCanvasSurfaceSize %fMB",
                           totalAllocatedCanvasSurfaceSizeAfter / 1024.f /
                               1024.f);
     }
@@ -1570,7 +1570,7 @@ RenderResult WebView::rendering(bool force)
             auto diff = currentTime - m_navigateStartingTime;
             STARFISH_LOG_INFO(
                 "`STARFISH_ENABLE_PROFILE_LOADING` => %fms elapsed since "
-                "starting loading\n",
+                "starting loading",
                 (float)diff);
             ANNOTATE_CHANNEL_END(3001);
             exit(0);
@@ -1704,7 +1704,7 @@ RenderResult WebView::rendering(bool force)
 
 void WebView::setNeedsFullRepainting()
 {
-    STARFISH_LOG_INFO("WebView::setNeedsFullRepainting\n");
+    STARFISH_LOG_INFO("WebView::setNeedsFullRepainting");
     markNeedsPaintingConsiderInRendering();
     m_needsFullPainting = true;
 }
@@ -1811,7 +1811,7 @@ void WebView::pause()
     if (m_isActive == false) {
         return;
     }
-    STARFISH_LOG_INFO("WebView::pause\n");
+    STARFISH_LOG_INFO("WebView::pause");
     m_isActive = false;
 
     if (mainBrowsingContext()) {
@@ -1824,7 +1824,7 @@ void WebView::resume()
     if (m_isActive) {
         return;
     }
-    STARFISH_LOG_INFO("WebView::resume\n");
+    STARFISH_LOG_INFO("WebView::resume");
     m_isActive = true;
 
     if (mainBrowsingContext()) {
@@ -1837,7 +1837,7 @@ void WebView::resume()
 
 void WebView::resize(uint32_t width, uint32_t height)
 {
-    STARFISH_LOG_INFO("WebView::resize\n");
+    STARFISH_LOG_INFO("WebView::resize");
     if (mainBrowsingContext()) {
         float dpr = screenInfo().devicePixelRatio;
         LayoutUnit scaledWidth = LayoutUnit(width) / dpr;

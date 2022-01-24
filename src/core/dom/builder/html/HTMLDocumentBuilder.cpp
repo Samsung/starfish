@@ -196,7 +196,7 @@ public:
         if (!m_isAllowedResponse) {
             browsingContext->sourceElement()->markContentDocumentDisabled();
             STARFISH_LOG_WARN(
-                "Refused to display in iframe according to X-Frame-Options\n");
+                "Refused to display in iframe according to X-Frame-Options");
         }
 #if !defined(STARFISH_WEBWORKER_HOST)
         auto request = m_resource->resourceRequest();
@@ -558,4 +558,4 @@ void HTMLDocumentBuilder::resume()
 {
     m_parser->parseStep();
 }
-}
+} // namespace Starfish

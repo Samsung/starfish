@@ -536,7 +536,7 @@ void FrameBox::paintOutline(Canvas* canvas)
         rect.setHeight(rect.height() + offset * 2);
 
         if (s != BorderStyleValue::SolidBorderStyleValue) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
 
         canvas->setFillColor(style()->outlineColor());
@@ -3952,7 +3952,7 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
             if (isFrameReplaced()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             } else {
                 if (style->width().isSpecified()) {
                     LayoutUnit width =
@@ -4016,7 +4016,7 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
             !FlexibleBox->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
             if (isFrameReplaced()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             } else {
                 if (style->height().isDefinite(parentHasFixedValue)) {
                     LayoutUnit h = LayoutUnit(

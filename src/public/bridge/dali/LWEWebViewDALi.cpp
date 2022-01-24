@@ -115,7 +115,7 @@ public:
     }
     ~DALiShellController()
     {
-        STARFISH_LOG_INFO("[DALi Shell] ~DALiShellController()\n");
+        STARFISH_LOG_INFO("[DALi Shell] ~DALiShellController()");
         mTimer.TickSignal().Disconnect(this,
                                        &DALiShellController::updateBuffer);
         mTimer.Stop();
@@ -175,7 +175,7 @@ private:
 
     bool touchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
     {
-        // STARFISH_LOG_INFO("[DALi Shell] touchEventHandler()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] touchEventHandler()");
         size_t pointCount = data.GetPointCount();
         if (pointCount == 1) {
             // Single touch event
@@ -336,7 +336,7 @@ private:
 public:
     void keyEventHandler(const Dali::KeyEvent& event)
     {
-        // STARFISH_LOG_INFO("[DALi Shell] keyEventHandler()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] keyEventHandler()");
         LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
         if (32 < event.keyPressed.c_str()[0] &&
             127 > event.keyPressed.c_str()[0]) {
@@ -381,7 +381,7 @@ public:
         }
 
         auto cb = [x, y](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseDownEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseDownEvent()");
             TO_CONTAINER(data)->DispatchMouseDownEvent(
                 LWE::MouseButtonValue::LeftButton,
                 LWE::MouseButtonsValue::LeftButtonDown, x, y);
@@ -397,7 +397,7 @@ public:
         }
 
         auto cb = [x, y](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseUpEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseUpEvent()");
             TO_CONTAINER(data)->DispatchMouseUpEvent(
                 LWE::MouseButtonValue::NoButton,
                 LWE::MouseButtonsValue::NoButtonDown, x, y);
@@ -414,7 +414,7 @@ public:
         }
 
         auto cb = [x, y, isLButtonPressed](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseMoveEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseMoveEvent()");
             TO_CONTAINER(data)->DispatchMouseMoveEvent(
                 isLButtonPressed ? LWE::MouseButtonValue::LeftButton
                                  : LWE::MouseButtonValue::NoButton,
@@ -433,7 +433,7 @@ public:
         }
 
         auto cb = [keyCode](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyDownEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyDownEvent()");
             TO_CONTAINER(data)->DispatchKeyDownEvent(keyCode);
         };
         sendAsyncHandle(this, cb);
@@ -447,7 +447,7 @@ public:
         }
 
         auto cb = [keyCode](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyPressEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyPressEvent()");
             TO_CONTAINER(data)->DispatchKeyPressEvent(keyCode);
         };
         sendAsyncHandle(this, cb);
@@ -461,7 +461,7 @@ public:
         }
 
         auto cb = [keyCode](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyUpEvent()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] dispatchKeyUpEvent()");
             TO_CONTAINER(data)->DispatchKeyUpEvent(keyCode);
         };
         sendAsyncHandle(this, cb);
@@ -473,7 +473,7 @@ public:
 
         auto cb = [](void* data) {
             DALiShellController* controller = (DALiShellController*)data;
-            STARFISH_LOG_INFO("[DALi Shell] createInstance()\n");
+            STARFISH_LOG_INFO("[DALi Shell] createInstance()");
 #if !defined(STARFISH_TIZEN_VERSION_5_0)
             controller->mWebContainer = LWE::WebContainer::Create(
                 controller->mOutputWidth, controller->mOutputHeight, 1.0,
@@ -554,7 +554,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [url](void* data) {
-            STARFISH_LOG_INFO("[DALi Shell] loadURL()\n");
+            STARFISH_LOG_INFO("[DALi Shell] loadURL()");
             TO_CONTAINER(data)->LoadURL(url);
         };
         sendAsyncHandle(this, cb);
@@ -567,7 +567,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] registerOnRenderedHandler()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] registerOnRenderedHandler()");
             TO_CONTAINER(data)->RegisterOnRenderedHandler(callback);
         };
         sendAsyncHandle(this, cb);
@@ -604,7 +604,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [d](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] loadData()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] loadData()");
             TO_CONTAINER(data)->LoadData(d);
         };
         sendAsyncHandle(this, cb);
@@ -614,7 +614,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] reload()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] reload()");
             TO_CONTAINER(data)->Reload();
         };
         sendAsyncHandle(this, cb);
@@ -624,7 +624,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] stopLoading()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] stopLoading()");
             TO_CONTAINER(data)->StopLoading();
         };
         sendAsyncHandle(this, cb);
@@ -634,7 +634,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] goBack()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] goBack()");
             TO_CONTAINER(data)->GoBack();
         };
         sendAsyncHandle(this, cb);
@@ -644,7 +644,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] goForward()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] goForward()");
             TO_CONTAINER(data)->GoForward();
         };
         sendAsyncHandle(this, cb);
@@ -656,7 +656,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [exposedObjectName, jsFunctionName, callback](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] addJavaScriptInterface()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] addJavaScriptInterface()");
             TO_CONTAINER(data)->AddJavaScriptInterface(
                 exposedObjectName, jsFunctionName, callback);
         };
@@ -668,7 +668,7 @@ public:
         auto cb = [script](void* data) {
             std::string ret = TO_CONTAINER(data)->EvaluateJavaScript(script);
             // STARFISH_LOG_INFO("[DALi Shell] evaluateJavaScript() returns
-            // [%s]\n", ret.c_str());
+            // [%s]", ret.c_str());
         };
         sendAsyncHandle(this, cb);
     }
@@ -677,7 +677,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] clearHistory()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] clearHistory()");
             DALiShellController* controller = (DALiShellController*)data;
             TO_CONTAINER(data)->ClearHistory();
             controller->mCanGoBack = TO_CONTAINER(data)->CanGoBack();
@@ -689,7 +689,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] destroy()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] destroy()");
             DALiShellController* controller = (DALiShellController*)data;
 
             TO_CONTAINER(data)->Destroy();
@@ -720,7 +720,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [exposedObjectName, jsFunctionName](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] removeJavascriptInterface()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] removeJavascriptInterface()");
             TO_CONTAINER(data)->RemoveJavascriptInterface(exposedObjectName,
                                                           jsFunctionName);
         };
@@ -731,7 +731,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            // STARFISH_LOG_INFO("[DALi Shell] clearCache()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] clearCache()");
             TO_CONTAINER(data)->ClearCache();
         };
         sendAsyncHandle(this, cb);
@@ -744,7 +744,7 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell]
-            // registerOnReceivedErrorHandler()\n");
+            // registerOnReceivedErrorHandler()");
             TO_CONTAINER(data)->RegisterOnReceivedErrorHandler(callback);
         };
         sendAsyncHandle(this, cb);
@@ -757,7 +757,7 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell]
-            // registerOnPageStartedHandler()\n");
+            // registerOnPageStartedHandler()");
             TO_CONTAINER(data)->RegisterOnPageStartedHandler(callback);
         };
         sendAsyncHandle(this, cb);
@@ -770,7 +770,7 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell]
-            // registerOnPageFinishedHandler()\n");
+            // registerOnPageFinishedHandler()");
             TO_CONTAINER(data)->RegisterOnPageLoadedHandler(callback);
         };
         sendAsyncHandle(this, cb);
@@ -780,7 +780,7 @@ public:
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
-            STARFISH_LOG_INFO("[DALi Shell] callEmptyAsyncHandle()\n");
+            STARFISH_LOG_INFO("[DALi Shell] callEmptyAsyncHandle()");
         };
         sendAsyncHandle(controller, cb);
     }
@@ -831,7 +831,7 @@ void DALiShellController::Create(Application& application)
     onRenderedHandler =
         [this](LWE::WebContainer* c,
                const LWE::WebContainer::RenderResult& renderResult) {
-            // STARFISH_LOG_INFO("[DALi Shell] onRenderedHandler()\n");
+            // STARFISH_LOG_INFO("[DALi Shell] onRenderedHandler()");
 
             Locker l(gMutex);
             int w = mOutputWidth;
@@ -842,7 +842,7 @@ void DALiShellController::Create(Application& application)
             tbm_surface_info_s tbmSurfaceInfo;
             if (tbm_surface_map(mTbmSurface, TBM_SURF_OPTION_WRITE,
                                 &tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
-                STARFISH_LOG_ERROR("Fail to map tbm_surface\n");
+                STARFISH_LOG_ERROR("Fail to map tbm_surface");
                 abort();
             }
             dstBuffer = tbmSurfaceInfo.planes[0].ptr;
@@ -874,19 +874,19 @@ void DALiShellController::Create(Application& application)
 
     onReceivedError = [](LWE::WebContainer* container,
                          LWE::ResourceError error) {
-        // STARFISH_LOG_INFO("[DALi Shell] onReceivedError()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] onReceivedError()");
     };
     onPageStartedHandler = [](LWE::WebContainer* container,
                               const std::string& url) {
-        // STARFISH_LOG_INFO("[DALi Shell] onPageStartedHandler()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] onPageStartedHandler()");
     };
     onPageFinishedHandler = [](LWE::WebContainer* container,
                                const std::string& url) {
-        // STARFISH_LOG_INFO("[DALi Shell] onPageFinishedHandler()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] onPageFinishedHandler()");
     };
     onLoadResourceHandler = [](LWE::WebContainer* container,
                                const std::string& url) {
-        // STARFISH_LOG_INFO("[DALi Shell] onLoadResourceHandler()\n");
+        // STARFISH_LOG_INFO("[DALi Shell] onLoadResourceHandler()");
     };
 
 #if defined(STARFISH_DALI_TBMSURFACE)
@@ -907,7 +907,7 @@ void DALiShellController::Create(Application& application)
 #else
     mBufferImage = Dali::BufferImage::New(mOutputWidth, mOutputHeight,
                                           Dali::Pixel::RGBA8888);
-    // STARFISH_LOG_INFO("[DALi Shell] [Dali BufImg:%p]\n",
+    // STARFISH_LOG_INFO("[DALi Shell] [Dali BufImg:%p]",
     // mBufferImage.GetBuffer());
     ((Dali::Toolkit::ImageView)mImageView).SetImage(mBufferImage);
 #endif
@@ -925,7 +925,7 @@ void DALiShellController::onKeyEvent(const Dali::KeyEvent& event)
 {
     STARFISH_ASSERT(mWebContainer);
 
-    // STARFISH_LOG_INFO("[DALi Shell] key pressed [%d]\n", event.keyCode);
+    // STARFISH_LOG_INFO("[DALi Shell] key pressed [%d]", event.keyCode);
 
     if (event.state == KeyEvent::Up) {
         if (IsKey(event, DALI_KEY_ESCAPE) || IsKey(event, DALI_KEY_BACK)) {
@@ -994,7 +994,7 @@ void DALiShellController::onKeyEvent(const Dali::KeyEvent& event)
                 // F8
             } else if (event.keyCode == 74) {
                 bool ret = mCanGoBack;
-                STARFISH_LOG_INFO("[DALi Shell] canGoBack() returns [%s]\n",
+                STARFISH_LOG_INFO("[DALi Shell] canGoBack() returns [%s]",
                                   ret ? "true" : "false");
                 // F9
             } else if (event.keyCode == 75) {
@@ -1035,7 +1035,7 @@ void sendAsyncHandle(DALiShellController* controller,
 
 static void* startMainThread(void* data)
 {
-    STARFISH_LOG_INFO("[DALi Shell] uv_run() start\n");
+    STARFISH_LOG_INFO("[DALi Shell] uv_run() start");
     uv_async_init(uv_default_loop(), &gLauncherHandle, [](uv_async_t* handle) {
         DALiShellController* controller = (DALiShellController*)handle->data;
         while (!controller->mAsyncHandlePool.empty()) {
@@ -1065,7 +1065,7 @@ static void* startMainThread(void* data)
         }
     }
 
-    STARFISH_LOG_INFO("[DALi Shell] uv_run() end\n");
+    STARFISH_LOG_INFO("[DALi Shell] uv_run() end");
 
     return NULL;
 }

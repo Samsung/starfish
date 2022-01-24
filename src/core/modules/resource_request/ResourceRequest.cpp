@@ -95,7 +95,7 @@ ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
         this,
         [](void* obj, void* cd) {
             // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest
-            // %p\n", obj);
+            // %p", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
             std::string().swap(nr->m_lastLocation);
             std::string().swap(nr->m_lastEffectiveURL);
@@ -448,9 +448,9 @@ String* ResourceRequest::encodeFormDataSet(
             result = result->concat(value);
         }
     } else if (formEnctype == EncodeType::MultiPartFormData) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else if (formEnctype == EncodeType::TextPlain) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     return result;

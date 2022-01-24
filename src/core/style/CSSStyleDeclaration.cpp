@@ -2924,7 +2924,7 @@ void CSSStyleDeclaration::removeBorderRadius()
 
 String* CSSStyleDeclaration::BorderImage()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return String::emptyString;
 }
 
@@ -4338,7 +4338,7 @@ void CSSStyleDeclaration::removeAnimation()
 String* CSSStyleDeclaration::Mask()
 {
     // Mask is only supported as SVG attribute.
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return String::emptyString;
 }
 

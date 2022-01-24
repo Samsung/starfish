@@ -92,7 +92,7 @@ float SVGAngle::value()
     } else if (m_unitType == SVG_ANGLETYPE_GRAD) {
         return UnitHelper::convertFromGradToDeg(valueInSpecifiedUnits());
     }
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return 0;
 }
 
@@ -107,7 +107,7 @@ void SVGAngle::setValue(float v)
     } else if (m_unitType == SVG_ANGLETYPE_GRAD) {
         setValueInSpecifiedUnits(UnitHelper::convertFromDegToGrad(v));
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -140,7 +140,7 @@ String* SVGAngle::valueAsString()
     } else if (m_unitType == SVG_ANGLETYPE_GRAD) {
         str = str->concat("grad");
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     return str;

@@ -558,7 +558,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(parentContentWidth);
         } else if (width.isCalc()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
 
@@ -621,7 +621,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             if (width.isPercent()) {
                 sumOfWidthPercentage += width.percent();
             } else if (width.isCalc()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         }
 
@@ -644,7 +644,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         sumOfWidthPercentage;
                     col.cellWidth = specifiedWidth;
                 } else if (width.isCalc()) {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    STARFISH_UNIMPLEMENTED();
                 }
                 sumOfSpecifiedCellWidths += col.cellWidth;
             }
@@ -1325,7 +1325,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
                 maxRowWidthSoFar =
                     std::max(maxRowWidthSoFar, c->asFrameBox()->width());
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         } else if (c->isFrameTableColBox()) {
             // The FrameTableColBox must not be laid out.
@@ -1352,7 +1352,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(ctx.parentContentWidth(this));
         } else if (width.isCalc()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
 
         tableContentWidth = std::max(

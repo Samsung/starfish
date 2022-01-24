@@ -139,7 +139,7 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
             return String::fromUTF8(result.data(), result.size());
         }
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     return String::fromUTF8("data:,");
 }

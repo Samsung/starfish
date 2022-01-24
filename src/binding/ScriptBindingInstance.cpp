@@ -56,7 +56,7 @@ ScriptBindingInstance::ScriptBindingInstance(
             this,
             [](void* obj, void* cd) {
                 STARFISH_LOG_INFO(
-                    "ScriptBindingInstance::~ScriptBindingInstance\n");
+                    "ScriptBindingInstance::~ScriptBindingInstance");
             },
             NULL, NULL, NULL);
     */
@@ -115,7 +115,8 @@ static String* toBrowserStringForConsole(ExecutionStateRef* state,
 }
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
-static void printToDebuggerInConsole(ExecutionStateRef* state, ValueRef* val, const char* head)
+static void printToDebuggerInConsole(ExecutionStateRef* state, ValueRef* val,
+                                     const char* head)
 {
     StringBuilder sb;
     sb.appendString(head, strlen(head));
@@ -294,15 +295,15 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
             true, false, true,                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                STARFISH_BINDING_ASSERT_UNIMPLEMENTED(                         \
-                    "Unimplemented module \"%s\"\n", #exportName);             \
+                STARFISH_UNIMPLEMENTED("Unimplemented module \"%s\"",          \
+                                       #exportName);                           \
                 return ValueRef::createUndefined();                            \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
-                STARFISH_BINDING_ASSERT_UNIMPLEMENTED(                         \
-                    "Unimplemented module \"%s\"\n", #exportName);             \
+                STARFISH_UNIMPLEMENTED("Unimplemented module \"%s\"",          \
+                                       #exportName);                           \
                 return false;                                                  \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \

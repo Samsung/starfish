@@ -186,13 +186,13 @@ static void loggingJSErrorInfo(
     const ::Escargot::Evaluator::EvaluatorResult& sbResult)
 {
     STARFISH_LOG_ERROR(
-        "Uncaught %s\n",
+        "Uncaught %s",
         sbResult.resultOrErrorToString(instance->scriptContext())
             ->toStdUTF8String()
             .data());
     for (size_t i = 0; i < sbResult.stackTraceData.size(); i++) {
         STARFISH_LOG_ERROR(
-            "at %s(%d:%d)\n",
+            "at %s(%d:%d)",
             toBrowserString(instance, sbResult.stackTraceData[i].src)
                 ->toUTF8NonGCString()
                 .data(),
@@ -239,7 +239,7 @@ static void loggingJSErrorInfo(
                 preLineSoFar <= src->length() &&
                 afterLineSoFar <= src->length()) {
                 auto subSrc = src->substring(preLineSoFar, afterLineSoFar);
-                STARFISH_LOG_INFO("%s\n", subSrc->toStdUTF8String().data());
+                STARFISH_LOG_INFO("%s", subSrc->toStdUTF8String().data());
                 std::string sourceCodePosition;
                 for (size_t i = preLineSoFar; i < start; i++) {
                     sourceCodePosition += " ";
@@ -804,65 +804,67 @@ void jsGlobalObjectDefinePropertyIfNotExists(ScriptBindingInstance* instance,
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
-	if (UNLIKELY(!instance->isScriptingEnabled())) {
+    if (UNLIKELY(!instance->isScriptingEnabled())) {
         if (result) {
             *result = false;
         }
         return scriptUndefined();
-	}
+    }
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
-	// currently, debugger only supports ScriptBindingWindowInstance
-    if (instance->hasWindow() && instance->isScriptingEnabled() && !instance->isDebuggerEnabled()) {
-		static unsigned port;
-		Window* window = instance->ownerWindow();
-		if (window->browsingContext()->isTopLevelBrowsingContext()) {
-			port = 6501;
-		}
-		struct DebuggerCallbackParam {
-			std::string url;
-			int port;
-			bool* ret;
-		};
+    // currently, debugger only supports ScriptBindingWindowInstance
+    if (instance->hasWindow() && instance->isScriptingEnabled() &&
+        !instance->isDebuggerEnabled()) {
+        static unsigned port;
+        Window* window = instance->ownerWindow();
+        if (window->browsingContext()->isTopLevelBrowsingContext()) {
+            port = 6501;
+        }
+        struct DebuggerCallbackParam {
+            std::string url;
+            int port;
+            bool* ret;
+        };
 
-		DebuggerCallbackParam* param = new DebuggerCallbackParam();
-		bool shouldInit = true;
-		param->port = port;
-		param->url = window->document()->urlString()->toUTF8NonGCString();
-		param->ret = &shouldInit;
-		window->webView()->callPublicWebViewHandler(
-			DebuggerShouldInit, param, true);
-		delete param;
+        DebuggerCallbackParam* param = new DebuggerCallbackParam();
+        bool shouldInit = true;
+        param->port = port;
+        param->url = window->document()->urlString()->toUTF8NonGCString();
+        param->ret = &shouldInit;
+        window->webView()->callPublicWebViewHandler(DebuggerShouldInit, param,
+                                                    true);
+        delete param;
 
-		if (shouldInit) {
-			while (true) {
-				window->scriptBindingInstance()->startDebugger(port, 1000);
-				if (window->scriptBindingInstance()->isDebuggerEnabled()) {
-					port++;
-					window->setInterval(
-						[](void* data) {
-							ScriptBindingInstance* w =
-								(ScriptBindingInstance*)data;
-							w->pumpDebuggerEvents();
-						},
-						100, instance);
-					break;
-				}
+        if (shouldInit) {
+            while (true) {
+                window->scriptBindingInstance()->startDebugger(port, 1000);
+                if (window->scriptBindingInstance()->isDebuggerEnabled()) {
+                    port++;
+                    window->setInterval(
+                        [](void* data) {
+                            ScriptBindingInstance* w =
+                                (ScriptBindingInstance*)data;
+                            w->pumpDebuggerEvents();
+                        },
+                        100, instance);
+                    break;
+                }
 
-				DebuggerCallbackParam* param = new DebuggerCallbackParam();
-				bool shouldWait = true;
-				param->port = port;
-				param->url = window->document()->urlString()->toUTF8NonGCString();
-				param->ret = &shouldWait;
-				window->webView()->callPublicWebViewHandler(
-					DebuggerShouldContinueWaiting, param, true);
-				delete param;
+                DebuggerCallbackParam* param = new DebuggerCallbackParam();
+                bool shouldWait = true;
+                param->port = port;
+                param->url =
+                    window->document()->urlString()->toUTF8NonGCString();
+                param->ret = &shouldWait;
+                window->webView()->callPublicWebViewHandler(
+                    DebuggerShouldContinueWaiting, param, true);
+                delete param;
 
-				if (!shouldWait) {
-					break;
-				}
-			}
-		}
+                if (!shouldWait) {
+                    break;
+                }
+            }
+        }
     }
 
 #endif
@@ -880,8 +882,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     s += "_";
     s += std::to_string(++s_evalUniqueID);
     s += ".js";
-    auto scriptRef =
-        ctx->scriptParser()->initializeScript(source, toJSString(String::fromUTF8(s.data(), s.length())));
+    auto scriptRef = ctx->scriptParser()->initializeScript(
+        source, toJSString(String::fromUTF8(s.data(), s.length())));
 #else
     auto scriptRef =
         ctx->scriptParser()->initializeScript(source, toJSString(fileName));
@@ -889,7 +891,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 
     if (!scriptRef.isSuccessful()) {
         STARFISH_LOG_ERROR(
-            "Script parse error: %s %s\n", fileName->toUTF8NonGCString().data(),
+            "Script parse error: %s %s", fileName->toUTF8NonGCString().data(),
             toBrowserString(instance, scriptRef.parseErrorMessage)
                 ->toUTF8NonGCString()
                 .data());
@@ -901,7 +903,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
     size_t parseEnd = longTickCount();
     float time = (float)((parseEnd - parseStart) / 1000.f);
-    STARFISH_LOG_INFO("js parse %f ms\n", time);
+    STARFISH_LOG_INFO("js parse %f ms", time);
 #endif
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
@@ -918,7 +920,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
     size_t executeEnd = longTickCount();
     time = (float)((executeEnd - parseEnd) / 1000.f);
-    STARFISH_LOG_INFO("js execute %f ms\n", time);
+    STARFISH_LOG_INFO("js execute %f ms", time);
 #endif
 
     clearStack<DEFAULT_CLEAR_STACK_SIZE>();

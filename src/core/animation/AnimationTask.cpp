@@ -124,7 +124,7 @@ void AnimationExecutor::fireAnimationStartEvent(Element* element, String* name,
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationStart: animationName [%s]\n",
+    // STARFISH_LOG_INFO("element %p animationStart: animationName [%s]",
     // element, name->toUTF8NonGCString().data());
     AnimationEventInit init;
     init.setAnimationName(name);
@@ -148,7 +148,7 @@ void AnimationExecutor::fireAnimationEndEvent(Element* element, String* name,
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationEnd: animationName [%s]\n",
+    // STARFISH_LOG_INFO("element %p animationEnd: animationName [%s]",
     // element, name->toUTF8NonGCString().data());
     AnimationEventInit init;
     init.setAnimationName(name);
@@ -167,7 +167,7 @@ void AnimationExecutor::fireAnimationCancelEvent(Element* element, String* name,
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(name != nullptr);
-    // STARFISH_LOG_INFO("element %p animationCancel: animationName [%s]\n",
+    // STARFISH_LOG_INFO("element %p animationCancel: animationName [%s]",
     // element, name->toUTF8NonGCString().data());
     AnimationEventInit init;
     init.setAnimationName(name);
@@ -320,7 +320,7 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
 void ActiveAnimationTask::fireTransitionStartEvent()
 {
-    // STARFISH_LOG_INFO("element %p property %s transitionStart\n",
+    // STARFISH_LOG_INFO("element %p property %s transitionStart",
     // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
@@ -338,7 +338,7 @@ void ActiveAnimationTask::fireTransitionStartEvent()
 
 void ActiveAnimationTask::fireTransitionEndEvent()
 {
-    // STARFISH_LOG_INFO("element %p property %s transitionEnd\n",
+    // STARFISH_LOG_INFO("element %p property %s transitionEnd",
     // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
@@ -356,7 +356,7 @@ void ActiveAnimationTask::fireTransitionEndEvent()
 
 void ActiveAnimationTask::fireTransitionCancelEvent()
 {
-    // STARFISH_LOG_INFO("element %p property %s transitionCancel\n",
+    // STARFISH_LOG_INFO("element %p property %s transitionCancel",
     // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
@@ -953,7 +953,7 @@ void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
     } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
         style->setTextDecorationColor(Unit::Color(r, g, b, a));
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -1003,7 +1003,7 @@ bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
             return true;
         }
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     return false;
 }
@@ -2723,7 +2723,7 @@ static AnimatedValue* animatedColorValue(const CSSStyleValuePair& property)
             NamedColor::namedColorToColor(property.namedColorValue()));
     } else {
         // TODO: Consider how to handle in this case.
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return new AnimatedValue(Unit::Color(0, 0, 0, 0));
     }
 }
@@ -2743,7 +2743,7 @@ static AnimatedValue* animatedLengthValue(const CSSStyleValuePair& property)
             Length(Length::Percent, property.percentageValue()));
     } else {
         // TODO: Consider how to handle in this case.
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return new AnimatedValue(Length(Length::Fixed, 0));
     }
 }
@@ -2928,7 +2928,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
                                                      layer);
         } else {
             // TODO: Consider how to handle in this case.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         break;
     case CSSStyleValuePair::BackgroundPositionY:
@@ -2941,7 +2941,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
                                                      layer);
         } else {
             // TODO: Consider how to handle in this case.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         break;
     case CSSStyleValuePair::BackgroundSize:
@@ -2954,7 +2954,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
                                                  layer);
         } else {
             // TODO: Consider how to handle in this case.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         break;
     case CSSStyleValuePair::Opacity:
@@ -2965,7 +2965,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
         if (property.valueKind() == CSSStyleValuePair::ValueKind::Number) {
             return new AnimatedValue(property.numberValue());
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             return nullptr;
         }
         break;

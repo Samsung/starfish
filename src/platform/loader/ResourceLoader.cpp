@@ -288,7 +288,7 @@ static void registerImageURLs(
 
 void ResourceLoader::cachePruning()
 {
-    // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n",
+    // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB",
     // (int)m_resourceCacheSize / 1024);
 
     if (m_resourceCacheSize > (STARFISH_RESOURCE_CACHE_SIZE * 0.75) &&
@@ -380,7 +380,7 @@ void ResourceLoader::cachePruning()
 #endif
         STARFISH_LOG_INFO(
             "ResourceLoader::cachePruning - prune %dKB current cache size is "
-            "%dKB\n",
+            "%dKB",
             (int)removedSize / 1024, (int)m_resourceCacheSize / 1024);
     }
 }
@@ -502,7 +502,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
 {
     Resource::State s = org->state();
     org->m_isReferencedByAnoterResource = true;
-    // STARFISH_LOG_INFO("cache hit! %s\n",
+    // STARFISH_LOG_INFO("cache hit! %s",
     // org->url()->urlString()->toUTF8NonGCString().data());
     if (s == Resource::State::Finished) {
         if (syncLevel == RequestSyncLevel::SyncIfAlreadyLoaded) {
@@ -560,7 +560,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                 ->isTopLevelBrowsingContext()) {
                             STARFISH_LOG_INFO(
                                 "will fire top browsing context Window.onload "
-                                "event\n");
+                                "event");
                         }
 
                         String* eventType = doc->starfish()

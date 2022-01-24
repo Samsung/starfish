@@ -53,7 +53,7 @@ static inline bool startsWith(const std::string& string,
 int main(int argc, char* argv[])
 {
     STARFISH_ASSERT(argv != nullptr);
-    STARFISH_LOG_INFO("WORKER STARTS\n");
+    STARFISH_LOG_INFO("WORKER STARTS");
 
     std::string scriptURL = "";
 
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 
     LWE::LWE::Finalize();
 
-    STARFISH_LOG_INFO("WORKER ENDS\n");
+    STARFISH_LOG_INFO("WORKER ENDS");
     return 0;
 }
 

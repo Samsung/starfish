@@ -109,13 +109,13 @@ Starfish::Starfish(const char* localStorageFilePath,
         g_starfishGlobalInit = true;
 
         GC_set_abort_func([](const char* msg) {
-            STARFISH_LOG_ERROR("Starfish: GC aborted\n");
-            STARFISH_LOG_ERROR("%s\n", msg);
+            STARFISH_LOG_ERROR("Starfish: GC aborted");
+            STARFISH_LOG_ERROR("%s", msg);
         });
 
         GC_set_warn_proc([](char* msg, GC_word arg) {
-            STARFISH_LOG_ERROR("Starfish: GC warning\n");
-            STARFISH_LOG_ERROR("%s\n", msg);
+            STARFISH_LOG_ERROR("Starfish: GC warning");
+            STARFISH_LOG_ERROR("%s", msg);
         });
 
         GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
@@ -234,7 +234,7 @@ void Starfish::doFullGCWithoutSeeingStack()
 
 void Starfish::printEveryReachableGCObjects()
 {
-    STARFISH_LOG_ERROR("print reachable pointers -->\n");
+    STARFISH_LOG_ERROR("print reachable pointers -->");
     GC_gcollect();
     GC_disable();
     GC_enumerate_reachable_objects_inner(
@@ -243,13 +243,13 @@ void Starfish::printEveryReachableGCObjects()
             int kind = GC_get_kind_and_size(obj, &size);
             STARFISH_ASSERT(size == bytes);
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
-            STARFISH_LOG_ERROR("@@@ kind %d pointer %p\n", (int)kind, ptr);
+            STARFISH_LOG_ERROR("@@@ kind %d pointer %p", (int)kind, ptr);
 #if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID))
             GC_print_backtrace(ptr);
 #endif
         },
         nullptr);
     GC_enable();
-    STARFISH_LOG_ERROR("<-- end of print reachable pointers\n");
+    STARFISH_LOG_ERROR("<-- end of print reachable pointers");
 }
 } // namespace Starfish

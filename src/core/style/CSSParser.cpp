@@ -1663,7 +1663,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
 
                 if (!aToken->value()->hasASCIIContent()) {
                     auto s = aToken->value()->toString()->toUTF8NonGCString();
-                    STARFISH_LOG_ERROR("CSSParser: Unsupported property: %s\n",
+                    STARFISH_LOG_ERROR("CSSParser: Unsupported property: %s",
                                        s.data());
                 } else {
                     struct Sender {
@@ -1700,7 +1700,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                     CSSStyleValuePair::KeyKind::Unknown &&
                                 len && name[0] != '-') {
                                 STARFISH_LOG_ERROR(
-                                    "CSSParser: Unsupported property: %s\n",
+                                    "CSSParser: Unsupported property: %s",
                                     name);
                             }
 #endif

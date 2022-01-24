@@ -92,7 +92,7 @@ static bool normalizeAndAddStops(GCVector<ColorStop*>& colorStops)
         // if (desc.spread_method != kSpreadMethodRepeat)
         //     desc.stops.emplace_back(clamped_offset, stops.front().color);
         // desc.stops.emplace_back(clamped_offset, stops.back().color);
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 

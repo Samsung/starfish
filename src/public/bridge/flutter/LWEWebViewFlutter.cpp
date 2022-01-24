@@ -120,7 +120,7 @@ public:
                             if (result == EGL_FALSE) {
                                 STARFISH_LOG_INFO(
                                     "EGL FENCE: error waiting for fence: "
-                                    "%d\n",
+                                    "%d",
                                     (int)eglGetError());
                             }
                             g_eglDestroySyncKHRProc(m_display, m_fence);
@@ -135,7 +135,7 @@ public:
                                             m_context)) {
                             auto eglError = eglGetError();
                             STARFISH_LOG_ERROR(
-                                "Made current failed error -> %d\n",
+                                "Made current failed error -> %d",
                                 (int)eglError);
                         }
                     }
@@ -147,7 +147,7 @@ public:
                         if (!eglSwapBuffers(m_display, m_surface)) {
                             auto eglError = eglGetError();
                             STARFISH_LOG_ERROR(
-                                "Made current failed error -> %d\n",
+                                "Made current failed error -> %d",
                                 (int)eglError);
                         }
                     }
@@ -158,7 +158,7 @@ public:
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
                         uint64_t end = Starfish::longTickCount();
                         float time = (float)((end - m_lastInputTime) / 1000.f);
-                        STARFISH_LOG_INFO("response time is %f ms\n", time);
+                        STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
                         m_lastInputTime = 0;
                         ANNOTATE_CHANNEL_END(3002);
@@ -167,7 +167,7 @@ public:
                         m_fence = g_eglCreateSyncKHRProc(
                             m_display, EGL_SYNC_FENCE_KHR, NULL);
                         if (!m_fence) {
-                            STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d\n",
+                            STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
                                               (int)eglGetError());
                         }
                     }
@@ -225,25 +225,25 @@ public:
         if (!m_display) {
             m_display = eglGetDisplay((EGLNativeDisplayType)m_wlDisplay);
             if (m_display == EGL_NO_DISPLAY) {
-                STARFISH_LOG_ERROR("Can't create egl display\n");
+                STARFISH_LOG_ERROR("Can't create egl display");
                 exit(1);
             } else {
-                STARFISH_LOG_INFO("Created egl display\n");
+                STARFISH_LOG_INFO("Created egl display");
             }
 
             if (eglInitialize(m_display, &major, &minor) != EGL_TRUE) {
-                STARFISH_LOG_ERROR("Can't initialise egl display\n");
+                STARFISH_LOG_ERROR("Can't initialise egl display");
                 exit(1);
             }
-            STARFISH_LOG_INFO("EGL major: %d, minor %d\n", major, minor);
+            STARFISH_LOG_INFO("EGL major: %d, minor %d", major, minor);
 
             if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) {
-                STARFISH_LOG_ERROR("Can't bind egl api\n");
+                STARFISH_LOG_ERROR("Can't bind egl api");
             }
         }
 
         eglGetConfigs(m_display, NULL, 0, &count);
-        STARFISH_LOG_INFO("EGL has %d configs\n", count);
+        STARFISH_LOG_INFO("EGL has %d configs", count);
 
         configs = ALLOCA(count * sizeof(*configs), void*);
 
@@ -252,19 +252,19 @@ public:
         EGLConfig eglConf = configs[0];
         for (i = 0; i < n; i++) {
             eglGetConfigAttrib(m_display, configs[i], EGL_BUFFER_SIZE, &size);
-            STARFISH_LOG_INFO("Buffer size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Buffer size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_RED_SIZE, &size);
-            STARFISH_LOG_INFO("Red size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Red size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_GREEN_SIZE, &size);
-            STARFISH_LOG_INFO("Green size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Green size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_BLUE_SIZE, &size);
-            STARFISH_LOG_INFO("Blue size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Blue size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_ALPHA_SIZE, &size);
-            STARFISH_LOG_INFO("Alpha size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Alpha size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_STENCIL_SIZE, &size);
-            STARFISH_LOG_INFO("Stencil size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Stencil size for config %d is %d", i, size);
             eglGetConfigAttrib(m_display, configs[i], EGL_DEPTH_SIZE, &size);
-            STARFISH_LOG_INFO("Depth size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Depth size for config %d is %d", i, size);
             // just choose the first one
             eglConf = configs[i];
             break;
@@ -282,7 +282,7 @@ public:
                 EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
                                             EGL_NONE };
                 STARFISH_LOG_INFO(
-                    "failed to create opengl es 3+ context. use 2 instead\n");
+                    "failed to create opengl es 3+ context. use 2 instead");
                 m_context = eglCreateContext(m_display, eglConf, EGL_NO_CONTEXT,
                                              contextAttribs);
             }
@@ -297,9 +297,9 @@ public:
         }
 
         if (eglMakeCurrent(m_display, m_surface, m_surface, m_context)) {
-            STARFISH_LOG_INFO("Made current\n");
+            STARFISH_LOG_INFO("Made current");
         } else {
-            STARFISH_LOG_ERROR("Made current failed\n");
+            STARFISH_LOG_ERROR("Made current failed");
         }
 
         if (needsEGLInitization) {
@@ -310,12 +310,12 @@ public:
             glFlush();
 
             if (eglSwapBuffers(m_display, m_surface)) {
-                STARFISH_LOG_INFO("Swapped buffers\n");
+                STARFISH_LOG_INFO("Swapped buffers");
             } else {
-                STARFISH_LOG_ERROR("Swapped buffers failed\n");
+                STARFISH_LOG_ERROR("Swapped buffers failed");
             }
 
-            STARFISH_LOG_INFO("wl_display_dispatch few times\n");
+            STARFISH_LOG_INFO("wl_display_dispatch few times");
             size_t dispatchCount = 0;
             while (dispatchCount < 3) {
                 if (wl_display_dispatch_pending(m_wlDisplay) > 0) {

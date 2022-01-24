@@ -321,7 +321,7 @@ WindowProxy* Document::open(String* url, String* name, String* features)
 {
     // TODO If this Document object is not an active document, then throw an
     // "InvalidStateError" DOMException exception.
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
@@ -676,12 +676,12 @@ void Document::notifyDomContentLoaded()
         }
 #endif
 
-        STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
+        STARFISH_LOG_INFO("Document::notifyDomContentLoaded");
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         if (browsingContext()->isTopLevelBrowsingContext()) {
             STARFISH_LOG_INFO(
                 "[NETWORK_PROFILING] Document::notifyDomContentLoaded at "
-                "%dms\n",
+                "%dms",
                 (int)(timestamp() - g_profilingBaseTime));
         }
 #endif
@@ -700,13 +700,13 @@ void Document::notifyDomContentLoaded()
 
             STARFISH_LOG_INFO(
                 "No doctype is found or quirks mode is given in "
-                "%s\n",
+                "%s",
                 s.data());
             STARFISH_LOG_INFO(
                 "Please make sure the document starts with "
-                "\"<!DOCTYPE html>\"\n");
-            STARFISH_LOG_INFO("Quirks mode is not supported.\n");
-            STARFISH_LOG_INFO("Processing the document in no-quirks mode.\n");
+                "\"<!DOCTYPE html>\"");
+            STARFISH_LOG_INFO("Quirks mode is not supported.");
+            STARFISH_LOG_INFO("Processing the document in no-quirks mode.");
         }
 
         // if there is a fragment identifier, set cssTarget.
@@ -1298,7 +1298,7 @@ String* Document::dir()
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-dir
 void Document::setDir(String* dir)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 bool Document::hidden() const
@@ -1813,7 +1813,7 @@ Element* Document::activeElement()
 
 bool Document::hasFocus() const
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return true;
 }
 
@@ -1890,7 +1890,7 @@ String* Document::domain()
 
 void Document::setDomain(String* domain)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 Nullable<HTMLOrSVGScriptElement> Document::currentScript()
@@ -1914,21 +1914,21 @@ void Document::loadBuiltinPolyfill(String* localPath)
     if (!localPath->length()) {
         return;
     }
-    STARFISH_LOG_INFO("Load built-in javascript polyfill\n");
+    STARFISH_LOG_INFO("Load built-in javascript polyfill");
     auto in = PlatformFile::open(localPath, PlatformFile::FileMode::Read);
     if (!in) {
-        STARFISH_LOG_INFO("Invalid built-in polyfill path.\n");
+        STARFISH_LOG_INFO("Invalid built-in polyfill path.");
         return;
     }
     Nullable<String*> data = in->readAll();
     in.reset();
     if (!data.hasValue()) {
-        STARFISH_LOG_INFO("Invalid built-in polyfill content.\n");
+        STARFISH_LOG_INFO("Invalid built-in polyfill content.");
         return;
     }
     evaluateString(window()->scriptBindingInstance(), data.getValue(),
                    String::createASCIIString("builtinPolyfill"));
-    STARFISH_LOG_INFO("Built-in polyfill evaluated.\n");
+    STARFISH_LOG_INFO("Built-in polyfill evaluated.");
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
@@ -1961,13 +1961,13 @@ Event* Document::createEvent(String* type)
         break;
     case 9:
         if (type->equals("dragevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("svgevents")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("textevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
@@ -1975,13 +1975,13 @@ Event* Document::createEvent(String* type)
         switch (type->charAt(0)) {
         case 'c':
             if (type->equals("closeevent")) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 e = new Event(executionContext());
             }
             break;
         case 'e':
             if (type->equals("errorevent")) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 e = new Event(executionContext());
             }
             break;
@@ -1992,7 +1992,7 @@ Event* Document::createEvent(String* type)
             break;
         case 'h':
             if (type->equals("htmlevents")) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 e = new Event(executionContext());
             }
             break;
@@ -2005,13 +2005,13 @@ Event* Document::createEvent(String* type)
             if (type->equals("touchevent")) {
                 e = new TouchEvent(this);
             } else if (type->equals("trackevent")) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 e = new Event(executionContext());
             }
             break;
         case 'w':
             if (type->equals("wheelevent")) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 e = new Event(executionContext());
             }
             break;
@@ -2028,10 +2028,10 @@ Event* Document::createEvent(String* type)
         break;
     case 12:
         if (type->equals("messageevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("storageevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
@@ -2039,58 +2039,58 @@ Event* Document::createEvent(String* type)
         if (type->equals("keyboardevent")) {
             e = new KeyboardEvent(executionContext());
         } else if (type->equals("popstateevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("mutationevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 14:
         if (type->equals("animationevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("mutationevents")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 15:
         if (type->equals("hashchangeevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("transitionevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 17:
         if (type->equals("beforeunloadevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("devicemotionevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         } else if (type->equals("webglcontextevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 19:
         if (type->equals("pagetransitionevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 21:
         if (type->equals("idbversionchangeevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
     case 22:
         if (type->equals("deviceorientationevent")) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             e = new Event(executionContext());
         }
         break;
@@ -2214,7 +2214,7 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
         m_nativeGradientCacheTotalSize += bufferSize;
     }
 #ifdef STARFISH_ENABLE_TEST
-    STARFISH_LOG_INFO("NativeGradient cache size : %d KB\n",
+    STARFISH_LOG_INFO("NativeGradient cache size : %d KB",
                       (int)m_nativeGradientCacheTotalSize / 1024);
 #endif
 }

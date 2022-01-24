@@ -123,7 +123,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
         // TODO: send request reject
         SWHOST_LOG_IF_ALLOWED(1,
                               "1. received data is ignored due to swserver is "
-                              "being terminated\n");
+                              "being terminated");
         return;
     }
 

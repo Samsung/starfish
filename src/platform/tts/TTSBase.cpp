@@ -68,7 +68,7 @@ void TTS::speech(Element* element, String* text)
             nullptr,
             [](size_t, void* data) {
                 String* text = (String*)data;
-                STARFISH_LOG_INFO("TTS speech : %s\n",
+                STARFISH_LOG_INFO("TTS speech : %s",
                                   text->toUTF8NonGCString().data());
             },
             text);

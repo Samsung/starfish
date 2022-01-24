@@ -209,7 +209,7 @@ public:
         int s;
         int ret = player_get_play_position(m_nativePlayer, &s);
         if (ret) {
-            PLAYER_LOGI("player_get_play_position: failed\n");
+            PLAYER_LOGI("player_get_play_position: failed");
             printNativePlayerError(ret);
             return 0;
         }
@@ -264,7 +264,7 @@ public:
 
     static void seekedCallback(void* data)
     {
-        PLAYER_LOGI("player_set_play_position_cb\n");
+        PLAYER_LOGI("player_set_play_position_cb");
         MediaPlayerTizen* self = (MediaPlayerTizen*)data;
         self->handleSeeked();
     }

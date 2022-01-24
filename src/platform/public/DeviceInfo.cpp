@@ -68,8 +68,7 @@ bool DeviceInfo::getLocalIPAddress(std::string queriedInfName,
             goto error;
         }
 
-        STARFISH_LOG_INFO("%s - inet addr:%s\n", ifconf.ifc_req[i].ifr_name,
-                          ip);
+        STARFISH_LOG_INFO("%s - inet addr:%s", ifconf.ifc_req[i].ifr_name, ip);
 
         // NOTE: if the given inteface name is empty, we currently return the
         // first matched interface's IP.

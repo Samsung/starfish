@@ -47,7 +47,7 @@ public:
             requestWorkerSize = static_cast<unsigned>(max);
         }
 #ifdef STARFISH_ENABLE_TEST
-        STARFISH_LOG_INFO("ParallelJobExecutor worker size is : %d\n",
+        STARFISH_LOG_INFO("ParallelJobExecutor worker size is : %d",
                           requestWorkerSize);
 #endif
         auto& threadPool = webView()->parallelJobExecutorThreadPool();

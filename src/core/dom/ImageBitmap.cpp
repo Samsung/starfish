@@ -62,7 +62,7 @@ void ImageBitmap::close()
 
 SerializedData* ImageBitmap::serialize(SerializingMap& memory)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     // 1.Set serialized.[[BitmapData]] to a copy of value's bitmap data.
     // 2.Set serialized.[[OriginClean]] to true if value's origin-clean flag is
     // set, and false otherwise.
@@ -72,14 +72,14 @@ SerializedData* ImageBitmap::serialize(SerializingMap& memory)
 void ImageBitmap::deserialize(SerializedData* serialized,
                               DeserializingMap& memory) const
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     // 1.Set value's bitmap data to serialized.[[BitmapData]].
     // 2.If serialized.[[OriginClean]] is true, set value's origin-clean flag.
 }
 
 TransferedData* ImageBitmap::transfer()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     // 1.Set dataHolder.[[BitmapData]] to value's bitmap data.
     // 2.Set dataHolder.[[OriginClean]] to true if value's origin-clean flag is
     // set, and false otherwise.
@@ -89,7 +89,7 @@ TransferedData* ImageBitmap::transfer()
 
 void ImageBitmap::transferReceive(TransferedData* transfered)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     // 1.Set value's bitmap data to dataHolder.[[BitmapData]].
     // 2.If dataHolder.[[OriginClean]] is true, set value's origin-clean flag.
 }
@@ -97,14 +97,14 @@ void ImageBitmap::transferReceive(TransferedData* transfered)
 ScriptWrappable* SerializedImageBitmap::createDeserializingInstance(
     ExecutionContext* executionContext) const
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return new ImageBitmap(executionContext, nullptr);
 }
 
 ScriptWrappable* TransferedImageBitmap::createTransferReceivingInstance(
     ExecutionContext* executionContext) const
 {
-    STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return new ImageBitmap(executionContext, nullptr);
 }
 

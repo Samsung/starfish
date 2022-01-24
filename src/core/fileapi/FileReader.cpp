@@ -61,12 +61,12 @@ ScriptBindingInstance* FileReader::scriptBindingInstance()
 
 void FileReader::readAsArrayBuffer(Blob* blob)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void FileReader::readAsBinaryString(Blob* blob)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void FileReader::readAsText(Blob* blob)
@@ -81,7 +81,7 @@ void FileReader::readAsText(Blob* blob, String* encoding)
 
 void FileReader::readAsDataURL(Blob* blob)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void FileReader::abort()

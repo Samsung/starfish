@@ -240,7 +240,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
             contexts.pop_back();
         } else if (token.m_type == VariableTokenizer::TokenType::RAWVALUE) {
             // TODO : Implement a raw data such as #fff, yellow and 10px.
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
 
         token = tokenizer.next();

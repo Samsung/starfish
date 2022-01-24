@@ -70,8 +70,8 @@ PeerConnectionObserver::PeerConnectionObserver(
     RTCPeerConnection* peerConnection)
     : m_peerConnection(peerConnection)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s/>: %p : %p\n", __func__,
-                (void*)this, (void*)m_peerConnection);
+    WEBRTC_LOGI("<PeerConnectionObserver::%s/>: %p : %p", __func__, (void*)this,
+                (void*)m_peerConnection);
 
     m_webRtcManager =
         executionContext()->document()->window()->navigator()->webRtcManager();
@@ -86,7 +86,7 @@ PeerConnectionObserver::PeerConnectionObserver(
 
 PeerConnectionObserver::~PeerConnectionObserver()
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (m_webRtcManager->peerConnectionFactory()) {
@@ -95,14 +95,14 @@ PeerConnectionObserver::~PeerConnectionObserver()
         }
     }
     m_peerConnection = nullptr;
-    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 }
 
 void PeerConnectionObserver::OnSignalingChange(
     webrtc::PeerConnectionInterface::SignalingState newState)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (newState == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
@@ -133,7 +133,7 @@ void PeerConnectionObserver::OnSignalingChange(
                     self->m_peerConnection->isClosed()) {
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnSignalingChange1 "
-                        "self=%p>\n",
+                        "self=%p>",
                         (void*)p->self);
                     return;
                 }
@@ -145,7 +145,7 @@ void PeerConnectionObserver::OnSignalingChange(
                 Event* e = new Event(self->executionContext(), eventType);
                 self->m_peerConnection->dispatchEventByUA(e);
                 WEBRTC_LOGI(
-                    "</PeerConnectionObserver::OnSignalingChange2 self=%p>\n",
+                    "</PeerConnectionObserver::OnSignalingChange2 self=%p>",
                     (void*)p->self);
                 delete p;
             },
@@ -177,7 +177,7 @@ public:
 void PeerConnectionObserver::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (!isMainThread()) {
@@ -206,7 +206,7 @@ void PeerConnectionObserver::OnTrack(
                     }
 
                     p->self->OnTrack(p->transceiver);
-                    WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>\n",
+                    WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>",
                                 (void*)p->self);
                     delete p;
                 },
@@ -248,7 +248,7 @@ void PeerConnectionObserver::OnTrack(
 void PeerConnectionObserver::OnDataChannel(
     rtc::scoped_refptr<webrtc::DataChannelInterface> channel)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (!isMainThread()) {
@@ -278,7 +278,7 @@ void PeerConnectionObserver::OnDataChannel(
 
                     p->self->OnDataChannel(p->channel);
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnDataChannel self=%p>\n",
+                        "</PeerConnectionObserver::OnDataChannel self=%p>",
                         (void*)p->self);
                     delete p;
                 },
@@ -303,13 +303,13 @@ void PeerConnectionObserver::OnDataChannel(
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
 void PeerConnectionObserver::OnRenegotiationNeeded()
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isDisposed() ||
             m_peerConnection->isClosed()) {
-            WEBRTC_LOGI("</PeerConnectionObserver::%s1 self=%p pc=%p>\n",
+            WEBRTC_LOGI("</PeerConnectionObserver::%s1 self=%p pc=%p>",
                         __func__, (void*)this, (void*)m_peerConnection);
             return;
         }
@@ -328,7 +328,7 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                         self->m_peerConnection->isClosed()) {
                         WEBRTC_LOGI(
                             "<PeerConnectionObserver::OnRenegotiationNeeded2 "
-                            "pc=%p>\n",
+                            "pc=%p>",
                             (void*)self->m_peerConnection);
                         return;
                     }
@@ -344,7 +344,7 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                             ->m_negotiationneeded.localName();
     Event* e = new Event(executionContext(), eventType);
     m_peerConnection->dispatchEventByUA(e);
-    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc:%p>\n", __func__,
+    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc:%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
     return;
 }
@@ -352,23 +352,22 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
 void PeerConnectionObserver::OnIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState newState)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (newState == webrtc::PeerConnectionInterface::IceConnectionState::
                         kIceConnectionClosed ||
         newState ==
             webrtc::PeerConnectionInterface::kIceConnectionDisconnected) {
-        WEBRTC_LOGI(
-            "</PeerConnectionObserver::OnIceConnectionChange1 self=%p>\n",
-            (void*)this);
+        WEBRTC_LOGI("</PeerConnectionObserver::OnIceConnectionChange1 self=%p>",
+                    (void*)this);
         return;
     }
 
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
             WEBRTC_LOGI(
-                "</PeerConnectionObserver::OnIceConnectionChange2 self=%p>\n",
+                "</PeerConnectionObserver::OnIceConnectionChange2 self=%p>",
                 (void*)this);
             return;
         }
@@ -392,7 +391,7 @@ void PeerConnectionObserver::OnIceConnectionChange(
                         p->self->m_peerConnection->isClosed()) {
                         WEBRTC_LOGI(
                             "</PeerConnectionObserver::OnIceConnectionChange3 "
-                            "self=%p>\n",
+                            "self=%p>",
                             (void*)p->self);
                         return;
                     }
@@ -400,7 +399,7 @@ void PeerConnectionObserver::OnIceConnectionChange(
                     p->self->OnIceConnectionChange(p->newState);
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnIceConnectionChange "
-                        "self=%p>\n",
+                        "self=%p>",
                         (void*)p->self);
                     delete p;
                 },
@@ -419,7 +418,7 @@ void PeerConnectionObserver::OnIceConnectionChange(
 void PeerConnectionObserver::OnConnectionChange(
     webrtc::PeerConnectionInterface::PeerConnectionState newState)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (newState ==
@@ -454,7 +453,7 @@ void PeerConnectionObserver::OnConnectionChange(
                     p->self->OnConnectionChange(p->newState);
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnConnectionChange "
-                        "self=%p>\n",
+                        "self=%p>",
                         (void*)p->self);
                     delete p;
                 },
@@ -473,7 +472,7 @@ void PeerConnectionObserver::OnConnectionChange(
 void PeerConnectionObserver::OnIceGatheringChange(
     webrtc::PeerConnectionInterface::IceGatheringState newState)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (newState == webrtc::PeerConnectionInterface::IceGatheringState::
@@ -509,7 +508,7 @@ void PeerConnectionObserver::OnIceGatheringChange(
                     p->self->OnIceGatheringChange(p->newState);
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnIceGatheringChange "
-                        "self=%p>\n",
+                        "self=%p>",
                         (void*)p->self);
                     delete p;
                 },
@@ -528,7 +527,7 @@ void PeerConnectionObserver::OnIceGatheringChange(
 void PeerConnectionObserver::OnIceCandidate(
     const webrtc::IceCandidateInterface* candidate)
 {
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>\n", __func__,
+    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (!m_peerConnection || m_peerConnection->isClosed()) {
@@ -585,9 +584,8 @@ void PeerConnectionObserver::OnIceCandidate(
                     self->executionContext(), eventType, init);
                 self->m_peerConnection->dispatchEventByUA(e);
 
-                WEBRTC_LOGI(
-                    "</PeerConnectionObserver::OnIceCandidate self=%p>\n",
-                    (void*)p->self);
+                WEBRTC_LOGI("</PeerConnectionObserver::OnIceCandidate self=%p>",
+                            (void*)p->self);
                 delete p;
             },
             p);
@@ -596,7 +594,7 @@ void PeerConnectionObserver::OnIceCandidate(
 void CreateOfferAnswerObserver::OnSuccess(
     webrtc::SessionDescriptionInterface* desc)
 {
-    WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p", __func__, (void*)this);
 
     if (!m_peerConnection) {
         return;
@@ -652,19 +650,18 @@ void CreateOfferAnswerObserver::OnSuccess(
                 if (promise) {
                     promise->fulfill(createScriptValue(sd));
                 } else {
-                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                    WEBRTC_LOGE("%s: unknown promise type", __func__);
                 }
                 delete p;
             },
             p);
 
-    WEBRTC_LOGI("<CreateOfferAnswerObserver::/%s>: %p\n", __func__,
-                (void*)this);
+    WEBRTC_LOGI("<CreateOfferAnswerObserver::/%s>: %p", __func__, (void*)this);
 }
 
 void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
 {
-    WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p", __func__, (void*)this);
 
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
@@ -708,20 +705,19 @@ void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
                 if (promise) {
                     promise->reject(exception->scriptValue());
                 } else {
-                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                    WEBRTC_LOGE("%s: unknown promise type", __func__);
                 }
 
                 delete p;
             },
             p);
 
-    WEBRTC_LOGI("</CreateOfferAnswerObserver::%s>: %p\n", __func__,
-                (void*)this);
+    WEBRTC_LOGI("</CreateOfferAnswerObserver::%s>: %p", __func__, (void*)this);
 }
 
 void SetLocalRemoteDescriptionObserver::OnSuccess()
 {
-    WEBRTC_LOGI("<SetLocalRemoteDescriptionObserver::%s>: %p\n", __func__,
+    WEBRTC_LOGI("<SetLocalRemoteDescriptionObserver::%s>: %p", __func__,
                 (void*)this);
 
     if (!isMainThread()) {
@@ -755,15 +751,15 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
     if (promise) {
         promise->fulfill(scriptUndefined());
     } else {
-        WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+        WEBRTC_LOGE("%s: unknown promise type", __func__);
     }
-    WEBRTC_LOGI("</SetLocalRemoteDescriptionObserver::%s>: %p\n", __func__,
+    WEBRTC_LOGI("</SetLocalRemoteDescriptionObserver::%s>: %p", __func__,
                 (void*)this);
 }
 
 void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
 {
-    WEBRTC_LOGI("<SetLocalRemoteDescriptionObserver::%s>: %p\n", __func__,
+    WEBRTC_LOGI("<SetLocalRemoteDescriptionObserver::%s>: %p", __func__,
                 (void*)this);
 
     // This callback is called from another thread
@@ -810,13 +806,13 @@ void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
                 if (promise) {
                     promise->reject(exception->scriptValue());
                 } else {
-                    WEBRTC_LOGE("%s: unknown promise type\n", __func__);
+                    WEBRTC_LOGE("%s: unknown promise type", __func__);
                 }
                 delete p;
             },
             p);
 
-    WEBRTC_LOGI("</SetLocalRemoteDescriptionObserver::%s>: %p\n", __func__,
+    WEBRTC_LOGI("</SetLocalRemoteDescriptionObserver::%s>: %p", __func__,
                 (void*)this);
 }
 
@@ -827,7 +823,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
     , m_executionContext(executionContext)
     , m_disposeLock(new Mutex())
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s> %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s> %p", __func__, (void*)this);
 
     if (!configuration.certificates().empty()) {
         // TODO
@@ -847,8 +843,8 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
         m_peerConnectionObserver = nullptr;
         m_webRtcManager->deletePeerConnection(nullptr);
         m_backend = nullptr;
-        STARFISH_LOG_ERROR("%s: PeerConnection: failed\n", __func__);
-        WEBRTC_LOGI("</RTCPeerConnection::%s> %p\n", __func__, (void*)this);
+        STARFISH_LOG_ERROR("%s: PeerConnection: failed", __func__);
+        WEBRTC_LOGI("</RTCPeerConnection::%s> %p", __func__, (void*)this);
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
                                "Invalid Configuration");
     }
@@ -862,7 +858,7 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
         },
         NULL, NULL, NULL);
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s> %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s> %p", __func__, (void*)this);
 }
 
 bool RTCPeerConnection::initializePeerConnection()
@@ -896,26 +892,26 @@ bool RTCPeerConnection::initializePeerConnection(
 
 RTCPeerConnection::~RTCPeerConnection()
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p : %p\n", __func__, (void*)this,
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p : %p", __func__, (void*)this,
                 (void*)m_peerConnectionObserver);
     dispose();
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
 }
 
 void RTCPeerConnection::dispose()
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     if (isDisposed()) {
         return;
     }
 
     if (!m_webRtcManager->peerConnectionFactory()) {
-        WEBRTC_LOGI("    factory: %p\n",
+        WEBRTC_LOGI("    factory: %p",
                     (void*)m_webRtcManager->peerConnectionFactory().get());
         m_backend.release();
         m_peerConnectionObserver = nullptr;
-        WEBRTC_LOGI("</RTCPeerConnection::%s_1>: %p\n", __func__, (void*)this);
+        WEBRTC_LOGI("</RTCPeerConnection::%s_1>: %p", __func__, (void*)this);
         return;
     }
 
@@ -944,7 +940,7 @@ void RTCPeerConnection::dispose()
     m_peerConnectionObserver = nullptr;
     m_webRtcManager->deletePeerConnection(this);
     m_webRtcManager = nullptr;
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -960,7 +956,7 @@ ExecutionContext* RTCPeerConnection::executionContext() const
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer
 Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     // 1-2
     if (isClosed()) {
@@ -974,7 +970,7 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 
     if (backend() == nullptr) {
         Promise* promise = new Promise(scriptBindingInstance());
-        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_STATE_ERR,
             "Internal Error: backend() == nullptr");
@@ -991,14 +987,14 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 
     m_backend->CreateOffer(m_createOfferObserver->m_observer, opt);
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createanswer
 Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
@@ -1011,7 +1007,7 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
     if (backend() == nullptr) {
         Promise* promise = new Promise(scriptBindingInstance());
-        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_STATE_ERR,
             "Internal Error: backend() == nullptr");
@@ -1031,7 +1027,7 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
     m_backend->CreateAnswer(m_createAnswerObserver->m_observer, opt);
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
 }
 
@@ -1100,7 +1096,7 @@ ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
 Promise* RTCPeerConnection::setLocalDescription(
     RTCSessionDescriptionInit& description)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
@@ -1110,7 +1106,7 @@ Promise* RTCPeerConnection::setLocalDescription(
 
     if (backend() == nullptr) {
         Promise* promise = new Promise(scriptBindingInstance());
-        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_STATE_ERR,
             "Internal Error: backend() == nullptr");
@@ -1123,7 +1119,7 @@ Promise* RTCPeerConnection::setLocalDescription(
 
     Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
     if (!type.hasValue()) {
-        STARFISH_LOG_ERROR("%s: rollback is not supported\n", __func__);
+        STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
         auto exception =
             new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                              "rollback is not supported");
@@ -1168,7 +1164,7 @@ Promise* RTCPeerConnection::setLocalDescription(
         sdpString = m_lastCreatedAnswer;
     }
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     // 4.6
     return setRtcSessionDescription({ type, sdpString }, promise, false);
 }
@@ -1177,7 +1173,7 @@ Promise* RTCPeerConnection::setLocalDescription(
 Promise* RTCPeerConnection::setRtcSessionDescription(
     RTCSessionDescriptionInit description, Promise* promise, bool isRemote)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     // 3.1.2
     if (isRemote) {
@@ -1226,7 +1222,7 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
         webrtc::CreateSessionDescription(type.value(), sdpString);
 
     if (!desc) {
-        STARFISH_LOG_WARN("%s: desc = nullptr\n", __func__);
+        STARFISH_LOG_WARN("%s: desc = nullptr", __func__);
         return promise;
     }
 
@@ -1240,7 +1236,7 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
             m_setLocalDescriptionObserver->m_observer, desc.release());
     }
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
 }
 
@@ -1281,7 +1277,7 @@ RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
 Promise* RTCPeerConnection::setRemoteDescription(
     RTCSessionDescriptionInit& description)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
@@ -1291,7 +1287,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
     if (backend() == nullptr) {
         Promise* promise = new Promise(scriptBindingInstance());
-        STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+        STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_STATE_ERR,
             "Internal Error: backend() == nullptr");
@@ -1304,7 +1300,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
     Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
     if (!type.hasValue()) {
-        STARFISH_LOG_ERROR("%s: rollback is not supported\n", __func__);
+        STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
         auto exception =
             new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                              "rollback is not supported");
@@ -1348,7 +1344,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
         return promise;
     }
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return setRtcSessionDescription({ type, sdpString }, promise, true);
 }
 
@@ -1593,7 +1589,7 @@ GCVector<RTCIceServer> RTCPeerConnection::getDefaultIceServers()
 {
     // FIXME: IceServer is browser specific. Update as
     // IceServers become available
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     GCVector<RTCIceServer> iceServers;
     return std::move(iceServers);
 }
@@ -1742,18 +1738,18 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration,
 
 void RTCPeerConnection::close()
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
     if (isClosed()) {
         return;
     }
 
     m_closed = true;
-    WEBRTC_LOGI("  <RTCPeerConnection::m_backend->close()>\n");
+    WEBRTC_LOGI("  <RTCPeerConnection::m_backend->close()>");
     if (m_backend) {
         m_backend->Close();
     }
-    WEBRTC_LOGI("  </RTCPeerConnection::m_backend->close()>\n");
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("  </RTCPeerConnection::m_backend->close()>");
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
 }
 
 DEFINE_EVENT_LISTENER(RTCPeerConnection, negotiationneeded);
@@ -1788,21 +1784,21 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
 {
     // 1-4
     if (isClosed()) {
-        STARFISH_LOG_ERROR("%s: connection closed\n", __func__);
+        STARFISH_LOG_ERROR("%s: connection closed", __func__);
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "connection closed");
     }
     // 5-15
     if ((label->length() > 65535)) {
-        STARFISH_LOG_ERROR("%s: label.length() > 65535\n", __func__);
+        STARFISH_LOG_ERROR("%s: label.length() > 65535", __func__);
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "label.length() > 65535");
     }
     if (!dataChannelDict.negotiated() &&
         (dataChannelDict.protocol()->length() > 65535)) {
-        STARFISH_LOG_ERROR("%s: protocol.length() > 65535\n", __func__);
+        STARFISH_LOG_ERROR("%s: protocol.length() > 65535", __func__);
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "protocol.length() > 65535");
@@ -1823,7 +1819,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
         init.id = dataChannelDict.id();
     }
     if (dataChannelDict.negotiated() && !dataChannelDict.hasId()) {
-        STARFISH_LOG_ERROR("%s: negotiated=true but id=null\n", __func__);
+        STARFISH_LOG_ERROR("%s: negotiated=true but id=null", __func__);
         throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR,
                                "negotiated=true but id=null");
@@ -1831,7 +1827,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
     if (dataChannelDict.hasMaxPacketLifeTime() &&
         dataChannelDict.hasMaxRetransmits()) {
         STARFISH_LOG_ERROR(
-            "%s: both maxPacketLifeTime=true and maxRetransmits=true\n",
+            "%s: both maxPacketLifeTime=true and maxRetransmits=true",
             __func__);
         throw new DOMException(
             executionContext(), DOMException::SCRIPT_TYPE_ERR,
@@ -1847,7 +1843,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
             std::string(label->toUTF8NonGCString().data()), &init);
 
     if (!dataChannel) {
-        STARFISH_LOG_ERROR("%s: Invalid configuration\n", __func__);
+        STARFISH_LOG_ERROR("%s: Invalid configuration", __func__);
         throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                                "Invalid configuration");
     }
@@ -1904,11 +1900,11 @@ GCVector<RTCRtpTransceiver*> RTCPeerConnection::getTransceivers()
 RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                           GCVector<MediaStream*>& streams)
 {
-    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<RTCPeerConnection::%s>: %p", __func__, (void*)this);
 
     // 5
     if (isClosed()) {
-        STARFISH_LOG_ERROR("%s: InvalidStateError\n", __func__);
+        STARFISH_LOG_ERROR("%s: InvalidStateError", __func__);
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
@@ -1990,7 +1986,7 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
         }
 
         if (!r.ok()) {
-            STARFISH_LOG_ERROR("Failed to add an audio/video track: %s\n",
+            STARFISH_LOG_ERROR("Failed to add an audio/video track: %s",
                                r.error().message());
             throw new DOMException(executionContext(),
                                    DOMException::INVALID_ACCESS_ERR,
@@ -2010,7 +2006,7 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
         STARFISH_ASSERT(senderToReturn);
     }
 
-    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return senderToReturn;
 }
 
@@ -2019,7 +2015,7 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
 {
     // 1-3
     if (isClosed()) {
-        STARFISH_LOG_ERROR("%s: InvalidStateError\n", __func__);
+        STARFISH_LOG_ERROR("%s: InvalidStateError", __func__);
         throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
@@ -2041,7 +2037,7 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
     }
 
     if (!existingSender) {
-        STARFISH_LOG_ERROR("%s: InvalidAccessError\n", __func__);
+        STARFISH_LOG_ERROR("%s: InvalidAccessError", __func__);
         throw new DOMException(executionContext(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
@@ -2060,7 +2056,7 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
     aliveSender->setTrack(nullptr);
 
     if (!existingTransceiver) {
-        STARFISH_LOG_ERROR("%s: Transceiver not exist\n", __func__);
+        STARFISH_LOG_ERROR("%s: Transceiver not exist", __func__);
         return;
     }
 
@@ -2107,7 +2103,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     }
 
     if (!r.ok()) {
-        STARFISH_LOG_ERROR("%s: internal error\n", __func__);
+        STARFISH_LOG_ERROR("%s: internal error", __func__);
         throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                                "addTransceiver: internal error");
     }
@@ -2139,7 +2135,7 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
         }
 
         if (count != 1) {
-            STARFISH_LOG_ERROR("%s: The track does not exist in this pc\n",
+            STARFISH_LOG_ERROR("%s: The track does not exist in this pc",
                                __func__);
             auto exception = new DOMException(
                 executionContext(), DOMException::INVALID_ACCESS_ERR,

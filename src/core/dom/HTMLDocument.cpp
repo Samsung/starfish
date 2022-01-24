@@ -276,7 +276,7 @@ Element* HTMLDocument::createHTMLElement(Document* document,
 #endif
 
     auto s = name.string()->toUTF8NonGCString();
-    STARFISH_LOG_INFO("HTMLDocument: invalid (or unsupported) element: %s\n",
+    STARFISH_LOG_INFO("HTMLDocument: invalid (or unsupported) element: %s",
                       s.data());
     return new HTMLUnknownElement(document, qname);
 }

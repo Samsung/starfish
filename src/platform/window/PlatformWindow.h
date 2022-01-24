@@ -107,7 +107,7 @@ public:
     virtual uint32_t height() = 0;
     virtual void resizeTo(uint32_t w, uint32_t h)
     {
-        STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d\n", w, h);
+        STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d", w, h);
         onResize();
     }
     virtual void clearResources();

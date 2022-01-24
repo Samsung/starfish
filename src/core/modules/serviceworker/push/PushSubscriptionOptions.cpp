@@ -53,7 +53,7 @@ void PushSubscriptionOptions::setPushSubscriptionOptions(
         } else {
             // TODO: Support other types
             STARFISH_LOG_WARN(
-                "Push Service: Unsupported type of application server key\n");
+                "Push Service: Unsupported type of application server key");
         }
     }
 }

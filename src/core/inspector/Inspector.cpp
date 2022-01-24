@@ -49,7 +49,7 @@ Inspector::Inspector(WebView* wv)
 
 Inspector::~Inspector()
 {
-    STARFISH_LOG_INFO("Inspector::~Inspector()\n");
+    STARFISH_LOG_INFO("Inspector::~Inspector()");
     if (m_isRunning) {
         stop();
     }
@@ -82,7 +82,7 @@ void Inspector::sendInfoMessage(String* m)
         m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
                           0);
     } catch (const nn::exception& e) {
-        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+        STARFISH_LOG_INFO("sending is failed due to %s", e.what());
     }
 }
 
@@ -113,7 +113,7 @@ void Inspector::sendErrorMessage(String* m)
         m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
                           0);
     } catch (const nn::exception& e) {
-        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+        STARFISH_LOG_INFO("sending is failed due to %s", e.what());
     }
 }
 
@@ -144,7 +144,7 @@ void Inspector::sendWarnMessage(String* m)
         m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
                           0);
     } catch (const nn::exception& e) {
-        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+        STARFISH_LOG_INFO("sending is failed due to %s", e.what());
     }
 }
 
@@ -175,7 +175,7 @@ void Inspector::sendDebugMessage(String* m)
         m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
                           0);
     } catch (const nn::exception& e) {
-        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+        STARFISH_LOG_INFO("sending is failed due to %s", e.what());
     }
 }
 
@@ -204,7 +204,7 @@ void* Inspector::worker(void* data)
         self->m_nnmSocket->bind(self->m_addr.c_str());
     } catch (const nn::exception& ex) {
         if (ex.num() == EADDRINUSE) {
-            STARFISH_LOG_INFO("The requested address is already in use.\n");
+            STARFISH_LOG_INFO("The requested address is already in use.");
         }
         goto exit;
     }
@@ -252,7 +252,7 @@ void* Inspector::worker(void* data)
                 nn::freemsg(buffer);
             }
         } catch (const nn::exception& e) {
-            STARFISH_LOG_INFO("recv failed due to %s\n", e.what());
+            STARFISH_LOG_INFO("recv failed due to %s", e.what());
             break;
         }
     }
@@ -261,7 +261,7 @@ exit:
     delete self->m_nnmSocket;
     self->m_nnmSocket = nullptr;
     self->m_isRunning = false;
-    STARFISH_LOG_INFO("inspector io thread end\n");
+    STARFISH_LOG_INFO("inspector io thread end");
     return nullptr;
 }
 
@@ -270,7 +270,7 @@ void Inspector::run(uint32_t port)
     m_ioThread = new Thread(m_webView->threadPool());
     m_addr = "ws://0.0.0.0:";
     m_addr += std::to_string(port);
-    STARFISH_LOG_INFO("inspector open server %s\n", m_addr.c_str());
+    STARFISH_LOG_INFO("inspector open server %s", m_addr.c_str());
     try {
         m_ioThread->run(m_webView->messageLoop(), Inspector::worker, this);
     } catch (...) {

@@ -257,7 +257,7 @@ static SerializedTypedData* serializeInternal(
             data = new SerializedPrimitiveValueData(
                 obj->asDateObject()->primitiveValue());
         } else if (obj->isRegExpObject()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else if (obj->isArrayObject()) {
             type = SerializedTypedData::Array;
             ValueRef* length = obj->getOwnProperty(
@@ -283,9 +283,9 @@ static SerializedTypedData* serializeInternal(
         } else if (obj->isPromiseObject()) {
             return nullptr;
         } else if (obj->isArrayBufferObject()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else if (obj->isArrayBufferView()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else {
             type = SerializedTypedData::Object;
             data = new SerializedObjectData();
@@ -380,7 +380,7 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                 value->data()->asSerializedPrimitiveValueData()->numberData()));
         result = dateObj;
     } else if (value->isRegExp()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         result = ValueRef::createUndefined();
     } else if (value->isArray()) {
         ArrayObjectRef* array = ArrayObjectRef::create(state);
@@ -398,7 +398,7 @@ static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                      ->createDeserializingInstance(executionContext)
                      ->scriptValue();
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     if (result) {
         memory.insert(std::make_pair(value, result));
@@ -508,7 +508,7 @@ void Serializer::serializeWithTransfer(ExecutionContext* executionContext,
                 }
             } else if (item->asObject()->isArrayBufferObject()) {
                 // TODO Handle SharedArrayBuffer case (ECMAScript2018)
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         }
         throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);

@@ -83,7 +83,7 @@ StreamInfo::StreamInfo()
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("StreamInfo::~StreamInfo\n");
+            STARFISH_LOG_INFO("StreamInfo::~StreamInfo");
             StreamInfo* self = (StreamInfo*)obj;
             std::vector<uint8_t>().swap(self->m_extraData);
         },

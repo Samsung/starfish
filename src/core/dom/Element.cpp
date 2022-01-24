@@ -511,10 +511,10 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 {
 #ifdef STARFISH_TC_COVERAGE
     if (name.localName()->equals("style")) {
-        STARFISH_LOG_INFO("+++attr:&&&style\n");
+        STARFISH_LOG_INFO("+++attr:&&&style");
     } else {
         auto s = name.localName()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("+++attr:%s\n", s.data());
+        STARFISH_LOG_INFO("+++attr:%s", s.data());
     }
 #endif
 

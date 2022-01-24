@@ -49,13 +49,12 @@ public:
     {
         ResourceClient::didLoadFailed();
         RequestErrorType error = m_resource->requestErrorType();
-        STARFISH_LOG_ERROR("AudioDownloadClient::%s: %d\n", __func__,
-                           (int)error);
+        STARFISH_LOG_ERROR("AudioDownloadClient::%s: %d", __func__, (int)error);
     }
 
     virtual void didLoadFinished()
     {
-        STARFISH_LOG_INFO("AudioDownloadClient::%s\n", __func__);
+        STARFISH_LOG_INFO("AudioDownloadClient::%s", __func__);
 
         ResourceClient::didLoadFinished();
 
@@ -81,17 +80,17 @@ MediaPlayerAudio::MediaPlayerAudio(HTMLMediaElement* element)
 
 void MediaPlayerAudio::play()
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 }
 
 void MediaPlayerAudio::destroy()
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 }
 
 void MediaPlayerAudio::setBuffer(uint8_t* buffer, uint32_t length)
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 
     m_audioData.reserve(length);
     memcpy(m_audioData.data(), buffer, length);
@@ -99,11 +98,10 @@ void MediaPlayerAudio::setBuffer(uint8_t* buffer, uint32_t length)
 
 void MediaPlayerAudio::prepare(ResourceURL* url)
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 
     if (m_container == nullptr) {
-        STARFISH_LOG_WARN("MediaPlayerAudio::%s: container is null\n",
-                          __func__);
+        STARFISH_LOG_WARN("MediaPlayerAudio::%s: container is null", __func__);
         return;
     }
 
@@ -112,7 +110,7 @@ void MediaPlayerAudio::prepare(ResourceURL* url)
 
 void MediaPlayerAudio::downloadAudioData(ResourceURL* url)
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s: %s\n", __func__,
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s: %s", __func__,
                       url->urlString()->toUTF8NonGCString().data());
 
     m_audioResource = m_container->document()->resourceLoader().fetch(url);
@@ -129,7 +127,7 @@ void MediaPlayerAudio::downloadAudioData(ResourceURL* url)
 
 void MediaPlayerAudio::onAudioDownloadCompleted()
 {
-    STARFISH_LOG_INFO("MediaPlayerAudio::%s\n", __func__);
+    STARFISH_LOG_INFO("MediaPlayerAudio::%s", __func__);
 
     MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(

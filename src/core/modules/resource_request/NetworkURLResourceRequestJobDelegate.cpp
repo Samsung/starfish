@@ -175,10 +175,9 @@ void* NetworkURLResourceRequestJobDelegate::httpCacheWorker(void* data)
         nwd->cachehit = true;
         uint64_t end = longTickCount();
         nwd->workingTime += end - start;
-        STARFISH_LOG_INFO(
-            "[NETWORK_PROFILING] Http disk cache hit! %s at %dms\n",
-            nwd->httpTransaction->httpRequest().url().data(),
-            (int)(timestamp() - g_profilingBaseTime));
+        STARFISH_LOG_INFO("[NETWORK_PROFILING] Http disk cache hit! %s at %dms",
+                          nwd->httpTransaction->httpRequest().url().data(),
+                          (int)(timestamp() - g_profilingBaseTime));
 #endif
     }
     if (ret) {
@@ -263,14 +262,14 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     } else if (nwd->httpTransaction->res() == CURLE_OPERATION_TIMEDOUT) {
         auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO(
-            "got timeout %s[%d]\n", s.data(),
+            "got timeout %s[%d]", s.data(),
             (int)nwd->httpTransaction->httpResponse().responseCode());
         nwd->request->handleError(ProgressState::TimeOut,
                                   RequestErrorType::TimeoutError);
     } else {
         auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
-        STARFISH_LOG_INFO("failed to open[%d] %s\n",
-                          nwd->httpTransaction->res(), s.data());
+        STARFISH_LOG_INFO("failed to open[%d] %s", nwd->httpTransaction->res(),
+                          s.data());
         RequestErrorType errorType;
         switch (nwd->httpTransaction->res()) {
         case CURLE_COULDNT_RESOLVE_HOST:
@@ -341,7 +340,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
     STARFISH_LOG_INFO(
         "[NETWORK_PROFILING] Resource Raw data(%zu byte) Load in %f ms, "
         "diskcache: "
-        "%s, HitRate: %lf\n",
+        "%s, HitRate: %lf",
         nwd->request->response().size(), (float)((nwd->workingTime) / 1000.f),
         (nwd->cachehit) ? "hit" : "miss",
         (NetworkURLWorkerData::hitCnt) ? (double)NetworkURLWorkerData::hitCnt /
@@ -622,7 +621,7 @@ public:
     {
         if (nwd->httpTransaction) {
             STARFISH_LOG_INFO(
-                "[NETWORK_PROFILING] Start network request %s at %dms\n",
+                "[NETWORK_PROFILING] Start network request %s at %dms",
                 nwd->httpTransaction->httpRequest().url().data(),
                 (int)(timestamp() - g_profilingBaseTime));
         }
@@ -632,7 +631,7 @@ public:
     {
         if (nwd->httpTransaction) {
             STARFISH_LOG_INFO(
-                "[NETWORK_PROFILING] End network request %s at %dms\n",
+                "[NETWORK_PROFILING] End network request %s at %dms",
                 nwd->httpTransaction->httpRequest().url().data(),
                 (int)(timestamp() - g_profilingBaseTime));
         }
@@ -842,7 +841,7 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
             STARFISH_LOG_WARN(
                 "Failed to load %s : Request doesn't pass CORS Preflight "
                 "request, "
-                "please check %s header in reponse\n",
+                "please check %s header in reponse",
                 nwd->httpTransaction->httpRequest().url().data(),
                 HTTPHeaderMap::kAccessControlAllowMethods);
             return false;
@@ -882,7 +881,7 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
             STARFISH_LOG_WARN(
                 "Failed to load %s : Request doesn't pass CORS Preflight "
                 "request, "
-                "please check %s header in reponse\n",
+                "please check %s header in reponse",
                 nwd->httpTransaction->httpRequest().url().data(),
                 HTTPHeaderMap::kAccessControlAllowHeaders);
             return false;
@@ -911,7 +910,7 @@ static bool checkCors(NetworkURLWorkerData* nwd)
     if (origin == resHeaders.end()) {
         STARFISH_LOG_WARN(
             "Failed to load %s : request doesn't pass CORS check, please "
-            "check %s header in reponse\n",
+            "check %s header in reponse",
             nwd->httpTransaction->httpRequest().url().data(),
             HTTPHeaderMap::kAccessControlAllowOrigin);
         return false;
@@ -928,7 +927,7 @@ static bool checkCors(NetworkURLWorkerData* nwd)
         serializedRequestOrigin->second != origin->second) {
         STARFISH_LOG_WARN(
             "Failed to load %s : request doesn't pass CORS check, please "
-            "check %s header in reponse\n",
+            "check %s header in reponse",
             nwd->httpTransaction->httpRequest().url().data(),
             HTTPHeaderMap::kAccessControlAllowOrigin);
         return false;
@@ -945,7 +944,7 @@ static bool checkCors(NetworkURLWorkerData* nwd)
     }
     STARFISH_LOG_WARN(
         "Failed to load %s : request doesn't pass CORS check, please "
-        "check %s header in reponse\n",
+        "check %s header in reponse",
         nwd->httpTransaction->httpRequest().url().data(),
         HTTPHeaderMap::kAccessControlAllowCredentials);
 

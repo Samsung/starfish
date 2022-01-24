@@ -269,7 +269,7 @@ LayoutRect HTMLElement::offsetRect()
                     return result;
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         }
     } else {
@@ -311,7 +311,7 @@ String* HTMLElement::innerText()
 {
     // TODO
     // https://html.spec.whatwg.org/multipage/dom.html#the-innertext-idl-attribute
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     auto v = textContent();
     return v.hasValue() ? v.getValue() : String::emptyString;
 }

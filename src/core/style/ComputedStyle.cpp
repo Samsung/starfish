@@ -190,7 +190,7 @@ bool ComputedStyle::hasAvailableFilter()
         case FilterFunctionType::SaturateFilterFunctionType:
         case FilterFunctionType::SVGUrlFilterFunctionType:
         default:
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             break;
         }
     }
