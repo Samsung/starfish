@@ -111,7 +111,7 @@ bool ContentSecurityPolicy::allowSource(
                                    resUrl->urlString(), eventDelegator);
             STARFISH_LOG_WARN(
                 "Refused to use '%s' as a source of '%s' because it violates "
-                "the Content Security Policy\n",
+                "the Content Security Policy",
                 CSTR(resUrl->urlString()), CSTR(getDirectiveName(directive)));
             isAllowed = false;
         }
@@ -128,7 +128,7 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to execute contents as an inline-source of '%s' "
-                "because it violates the Content Security Policy\n",
+                "because it violates the Content Security Policy",
                 CSTR(getDirectiveName(directive)));
             isAllowed = false;
         }
@@ -146,7 +146,7 @@ bool ContentSecurityPolicy::allowNonceOrSource(CSPDirectives directive,
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to use '%s' as a source of '%s' because it violates "
-                "the Content Security Policy\n",
+                "the Content Security Policy",
                 CSTR(resUrl->urlString()), CSTR(getDirectiveName(directive)));
             isAllowed = false;
         }
@@ -162,7 +162,7 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to execute a string as JavaScript' "
-                "because it violates the Content Security Policy\n");
+                "because it violates the Content Security Policy");
             isAllowed = false;
         }
     }

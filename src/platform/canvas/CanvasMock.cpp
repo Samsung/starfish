@@ -525,12 +525,12 @@ public:
 
     virtual void setOriginalFontStr(String* fontStr)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual Font* font()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         auto famliyName =
             m_webView->initialFontFamilyDatas()[1].m_familyName.string();
         return m_webView->mainBrowsingContext()
@@ -544,51 +544,51 @@ public:
 
     virtual String* originalFontStr()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return String::emptyString;
     }
 
     virtual void setCanvasWebFontState(size_t version)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual size_t canvasWebFontState()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 0;
     }
 
     virtual void setCanvasTextAlign(CanvasTextAlign textAlign)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasTextAlign canvasTextAlign()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasTextAlign::Start;
     }
 
     virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasTextBaseline canvasTextBaseline()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasTextBaseline::Alphabetic;
     }
 
     virtual void setCanvasTextDirection(CanvasDirection textDirection)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasDirection canvasTextDirection()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasDirection::Inherit;
     }
 };
@@ -617,7 +617,7 @@ Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 
 NativeImageData* NativeImageData::attach(Canvas* canvas)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 } // namespace Starfish

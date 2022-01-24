@@ -42,7 +42,7 @@ namespace Starfish {
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>\n", __func__,
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
                 (void*)this, (void*)m_dataChannel);
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -50,21 +50,21 @@ RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
             ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
         },
         NULL, NULL, NULL);
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>\n",
-                __func__, (void*)this, (void*)m_dataChannel);
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
+                (void*)this, (void*)m_dataChannel);
 }
 
 RTCDataChannelObserver::~RTCDataChannelObserver()
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>\n", __func__,
+    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
                 (void*)this, (void*)m_dataChannel);
     if (m_dataChannel) {
         m_dataChannel->dispose();
     }
     m_dataChannel = nullptr;
 
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>\n",
-                __func__, (void*)this, (void*)m_dataChannel);
+    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
+                (void*)this, (void*)m_dataChannel);
 }
 
 void RTCDataChannelObserver::OnStateChange()
@@ -153,7 +153,7 @@ RTCDataChannel::RTCDataChannel(
     , m_peerConnection(peerConnection)
     , m_backend(dataChannel)
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
                 (void*)m_peerConnection);
     m_protocol = init.m_protocol;
     m_observer = new RTCDataChannelObserver(this);
@@ -167,18 +167,18 @@ RTCDataChannel::RTCDataChannel(
         [](void* obj, void* cd) { ((RTCDataChannel*)obj)->~RTCDataChannel(); },
         NULL, NULL, NULL);
 
-    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
                 (void*)m_peerConnection);
 }
 
 RTCDataChannel::~RTCDataChannel()
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
                 (void*)m_peerConnection);
     if (m_observer) {
         dispose();
     }
-    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>\n", __func__, (void*)this,
+    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
                 (void*)m_peerConnection);
 }
 

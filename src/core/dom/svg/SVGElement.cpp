@@ -160,7 +160,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
             SET_PARV(xMaxYMax)
             else
             {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
 #undef SET_PARV
         }

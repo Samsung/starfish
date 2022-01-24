@@ -48,7 +48,7 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
     auto len = uloc_getName(locale, buf, sizeof(buf), &err);
     if (U_FAILURE(err)) {
         STARFISH_LOG_ERROR(
-            "there is an error whild parsing locale %s. use default instead\n",
+            "there is an error whild parsing locale %s. use default instead",
             locale);
         m_locale = uloc_getDefault();
     } else {

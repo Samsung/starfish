@@ -77,7 +77,7 @@ void UnsupportedFilterFunction::apply(WebView* webView, uint8_t* buffer,
                                       size_t width, size_t height,
                                       size_t stride) const
 {
-    STARFISH_LOG_INFO("%s is unsupported\n",
+    STARFISH_LOG_INFO("%s is unsupported",
                       CSSFilterFunction::typeToString(m_type));
     return;
 }

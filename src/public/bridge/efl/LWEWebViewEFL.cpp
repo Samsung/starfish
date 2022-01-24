@@ -258,7 +258,7 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::TVPlayBack;
     }
 
-    STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s\n", ecoreKeyString);
+    STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s", ecoreKeyString);
     return KeyValue::UnidentifiedKey;
 }
 
@@ -312,7 +312,7 @@ public:
         , m_lastRenderingTime(0)
         , m_lastInputTime(0)
     {
-        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL\n");
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
 
         m_windowObject = win;
@@ -368,7 +368,7 @@ public:
             EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
             EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
             EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
-        STARFISH_LOG_INFO("try to use EvasGL direct mode\n");
+        STARFISH_LOG_INFO("try to use EvasGL direct mode");
 
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
@@ -378,12 +378,12 @@ public:
         if (m_glCtx == nullptr) {
             STARFISH_LOG_ERROR(
                 "failed to create openGL 3.0 context... try to use 2.0 "
-                "instead\n");
+                "instead");
             m_glCtx = evas_gl_context_version_create(
                 m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
         }
         if (m_glCtx == nullptr) {
-            STARFISH_LOG_ERROR("failed to create openGL 2.0 context...\n");
+            STARFISH_LOG_ERROR("failed to create openGL 2.0 context...");
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
@@ -395,7 +395,7 @@ public:
         m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
                                   void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
-            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL\n");
+            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL");
             wv->immediatelyClearScreen();
         };
         evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
@@ -610,12 +610,12 @@ public:
             WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
             STARFISH_LOG_INFO(
-                "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox [%s,%d]\n",
+                "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox [%s,%d]",
                 ev->key, (int)ev->keycode);
             if (evas_object_focus_get(webView->m_mainBox) == EINA_TRUE) {
                 STARFISH_LOG_INFO(
                     "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox but "
-                    "m_mainBox has focus[%s]\n",
+                    "m_mainBox has focus[%s]",
                     ev->key);
                 return;
             }
@@ -699,7 +699,7 @@ public:
             int w, h;
             evas_object_geometry_get(wv->m_mainBox, NULL, NULL, &w, &h);
             if (w == 0 || h == 0) {
-                STARFISH_LOG_WARN("the main box has a zero size\n");
+                STARFISH_LOG_WARN("the main box has a zero size");
                 w = 1;
                 h = 1;
             }
@@ -717,7 +717,7 @@ public:
             evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
             wv->m_isRenderedOnce = false;
 
-            STARFISH_LOG_INFO("WebViewEFL::resizeCallback::clearEvasGL %d %d\n",
+            STARFISH_LOG_INFO("WebViewEFL::resizeCallback::clearEvasGL %d %d",
                               w, h);
 
             wv->immediatelyClearScreen();
@@ -741,7 +741,7 @@ public:
         m_shownHandler = [](void* data, Evas* e, Evas_Object* obj,
                             void* event_info) {
             WebViewEFL* wv = (WebViewEFL*)data;
-            STARFISH_LOG_INFO("WebViewEFL::shownCallback\n");
+            STARFISH_LOG_INFO("WebViewEFL::shownCallback");
             wv->immediatelyClearScreen();
         };
 
@@ -766,7 +766,7 @@ public:
         } else {
             STARFISH_LOG_ERROR(
                 "ecore_imf_context_default_id_get returns null.. use fallback "
-                "method\n");
+                "method");
             m_imfContext = ecore_imf_context_add(getImfMethod());
         }
 
@@ -798,7 +798,7 @@ public:
             [](void* data, Ecore_IMF_Context* ctx, void* event_info) {
                 WebViewEFL* self = (WebViewEFL*)data;
                 char* commit_str = (char*)event_info;
-                STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
+                STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s", commit_str);
                 self->FetchWebContainer()->DispatchCompositionEndEvent(
                     commit_str);
             },
@@ -813,7 +813,7 @@ public:
                 int cursor_pos;
                 ecore_imf_context_preedit_string_get(self->m_imfContext, &str,
                                                      &cursor_pos);
-                STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d\n",
+                STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d",
                                   str, cursor_pos);
                 if (str) {
                     self->FetchWebContainer()->DispatchCompositionUpdateEvent(
@@ -829,8 +829,8 @@ public:
             [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
                 WebViewEFL* wv = (WebViewEFL*)data;
                 Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
-                STARFISH_LOG_INFO(
-                    "EVAS_CALLBACK_KEY_DOWN for ime object [%s]\n", ev->key);
+                STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_DOWN for ime object [%s]",
+                                  ev->key);
 
 #ifdef STARFISH_TIZEN_TV
                 if ((strcmp(ev->key, "XF86Red") == 0)) {
@@ -871,7 +871,7 @@ public:
                 }
 
                 // process non-char keys
-                STARFISH_LOG_INFO("process non-char [%s]\n", ev->key);
+                STARFISH_LOG_INFO("process non-char [%s]", ev->key);
                 auto keyValue = ecoreEventKeyToKeyValue(
                     ev->key,
                     (evas_key_modifier_is_set(ev->modifiers, "Shift_L") ==
@@ -899,7 +899,7 @@ public:
             [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
                 WebViewEFL* wv = (WebViewEFL*)data;
                 Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
-                STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]\n",
+                STARFISH_LOG_INFO("EVAS_CALLBACK_KEY_UP for ime object [%s]",
                                   ev->key);
 
 #ifdef STARFISH_TIZEN_TV
@@ -1010,7 +1010,7 @@ public:
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
                     uint64_t end = Starfish::longTickCount();
                     float time = (float)((end - m_lastInputTime) / 1000.f);
-                    STARFISH_LOG_INFO("response time is %f ms\n", time);
+                    STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
                     m_lastInputTime = 0;
                     ANNOTATE_CHANNEL_END(3002);

@@ -60,8 +60,8 @@ bool ProcessUtil::launchProcess(const std::vector<std::string>& argv,
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP | SA_SIGINFO;
     sa.sa_sigaction = [](int sig, siginfo_t* sip, void* ucp) {
-        STARFISH_LOG_INFO("signal (%s) is sent from process %d\n",
-                          strsignal(sig), sip->si_pid);
+        STARFISH_LOG_INFO("signal (%s) is sent from process %d", strsignal(sig),
+                          sip->si_pid);
         while (waitpid(sip->si_pid, 0, WNOHANG) > 0) {
             // NOTE: we use non-blocking call to be sure this signal handler
             // will not block if a child was cleaned up in another part of the
@@ -92,7 +92,7 @@ bool ProcessUtil::launchProcess(const std::vector<std::string>& argv,
         }
     }
 
-    STARFISH_LOG_INFO("process %d created a child process %d\n",
+    STARFISH_LOG_INFO("process %d created a child process %d",
                       getCurrentProcId(), pid);
 
     *processID = pid;
@@ -115,7 +115,7 @@ bool ProcessUtil::launchProcessOnDoubleFork(
 
     if (pid > 0) {
         // Parent process
-        STARFISH_LOG_INFO("process %d created a child process %d\n",
+        STARFISH_LOG_INFO("process %d created a child process %d",
                           getCurrentProcId(), pid);
 
         *processID = pid;
@@ -133,7 +133,7 @@ bool ProcessUtil::launchProcessOnDoubleFork(
         }
 
         if (grandChild_pid > 0) {
-            STARFISH_LOG_INFO("process %d created a child process %d\n",
+            STARFISH_LOG_INFO("process %d created a child process %d",
                               getCurrentProcId(), grandChild_pid);
             _exit(EXIT_SUCCESS);
         } else {

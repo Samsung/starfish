@@ -102,7 +102,7 @@ Promise* PushManager::subscribe()
         },
         this, promise);
 #else
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 #endif
     return promise;
 }
@@ -148,7 +148,7 @@ Promise* PushManager::getSubscription()
         },
         this, promise);
 #else
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 #endif
     return promise;
 }

@@ -269,10 +269,10 @@ void HTMLFormattingElementList::show()
     for (unsigned i = 1; i <= m_entries.size(); ++i) {
         const Entry& entry = m_entries[m_entries.size() - i];
         if (entry.isMarker()) {
-            STARFISH_LOG_ERROR("HTMLFormattingElementList::show(): marker\n");
+            STARFISH_LOG_ERROR("HTMLFormattingElementList::show(): marker");
         } else {
             STARFISH_LOG_ERROR(
-                "HTMLFormattingElementList::show(): Not implemented\n");
+                "HTMLFormattingElementList::show(): Not implemented");
             // entry.element()->showNode();
         }
     }

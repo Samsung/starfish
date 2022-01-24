@@ -203,7 +203,7 @@ CanvasFillStrokeSource* FrameSVGEllipseBox::makeCanvasFillStrokeSource(
                 gradient->addColorStop(offset, color);
             }
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
         auto canvasStyle = CanvasStyle::createCanvasGradient(gradient);
         return new CanvasFillStrokeSource(canvasStyle);

@@ -40,7 +40,7 @@ public:
         , m_nonce(nullptr)
     {
 #ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("+++tag:script\n");
+        STARFISH_LOG_INFO("+++tag:script");
 #endif
     }
 

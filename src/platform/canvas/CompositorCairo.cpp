@@ -90,7 +90,7 @@ public:
 #ifndef NDEBUG
         auto status = cairo_status(m_canvas);
         if (status != CAIRO_STATUS_SUCCESS) {
-            STARFISH_LOG_ERROR("%s\n", cairo_status_to_string(status));
+            STARFISH_LOG_ERROR("%s", cairo_status_to_string(status));
             STARFISH_ASSERT_NOT_REACHED();
         }
 #endif

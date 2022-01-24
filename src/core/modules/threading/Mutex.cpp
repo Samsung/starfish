@@ -34,7 +34,7 @@ Mutex::Mutex(const char* name)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO("Mutex::~Mutex\n");
+            // STARFISH_LOG_INFO("Mutex::~Mutex");
             pthread_mutex_t* m = (pthread_mutex_t*)cd;
             auto check = pthread_mutex_destroy(m);
             delete m;
@@ -47,7 +47,7 @@ void Mutex::lock()
 {
 #ifndef NDEBUG
     if (!m_name.empty()) {
-        STARFISH_LOG_WARN("Lock: %s\n", m_name.c_str());
+        STARFISH_LOG_WARN("Lock: %s", m_name.c_str());
     }
 #endif
     pthread_mutex_lock(m_mutex);
@@ -57,7 +57,7 @@ void Mutex::unlock()
 {
 #ifndef NDEBUG
     if (!m_name.empty()) {
-        STARFISH_LOG_WARN("Unlock: %s\n", m_name.c_str());
+        STARFISH_LOG_WARN("Unlock: %s", m_name.c_str());
     }
 #endif
     pthread_mutex_unlock(m_mutex);

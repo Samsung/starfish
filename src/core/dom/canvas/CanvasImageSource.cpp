@@ -79,7 +79,7 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
         return true;
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
     } else if (image.isHTMLVideoElementValue()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
 #endif
     } else {
         STARFISH_ASSERT(image.isNoneValue());
@@ -134,7 +134,7 @@ CanvasImageSourceUtils::toNativeImageData(ExecutionContext* executionContext,
         nativeImageData = imageBitmap->nativeImageData();
         clean = imageBitmap->originCleanFlag();
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     return std::make_pair(nativeImageData, clean);

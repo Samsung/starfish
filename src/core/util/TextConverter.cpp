@@ -30,7 +30,7 @@ TextConverter::TextConverter(String* charsetName)
     auto utf8Data = charsetName->toUTF8NonGCString();
     m_converter = ucnv_open(utf8Data.data(), &err);
     if (U_FAILURE(err)) {
-        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
+        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s",
                            utf8Data.data());
         m_converter = nullptr;
     }
@@ -63,7 +63,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
             registerFinalizer();
             return;
         } else {
-            STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
+            STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s",
                                utf8Data.data());
             m_converter = nullptr;
         }
@@ -95,15 +95,15 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
 
     /*
     #ifndef NDEBUG
-        STARFISH_LOG_INFO("encoding detector verbose info start\n");
+        STARFISH_LOG_INFO("encoding detector verbose info start");
         for (int i = 0; i < num; i++) {
             const char* charset = nullptr;
             confidence = ucsdet_getConfidence(match[i], &err);
             charset = ucsdet_getName(match[i], &err);
-            STARFISH_LOG_INFO("encoding detector verbose info.. %s[%d]\n",
+            STARFISH_LOG_INFO("encoding detector verbose info.. %s[%d]",
                 charset, confidence);
         }
-        STARFISH_LOG_INFO("encoding detector verbose info end\n");
+        STARFISH_LOG_INFO("encoding detector verbose info end");
     #endif
     */
     for (int i = 0; i < num; i++) {
@@ -134,8 +134,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
 
     m_converter = ucnv_open(bestCharset, &err);
     if (U_FAILURE(err)) {
-        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s\n",
-                           bestCharset);
+        STARFISH_LOG_ERROR("TextConverter: Unknown encoding: %s", bestCharset);
         m_converter = nullptr;
     }
 
@@ -230,7 +229,7 @@ void TextConverter::registerFinalizer()
         this,
         [](void* obj, void* cd) {
             // STARFISH_LOG_INFO(
-            //    "TextConverter::~TextConverter\n");
+            //    "TextConverter::~TextConverter");
             TextConverter* nr = (TextConverter*)obj;
             if (nr->m_converter) {
                 ucnv_close(nr->m_converter);

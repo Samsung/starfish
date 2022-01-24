@@ -248,7 +248,7 @@ namespace WindowOrWorkerGlobalScope {
             new Promise(executionContext->scriptBindingInstance());
 
         if (!executionContext->webBase()->isWebView()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);
@@ -379,7 +379,7 @@ namespace WindowOrWorkerGlobalScope {
                 stride, needsDownScaleImageResourceLargerThan);
 
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);

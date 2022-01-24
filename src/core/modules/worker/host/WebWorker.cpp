@@ -112,7 +112,7 @@ void WebWorker::createScriptEngineInstance()
 
                     if (sbresult.error.hasValue()) {
                         STARFISH_LOG_ERROR(
-                            "Uncaught %s\n",
+                            "Uncaught %s",
                             toBrowserString(
                                 executionContext->scriptBindingInstance(),
                                 Escargot::ValueRef::create(

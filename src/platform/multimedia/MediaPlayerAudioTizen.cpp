@@ -40,24 +40,24 @@ namespace Starfish {
 MediaPlayerAudioTizen::MediaPlayerAudioTizen(AudioNode* element)
     : MediaPlayerAudio(element)
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s(node)\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s(node)", __func__);
 }
 
 MediaPlayerAudioTizen::MediaPlayerAudioTizen(HTMLMediaElement* element)
     : MediaPlayerAudio(element)
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s(element)\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s(element)", __func__);
 }
 
 MediaPlayerAudioTizen::~MediaPlayerAudioTizen()
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
     destroy();
 }
 
 void MediaPlayerAudioTizen::destroy()
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
     MediaPlayerAudio::destroy();
 
     if (m_audioOut) {
@@ -68,23 +68,23 @@ void MediaPlayerAudioTizen::destroy()
 
 void MediaPlayerAudioTizen::play()
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
 
     audio_out_write(m_audioOut, m_audioData.data(), m_audioData.size());
 }
 
 void MediaPlayerAudioTizen::prepare(ResourceURL* url)
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
 
     if (m_container == nullptr) {
-        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: container is null\n",
+        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: container is null",
                           __func__);
         return;
     }
 
     if (!url->urlString()->endsWith(".wav", false)) {
-        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: format not supported\n",
+        STARFISH_LOG_WARN("MediaPlayerAudioTizen::%s: format not supported",
                           __func__);
         return;
     }
@@ -120,14 +120,14 @@ void MediaPlayerAudioTizen::onAudioDownloadCompleted()
 
 MediaPlayerAudio* MediaPlayerAudio::create(HTMLMediaElement* element)
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
 
     return new MediaPlayerAudioTizen(element);
 }
 
 MediaPlayerAudio* MediaPlayerAudio::create(AudioNode* element)
 {
-    PLAYER_LOGI("MediaPlayerAudioTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerAudioTizen::%s", __func__);
 
     return new MediaPlayerAudioTizen(element);
 }

@@ -693,7 +693,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         if (url->isHTTPFamilyURL() || url->isFileURL()) {
             submitData(url, formDataSet, formEnctype, formMethod, formTarget);
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
 }
@@ -708,7 +708,7 @@ void HTMLFormElement::submitData(ResourceURL* url,
     } else if (method->equals("POST")) {
         submitAsEntityBody(url, formDataSet, enctype, method, target);
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -808,9 +808,9 @@ void HTMLFormElement::submitAsEntityBody(
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
             window(), fn, this, urlToOpen, targetElement);
     } else if (enctype == EncodeType::MultiPartFormData) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else if (enctype == EncodeType::TextPlain) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else {
         // Do nothing for an invalid enctype
     }
@@ -917,7 +917,7 @@ GCVector<FormDataSetItem*>* HTMLFormElement::createFormDataSet(
         } else if (field->isHTMLInputElement() &&
                    field->type()->equals("file")) {
             // TODO: file upload, object
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else {
             formDataSet->push_back(new FormDataSetItem(
                 field->domName(), field->value(), field->type()));

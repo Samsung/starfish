@@ -126,19 +126,19 @@ void PathSkia::copy(Path* src)
 
 bool PathSkia::isPointInPath(float x, float y, CanvasFillRule fillRule)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return false;
 }
 
 bool PathSkia::isPointInStroke(float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return false;
 }
 
 void PathSkia::applyPathDrawingStyles(Canvas* canvas)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::closePath()
@@ -162,23 +162,23 @@ void PathSkia::lineTo(float x, float y)
 
 void PathSkia::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                              float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::rect(float x, float y, float w, float h)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::arc(float x, float y, float radius, float startAngle,
@@ -217,7 +217,7 @@ void PathSkia::ellipse(float x, float y, float radiusX, float radiusY,
                        float rotation, float startAngle, float endAngle,
                        bool anticlockwise /*=false*/)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::postMatrix(const SkMatrix& matrix)
@@ -236,12 +236,12 @@ Unit::Rect PathSkia::boundingRect(bool isFill)
 
 void PathSkia::translate(float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void PathSkia::append(Path* path)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 } // namespace Starfish
 #endif

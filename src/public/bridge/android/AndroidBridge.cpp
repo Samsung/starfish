@@ -112,7 +112,7 @@ static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
 {
     jmethodID m = env->GetStaticMethodID(clazz, name, signature);
     if (!m) {
-        STARFISH_LOG_ERROR("Could not find Java method %s\n", name);
+        STARFISH_LOG_ERROR("Could not find Java method %s", name);
     }
     return m;
 }
@@ -667,7 +667,7 @@ Java_com_samsung_android_lightweightwebengine_internal_LweWebViewImpl_create(
                 p = p.substr(sizeof("/android_asset/") - 1);
                 AAsset* as =
                     AAssetManager_open(am, p.data(), AASSET_MODE_BUFFER);
-                STARFISH_LOG_ERROR("AAssetManager_open %s %p\n", p.data(), as);
+                STARFISH_LOG_ERROR("AAssetManager_open %s %p", p.data(), as);
                 if (!as) {
                     return nullptr;
                 }

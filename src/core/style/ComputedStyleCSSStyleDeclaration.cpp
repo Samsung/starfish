@@ -1575,7 +1575,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::Cursor: {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Cursor);
         // when cursor value type is implemented, add cursor value type instead
@@ -1615,7 +1615,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(maskImage);
     } break;
     case CSSStyleValuePair::KeyKind::MaskSize: {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
         p.setValueKind(CSSStyleValuePair::ValueKind::None);

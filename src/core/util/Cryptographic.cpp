@@ -321,7 +321,7 @@ Crypto::Crypto(CryptoAlgorithmType hashType)
         m_algorithm = new CryptoAlgorithmSHA512();
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         break;
     }
 }
@@ -348,7 +348,7 @@ std::string Crypto::digest(
         output = Base64Utils::encodeBase64(hash);
         break;
     case DigestEncodingType::Hex:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         break;
     default:
         output = hash;

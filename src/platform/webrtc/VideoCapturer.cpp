@@ -91,7 +91,7 @@ VideoCapturer* VideoCapturer::create(size_t width, size_t height,
     std::unique_ptr<VideoCapturer> videoCapturer(new VideoCapturer());
     if (!videoCapturer->init(width, height, targetFps, captureDeviceIndex)) {
         STARFISH_LOG_WARN(
-            "Failed to create VcmCapturer(w =%zu, h=%zu, fps=%zu)\n", width,
+            "Failed to create VcmCapturer(w =%zu, h=%zu, fps=%zu)", width,
             height, targetFps);
         return nullptr;
     }

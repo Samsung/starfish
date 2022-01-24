@@ -125,7 +125,7 @@ void MediaPlayerTizen::disposePlayer()
             *m_playerDeadFlag = true;
         }
         PLAYER_LOGI(
-            "MediaPlayerTizen::close() - dispose player next idle time\n");
+            "MediaPlayerTizen::close() - dispose player next idle time");
         msgLoop->addIdler(
             nullptr,
             [](size_t, void* data) {
@@ -134,7 +134,7 @@ void MediaPlayerTizen::disposePlayer()
             },
             this);
     } else {
-        PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal \n");
+        PLAYER_LOGI("MediaPlayerTizen::close() - instant disposal ");
         dispose();
     }
 }
@@ -198,7 +198,7 @@ void MediaPlayerTizen::updateAudioStreamInfo(MediaPlayerSourceStream* stream,
                                              size_t newInitIndex)
 {
     // TODO audio
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void MediaPlayerTizen::videoFramerateChanged(MediaPlayerSourceStream* stream,
@@ -213,7 +213,7 @@ void MediaPlayerTizen::videoFramerateChanged(MediaPlayerSourceStream* stream,
     int ret = player_set_media_stream_info(
         m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO, mediaFormat);
     if (ret != PLAYER_ERROR_NONE) {
-        PLAYER_LOGI("ERROR: player_set_media_stream_info\n");
+        PLAYER_LOGI("ERROR: player_set_media_stream_info");
         printNativePlayerError(ret);
     }
 }
@@ -252,7 +252,7 @@ void MediaPlayerTizen::setMediaFormatExtraForVideo(media_format_h& mediaFormat,
                mediaFormatExtra->extradata_size);
     }
     media_format_set_extra(mediaFormat, mediaFormatExtra);
-    PLAYER_LOGI("> framerate : %d/%d\n", mediaFormatExtra->framerate_num,
+    PLAYER_LOGI("> framerate : %d/%d", mediaFormatExtra->framerate_num,
                 mediaFormatExtra->framerate_den);
 }
 

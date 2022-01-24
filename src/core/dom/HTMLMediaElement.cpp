@@ -89,7 +89,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
         [](void* obj, void* cd) {
             HTMLMediaElement* element = (HTMLMediaElement*)obj;
             MEDIA_ELEMENT_LOG(
-                element, "HTMLMediaElement::~HTMLMediaElement (%s|%p)\n",
+                element, "HTMLMediaElement::~HTMLMediaElement (%s|%p)",
                 element->isHTMLVideoElement()
                     ? "VIDEO"
                     : element->isHTMLAudioElement() ? "AUDIO" : "ETC",
@@ -145,10 +145,10 @@ void HTMLMediaElement::onDOMContentLoaded()
         MEDIA_ELEMENT_LOG(
             this,
             "HTMLMediaElement::onDOMContentLoaded() causes content load "
-            "(autoplay:%s, preload:%s)\n",
+            "(autoplay:%s, preload:%s)",
             autoplay() ? "true" : "false",
             preload()->toUTF8NonGCString().data());
-        MEDIA_ELEMENT_LOG(this, "src: %s\n", src()->toUTF8NonGCString().data());
+        MEDIA_ELEMENT_LOG(this, "src: %s", src()->toUTF8NonGCString().data());
         load();
     }
 }
@@ -166,7 +166,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
             MEDIA_ELEMENT_LOG(
                 this,
                 "HTMLMediaElement::Changing src attribute causes content load "
-                "(autoplay:%s, preload:%s)\n",
+                "(autoplay:%s, preload:%s)",
                 autoplay() ? "true" : "false",
                 preload()->toUTF8NonGCString().data());
             load();
@@ -206,7 +206,7 @@ void HTMLMediaElement::didNodeRemovedFromDocumentTree()
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
 void HTMLMediaElement::load()
 {
-    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::load()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::load()");
     // While the delaying-the-load-event flag is true, the element must delay
     // the load event of its document.
 
@@ -343,7 +343,7 @@ void HTMLMediaElement::initMediaPlayer()
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 void HTMLMediaElement::resourceSelection()
 {
-    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::resourceSelection()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::resourceSelection()");
     // 1. Set the element's networkState attribute to the NETWORK_NO_SOURCE
     // value.
     closeMediaPlayer();
@@ -624,7 +624,7 @@ TimeRanges* HTMLMediaElement::buffered()
 
 String* HTMLMediaElement::canPlayType(String* type)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     // TODO We need get informaton from media-player
     MimeType mt = MimeType::parseFromString(type);
     if (mt.type()->equals("video")) {
@@ -671,13 +671,13 @@ bool HTMLMediaElement::paused()
 
 double HTMLMediaElement::defaultPlaybackRate()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return 1;
 }
 
 double HTMLMediaElement::playbackRate()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return 1;
 }
 
@@ -834,7 +834,7 @@ void HTMLMediaElement::setCurrentTime(double time)
     // then it must set the media element’s default playback start position
     // to the new value; otherwise, it must set the official playback position
     // to the new value and then seek to the new value.
-    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::setCurrentTime() %lf \n", time);
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::setCurrentTime() %lf ", time);
     MediaPlayer* player = activeMediaPlayer();
     if (!player) {
         return;
@@ -843,7 +843,7 @@ void HTMLMediaElement::setCurrentTime(double time)
         m_defaultPlaybackStartPosition = time;
         MEDIA_ELEMENT_LOG(this,
                           "HTMLMediaElement::setCurrentTime() readyState is "
-                          "HAVE_NOTHING..\n");
+                          "HAVE_NOTHING..");
     } else {
         m_isEnded = false;
         if (m_isSeeking) {
@@ -855,7 +855,7 @@ void HTMLMediaElement::setCurrentTime(double time)
             // Note : But there is no way of aborting player_set_position_async,
             // we have to wait.
             MEDIA_ELEMENT_LOG(
-                this, "HTMLMediaElement::setCurrentTime() Seek pending..\n");
+                this, "HTMLMediaElement::setCurrentTime() Seek pending..");
             m_pendingSeek = time;
         } else {
             if (!m_isPaused) {
@@ -893,12 +893,12 @@ void HTMLMediaElement::setOfficialPlaybackPosition(double time)
 
 void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void HTMLMediaElement::setPlaybackRate(double playbackRate)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
@@ -991,7 +991,7 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
     }
     MEDIA_ELEMENT_LOG(
         this,
-        "HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(%d)\n",
+        "HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(%d)",
         (int)state);
     HTMLMediaElement::ReadyState prevState = m_readyState;
     m_readyState = state;
@@ -1081,7 +1081,7 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(
 void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 {
     MEDIA_ELEMENT_LOG(
-        this, "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n",
+        this, "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)",
         currentTime);
     // Note : Set officialPlaybackPosition manually instead of calling
     // setOfficialPlaybackPosition()
@@ -1092,7 +1092,7 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
         MEDIA_ELEMENT_LOG(
             this,
             "HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found "
-            "pending seek operation (%lf)\n",
+            "pending seek operation (%lf)",
             m_pendingSeek);
         double pendingSeek = m_pendingSeek;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
@@ -1114,7 +1114,7 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
 {
     MEDIA_ELEMENT_LOG(
-        this, "HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
+        this, "HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer");
     m_isSeeking = false;
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
     // TODO
@@ -1196,7 +1196,7 @@ ADD_DISPATCH_EVENT_DEF(volumechange, Volumechange);
 void HTMLMediaElement::abortEveryPendingOperation(
     DOMException* exceptionForPlayPromise)
 {
-    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::abortEveryPendingOperation()\n");
+    MEDIA_ELEMENT_LOG(this, "HTMLMediaElement::abortEveryPendingOperation()");
     if (m_currentOperation) {
         m_currentOperation->cancelOperation();
         m_currentOperation = nullptr;
@@ -1327,7 +1327,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(m_mediaElement,
                       "MediaOperationQueueDataRequestResourceSelection::"
-                      "processOperationQueue()\n");
+                      "processOperationQueue()");
     HTMLMediaElement* self = m_mediaElement;
     self->processNextOperationQueue();
 
@@ -1474,7 +1474,7 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(
         m_mediaElement,
-        "MediaOperationQueueDataRequestPrepare::processOperationQueue()\n");
+        "MediaOperationQueueDataRequestPrepare::processOperationQueue()");
     MediaPlayer* player = mediaPlayer();
     if (player) {
         if (player->isWebRtcPlayer()) {
@@ -1496,7 +1496,7 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(
         m_mediaElement,
-        "MediaOperationQueueDataRequestSeek::processOperationQueue()\n");
+        "MediaOperationQueueDataRequestSeek::processOperationQueue()");
     // Seek task does not hold operation queue
     m_mediaElement->processNextOperationQueue();
     MediaPlayer* player = mediaPlayer();
@@ -1532,7 +1532,7 @@ void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
     MEDIA_ELEMENT_LOG(
         m_mediaElement,
         "MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()"
-        "\n");
+        "");
     if (m_mediaElement->m_defaultPlaybackStartPosition != 0) {
         m_seekPosition = m_mediaElement->m_defaultPlaybackStartPosition;
         m_mediaElement->m_defaultPlaybackStartPosition = 0;
@@ -1546,7 +1546,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(
         m_mediaElement,
-        "MediaOperationQueueDataRequestPause::processOperationQueue()\n");
+        "MediaOperationQueueDataRequestPause::processOperationQueue()");
     m_mediaElement->processNextOperationQueue();
     MediaPlayer* player = mediaPlayer();
     if (!player) {
@@ -1580,7 +1580,7 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     // MEDIA_ELEMENT_LOG(
     //     "MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     //     "
-    //     "-> %s\n",
+    //     "-> %s",
     //     s.data());
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEventByUA(m_event);
@@ -1601,7 +1601,7 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {
     MEDIA_ELEMENT_LOG(
         m_mediaElement,
-        "MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
+        "MediaOperationQueueDataRequestPlay::processOperationQueue()");
     MediaPlayer* player = mediaPlayer();
     if (player) {
         player->play();

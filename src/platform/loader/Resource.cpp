@@ -102,7 +102,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
                             formSubmitData->m_enctype);
                     }
                 } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    STARFISH_UNIMPLEMENTED();
                 }
             }
             m_resourceRequest->m_requestData->m_url = url;

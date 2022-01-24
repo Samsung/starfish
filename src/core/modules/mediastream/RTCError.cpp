@@ -62,7 +62,7 @@ String* RTCErrorInit::errorDetail()
     case RTCErrorDetailType::HardwareEncoderError:
         return String::createASCIIString("hardware-encoder-error");
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     return String::emptyString;

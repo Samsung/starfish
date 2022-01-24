@@ -176,7 +176,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         // The spec does not define how to calculate the height when the height
         // is specified in percentage
     } else if (height.isCalc()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     setHeight(std::max(maxCellHeightSoFar, specifiedHeight));

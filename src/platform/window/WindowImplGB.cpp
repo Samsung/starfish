@@ -48,7 +48,7 @@ namespace Starfish {
 #ifdef STARFISH_ENABLE_TEST
 void screenShotInRendering(WebView*, char const*, std::function<void()>)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 #endif
 

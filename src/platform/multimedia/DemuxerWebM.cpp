@@ -86,7 +86,7 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
-                STARFISH_LOG_INFO("DemuxerWebM::~DemuxerWebM\n");
+                STARFISH_LOG_INFO("DemuxerWebM::~DemuxerWebM");
                 delete ((DemuxerWebM*)obj)->m_headerSegment;
             },
             NULL, NULL, NULL);
@@ -215,10 +215,10 @@ public:
 
         while ((pCluster != NULL) && !pCluster->EOS()) {
             const long long timeCode = pCluster->GetTimeCode();
-            // STARFISH_LOG_INFO("\t\tCluster Time Code\t: %lld\n", timeCode);
+            // STARFISH_LOG_INFO("\t\tCluster Time Code\t: %lld", timeCode);
 
             const long long time_ns = pCluster->GetTime();
-            // STARFISH_LOG_INFO("\t\tCluster Time (ns)\t: %lld\n", time_ns);
+            // STARFISH_LOG_INFO("\t\tCluster Time (ns)\t: %lld", time_ns);
 
             const mkvparser::BlockEntry* pBlockEntry;
 
@@ -226,7 +226,7 @@ public:
 
             if (status < 0) { // error
                 // STARFISH_LOG_INFO("\t\tError parsing first block of
-                // cluster\n");
+                // cluster");
                 return false;
             }
 
@@ -244,7 +244,7 @@ public:
                         pBlock->GetFrame(i);
                     const long size = theFrame.len;
                     const long long offset = theFrame.pos;
-                    // STARFISH_LOG_INFO("\t\t\t %15ld,%15llx\n", size, offset);
+                    // STARFISH_LOG_INFO("\t\t\t %15ld,%15llx", size, offset);
 
                     uint64_t pts = pBlock->GetTimeCode(pCluster);
                     uint8_t* dataPtr = (unsigned char*)malloc((size_t)size);
@@ -271,7 +271,7 @@ public:
 
                 if (status < 0) {
                     // STARFISH_LOG_INFO("\t\t\tError parsing next block of
-                    // cluster\n");
+                    // cluster");
                     // fflush(stdout);
                     return false;
                 }

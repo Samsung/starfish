@@ -268,7 +268,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
                     webOrigin->serialize());
             swConnection->scheduleJob(job);
 #else
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
 #endif
         },
         job, executionContext()->webOrigin());
@@ -278,7 +278,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
 Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 {
-    SWCLIENT_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(rawClientURL));
+    SWCLIENT_LOG_IF_ALLOWED(1, "0: %s", CSTR(rawClientURL));
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistration
 
@@ -347,7 +347,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
             if (registration != nullptr) {
                 // 7.2.1 Resolve promise with the ServiceWorkerRegistration
                 // object which represents registration.
-                SWCLIENT_LOG_IF_ALLOWED(1, "7.2.1: %s\n",
+                SWCLIENT_LOG_IF_ALLOWED(1, "7.2.1: %s",
                                         CSTR(registration->scope));
 
                 auto swRegistration = new ServiceWorkerRegistration(
@@ -360,7 +360,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
             } else {
                 // 7.3 Else:
                 // 7.3.1 Resolve promise with undefined.
-                SWCLIENT_LOG_IF_ALLOWED(1, "7.3.1: null\n");
+                SWCLIENT_LOG_IF_ALLOWED(1, "7.3.1: null");
                 request->promise()->fulfill(scriptUndefined());
             }
         },
@@ -405,7 +405,7 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
 
             swConnection->matchRegistration(swrequest, urlString);
 #else
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
 #endif
         },
         request, clientURL->urlString());

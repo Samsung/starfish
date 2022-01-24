@@ -110,7 +110,7 @@ String* RTCDtlsTransport::stateStr()
 GCVector<ScriptArrayBuffer> RTCDtlsTransport::getRemoteCertificates()
 {
     GCVector<ScriptArrayBuffer> buffer;
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return buffer;
 }
 #endif

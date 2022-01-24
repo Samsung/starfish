@@ -235,7 +235,7 @@ void Timer::clear(GlobalScope* globalScope)
 
 void Timer::destroy()
 {
-    STARFISH_LOG_INFO("TimerEFL::destroy\n");
+    STARFISH_LOG_INFO("TimerEFL::destroy");
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;

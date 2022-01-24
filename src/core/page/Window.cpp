@@ -97,7 +97,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
-            [](void* obj, void* cd) { STARFISH_LOG_INFO("Window::~Window\n"); },
+            [](void* obj, void* cd) { STARFISH_LOG_INFO("Window::~Window"); },
             NULL, NULL, NULL);
     */
     m_scriptBindingInstance = new ScriptBindingWindowInstance(
@@ -390,12 +390,12 @@ void Window::resize(uint32_t w, uint32_t h)
 
 void Window::focus()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void Window::blur()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 float Window::devicePixelRatio()

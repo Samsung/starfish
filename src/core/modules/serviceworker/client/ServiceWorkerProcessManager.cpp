@@ -176,9 +176,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
                        GlobalOptions::instance().get("DEBUG_WORKER"));
 
         if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
-            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: success\n");
+            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: success");
         } else {
-            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: fail\n");
+            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: fail");
         }
 #endif
 
@@ -205,8 +205,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     STARFISH_ASSERT(processData->connection != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s\n", address.c_str());
-    SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s\n", origin.c_str());
+    SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s", address.c_str());
+    SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s", origin.c_str());
 
     return processData->connection;
 }
@@ -216,7 +216,7 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 {
     STARFISH_ASSERT(globalScope != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s\n",
+    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s",
                             CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
@@ -236,7 +236,7 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
 
     STARFISH_ASSERT(globalScope != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s\n",
+    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s",
                             CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.erase(id);

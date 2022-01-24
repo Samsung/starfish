@@ -45,14 +45,14 @@ public:
     {
         char buf[1024];
         vsnprintf(buf, sizeof(buf), format, arg);
-        STARFISH_LOG_INFO("%s\n", buf);
+        STARFISH_LOG_INFO("%s", buf);
     }
 
     virtual void customErrorLogger(const char* format, va_list arg)
     {
         char buf[1024];
         vsnprintf(buf, sizeof(buf), format, arg);
-        STARFISH_LOG_ERROR("%s\n", buf);
+        STARFISH_LOG_ERROR("%s", buf);
     }
 
     virtual void markJSJobEnqueued(
@@ -67,7 +67,7 @@ public:
                 if (vm->hasPendingJob()) {
                     auto jobResult = vm->executePendingJob();
                     if (jobResult.error) {
-                        STARFISH_LOG_ERROR("Uncaught Error in JS job\n");
+                        STARFISH_LOG_ERROR("Uncaught Error in JS job");
                     }
                 }
             },
@@ -148,7 +148,7 @@ Starfish::Starfish* g_starfishInstance;
 
 static void StarfishGCMemoryLogger(void* data)
 {
-    STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
+    STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]",
                       GC_get_memory_use() / 1024.f / 1024.f,
                       GC_get_heap_size() / 1024.f / 1024.f);
 }
@@ -162,7 +162,7 @@ void* LWEMainThread(void*)
 {
     Starfish::MessageLoop::init();
     pthread_mutex_unlock(&g_mainThreadInitLocker);
-    STARFISH_LOG_INFO("Worker thread started!\n");
+    STARFISH_LOG_INFO("Worker thread started!");
     Starfish::MessageLoop::run();
     return nullptr;
 }

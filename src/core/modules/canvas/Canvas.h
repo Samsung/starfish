@@ -501,110 +501,110 @@ public:
 
     virtual bool canRejectPainting(const LayoutRect& rect)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 
     // Generic canvas functions
     virtual void beginPath()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void closePath()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void moveTo(float x, float y)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void lineTo(float x, float y)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
                          float y3)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void quadraticCurveTo(float x1, float y1, float x2, float y2)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void arc(double xc, double yc, double radius, double angle1,
                      double angle2)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
                              double angle2)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void stroke()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void strokePreserve()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void strokePath(Path* path)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void setFillRule(bool shouldUseNonZeroFillRule = true)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void fill()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void fillPreserve()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void fillPath(Path* path)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void clipPath()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void clipPath(Path* path)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void clipPathPreserve()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual float lineWidth()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 1.0f;
     }
     virtual void setLineWidth(float width)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void setNeedsNoneAntialias()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void setNeedsFastAntialias()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void setNeedsGoodQualityAntialias()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void markDirtyRect(const Unit::Rect& rt)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     CanvasRenderTargetInfo& renderTargetInfo()
     {
@@ -612,12 +612,12 @@ public:
     }
     virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 #if defined(STARFISH_ENABLE_TEST)
     virtual void dump(const char* path)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 #endif
 protected:

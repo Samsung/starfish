@@ -168,7 +168,7 @@ public:
 
                             STARFISH_LOG_ERROR(
                                 "failed to parse resonse on "
-                                "XMLHttpRequest(%s)\n",
+                                "XMLHttpRequest(%s)",
                                 errorMessage->toUTF8NonGCString().data());
 
                             m_xhr->m_responseXML = parser->parseFromString(
@@ -296,7 +296,7 @@ XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("XMLHttpRequest::~XMLHttpRequest\n");
+        STARFISH_LOG_INFO("XMLHttpRequest::~XMLHttpRequest");
     }, NULL, NULL, NULL);
     */
     m_overrideMimeType = nullptr;
@@ -479,7 +479,7 @@ void XMLHttpRequest::setResponseType(String* typeStr)
         type = XMLHttpRequestResponseType::Text;
     } else {
         auto s = typeStr->toUTF8NonGCString();
-        STARFISH_LOG_ERROR("setResponseType: Invalid value given: %s\n",
+        STARFISH_LOG_ERROR("setResponseType: Invalid value given: %s",
                            s.data());
     }
 
@@ -565,7 +565,7 @@ ScriptValue XMLHttpRequest::response() const
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 #ifdef STARFISH_TC_COVERAGE
-    STARFISH_LOG_INFO("&&&response\n");
+    STARFISH_LOG_INFO("&&&response");
 #endif
 
     return result;
@@ -583,7 +583,7 @@ String* XMLHttpRequest::responseText() const
     }
 
 #ifdef STARFISH_TC_COVERAGE
-    STARFISH_LOG_INFO("&&&responseText\n");
+    STARFISH_LOG_INFO("&&&responseText");
 #endif
     return m_responseText;
 }
@@ -600,7 +600,7 @@ Document* XMLHttpRequest::responseXML() const
     }
 
 #ifdef STARFISH_TC_COVERAGE
-    STARFISH_LOG_INFO("&&&responseXML\n");
+    STARFISH_LOG_INFO("&&&responseXML");
 #endif
     return m_responseXML;
 }

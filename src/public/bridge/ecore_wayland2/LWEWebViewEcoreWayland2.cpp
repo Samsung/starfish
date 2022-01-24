@@ -264,7 +264,7 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::TVPlayBack;
     }
 
-    STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s\n", ecoreKeyString);
+    STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s", ecoreKeyString);
     return KeyValue::UnidentifiedKey;
 }
 
@@ -298,7 +298,7 @@ public:
         mWlDisplay = display;
         auto wlSurface = ecore_wl2_window_surface_get(win);
 
-        STARFISH_LOG_INFO("wl_display %p surface %p\n", display, wlSurface);
+        STARFISH_LOG_INFO("wl_display %p surface %p", display, wlSurface);
 
         EGLint major, minor, count, n, size;
         EGLConfig* configs;
@@ -323,20 +323,20 @@ public:
 
         mDisplay = eglGetDisplay((EGLNativeDisplayType)display);
         if (mDisplay == EGL_NO_DISPLAY) {
-            STARFISH_LOG_INFO("Can't create egl display\n");
+            STARFISH_LOG_INFO("Can't create egl display");
             exit(1);
         } else {
-            STARFISH_LOG_INFO("Created egl display\n");
+            STARFISH_LOG_INFO("Created egl display");
         }
 
         if (eglInitialize(mDisplay, &major, &minor) != EGL_TRUE) {
-            STARFISH_LOG_INFO("Can't initialise egl display\n");
+            STARFISH_LOG_INFO("Can't initialise egl display");
             exit(1);
         }
-        STARFISH_LOG_INFO("EGL major: %d, minor %d\n", major, minor);
+        STARFISH_LOG_INFO("EGL major: %d, minor %d", major, minor);
 
         eglGetConfigs(mDisplay, NULL, 0, &count);
-        STARFISH_LOG_INFO("EGL has %d configs\n", count);
+        STARFISH_LOG_INFO("EGL has %d configs", count);
 
         configs = ALLOCA(count * sizeof(*configs), void*);
 
@@ -345,19 +345,19 @@ public:
         EGLConfig eglConf = configs[0];
         for (i = 0; i < n; i++) {
             eglGetConfigAttrib(mDisplay, configs[i], EGL_BUFFER_SIZE, &size);
-            STARFISH_LOG_INFO("Buffer size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Buffer size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_RED_SIZE, &size);
-            STARFISH_LOG_INFO("Red size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Red size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_GREEN_SIZE, &size);
-            STARFISH_LOG_INFO("Green size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Green size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_BLUE_SIZE, &size);
-            STARFISH_LOG_INFO("Blue size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Blue size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_ALPHA_SIZE, &size);
-            STARFISH_LOG_INFO("Alpha size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Alpha size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_STENCIL_SIZE, &size);
-            STARFISH_LOG_INFO("Stencil size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Stencil size for config %d is %d", i, size);
             eglGetConfigAttrib(mDisplay, configs[i], EGL_DEPTH_SIZE, &size);
-            STARFISH_LOG_INFO("Depth size for config %d is %d\n", i, size);
+            STARFISH_LOG_INFO("Depth size for config %d is %d", i, size);
             // just choose the first one
             eglConf = configs[i];
             break;
@@ -371,25 +371,25 @@ public:
             EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
                                         EGL_NONE };
             STARFISH_LOG_INFO(
-                "failed to create opengl es 3+ context. use 2 instead\n");
+                "failed to create opengl es 3+ context. use 2 instead");
             mContext = eglCreateContext(mDisplay, eglConf, EGL_NO_CONTEXT,
                                         contextAttribs);
         }
 
         mEglWindow = wl_egl_window_create(wlSurface, width, height);
         if (mEglWindow == EGL_NO_SURFACE) {
-            STARFISH_LOG_INFO("Can't create egl window\n");
+            STARFISH_LOG_INFO("Can't create egl window");
             exit(1);
         } else {
-            STARFISH_LOG_INFO("Created egl window\n");
+            STARFISH_LOG_INFO("Created egl window");
         }
 
         mSurface = eglCreateWindowSurface(mDisplay, eglConf, mEglWindow, NULL);
 
         if (eglMakeCurrent(mDisplay, mSurface, mSurface, mContext)) {
-            STARFISH_LOG_INFO("Made current\n");
+            STARFISH_LOG_INFO("Made current");
         } else {
-            STARFISH_LOG_INFO("Made current failed\n");
+            STARFISH_LOG_INFO("Made current failed");
         }
 
         mFence = nullptr;
@@ -400,12 +400,12 @@ public:
         glFlush();
 
         if (eglSwapBuffers(mDisplay, mSurface)) {
-            STARFISH_LOG_INFO("Swapped buffers\n");
+            STARFISH_LOG_INFO("Swapped buffers");
         } else {
-            STARFISH_LOG_INFO("Swapped buffers failed\n");
+            STARFISH_LOG_INFO("Swapped buffers failed");
         }
 
-        STARFISH_LOG_INFO("wl_display_dispatch few times\n");
+        STARFISH_LOG_INFO("wl_display_dispatch few times");
         size_t dispatchCount = 0;
         while (dispatchCount < 3) {
             if (wl_display_dispatch_pending(display) > 0) {
@@ -430,7 +430,7 @@ public:
                             EGL_FOREVER_KHR);
                         if (result == EGL_FALSE) {
                             STARFISH_LOG_INFO(
-                                "EGL FENCE: error waiting for fence: %d\n",
+                                "EGL FENCE: error waiting for fence: %d",
                                 (int)eglGetError());
                         }
                         g_eglDestroySyncKHRProc(mDisplay, mFence);
@@ -444,7 +444,7 @@ public:
                     if (!eglMakeCurrent(mDisplay, mSurface, mSurface,
                                         mContext)) {
                         auto eglError = eglGetError();
-                        STARFISH_LOG_INFO("Made current failed error -> %d\n",
+                        STARFISH_LOG_INFO("Made current failed error -> %d",
                                           (int)eglError);
                     }
                 }
@@ -455,7 +455,7 @@ public:
                         "WebViewEcoreWayland2 - eglSwapBuffers", 2);
                     if (!eglSwapBuffers(mDisplay, mSurface)) {
                         auto eglError = eglGetError();
-                        STARFISH_LOG_INFO("Made current failed error -> %d\n",
+                        STARFISH_LOG_INFO("Made current failed error -> %d",
                                           (int)eglError);
                     }
                 }
@@ -466,7 +466,7 @@ public:
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
                     uint64_t end = Starfish::longTickCount();
                     float time = (float)((end - m_lastInputTime) / 1000.f);
-                    STARFISH_LOG_INFO("response time is %f ms\n", time);
+                    STARFISH_LOG_INFO("response time is %f ms", time);
 #endif
                     m_lastInputTime = 0;
                     ANNOTATE_CHANNEL_END(3002);
@@ -475,7 +475,7 @@ public:
                     mFence = g_eglCreateSyncKHRProc(mDisplay,
                                                     EGL_SYNC_FENCE_KHR, NULL);
                     if (!mFence) {
-                        STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d\n",
+                        STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d",
                                           (int)eglGetError());
                     }
                 }
@@ -569,7 +569,7 @@ public:
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
-                        "ECORE_EVENT_KEY_DOWN [%s, %d]\n", keyName.data(),
+                        "ECORE_EVENT_KEY_DOWN [%s, %d]", keyName.data(),
                         (keyEvent->modifiers & 1) || (keyEvent->modifiers & 2));
 
                     bool lastInputTimeWasZeroBefore = false;
@@ -681,7 +681,7 @@ public:
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
-                        "ECORE_EVENT_KEY_UP [%s, %d]\n", keyName.data(),
+                        "ECORE_EVENT_KEY_UP [%s, %d]", keyName.data(),
                         (keyEvent->modifiers & 1) || (keyEvent->modifiers & 2));
 
                     if (!webView->m_hasFocus) {
@@ -751,7 +751,7 @@ public:
         if (contextId) {
             m_IMFContext = ecore_imf_context_add(contextId);
         } else {
-            STARFISH_LOG_ERROR("Default context is null. Use fallback\n");
+            STARFISH_LOG_ERROR("Default context is null. Use fallback");
             m_IMFContext = ecore_imf_context_add(getIMFMethod());
         }
         ecore_imf_context_client_window_set(
@@ -763,7 +763,7 @@ public:
     {
         WebViewEcoreWayland2* self = (WebViewEcoreWayland2*)data;
         char* commit_str = (char*)event_info;
-        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
+        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s", commit_str);
         self->FetchWebContainer()->DispatchCompositionEndEvent(commit_str);
     }
 
@@ -775,7 +775,7 @@ public:
         int cursor_pos;
         ecore_imf_context_preedit_string_get(self->m_IMFContext, &str,
                                              &cursor_pos);
-        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d\n", str,
+        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d", str,
                           cursor_pos);
         if (str) {
             self->FetchWebContainer()->DispatchCompositionUpdateEvent(str);
@@ -800,24 +800,24 @@ public:
                                               int value)
     {
         if (!data) {
-            STARFISH_LOG_INFO("[No Data]\n");
+            STARFISH_LOG_INFO("[No Data]");
             return;
         }
         WebViewEcoreWayland2* wv = (WebViewEcoreWayland2*)data;
         switch (value) {
         case ECORE_IMF_INPUT_PANEL_STATE_SHOW:
             wv->ShowPanel();
-            STARFISH_LOG_INFO("[PANEL_STATE_SHOW]\n");
+            STARFISH_LOG_INFO("[PANEL_STATE_SHOW]");
             break;
         case ECORE_IMF_INPUT_PANEL_STATE_HIDE:
             wv->HidePanel();
-            STARFISH_LOG_INFO("[PANEL_STATE_HIDE]\n");
+            STARFISH_LOG_INFO("[PANEL_STATE_HIDE]");
             break;
         case ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW:
-            STARFISH_LOG_INFO("[PANEL_STATE_WILL_SHOW]\n");
+            STARFISH_LOG_INFO("[PANEL_STATE_WILL_SHOW]");
             break;
         default:
-            STARFISH_LOG_INFO("[PANEL_STATE_EVENT (default: %d)]\n", value);
+            STARFISH_LOG_INFO("[PANEL_STATE_EVENT (default: %d)]", value);
             break;
         }
     }
@@ -954,7 +954,7 @@ public:
     {
         Ecore_IMF_Context* ctx = m_IMFContext;
 
-        STARFISH_LOG_INFO("ShowPanel() [wv->m_isShowing:%d] \n", m_isShowing);
+        STARFISH_LOG_INFO("ShowPanel() [wv->m_isShowing:%d] ", m_isShowing);
         if (!m_isShowing) {
             m_isShowing = true;
             ecore_imf_context_input_panel_show(ctx);
@@ -964,7 +964,7 @@ public:
 
     void ShowSoftwareKeyboardIfPossible()
     {
-        STARFISH_LOG_INFO("1.Show IMF()\n");
+        STARFISH_LOG_INFO("1.Show IMF()");
 
 #if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         FetchWebContainer()->AddIdleCallback(
@@ -983,7 +983,7 @@ public:
     {
         Ecore_IMF_Context* ctx = m_IMFContext;
 
-        STARFISH_LOG_INFO("HidePanel() [wv->m_isShowing:%d] \n", m_isShowing);
+        STARFISH_LOG_INFO("HidePanel() [wv->m_isShowing:%d] ", m_isShowing);
         if (ctx && m_isShowing) {
             m_isShowing = false;
             ecore_imf_context_reset(ctx);
@@ -994,7 +994,7 @@ public:
 
     void HideSoftwareKeyboardIfPossible()
     {
-        STARFISH_LOG_INFO("1.Hide IMF()\n");
+        STARFISH_LOG_INFO("1.Hide IMF()");
 
 #if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         FetchWebContainer()->AddIdleCallback(

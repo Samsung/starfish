@@ -129,7 +129,7 @@ void PlatformWindow::clearNativeHandlers()
 
 void PlatformWindow::destroy()
 {
-    STARFISH_LOG_INFO("PlatformWindow::destroy()\n");
+    STARFISH_LOG_INFO("PlatformWindow::destroy()");
     m_isDestroyed = true;
     clearResources();
 }
@@ -182,7 +182,7 @@ void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
                                       PlatformKeyEventData data)
 {
-    STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d\n",
+    STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d",
                       (int)data.keyValue());
 
     LongTaskFinder p("PlatformWindow::dispatchKeyEvent", 1);
@@ -372,7 +372,7 @@ void PlatformWindow::setNeedsRendering()
             if (wnd->width() != 0 && wnd->height() != 0) {
                 wnd->rendering();
             } else {
-                STARFISH_LOG_WARN("PlatformWindow size error\n");
+                STARFISH_LOG_WARN("PlatformWindow size error");
             }
 
             if (wnd->webView()->needsContinuousRendering()) {

@@ -2137,7 +2137,7 @@ public:
 
     void setBorderImageSource(CSSGradientValue* gradient)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     void setBorderImageSlices(BorderImageLengthBox slices)

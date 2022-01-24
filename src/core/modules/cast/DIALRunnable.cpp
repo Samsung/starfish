@@ -50,7 +50,7 @@ bool DIALRunnable::doRun()
 
     m_server->Get(LOCATION_DESC, [appURL](const httplib::Request& req,
                                           httplib::Response& res) {
-        STARFISH_LOG_INFO("CAST - GET: %s\n", LOCATION_DESC);
+        STARFISH_LOG_INFO("CAST - GET: %s", LOCATION_DESC);
 
         res.set_header("Application-URL", appURL.data());
         res.set_content(CastConfig::templateDeviceDescription,
@@ -64,12 +64,12 @@ bool DIALRunnable::doRun()
 #if !defined(NDEBUG)
     m_server->Get(R"(/(.*))",
                   [](const httplib::Request& req, httplib::Response& res) {
-                      STARFISH_LOG_INFO("CAST - GET: %s\n", req.path.data());
+                      STARFISH_LOG_INFO("CAST - GET: %s", req.path.data());
                   });
 
     m_server->Post(R"(/(.*))",
                    [](const httplib::Request& req, httplib::Response& res) {
-                       STARFISH_LOG_INFO("CAST - POST: %s\n", req.path.data());
+                       STARFISH_LOG_INFO("CAST - POST: %s", req.path.data());
                    });
 #endif
 

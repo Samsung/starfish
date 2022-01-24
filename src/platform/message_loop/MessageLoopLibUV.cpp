@@ -344,7 +344,7 @@ void MessageLoop::destroy()
         }
 
         if (m_idlers.empty() && e) {
-            STARFISH_LOG_INFO("[Starfish] message loop [m_idlers:%zu]\n",
+            STARFISH_LOG_INFO("[Starfish] message loop [m_idlers:%zu]",
                               m_idlers.size());
             break;
         }

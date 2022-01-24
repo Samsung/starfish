@@ -88,7 +88,7 @@ public:
 #endif
     {
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
-        STARFISH_LOG_INFO("[SCRIPT_PROFILING] Start JS Execution at %dms\n",
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] Start JS Execution at %dms",
                           (int)(timestamp() - g_profilingBaseTime));
 #endif
     }
@@ -96,7 +96,7 @@ public:
     ~ScriptProfileLogger()
     {
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
-        STARFISH_LOG_INFO("[SCRIPT_PROFILING] End JS Execution at %dms\n",
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] End JS Execution at %dms",
                           (int)(timestamp() - g_profilingBaseTime));
 #endif
     }

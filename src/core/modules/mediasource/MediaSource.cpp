@@ -53,7 +53,7 @@ MediaSource::MediaSource(Document* document)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            STARFISH_LOG_INFO("MediaSource::~MediaSource (%p)\n", obj);
+            STARFISH_LOG_INFO("MediaSource::~MediaSource (%p)", obj);
         },
         NULL, NULL, NULL);
 #endif
@@ -144,7 +144,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::removeSourceBuffer(SourceBuffer* buffer)
 {
-    STARFISH_LOG_INFO("MediaSource::removeSourceBuffer()\n");
+    STARFISH_LOG_INFO("MediaSource::removeSourceBuffer()");
     size_t index = SIZE_MAX;
     if (m_sourceBuffers) {
         for (size_t i = 0; i < m_sourceBuffers->length(); i++) {
@@ -338,7 +338,7 @@ void MediaSource::setDuration(double d, bool checkCurrentDuration)
         }
     }
 
-    STARFISH_LOG_INFO("MediaSource got new duration -> %lf %lf\n", d,
+    STARFISH_LOG_INFO("MediaSource got new duration -> %lf %lf", d,
                       (lastTimeStamp / 1000.0));
     if (checkCurrentDuration && (d < (lastTimeStamp / 1000.0))) {
         throw new DOMException(executionContext(),
@@ -419,7 +419,7 @@ bool MediaSource::attach(HTMLMediaElement* e)
 // 2.4.2 Detaching from a media element
 void MediaSource::detach()
 {
-    STARFISH_LOG_INFO("MediaSource::detach()\n");
+    STARFISH_LOG_INFO("MediaSource::detach()");
     // Update duration to NaN.
     m_duration =
         std::numeric_limits<double>::quiet_NaN(); // update duration directly

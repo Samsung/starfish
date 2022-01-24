@@ -112,7 +112,7 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
     // Query for application information.
     server->Get(appPathBuffer, [this](const httplib::Request& req,
                                       httplib::Response& res) {
-        CAST_LOG_IF_ALLOWED(3, "CAST - GET:/apps/%s\n",
+        CAST_LOG_IF_ALLOWED(3, "CAST - GET:/apps/%s",
                             m_castAppInfo.m_appName.data());
 
         const char* status = m_castAppInfo.m_isRunning ? "running" : "stopped";
@@ -121,7 +121,7 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
                  CastConfig::templateCastAppInfo,
                  m_castAppInfo.m_appName.data(), status);
 
-        CAST_SEND_LOG_IF_ALLOWED(4, "%s\n", contentBuffer);
+        CAST_SEND_LOG_IF_ALLOWED(4, "%s", contentBuffer);
 
         res.set_content(contentBuffer, strlen(contentBuffer), "test/xml");
     });
@@ -129,7 +129,7 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
     // Launch an application.
     server->Post(appPathBuffer, [this](const httplib::Request& req,
                                        httplib::Response& res) {
-        CAST_LOG_IF_ALLOWED(3, "CAST - POST:/apps/%s\n",
+        CAST_LOG_IF_ALLOWED(3, "CAST - POST:/apps/%s",
                             m_castAppInfo.m_appName.data());
 
         char buffer[CAST_APP_INFOR_BUFFER_SIZE];
@@ -142,13 +142,12 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
                 res.status = 200;
             } else {
                 if (launchApp(&m_castAppInfo, req.body)) {
-                    CAST_LOG_IF_ALLOWED(3, "CAST - Launch application\n");
+                    CAST_LOG_IF_ALLOWED(3, "CAST - Launch application");
                     m_castAppInfo.m_isRunning = true;
                     res.status = 201;
                     res.set_header("LOCATION", buffer);
                 } else {
-                    CAST_LOG_IF_ALLOWED(3,
-                                        "CAST - Cannot launch application\n");
+                    CAST_LOG_IF_ALLOWED(3, "CAST - Cannot launch application");
                     res.status = 503;
                 }
             }
@@ -165,7 +164,7 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
     // Stop an application.
     server->Delete(appRunPathBuffer, [this](const httplib::Request& req,
                                             httplib::Response& res) {
-        CAST_LOG_IF_ALLOWED(3, "CAST - Delete\n");
+        CAST_LOG_IF_ALLOWED(3, "CAST - Delete");
         if (m_castAppInfo.m_isRunning && stopApp(&m_castAppInfo)) {
             m_castAppInfo.m_isRunning = false;
             res.status = 200;
@@ -177,7 +176,7 @@ CastApplication::CastApplication(httplib::Server* server, CastConfig* config,
 #if !defined(NDEBUG)
     server->set_logger([](const httplib::Request& req,
                           const httplib::Response& res) {
-        CAST_LOG_IF_ALLOWED(4, "%s\n", logRequestAndResponse(req, res).c_str());
+        CAST_LOG_IF_ALLOWED(4, "%s", logRequestAndResponse(req, res).c_str());
     });
 #endif
 }

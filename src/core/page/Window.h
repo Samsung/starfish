@@ -219,7 +219,7 @@ public:
     Document* document() const
     {
 #ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("&&&document\n");
+        STARFISH_LOG_INFO("&&&document");
 #endif
         return m_document;
     }

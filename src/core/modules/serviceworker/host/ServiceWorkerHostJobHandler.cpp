@@ -206,7 +206,7 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
                           toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
@@ -229,7 +229,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     }
 
     // 5. If jobQueue is empty, then:
-    SWHOST_LOG_IF_ALLOWED(1, "5: is jobQueue empty? (%s)\n",
+    SWHOST_LOG_IF_ALLOWED(1, "5: is jobQueue empty? (%s)",
                           jobQueue->empty() ? "true" : "false");
 
     if (jobQueue->empty()) {
@@ -241,7 +241,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
         // 5.2. Invoke Run Job with jobQueue.
         runJob(jobQueue);
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
 
         // 6. Else:
         // 6.1 Let lastJob be the element at the back of jobQueue.
@@ -269,12 +269,12 @@ ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 
     for (const auto& pair : m_scopeToRegistrationMap) {
         if (pair.first->equals(queriedScope)) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)\n", CSTR(queriedScope));
+            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)", CSTR(queriedScope));
             return pair.second;
         }
     }
 
-    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)\n", CSTR(queriedScope));
+    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)", CSTR(queriedScope));
     return nullptr;
 }
 
@@ -285,13 +285,13 @@ ServiceWorkerHostJobHandler::getRegistration(
     for (const auto& pair : m_scopeToRegistrationMap) {
         auto registration = pair.second;
         if (registration->id == registrationId) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)\n",
+            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)",
                                   registrationId.toString().c_str());
             return registration;
         }
     }
 
-    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)\n",
+    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)",
                           registrationId.toString().c_str());
     return nullptr;
 }
@@ -301,7 +301,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
 {
     STARFISH_ASSERT(scope != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(scope));
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s", CSTR(scope));
 
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
 
@@ -748,7 +748,7 @@ void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
 void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
                           toUnderlyingType(job->data()->type));
 
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
@@ -805,7 +805,7 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d\n",
+    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
                           toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
@@ -832,7 +832,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURLString != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", CSTR(clientURLString));
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s", CSTR(clientURLString));
 
     // https://w3c.github.io/ServiceWorker/#match-service-worker-registration
 
@@ -849,7 +849,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     for (const auto& pair : m_scopeToRegistrationMap) {
         ServiceWorkerRegistrationKey selectedRegistrationKey = pair.first;
 
-        SWHOST_LOG_IF_ALLOWED(1, "4: %s\n", CSTR(selectedRegistrationKey));
+        SWHOST_LOG_IF_ALLOWED(1, "4: %s", CSTR(selectedRegistrationKey));
         if (clientURLString->startsWith(selectedRegistrationKey, false) ==
             false) {
             continue;
@@ -858,7 +858,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
         // 5. Set matchingScopeString to the longest value in scopeStringSet
         // which the value of clientURLString starts with, if it exists.
         if (matchingScopeString->length() < selectedRegistrationKey->length()) {
-            SWHOST_LOG_IF_ALLOWED(1, "5: %s\n", CSTR(selectedRegistrationKey));
+            SWHOST_LOG_IF_ALLOWED(1, "5: %s", CSTR(selectedRegistrationKey));
             matchingScopeString = selectedRegistrationKey;
         }
     }
@@ -883,7 +883,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     // 9. If registration is not null and registration’s uninstalling flag is
     // set, return null.
     if ((registration != nullptr) && registration->isUninstalling()) {
-        SWHOST_LOG_IF_ALLOWED(1, "9: done\n");
+        SWHOST_LOG_IF_ALLOWED(1, "9: done");
         return nullptr;
     }
 
@@ -896,11 +896,11 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
 {
     STARFISH_ASSERT(request != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s\n", request->contextId.toString().c_str());
+    SWHOST_LOG_IF_ALLOWED(1, "0: %s", request->contextId.toString().c_str());
 
     if (request->type == ServiceWorkerClientRequestType::Register) {
         if (request->registrationId.isValid()) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: client is registered to regId: %s\n",
+            SWHOST_LOG_IF_ALLOWED(1, "1: client is registered to regId: %s",
                                   request->registrationId.toString().c_str());
             auto iter = m_clientIdToRegistrationIdMap.find(request->contextId);
             if (iter == m_clientIdToRegistrationIdMap.end()) {
@@ -911,7 +911,7 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
             }
         }
     } else if (request->type == ServiceWorkerClientRequestType::Unregister) {
-        SWHOST_LOG_IF_ALLOWED(1, "1: client is unregistered\n");
+        SWHOST_LOG_IF_ALLOWED(1, "1: client is unregistered");
         m_clientIdToRegistrationIdMap.erase(request->contextId);
 
     } else {

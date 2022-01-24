@@ -102,7 +102,7 @@ Promise* Body::arrayBuffer()
                               arrayValue.getArrayBufferViewValue());
                 m_promise->fulfill(value);
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -141,7 +141,7 @@ Promise* Body::blob()
 
                 m_promise->fulfill(blob->scriptValue());
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -175,7 +175,7 @@ Promise* Body::json()
                               body.getUSVStringValue());
                 m_promise->fulfill(jsonObject);
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -189,7 +189,7 @@ Promise* Body::json()
 
 Promise* Body::formData()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
@@ -236,7 +236,7 @@ Promise* Body::text()
                 m_resourceRequest->open(reqData, new HeadersData());
                 m_resourceRequest->send();
             } else {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
         } else {
             m_readableStream->resolveData(m_promise, executionContext(),
@@ -249,19 +249,19 @@ Promise* Body::text()
 
 ArrayBuffer* Body::extractArrayBuffer()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
 ArrayBufferView* Body::extractArrayBufferView()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
 Blob* Body::extractBlob()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 
@@ -286,11 +286,11 @@ String* Body::extract()
         // request supports only string type.
         result = extractText();
     } else if (isArrayBufferType()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else if (isArrayBufferViewType()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else if (isBlobType()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
@@ -400,7 +400,7 @@ void Body::copyBody(Body* body)
             m_bodyInit =
                 BodyInit::createUSVString(srcBodyValue.getUSVStringValue());
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
 }

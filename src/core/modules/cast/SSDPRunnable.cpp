@@ -68,7 +68,7 @@ bool SSDPRunnable::doRun()
         CastConfig::templateMSearchResponse,
         localAddrString->toUTF8NonGCString().c_str(), LOCATION_PORT, "");
 
-    CAST_LOG_IF_ALLOWED(1, COLOR_YELLOW "%s\n", msearchResData);
+    CAST_LOG_IF_ALLOWED(1, COLOR_YELLOW "%s", msearchResData);
 
     while (isStopRequested() == false) {
         std::this_thread::sleep_for(std::chrono::milliseconds(RECV_SLEEP_MS));
@@ -96,7 +96,7 @@ bool SSDPRunnable::doRun()
             // send a response of M-SEARCH
             if (sendto(m_socket, msearchResData, msearchResDataLen, 0,
                        (struct sockaddr *)&srcAddr, addrLen) == -1) {
-                STARFISH_LOG_WARN("FAILED: Responding to %s:%d\n",
+                STARFISH_LOG_WARN("FAILED: Responding to %s:%d",
                                   inet_ntoa(srcAddr.sin_addr),
                                   ntohs(srcAddr.sin_port));
                 return false;
@@ -104,7 +104,7 @@ bool SSDPRunnable::doRun()
                 if ((hasTargetAddr == false) ||
                     (strncmp(inet_ntoa(srcAddr.sin_addr), clientAddr.c_str(),
                              clientAddr.length()) == 0)) {
-                    CAST_SEND_LOG_IF_ALLOWED(3, "HTTP/1.1 200 OK: to %s:%d\n",
+                    CAST_SEND_LOG_IF_ALLOWED(3, "HTTP/1.1 200 OK: to %s:%d",
                                              inet_ntoa(srcAddr.sin_addr),
                                              ntohs(srcAddr.sin_port));
                 }

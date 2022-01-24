@@ -131,7 +131,7 @@ void ServiceWorkerServer::start()
 
     std::string address = createAddress();
 
-    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
+    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s", address.c_str());
     m_connection->socket()->bind(address.c_str());
     m_ioRunnable->addClient(m_connection);
 }
@@ -150,8 +150,8 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     std::string address = createAddress(encodedOrigin);
 
-    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s\n", address.c_str());
-    SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s\n", origin.c_str());
+    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s", address.c_str());
+    SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s", origin.c_str());
 
     STARFISH_ASSERT(m_connection != nullptr);
     STARFISH_ASSERT(m_ioRunnable != nullptr);
@@ -186,7 +186,7 @@ bool ServiceWorkerServer::isTerminating()
 
 bool ServiceWorkerServer::tryTerminate()
 {
-    SWHOST_LOG_IF_ALLOWED(1, "0. called\n");
+    SWHOST_LOG_IF_ALLOWED(1, "0. called");
 
     if (m_isTerminating == true) {
         return true;
@@ -198,12 +198,12 @@ bool ServiceWorkerServer::tryTerminate()
         m_messageLoop->addIdler(
             nullptr,
             [](size_t handle, void* data0) {
-                SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server\n");
+                SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server");
                 castTo<ServiceWorkerServer*>(data0)->destroy();
             },
             this);
     } else {
-        SWHOST_LOG_IF_ALLOWED(1, "1. registration map isn't empty\n");
+        SWHOST_LOG_IF_ALLOWED(1, "1. registration map isn't empty");
         return false;
     }
 

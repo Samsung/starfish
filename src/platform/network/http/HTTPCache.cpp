@@ -63,13 +63,13 @@ HTTPCache::HTTPCache(String* cacheDirPath)
 
     if (createOrOpenCacheDir() && lock()) {
         if (!initFromIndexFileIfPossible()) {
-            STARFISH_LOG_ERROR("[HTTPCache] Failed to init using index\n")
+            STARFISH_LOG_ERROR("[HTTPCache] Failed to init using index")
             init();
             clearCacheDir();
         }
     } else {
         unlock();
-        STARFISH_LOG_ERROR("[HTTPCache] Failed to create(or open) cache dir\n")
+        STARFISH_LOG_ERROR("[HTTPCache] Failed to create(or open) cache dir")
         return;
     }
     m_good = true;
@@ -84,14 +84,14 @@ bool HTTPCache::lock()
     auto path = m_cacheDirPath->toUTF8NonGCString();
     if ((m_lockfd = open(path.data(), O_RDONLY)) != -1) {
         if (flock(m_lockfd, LOCK_EX | LOCK_NB) != -1) {
-            STARFISH_LOG_INFO("[HTTPCache] Lock cache dir\n");
+            STARFISH_LOG_INFO("[HTTPCache] Lock cache dir");
             return true;
         } else {
             close(m_lockfd);
             m_lockfd = -1;
         }
     }
-    STARFISH_LOG_ERROR("[HTTPCache] Failed to lock cache dir\n");
+    STARFISH_LOG_ERROR("[HTTPCache] Failed to lock cache dir");
     return false;
 }
 
@@ -100,9 +100,9 @@ void HTTPCache::unlock()
     if (m_lockfd != -1) {
         if (flock(m_lockfd, LOCK_UN) != -1) {
             close(m_lockfd);
-            STARFISH_LOG_INFO("[HTTPCache] Unlock cache dir\n");
+            STARFISH_LOG_INFO("[HTTPCache] Unlock cache dir");
         } else {
-            STARFISH_LOG_ERROR("[HTTPCache] Failed to unlock cache dir\n");
+            STARFISH_LOG_ERROR("[HTTPCache] Failed to unlock cache dir");
         }
     }
 }
@@ -178,7 +178,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
         StringUtils::tokenize(&(*row), HTTPCacheEntry::kSeparator, 1, columns);
 
         if (columns.size() != NUM_OF_COL) {
-            STARFISH_LOG_ERROR("[HTTPCache] Index file is corrupted\n");
+            STARFISH_LOG_ERROR("[HTTPCache] Index file is corrupted");
             return false;
         }
         // TODO : Check whether each column is valid or not
@@ -248,7 +248,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
 
     expire();
 #ifdef STARFISH_ENABLE_TEST
-    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 #endif
     return true;
@@ -335,7 +335,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
 
     if (!newEntry->writeRawDataToEntryFile(nwd->request->response())) {
         STARFISH_LOG_ERROR(
-            "[HTTPCache] Failed to write RawData(url:%s)\n",
+            "[HTTPCache] Failed to write RawData(url:%s)",
             nwd->request->url()->string()->toUTF8NonGCString().data());
         return;
     }
@@ -345,7 +345,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
     m_cacheLRUList.push_back(newEntry->url()->urlString());
     m_currentTotalSizeOfBlocks += sizeOfBlocks;
 #ifdef STARFISH_ENABLE_TEST
-    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 #endif
 }
@@ -392,7 +392,7 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
         if (isGood &&
             !entry->writeRawDataToEntryFile(nwd->request->response())) {
             STARFISH_LOG_ERROR(
-                "[HTTPCache] Failed to write RawData(url:%s)\n",
+                "[HTTPCache] Failed to write RawData(url:%s)",
                 entry->url()->string()->toUTF8NonGCString().data());
             isGood = false;
         }
@@ -404,7 +404,7 @@ void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
 
     if (!isGood) {
         STARFISH_LOG_ERROR(
-            "[HTTPCache] Failed to update a entry, so remove it\n");
+            "[HTTPCache] Failed to update a entry, so remove it");
         remove(entry);
     }
 }
@@ -435,7 +435,7 @@ void HTTPCache::extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
 bool HTTPCache::flush()
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_LOG_INFO("HTTPCache::flush()\n");
+    STARFISH_LOG_INFO("HTTPCache::flush()");
 
     bool check = true;
 
@@ -443,7 +443,7 @@ bool HTTPCache::flush()
 
     if (!pruneAsNeededForCacheSpace(calcBlocksSizeOfIndexFile())) {
         STARFISH_LOG_ERROR(
-            "[HTTPCache] Failed to reserve free space to index files\n");
+            "[HTTPCache] Failed to reserve free space to index files");
         check = false;
     }
 
@@ -453,7 +453,7 @@ bool HTTPCache::flush()
         return false;
     }
 #ifdef STARFISH_ENABLE_TEST
-    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
+    STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 #endif
     auto out =
@@ -514,7 +514,7 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
         }
         STARFISH_LOG_INFO(
             "[HTTPCache] Reserve : %.2lf, Prune : %.2lf, Current size : "
-            "%.2lf\n",
+            "%.2lf",
             (double)reserve / (1024 * 1024),
             (double)removedSize / (1024 * 1024),
             (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
@@ -533,7 +533,7 @@ bool HTTPCache::isConsistent()
 
     if (!dir->open(m_cacheDirPath) ||
         (dir->fileCount()) != m_cacheLRUList.size()) {
-        STARFISH_LOG_ERROR("[HTTPCache] Cache dir status is inconsistent\n");
+        STARFISH_LOG_ERROR("[HTTPCache] Cache dir status is inconsistent");
         dir->close();
         return false;
     }
@@ -542,7 +542,7 @@ bool HTTPCache::isConsistent()
 
     for (auto& it : *m_cacheEntryTable) {
         if (!it.second->isConsistent()) {
-            STARFISH_LOG_ERROR("[HTTPCache] Entry status is inconsistent\n");
+            STARFISH_LOG_ERROR("[HTTPCache] Entry status is inconsistent");
             return false;
         }
     }

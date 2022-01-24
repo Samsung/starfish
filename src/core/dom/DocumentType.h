@@ -35,7 +35,7 @@ public:
     {
 #ifdef STARFISH_TC_COVERAGE
         if (name->equals("html")) {
-            STARFISH_LOG_INFO("+++doctype:!DOCTYPE\n");
+            STARFISH_LOG_INFO("+++doctype:!DOCTYPE");
         }
 #endif
     }

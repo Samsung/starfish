@@ -31,7 +31,7 @@ namespace LWE {
 
 static void error_callback(int error, const char* description)
 {
-    STARFISH_LOG_ERROR("%s\n", description);
+    STARFISH_LOG_ERROR("%s", description);
 }
 
 static void cursor_position_callback(GLFWwindow* window, double xpos,
@@ -72,14 +72,14 @@ public:
         if (m_glWindow == nullptr) {
             STARFISH_LOG_ERROR(
                 "failed to create OpenGL 3.0  context. try OpenGL ES 3.0 "
-                "instead\n");
+                "instead");
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
             m_glWindow =
                 glfwCreateWindow(width, height, "Starfish", NULL, NULL);
             if (m_glWindow == nullptr) {
                 STARFISH_LOG_ERROR(
                     "failed to create OpenGL ES 3.0 context. please check your "
-                    "environment...\n");
+                    "environment...");
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }

@@ -270,7 +270,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     parent()->executionContext()->webBase()->starfish()->addPointerInRootSet(
         this);
 
-    STARFISH_LOG_ERROR("%p SocketLWS::SocketLWS called\n", this);
+    STARFISH_LOG_ERROR("%p SocketLWS::SocketLWS called", this);
 }
 SocketLWS::~SocketLWS()
 {
@@ -278,7 +278,7 @@ SocketLWS::~SocketLWS()
     delete[] m_lwsProtocols;
     delete m_lwsContextCreationInfo;
 
-    STARFISH_LOG_ERROR("%p SocketLWS::~SocketLWS called\n", this);
+    STARFISH_LOG_ERROR("%p SocketLWS::~SocketLWS called", this);
 }
 
 void SocketLWS::deref()

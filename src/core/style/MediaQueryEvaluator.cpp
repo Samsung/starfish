@@ -583,7 +583,7 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
         ENUM_MEDIA_FEATURES(EVAL_MEDIA_FEATURES)
 #undef EVAL_MEDIA_FEATURES
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 }

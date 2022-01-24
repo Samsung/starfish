@@ -88,7 +88,7 @@ static String* computeReferrer(String* referrer,
 
     ResourceURL url(referrer, contextOrigin);
 
-    // STARFISH_LOG_INFO("%s %s %s %s\n"
+    // STARFISH_LOG_INFO("%s %s %s %s"
     //                 , CSTR(url.urlString())
     //                 , CSTR(url.origin())
     //                 , CSTR(referrer)

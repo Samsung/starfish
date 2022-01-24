@@ -944,13 +944,13 @@ void CanvasRenderingContext2DMixIn::setShadowColor(String* colorStr)
 
 String* CanvasRenderingContext2DMixIn::filter()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return String::fromUTF8("none");
 }
 
 void CanvasRenderingContext2DMixIn::setFilter(String* value)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)

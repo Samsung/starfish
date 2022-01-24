@@ -47,7 +47,7 @@ static BrowsingContext* browsingContext(void* user_data)
 
 static void _videoPlayerPrepareCB(void* user_data)
 {
-    STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
+    STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self)->window(),
@@ -60,7 +60,7 @@ static void _videoPlayerPrepareCB(void* user_data)
 
 static void _videoPlayerCompletedCB(void* user_data)
 {
-    STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
+    STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self)->window(),
@@ -73,7 +73,7 @@ static void _videoPlayerCompletedCB(void* user_data)
 
 static void _videoPlayerbufferingCBNative(int percent, void* user_data)
 {
-    STARFISH_LOG_INFO("avplay::_videoPlayerbufferingCBNative() %d\n", percent);
+    STARFISH_LOG_INFO("avplay::_videoPlayerbufferingCBNative() %d", percent);
     Avplay* self = (Avplay*)user_data;
     if (percent < 100) {
         self->setBufferingPercent(percent);
@@ -98,12 +98,12 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
 
 static void _videoPlayerEventCBNative(int msg, void* msg_data, void* user_data)
 {
-    STARFISH_LOG_INFO("avplay::_videoPlayerEventCBNative()\n");
+    STARFISH_LOG_INFO("avplay::_videoPlayerEventCBNative()");
 }
 
 static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
 {
-    STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
+    STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self)->window(),
@@ -117,9 +117,9 @@ static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
 void printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
-#define GEN_ERROR_PRINTS(errorenum)            \
-    case errorenum:                            \
-        STARFISH_LOG_INFO("%s\n", #errorenum); \
+#define GEN_ERROR_PRINTS(errorenum)          \
+    case errorenum:                          \
+        STARFISH_LOG_INFO("%s", #errorenum); \
         return;
         GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
         GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
@@ -142,7 +142,7 @@ void printNativePlayerError(int errorCode)
         GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
 #undef GEN_ERROR_PRINTS
     default:
-        STARFISH_LOG_INFO("Unknown error\n");
+        STARFISH_LOG_INFO("Unknown error");
         return;
     }
 }
@@ -168,7 +168,7 @@ Avplay::~Avplay()
 void Avplay::open(String* url)
 {
     auto s = url->toUTF8NonGCString();
-    STARFISH_LOG_INFO("avplay::open() :: URL %s\n", s.data());
+    STARFISH_LOG_INFO("avplay::open() :: URL %s", s.data());
     if (m_nativePlayer) {
         player_destroy(m_nativePlayer);
         m_nativePlayer = nullptr;
@@ -245,13 +245,13 @@ void Avplay::setDisplayRect(double offsetLeft, double offsetTop,
         m_offsetHeight = offsetHeight;
     }
 
-    STARFISH_LOG_INFO("avplay::setDisplayRect() %lf %lf %lf %lf !!!\n",
+    STARFISH_LOG_INFO("avplay::setDisplayRect() %lf %lf %lf %lf !!!",
                       m_offsetLeft, m_offsetTop, m_offsetWidth, m_offsetHeight);
 }
 
 void Avplay::play()
 {
-    STARFISH_LOG_INFO("avplay::play() \n");
+    STARFISH_LOG_INFO("avplay::play() ");
     player_set_display_roi_area(m_nativePlayer, m_offsetLeft, m_offsetTop,
                                 m_offsetWidth, m_offsetHeight);
     int ret = player_start(m_nativePlayer);
@@ -262,7 +262,7 @@ void Avplay::play()
 
 void Avplay::close()
 {
-    STARFISH_LOG_INFO("avplay::close()\n");
+    STARFISH_LOG_INFO("avplay::close()");
     if (m_nativePlayer) {
         player_unset_buffering_cb(m_nativePlayer);
 
@@ -279,7 +279,7 @@ void Avplay::close()
 
 void Avplay::pause()
 {
-    STARFISH_LOG_INFO("avplay::pause()\n");
+    STARFISH_LOG_INFO("avplay::pause()");
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
 
@@ -293,7 +293,7 @@ void Avplay::pause()
 
 void Avplay::stop()
 {
-    STARFISH_LOG_INFO("avplay::stop()\n");
+    STARFISH_LOG_INFO("avplay::stop()");
     int ret = player_stop(m_nativePlayer);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
@@ -321,7 +321,7 @@ String* Avplay::getState()
 
 double Avplay::getCurrentTime()
 {
-    STARFISH_LOG_INFO("avplay::getCurrentTime()\n");
+    STARFISH_LOG_INFO("avplay::getCurrentTime()");
     int position = 0;
     player_get_play_position(m_nativePlayer, &position);
     return (double)position;
@@ -329,7 +329,7 @@ double Avplay::getCurrentTime()
 
 double Avplay::getDuration()
 {
-    STARFISH_LOG_INFO("avplay::getDuration()\n");
+    STARFISH_LOG_INFO("avplay::getDuration()");
     int duration = 0;
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
@@ -342,7 +342,7 @@ double Avplay::getDuration()
 void Avplay::seekTo(double seekTime)
 {
     // TODO
-    STARFISH_LOG_INFO("avplay::seekTo()\n");
+    STARFISH_LOG_INFO("avplay::seekTo()");
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
 
@@ -369,7 +369,7 @@ void Avplay::prepareAsync(ScriptValue listener)
 {
     callJSCallback(onbufferingstart_CALLBACK);
 
-    STARFISH_LOG_INFO("avplay::prepareAsync()\n");
+    STARFISH_LOG_INFO("avplay::prepareAsync()");
     m_prepare_async = listener;
     int ret = player_prepare_async(m_nativePlayer, _videoPlayerPrepareCB, this);
     if (ret != PLAYER_ERROR_NONE) {
@@ -482,7 +482,7 @@ void Avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
                 break;
 
             default:
-                STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!\n");
+                STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!");
             }
             return ValueRef::createUndefined();
         },

@@ -55,12 +55,12 @@ public:
 
     virtual void addColorStop(const double& offset, const Unit::Color& color)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual bool isZeroSize()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 

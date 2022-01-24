@@ -614,13 +614,13 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
             return scriptUndefined();
         }
         std::string errString = "[FAIL]assertion fail";
-        STARFISH_LOG_ERROR("%s\n", errString.data());
+        STARFISH_LOG_ERROR("%s", errString.data());
         customExit(-1);
     } else {
         if (argv[0]->toBoolean(state)) {
         } else {
             std::string errString = "[FAIL]assertion fail";
-            STARFISH_LOG_ERROR("%s\n", errString.data());
+            STARFISH_LOG_ERROR("%s", errString.data());
             customExit(-1);
         }
     }
@@ -633,7 +633,7 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
                                  bool isNewExpression)
 {
     puts("[PASS]");
-    STARFISH_LOG_ERROR("%s\n", "[PASS]");
+    STARFISH_LOG_ERROR("%s", "[PASS]");
     customExit(0);
 
     return scriptUndefined();
@@ -646,7 +646,7 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
     puts("wptTestEnd() called");
     if (gotTestAssert) {
         puts("[PASS]");
-        STARFISH_LOG_ERROR("%s\n", "[PASS]");
+        STARFISH_LOG_ERROR("%s", "[PASS]");
         customExit(0);
     }
     const char* hide = getenv("HIDE_WINDOW");
@@ -675,7 +675,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     cmd += path;
     cmd += argv[1]->toString(state)->toStdUTF8String().data();
 
-    STARFISH_LOG_INFO("%s\n", cmd.c_str());
+    STARFISH_LOG_INFO("%s", cmd.c_str());
     FILE* fp = popen(cmd.c_str(), "r");
     int ch;
 
@@ -715,7 +715,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
             output += ch;
         }
 
-        STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
+        STARFISH_LOG_ERROR("%s", "[FAIL]testImgDiff fail");
 
         puts("error html -->");
         puts(window->document()

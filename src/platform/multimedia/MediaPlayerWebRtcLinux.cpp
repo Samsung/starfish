@@ -60,17 +60,14 @@ MediaPlayerWebRtcLinux::MediaPlayerWebRtcLinux(HTMLMediaElement* element)
 
 MediaPlayerWebRtcLinux::~MediaPlayerWebRtcLinux()
 {
-    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
-                (void*)this);
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>", __func__, (void*)this);
     destroy();
-    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
-                (void*)this);
+    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>", __func__, (void*)this);
 }
 
 void MediaPlayerWebRtcLinux::destroy()
 {
-    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
-                (void*)this);
+    PLAYER_LOGI("<MediaPlayerWebRtcLinux::%s self=%p>", __func__, (void*)this);
     m_alive = false;
     pause();
     if (m_mediaProvider) {
@@ -93,13 +90,12 @@ void MediaPlayerWebRtcLinux::destroy()
 
     m_seekState = SEEKSTATE_NO_SEEK;
     m_playbackState = PLAYBACK_STATE_NONE;
-    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>\n", __func__,
-                (void*)this);
+    PLAYER_LOGI("</MediaPlayerWebRtcLinux::%s self=%p>", __func__, (void*)this);
 }
 
 void MediaPlayerWebRtcLinux::play()
 {
-    PLAYER_LOGI("%s\n", __func__);
+    PLAYER_LOGI("%s", __func__);
     // TODO: Impl resource selection algorithm
     // TODO: The spec assumes there is one video track
     // TODO: Plays the first audio track.
@@ -126,7 +122,7 @@ void MediaPlayerWebRtcLinux::pause()
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 void MediaPlayerWebRtcLinux::prepare(MediaProvider* mediaProvider)
 {
-    PLAYER_LOGI("%s\n", __func__);
+    PLAYER_LOGI("%s", __func__);
 
     m_mediaProvider = mediaProvider;
     m_mediaProvider->setMediaPlayer(this);
@@ -147,7 +143,7 @@ void MediaPlayerWebRtcLinux::prepare(MediaProvider* mediaProvider)
 
 void MediaPlayerWebRtcLinux::prepareMediaSource()
 {
-    STARFISH_LOG_INFO("%s\n", __func__);
+    STARFISH_LOG_INFO("%s", __func__);
 }
 
 void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)

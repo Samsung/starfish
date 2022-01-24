@@ -189,10 +189,10 @@ std::string HTTPHeaderMap::generateAccessControlRequestHeaders()
 #ifdef STARFISH_ENABLE_TEST
 void HTTPHeaderMap::dump()
 {
-    STARFISH_LOG_INFO("dump header map\n");
+    STARFISH_LOG_INFO("dump header map");
     for (auto it = m_headerMap.begin(); it != m_headerMap.end(); ++it) {
-        STARFISH_LOG_INFO("name : %s\n", it->first.c_str());
-        STARFISH_LOG_INFO("value : %s\n", it->second.c_str());
+        STARFISH_LOG_INFO("name : %s", it->first.c_str());
+        STARFISH_LOG_INFO("value : %s", it->second.c_str());
     }
 }
 #endif

@@ -105,7 +105,7 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]\n",
+                STARFISH_LOG_INFO("Delete FontFaceImplCairo [%p] buffer [%p]",
                                   m, m->m_dataBuffer);
                 hb_font_destroy(m->m_hbFace);
                 FT_Done_Face(m->m_face);
@@ -473,7 +473,7 @@ public:
         CHECK_ERROR;
         FT_Set_Pixel_Sizes(face, 0, 16);
         hbFace = hb_ft_font_create(face, [](void* userData) {});
-        STARFISH_LOG_ERROR("load system font %s %p %p\n", path.data(), face,
+        STARFISH_LOG_ERROR("load system font %s %p %p", path.data(), face,
                            hbFace);
 
         auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);

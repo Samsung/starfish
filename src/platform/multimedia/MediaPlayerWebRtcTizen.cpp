@@ -53,7 +53,7 @@ MediaPlayer* MediaPlayerWebRtc::create(HTMLMediaElement* element)
 MediaPlayerWebRtcTizen::MediaPlayerWebRtcTizen(HTMLMediaElement* element)
     : MediaPlayerWebRtc(element)
 {
-    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s", __func__);
 
     if (element->isHTMLVideoElement()) {
         HTMLVideoElement* elem = element->asHTMLVideoElement();
@@ -68,14 +68,14 @@ MediaPlayerWebRtcTizen::~MediaPlayerWebRtcTizen()
     try {
         destroy();
     } catch (...) {
-        PLAYER_LOGE("MediaPlayerWebRtcTizen::%s\n", __func__);
+        PLAYER_LOGE("MediaPlayerWebRtcTizen::%s", __func__);
     }
 }
 
 void MediaPlayerWebRtcTizen::destroy()
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s", __func__);
 
     if (m_player) {
         player_state_e state;
@@ -114,7 +114,7 @@ void MediaPlayerWebRtcTizen::destroy()
 void MediaPlayerWebRtcTizen::play()
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s", __func__);
 
     // TODO: Impl resource selection algorithm
     // TODO: The spec assumes there is one video track
@@ -129,9 +129,9 @@ void MediaPlayerWebRtcTizen::play()
     if (!audioTracks.empty()) {
         STARFISH_ASSERT(m_mediaProvider);
 
-        STARFISH_LOG_INFO("%s: <playerStart>\n", __func__);
+        STARFISH_LOG_INFO("%s: <playerStart>", __func__);
         checkStatusPlayer(player_start(m_player), "playerStart");
-        STARFISH_LOG_INFO("%s: </playerStart>\n", __func__);
+        STARFISH_LOG_INFO("%s: </playerStart>", __func__);
         m_mediaProvider->playAudioTrack(audioTracks[0]);
     }
 }
@@ -148,23 +148,23 @@ void MediaPlayerWebRtcTizen::pause()
 
 static void bufferingCb(int percent, void* data)
 {
-    STARFISH_LOG_INFO("buffering: %d\n", percent);
+    STARFISH_LOG_INFO("buffering: %d", percent);
 }
 
 static void mediaStreamBufferStatusCb(
     player_media_stream_buffer_status_e status, void* data)
 {
     if (status == PLAYER_MEDIA_STREAM_BUFFER_UNDERRUN) {
-        STARFISH_LOG_WARN("MediaStreamBufferUnderrun\n");
+        STARFISH_LOG_WARN("MediaStreamBufferUnderrun");
     } else if (status == PLAYER_MEDIA_STREAM_BUFFER_OVERFLOW) {
-        STARFISH_LOG_WARN("MediaStreamBufferOverflow\n");
+        STARFISH_LOG_WARN("MediaStreamBufferOverflow");
     }
 }
 
 void MediaPlayerWebRtcTizen::prepare(MediaProvider* mediaProvider)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
-    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s\n", __func__);
+    PLAYER_LOGI("MediaPlayerWebRtcTizen::%s", __func__);
 
     STARFISH_ASSERT(mediaProvider);
     m_mediaProvider = mediaProvider;
@@ -229,23 +229,23 @@ bool MediaPlayerWebRtcTizen::checkStatusPlayer(int err, std::string msg)
     }
 
     if (err == PLAYER_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid params: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid params: %s", msg.data());
     } else if (err == PLAYER_ERROR_INVALID_STATE) {
-        STARFISH_LOG_ERROR("Invalid state: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid state: %s", msg.data());
     } else if (err == PLAYER_ERROR_NOT_SUPPORTED_FILE) {
-        STARFISH_LOG_ERROR("Not supported file: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Not supported file: %s", msg.data());
     } else if (err == PLAYER_ERROR_BUFFER_SPACE) {
-        STARFISH_LOG_ERROR("Buffer space: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Buffer space: %s", msg.data());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == PLAYER_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == PLAYER_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
     } else if (err == PLAYER_ERROR_RESOURCE_LIMIT) {
-        STARFISH_LOG_ERROR("Resource limited: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Resource limited: %s", msg.data());
     } else {
-        STARFISH_LOG_ERROR("Unknown error: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
     }
 
     return false;
@@ -258,14 +258,14 @@ bool MediaPlayerWebRtcTizen::checkStatusMediaFormat(int err, std::string msg)
     }
 
     if (err == MEDIA_FORMAT_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid Params: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid Params: %s", msg.data());
     } else if (err == MEDIA_FORMAT_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == MEDIA_FORMAT_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
     } else {
-        STARFISH_LOG_ERROR("Unknown error: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
     }
 
     return false;
@@ -277,14 +277,14 @@ bool MediaPlayerWebRtcTizen::checkStatusMediaPacket(int err, std::string msg)
     }
 
     if (err == MEDIA_PACKET_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid Params: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid Params: %s", msg.data());
     } else if (err == MEDIA_PACKET_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == MEDIA_PACKET_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
     } else {
-        STARFISH_LOG_ERROR("Unknown error: %s\n", msg.data());
+        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
     }
 
     return false;
@@ -328,7 +328,7 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
             observer->width() * observer->height() * observer->pixelStride();
 
         if (videoFrameSize != canvasBufferSize) {
-            STARFISH_LOG_WARN("videoFrameSize: %d != canvasBufferSize: %d\n",
+            STARFISH_LOG_WARN("videoFrameSize: %d != canvasBufferSize: %d",
                               videoFrameSize, canvasBufferSize);
         }
 

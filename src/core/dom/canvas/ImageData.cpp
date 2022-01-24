@@ -132,7 +132,7 @@ ScriptBindingInstance* ImageData::scriptBindingInstance()
 
 SerializedData* ImageData::serialize(SerializingMap& memory)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return new SerializedImageData();
 }
 
@@ -174,7 +174,7 @@ void ImageData::setData(ScriptUint8ClampedArray value)
 ScriptWrappable* SerializedImageData::createDeserializingInstance(
     ExecutionContext* executionContext) const
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 } // namespace Starfish

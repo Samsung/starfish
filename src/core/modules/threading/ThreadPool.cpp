@@ -95,7 +95,7 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
 
             ThreadWorker worker = [](void* data) -> void* {
                 Rooter* rooter = (Rooter*)data;
-                // STARFISH_LOG_INFO("threadPool worker start\n");
+                // STARFISH_LOG_INFO("threadPool worker start");
                 while (true) {
                     rooter->pool->m_workerQueueMutex->lock();
                     if (!rooter->pool->m_workerQueue.size()) {
@@ -119,7 +119,7 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
                 rooter->pool->m_messageLoop->decreaseRunningPoolWorkerCount();
 #endif
-                // STARFISH_LOG_INFO("threadPool worker end\n");
+                // STARFISH_LOG_INFO("threadPool worker end");
                 rooter->pool->m_messageLoop
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,

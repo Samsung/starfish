@@ -338,7 +338,7 @@ void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
                 style->rareComputedStyleData()
                     ->ensureTransforms()
                     ->m_has3DTransform = true;
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
             }
             style->setTransformTranslate(a, b);
             break;
@@ -404,9 +404,9 @@ void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_has3DTransform = true;
-            STARFISH_LOG_INFO("Transform: [%d] property is unimplemented\n",
+            STARFISH_LOG_INFO("Transform: [%d] property is unimplemented",
                               (int)f.kind());
-            // STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            // STARFISH_UNIMPLEMENTED();
         }
     }
 }
@@ -2546,7 +2546,7 @@ static void applyTransitionProperty(Element* element, ComputedStyle* style,
         style->setTransitionProperty(item.cssPropertyNameValue(), layer);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2584,7 +2584,7 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2619,7 +2619,7 @@ static void applyTransitionTimingFunction(Element* element,
                                            layer);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2657,7 +2657,7 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2684,7 +2684,7 @@ static void applyAnimationName(Element* element, ComputedStyle* style,
         style->setAnimationName(item.stringValue(), index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2721,7 +2721,7 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2758,7 +2758,7 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2791,7 +2791,7 @@ static void applyAnimationTimingFunction(Element* element, ComputedStyle* style,
                                           index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2820,7 +2820,7 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
         style->setAnimationIterationCount(item.numberValue(), index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2848,7 +2848,7 @@ static void applyAnimationDirection(Element* element, ComputedStyle* style,
         style->setAnimationDirection(item.animationDirectionValue(), index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2876,7 +2876,7 @@ static void applyAnimationPlayState(Element* element, ComputedStyle* style,
         style->setAnimationPlayState(item.animationPlayStateValue(), index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -2904,7 +2904,7 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
         style->setAnimationFillMode(item.animationFillModeValue(), index);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
@@ -3115,7 +3115,7 @@ void StyleResolver::applyProperty(
             style->setWidth(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else {
             Nullable<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
@@ -3178,7 +3178,7 @@ void StyleResolver::applyProperty(
             style->setHeight(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         } else {
             Nullable<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
@@ -4204,7 +4204,7 @@ void StyleResolver::applyProperty(
                         item.gradientValue()->convertToGradientData());
                     style->setMaskImage(imageValue, i);
                 } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    STARFISH_UNIMPLEMENTED();
                 }
             }
         }
@@ -7423,7 +7423,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
     default:
 #ifdef STARFISH_ENABLE_TEST
     {
-        // Code for reducing logging `STARFISH_RELEASE_ASSERT_UNIMPLEMENTED`
+        // Code for reducing logging `STARFISH_UNIMPLEMENTED`
         static bool pseudoLogMap[CSSSelector::PseudoTotalCount];
         if (pseudoLogMap[selector->pseudoType()]) {
             return false;
@@ -7431,7 +7431,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         pseudoLogMap[selector->pseudoType()] = true;
     }
 #endif
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         break;
     }
     return false;
@@ -7459,7 +7459,7 @@ bool StyleResolver::checkPseudoElement(Element* element,
         result.pseudoType = PseudoElementType::PseudoElementAfter;
         return true;
     default:
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 }
@@ -8304,7 +8304,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                         switch (i) {
 #define ADD_CSS_KEYKIND(Name, name, cssname)                                \
     case CSSStyleValuePair::KeyKind::Name:                                  \
-        STARFISH_LOG_INFO("element %p, #%s, .%s %s damaged\n", element,     \
+        STARFISH_LOG_INFO("element %p, #%s, .%s %s damaged", element,       \
                           element->id()->toUTF8NonGCString().data(),        \
                           element->className()->toUTF8NonGCString().data(), \
                           #Name "");                                        \
@@ -8312,7 +8312,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND
                         default:
-                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                            STARFISH_UNIMPLEMENTED();
                         }
                     }
                 }
@@ -9862,7 +9862,7 @@ bool CSSStyleValuePair::updateValueCursor(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return true;
 }
 
@@ -10014,7 +10014,7 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
                        !parseCounters(document, value, &ret)) {
                 // TODO: Consider various value types of the 'content' property.
                 // https://www.w3.org/TR/CSS2/generate.html#content
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                STARFISH_UNIMPLEMENTED();
                 return false;
             }
         }
@@ -10055,7 +10055,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
         } else if (STRING_VALUE_IS_STRING("space")) {
             pair.setBorderImageRepeatValue(BorderImageRepeatValue::SpaceValue);
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
             return false;
         }
         values->push_back(pair);
@@ -11455,7 +11455,7 @@ static bool parseGridTemplateRows(const CSSTokenVector& tokens,
                 GridTrackSize(CSSLength(str, number).toLength(),
                               GridTrackSize::GridTrackType::LengthType));
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
 
@@ -14137,7 +14137,7 @@ bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueMaskSize(Document* document,
                                             const CSSTokenVector& tokens)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return false;
 }
 

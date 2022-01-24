@@ -246,7 +246,7 @@ MediaStream::MediaStream(
     , m_executionContext(executionContext)
     , m_backend(backend)
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
 
     if (backend) {
         syncTracks();
@@ -262,7 +262,7 @@ MediaStream::MediaStream(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
 
-    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,
@@ -279,14 +279,14 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
     dispose();
-    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
 }
 
 void MediaStream::dispose()
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
 
     stopAudioTrack();
     stopVideoTrack();
@@ -315,7 +315,7 @@ void MediaStream::dispose()
         videoTrack->dispose();
     }
     m_videoTracks.clear();
-    WEBRTC_LOGI("</MediaStream::%s self=%p>\n", __func__, (void*)this);
+    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
 }
 
 ScriptBindingInstance* MediaStream::scriptBindingInstance()
@@ -426,7 +426,7 @@ void MediaStream::playAudioTrack(MediaStreamTrack* track)
             m_audioTrackObserver =
                 new AudioTrackObserver(this, audioTrack->backend());
         } else {
-            STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+            STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         }
     }
 }
@@ -441,7 +441,7 @@ void MediaStream::playVideoTrack(MediaStreamTrack* track)
             m_videoFrameObserver =
                 new VideoFrameObserver(this, videoTrack->backend());
         } else {
-            STARFISH_LOG_WARN("%s: backend() == nullptr\n", __func__);
+            STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
         }
     }
 }

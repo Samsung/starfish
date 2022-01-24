@@ -45,7 +45,7 @@ static int peerConnectionCount = 0;
 
 WebRtcManager::WebRtcManager()
 {
-    WEBRTC_LOGI("<%s/>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<%s/>: %p", __func__, (void*)this);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -55,14 +55,14 @@ WebRtcManager::WebRtcManager()
 
 WebRtcManager::~WebRtcManager()
 {
-    WEBRTC_LOGI("<%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("<%s>: %p", __func__, (void*)this);
     dispose();
-    WEBRTC_LOGI("</%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</%s>: %p", __func__, (void*)this);
 }
 
 void WebRtcManager::initPeerConnectionFactory()
 {
-    WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
+    WEBRTC_LOGI("<WebRtcManager::%s>", __func__);
     m_networkThread = rtc::Thread::CreateWithSocketServer();
     m_networkThread->Start();
     m_workerThread = rtc::Thread::Create();
@@ -85,7 +85,7 @@ void WebRtcManager::initPeerConnectionFactory()
         webrtc::CreateBuiltinVideoEncoderFactory(),
         webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
         nullptr /* audio_processing */);
-    WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
+    WEBRTC_LOGI("</WebRtcManager::%s>", __func__);
 
     STARFISH_ASSERT(m_peerConnectionFactory);
 }
@@ -93,9 +93,9 @@ void WebRtcManager::initPeerConnectionFactory()
 void WebRtcManager::deletePeerConnectionFactory(bool force)
 {
     if (force || peerConnectionCount == 0) {
-        WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
+        WEBRTC_LOGI("<WebRtcManager::%s>", __func__);
 
-        WEBRTC_LOGI("  m_audioStreamTracks.size(): %zu\n",
+        WEBRTC_LOGI("  m_audioStreamTracks.size(): %zu",
                     m_audioStreamTracks.size());
         for (auto audioTrack : m_audioStreamTracks) {
             audioTrack->dispose();
@@ -124,7 +124,7 @@ void WebRtcManager::deletePeerConnectionFactory(bool force)
         m_networkThread.reset();
         m_workerThread.reset();
         m_signalingThread.reset();
-        WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
+        WEBRTC_LOGI("</WebRtcManager::%s>", __func__);
     }
 }
 
@@ -157,14 +157,14 @@ WebRtcManager::createPeerConnection(
 
 void WebRtcManager::deletePeerConnection(RTCPeerConnection* peerConnection)
 {
-    WEBRTC_LOGI("<WebRtcManager::%s>\n", __func__);
+    WEBRTC_LOGI("<WebRtcManager::%s>", __func__);
     peerConnectionCount--;
-    WEBRTC_LOGI("  peerConnectionCount: %d\n", peerConnectionCount);
+    WEBRTC_LOGI("  peerConnectionCount: %d", peerConnectionCount);
     if (peerConnection) {
         m_peerConnections.erase(m_peerConnections.find(peerConnection));
     }
     deletePeerConnectionFactory();
-    WEBRTC_LOGI("</WebRtcManager::%s>\n", __func__);
+    WEBRTC_LOGI("</WebRtcManager::%s>", __func__);
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface> WebRtcManager::createAudioTrack(
@@ -179,7 +179,7 @@ rtc::scoped_refptr<webrtc::AudioTrackInterface> WebRtcManager::createAudioTrack(
         audioTrack =
             m_peerConnectionFactory->CreateAudioTrack(labelStr, audioDevice);
     } else {
-        STARFISH_LOG_ERROR("AudioStreamTrack: failed\n");
+        STARFISH_LOG_ERROR("AudioStreamTrack: failed");
     }
 
     return audioTrack;
@@ -197,26 +197,26 @@ void WebRtcManager::addMediaStream(MediaStream* mediaStream)
 
 void WebRtcManager::addAudioStreamTrack(AudioStreamTrack* audioStreamTrack)
 {
-    WEBRTC_LOGI("<WebRtcManager::%s/>\n", __func__);
+    WEBRTC_LOGI("<WebRtcManager::%s/>", __func__);
     m_audioStreamTracks.push_back(audioStreamTrack);
-    WEBRTC_LOGI("    now: m_audioStreamTracks.size(): %zu\n",
+    WEBRTC_LOGI("    now: m_audioStreamTracks.size(): %zu",
                 m_audioStreamTracks.size());
 }
 
 void WebRtcManager::addVideoStreamTrack(VideoStreamTrack* videoStreamTrack)
 {
-    WEBRTC_LOGI("<WebRtcManager::%s/>\n", __func__);
+    WEBRTC_LOGI("<WebRtcManager::%s/>", __func__);
     m_videoStreamTracks.push_back(videoStreamTrack);
-    WEBRTC_LOGI("    now: m_videoStreamTracks.size(): %zu\n",
+    WEBRTC_LOGI("    now: m_videoStreamTracks.size(): %zu",
                 m_videoStreamTracks.size());
 }
 
 void WebRtcManager::dispose()
 {
-    WEBRTC_LOGI("<WebRtcManager::%s>: %p\n", __func__, (void*)this);
-    WEBRTC_LOGI("  peerConnectionCount: %d\n", peerConnectionCount);
+    WEBRTC_LOGI("<WebRtcManager::%s>: %p", __func__, (void*)this);
+    WEBRTC_LOGI("  peerConnectionCount: %d", peerConnectionCount);
     deletePeerConnectionFactory(true);
-    WEBRTC_LOGI("</WebRtcManager::%s>: %p\n", __func__, (void*)this);
+    WEBRTC_LOGI("</WebRtcManager::%s>: %p", __func__, (void*)this);
 }
 } // namespace Starfish
 

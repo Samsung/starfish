@@ -418,12 +418,12 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     m_demuxer = Demuxer::createDemuxer(m_type);
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
 
-    SOURCEBUFFER_LOG(this, "SourceBuffer::SourceBuffer\n");
+    SOURCEBUFFER_LOG(this, "SourceBuffer::SourceBuffer");
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
             SourceBuffer* nr = (SourceBuffer*)obj;
-            SOURCEBUFFER_LOG(nr, "SourceBuffer::~SourceBuffer\n");
+            SOURCEBUFFER_LOG(nr, "SourceBuffer::~SourceBuffer");
             nr->clearAll();
         },
         NULL, NULL, NULL);
@@ -436,7 +436,7 @@ ExecutionContext* SourceBuffer::executionContext() const
 
 void SourceBuffer::clearAll()
 {
-    SOURCEBUFFER_LOG(this, "clearAll\n");
+    SOURCEBUFFER_LOG(this, "clearAll");
     {
         Locker<Mutex> locker(*m_packetGroupsMutex);
         size_t removedSize = 0;
@@ -628,7 +628,7 @@ void SourceBuffer::prepareAppend(size_t newDataSize)
     // Run the coded frame eviction algorithm.
     if (!codedFrameEviction(newDataSize)) {
         SOURCEBUFFER_LOG(
-            this, "Failed to make buffer space: throw QUOTA_EXCEEDED_ERR\n");
+            this, "Failed to make buffer space: throw QUOTA_EXCEEDED_ERR");
         throw new DOMException(executionContext(),
                                DOMException::QUOTA_EXCEEDED_ERR,
                                "SourceBuffer is full");
@@ -691,7 +691,7 @@ void SourceBuffer::remove(double start, double end)
         parentMediaSource()->setReadyState(MediaSource::ReadyState::Open);
     }
 
-    SOURCEBUFFER_LOG(this, "Remove range (%dms->%dms)\n", (int)(start * 1000),
+    SOURCEBUFFER_LOG(this, "Remove range (%dms->%dms)", (int)(start * 1000),
                      (int)(end * 1000));
     setUpdating(true, UpdateState::Success);
     rangeRemoval(start * 1000, end * 1000);
@@ -861,7 +861,7 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
     size_t maxAssume =
         (newDataSize + demuxerClient()->m_bufferUnprocessed.size()) * 1.1;
     SOURCEBUFFER_LOG(
-        this, "Run Code Frame Eviction algorithm (new: %d, available: %d)\n",
+        this, "Run Code Frame Eviction algorithm (new: %d, available: %d)",
         (int)maxAssume, (int)m_parentMediaSource->availableBufferSize());
 
     // 1. Let new data equal the data that is about to be appended to this
@@ -892,7 +892,7 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
 
     SOURCEBUFFER_LOG(
         this,
-        "Run Code Frame Eviction algorithm update max Buffer size(new: %fMB)\n",
+        "Run Code Frame Eviction algorithm update max Buffer size(new: %fMB)",
         maxBufferSize / 1024.f / 1024.f);
     m_parentMediaSource->setMaxBufferSize(maxBufferSize);
 
@@ -909,7 +909,7 @@ bool SourceBuffer::codedFrameEviction(size_t newDataSize)
             m_parentMediaSource->evict(
                 0, targetPos - STARFISH_FRAME_EVICTION_BACKWARD_DUR);
         }
-        SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)\n",
+        SOURCEBUFFER_LOG(this, "Remove backward data (available: %d)",
                          (int)m_parentMediaSource->availableBufferSize());
         // TODO Try to remove fragmented forward packets
         if (maxAssume >= m_parentMediaSource->availableBufferSize()) {
@@ -964,20 +964,20 @@ static size_t tryDemuxing(SourceBufferData* inputBuffer)
     auto client = inputBuffer->currentDemuxerClient();
     DemuxerSourceForSourceBuffer src(inputBuffer, &client->m_bufferUnprocessed);
 
-    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamInfo\n");
+    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamInfo");
     STARFISH_ASSERT(client->m_detectedStream.size() == 0);
     size_t maxPos = client->m_bufferUnprocessed.size() + inputBuffer->m_length;
     if (!demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->type())) {
         SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                         "Found error while demuxing\n");
+                         "Found error while demuxing");
         client->m_foundError = true;
         return maxPos;
     }
     client->setTimestampInfo(inputBuffer->m_sourceBuffer);
-    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamPacket\n");
+    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "findStreamPacket");
     if (!demuxer->findStreamPacket(&src)) {
         SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                         "Found error while demuxing\n");
+                         "Found error while demuxing");
         client->m_foundError = true;
         return maxPos;
     }
@@ -1005,7 +1005,7 @@ static void updateBufferUnprocessed(SourceBufferData* inputBuffer,
     }
     unp.insert(unp.end(), inputBuffer->m_data + copyStart,
                inputBuffer->m_data + copyEnd);
-    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "Got unprocessed (size %d)\n",
+    SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer, "Got unprocessed (size %d)",
                      (int)(copyEnd - copyStart));
 }
 
@@ -1019,7 +1019,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
     if (client->m_isAborted) {
         STARFISH_ASSERT(inputBuffer->m_sourceBuffer->demuxerClient() != client);
         SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                         "Aborted. clear demuxed data.\n");
+                         "Aborted. clear demuxed data.");
         // NOTE Delete data before GC does
         client->clearAll();
         return;
@@ -1046,7 +1046,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
 
             m_streamInfo.push_back(std::move(streamInfo));
             m_initSegmentCount++;
-            SOURCEBUFFER_LOG(this, "Got init segments: %d\n",
+            SOURCEBUFFER_LOG(this, "Got init segments: %d",
                              (int)client->m_detectedStream.size());
         }
         if (!m_initSegmentCount) {
@@ -1079,7 +1079,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
             SOURCEBUFFER_LOG(
                 this,
                 "Got packetGroup (initIdx%d, streamIdx:%d, count:%d, "
-                "dur:%dms->%dms)\n",
+                "dur:%dms->%dms)",
                 (int)group->m_initSegmentIndex, (int)group->m_streamIndex,
                 (int)group->m_packets.size(), (int)group->m_groupTimestampStart,
                 (int)group->m_groupTimestampEnd);
@@ -1106,7 +1106,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
             SOURCEBUFFER_LOG(
                 inputBuffer->m_sourceBuffer,
-                "Run thread: bufferAppend (size %d + unprocessed %d)\n",
+                "Run thread: bufferAppend (size %d + unprocessed %d)",
                 (int)inputBuffer->m_length,
                 (int)inputBuffer->currentDemuxerClient()
                     ->m_bufferUnprocessed.size());
@@ -1121,7 +1121,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                         SourceBufferData* inputBuffer = (SourceBufferData*)data;
                         size_t processedSize = (size_t)data1;
                         SOURCEBUFFER_LOG(inputBuffer->m_sourceBuffer,
-                                         "postBufferAppend\n");
+                                         "postBufferAppend");
                         // Save unprocessed data
                         updateBufferUnprocessed(inputBuffer, processedSize);
                         // Move results to sourceBuffer from demuxerClient
@@ -1573,7 +1573,7 @@ void SourceBuffer::increaseUsedBufferSize(size_t amount)
 {
     if (m_parentMediaSource) {
         m_parentMediaSource->m_usedBufferSize += amount;
-        SOURCEBUFFER_LOG(this, "Increased packet data: %d (capacity: %d)\n",
+        SOURCEBUFFER_LOG(this, "Increased packet data: %d (capacity: %d)",
                          (int)amount,
                          (int)m_parentMediaSource->availableBufferSize());
     }
@@ -1584,7 +1584,7 @@ void SourceBuffer::decreaseUsedBufferSize(size_t amount)
     if (m_parentMediaSource) {
         STARFISH_ASSERT(m_parentMediaSource->m_usedBufferSize >= amount);
         m_parentMediaSource->m_usedBufferSize -= amount;
-        SOURCEBUFFER_LOG(this, "Removed packet data: %d (capacity: %d)\n",
+        SOURCEBUFFER_LOG(this, "Removed packet data: %d (capacity: %d)",
                          (int)amount,
                          (int)m_parentMediaSource->availableBufferSize());
     }

@@ -90,7 +90,7 @@ String* HTMLTableColElement::ch()
     }
     // TODO : Set defualt Value that is the decimal point character for the
     // current language as set by the lang attribute
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return String::createASCIIString(".");
 }
 

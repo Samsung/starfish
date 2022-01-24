@@ -49,27 +49,27 @@ static void dumpCookies(CURL* curl, const char* message)
     struct curl_slist* cookies;
     struct curl_slist* nc;
     int i;
-    STARFISH_LOG_INFO("=========Dump cookie : %s=========\n", message);
-    STARFISH_LOG_INFO("Cookies, curl knows:\n");
+    STARFISH_LOG_INFO("=========Dump cookie : %s=========", message);
+    STARFISH_LOG_INFO("Cookies, curl knows:");
     res = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
     if (res != CURLE_OK) {
-        STARFISH_LOG_INFO("Curl curl_easy_getinfo failed: %s\n",
+        STARFISH_LOG_INFO("Curl curl_easy_getinfo failed: %s",
                           curl_easy_strerror(res));
-        STARFISH_LOG_INFO("===================================\n");
+        STARFISH_LOG_INFO("===================================");
         return;
     }
     nc = cookies;
     i = 1;
     while (nc) {
-        STARFISH_LOG_INFO("[%d]: %s\n", i, nc->data);
+        STARFISH_LOG_INFO("[%d]: %s", i, nc->data);
         nc = nc->next;
         i++;
     }
     if (i == 1) {
-        STARFISH_LOG_INFO("(none)\n");
+        STARFISH_LOG_INFO("(none)");
     }
     curl_slist_free_all(cookies);
-    STARFISH_LOG_INFO("===================================\n");
+    STARFISH_LOG_INFO("===================================");
 }
 #endif
 
@@ -316,7 +316,7 @@ NetworkSharedResourceManager* NetworkSharedResourceManager::getInstance()
 void NetworkSharedResourceManager::destroy()
 {
     STARFISH_ASSERT(g_networkSharedResourceMangerInstance);
-    STARFISH_LOG_INFO("NetworkSharedResourceManager::destroy()\n");
+    STARFISH_LOG_INFO("NetworkSharedResourceManager::destroy()");
     delete g_networkSharedResourceMangerInstance;
     g_networkSharedResourceMangerInstance = nullptr;
 }
@@ -492,7 +492,7 @@ void NetworkSharedResourceManager::pruningIfNeed()
             }
         }
 #ifdef STARFISH_ENABLE_TEST
-        STARFISH_LOG_INFO("prunning cached handles %zd => %zd \n", old,
+        STARFISH_LOG_INFO("prunning cached handles %zd => %zd ", old,
                           m_curlHandleDataCache.size());
 #endif
         m_lastCachePruneTime = tickCount();
@@ -503,7 +503,7 @@ void NetworkSharedResourceManager::clearAllCurlHandleDataCache()
 {
 #ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO(
-        "NetworkSharedResourceManager::clearAllCurlHandleDataCache(size:%d)\n",
+        "NetworkSharedResourceManager::clearAllCurlHandleDataCache(size:%d)",
         (int)m_curlHandleDataCache.size());
 #endif
     Locker<Mutex> locker(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);

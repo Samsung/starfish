@@ -109,14 +109,14 @@ public:
     NativeGradientSkia(double x0, double y0, double x1, double y1)
         : NativeGradient()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     NativeGradientSkia(double x0, double y0, double r0, double x1, double y1,
                        double r1)
         : NativeGradient()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     ~NativeGradientSkia()
@@ -151,7 +151,7 @@ private:
                 { info->x1, info->y1 }, info->r2, colors, pos, colorCount,
                 SkShader::kClamp_TileMode);
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
     }
 
@@ -185,7 +185,7 @@ public:
                       bool repeatY)
         : NativePattern(image, repeatX, repeatY)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     ~NativePatternSkia()
@@ -364,7 +364,7 @@ public:
 
     virtual void scale(double x, double y, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void rotate(double angle)
@@ -374,7 +374,7 @@ public:
 
     virtual void rotate(double angle, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void translate(double x, double y)
@@ -505,12 +505,12 @@ public:
 
     virtual void setFillSource(CanvasFillStrokeSource* source)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasFillStrokeSource* fillSource()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return new CanvasFillStrokeSource();
     }
 
@@ -522,12 +522,12 @@ public:
 
     virtual void setStrokeSource(CanvasFillStrokeSource* source)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasFillStrokeSource* strokeSource()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return new CanvasFillStrokeSource();
     }
 
@@ -542,7 +542,7 @@ public:
         lastState()->m_compositeOperator = oper;
         lastState()->m_blendMode = mode;
 
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasCompositeOperator compositeOperator()
@@ -634,35 +634,35 @@ public:
 
     virtual void drawRectInner(float x, float y, float w, float h)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void drawStrokeRectInner(float x, float y, float w, float h)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void drawTextInner(float x, float y, float stringWidth,
                                const StringView& sv,
                                bool shouldSkipUnresolvedWebFont)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
     virtual void drawStrokeTextInner(float x, float y, float stringWidth,
                                      const StringView& sv,
                                      bool shouldSkipUnresolvedWebFont)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void strokeRect(const Unit::Rect& rt)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void strokeRect(const LayoutRect& rt)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
@@ -684,7 +684,7 @@ public:
 
     virtual void punchHole(const Unit::Rect& rt)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         if (!lastState()->m_visible) {
             return;
         }
@@ -1153,79 +1153,79 @@ public:
 
     virtual CanvasLineCap lineCap()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasLineCap::Butt;
     }
 
     virtual void setLineCap(CanvasLineCap lineCap)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasLineJoin lineJoine()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasLineJoin::Miter;
     }
 
     virtual void setLineJoin(CanvasLineJoin lineJoin)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual double miterLimit()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 10.0f;
     }
 
     virtual void setMiterLimit(double limit)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual double shadowOffsetX()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 0;
     }
 
     virtual void setShadowOffsetX(double offset)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual double shadowOffsetY()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 0;
     }
 
     virtual void setShadowOffsetY(double offset)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual double shadowBlur()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 0;
     }
 
     virtual void setShadowBlur(double blur)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual Unit::Color shadowColor() override
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return Unit::Color();
     }
 
     virtual void setShadowColor(const Unit::Color& color) override
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual bool imageSmoothingEnabled()
@@ -1275,62 +1275,62 @@ public:
 
     virtual void setOriginalFontStr(String* fontStr)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual void setCanvasWebFontState(size_t version)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual size_t canvasWebFontState()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return 0;
     }
 
     virtual Font* font()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return lastState()->m_font;
     }
 
     virtual String* originalFontStr()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return nullptr;
     }
 
     virtual void setCanvasTextAlign(CanvasTextAlign textAlign)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasTextAlign canvasTextAlign()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasTextAlign::Start;
     }
 
     virtual void setCanvasTextBaseline(CanvasTextBaseline textBaseline)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasTextBaseline canvasTextBaseline()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasTextBaseline::Alphabetic;
     }
 
     virtual void setCanvasTextDirection(CanvasDirection textDirection)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual CanvasDirection canvasTextDirection()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return CanvasDirection::Inherit;
     }
 
@@ -1516,24 +1516,24 @@ public:
 
     virtual void setDash(const std::vector<double>& dashes)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     virtual std::vector<double> dash()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return lastState()->m_dashes;
     }
 
     virtual double dashOffset()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return lastState()->m_dashOffset;
     }
 
     virtual void setDashOffset(double offset)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 
     // reset transform matrix & clip
@@ -1605,7 +1605,7 @@ Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 
 NativeImageData* NativeImageData::attach(Canvas* canvas)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
 } // namespace Starfish

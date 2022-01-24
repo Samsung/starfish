@@ -40,9 +40,9 @@ void Console::log(String* m)
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
 #if defined(STARFISH_TIZEN_PROD_TV)
-            STARFISH_LOG_ERROR("console.log: %s\n", buf);
+            STARFISH_LOG_ERROR("console.log: %s", buf);
 #else
-            STARFISH_LOG_INFO("console.log: %s\n", buf);
+            STARFISH_LOG_INFO("console.log: %s", buf);
 #endif
             return 0;
         },
@@ -60,9 +60,9 @@ void Console::info(String* m)
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
 #if defined(STARFISH_TIZEN_PROD_TV)
-            STARFISH_LOG_ERROR("console.info: %s\n", buf);
+            STARFISH_LOG_ERROR("console.info: %s", buf);
 #else
-            STARFISH_LOG_INFO("console.info: %s\n", buf);
+            STARFISH_LOG_INFO("console.info: %s", buf);
 #endif
             return 0;
         },
@@ -78,7 +78,7 @@ void Console::error(String* m)
 #endif
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.error: %s\n", buf);
+            STARFISH_LOG_ERROR("console.error: %s", buf);
             return 0;
         },
         nullptr);
@@ -93,7 +93,7 @@ void Console::warn(String* m)
 #endif
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.warn: %s\n", buf);
+            STARFISH_LOG_ERROR("console.warn: %s", buf);
             return 0;
         },
         nullptr);
@@ -108,7 +108,7 @@ void Console::debug(String* m)
 #endif
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            STARFISH_LOG_ERROR("console.debug: %s\n", buf);
+            STARFISH_LOG_ERROR("console.debug: %s", buf);
             return 0;
         },
         nullptr);

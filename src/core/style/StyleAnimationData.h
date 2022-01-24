@@ -309,7 +309,7 @@ public:
 
     bool operator==(const StyleAnimationData& b) const
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 

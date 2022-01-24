@@ -166,7 +166,7 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
 
     m_window->document()->init(referrerURL);
 
-    // STARFISH_LOG_INFO("BrowsingContext::open %s\n",
+    // STARFISH_LOG_INFO("BrowsingContext::open %s",
     // url->urlString()->toUTF8String().data());
 
     switch (type) {
@@ -214,7 +214,7 @@ public:
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
         resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
-        STARFISH_LOG_INFO("WebFont %s is failed to load..\n",
+        STARFISH_LOG_INFO("WebFont %s is failed to load..",
                           m_familyName->toUTF8NonGCString().data());
     }
 
@@ -230,7 +230,7 @@ public:
             m_familyName);
         // we needs to rebuild frame tree due to considering pseudo-elements
         resource()->loader()->document()->setNeedsFrameTreeBuildWithoutSelf();
-        STARFISH_LOG_INFO("WebFont %s is downloaded\n",
+        STARFISH_LOG_INFO("WebFont %s is downloaded",
                           m_familyName->toUTF8NonGCString().data());
         resource()->loader()->document()->updateCanvasWebFontState();
     }
@@ -737,13 +737,13 @@ template void BrowsingContext::clearingBeforePaint<Compositor*>(Compositor*);
 
 void BrowsingContext::markHasPendingStyleSheet()
 {
-    // STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
+    // STARFISH_LOG_INFO("Window::markHasPendingStyleSheet");
     m_pendingStyleSheetCount++;
 }
 
 void BrowsingContext::unmarkHasPendingStyleSheet()
 {
-    // STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
+    // STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet");
     if (m_pendingStyleSheetCount > 0) {
         m_pendingStyleSheetCount--;
         setNeedsRendering();
@@ -1449,7 +1449,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
     // MouseEventEnter/MouseEventOut are not supported yet
     if (kind >= MouseEventKind::MouseEventEnter) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
         return false;
     }
 
@@ -1465,7 +1465,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         return true;
     }
 
-    // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f %d\n",
+    // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f %d",
     // (int)kind, data.clientX(), data.clientY(), (int)data.buttons());
 
     data.setClientX(data.clientX() + window()->scrollX(false));

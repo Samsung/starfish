@@ -281,7 +281,7 @@ private:
         clearDirectory(path);
 
         if (rmdir(path) != 0) {
-            STARFISH_LOG_ERROR("Can`t remove a directory: %s\n", path);
+            STARFISH_LOG_ERROR("Can`t remove a directory: %s", path);
             STARFISH_ASSERT_NOT_REACHED();
         }
     }
@@ -297,11 +297,11 @@ private:
             return;
         }
         if (S_ISDIR(statPath.st_mode) == 0) {
-            STARFISH_LOG_ERROR("Is not directory : %s\n", path);
+            STARFISH_LOG_ERROR("Is not directory : %s", path);
             return;
         }
         if ((dir = opendir(path)) == nullptr) {
-            STARFISH_LOG_ERROR("Can`t open directory : %s\n", path);
+            STARFISH_LOG_ERROR("Can`t open directory : %s", path);
             return;
         }
 
@@ -329,8 +329,7 @@ private:
 
             // remove a file object
             if (unlink(fullPath.c_str()) != 0) {
-                STARFISH_LOG_ERROR("Can`t remove a file: %s\n",
-                                   fullPath.c_str());
+                STARFISH_LOG_ERROR("Can`t remove a file: %s", fullPath.c_str());
                 continue;
             }
         }

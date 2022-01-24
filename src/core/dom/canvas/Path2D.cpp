@@ -48,7 +48,7 @@ void Path2D::initFromPath2DOrDOMString(Path2DOrDOMString& path)
     if (path.isPath2DValue()) {
         m_canvasPath->path()->copy(path.getPath2DValue()->m_canvasPath->path());
     } else if (path.isDOMStringValue()) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        STARFISH_UNIMPLEMENTED();
     }
 }
 

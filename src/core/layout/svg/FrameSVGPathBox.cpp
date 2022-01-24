@@ -254,7 +254,7 @@ GradientDrawingInfo* FrameSVGPathBox::makeGradientDrawingInfo(String* url)
             info->colorStops =
                 matchingSvg->asSVGLinearGradientElement()->colorStops();
         } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            STARFISH_UNIMPLEMENTED();
         }
 
         return info;
@@ -439,7 +439,7 @@ Path* FrameSVGPathBox::path()
                 } else if (token.equals("V")) {
                     TO_WAIT_COORDS_MODE('V');
                 } else {
-                    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                    STARFISH_UNIMPLEMENTED();
                     // error
                     break;
                 }
@@ -633,4 +633,4 @@ Path* FrameSVGPathBox::path()
     }
     return path;
 }
-}
+} // namespace Starfish

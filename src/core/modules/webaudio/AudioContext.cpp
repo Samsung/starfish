@@ -56,7 +56,7 @@ AudioContext::AudioContext(ExecutionContext* executionContext,
             },
             this);
     } else {
-        STARFISH_LOG_WARN("Failed: AudioContext cannot be created\n");
+        STARFISH_LOG_WARN("Failed: AudioContext cannot be created");
     }
 }
 

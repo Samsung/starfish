@@ -162,7 +162,7 @@ static void logEglError(const char* name) noexcept
         err = "unknown";
         break;
     }
-    STARFISH_LOG_ERROR("%s failed with %s\n", name, err);
+    STARFISH_LOG_ERROR("%s failed with %s", name, err);
 }
 #else
 #include <GLES3/gl3.h>
@@ -588,7 +588,7 @@ static void checkError()
 {
     volatile auto error = glGetError();
     if (error != 0) {
-        STARFISH_LOG_ERROR("OpenGL error.. 0x%04x\n", error);
+        STARFISH_LOG_ERROR("OpenGL error.. 0x%04x", error);
         STARFISH_ASSERT_NOT_REACHED();
     }
 }
@@ -622,9 +622,8 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
         std::vector<GLchar> errorLog(maxLength);
         glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
 
-        STARFISH_LOG_ERROR("loadShader error.. shader source -> %s\n",
-                           shaderSrc);
-        STARFISH_LOG_ERROR("loadShader error.. error desc -> %s\n",
+        STARFISH_LOG_ERROR("loadShader error.. shader source -> %s", shaderSrc);
+        STARFISH_LOG_ERROR("loadShader error.. error desc -> %s",
                            errorLog.data());
         // Provide the infolog in whatever manor you deem best.
         // Exit with failure.
@@ -644,7 +643,7 @@ inline static GLenum textureFormat()
 #endif
 
     if (g_needsCheckCompatibility) {
-        STARFISH_LOG_ERROR("Read textureFormat before check compatibility\n");
+        STARFISH_LOG_ERROR("Read textureFormat before check compatibility");
         STARFISH_ASSERT_NOT_REACHED();
     }
 
@@ -733,7 +732,7 @@ public:
 
     CompositorContextGL(PlatformWindow* platformWindow)
     {
-        STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL\n");
+        STARFISH_LOG_INFO("CompositorContextGL::CompositorContextGL");
 
         m_platformWindow = platformWindow;
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
@@ -791,7 +790,7 @@ public:
 
     ~CompositorContextGL()
     {
-        STARFISH_LOG_INFO("CompositorContextGL::~CompositorContextGL\n");
+        STARFISH_LOG_INFO("CompositorContextGL::~CompositorContextGL");
         glUseProgram(0);
 
         cleanUpTextureCache();
@@ -1555,9 +1554,9 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
 
         if (isOpenGLES3) {
-            STARFISH_LOG_INFO("GL_MAJOR_VERSION %d\n", (int)major);
+            STARFISH_LOG_INFO("GL_MAJOR_VERSION %d", (int)major);
         } else {
-            STARFISH_LOG_INFO("GL_MAJOR_VERSION 2\n");
+            STARFISH_LOG_INFO("GL_MAJOR_VERSION 2");
         }
 
         if (major >= 3) {
@@ -1567,7 +1566,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         const char* ex = (const char*)glGetString(GL_EXTENSIONS);
 
         if (ex) {
-            STARFISH_LOG_INFO("GL_EXTENSIONS -> %s\n", ex);
+            STARFISH_LOG_INFO("GL_EXTENSIONS -> %s", ex);
             g_isSupportExtensionEGLImageExternal =
                 strstr(ex, "GL_OES_EGL_image_external") != nullptr;
             g_isSupportBGRATexture =
@@ -1575,7 +1574,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
             g_isSupportTextureSwizzle =
                 strstr(ex, "GL_ARB_texture_swizzle") != nullptr;
         } else {
-            STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...\n");
+            STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...");
         }
 
 #if (!defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)) || \
@@ -1589,15 +1588,15 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         }
 #endif
         if (g_isSupportExtensionEGLImageExternal) {
-            STARFISH_LOG_INFO("support EGLImageExternal!\n");
+            STARFISH_LOG_INFO("support EGLImageExternal!");
         }
 
         if (g_isSupportBGRATexture) {
-            STARFISH_LOG_INFO("support BGRA texture!\n");
+            STARFISH_LOG_INFO("support BGRA texture!");
         }
 
         if (g_isSupportTextureSwizzle) {
-            STARFISH_LOG_INFO("support Texture Swizzle!\n");
+            STARFISH_LOG_INFO("support Texture Swizzle!");
             g_isSupportBGRATexture = false;
         }
 
@@ -1936,7 +1935,7 @@ public:
 
 #if defined(USE_EGLIMAGE_EXT_ANDROID) || !defined(STARFISH_ANDROID)
             if (nullptr == m_eglImage) {
-                STARFISH_LOG_INFO("result of eglCreateImageKHR is fail\n");
+                STARFISH_LOG_INFO("result of eglCreateImageKHR is fail");
             }
 #endif
             {
@@ -3007,7 +3006,7 @@ public:
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
             if (glGetError() == 1286) {
-                STARFISH_LOG_ERROR("drawFilteredTexture got error 1286\n");
+                STARFISH_LOG_ERROR("drawFilteredTexture got error 1286");
             }
             if (a != 1) {
                 glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
@@ -3554,7 +3553,7 @@ public:
 
                 auto errChk = glGetError();
                 if (errChk == 1286) {
-                    STARFISH_LOG_ERROR("fbo stencil clipping got error 1286\n");
+                    STARFISH_LOG_ERROR("fbo stencil clipping got error 1286");
                 }
 
                 m_compositorContext->putGenericTextureToCache(
