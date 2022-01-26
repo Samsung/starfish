@@ -3448,6 +3448,7 @@ void StackingContext::applyMask(Canvas* canvas,
                 document->cacheNativeGradient(info, gradient);
             }
             gradientNativeImageData = gradient->gradientImageDataCached();
+            canvas->maskNativeImage(gradientNativeImageData, rect, false);
         } else {
             auto gradient = NativeGradient::create(info);
             auto imageData =
@@ -3465,8 +3466,8 @@ void StackingContext::applyMask(Canvas* canvas,
             gradientCanvas->fill();
             delete gradientCanvas;
             gradientNativeImageData = imageData;
+            canvas->maskNativeImage(gradientNativeImageData, rect);
         }
-        canvas->maskNativeImage(gradientNativeImageData, rect);
     }
 }
 

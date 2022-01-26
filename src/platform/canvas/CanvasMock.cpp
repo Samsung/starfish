@@ -346,8 +346,8 @@ public:
     {
     }
 
-    virtual void maskNativeImage(NativeImageData* data,
-                                 const Unit::Rect& dst) override
+    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst,
+                                 bool removeImmediately = true) override
     {
     }
     virtual void postMatrix(const SkMatrix& matrix)

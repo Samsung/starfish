@@ -153,6 +153,7 @@ public:
 
     void* m_maskPattern;
     void* m_maskPatternData;
+    bool m_shouldRemoveImmediately;
     SkMatrix m_maskTM;
 
 protected:
@@ -610,7 +611,8 @@ public:
     {
         return m_renderTargetInfo;
     }
-    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst)
+    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst,
+                                 bool removeImmediately = true)
     {
         STARFISH_UNIMPLEMENTED();
     }
