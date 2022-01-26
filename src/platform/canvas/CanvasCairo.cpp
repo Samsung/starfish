@@ -596,6 +596,9 @@ public:
             cairo_set_matrix(m_canvas, &matrix);
             cairo_surface_flush(m_surface);
 
+            if (lastState()->m_shouldRemoveImmediately) {
+                delete ((NativeImageData*)lastState()->m_maskPatternData);
+            }
             lastState()->m_maskPatternData = nullptr;
         }
         Canvas::restore();
@@ -1353,14 +1356,15 @@ public:
         drawImageInner(data, dst, imageRenderingMode);
     }
 
-    virtual void maskNativeImage(NativeImageData* data,
-                                 const Unit::Rect& dst) override
+    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst,
+                                 bool removeImmediately = true) override
     {
         cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
         if (image) {
             lastState()->m_maskPatternData = data;
             lastState()->m_maskPattern =
                 cairo_pattern_create_for_surface(image);
+            lastState()->m_shouldRemoveImmediately = removeImmediately;
             cairo_matrix_t matrix;
             cairo_get_matrix(m_canvas, &matrix);
             {

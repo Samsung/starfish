@@ -1062,8 +1062,8 @@ public:
         m_canvas->restore();
     }
 
-    virtual void maskNativeImage(NativeImageData* data,
-                                 const Unit::Rect& dst) override
+    virtual void maskNativeImage(NativeImageData* data, const Unit::Rect& dst,
+                                 bool removeImmediately = true) override
     {
     }
     virtual void drawLinearGradient(const Unit::Rect& dst,
