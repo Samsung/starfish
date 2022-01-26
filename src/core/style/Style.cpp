@@ -2912,38 +2912,53 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     const CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
     GCVector<MutablePropertyValue>& cssCustomValues, bool isImportant)
 {
-    CSSTokenVector cssTokenValues;
-    CSSStyleDeclaration::tokenizeCSSValue(
-        cssTokenValues,
-        cssValuePair.varFunctionValue()->toUTF8NonGCString().c_str(),
-        cssValuePair.varFunctionValue()->length(), ",", 1);
+    std::string cssValueString =
+        cssValuePair.varFunctionValue()->toUTF8NonGCString();
+    size_t cssValueLength = cssValueString.size();
 
-    std::string cssValue;
-    for (size_t i = 0; i < cssTokenValues.size(); ++i) {
+    if (cssValuePair.temporaryValueKind() ==
+        CSSStyleValuePair::ValueKind::CalcValueKind) {
+        // This is the length of "calc(".
+        size_t calcHeaderSize = 5;
+        cssValueString = &cssValueString[calcHeaderSize];
+        cssValueLength = cssValueLength - (calcHeaderSize + 1);
+    }
+
+    CSSTokenVector cssValueTokens;
+    CSSStyleDeclaration::tokenizeCSSValue(
+        cssValueTokens, cssValueString.c_str(), cssValueLength, ",", 1);
+
+    std::string newCssValue;
+    for (size_t i = 0; i < cssValueTokens.size(); ++i) {
         CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
-        variablesSyntaxBuilder.build(cssTokenValues[i]);
+        variablesSyntaxBuilder.build(cssValueTokens[i]);
         if (variablesSyntaxBuilder.isValid()) {
-            cssTokenValues[i] =
+            cssValueTokens[i] =
                 variablesSyntaxBuilder.generateStyle(cssCustomValues);
-            CSSTokenVector tempTokenValues;
+            CSSTokenVector tempCssValueTokens;
             CSSStyleDeclaration::tokenizeCSSValue(
-                tempTokenValues, cssTokenValues[i].c_str(),
-                cssTokenValues[i].size(), ",", 1);
-            for (size_t j = 0; j < tempTokenValues.size(); ++j) {
-                cssValue.append(tempTokenValues[j] + " ");
+                tempCssValueTokens, cssValueTokens[i].c_str(),
+                cssValueTokens[i].size(), ",", 1);
+            for (size_t j = 0; j < tempCssValueTokens.size(); ++j) {
+                newCssValue.append(tempCssValueTokens[j] + " ");
             }
         } else {
-            cssValue.append(cssTokenValues[i] + " ");
+            newCssValue.append(cssValueTokens[i] + " ");
         }
+    }
+
+    if (cssValuePair.temporaryValueKind() ==
+        CSSStyleValuePair::ValueKind::CalcValueKind) {
+        newCssValue = "calc(" + newCssValue + ")";
     }
 
     CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
     switch (keyKind) {
-#define SET_ATTR(name, ...)                                       \
-    case CSSStyleValuePair::KeyKind::name: {                      \
-        declaration->set##name(cssValue.c_str(), cssValue.size(), \
-                               isImportant);                      \
-        break;                                                    \
+#define SET_ATTR(name, ...)                                             \
+    case CSSStyleValuePair::KeyKind::name: {                            \
+        declaration->set##name(newCssValue.c_str(), newCssValue.size(), \
+                               isImportant);                            \
+        break;                                                          \
     }
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
@@ -10344,7 +10359,8 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
     CSSPropertyParser parser((char*)token.data());
 
     parser.consumeString(0);
-    if (parser.parsedString() == "calc") {
+    const char* calcHeader = "calc";
+    if (parser.parsedString() == calcHeader) {
         if (!parser.consumeIfNext('(')) {
             return false;
         }
@@ -10355,6 +10371,19 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         if (result && parser.isEnd()) {
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
+            return true;
+        }
+
+        CSSTokenVector tokens;
+        // The css token will be parsed except for "calc(" and ")".
+        size_t calcHeaderSize = strlen(calcHeader) + 1;
+        CSSStyleDeclaration::tokenizeCSSValue(
+            tokens, token.c_str() + calcHeaderSize,
+            token.size() - (calcHeaderSize + 1));
+        if (updateValueVarReferences(tokens)) {
+            m_valueKind = CSSStyleValuePair::ValueKind::VarFunctionValueKind;
+            m_temporaryValueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
+            m_value = String::fromUTF8(token.c_str(), token.size());
             return true;
         }
     }

@@ -1092,6 +1092,7 @@ public:
     CSSStyleValuePair()
         : m_keyKind(KeyKind::Unknown)
         , m_valueKind(ValueKind::None)
+        , m_temporaryValueKind(ValueKind::None)
         , m_flagImportant(false)
         , m_value(0.0f)
     {
@@ -1100,6 +1101,7 @@ public:
     CSSStyleValuePair(const CSSStyleValuePair& o)
         : m_keyKind(o.m_keyKind)
         , m_valueKind(o.m_valueKind)
+        , m_temporaryValueKind(o.m_temporaryValueKind)
         , m_flagImportant(o.m_flagImportant)
         , m_value(o.m_value)
     {
@@ -1125,6 +1127,16 @@ public:
     void setValueKind(ValueKind kind)
     {
         m_valueKind = kind;
+    }
+
+    ValueKind temporaryValueKind() const
+    {
+        return m_temporaryValueKind;
+    }
+
+    void setTemporaryValueKind(ValueKind kind)
+    {
+        m_temporaryValueKind = kind;
     }
 
     bool isSideValueKind() const
@@ -2159,6 +2171,7 @@ public:
     CSSStyleValuePair(ValueKind kind, ValueData value)
         : m_keyKind(KeyKind::Unknown)
         , m_valueKind(kind)
+        , m_temporaryValueKind(ValueKind::None)
         , m_flagImportant(false)
         , m_value(value)
     {
@@ -2507,6 +2520,7 @@ public:
 protected:
     KeyKind m_keyKind : 8;
     ValueKind m_valueKind : 8;
+    ValueKind m_temporaryValueKind : 8;
     bool m_flagImportant : 1;
     ValueData m_value;
 };
