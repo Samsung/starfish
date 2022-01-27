@@ -252,3 +252,9 @@ make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
 ```
 
 e.g. `make x64.exe.debug -j`
+
+## Governance
+All decisions in this project are made by consensus, respecting the principles and rules of the community.
+
+Please refer to the [Samsung Inner Source Governance](https://github.sec.samsung.net/InnerSource/SamsungInnerSourceProgram/blob/master/GettingStarted/Governance.md) in more detail.
+
