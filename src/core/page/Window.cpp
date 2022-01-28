@@ -342,6 +342,11 @@ int32_t Window::innerHeight()
     return m_height;
 }
 
+bool Window::isInnerSizeEmpty()
+{
+    return m_width == 0 || m_height == 0;
+}
+
 static void checkVwVh(Node* nd)
 {
     if (nd->isElement()) {
