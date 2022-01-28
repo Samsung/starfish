@@ -1570,8 +1570,10 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                 const int32_t minimumScale =
                     STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
 
-                if ((visibleWidth > windowWidth * minimumScale) ||
-                    (visibleHeight > windowHeight * minimumScale)) {
+                if ((!m_rareData->m_visibleRect.isEmpty() &&
+                     !m_owner->node()->window()->isInnerSizeEmpty()) &&
+                    ((visibleWidth > windowWidth * minimumScale) ||
+                     (visibleHeight > windowHeight * minimumScale))) {
                     int m = std::max(visibleWidth / windowWidth,
                                      visibleHeight / windowHeight);
                     float scale =
