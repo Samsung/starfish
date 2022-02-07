@@ -1564,11 +1564,12 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
 }
 
-static inline void paintRepeatGradient(
-    Canvas* canvas, FrameBox* box, ComputedStyle* style,
-    const unsigned int& idx, Unit::Rect dst, const float& width,
-    const float& height, bool repeatX, bool repeatY,
-    const ImageRenderingValue& imageRenderingValue)
+static inline void paintGradient(Canvas* canvas, FrameBox* box,
+                                 ComputedStyle* style, const unsigned int& idx,
+                                 Unit::Rect dst, const float& width,
+                                 const float& height, bool repeatX,
+                                 bool repeatY,
+                                 ImageRenderingValue imageRenderingValue)
 {
     float startX = dst.x();
     float startY = dst.y();
@@ -1589,10 +1590,13 @@ static inline void paintRepeatGradient(
     auto value = imageValue->gradientValue();
     bool cacheable =
         (value->isCacheable() &&
+         ((dst.width() * dst.height()) >= CACHEABLE_GRADIENT_SIZE) &&
          ((width * height) >= CACHEABLE_GRADIENT_SIZE) &&
          ((width * height * 4) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
 
     if (cacheable) {
+        float imageWidth = width;
+        float imageHeight = height;
         Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
         std::shared_ptr<NativeGradient> gradient =
@@ -1600,11 +1604,67 @@ static inline void paintRepeatGradient(
         if (gradient.get() == nullptr) {
             gradient = NativeGradient::create(info);
         }
-        canvas->save();
+
+        // if we can shrink result image, shrink!
+        if (value->type() == GradientType::LinearGradient) {
+            LinearGradientData* l = value->asLinearGradientData();
+            auto horizentalSide = l->horizontalSide();
+            auto verticalSide = l->verticalSide();
+            float angle = std::numeric_limits<float>::quiet_NaN();
+            if (horizentalSide == SideValue::NoneSideValue &&
+                verticalSide == SideValue::NoneSideValue) {
+                angle = l->angle();
+            } else {
+                if (horizentalSide != SideValue::NoneSideValue &&
+                    verticalSide != SideValue::NoneSideValue) {
+                    float rise = rect.width();
+                    float run = rect.height();
+                    if (horizentalSide == SideValue::LeftSideValue) {
+                        run *= -1;
+                    }
+                    if (verticalSide == SideValue::BottomSideValue) {
+                        rise *= -1;
+                    }
+                    angle =
+                        90 - UnitHelper::convertFromRadToDeg(atan2(rise, run));
+                } else if (horizentalSide != SideValue::NoneSideValue ||
+                           verticalSide != SideValue::NoneSideValue) {
+                    angle = 0;
+                    if (horizentalSide == SideValue::RightSideValue) {
+                        angle = 90;
+                    } else if (verticalSide == SideValue::BottomSideValue) {
+                        angle = 180;
+                    } else if (horizentalSide == SideValue::LeftSideValue) {
+                        angle = 270;
+                    }
+                }
+            }
+            if (angle != std::numeric_limits<float>::quiet_NaN()) {
+                if (fmodf(angle, 180.0) == 0) {
+                    imageWidth = 1;
+                    repeatX = true;
+                } else if (fmodf(angle, 90.0) == 0) {
+                    imageHeight = 1;
+                    repeatY = true;
+                }
+            }
+        }
+
+        float imageScale = 1;
+#if !defined(STARFISH_ENABLE_TEST)
+#define STARFISH_NATIVEGRADIENT_MAX_SIZE 512
+        while ((imageWidth / imageScale) > STARFISH_NATIVEGRADIENT_MAX_SIZE &&
+               (imageHeight / imageScale) > STARFISH_NATIVEGRADIENT_MAX_SIZE) {
+            imageRenderingValue = ImageRenderingPixelatedValue;
+            imageScale += 0.25f;
+        }
+#endif
+
         if (gradient->gradientImageDataCached() == nullptr) {
-            auto imageData =
-                BufferedNativeImageData::create(ceil(width), ceil(height));
+            auto imageData = BufferedNativeImageData::create(
+                ceil(imageWidth / imageScale), ceil(imageHeight / imageScale));
             Canvas* cv = Canvas::create(box->node()->webView(), imageData);
+            cv->scale(1 / imageScale, 1 / imageScale);
 
             cv->clearColor(Unit::Color(0, 0, 0, 0));
             if (imageValue->gradientValue()->type() ==
@@ -1620,8 +1680,20 @@ static inline void paintRepeatGradient(
             gradient->setGradientImageDataCached(imageData);
             box->document()->cacheNativeGradient(info, gradient);
         }
-        canvas->drawRepeatImage(gradient->gradientImageDataCached(), dst, width,
-                                height, repeatX, repeatY, imageRenderingValue);
+
+        Unit::Rect drawRect =
+            Unit::Rect(startX, startY, width, height).snapSizeToPixel();
+        canvas->save();
+        for (float y = startY; y < dst.maxY();
+             y += height, canvas->translate(0, drawRect.height())) {
+            canvas->save();
+            for (float x = startX; x < dst.maxX();
+                 x += width, canvas->translate(drawRect.width(), 0)) {
+                canvas->drawImage(gradient->gradientImageDataCached(), drawRect,
+                                  imageRenderingValue);
+            }
+            canvas->restore();
+        }
         canvas->restore();
     } else {
         Unit::Rect rect =
@@ -1850,10 +1922,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                         true, true, imageRenderingValue);
                 }
             } else if (type.isGradient()) {
-                paintRepeatGradient(canvas, box, style, idx,
-                                    Unit::Rect(x, y, paintingW, paintingH),
-                                    imgW, imgH, true, true,
-                                    imageRenderingValue);
+                paintGradient(canvas, box, style, idx,
+                              Unit::Rect(x, y, paintingW, paintingH), imgW,
+                              imgH, true, true, imageRenderingValue);
             }
         } else if (shouldApplyRepeat &&
                    repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
@@ -1863,9 +1934,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, false, true,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                paintRepeatGradient(canvas, box, style, idx,
-                                    Unit::Rect(x, y, imgW, paintingH), imgW,
-                                    imgH, false, true, imageRenderingValue);
+                paintGradient(canvas, box, style, idx,
+                              Unit::Rect(x, y, imgW, paintingH), imgW, imgH,
+                              false, true, imageRenderingValue);
             }
 
         } else if (shouldApplyRepeat &&
@@ -1876,35 +1947,18 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, true, false,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                paintRepeatGradient(canvas, box, style, idx,
-                                    Unit::Rect(x, y, paintingW, imgH), imgW,
-                                    imgH, true, false, imageRenderingValue);
+                paintGradient(canvas, box, style, idx,
+                              Unit::Rect(x, y, paintingW, imgH), imgW, imgH,
+                              true, false, imageRenderingValue);
             }
         } else {
             if (type.isURL()) {
                 canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
                                   imageRenderingValue);
             } else if (type.isGradient()) {
-                ImageValue* imageValue = style->backgroundImage(idx);
-                Unit::Rect rect(x, y, imgW, imgH);
-
-#if defined(STARFISH_ENABLE_TEST)
-                // to match with expected images
-                rect = rect.snapSizeToPixel();
-#endif
-
-                auto info =
-                    imageValue->gradientValue()->makeGradientDrawingInfo(rect,
-                                                                         box);
-                auto gradient = NativeGradient::create(info);
-
-                if (imageValue->gradientValue()->type() ==
-                    GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info, gradient.get());
-                } else if (imageValue->gradientValue()->type() ==
-                           GradientType::RadialGradient) {
-                    canvas->drawRadialGradient(rect, info, gradient.get());
-                }
+                paintGradient(canvas, box, style, idx,
+                              Unit::Rect(x, y, imgW, imgH), imgW, imgH, false,
+                              false, imageRenderingValue);
             }
         }
         canvas->restore();
