@@ -26,7 +26,9 @@
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 #include "binding/WindowProxy.h"
 
-#define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1024 * 1024 * 4
+// FIXME reduce cache size
+// if we optimize gradient painting we can reduce this size as FHD
+#define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1920 * 1080 * 4 * 2
 
 namespace Starfish {
 
@@ -576,6 +578,7 @@ public:
     void cacheNativeGradient(GradientDrawingInfo* key,
                              std::shared_ptr<NativeGradient> value);
     bool pruneNativeGradientCacheIfNeeds(size_t reserve);
+    void clearNativeGradientCacheIfNeeds();
 
     void setReferrer(ResourceURL* m_referrer);
 

@@ -754,10 +754,7 @@ void Document::dispose()
 
     m_fontSelector->clearWholeCache();
 
-    if (m_nativeGradientCache) {
-        m_nativeGradientCache->clear();
-        m_nativeGradientCacheLRUList.clear();
-    }
+    clearNativeGradientCacheIfNeeds();
 
     if (m_animationExecutor != nullptr) {
         auto& v = window()->webView()->activeAnimationExecutor();
@@ -2208,15 +2205,16 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
         if (iter == m_nativeGradientCache->end()) {
             m_nativeGradientCache->insert(std::make_pair(key, value));
         } else {
+            m_nativeGradientCacheTotalSize -=
+                iter->second->gradientImageDataCached()->bufferSize();
             iter->second = value;
         }
         m_nativeGradientCacheLRUList.push_back(key);
         m_nativeGradientCacheTotalSize += bufferSize;
     }
-#ifdef STARFISH_ENABLE_TEST
+
     STARFISH_LOG_INFO("NativeGradient cache size : %d KB",
                       (int)m_nativeGradientCacheTotalSize / 1024);
-#endif
 }
 
 bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
@@ -2243,6 +2241,15 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
         m_nativeGradientCacheTotalSize -= removedSize;
     }
     return true;
+}
+
+void Document::clearNativeGradientCacheIfNeeds()
+{
+    if (m_nativeGradientCache) {
+        m_nativeGradientCache->clear();
+        m_nativeGradientCacheLRUList.clear();
+        m_nativeGradientCacheTotalSize = 0;
+    }
 }
 
 void Document::setReferrer(ResourceURL* referrer)

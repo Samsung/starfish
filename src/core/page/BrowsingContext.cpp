@@ -789,6 +789,7 @@ void BrowsingContext::onIdle()
                 v[i]->fontFace()->clearCache();
             }
         }
+        document()->clearNativeGradientCacheIfNeeds();
     }
 
     iterateChildContext([](BrowsingContext* ctx) { ctx->onIdle(); });

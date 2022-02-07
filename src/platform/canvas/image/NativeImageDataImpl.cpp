@@ -55,18 +55,6 @@ public:
         disposeNativeImageData();
     }
 
-    virtual void pruneInternalDataIfPossible() override
-    {
-        if (m_image) {
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
-            cairo_surface_destroy(m_imageSurface);
-            m_imageSurface = nullptr;
-#endif
-            free(m_image);
-            m_image = nullptr;
-        }
-    }
-
     virtual uint8_t* data() override
     {
         return (uint8_t*)m_image;
