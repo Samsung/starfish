@@ -1425,7 +1425,9 @@ void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
     m_pointerRooter.clear();
-    m_cssCustomValues.clear();
+    if (m_cssCustomValues) {
+        m_cssCustomValues->clear();
+    }
 }
 
 ScriptBindingInstance* CSSStyleDeclaration::scriptBindingInstance()
@@ -1438,7 +1440,10 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 {
     CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(element);
     newStyle->m_cssValues = m_cssValues;
-    newStyle->m_cssCustomValues = m_cssCustomValues;
+    if (m_cssCustomValues) {
+        newStyle->m_cssCustomValues =
+            new MutablePropertyValueList(*m_cssCustomValues);
+    }
     return newStyle;
 }
 
@@ -1446,42 +1451,31 @@ String* CSSStyleDeclaration::customProperty(String* key)
 {
     AtomicString atomicKey =
         AtomicString::createAtomicString(m_node->starfish(), key);
-    String* val = String::emptyString;
-
-    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        const MutablePropertyValue& customProperty = m_cssCustomValues[i];
-        if (customProperty.name() == atomicKey) {
-            val = customProperty.value();
-            break;
+    if (m_cssCustomValues) {
+        auto ret = m_cssCustomValues->property(atomicKey);
+        if (ret) {
+            return ret.value();
         }
+        return String::emptyString;
     }
-
-    return val;
+    return String::emptyString;
 }
 
 void CSSStyleDeclaration::setCustomProperty(AtomicString key, String* value)
 {
-    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        MutablePropertyValue& property = m_cssCustomValues[i];
-        if (property.name() == key) {
-            property.setValue(value);
-            return;
-        }
+    if (!m_cssCustomValues) {
+        m_cssCustomValues = new MutablePropertyValueList();
     }
-    MutablePropertyValue custom(key, value);
-    m_cssCustomValues.push_back(custom);
+
+    m_cssCustomValues->setProperty(key, value);
 }
 
 void CSSStyleDeclaration::removeCustomProperty(String* key)
 {
     AtomicString atomicKey =
         AtomicString::createAtomicString(m_node->starfish(), key);
-    for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        const MutablePropertyValue& property = m_cssCustomValues[i];
-        if (property.name() == atomicKey) {
-            m_cssCustomValues.erase(m_cssCustomValues.begin() + i);
-            return;
-        }
+    if (m_cssCustomValues) {
+        m_cssCustomValues->removeProperty(atomicKey);
     }
 }
 
@@ -4367,7 +4361,10 @@ StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
                               ->ownerDocument())
 {
     m_cssValues = src->m_cssValues;
-    m_cssCustomValues = src->m_cssCustomValues;
+    if (src->m_cssCustomValues) {
+        m_cssCustomValues =
+            new MutablePropertyValueList(*src->m_cssCustomValues);
+    }
     m_pointerRooter = src->m_pointerRooter;
     m_parentRule = parentRule;
 }

@@ -252,7 +252,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
 }
 
 CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
-    GCVector<MutablePropertyValue>& cssCustomValues)
+    MutablePropertyValueList& cssCustomValues)
 {
     struct Context {
         Context(Block* b, size_t i)
@@ -288,9 +288,10 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                         String::fromUTF8(variable->m_value.trim().data(),
                                          variable->m_value.trim().size());
                     if (isFirst) {
-                        for (size_t k = 0; k < cssCustomValues.size(); k++) {
+                        for (size_t k = 0; k < cssCustomValues.values().size();
+                             k++) {
                             MutablePropertyValue customProperty =
-                                cssCustomValues[k];
+                                cssCustomValues.values()[k];
                             if (customProperty.name().string()->equals(key)) {
                                 findValue.appendString(customProperty.value());
                                 isFind = true;

@@ -27,49 +27,6 @@ namespace Starfish {
 
 class CSSRule;
 
-class MutablePropertyValue : public gc {
-public:
-    MutablePropertyValue(AtomicString name, String* value)
-        : m_name(name)
-        , m_value(value)
-    {
-    }
-
-    AtomicString name() const
-    {
-        return m_name;
-    }
-
-    String* value() const
-    {
-        return m_value;
-    }
-
-    void setName(AtomicString name)
-    {
-        m_name = name;
-    }
-
-    void setValue(String* value)
-    {
-        m_value = value;
-    }
-
-    bool operator==(MutablePropertyValue& v)
-    {
-        return name() == v.name() && value()->equals(v.value());
-    }
-
-    bool operator!=(MutablePropertyValue& v)
-    {
-        return !operator==(v);
-    }
-
-private:
-    AtomicString m_name;
-    String* m_value;
-};
-
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
     friend class StyleRuleCSSStyleDeclaration;
@@ -237,7 +194,7 @@ public:
         return m_cssValues;
     }
 
-    GCVector<MutablePropertyValue>& cssCustomValues()
+    Nullable<MutablePropertyValueList*> cssCustomValues()
     {
         return m_cssCustomValues;
     }
@@ -307,7 +264,7 @@ protected:
     void removeRootPointerValue(const CSSStyleValuePair& v);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
-    GCVector<MutablePropertyValue> m_cssCustomValues;
+    Nullable<MutablePropertyValueList*> m_cssCustomValues;
     GCVector<void*> m_pointerRooter;
     Node* m_node;
 };
