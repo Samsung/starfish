@@ -1670,14 +1670,16 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                         bool priority;
                         bool allowSrcProperty;
                         CSSStyleValuePair::KeyKind kind;
-                        String* key;
+                        AtomicString key;
                         CSSTokenString* value;
                         CSSStyleDeclaration* declaration;
+                        Starfish* starfish;
                     } sender;
                     sender.value = &value;
                     sender.allowSrcProperty = allowSrcProperty;
                     sender.priority = priority;
                     sender.declaration = declaration;
+                    sender.starfish = document()->starfish();
                     aToken->value()->peekASCIIBuffer(
                         [](const char* buf, size_t len, void* data) -> size_t {
                             // We can modify content of `buf`.
@@ -1687,16 +1689,19 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                             for (size_t i = 0; i < len; i++) {
                                 name[i] = tolower(name[i]);
                             }
-                            ((Sender*)data)->kind = lookupCSSStyle(name, len);
 
-                            if (((Sender*)data)->kind ==
+                            Sender* sd = reinterpret_cast<Sender*>(data);
+
+                            sd->kind = lookupCSSStyle(name, len);
+
+                            if (sd->kind ==
                                 CSSStyleValuePair::KeyKind::CustomProperty) {
-                                ((Sender*)data)->key =
-                                    String::fromUTF8(name, len);
+                                sd->key = AtomicString::createAtomicString(
+                                    sd->starfish, name, len);
                             }
 #ifndef NDEBUG
                             // ignore vendor prefix & CSS Custom Variables
-                            if (((Sender*)data)->kind ==
+                            if (sd->kind ==
                                     CSSStyleValuePair::KeyKind::Unknown &&
                                 len && name[0] != '-') {
                                 STARFISH_LOG_ERROR(
@@ -1704,45 +1709,41 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                     name);
                             }
 #endif
-                            if (((Sender*)data)->kind ==
-                                    CSSStyleValuePair::KeyKind::Src &&
-                                !((Sender*)data)->allowSrcProperty) {
+                            if (sd->kind == CSSStyleValuePair::KeyKind::Src &&
+                                !sd->allowSrcProperty) {
                                 return 0;
                             }
 
-                            ((Sender*)data)
-                                ->value->peekUTF8Buffer(
-                                    [](const char* value, size_t len,
-                                       void* data) -> size_t {
-                                        bool priority =
-                                            ((Sender*)data)->priority;
-                                        CSSStyleDeclaration* declaration =
-                                            ((Sender*)data)->declaration;
-                                        CSSStyleValuePair::KeyKind kind =
-                                            ((Sender*)data)->kind;
+                            sd->value->peekUTF8Buffer(
+                                [](const char* value, size_t len,
+                                   void* data) -> size_t {
+                                    Sender* sd =
+                                        reinterpret_cast<Sender*>(data);
+                                    bool priority = sd->priority;
+                                    CSSStyleDeclaration* declaration =
+                                        sd->declaration;
+                                    CSSStyleValuePair::KeyKind kind = sd->kind;
 
-                                        switch (kind) {
-                                        case CSSStyleValuePair::KeyKind::
-                                            CustomProperty: {
-                                            // https://www.w3.org/TR/css-variables-1/
-                                            String* key = ((Sender*)data)->key;
-                                            declaration->setCustomProperty(
-                                                key,
-                                                String::fromUTF8(value, len));
-                                        } break;
+                                    switch (kind) {
+                                    case CSSStyleValuePair::KeyKind::
+                                        CustomProperty: {
+                                        // https://www.w3.org/TR/css-variables-1/
+                                        AtomicString key = sd->key;
+                                        declaration->setCustomProperty(
+                                            key, sd->value->toString());
+                                    } break;
 #define SET_ATTR(name, nameLower, nameCSSCase)        \
     case CSSStyleValuePair::KeyKind::name: {          \
         declaration->set##name(value, len, priority); \
     } break;
-                                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(
-                                                SET_ATTR)
-                                        default:
-                                            break;
-                                        }
+                                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                                    default:
+                                        break;
+                                    }
 
-                                        return 0;
-                                    },
-                                    data);
+                                    return 0;
+                                },
+                                data);
                             return 0;
                         },
                         &sender);
