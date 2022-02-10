@@ -3961,23 +3961,24 @@ public:
         m_rareComputedStyleData.setFilter(v);
     }
 
-    // Inherited Custom properties.
-    const GCVector<MutablePropertyValue>& customProperty()
+    bool hasCustomProperty()
     {
-        return m_inheritedStyles.m_cssCustomValues;
+        return m_inheritedStyles.m_cssCustomValues.hasValue();
+    }
+    // Inherited Custom properties.
+    const MutablePropertyValueList& customProperty()
+    {
+        return *m_inheritedStyles.m_cssCustomValues;
     }
 
     // Store Custom properties.
-    void setCustomProperty(const MutablePropertyValue& v)
+    void setCustomProperty(AtomicString key, String* value)
     {
-        auto& cssCustomValues = m_inheritedStyles.m_cssCustomValues;
-        for (size_t i = 0; i < cssCustomValues.size(); i++) {
-            if (cssCustomValues[i].name() == v.name()) {
-                cssCustomValues[i].setValue(v.value());
-                return;
-            }
+        if (!m_inheritedStyles.m_cssCustomValues) {
+            m_inheritedStyles.m_cssCustomValues =
+                new MutablePropertyValueList();
         }
-        cssCustomValues.push_back(v);
+        m_inheritedStyles.m_cssCustomValues->setProperty(key, value);
     }
 
     static TimingFunction* knownTimingFunction(TimingFunctionValue v);
@@ -4059,7 +4060,7 @@ protected:
         Length m_fontSize;
         Length m_lineHeight;
         InheritedStylesRareData* m_rareData;
-        GCVector<MutablePropertyValue> m_cssCustomValues;
+        Nullable<MutablePropertyValueList*> m_cssCustomValues;
     } m_inheritedStyles;
 
     bool m_seenViewPortUnitInStyle : 1;

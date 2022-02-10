@@ -2476,10 +2476,12 @@ void* StyleResolveContext::allocateComputedStyle()
     }
 }
 
-void StyleResolver::applyAllProperty(
-    Element* element, CSSStyleValuePair::ValueKind valueKind,
-    GCVector<MutablePropertyValue>& cssCustomValues, ResourceURL* origin,
-    ComputedStyle*& style, ComputedStyle* parentStyle, bool isImportant)
+void StyleResolver::applyAllProperty(Element* element,
+                                     CSSStyleValuePair::ValueKind valueKind,
+                                     MutablePropertyValueList& cssCustomValues,
+                                     ResourceURL* origin, ComputedStyle*& style,
+                                     ComputedStyle* parentStyle,
+                                     bool isImportant)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(origin != nullptr);
@@ -2910,7 +2912,7 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
 
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     const CSSStyleValuePair& cssValuePair, CSSStyleValuePair::KeyKind keyKind,
-    GCVector<MutablePropertyValue>& cssCustomValues, bool isImportant)
+    MutablePropertyValueList& cssCustomValues, bool isImportant)
 {
     std::string cssValueString =
         cssValuePair.varFunctionValue()->toUTF8NonGCString();
@@ -2971,7 +2973,7 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
 
 void StyleResolver::apply(Element* element,
                           const GCAtomicVector<CSSStyleValuePair>& cssValues,
-                          GCVector<MutablePropertyValue>& cssCustomValues,
+                          MutablePropertyValueList& cssCustomValues,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
 {
@@ -2982,29 +2984,23 @@ void StyleResolver::apply(Element* element,
 
     // Get the css-custom-property from 'parentStyle'.
     if (parentStyle) {
-        auto parentCustomProperty = parentStyle->customProperty();
+        if (parentStyle->hasCustomProperty()) {
+            auto parentCustomProperty = parentStyle->customProperty().values();
 
-        for (size_t i = 0; i < parentCustomProperty.size(); i++) {
-            const auto& parentValue = parentCustomProperty[i];
-
-            bool skip = false;
-            for (const auto& value : cssCustomValues) {
-                if (value.name() == parentValue.name()) {
-                    skip = true;
-                    break;
-                }
-            }
-
-            if (!skip) {
-                cssCustomValues.push_back(parentValue);
+            for (size_t i = 0; i < parentCustomProperty.size(); i++) {
+                const auto& parentValue = parentCustomProperty[i];
+                cssCustomValues.addPropertyIfNotExists(parentValue.name(),
+                                                       parentValue.value());
             }
         }
     }
 
     // Store the css-custom-property into 'style'.
-    for (size_t i = 0; i < cssCustomValues.size(); i++) {
-        auto value = cssCustomValues[i];
-        style->setCustomProperty(value);
+    {
+        auto values = cssCustomValues.values();
+        for (size_t i = 0; i < values.size(); i++) {
+            style->setCustomProperty(values[i].name(), values[i].value());
+        }
     }
 
     for (unsigned k = 0; k < cssValues.size(); k++) {
@@ -3027,10 +3023,11 @@ void StyleResolver::apply(Element* element,
     }
 }
 
-void StyleResolver::applyProperty(
-    Element* element, const CSSStyleValuePair& newCssValue,
-    GCVector<MutablePropertyValue>& cssCustomValues, ResourceURL* origin,
-    ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant)
+void StyleResolver::applyProperty(Element* element,
+                                  const CSSStyleValuePair& newCssValue,
+                                  MutablePropertyValueList& cssCustomValues,
+                                  ResourceURL* origin, ComputedStyle* style,
+                                  ComputedStyle* parentStyle, bool isImportant)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(origin != nullptr);
@@ -6794,27 +6791,17 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     // Gather all css custom properties
-    GCVector<MutablePropertyValue> cssCustomProperties;
+    MutablePropertyValueList cssCustomProperties;
     {
         auto iter = begin;
         while (iter != end) {
-            const auto& properties =
+            const auto& propertiesList =
                 iter->first->styleDeclaration()->cssCustomValues();
-            for (size_t i = 0; i < properties.size(); ++i) {
-                bool found = false;
-                size_t index = -1;
-                for (size_t k = 0; k < cssCustomProperties.size(); ++k) {
-                    if (cssCustomProperties[k].name() == properties[i].name()) {
-                        found = true;
-                        index = k;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    cssCustomProperties[index].setValue(properties[i].value());
-                } else {
-                    cssCustomProperties.push_back(properties[i]);
+            if (propertiesList) {
+                const auto& properties = propertiesList->values();
+                for (size_t i = 0; i < properties.size(); ++i) {
+                    cssCustomProperties.setProperty(properties[i].name(),
+                                                    properties[i].value());
                 }
             }
             iter++;
@@ -6836,7 +6823,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     CSSStyleValuePairVectorHolder cssValues;
     element->styleForPresentationAttribute(cssValues);
     // FIXME : clean up to remove this vector called by empty.
-    GCVector<MutablePropertyValue> empty;
+    MutablePropertyValueList empty;
     apply(element, cssValues.mutableData(), empty,
           element->document()->documentURI(), ret, parent, false);
 

@@ -2189,25 +2189,31 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     {
-        auto newCustomProperty = newStyle->customProperty();
-        auto oldCustomProperty = oldStyle->customProperty();
-
-        if (newCustomProperty.size() != oldCustomProperty.size()) {
+        if (newStyle->hasCustomProperty() != oldStyle->hasCustomProperty()) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-        } else {
-            bool changedCustomProperty = false;
-            for (auto newValue : newCustomProperty) {
-                for (auto oldValue : oldCustomProperty) {
-                    if (oldValue != newValue) {
-                        changedCustomProperty = true;
-                    }
-                }
-            }
+        } else if (newStyle->hasCustomProperty()) {
+            auto newCustomProperty = newStyle->customProperty().values();
+            auto oldCustomProperty = oldStyle->customProperty().values();
 
-            if (changedCustomProperty) {
+            if (newCustomProperty.size() != oldCustomProperty.size()) {
                 damage = (ComputedStyleDamage)(
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            } else {
+                bool changedCustomProperty = false;
+                for (auto newValue : newCustomProperty) {
+                    for (auto oldValue : oldCustomProperty) {
+                        if (oldValue != newValue) {
+                            changedCustomProperty = true;
+                        }
+                    }
+                }
+
+                if (changedCustomProperty) {
+                    damage = (ComputedStyleDamage)(
+                        ComputedStyleDamage::ComputedStyleDamagePainting |
+                        damage);
+                }
             }
         }
     }

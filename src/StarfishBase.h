@@ -710,6 +710,18 @@ public:
         return m_value;
     }
 
+    const T& operator*() const
+    {
+        STARFISH_ASSERT(hasValue());
+        return *m_value;
+    }
+
+    T& operator*()
+    {
+        STARFISH_ASSERT(hasValue());
+        return *m_value;
+    }
+
     bool operator==(const Nullable<T*>& other) const
     {
         if (hasValue() != other.hasValue()) {
