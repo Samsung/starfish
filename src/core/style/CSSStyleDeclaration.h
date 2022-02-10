@@ -29,23 +29,23 @@ class CSSRule;
 
 class MutablePropertyValue : public gc {
 public:
-    MutablePropertyValue(String* name, String* value)
+    MutablePropertyValue(AtomicString name, String* value)
         : m_name(name)
         , m_value(value)
     {
     }
 
-    String* name()
+    AtomicString name() const
     {
         return m_name;
     }
 
-    String* value()
+    String* value() const
     {
         return m_value;
     }
 
-    void setName(String* name)
+    void setName(AtomicString name)
     {
         m_name = name;
     }
@@ -57,16 +57,16 @@ public:
 
     bool operator==(MutablePropertyValue& v)
     {
-        return name()->equals(v.name()) && value()->equals(v.value());
+        return name() == v.name() && value()->equals(v.value());
     }
 
     bool operator!=(MutablePropertyValue& v)
     {
-        return !(name()->equals(v.name()) && value()->equals(v.value()));
+        return !operator==(v);
     }
 
 private:
-    String* m_name;
+    AtomicString m_name;
     String* m_value;
 };
 
@@ -161,7 +161,7 @@ public:
     void setOutline(const char* value, size_t len, bool isImportant);
     void setListStyle(const char* value, size_t len, bool isImportant);
     void setMask(const char* value, size_t len, bool isImportant);
-    void setCustomProperty(String* key, String* value);
+    void setCustomProperty(AtomicString key, String* value);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
     void set##name(const char* value, size_t len, bool isImportant);

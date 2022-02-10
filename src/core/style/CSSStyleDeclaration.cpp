@@ -1444,11 +1444,13 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 
 String* CSSStyleDeclaration::customProperty(String* key)
 {
+    AtomicString atomicKey =
+        AtomicString::createAtomicString(m_node->starfish(), key);
     String* val = String::emptyString;
 
     for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        MutablePropertyValue customProperty = m_cssCustomValues[i];
-        if (customProperty.name()->equals(key)) {
+        const MutablePropertyValue& customProperty = m_cssCustomValues[i];
+        if (customProperty.name() == atomicKey) {
             val = customProperty.value();
             break;
         }
@@ -1457,11 +1459,11 @@ String* CSSStyleDeclaration::customProperty(String* key)
     return val;
 }
 
-void CSSStyleDeclaration::setCustomProperty(String* key, String* value)
+void CSSStyleDeclaration::setCustomProperty(AtomicString key, String* value)
 {
     for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        MutablePropertyValue property = m_cssCustomValues[i];
-        if (property.name()->equals(key)) {
+        MutablePropertyValue& property = m_cssCustomValues[i];
+        if (property.name() == key) {
             property.setValue(value);
             return;
         }
@@ -1472,9 +1474,11 @@ void CSSStyleDeclaration::setCustomProperty(String* key, String* value)
 
 void CSSStyleDeclaration::removeCustomProperty(String* key)
 {
+    AtomicString atomicKey =
+        AtomicString::createAtomicString(m_node->starfish(), key);
     for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
-        MutablePropertyValue property = m_cssCustomValues[i];
-        if (property.name()->equals(key)) {
+        const MutablePropertyValue& property = m_cssCustomValues[i];
+        if (property.name() == atomicKey) {
             m_cssCustomValues.erase(m_cssCustomValues.begin() + i);
             return;
         }
@@ -1860,7 +1864,9 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
             isImportant = true;
         } else {
             if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
-                setCustomProperty(name, value);
+                setCustomProperty(
+                    AtomicString::createAtomicString(m_node->starfish(), name),
+                    value);
             }
             return;
         }

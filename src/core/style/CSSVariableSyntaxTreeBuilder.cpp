@@ -291,7 +291,7 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                         for (size_t k = 0; k < cssCustomValues.size(); k++) {
                             MutablePropertyValue customProperty =
                                 cssCustomValues[k];
-                            if (customProperty.name()->equals(key)) {
+                            if (customProperty.name().string()->equals(key)) {
                                 findValue.appendString(customProperty.value());
                                 isFind = true;
                             }

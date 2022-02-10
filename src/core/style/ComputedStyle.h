@@ -3968,11 +3968,11 @@ public:
     }
 
     // Store Custom properties.
-    void setCustomProperty(MutablePropertyValue v)
+    void setCustomProperty(const MutablePropertyValue& v)
     {
         auto& cssCustomValues = m_inheritedStyles.m_cssCustomValues;
         for (size_t i = 0; i < cssCustomValues.size(); i++) {
-            if (cssCustomValues[i].name()->equals(v.name())) {
+            if (cssCustomValues[i].name() == v.name()) {
                 cssCustomValues[i].setValue(v.value());
                 return;
             }

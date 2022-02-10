@@ -2985,11 +2985,11 @@ void StyleResolver::apply(Element* element,
         auto parentCustomProperty = parentStyle->customProperty();
 
         for (size_t i = 0; i < parentCustomProperty.size(); i++) {
-            auto parentValue = parentCustomProperty[i];
+            const auto& parentValue = parentCustomProperty[i];
 
             bool skip = false;
-            for (auto value : cssCustomValues) {
-                if (value.name()->equals(parentValue.name())) {
+            for (const auto& value : cssCustomValues) {
+                if (value.name() == parentValue.name()) {
                     skip = true;
                     break;
                 }
@@ -6798,14 +6798,13 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     {
         auto iter = begin;
         while (iter != end) {
-            auto properties =
+            const auto& properties =
                 iter->first->styleDeclaration()->cssCustomValues();
             for (size_t i = 0; i < properties.size(); ++i) {
                 bool found = false;
                 size_t index = -1;
                 for (size_t k = 0; k < cssCustomProperties.size(); ++k) {
-                    if (cssCustomProperties[k].name()->equals(
-                            properties[i].name())) {
+                    if (cssCustomProperties[k].name() == properties[i].name()) {
                         found = true;
                         index = k;
                         break;
