@@ -224,7 +224,13 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
         Context* c = &contexts.back();
         VariableBlock* parent = (VariableBlock*)c->block;
         if (token.m_type == VariableTokenizer::TokenType::VARIABLE) {
-            parent->variables.push_back(new Variable(token.m_value));
+            if (m_starfish) {
+                auto trimmedValue = token.m_value.trim();
+                parent->variables.push_back(new Variable(
+                    AtomicString::createAtomicString(m_starfish.value(),
+                                                     trimmedValue.data(),
+                                                     trimmedValue.size())));
+            }
             c->index++;
         } else if (token.m_type ==
                    VariableTokenizer::TokenType::VARIABLEBLOCKOPEN) {
@@ -253,7 +259,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
 }
 
 CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
-    Element* element, const MutablePropertyValueList& cssCustomValues)
+    Element* element, Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
     struct Context {
         Context(Block* b, size_t i)
@@ -286,36 +292,42 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                 c->index++;
                 if (block->isVariable()) {
                     Variable* variable = (Variable*)block;
-                    String* key =
-                        String::fromUTF8(variable->m_value.trim().data(),
-                                         variable->m_value.trim().size());
                     if (isFirst) {
                         auto currentElement = element;
-                        auto currentCustomValues = cssCustomValues;
+                        Nullable<const MutablePropertyValueList*>
+                            currentCustomValues = cssCustomValues;
                         while (currentElement && !found) {
-                            for (size_t k = 0;
-                                 k < currentCustomValues.values().size(); k++) {
-                                MutablePropertyValue customProperty =
-                                    currentCustomValues.values()[k];
-                                if (customProperty.name().string()->equals(
-                                        key)) {
-                                    findValue.appendString(
-                                        customProperty.value());
-                                    found = true;
+                            if (currentCustomValues) {
+                                for (size_t k = 0;
+                                     k < currentCustomValues->values().size();
+                                     k++) {
+                                    MutablePropertyValue customProperty =
+                                        currentCustomValues->values()[k];
+                                    if (customProperty.name() ==
+                                        variable->m_value) {
+                                        findValue.appendString(
+                                            customProperty.value());
+                                        found = true;
+                                    }
                                 }
                             }
 
                             currentElement = currentElement->parentElement();
                             if (currentElement) {
-                                currentCustomValues =
+                                auto cp =
                                     currentElement->style()->customProperty();
+                                if (cp) {
+                                    currentCustomValues = cp.value();
+                                } else {
+                                    currentCustomValues = nullptr;
+                                }
                             }
                         }
                     } else {
                         if (findValue.length() > 0) {
                             findValue.appendString(" ,");
                         }
-                        findValue.appendString(key);
+                        findValue.appendString(variable->m_value.string());
                     }
                 } else if (block->isRawValue()) {
                 } else if (block->isVariableBlock()) {
@@ -376,7 +388,9 @@ void CSSVariableSyntaxTreeBuilder::dump()
                 if (block->isVariable()) {
                     Variable* variable = (Variable*)block;
                     printf("[%p][Variable] [name : %s]\n", variable,
-                           variable->m_value.c_str());
+                           variable->m_value.string()
+                               ->toUTF8NonGCString()
+                               .c_str());
                 } else if (block->isRawValue()) {
                 } else if (block->isVariableBlock()) {
                     VariableBlock* variableBlock = (VariableBlock*)block;

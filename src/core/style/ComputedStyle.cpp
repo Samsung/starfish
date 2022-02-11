@@ -146,8 +146,6 @@ void* ComputedStyle::operator new(size_t size)
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(ComputedStyle, m_cssCustomValues));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
         typeInited = true;
     }
@@ -2188,30 +2186,29 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     }
 
     {
-        if (newStyle->hasCustomProperty() != oldStyle->hasCustomProperty()) {
+        auto oldCustomProperty = oldStyle->customProperty();
+        auto newCustomProperty = newStyle->customProperty();
+        if (oldCustomProperty.hasValue() != newCustomProperty.hasValue()) {
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-        } else if (newStyle->hasCustomProperty()) {
-            auto newCustomProperty = newStyle->customProperty().values();
-            auto oldCustomProperty = oldStyle->customProperty().values();
-
-            if (newCustomProperty.size() != oldCustomProperty.size()) {
+                ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+        } else if (newCustomProperty) {
+            const auto& oldCustomPropertyValues =
+                oldStyle->customProperty()->values();
+            const auto& newCustomPropertyValues =
+                newStyle->customProperty()->values();
+            if (oldCustomPropertyValues.size() !=
+                newCustomPropertyValues.size()) {
                 damage = (ComputedStyleDamage)(
-                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+                    ComputedStyleDamage::ComputedStyleDamageInherited | damage);
             } else {
-                bool changedCustomProperty = false;
-                for (auto newValue : newCustomProperty) {
-                    for (auto oldValue : oldCustomProperty) {
-                        if (oldValue != newValue) {
-                            changedCustomProperty = true;
-                        }
+                for (size_t i = 0; i < newCustomPropertyValues.size(); i++) {
+                    if (newCustomPropertyValues[i] !=
+                        oldCustomPropertyValues[i]) {
+                        damage = (ComputedStyleDamage)(
+                            ComputedStyleDamage::ComputedStyleDamageInherited |
+                            damage);
+                        break;
                     }
-                }
-
-                if (changedCustomProperty) {
-                    damage = (ComputedStyleDamage)(
-                        ComputedStyleDamage::ComputedStyleDamagePainting |
-                        damage);
                 }
             }
         }

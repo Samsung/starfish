@@ -143,6 +143,7 @@ public:
         LineClamp,
         StopColor,
         StopOpacity,
+        CustomProperty,
 
         // Grid
         GridTemplateColumns,
@@ -197,6 +198,7 @@ public:
         FilterFunctions* m_filter;
         AppearanceValue m_appearance;
         StylePaintData* m_stopColor; // svg
+        MutablePropertyValueList* m_mutablePropertyValueList;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -392,6 +394,11 @@ public:
 
         RareComputedStyleValue(StylePaintData* v)
             : m_stopColor(v)
+        {
+        }
+
+        RareComputedStyleValue(MutablePropertyValueList* v)
+            : m_mutablePropertyValueList(v)
         {
         }
     };
@@ -599,6 +606,8 @@ public:
                CounterIncrement);
     GETTER_PTR(ValueList, textDecorationLine, textDecorationLine,
                TextDecorationLine);
+    GETTER_PTR(MutablePropertyValueList, mutablePropertyValueList,
+               customProperty, CustomProperty);
 
     void setCounterReset(CounterBaseList* v)
     {
@@ -655,6 +664,16 @@ public:
         clearFilter();
         if (v) {
             m_styles.emplace_back(KeyKind::Filter, v);
+        }
+    }
+
+    void setCustomProperty(MutablePropertyValueList* v)
+    {
+        FIND_VALUE(CustomProperty);
+        if (it == m_styles.end()) {
+            m_styles.emplace_back(KeyKind::CustomProperty, v);
+        } else {
+            it->m_value = v;
         }
     }
 
@@ -3963,24 +3982,12 @@ public:
 
     bool hasCustomProperty()
     {
-        return m_cssCustomValues.hasValue();
-    }
-    // Inherited Custom properties.
-    const MutablePropertyValueList& customProperty()
-    {
-        if (!m_cssCustomValues) {
-            m_cssCustomValues = new MutablePropertyValueList();
-        }
-        return *m_cssCustomValues;
+        return !!customProperty();
     }
 
-    // Store Custom properties.
-    void setCustomProperty(AtomicString key, String* value)
+    Nullable<MutablePropertyValueList*> customProperty()
     {
-        if (!m_cssCustomValues) {
-            m_cssCustomValues = new MutablePropertyValueList();
-        }
-        m_cssCustomValues->setProperty(key, value);
+        return m_rareComputedStyleData.customProperty();
     }
 
     static TimingFunction* knownTimingFunction(TimingFunctionValue v);
@@ -4098,7 +4105,6 @@ protected:
     Font* m_font;
 
     RareComputedStyleData m_rareComputedStyleData;
-    Nullable<MutablePropertyValueList*> m_cssCustomValues;
 };
 
 struct KeyframeAnimationOptions;

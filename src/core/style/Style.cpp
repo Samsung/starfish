@@ -452,7 +452,10 @@ String* CSSStyleValuePair::keyName() const
 
 static bool hasValidVarFunction(const CSSTokenValue& token)
 {
-    CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+    // we can give pass nullptr into CSSVariableSyntaxTreeBuilder
+    // because, we don't need variables of this builder
+    // we just want to know that the syntax is correct
+    CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(nullptr);
     variablesSyntaxBuilder.build(token);
     if (variablesSyntaxBuilder.isValid()) {
         return true;
@@ -2478,8 +2481,9 @@ void* StyleResolveContext::allocateComputedStyle()
 
 void StyleResolver::applyAllProperty(
     Element* element, CSSStyleValuePair::ValueKind valueKind,
-    const MutablePropertyValueList& cssCustomValues, ResourceURL* origin,
-    ComputedStyle*& style, ComputedStyle* parentStyle, bool isImportant)
+    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
+    bool isImportant)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(origin != nullptr);
@@ -2911,7 +2915,7 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
     CSSStyleValuePair::KeyKind keyKind,
-    const MutablePropertyValueList& cssCustomValues, bool isImportant)
+    Nullable<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
 {
     std::string cssValueString =
         cssValuePair.varFunctionValue()->toUTF8NonGCString();
@@ -2931,7 +2935,8 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
 
     std::string newCssValue;
     for (size_t i = 0; i < cssValueTokens.size(); ++i) {
-        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(
+            element->starfish());
         variablesSyntaxBuilder.build(cssValueTokens[i]);
         if (variablesSyntaxBuilder.isValid()) {
             cssValueTokens[i] =
@@ -2970,11 +2975,11 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     return declaration;
 }
 
-void StyleResolver::apply(Element* element,
-                          const GCAtomicVector<CSSStyleValuePair>& cssValues,
-                          const MutablePropertyValueList& cssCustomValues,
-                          ResourceURL* origin, ComputedStyle* style,
-                          ComputedStyle* parentStyle, bool isImportant)
+void StyleResolver::apply(
+    Element* element, const GCAtomicVector<CSSStyleValuePair>& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
+    bool isImportant)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(origin != nullptr);
@@ -3003,8 +3008,9 @@ void StyleResolver::apply(Element* element,
 
 void StyleResolver::applyProperty(
     Element* element, const CSSStyleValuePair& newCssValue,
-    const MutablePropertyValueList& cssCustomValues, ResourceURL* origin,
-    ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant)
+    Nullable<const MutablePropertyValueList*> cssCustomValues,
+    ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
+    bool isImportant)
 {
     STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(origin != nullptr);
@@ -6775,12 +6781,22 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
                 iter->first->styleDeclaration()->cssCustomValues();
             if (propertiesList) {
                 const auto& properties = propertiesList->values();
+                auto list =
+                    ret->rareComputedStyleData()->ensureCustomProperty();
                 for (size_t i = 0; i < properties.size(); ++i) {
-                    ret->setCustomProperty(properties[i].name(),
-                                           properties[i].value());
+                    list->setProperty(properties[i].name(),
+                                      properties[i].value());
                 }
             }
             iter++;
+        }
+    }
+
+    Nullable<const MutablePropertyValueList*> cssCustomValues;
+    {
+        auto list = ret->customProperty();
+        if (list) {
+            cssCustomValues = list.value();
         }
     }
 
@@ -6790,7 +6806,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = begin;
         while (iter != authorSheetBegin) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  ret->customProperty(), iter->second, ret, parent, false);
+                  cssCustomValues, iter->second, ret, parent, false);
             iter++;
         }
     }
@@ -6798,9 +6814,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     // Apply presentation attribute's style
     CSSStyleValuePairVectorHolder cssValues;
     element->styleForPresentationAttribute(cssValues);
-    // FIXME : clean up to remove this vector called by empty.
-    MutablePropertyValueList empty;
-    apply(element, cssValues.mutableData(), empty,
+    apply(element, cssValues.mutableData(), nullptr,
           element->document()->documentURI(), ret, parent, false);
 
     // Apply non-important author-rules
@@ -6808,7 +6822,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  ret->customProperty(), iter->second, ret, parent, false);
+                  cssCustomValues, iter->second, ret, parent, false);
             iter++;
         }
     }
@@ -6817,8 +6831,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              ret->customProperty(), element->document()->baseURL(), ret,
-              parent, false);
+              cssCustomValues, element->document()->baseURL(), ret, parent,
+              false);
     }
 
     // Apply important author-rules
@@ -6826,7 +6840,7 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         auto iter = authorSheetBegin;
         while (iter != end) {
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  ret->customProperty(), iter->second, ret, parent, true);
+                  cssCustomValues, iter->second, ret, parent, true);
             iter++;
         }
     }
@@ -6835,8 +6849,8 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     if (pseudoElementType == PseudoElementNone &&
         element->inlineStyleWithoutCreation()) {
         apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              ret->customProperty(), element->document()->baseURL(), ret,
-              parent, true);
+              cssCustomValues, element->document()->baseURL(), ret, parent,
+              true);
     }
 }
 
