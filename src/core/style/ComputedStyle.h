@@ -3963,22 +3963,24 @@ public:
 
     bool hasCustomProperty()
     {
-        return m_inheritedStyles.m_cssCustomValues.hasValue();
+        return m_cssCustomValues.hasValue();
     }
     // Inherited Custom properties.
     const MutablePropertyValueList& customProperty()
     {
-        return *m_inheritedStyles.m_cssCustomValues;
+        if (!m_cssCustomValues) {
+            m_cssCustomValues = new MutablePropertyValueList();
+        }
+        return *m_cssCustomValues;
     }
 
     // Store Custom properties.
     void setCustomProperty(AtomicString key, String* value)
     {
-        if (!m_inheritedStyles.m_cssCustomValues) {
-            m_inheritedStyles.m_cssCustomValues =
-                new MutablePropertyValueList();
+        if (!m_cssCustomValues) {
+            m_cssCustomValues = new MutablePropertyValueList();
         }
-        m_inheritedStyles.m_cssCustomValues->setProperty(key, value);
+        m_cssCustomValues->setProperty(key, value);
     }
 
     static TimingFunction* knownTimingFunction(TimingFunctionValue v);
@@ -4060,7 +4062,6 @@ protected:
         Length m_fontSize;
         Length m_lineHeight;
         InheritedStylesRareData* m_rareData;
-        Nullable<MutablePropertyValueList*> m_cssCustomValues;
     } m_inheritedStyles;
 
     bool m_seenViewPortUnitInStyle : 1;
@@ -4097,6 +4098,7 @@ protected:
     Font* m_font;
 
     RareComputedStyleData m_rareComputedStyleData;
+    Nullable<MutablePropertyValueList*> m_cssCustomValues;
 };
 
 struct KeyframeAnimationOptions;

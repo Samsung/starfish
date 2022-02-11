@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/dom/Element.h"
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #include "core/style/CSSStyleDeclaration.h"
 
@@ -252,7 +253,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
 }
 
 CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
-    MutablePropertyValueList& cssCustomValues)
+    Element* element, const MutablePropertyValueList& cssCustomValues)
 {
     struct Context {
         Context(Block* b, size_t i)
@@ -271,15 +272,16 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
         VariableBlock* parent = (VariableBlock*)container->m_root;
         GCVector<Context> contexts;
         contexts.push_back(Context(parent, 0));
-        bool isFind = false;
+        bool found = false;
         StringBuilder findValue;
 
-        while (contexts.size()) {
+        while (contexts.size() && !found) {
             Context* c = &contexts.back();
             VariableBlock* parent = (VariableBlock*)c->block;
 
             bool isFirst = true;
-            for (size_t j = c->index; j < parent->variables.size(); j++) {
+            for (size_t j = c->index; j < parent->variables.size() && !found;
+                 j++) {
                 Block* block = parent->variables[j];
                 c->index++;
                 if (block->isVariable()) {
@@ -288,18 +290,26 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                         String::fromUTF8(variable->m_value.trim().data(),
                                          variable->m_value.trim().size());
                     if (isFirst) {
-                        for (size_t k = 0; k < cssCustomValues.values().size();
-                             k++) {
-                            MutablePropertyValue customProperty =
-                                cssCustomValues.values()[k];
-                            if (customProperty.name().string()->equals(key)) {
-                                findValue.appendString(customProperty.value());
-                                isFind = true;
+                        auto currentElement = element;
+                        auto currentCustomValues = cssCustomValues;
+                        while (currentElement && !found) {
+                            for (size_t k = 0;
+                                 k < currentCustomValues.values().size(); k++) {
+                                MutablePropertyValue customProperty =
+                                    currentCustomValues.values()[k];
+                                if (customProperty.name().string()->equals(
+                                        key)) {
+                                    findValue.appendString(
+                                        customProperty.value());
+                                    found = true;
+                                }
                             }
-                        }
 
-                        if (isFind) {
-                            break;
+                            currentElement = currentElement->parentElement();
+                            if (currentElement) {
+                                currentCustomValues =
+                                    currentElement->style()->customProperty();
+                            }
                         }
                     } else {
                         if (findValue.length() > 0) {
@@ -307,17 +317,12 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                         }
                         findValue.appendString(key);
                     }
-
                 } else if (block->isRawValue()) {
                 } else if (block->isVariableBlock()) {
                     VariableBlock* variableBlock = (VariableBlock*)block;
                     contexts.push_back(Context(variableBlock, 0));
                 }
                 isFirst = false;
-            }
-
-            if (isFind) {
-                break;
             }
 
             if (c->index == parent->variables.size() &&

@@ -115,7 +115,8 @@ public:
 
     void buildTree(VariableContainer*, CSSTokenValue&);
 
-    CSSTokenValue generateStyle(MutablePropertyValueList&);
+    CSSTokenValue generateStyle(Element* element,
+                                const MutablePropertyValueList&);
 
     void dump();
 

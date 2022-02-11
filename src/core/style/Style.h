@@ -3225,23 +3225,23 @@ public:
 
 protected:
     CSSStyleDeclaration* resolveVarValue(
-        const CSSStyleValuePair& cssValuePair,
+        Element* element, const CSSStyleValuePair& cssValuePair,
         CSSStyleValuePair::KeyKind keyKind,
-        MutablePropertyValueList& cssCustomValues, bool isImportant);
+        const MutablePropertyValueList& cssCustomValues, bool isImportant);
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
-               MutablePropertyValueList& cssCustomValues, ResourceURL* origin,
-               ComputedStyle* style, ComputedStyle* parentStyle,
-               bool isImportant = false);
+               const MutablePropertyValueList& cssCustomValues,
+               ResourceURL* origin, ComputedStyle* style,
+               ComputedStyle* parentStyle, bool isImportant = false);
 
     void applyProperty(Element* element, const CSSStyleValuePair& cssValues,
-                       MutablePropertyValueList& cssCustomValues,
+                       const MutablePropertyValueList& cssCustomValues,
                        ResourceURL* origin, ComputedStyle* style,
                        ComputedStyle* parentStyle, bool isImportant = false);
 
     void applyAllProperty(Element* element,
                           CSSStyleValuePair::ValueKind valueKind,
-                          MutablePropertyValueList& cssCustomValues,
+                          const MutablePropertyValueList& cssCustomValues,
                           ResourceURL* origin, ComputedStyle*& style,
                           ComputedStyle* parentStyle, bool isImportant = false);
 

@@ -142,13 +142,12 @@ void* ComputedStyle::operator new(size_t size)
             GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_fontFamilyDatas));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle,
                                               m_inheritedStyles.m_lineHeight));
-        GC_set_bit(
-            obj_bitmap,
-            GC_WORD_OFFSET(ComputedStyle, m_inheritedStyles.m_cssCustomValues));
         GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ComputedStyle, m_font));
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle, m_rareComputedStyleData.m_styles));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle, m_cssCustomValues));
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ComputedStyle));
         typeInited = true;
     }
