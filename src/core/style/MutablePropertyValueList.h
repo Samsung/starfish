@@ -31,6 +31,13 @@ public:
     {
     }
 
+    MutablePropertyValueList(MutablePropertyValueList&& src)
+        : m_values(src.m_values)
+        , m_bloomFilter(src.m_bloomFilter)
+    {
+        src.m_bloomFilter.clear();
+    }
+
     MutablePropertyValueList(const MutablePropertyValueList& src)
     {
         operator=(src);

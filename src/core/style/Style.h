@@ -3227,23 +3227,25 @@ protected:
     CSSStyleDeclaration* resolveVarValue(
         Element* element, const CSSStyleValuePair& cssValuePair,
         CSSStyleValuePair::KeyKind keyKind,
-        const MutablePropertyValueList& cssCustomValues, bool isImportant);
+        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        bool isImportant);
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
-               const MutablePropertyValueList& cssCustomValues,
+               Nullable<const MutablePropertyValueList*> cssCustomValues,
                ResourceURL* origin, ComputedStyle* style,
                ComputedStyle* parentStyle, bool isImportant = false);
 
-    void applyProperty(Element* element, const CSSStyleValuePair& cssValues,
-                       const MutablePropertyValueList& cssCustomValues,
-                       ResourceURL* origin, ComputedStyle* style,
-                       ComputedStyle* parentStyle, bool isImportant = false);
+    void applyProperty(
+        Element* element, const CSSStyleValuePair& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        ResourceURL* origin, ComputedStyle* style, ComputedStyle* parentStyle,
+        bool isImportant = false);
 
-    void applyAllProperty(Element* element,
-                          CSSStyleValuePair::ValueKind valueKind,
-                          const MutablePropertyValueList& cssCustomValues,
-                          ResourceURL* origin, ComputedStyle*& style,
-                          ComputedStyle* parentStyle, bool isImportant = false);
+    void applyAllProperty(
+        Element* element, CSSStyleValuePair::ValueKind valueKind,
+        Nullable<const MutablePropertyValueList*> cssCustomValues,
+        ResourceURL* origin, ComputedStyle*& style, ComputedStyle* parentStyle,
+        bool isImportant = false);
 
     Match matchForRelation(
         Element* element, AtomicString elementName, AtomicString elementId,

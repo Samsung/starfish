@@ -68,11 +68,11 @@ class CSSVariableSyntaxTreeBuilder : public gc {
         {
             return false;
         }
-        Variable(CSSTokenValue value)
+        Variable(AtomicString value)
             : m_value(value)
         {
         }
-        CSSTokenValue m_value;
+        AtomicString m_value;
     };
 
     class RawValue : public Block {
@@ -105,8 +105,9 @@ class CSSVariableSyntaxTreeBuilder : public gc {
     };
 
 public:
-    CSSVariableSyntaxTreeBuilder()
+    CSSVariableSyntaxTreeBuilder(Nullable<Starfish*> sf)
         : m_valid(true)
+        , m_starfish(sf)
     {
         m_variableContainers.clear();
     }
@@ -116,7 +117,7 @@ public:
     void buildTree(VariableContainer*, CSSTokenValue&);
 
     CSSTokenValue generateStyle(Element* element,
-                                const MutablePropertyValueList&);
+                                Nullable<const MutablePropertyValueList*>);
 
     void dump();
 
@@ -127,6 +128,8 @@ public:
 
 private:
     bool m_valid;
+    Nullable<Starfish*> m_starfish; // if this value is null, there is no actual
+                                    // Variable will build.
     GCVector<VariableContainer> m_variableContainers;
 };
 } // namespace Starfish

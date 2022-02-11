@@ -50,12 +50,12 @@ public:
         m_value = value;
     }
 
-    bool operator==(const MutablePropertyValue& v)
+    bool operator==(const MutablePropertyValue& v) const
     {
         return name() == v.name() && value()->equals(v.value());
     }
 
-    bool operator!=(const MutablePropertyValue& v)
+    bool operator!=(const MutablePropertyValue& v) const
     {
         return !operator==(v);
     }
