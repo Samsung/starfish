@@ -225,7 +225,7 @@ http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.gradient.radia
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.gradient.radial.transform.1.html
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.gradient.radial.transform.2.html
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.gradient.radial.transform.3.html
-http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.animated.gif.html
+# http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.animated.gif.html // starfish/issues/3485
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.basic.canvas.html
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.basic.image.html
 http://web-platform.test:8000/2dcontext/fill-and-stroke-styles/2d.pattern.basic.nocontext.html
@@ -682,7 +682,7 @@ http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImag
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.9arg.sourcesize.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.alpha.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.apng.html
-http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.gif.html
+# http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.gif.html // starfish/issues/3485
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.animated.poster.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.broken.html
 http://web-platform.test:8000/2dcontext/drawing-images-to-the-canvas/2d.drawImage.canvas.html

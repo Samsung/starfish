@@ -476,3 +476,4 @@ test/cairo/internal-test/compatibility/quirks-empty-body.html
 test/cairo/internal-test/window/execution-order.html
 test/cairo/internal-test/url/URLsearchParams.html
 test/cairo/internal-test/blob/blob_arraybuffer_text_test.html
+test/cairo/internal-test/crash/gif-playback-crash.html
