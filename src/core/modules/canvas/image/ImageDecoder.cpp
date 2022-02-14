@@ -901,9 +901,6 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
     result.m_stride = result.m_width * 4;
     result.m_buffer = targetBuffer;
 
-    colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
-                                        : gifFile->SColorMap);
-
     do {
         DGifGetRecordType(gifFile, &recordType);
         switch (recordType) {
@@ -912,6 +909,9 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
             if (errorCode == GIF_ERROR) {
                 break;
             }
+
+            colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
+                                                : gifFile->SColorMap);
 
             row = gifFile->Image.Top;
             col = gifFile->Image.Left;
@@ -1032,6 +1032,7 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
             m_gifFile = gifFile;
         } break;
         default:
+            STARFISH_LOG_WARN("Unhandled record type!");
             break;
         }
         if (isNewFrame) {
@@ -1041,6 +1042,10 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
 
     if (colorMap == nullptr) {
         releaseGIFResource(gifFile, gifBuffer, result.m_height);
+        // These handles are copied from members. After releasing these,
+        // original members must be initialized to null.
+        m_gifFile = nullptr;
+        m_gifBuffer = nullptr;
         return result;
     }
     result.m_isSuccessful = true;
