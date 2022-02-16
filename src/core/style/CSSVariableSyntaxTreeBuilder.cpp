@@ -24,8 +24,35 @@
 
 namespace Starfish {
 
+static std::pair<const char*, size_t> trim(const char* src, size_t length)
+{
+    if (length) {
+        size_t first = 0;
+        size_t last = length - 1;
+
+        for (size_t i = 0; i < length; i++) {
+            if (!String::isSpaceOrNewline(src[i])) {
+                first = i;
+                break;
+            }
+        }
+
+        do {
+            if (!String::isSpaceOrNewline(src[last])) {
+                break;
+            }
+        } while (last--);
+
+        src = src + first;
+        length = last - first + 1;
+    }
+
+    return std::make_pair(src, length);
+}
+
 class VariableTokenizer {
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
     enum TokenType {
         VARIABLE,
         VARIABLEBLOCKOPEN,
@@ -37,48 +64,62 @@ public:
     };
 
     struct VariableToken {
-        VariableToken(TokenType type, CSSTokenValue value)
+        VariableToken(TokenType type, const char* data, size_t length)
             : m_type(type)
-            , m_value(value)
+            , m_data(data)
+            , m_length(length)
         {
         }
+
         TokenType m_type;
-        CSSTokenValue m_value;
+        const char* m_data;
+        size_t m_length;
     };
 
-    VariableTokenizer(CSSTokenValue token)
+    VariableTokenizer(const char* data, size_t length)
         : m_cursorStart(0)
         , m_cursorEnd(0)
-        , m_data(token)
+        , m_data(data)
+        , m_length(length)
     {
     }
 
     VariableToken next()
     {
-        VariableToken token(END, "");
+        VariableToken token(END, nullptr, 0);
         int parenthesisCount = 0;
         bool hadParenthesis = false;
-        while (m_cursorEnd <= m_data.size()) {
-            CSSTokenValue sub = m_data.substring(
-                m_cursorStart, m_cursorEnd - m_cursorStart + 1);
-            if (sub.equals("var(")) {
+        while (m_cursorEnd < m_length) {
+            const char* subData = m_data + m_cursorStart;
+            size_t subLength = m_cursorEnd - m_cursorStart + 1;
+
+            if (subLength == 4 && subData[0] == 'v' && subData[1] == 'a' &&
+                subData[2] == 'r' && subData[3] == '(') {
                 m_cursorStart += 4;
                 m_cursorEnd++;
                 token.m_type = VARIABLEBLOCKOPEN;
-                token.m_value = "var(";
+                token.m_data = "var(";
+                token.m_length = 4;
                 break;
-            } else if (sub.equals(")") && parenthesisCount == 0) {
+            } else if (subLength == 1 && subData[0] == ')' &&
+                       parenthesisCount == 0) {
                 token.m_type = VARIABLEBLOCKCLOSE;
-                token.m_value = ")";
+                token.m_data = ")";
+                token.m_length = 1;
                 m_cursorStart = m_cursorEnd + 1;
                 m_cursorEnd += 1;
                 break;
-            } else if (sub.trim().equals(",") && parenthesisCount == 0) {
-                token.m_type = COMMA;
-                token.m_value = ", ";
-                m_cursorStart = m_cursorEnd + 1;
-                m_cursorEnd += 1;
-                break;
+            } else if (subLength >= 1 && subData[0] == ',') {
+                auto r = trim(subData, subLength);
+                if (r.second == 1 && r.first[0] == ',' &&
+                    parenthesisCount == 0) {
+                    token.m_type = COMMA;
+                    token.m_data = ", ";
+                    token.m_length = 2;
+                    m_cursorStart = m_cursorEnd + 1;
+                    m_cursorEnd += 1;
+                    break;
+                }
             }
 
             if (m_data[m_cursorEnd] == '(') {
@@ -89,31 +130,27 @@ public:
             }
 
             if (m_data[m_cursorEnd] == ',' && parenthesisCount == 0) {
-                CSSTokenValue var = m_data.substring(
-                    m_cursorStart, m_cursorEnd - m_cursorStart);
                 token.m_type = VARIABLE;
-                token.m_value = var;
+                token.m_data = m_data + m_cursorStart;
+                token.m_length = m_cursorEnd - m_cursorStart;
                 m_cursorStart = m_cursorEnd + 1;
                 m_cursorEnd += 2;
                 break;
             }
 
             if (m_data[m_cursorEnd] == ')' && parenthesisCount == 0) {
-                CSSTokenValue var;
                 if (hadParenthesis) {
-                    var = m_data.substring(m_cursorStart,
-                                           m_cursorEnd - m_cursorStart + 1);
+                    token.m_data = m_data + m_cursorStart;
+                    token.m_length = m_cursorEnd - m_cursorStart + 1;
                     m_cursorStart = m_cursorEnd + 1;
-                    m_cursorEnd += 2;
+                    m_cursorEnd++;
                 } else {
-                    var = m_data.substring(m_cursorStart,
-                                           m_cursorEnd - m_cursorStart);
+                    token.m_data = m_data + m_cursorStart;
+                    token.m_length = m_cursorEnd - m_cursorStart;
                     m_cursorStart = m_cursorEnd;
                 }
 
                 token.m_type = VARIABLE;
-                token.m_value = var;
-
                 break;
             }
 
@@ -125,12 +162,14 @@ public:
 
     size_t m_cursorStart;
     size_t m_cursorEnd;
-    CSSTokenValue m_data;
+    const char* m_data;
+    size_t m_length;
 };
 
-void CSSVariableSyntaxTreeBuilder::build(const CSSTokenValue& src)
+void CSSVariableSyntaxTreeBuilder::build(const char* src, size_t length)
 {
-    bool pos = src.startsWith("var(");
+    bool pos = length >= 4 && src[0] == 'v' && src[1] == 'a' && src[2] == 'r' &&
+               src[3] == '(';
     if (!pos) {
         m_valid = false;
         return;
@@ -139,8 +178,8 @@ void CSSVariableSyntaxTreeBuilder::build(const CSSTokenValue& src)
     size_t cursor = 0;
     int parenthesisCount = 0;
     size_t start = 0, end = 0;
-    while (cursor < src.size()) {
-        if (cursor + 4 < src.size() && src[cursor] == 'v' &&
+    while (cursor < length) {
+        if (cursor + 4 < length && src[cursor] == 'v' &&
             src[cursor + 1] == 'a' && src[cursor + 2] == 'r' &&
             src[cursor + 3] == '(') {
             if (!parenthesisCount) {
@@ -186,13 +225,12 @@ void CSSVariableSyntaxTreeBuilder::build(const CSSTokenValue& src)
         VariableContainer* container = &m_variableContainers[i];
         size_t start = container->m_start;
         size_t end = container->m_end;
-        CSSTokenValue range = src.substring(start, end - start + 1);
-        buildTree(container, range);
+        buildTree(container, &src[start], end - start + 1);
     }
 }
 
 void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
-                                             CSSTokenValue& str)
+                                             const char* str, size_t length)
 {
     // Syntax of 'var()' = var( <custom-property-name> [, <declaration-value> ]?
     // )
@@ -210,7 +248,7 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
     GCVector<Context> contexts;
 
     container->m_root = new VariableBlock();
-    VariableTokenizer tokenizer(str);
+    VariableTokenizer tokenizer(str, length);
     VariableTokenizer::VariableToken token = tokenizer.next();
 
     if (token.m_type != VariableTokenizer::TokenType::VARIABLEBLOCKOPEN) {
@@ -225,11 +263,11 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
         VariableBlock* parent = (VariableBlock*)c->block;
         if (token.m_type == VariableTokenizer::TokenType::VARIABLE) {
             if (m_starfish) {
-                auto trimmedValue = token.m_value.trim();
+                auto trimmedValue = trim(token.m_data, token.m_length);
                 parent->variables.push_back(new Variable(
                     AtomicString::createAtomicString(m_starfish.value(),
-                                                     trimmedValue.data(),
-                                                     trimmedValue.size())));
+                                                     trimmedValue.first,
+                                                     trimmedValue.second)));
             }
             c->index++;
         } else if (token.m_type ==
@@ -258,7 +296,17 @@ void CSSVariableSyntaxTreeBuilder::buildTree(VariableContainer* container,
     }
 }
 
-CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
+static void appendString(CSSVariableSyntaxTreeBuilder::StyleString& str,
+                         String* src)
+{
+    auto n = src->toNullableUTF8String();
+    for (size_t i = 0; i < n.m_bufferSize; i++) {
+        str.push_back(n.m_buffer[i]);
+    }
+}
+
+CSSVariableSyntaxTreeBuilder::StyleString
+CSSVariableSyntaxTreeBuilder::generateStyle(
     Element* element, Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
     struct Context {
@@ -272,14 +320,14 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
         size_t index;
     };
 
-    CSSTokenValue ret;
+    StyleString ret;
     for (size_t i = 0; i < m_variableContainers.size(); i++) {
         VariableContainer* container = &m_variableContainers[i];
         VariableBlock* parent = (VariableBlock*)container->m_root;
         GCVector<Context> contexts;
         contexts.push_back(Context(parent, 0));
         bool found = false;
-        StringBuilder findValue;
+        StyleString findValue;
 
         while (contexts.size() && !found) {
             Context* c = &contexts.back();
@@ -305,8 +353,8 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                                         currentCustomValues->values()[k];
                                     if (customProperty.name() ==
                                         variable->m_value) {
-                                        findValue.appendString(
-                                            customProperty.value());
+                                        appendString(findValue,
+                                                     customProperty.value());
                                         found = true;
                                     }
                                 }
@@ -325,9 +373,10 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
                         }
                     } else {
                         if (findValue.length() > 0) {
-                            findValue.appendString(" ,");
+                            findValue.push_back(' ');
+                            findValue.push_back(',');
                         }
-                        findValue.appendString(variable->m_value.string());
+                        appendString(findValue, variable->m_value.string());
                     }
                 } else if (block->isRawValue()) {
                 } else if (block->isVariableBlock()) {
@@ -347,8 +396,7 @@ CSSTokenValue CSSVariableSyntaxTreeBuilder::generateStyle(
             // FIXME : To support the full style with variableContainers
             // such as 'rgb(100, var(--foo1), var(--foo2))'.
             // Before that, we should solve a issue(#1132).
-            ret =
-                CSSTokenValue(findValue.finalize()->toUTF8NonGCString().data());
+            ret = std::move(findValue);
             break;
         }
     }

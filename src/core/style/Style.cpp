@@ -456,7 +456,7 @@ static bool hasValidVarFunction(const CSSTokenValue& token)
     // because, we don't need variables of this builder
     // we just want to know that the syntax is correct
     CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(nullptr);
-    variablesSyntaxBuilder.build(token);
+    variablesSyntaxBuilder.build(token.data(), token.size());
     if (variablesSyntaxBuilder.isValid()) {
         return true;
     }
@@ -2912,44 +2912,126 @@ static void applyAnimationFillMode(Element* element, ComputedStyle* style,
     }
 }
 
+typedef VectorWithInlineStorage<32, char, std::allocator<char>> Token;
+typedef VectorWithInlineStorage<4, Token, std::allocator<Token>> TokenVector;
+
+static void tokenize(TokenVector& tokens, const char* data, size_t length)
+{
+    Token str;
+    bool inParenthesis = false;
+    size_t numberOfnesting = 0;
+    bool inQuotes = false;
+    bool isWhiteSpaceState = false;
+    for (size_t i = 0; i < length; i++) {
+        if (data[i] == '(' && !inQuotes) {
+            inParenthesis = true;
+            numberOfnesting++;
+        } else if (data[i] == ')' && !inQuotes) {
+            if (numberOfnesting) {
+                numberOfnesting--;
+            }
+        } else if (data[i] == '"' || data[i] == '\'') {
+            inQuotes = !inQuotes;
+        }
+
+        if (isWhiteSpaceState && String::isSpaceOrNewline(data[i])) {
+            continue;
+        }
+
+        isWhiteSpaceState = false;
+        str.push_back(data[i]);
+        if ((inParenthesis || inQuotes) && String::isSpaceOrNewline(data[i])) {
+            str[str.size() - 1] = ' ';
+            isWhiteSpaceState = true;
+            continue;
+        }
+        bool hasSepChar = false;
+        if (!inParenthesis) {
+            hasSepChar = data[i] == ',';
+        }
+
+        if ((!inParenthesis && !inQuotes &&
+             (String::isSpaceOrNewline(data[i]) || hasSepChar)) ||
+            (data[i] == '(' && hasSepChar) || (data[i] == ')' && hasSepChar)) {
+            str.pop_back();
+            bool onlyWhiteSpace = true;
+            for (size_t i = 0; i < str.size(); i++) {
+                if (!String::isASCIISpace(str[i])) {
+                    onlyWhiteSpace = false;
+                }
+            }
+
+            if (!onlyWhiteSpace && !numberOfnesting) {
+                tokens.push_back(Token(std::move(str)));
+            }
+            isWhiteSpaceState = true;
+            if (hasSepChar && !numberOfnesting) {
+                Token n;
+                n.push_back(data[i]);
+                tokens.push_back(std::move(n));
+            }
+        } else if (((inParenthesis && !numberOfnesting) && data[i] == ')') ||
+                   i == length - 1) {
+            if (str.size() != 0) {
+                if (!numberOfnesting) {
+                    tokens.push_back(std::move(str));
+                }
+            }
+            inParenthesis = false;
+            isWhiteSpaceState = true;
+        }
+    }
+}
+
 CSSStyleDeclaration* StyleResolver::resolveVarValue(
     Element* element, const CSSStyleValuePair& cssValuePair,
     CSSStyleValuePair::KeyKind keyKind,
     Nullable<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
 {
-    std::string cssValueString =
-        cssValuePair.varFunctionValue()->toUTF8NonGCString();
-    size_t cssValueLength = cssValueString.size();
-
+    NullableUTF8String utf8String =
+        cssValuePair.varFunctionValue()->toNullableUTF8String();
+    size_t startIndex = 0;
+    size_t size = utf8String.m_bufferSize;
     if (cssValuePair.temporaryValueKind() ==
         CSSStyleValuePair::ValueKind::CalcValueKind) {
         // This is the length of "calc(".
-        size_t calcHeaderSize = 5;
-        cssValueString = &cssValueString[calcHeaderSize];
-        cssValueLength = cssValueLength - (calcHeaderSize + 1);
+        startIndex = 5;
+        // consider ')' too
+        size -= 6;
     }
+    // we should keep reference of utf8String.m_buffer
+    // for bdwgc find the pointer of `utf8String.m_buffer`
+    volatile const char* forceKeepPointer = utf8String.m_buffer;
+    utf8String.m_buffer = utf8String.m_buffer + startIndex;
+    utf8String.m_bufferSize = size;
 
-    CSSTokenVector cssValueTokens;
-    CSSStyleDeclaration::tokenizeCSSValue(
-        cssValueTokens, cssValueString.c_str(), cssValueLength, ",", 1);
+    TokenVector cssValueTokens;
+    tokenize(cssValueTokens, utf8String.m_buffer, utf8String.m_bufferSize);
 
     std::string newCssValue;
     for (size_t i = 0; i < cssValueTokens.size(); ++i) {
         CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(
             element->starfish());
-        variablesSyntaxBuilder.build(cssValueTokens[i]);
+        variablesSyntaxBuilder.build(cssValueTokens[i].data(),
+                                     cssValueTokens[i].size());
         if (variablesSyntaxBuilder.isValid()) {
-            cssValueTokens[i] =
+            auto styleValue =
                 variablesSyntaxBuilder.generateStyle(element, cssCustomValues);
-            CSSTokenVector tempCssValueTokens;
-            CSSStyleDeclaration::tokenizeCSSValue(
-                tempCssValueTokens, cssValueTokens[i].c_str(),
-                cssValueTokens[i].size(), ",", 1);
+            TokenVector tempCssValueTokens;
+            tokenize(tempCssValueTokens, styleValue.data(),
+                     styleValue.length());
+
             for (size_t j = 0; j < tempCssValueTokens.size(); ++j) {
-                newCssValue.append(tempCssValueTokens[j] + " ");
+                newCssValue.append(tempCssValueTokens[j].data(),
+                                   tempCssValueTokens[j].data() +
+                                       tempCssValueTokens[j].size());
+                newCssValue.append(" ");
             }
         } else {
-            newCssValue.append(cssValueTokens[i] + " ");
+            newCssValue.append(cssValueTokens[i].data(),
+                               cssValueTokens[i].data() +
+                                   cssValueTokens[i].size());
+            newCssValue.append(" ");
         }
     }
 

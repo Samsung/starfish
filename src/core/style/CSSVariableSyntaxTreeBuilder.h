@@ -93,7 +93,7 @@ class CSSVariableSyntaxTreeBuilder : public gc {
 
     class VariableContainer {
     public:
-        VariableContainer(size_t start, size_t end)
+        VariableContainer(size_t start = 0, size_t end = 0)
             : m_start(start)
             , m_end(end)
             , m_root(nullptr)
@@ -105,19 +105,21 @@ class CSSVariableSyntaxTreeBuilder : public gc {
     };
 
 public:
+    STARFISH_MAKE_STACK_ALLOCATED();
     CSSVariableSyntaxTreeBuilder(Nullable<Starfish*> sf)
         : m_valid(true)
         , m_starfish(sf)
     {
-        m_variableContainers.clear();
     }
 
-    void build(const CSSTokenValue&);
+    void build(const char* str, size_t length);
 
-    void buildTree(VariableContainer*, CSSTokenValue&);
+    void buildTree(VariableContainer*, const char* str, size_t length);
 
-    CSSTokenValue generateStyle(Element* element,
-                                Nullable<const MutablePropertyValueList*>);
+    typedef VectorWithInlineStorage<256, char, std::allocator<char>>
+        StyleString;
+    StyleString generateStyle(Element* element,
+                              Nullable<const MutablePropertyValueList*>);
 
     void dump();
 
@@ -130,7 +132,9 @@ private:
     bool m_valid;
     Nullable<Starfish*> m_starfish; // if this value is null, there is no actual
                                     // Variable will build.
-    GCVector<VariableContainer> m_variableContainers;
+    VectorWithInlineStorage<12, VariableContainer,
+                            GCUtil::gc_malloc_allocator<VariableContainer>>
+        m_variableContainers;
 };
 } // namespace Starfish
 
