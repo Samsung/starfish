@@ -1565,7 +1565,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                 LayoutUnit visibleHeight = m_rareData->m_visibleRect.height();
                 // additional
 #ifndef STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE
-#define STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE 4
+#define STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE 6
 #endif
                 const int32_t minimumScale =
                     STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
