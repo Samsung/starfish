@@ -81,6 +81,7 @@ public:
         m_externalString = nullptr;
     }
 
+    void appendString(String* string);
     void appendChar(char32_t ch)
     {
         if (ch > 0xffff) {
@@ -183,6 +184,15 @@ protected:
     char32_t m_builtInBuffer[InlineStorageSize];
     UTF32String* m_externalString;
 };
+
+template <unsigned int InlineStorageSize>
+void GatherableString<InlineStorageSize>::appendString(String* src)
+{
+    auto bad = src->bufferAccessData();
+    for (size_t i = 0; i < bad.length; i++) {
+        appendChar(bad.charAt(i));
+    }
+}
 
 template <unsigned int InlineStorageSize>
 bool GatherableString<InlineStorageSize>::equals(const char* src) const
@@ -419,5 +429,6 @@ AtomicString GatherableString<InlineStorageSize>::toAttrAtomicString(
             starfish));
     }
 }
+
 } // namespace Starfish
 #endif

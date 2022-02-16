@@ -1682,31 +1682,30 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                     sender.starfish = document()->starfish();
                     aToken->value()->peekASCIIBuffer(
                         [](const char* buf, size_t len, void* data) -> size_t {
-                            // We can modify content of `buf`.
-                            // peekASCIIBuffer function allocates new buffer for
-                            // this function.
-                            char* name = (char*)buf;
-                            for (size_t i = 0; i < len; i++) {
-                                name[i] = tolower(name[i]);
-                            }
-
                             Sender* sd = reinterpret_cast<Sender*>(data);
-
-                            sd->kind = lookupCSSStyle(name, len);
-
-                            if (sd->kind ==
-                                CSSStyleValuePair::KeyKind::CustomProperty) {
+                            if (len > 2 && buf[0] == '-' && buf[1] == '-') {
+                                sd->kind =
+                                    CSSStyleValuePair::KeyKind::CustomProperty;
                                 sd->key = AtomicString::createAtomicString(
-                                    sd->starfish, name, len);
+                                    sd->starfish, buf, len);
+                            } else {
+                                // We can modify content of `buf`.
+                                // peekASCIIBuffer function allocates new buffer
+                                // for this function.
+                                char* name = (char*)buf;
+                                for (size_t i = 0; i < len; i++) {
+                                    name[i] = tolower(name[i]);
+                                }
+
+                                sd->kind = lookupCSSStyle(name, len);
                             }
 #ifndef NDEBUG
                             // ignore vendor prefix & CSS Custom Variables
                             if (sd->kind ==
                                     CSSStyleValuePair::KeyKind::Unknown &&
-                                len && name[0] != '-') {
+                                len && buf[0] != '-') {
                                 STARFISH_LOG_ERROR(
-                                    "CSSParser: Unsupported property: %s",
-                                    name);
+                                    "CSSParser: Unsupported property: %s", buf);
                             }
 #endif
                             if (sd->kind == CSSStyleValuePair::KeyKind::Src &&

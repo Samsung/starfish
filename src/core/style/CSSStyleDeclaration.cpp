@@ -1555,6 +1555,12 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                 std::transform(str.begin(), str.begin() + 3, str.begin(),
                                tolower);
                 tokens.push_back(std::move(str));
+            } else if (str.length() > 3 && (str[0] == 'v' || str[0] == 'V') &&
+                       (str[1] == 'a' || str[1] == 'a') &&
+                       (str[2] == 'r' || str[2] == 'R')) {
+                std::transform(str.begin(), str.begin() + 3, str.begin(),
+                               tolower);
+                tokens.push_back(std::move(str));
             } else if (str.length() != 0) {
                 if (!isCaseSensitive && !inQuotes) {
                     std::transform(str.begin(), str.end(), str.begin(),
@@ -1755,6 +1761,20 @@ String* CSSStyleDeclaration::item(uint32_t index)
     return String::emptyString;
 }
 
+static CSSStyleValuePair::KeyKind lookupName(const char* buf, size_t len)
+{
+    if (len > 2 && buf[0] == '-' && buf[1] == '-') {
+        return CSSStyleValuePair::KeyKind::CustomProperty;
+    } else {
+        char* mutableBuf = ALLOCA(len, char);
+        for (size_t i = 0; i < len; i++) {
+            mutableBuf[i] = tolower(buf[i]);
+        }
+
+        return lookupCSSStyle(mutableBuf, len);
+    }
+}
+
 String* CSSStyleDeclaration::getPropertyValue(String* name)
 {
     struct Sender {
@@ -1763,16 +1783,7 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
     name->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             Sender* s = (Sender*)data;
-
-            char* mutableBuf = ALLOCA(len, char);
-            memcpy(mutableBuf, buf, len);
-
-            for (size_t i = 0; i < len; i++) {
-                mutableBuf[i] = tolower(mutableBuf[i]);
-            }
-
-            s->kind = lookupCSSStyle(mutableBuf, len);
-
+            s->kind = lookupName(buf, len);
             return 0;
         },
         &sender);
@@ -1803,16 +1814,7 @@ String* CSSStyleDeclaration::getPropertyPriority(String* name)
     name->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             Sender* s = (Sender*)data;
-
-            char* mutableBuf = ALLOCA(len, char);
-            memcpy(mutableBuf, buf, len);
-
-            for (size_t i = 0; i < len; i++) {
-                mutableBuf[i] = tolower(mutableBuf[i]);
-            }
-
-            s->kind = lookupCSSStyle(mutableBuf, len);
-
+            s->kind = lookupName(buf, len);
             return 0;
         },
         &sender);
@@ -1837,16 +1839,7 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
     name->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             Sender* s = (Sender*)data;
-
-            char* mutableBuf = ALLOCA(len, char);
-            memcpy(mutableBuf, buf, len);
-
-            for (size_t i = 0; i < len; i++) {
-                mutableBuf[i] = tolower(mutableBuf[i]);
-            }
-
-            s->kind = lookupCSSStyle(mutableBuf, len);
-
+            s->kind = lookupName(buf, len);
             return 0;
         },
         &sender);
@@ -1914,15 +1907,7 @@ String* CSSStyleDeclaration::removeProperty(String* name)
     name->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             Sender* s = (Sender*)data;
-
-            char* mutableBuf = ALLOCA(len, char);
-            memcpy(mutableBuf, buf, len);
-
-            for (size_t i = 0; i < len; i++) {
-                mutableBuf[i] = tolower(mutableBuf[i]);
-            }
-
-            s->kind = lookupCSSStyle(mutableBuf, len);
+            s->kind = lookupName(buf, len);
             return 0;
         },
         &sender);

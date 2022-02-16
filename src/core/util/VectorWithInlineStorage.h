@@ -39,6 +39,20 @@ public:
         m_size = 0;
     }
 
+    VectorWithInlineStorage(
+        const VectorWithInlineStorage<InlineStorageSize, T,
+                                      ExternalStoreageAllocator>& src)
+    {
+        operator=(src);
+    }
+
+    VectorWithInlineStorage(
+        VectorWithInlineStorage<InlineStorageSize, T,
+                                ExternalStoreageAllocator>&& src)
+    {
+        operator=(std::move(src));
+    }
+
     VectorWithInlineStorage<InlineStorageSize, T, ExternalStoreageAllocator>&
     operator=(VectorWithInlineStorage<InlineStorageSize, T,
                                       ExternalStoreageAllocator>&& src)
@@ -97,6 +111,19 @@ public:
         m_size++;
     }
 
+    void pop_back()
+    {
+        m_size--;
+        if (m_size == InlineStorageSize) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_inlineStorage[i] = m_externalStorage[i];
+            }
+            m_externalStorage.clear();
+        } else if (m_size > InlineStorageSize) {
+            m_externalStorage.pop_back();
+        }
+    }
+
     T& operator[](const size_t& idx)
     {
         if (LIKELY(m_size <= InlineStorageSize)) {
@@ -125,6 +152,11 @@ public:
     }
 
     size_t size() const
+    {
+        return m_size;
+    }
+
+    size_t length() const
     {
         return m_size;
     }
