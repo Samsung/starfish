@@ -762,20 +762,16 @@ static ImageDecoder::DecodeResult decodeWebP(
     int width = 0, height = 0;
 
     if (needsDecoding) {
-        uint8_t* buf;
 #ifdef PORT_PIXEL_ORDER_RGBA
-        buf = WebPDecodeRGBA(readData.mem, readData.size, &width, &height);
+        result.m_buffer =
+            WebPDecodeRGBA(readData.mem, readData.size, &width, &height);
 #else
-        buf = WebPDecodeBGRA(readData.mem, readData.size, &width, &height);
+        result.m_buffer =
+            WebPDecodeBGRA(readData.mem, readData.size, &width, &height);
 #endif
-        if (buf == nullptr) {
+        if (result.m_buffer == nullptr) {
             return result;
         }
-        result.m_buffer =
-            (uint8_t*)malloc(result.m_width * result.m_height * 4);
-        STARFISH_RELEASE_ASSERT(result.m_buffer != nullptr);
-        memcpy(result.m_buffer, buf, width * height * 4);
-        free(buf);
     } else {
         if (!WebPGetInfo(readData.mem, readData.size, &width, &height)) {
             return result;
