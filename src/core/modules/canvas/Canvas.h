@@ -242,6 +242,13 @@ public:
     static size_t g_totalAllocatedCanvasSurfaceSize;
     static size_t g_canvasSurfaceTileSize;
 
+#if defined(STARFISH_ENABLE_TEST)
+    virtual void dump(const char* path)
+    {
+        STARFISH_UNIMPLEMENTED();
+    }
+#endif
+
 protected:
     CanvasSurface(float additionalPixelRatio)
         : m_additionalPixelRatio(additionalPixelRatio)

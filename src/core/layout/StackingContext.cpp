@@ -2624,12 +2624,23 @@ bool StackingContext::fillGraphicsBufferContents(
                     canvas->translate(-minX, -minY);
                     canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
 
-                    if (needsInitialClip) {
-                        canvas->clearColor(Unit::Color(0, 0, 0, 0));
-                    } else if (!gotNewBuffer) {
-                        memset(canvas->renderTargetInfo().m_buffer, 0,
-                               canvas->renderTargetInfo().m_stride *
-                                   canvas->renderTargetInfo().m_height);
+                    ComputedStyle* cs = owner()->node()->style();
+                    bool canSkipClear =
+                        gotNewBuffer ||
+                        (!isRootContext() && !isIFrameStackingContext() &&
+                         !cs->backgroundColor()
+                              .hasAlpha() && // if bg-color is solid
+                         cs->outlineColor().isTransparent() && // no outline
+                         !cs->boxShadow());                    // no shadow
+
+                    if (!canSkipClear) {
+                        if (needsInitialClip) {
+                            canvas->clearColor(Unit::Color(0, 0, 0, 0));
+                        } else if (!gotNewBuffer) {
+                            memset(canvas->renderTargetInfo().m_buffer, 0,
+                                   canvas->renderTargetInfo().m_stride *
+                                       canvas->renderTargetInfo().m_height);
+                        }
                     }
 
                     fillGraphicsBufferContents(canvas, ctx);
