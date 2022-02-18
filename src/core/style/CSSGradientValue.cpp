@@ -144,7 +144,7 @@ GradientData* CSSLinearGradientValue::convertToGradientData()
     }
 
     if (isCacheable()) {
-        gradient->setCacheable(true);
+        gradient->setGeneratedFromCacheableCSSGradientValue(true);
     }
 
     convertCSSColorStopsToColorStops(gradient->colorStopList());
@@ -237,7 +237,7 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
     }
 
     if (isCacheable()) {
-        gradient->setCacheable(true);
+        gradient->setGeneratedFromCacheableCSSGradientValue(true);
     }
 
     convertCSSColorStopsToColorStops(gradient->colorStopList());

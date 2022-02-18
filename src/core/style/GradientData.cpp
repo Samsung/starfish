@@ -53,6 +53,8 @@
 #include "core/dom/Node.h"
 #include "core/layout/FrameBox.h"
 #include "core/style/GradientData.h"
+#include "core/dom/Document.h"
+
 namespace Starfish {
 
 static bool requiresStopsNormalization(GCVector<ColorStop*>& colorStops)
@@ -445,43 +447,44 @@ bool LinearGradientData::computeEndPointsFromAngle(const Unit::Rect& rect,
     return true;
 }
 
-bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
+bool LinearGradientData::computeEndPoints(const Unit::Rect& rect,
+                                          const float& computedAngle, float& x1,
                                           float& y1, float& x2, float& y2)
 {
     x1 = y1 = x2 = y2 = 0.0f;
+    return computeEndPointsFromAngle(rect, computedAngle, x1, y1, x2, y2);
+}
+
+float LinearGradientData::computeAngle(float rise, float run) const
+{
+    float computedAngleDeg = 0;
     if (m_horizentalSide == SideValue::NoneSideValue &&
         m_verticalSide == SideValue::NoneSideValue) {
-        return computeEndPointsFromAngle(rect, m_angleDeg, x1, y1, x2, y2);
+        computedAngleDeg = m_angleDeg;
     } else {
         if (m_horizentalSide != SideValue::NoneSideValue &&
             m_verticalSide != SideValue::NoneSideValue) {
-            float rise = rect.width();
-            float run = rect.height();
             if (m_horizentalSide == SideValue::LeftSideValue) {
                 run *= -1;
             }
             if (m_verticalSide == SideValue::BottomSideValue) {
                 rise *= -1;
             }
-            float angleDeg =
+            computedAngleDeg =
                 90 - UnitHelper::convertFromRadToDeg(atan2(rise, run));
-
-            return computeEndPointsFromAngle(rect, angleDeg, x1, y1, x2, y2);
-
         } else if (m_horizentalSide != SideValue::NoneSideValue ||
                    m_verticalSide != SideValue::NoneSideValue) {
-            float angleDeg = 0;
+            computedAngleDeg = 0;
             if (m_horizentalSide == SideValue::RightSideValue) {
-                angleDeg = 90;
+                computedAngleDeg = 90;
             } else if (m_verticalSide == SideValue::BottomSideValue) {
-                angleDeg = 180;
+                computedAngleDeg = 180;
             } else if (m_horizentalSide == SideValue::LeftSideValue) {
-                angleDeg = 270;
+                computedAngleDeg = 270;
             }
-            return computeEndPointsFromAngle(rect, angleDeg, x1, y1, x2, y2);
         }
-        return false;
     }
+    return computedAngleDeg;
 }
 
 void GradientData::convertColorStopsToCSSColorStops(
@@ -507,13 +510,34 @@ void GradientData::convertColorStopsToCSSColorStops(
     }
 }
 
+bool GradientData::isCacheable(float width, float height,
+                               bool needToCheckShrinkable) const
+{
+    bool ret = false;
+
+    if (needToCheckShrinkable) {
+        auto pair = isShrinkable(width, height);
+        if (pair.first) {
+            return true;
+        }
+    }
+
+    ret = (m_generatedFromCacheableCSSGradientValue &&
+           ((width * height) >= CACHEABLE_GRADIENT_ITEM_EXTENT) &&
+           ((width * height * 4) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+
+    return ret;
+}
+
 GradientDrawingInfo* LinearGradientData::makeGradientDrawingInfo(
     const Unit::Rect& rect, FrameBox* box)
 {
     STARFISH_ASSERT(box);
 
     GradientDrawingInfo* ret = new GradientDrawingInfo(m_type, rect);
-    computeEndPoints(rect, ret->x1, ret->y1, ret->x2, ret->y2);
+    ret->computedAngle = computeAngle(rect.width(), rect.height());
+    computeEndPoints(rect, ret->computedAngle, ret->x1, ret->y1, ret->x2,
+                     ret->y2);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
                             ret->y2, ret->r2, box);
     return ret;
@@ -583,6 +607,17 @@ bool LinearGradientData::isEffective() const
         return true;
     }
     return false;
+}
+
+std::pair<bool, float> LinearGradientData::isShrinkable(float width,
+                                                        float height) const
+{
+    float computedAngleDeg = computeAngle(width, height);
+    if (fmodf(computedAngleDeg, 180.0) == 0 ||
+        fmodf(computedAngleDeg, 90.0) == 0) {
+        return { true, computedAngleDeg };
+    }
+    return { false, computedAngleDeg };
 }
 
 RadialGradientData::RadialGradientData()

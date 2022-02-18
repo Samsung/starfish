@@ -1571,6 +1571,10 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
                                  bool repeatY,
                                  ImageRenderingValue imageRenderingValue)
 {
+    if (width == 0 || height == 0) {
+        return;
+    }
+
     float startX = dst.x();
     float startY = dst.y();
 
@@ -1588,11 +1592,8 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
     }
     ImageValue* imageValue = style->backgroundImage(idx);
     auto value = imageValue->gradientValue();
-    bool cacheable =
-        (value->isCacheable() &&
-         ((dst.width() * dst.height()) >= CACHEABLE_GRADIENT_SIZE) &&
-         ((width * height) >= CACHEABLE_GRADIENT_SIZE) &&
-         ((width * height * 4) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+    bool cacheable = value->isCacheable(width, height, true) &&
+                     value->isCacheable(dst.width(), dst.height(), true);
 
     if (cacheable) {
         float imageWidth = width;
@@ -1606,47 +1607,13 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
         }
 
         // if we can shrink result image, shrink!
-        if (value->type() == GradientType::LinearGradient) {
-            LinearGradientData* l = value->asLinearGradientData();
-            auto horizentalSide = l->horizontalSide();
-            auto verticalSide = l->verticalSide();
-            float angle = std::numeric_limits<float>::quiet_NaN();
-            if (horizentalSide == SideValue::NoneSideValue &&
-                verticalSide == SideValue::NoneSideValue) {
-                angle = l->angle();
-            } else {
-                if (horizentalSide != SideValue::NoneSideValue &&
-                    verticalSide != SideValue::NoneSideValue) {
-                    float rise = rect.width();
-                    float run = rect.height();
-                    if (horizentalSide == SideValue::LeftSideValue) {
-                        run *= -1;
-                    }
-                    if (verticalSide == SideValue::BottomSideValue) {
-                        rise *= -1;
-                    }
-                    angle =
-                        90 - UnitHelper::convertFromRadToDeg(atan2(rise, run));
-                } else if (horizentalSide != SideValue::NoneSideValue ||
-                           verticalSide != SideValue::NoneSideValue) {
-                    angle = 0;
-                    if (horizentalSide == SideValue::RightSideValue) {
-                        angle = 90;
-                    } else if (verticalSide == SideValue::BottomSideValue) {
-                        angle = 180;
-                    } else if (horizentalSide == SideValue::LeftSideValue) {
-                        angle = 270;
-                    }
-                }
-            }
-            if (angle != std::numeric_limits<float>::quiet_NaN()) {
-                if (fmodf(angle, 180.0) == 0) {
-                    imageWidth = 1;
-                    repeatX = true;
-                } else if (fmodf(angle, 90.0) == 0) {
-                    imageHeight = 1;
-                    repeatY = true;
-                }
+        if (info->type == GradientType::LinearGradient) {
+            if (fmodf(info->computedAngle, 180.0) == 0) {
+                imageWidth = 1;
+                repeatX = true;
+            } else if (fmodf(info->computedAngle, 90.0) == 0) {
+                imageHeight = 1;
+                repeatY = true;
             }
         }
 
