@@ -1604,7 +1604,8 @@ void WebContainer::DispatchCompositionStartEvent(
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
         ::Starfish::CompositionEventKind::CompositionEventStart,
         ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                     soFarCompositiedString.length()));
+                                     soFarCompositiedString.length()),
+        nullptr);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -1615,7 +1616,8 @@ void WebContainer::DispatchCompositionUpdateEvent(
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
         ::Starfish::CompositionEventKind::CompositionEventUpdate,
         ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                     soFarCompositiedString.length()));
+                                     soFarCompositiedString.length()),
+        nullptr);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -1626,7 +1628,8 @@ void WebContainer::DispatchCompositionEndEvent(
     TO_WEBVIEW(m_impl)->platformWindow()->dispatchCompositionEvent(
         ::Starfish::CompositionEventKind::CompositionEventEnd,
         ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
-                                     soFarCompositiedString.length()));
+                                     soFarCompositiedString.length()),
+        nullptr);
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(

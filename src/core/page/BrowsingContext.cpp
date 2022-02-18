@@ -1936,15 +1936,16 @@ void BrowsingContext::focusNavigation(bool forward)
 }
 
 void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
-                                               String* data, Node* node)
+                                               String* data,
+                                               Nullable<Node*> node)
 {
     // Set target
     // 1) currently focused element if possible
     // or 2) body element if possible
     // or 3) root element
     Node* target;
-    if (node) {
-        target = node;
+    if (node.hasValue()) {
+        target = node.value();
     } else {
         target = m_focusedNode;
     }
@@ -1961,7 +1962,7 @@ void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
             if (target->asHTMLIFrameElement()->frame()) {
                 target->asHTMLIFrameElement()
                     ->browsingContext()
-                    ->dispatchCompositionEvent(kind, data);
+                    ->dispatchCompositionEvent(kind, data, nullptr);
             }
         }
         return;

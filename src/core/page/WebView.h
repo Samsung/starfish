@@ -381,7 +381,7 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data);
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                  Node* node = nullptr);
+                                  Nullable<Node*> node);
     // starting global pointing Intercept must use default event.
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);

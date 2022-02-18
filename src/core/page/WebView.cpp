@@ -1988,10 +1988,9 @@ void WebView::dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data)
 }
 
 void WebView::dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                       Node* node)
+                                       Nullable<Node*> node)
 {
     STARFISH_ASSERT(data != nullptr);
-    STARFISH_ASSERT(node != nullptr);
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispatchCompositionEvent(kind, data, node);
