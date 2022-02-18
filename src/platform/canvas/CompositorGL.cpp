@@ -2230,6 +2230,13 @@ public:
                             auto bStride = bufferStride();
                             auto kind = textureFormat();
 
+                            bool updateWholeTexture = textureJustCreated;
+                            if (!updateWholeTexture && xx == 0 && yy == 0 &&
+                                xxEnd == fragment.textureWidth &&
+                                yyEnd == fragment.textureHeight) {
+                                updateWholeTexture = true;
+                            }
+
                             glBindTexture(GL_TEXTURE_2D, fragment.textureID);
                             checkError();
 
@@ -2242,7 +2249,7 @@ public:
                                 auto data = bData;
                                 data += textureDataY * bStride;
                                 data += textureDataX * 4;
-                                if (textureJustCreated) {
+                                if (updateWholeTexture) {
                                     glTexImage2D(GL_TEXTURE_2D, 0, kind,
                                                  fragment.textureWidth,
                                                  fragment.textureHeight, 0,
@@ -2258,7 +2265,7 @@ public:
                                 glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
                                 glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
                             } else {
-                                if (textureJustCreated) {
+                                if (updateWholeTexture) {
                                     glTexImage2D(GL_TEXTURE_2D, 0, kind,
                                                  fragment.textureWidth,
                                                  fragment.textureHeight, 0,
