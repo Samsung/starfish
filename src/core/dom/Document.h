@@ -573,6 +573,8 @@ public:
     void markElementInClickProgress(Element* element);
     void unmarkElementInClickProgress(Element* element);
 
+    // TODO : Extract these method to new Class.
+    // Gradient cache
     std::shared_ptr<NativeGradient> findInNativeGradientCache(
         GradientDrawingInfo* key);
     void cacheNativeGradient(GradientDrawingInfo* key,

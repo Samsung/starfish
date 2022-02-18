@@ -3414,10 +3414,7 @@ void StackingContext::applyMask(Canvas* canvas,
         Unit::Rect rect =
             m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
         bool cacheable =
-            (gradientValue->isCacheable() &&
-             ((rect.width() * rect.height()) >= CACHEABLE_GRADIENT_SIZE) &&
-             ((rect.width() * rect.height() * 4) <=
-              STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+            gradientValue->isCacheable(rect.width(), rect.height(), false);
         auto info =
             imageValue->gradientValue()->makeGradientDrawingInfo(rect, m_owner);
         NativeImageData* gradientNativeImageData = nullptr;

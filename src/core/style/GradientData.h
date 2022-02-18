@@ -22,9 +22,11 @@
 
 #ifdef STARFISH_ENABLE_TEST
 // To enable cache mode in pixel-test, it must be set to 25 * 25.
-#define CACHEABLE_GRADIENT_SIZE (25.0f * 25.0f)
+#define CACHEABLE_GRADIENT_ITEM_EXTENT (25.0f * 25.0f)
 #else
-#define CACHEABLE_GRADIENT_SIZE (800.0f * 600.0f)
+// This value was determined heuristically based on several optimization
+// experiments for commercialization.
+#define CACHEABLE_GRADIENT_ITEM_EXTENT (256.0f * 256.0f)
 #endif
 
 namespace Starfish {
@@ -123,6 +125,7 @@ struct GradientDrawingInfo : public gc {
     float y2;
     float r1;
     float r2;
+    float computedAngle;
     float firstRadius;
     float secondRadius;
     GCVector<ColorStop*> colorStops;
@@ -136,6 +139,7 @@ struct GradientDrawingInfo : public gc {
         , y2(0.0f)
         , r1(0.0f)
         , r2(0.0f)
+        , computedAngle(0.0f)
         , firstRadius(0.0f)
         , secondRadius(0.0f)
         , colorStops()
@@ -178,7 +182,7 @@ public:
         , m_horizentalSide()
         , m_verticalSide()
         , m_colorStopList()
-        , m_isCacheable(false)
+        , m_generatedFromCacheableCSSGradientValue(false)
     {
     }
 
@@ -218,14 +222,12 @@ public:
         return m_colorStopList;
     }
 
-    bool isCacheable() const
-    {
-        return m_isCacheable;
-    }
+    bool isCacheable(float width, float height,
+                     bool needToCheckShrinkable) const;
 
-    void setCacheable(bool value)
+    void setGeneratedFromCacheableCSSGradientValue(bool value)
     {
-        m_isCacheable = value;
+        m_generatedFromCacheableCSSGradientValue = value;
     }
 
     virtual GradientDrawingInfo* makeGradientDrawingInfo(const Unit::Rect& rect,
@@ -239,6 +241,9 @@ public:
     virtual bool equals(GradientData* other) const;
 
     virtual bool isEffective() const = 0;
+
+    virtual std::pair<bool, float> isShrinkable(float width,
+                                                float height) const = 0;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -256,7 +261,7 @@ protected:
     SideValue m_horizentalSide;
     SideValue m_verticalSide;
     GCVector<ColorStop*> m_colorStopList;
-    bool m_isCacheable;
+    bool m_generatedFromCacheableCSSGradientValue;
 };
 
 class LinearGradientData : public GradientData {
@@ -273,11 +278,6 @@ public:
         m_angleDeg = val;
     }
 
-    bool computeEndPointsFromAngle(const Unit::Rect& rect, const float angleDeg,
-                                   float& x1, float& y1, float& x2, float& y2);
-    bool computeEndPoints(const Unit::Rect& rect, float& x1, float& y1,
-                          float& x2, float& y2);
-
     virtual GradientDrawingInfo* makeGradientDrawingInfo(
         const Unit::Rect& rect, FrameBox* box) override;
     virtual CSSGradientValue* convertToCSSGradientValue() override;
@@ -286,6 +286,8 @@ public:
                                ComputedStyle* cs) override;
     virtual bool equals(GradientData* other) const override;
     virtual bool isEffective() const override;
+    virtual std::pair<bool, float> isShrinkable(float width,
+                                                float height) const override;
 
     void* operator new(size_t size)
     {
@@ -309,6 +311,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
+    bool computeEndPointsFromAngle(const Unit::Rect& rect, const float angleDeg,
+                                   float& x1, float& y1, float& x2, float& y2);
+    bool computeEndPoints(const Unit::Rect& rect, const float& computedAngle,
+                          float& x1, float& y1, float& x2, float& y2);
+    float computeAngle(float rise, float run) const;
+
     float m_angleDeg;
 };
 
@@ -387,6 +395,11 @@ public:
                                ComputedStyle* cs) override;
     virtual bool equals(GradientData* other) const override;
     virtual bool isEffective() const override;
+    virtual std::pair<bool, float> isShrinkable(float width,
+                                                float height) const override
+    {
+        return { false, 0.0f };
+    }
 
     void* operator new(size_t size)
     {

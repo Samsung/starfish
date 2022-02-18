@@ -2213,8 +2213,10 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
         m_nativeGradientCacheTotalSize += bufferSize;
     }
 
-    STARFISH_LOG_INFO("NativeGradient cache size : %d KB",
-                      (int)m_nativeGradientCacheTotalSize / 1024);
+    STARFISH_LOG_INFO(
+        "NativeGradient cache size : %d KB / %d KB",
+        static_cast<int>(m_nativeGradientCacheTotalSize / 1024),
+        static_cast<int>(STARFISH_NATIVEGRADIENT_CACHE_SIZE / 1024));
 }
 
 bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
@@ -2222,6 +2224,8 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
     STARFISH_ASSERT(m_nativeGradientCache->size() ==
                     m_nativeGradientCacheLRUList.size());
     if (reserve > STARFISH_NATIVEGRADIENT_CACHE_SIZE) {
+        STARFISH_LOG_INFO("Failed to reserve[%d KB] cache space",
+                          static_cast<int>(reserve / 1024));
         return false;
     }
     size_t removedSize = 0;
