@@ -435,6 +435,7 @@ test/cairo/internal-test/svg/svg_mask_01.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
+test/cairo/internal-test/css/box-shadow/box-shadow-change.html
 test/cairo/internal-test/canvas/basicFillPath.html
 test/cairo/internal-test/canvas/basicStrokePath.html
 test/cairo/internal-test/canvas/arc.html

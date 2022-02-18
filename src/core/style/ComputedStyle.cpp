@@ -2063,8 +2063,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     } else if ((oldShadow != nullptr && newShadow == nullptr) ||
                (oldShadow == nullptr && newShadow != nullptr)) {
         damagedKeys[CSSStyleValuePair::KeyKind::BoxShadow] = true;
+        // changing box-shadow can adjust visible rect of StackingContext
         damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+
     } else if (*oldShadow != *newShadow) {
         damagedKeys[CSSStyleValuePair::KeyKind::BoxShadow] = true;
         damage = (ComputedStyleDamage)(
