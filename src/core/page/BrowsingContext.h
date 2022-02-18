@@ -194,7 +194,7 @@ public:
         bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
     void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData& data);
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
-                                  Node* node = nullptr);
+                                  Nullable<Node*> node);
 
     bool setActiveNode(Node* n);
     void releaseActiveNode();

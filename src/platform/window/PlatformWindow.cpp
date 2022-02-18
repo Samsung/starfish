@@ -326,7 +326,8 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
 }
 
 void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
-                                              String* data, Node* node)
+                                              String* data,
+                                              Nullable<Node*> node)
 {
     webView()->dispatchCompositionEvent(kind, data, node);
 }
