@@ -162,9 +162,10 @@ void SVGImageElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGImageElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
 
 WebOrigin* SVGImageElement::webOrigin()

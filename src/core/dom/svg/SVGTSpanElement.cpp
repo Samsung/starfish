@@ -34,8 +34,9 @@ void SVGTSpanElement::didAttributeChanged(QualifiedName name, String* old,
 }
 
 void SVGTSpanElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
 } // namespace Starfish

@@ -44,7 +44,8 @@ public:
                                      bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsPreserveAspectRatioValue() override
     {

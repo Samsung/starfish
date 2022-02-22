@@ -97,9 +97,10 @@ void SVGSVGElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGSVGElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 
     if (hasAttribute(starfish()->staticStrings()->m_width) == SIZE_MAX &&
         hasAttribute(starfish()->staticStrings()->m_height) == SIZE_MAX) {

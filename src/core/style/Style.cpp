@@ -2983,32 +2983,14 @@ static void tokenize(TokenVector& tokens, const char* data, size_t length)
     }
 }
 
-CSSStyleDeclaration* StyleResolver::resolveVarValue(
-    Element* element, const CSSStyleValuePair& cssValuePair,
-    CSSStyleValuePair::KeyKind keyKind,
-    Nullable<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
+std::string StyleResolver::resolveVarReferencedValue(
+    Element* element, NullableUTF8String utf8String,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    NullableUTF8String utf8String =
-        cssValuePair.varFunctionValue()->toNullableUTF8String();
-    size_t startIndex = 0;
-    size_t size = utf8String.m_bufferSize;
-    if (cssValuePair.temporaryValueKind() ==
-        CSSStyleValuePair::ValueKind::CalcValueKind) {
-        // This is the length of "calc(".
-        startIndex = 5;
-        // consider ')' too
-        size -= 6;
-    }
-    // we should keep reference of utf8String.m_buffer
-    // for bdwgc find the pointer of `utf8String.m_buffer`
-    volatile const char* forceKeepPointer = utf8String.m_buffer;
-    utf8String.m_buffer = utf8String.m_buffer + startIndex;
-    utf8String.m_bufferSize = size;
-
+    std::string newCssValue;
     TokenVector cssValueTokens;
     tokenize(cssValueTokens, utf8String.m_buffer, utf8String.m_bufferSize);
 
-    std::string newCssValue;
     for (size_t i = 0; i < cssValueTokens.size(); ++i) {
         CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(
             element->starfish());
@@ -3034,6 +3016,33 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
             newCssValue.append(" ");
         }
     }
+
+    return newCssValue;
+}
+
+CSSStyleDeclaration* StyleResolver::resolveVarValue(
+    Element* element, const CSSStyleValuePair& cssValuePair,
+    CSSStyleValuePair::KeyKind keyKind,
+    Nullable<const MutablePropertyValueList*> cssCustomValues, bool isImportant)
+{
+    NullableUTF8String utf8String =
+        cssValuePair.varFunctionValue()->toNullableUTF8String();
+    size_t startIndex = 0;
+    size_t size = utf8String.m_bufferSize;
+    if (cssValuePair.temporaryValueKind() ==
+        CSSStyleValuePair::ValueKind::CalcValueKind) {
+        // This is the length of "calc(".
+        startIndex = 5;
+        // consider ')' too
+        size -= 6;
+    }
+    // we should keep reference of utf8String.m_buffer
+    // for bdwgc find the pointer of `utf8String.m_buffer`
+    volatile const char* forceKeepPointer = utf8String.m_buffer;
+    utf8String.m_buffer = utf8String.m_buffer + startIndex;
+    utf8String.m_bufferSize = size;
+    std::string newCssValue =
+        resolveVarReferencedValue(element, utf8String, cssCustomValues);
 
     if (cssValuePair.temporaryValueKind() ==
         CSSStyleValuePair::ValueKind::CalcValueKind) {
@@ -6895,7 +6904,11 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     // Apply presentation attribute's style
     CSSStyleValuePairVectorHolder cssValues;
-    element->styleForPresentationAttribute(cssValues);
+    if (element->isSVGElement()) {
+        element->styleForPresentationAttribute(cssValues, cssCustomValues);
+    } else {
+        element->styleForPresentationAttribute(cssValues);
+    }
     apply(element, cssValues.mutableData(), nullptr,
           element->document()->documentURI(), ret, parent, false);
 

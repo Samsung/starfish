@@ -41,23 +41,24 @@
         return m_##attrName;                                         \
     }
 
-#define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)        \
-    {                                                                  \
-        CSSStyleValuePair pair;                                        \
-        String* name = getAttributeOrEmpty(staticStrings()->m_##name); \
-        if (name->length()) {                                          \
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);        \
-            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
-            auto s = name->toUTF8NonGCString();                        \
-            if (CSSPropertyParser::parseLength(                        \
-                    s.data(),                                          \
-                    CSSPropertyParser::AllowPercent |                  \
-                        CSSPropertyParser::AllowWithoutUnit |          \
-                        CSSPropertyParser::AllowNegative,              \
-                    &pair)) {                                          \
-                cssValues.push_back(pair);                             \
-            }                                                          \
-        }                                                              \
+#define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2, customs) \
+    {                                                                    \
+        CSSStyleValuePair pair;                                          \
+        String* name = getAttributeOrVarReferencedValue(                 \
+            staticStrings()->m_##name, customs);                         \
+        if (name->length()) {                                            \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);          \
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
+            auto s = name->toUTF8NonGCString();                          \
+            if (CSSPropertyParser::parseLength(                          \
+                    s.data(),                                            \
+                    CSSPropertyParser::AllowPercent |                    \
+                        CSSPropertyParser::AllowWithoutUnit |            \
+                        CSSPropertyParser::AllowNegative,                \
+                    &pair)) {                                            \
+                cssValues.push_back(pair);                               \
+            }                                                            \
+        }                                                                \
     }
 
 namespace Starfish {
@@ -98,7 +99,8 @@ public:
     virtual void updateSVGAttributeNeeded(QualifiedName name){};
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsGeometryAttributes()
     {

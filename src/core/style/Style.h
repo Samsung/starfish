@@ -3223,6 +3223,10 @@ public:
                               Node* element, ComputedStyle* elementStyle,
                               bool inheritedStyleChanged = false);
 
+    static std::string resolveVarReferencedValue(
+        Element* element, NullableUTF8String utf8String,
+        Nullable<const MutablePropertyValueList*> cssCustomValues);
+
 protected:
     CSSStyleDeclaration* resolveVarValue(
         Element* element, const CSSStyleValuePair& cssValuePair,

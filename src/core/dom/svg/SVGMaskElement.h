@@ -42,7 +42,8 @@ public:
     virtual void updateSVGAttributeNeeded(QualifiedName name);
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
 
     virtual bool needsGeometryAttributes() override
     {

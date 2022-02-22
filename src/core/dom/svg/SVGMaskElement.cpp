@@ -71,8 +71,9 @@ void SVGMaskElement::updateSVGAttributeNeeded(QualifiedName name)
 }
 
 void SVGMaskElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
 } // namespace Starfish
