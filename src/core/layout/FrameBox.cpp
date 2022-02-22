@@ -3944,6 +3944,17 @@ void FrameBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     tryUniteVisibleRect(ctx);
 }
 
+bool FrameBox::isVisible()
+{
+    ComputedStyle* cs = style();
+
+    if ((cs && cs->visibility() == HiddenVisibilityValue)) {
+        return false;
+    }
+
+    return cs && styleHasDrawableContents(cs, this);
+}
+
 void FrameBox::clearStackingContextIfNeeds()
 {
     if (stackingContext()) {
