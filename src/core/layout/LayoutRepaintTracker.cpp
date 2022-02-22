@@ -176,14 +176,16 @@ static void traceRepaintRegionJob(
                     iter->second.first.setY(LayoutUnit::min());
                 }
 
-                if (!lastStackingContextOwner->stackingContext() ||
-                    !lastStackingContextOwner->stackingContext()
-                         ->needsGraphicsBufferReason() ||
-                    !currentFrame->asFrameBox()->stackingContext() ||
-                    !currentFrame->asFrameBox()
-                         ->stackingContext()
-                         ->needsGraphicsBufferReason()) {
-                    node->setNeedsPainting();
+                if (currentFrameBox->isVisible()) {
+                    if (!lastStackingContextOwner->stackingContext() ||
+                        !lastStackingContextOwner->stackingContext()
+                             ->needsGraphicsBufferReason() ||
+                        !currentFrame->asFrameBox()->stackingContext() ||
+                        !currentFrame->asFrameBox()
+                             ->stackingContext()
+                             ->needsGraphicsBufferReason()) {
+                        node->setNeedsPainting();
+                    }
                 }
             } else {
                 // finded & result are same
@@ -222,14 +224,16 @@ static void traceRepaintRegionJob(
                 LayoutRepaintTracker::ComputeOverflow::reduceRect(
                     tracker, rt, lastStackingContextOwner);
 
-                Node* stackingContextOwner = lastStackingContextOwner->node();
-                auto iter2 =
-                    dirtyAreaMapPerStackingContext.find(stackingContextOwner);
-                if (iter2 == dirtyAreaMapPerStackingContext.end()) {
-                    dirtyAreaMapPerStackingContext.insert(
-                        std::make_pair(stackingContextOwner, rt));
-                } else {
-                    iter2->second.unite(rt);
+                if (currentFrameBox->isVisible()) {
+                    Node* stackingContextOwner = lastStackingContextOwner->node();
+                    auto iter2 =
+                        dirtyAreaMapPerStackingContext.find(stackingContextOwner);
+                    if (iter2 == dirtyAreaMapPerStackingContext.end()) {
+                        dirtyAreaMapPerStackingContext.insert(
+                            std::make_pair(stackingContextOwner, rt));
+                    } else {
+                        iter2->second.unite(rt);
+                    }
                 }
             } else {
                 // finded & result are same

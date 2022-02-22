@@ -155,6 +155,11 @@ public:
         paintReplaced(canvas);
     }
 
+    virtual bool isVisible() override
+    {
+        return true;
+    }
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

@@ -180,8 +180,8 @@ void RepaintRegionTracker::notifyDirty(FrameBox* frame, StackingContext* sc,
 
     if (m_willCompositing) {
         if (sc && sc->needsGraphicsBuffer()) {
-            m_repaintRegionPerGraphicsLayer[frame->node()].unite(
-                sc->visibleRect());
+            r = computeBoxExtent(r, frame->computeMatrixOnGraphicsBuffer());
+            m_repaintRegionPerGraphicsLayer[frame->node()].unite(r);
         } else {
             if (frame->isFrameDocument() && frame->parent() == nullptr) {
                 auto root = frame->node()->webView()->rootStackingContext();

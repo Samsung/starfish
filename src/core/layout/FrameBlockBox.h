@@ -102,6 +102,11 @@ public:
         return true;
     }
 
+    virtual bool isVisible() override
+    {
+        return true;
+    }
+
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
                                     LayoutUnit dx, LayoutUnit dy) override;
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
@@ -282,6 +287,11 @@ public:
     }
 
     virtual bool isInlineBoxLayoutParentBox() const override
+    {
+        return true;
+    }
+
+    virtual bool isVisible() override
     {
         return true;
     }

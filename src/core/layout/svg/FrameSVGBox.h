@@ -68,6 +68,10 @@ public:
     {
         m_hasMask = true;
     }
+    virtual bool isVisible() override
+    {
+        return true;
+    }
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
