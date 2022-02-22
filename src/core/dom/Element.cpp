@@ -269,6 +269,19 @@ String* Element::getAttributeOrEmpty(const QualifiedName& qualifiedName) const
     return String::emptyString;
 }
 
+String* Element::getAttributeOrVarReferencedValue(
+    const QualifiedName& attributeName,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
+{
+    String* attributeValue = getAttributeOrEmpty(attributeName);
+    if (attributeValue->startsWith("var(")) {
+        std::string newValue = StyleResolver::resolveVarReferencedValue(
+            this, attributeValue->toNullableUTF8String(), cssCustomValues);
+        return String::fromUTF8(newValue.c_str(), newValue.size());
+    }
+    return attributeValue;
+}
+
 void Element::invokeDidAttributeChanged(QualifiedName name, String* old,
                                         String* value, bool attributeCreated,
                                         bool attributeRemoved)

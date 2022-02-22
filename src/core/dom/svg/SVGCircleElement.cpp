@@ -91,12 +91,13 @@ void* SVGCircleElement::operator new(size_t size)
 }
 
 void SVGCircleElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(r, R, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY, cssCustomValues);
 }
 
 SVGAnimatedTransformList* SVGCircleElement::transform()

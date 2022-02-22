@@ -374,10 +374,12 @@ GCVector<HTMLInputElement*>* HTMLInputElement::radioButtonGroup()
 uint32_t HTMLInputElement::size()
 {
     String* size = getAttributeOrEmpty(starfish()->staticStrings()->m_size);
-    if (!size->equals(String::emptyString)) {
-        return String::parseInt64(size);
+    if (size->length()) {
+        // if the value is in the range 1 to 2147483647 inclusive,
+        // the resulting value must be returned.
+        int32_t value = String::parseInt64(size);
+        return value > 0 ? value : DEFAULT_SIZE;
     }
-
     return DEFAULT_SIZE;
 }
 

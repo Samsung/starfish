@@ -88,12 +88,13 @@ void* SVGEllipseElement::operator new(size_t size)
 }
 
 void SVGEllipseElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(rx, RX);
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(ry, RY);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cx, CX, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(cy, CY, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(rx, RX, cssCustomValues);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(ry, RY, cssCustomValues);
 }
 } // namespace Starfish

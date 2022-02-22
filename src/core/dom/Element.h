@@ -199,6 +199,9 @@ public:
     Attr* getAttributeNode(String* qualifiedName);
     Attr* getAttributeNodeNS(Nullable<String*> ns, String* localName);
     String* getAttributeOrEmpty(const QualifiedName& qualifiedName) const;
+    String* getAttributeOrVarReferencedValue(
+        const QualifiedName& attributeName,
+        Nullable<const MutablePropertyValueList*> cssCustomValues);
 
     void setAttribute(const AttributeName& name, String* value);
 
@@ -230,6 +233,12 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues)
+    {
+    }
+
+    virtual void styleForPresentationAttribute(
+        CSSStyleValuePairVectorHolder& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues)
     {
     }
 

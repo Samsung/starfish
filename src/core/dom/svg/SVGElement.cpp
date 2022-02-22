@@ -214,24 +214,28 @@ SVGElement* SVGElement::viewportElement()
 }
 
 void SVGElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
     Element::styleForPresentationAttribute(cssValues);
     CSSStyleValuePair pair;
 
     if (needsGeometryAttributes()) {
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x, X);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y, Y);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x1, X1);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y1, Y1);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x2, X2);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y2, Y2);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(width, Width);
-        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(height, Height);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x, X, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y, Y, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x1, X1, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y1, Y1, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(x2, X2, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(y2, Y2, cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(width, Width,
+                                                   cssCustomValues);
+        STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(height, Height,
+                                                   cssCustomValues);
     }
 
     if (needsFillAttributes()) {
-        String* fill = getAttributeOrEmpty(starfish()->staticStrings()->m_fill);
+        String* fill = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_fill, cssCustomValues);
         if (fill->length()) {
             pair.setKeyKind(CSSStyleValuePair::Fill);
 
@@ -244,8 +248,8 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
 
-        String* fillRule =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_fillRule);
+        String* fillRule = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_fillRule, cssCustomValues);
         if (fillRule->length()) {
             pair.setKeyKind(CSSStyleValuePair::FillRule);
 
@@ -258,8 +262,8 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
 
-        String* fillOpacity =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_fillOpacity);
+        String* fillOpacity = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_fillOpacity, cssCustomValues);
         if (fillOpacity->length()) {
             pair.setKeyKind(CSSStyleValuePair::FillOpacity);
 
@@ -274,8 +278,8 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     if (needsStrokeAttributes()) {
-        String* stroke =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_stroke);
+        String* stroke = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_stroke, cssCustomValues);
         if (stroke->length()) {
             pair.setKeyKind(CSSStyleValuePair::Stroke);
 
@@ -288,8 +292,8 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
 
-        String* strokeWidth =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_strokeWidth);
+        String* strokeWidth = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_strokeWidth, cssCustomValues);
         if (strokeWidth->length()) {
             pair.setKeyKind(CSSStyleValuePair::StrokeWidth);
 
@@ -302,8 +306,8 @@ void SVGElement::styleForPresentationAttribute(
             }
         }
 
-        String* strokeOpacity =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_strokeOpacity);
+        String* strokeOpacity = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_strokeOpacity, cssCustomValues);
         if (strokeOpacity->length()) {
             pair.setKeyKind(CSSStyleValuePair::StrokeOpacity);
 
@@ -318,8 +322,8 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     if (needsTransparentAttributes()) {
-        String* opacity =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_opacity);
+        String* opacity = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_opacity, cssCustomValues);
         if (opacity->length()) {
             pair.setKeyKind(CSSStyleValuePair::Opacity);
 
@@ -334,8 +338,8 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     if (needsTransformAttributes()) {
-        String* transform =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_transform);
+        String* transform = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_transform, cssCustomValues);
         if (transform->length()) {
             pair.setKeyKind(CSSStyleValuePair::Transform);
 
@@ -350,8 +354,8 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     if (needsClipPathAttributes()) {
-        String* clipPathStr =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_clipPath);
+        String* clipPathStr = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_clipPath, cssCustomValues);
 
         if (clipPathStr->length()) {
             pair.setKeyKind(CSSStyleValuePair::ClipPath);
@@ -368,8 +372,8 @@ void SVGElement::styleForPresentationAttribute(
 
     if (isRenderableElement()) {
         // The display property only applies to renderable elements.
-        String* displayStr =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_display);
+        String* displayStr = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_display, cssCustomValues);
 
         if (displayStr->length()) {
             pair.setKeyKind(CSSStyleValuePair::Display);
@@ -388,8 +392,8 @@ void SVGElement::styleForPresentationAttribute(
     if (needsMaskAttributes()) {
         // Value:  <funciri> | none | inherit
         // <FuncIRI> : Functional notation for an IRI: "url(" <IRI> ")".
-        String* value =
-            getAttributeOrEmpty(starfish()->staticStrings()->m_mask);
+        String* value = getAttributeOrVarReferencedValue(
+            starfish()->staticStrings()->m_mask, cssCustomValues);
         if (!value->isEmpty()) {
             pair.setKeyKind(CSSStyleValuePair::MaskImage);
 

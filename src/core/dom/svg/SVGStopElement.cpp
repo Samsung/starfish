@@ -33,7 +33,6 @@ void SVGStopElement::didAttributeChanged(QualifiedName name, String* old,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-
     if (name == ss->m_stopColor || name == ss->m_stopOpacity ||
         name == ss->m_offset) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
@@ -78,12 +77,13 @@ ColorStop* SVGStopElement::colorStop()
 }
 
 void SVGStopElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 
-    String* stopColor =
-        getAttributeOrEmpty(starfish()->staticStrings()->m_stopColor);
+    String* stopColor = getAttributeOrVarReferencedValue(
+        starfish()->staticStrings()->m_stopColor, cssCustomValues);
     if (stopColor->length()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::StopColor);
@@ -95,8 +95,8 @@ void SVGStopElement::styleForPresentationAttribute(
         }
     }
 
-    String* stopOpacity =
-        getAttributeOrEmpty(starfish()->staticStrings()->m_stopOpacity);
+    String* stopOpacity = getAttributeOrVarReferencedValue(
+        starfish()->staticStrings()->m_stopOpacity, cssCustomValues);
     if (stopOpacity->length()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::StopOpacity);

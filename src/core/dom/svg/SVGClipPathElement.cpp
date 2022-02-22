@@ -53,9 +53,10 @@ SVGClipPathElement::SVGClipPathElement(Document* document,
 }
 
 void SVGClipPathElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 }
 
 SVGAnimatedEnumeration* SVGClipPathElement::clipPathUnits()

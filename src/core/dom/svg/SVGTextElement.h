@@ -81,7 +81,8 @@ public:
     virtual void updateAttributeNeeded(QualifiedName name);
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues) override;
+        CSSStyleValuePairVectorHolder& cssValues,
+        Nullable<const MutablePropertyValueList*> cssCustomValues) override;
 
     void setTextAnchor(TextAnchor value)
     {

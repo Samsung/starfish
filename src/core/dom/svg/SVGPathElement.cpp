@@ -40,11 +40,13 @@ void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
 }
 
 void SVGPathElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 
-    String* d = getAttributeOrEmpty(starfish()->staticStrings()->m_d);
+    String* d = getAttributeOrVarReferencedValue(
+        starfish()->staticStrings()->m_d, cssCustomValues);
     CSSStyleDeclaration decl(this);
     auto buf = d->toUTF8NonGCString();
     decl.setD(buf.data(), buf.length(), false);

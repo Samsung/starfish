@@ -93,23 +93,26 @@ void SVGTextElement::updateAttributeNeeded(QualifiedName name)
 }
 
 void SVGTextElement::styleForPresentationAttribute(
-    CSSStyleValuePairVectorHolder& cssValues)
+    CSSStyleValuePairVectorHolder& cssValues,
+    Nullable<const MutablePropertyValueList*> cssCustomValues)
 {
-    SVGElement::styleForPresentationAttribute(cssValues);
+    SVGElement::styleForPresentationAttribute(cssValues, cssCustomValues);
 
     StaticStrings* ss = starfish()->staticStrings();
     {
-        auto attr = getAttribute(ss->m_fontDashFamily);
-        if (attr.hasValue()) {
+        auto attr = getAttributeOrVarReferencedValue(ss->m_fontDashFamily,
+                                                     cssCustomValues);
+        if (attr->length()) {
             CSSStyleDeclaration decl(this);
-            auto str = attr.getValue()->toUTF8NonGCString();
+            auto str = attr->toUTF8NonGCString();
             decl.setFontFamily(str.data(), str.length(), false);
             if (decl.cssValues().size()) {
                 cssValues.push_back(decl.cssValues()[0]);
             }
         }
     }
-    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fontDashSize, FontSize);
+    STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(fontDashSize, FontSize,
+                                               cssCustomValues);
 }
 
 SVGAnimatedLengthList* SVGTextElement::x()
