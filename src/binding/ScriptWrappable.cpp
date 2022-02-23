@@ -190,16 +190,16 @@ static void loggingJSErrorInfo(
         sbResult.resultOrErrorToString(instance->scriptContext())
             ->toStdUTF8String()
             .data());
-    for (size_t i = 0; i < sbResult.stackTraceData.size(); i++) {
+    for (size_t i = 0; i < sbResult.stackTrace.size(); i++) {
         STARFISH_LOG_ERROR(
             "at %s(%d:%d)",
-            toBrowserString(instance, sbResult.stackTraceData[i].src)
+            toBrowserString(instance, sbResult.stackTrace[i].srcName)
                 ->toUTF8NonGCString()
                 .data(),
-            (int)sbResult.stackTraceData[i].loc.line,
-            (int)sbResult.stackTraceData[i].loc.column);
+            (int)sbResult.stackTrace[i].loc.line,
+            (int)sbResult.stackTrace[i].loc.column);
 
-        Escargot::StringRef* src = sbResult.stackTraceData[i].sourceCode;
+        Escargot::StringRef* src = sbResult.stackTrace[i].sourceCode;
         if (src->length()) {
             const size_t preLineMax = 40;
             const size_t afterLineMax = 40;
@@ -207,7 +207,7 @@ static void loggingJSErrorInfo(
             size_t preLineSoFar = 0;
             size_t afterLineSoFar = 0;
 
-            size_t start = sbResult.stackTraceData[i].loc.index;
+            size_t start = sbResult.stackTrace[i].loc.index;
             int64_t idx = (int64_t)start;
             while (start - idx < preLineMax) {
                 if (idx == 0) {
@@ -605,12 +605,12 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
         // Dispatch error event to window
         ErrorEventInit errorInfo;
         errorInfo.setMessage(toBrowserString(instance, errorValue));
-        if (result.stackTraceData.size() > 0) {
-            size_t lastIndex = result.stackTraceData.size() - 1;
+        if (result.stackTrace.size() > 0) {
+            size_t lastIndex = result.stackTrace.size() - 1;
             errorInfo.setFilename(toBrowserString(
-                instance, result.stackTraceData[lastIndex].src));
-            errorInfo.setLineno(result.stackTraceData[lastIndex].loc.line);
-            errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
+                instance, result.stackTrace[lastIndex].srcName));
+            errorInfo.setLineno(result.stackTrace[lastIndex].loc.line);
+            errorInfo.setColno(result.stackTrace[lastIndex].loc.column);
         }
         errorInfo.setError(errorValue);
         instance->dispatchErrorEventToGlobalScope(errorInfo);
@@ -659,15 +659,13 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
             ScriptValue errorValue = sbresult.error.value();
             ErrorEventInit errorInfo;
             errorInfo.setMessage(toBrowserString(instance, errorValue));
-            if (sbresult.stackTraceData.size() > 0) {
-                size_t lastIndex = sbresult.stackTraceData.size() - 1;
+            if (sbresult.stackTrace.size() > 0) {
+                size_t lastIndex = sbresult.stackTrace.size() - 1;
                 errorInfo.setFilename(toBrowserString(
                     instance,
-                    ValueRef::create(sbresult.stackTraceData[lastIndex].src)));
-                errorInfo.setLineno(
-                    sbresult.stackTraceData[lastIndex].loc.line);
-                errorInfo.setColno(
-                    sbresult.stackTraceData[lastIndex].loc.column);
+                    ValueRef::create(sbresult.stackTrace[lastIndex].srcName)));
+                errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+                errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
             }
             errorInfo.setError(errorValue);
             instance->dispatchErrorEventToGlobalScope(errorInfo);
@@ -702,14 +700,12 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
             ScriptValue errorValue = sbresult.error.value();
             ErrorEventInit errorInfo;
             errorInfo.setMessage(toBrowserString(instance, errorValue));
-            if (sbresult.stackTraceData.size() > 0) {
-                size_t lastIndex = sbresult.stackTraceData.size() - 1;
+            if (sbresult.stackTrace.size() > 0) {
+                size_t lastIndex = sbresult.stackTrace.size() - 1;
                 errorInfo.setFilename(toBrowserString(
-                    instance, sbresult.stackTraceData[lastIndex].src));
-                errorInfo.setLineno(
-                    sbresult.stackTraceData[lastIndex].loc.line);
-                errorInfo.setColno(
-                    sbresult.stackTraceData[lastIndex].loc.column);
+                    instance, sbresult.stackTrace[lastIndex].srcName));
+                errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+                errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
             }
             errorInfo.setError(errorValue);
             instance->dispatchErrorEventToGlobalScope(errorInfo);
@@ -930,12 +926,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         ScriptValue errorValue = sbresult.error.value();
         ErrorEventInit errorInfo;
         errorInfo.setMessage(toBrowserString(instance, errorValue));
-        if (sbresult.stackTraceData.size() > 0) {
-            size_t lastIndex = sbresult.stackTraceData.size() - 1;
+        if (sbresult.stackTrace.size() > 0) {
+            size_t lastIndex = sbresult.stackTrace.size() - 1;
             errorInfo.setFilename(toBrowserString(
-                instance, sbresult.stackTraceData[lastIndex].src));
-            errorInfo.setLineno(sbresult.stackTraceData[lastIndex].loc.line);
-            errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
+                instance, sbresult.stackTrace[lastIndex].srcName));
+            errorInfo.setLineno(sbresult.stackTrace[lastIndex].loc.line);
+            errorInfo.setColno(sbresult.stackTrace[lastIndex].loc.column);
         }
         errorInfo.setError(errorValue);
         instance->dispatchErrorEventToGlobalScope(errorInfo);
