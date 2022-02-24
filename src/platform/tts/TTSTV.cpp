@@ -596,7 +596,14 @@ int TTS::ttsPlay()
     m_lastSpeechElement = m_pendingSpeech.first;
     String* text = m_pendingSpeech.second;
     // STARFISH_LOG_ERROR("[TTS] tts_add_text: %s", CSTR(text));
-    ret = tts_add_text(m_handle, CSTR(text), NULL, TTS_VOICE_TYPE_AUTO,
+
+    const char* language = nullptr;
+    if (m_userLanguage.size()) {
+        language = m_userLanguage.c_str();
+    }
+    // If the variable language is still nullptr, TTS Engine will use
+    // system-defined value.
+    ret = tts_add_text(m_handle, CSTR(text), language, TTS_VOICE_TYPE_AUTO,
                        TTS_SPEED_AUTO, &gUtteranceId);
     m_pendingSpeech.first = nullptr;
     m_pendingSpeech.second = String::emptyString;

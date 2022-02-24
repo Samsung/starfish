@@ -41,6 +41,7 @@ public:
         , m_state(-1)
         , m_lweTTSMode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
+        , m_userLanguage()
         , m_currentUtterId(0)
     {
         initialize();
@@ -66,6 +67,16 @@ public:
     }
 
     void setMode(LWE::TTSMode lweTTSMode);
+
+    std::string userLanguage() const
+    {
+        return m_userLanguage;
+    }
+
+    void setUserLanguage(const std::string& language)
+    {
+        m_userLanguage = language;
+    }
 
     SpeechSynthesisUtterance* utterance()
     {
@@ -150,6 +161,7 @@ private:
     GCUnorderedMap<int, SpeechSynthesisUtterance*> m_utteranceList;
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;
+    std::string m_userLanguage;
     int m_defaultVoiceType;
     int m_currentUtterId;
 };

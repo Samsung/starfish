@@ -110,6 +110,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 #endif
     , m_defaultFontSize(LWE_DEFAULT_FONT_SIZE)
     , m_ttsMode(TTSMode::Default)
+    , m_ttsLanguage("")
     , m_bgR(255)
     , m_bgG(255)
     , m_bgB(255)
@@ -149,6 +150,11 @@ std::string Settings::GetProxyURL() const
 TTSMode Settings::GetTTSMode() const
 {
     return m_ttsMode;
+}
+
+std::string Settings::GetTTSLanguage() const
+{
+    return m_ttsLanguage;
 }
 
 bool Settings::NeedsDownloadWebFontsEarly() const
@@ -201,6 +207,11 @@ void Settings::SetProxyURL(const std::string& s)
 void Settings::SetTTSMode(TTSMode mode)
 {
     m_ttsMode = mode;
+}
+
+void Settings::SetTTSLanguage(const std::string& language)
+{
+    m_ttsLanguage = language;
 }
 
 void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
@@ -901,6 +912,7 @@ Settings WebContainer::GetSettings()
     result.SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
 #ifdef STARFISH_ENABLE_TTS
     result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
+    result.SetTTSLanguage(TO_WEBVIEW(m_impl)->tts()->userLanguage());
 #endif
     result.SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
     result.SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
@@ -1138,6 +1150,7 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
 #ifdef STARFISH_ENABLE_TTS
     TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
+    TO_WEBVIEW(m_impl)->tts()->setUserLanguage(settings.GetTTSLanguage());
 #endif
     unsigned char r, g, b, a;
     settings.GetBaseBackgroundColor(r, g, b, a);

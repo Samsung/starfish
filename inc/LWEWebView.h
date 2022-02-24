@@ -75,6 +75,7 @@ public:
     std::string GetProxyURL() const;
     int GetCacheMode() const;
     TTSMode GetTTSMode() const;
+    std::string GetTTSLanguage() const;
     WebSecurityMode GetWebSecurityMode() const;
     IdleModeJob GetIdleModeJob() const;
     uint32_t GetIdleModeCheckIntervalInMS() const;
@@ -92,6 +93,7 @@ public:
     void SetProxyURL(const std::string& proxyURL);
     void setDefaultFontSize(int size);
     void SetTTSMode(TTSMode value);
+    void SetTTSLanguage(const std::string& language);
     void SetBaseBackgroundColor(unsigned char r, unsigned char g,
                                 unsigned char b, unsigned char a);
     void SetBaseForegroundColor(unsigned char r, unsigned char g,
@@ -113,6 +115,7 @@ private:
     int m_cacheMode;
     uint32_t m_defaultFontSize;
     TTSMode m_ttsMode;
+    std::string m_ttsLanguage;
     unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
     unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
     WebSecurityMode m_webSecurityMode;
