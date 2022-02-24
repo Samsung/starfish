@@ -306,6 +306,7 @@ int main(int argc, char* argv[])
     bool scrollbarVisible = true;
     bool useExternalPopup = false;
     bool useHTTP2 = false;
+    std::string language;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -391,6 +392,8 @@ int main(int argc, char* argv[])
             useExternalPopup = true;
         } else if (strcmp(argv[i], "--use-http2") == 0) {
             useHTTP2 = true;
+        } else if (strcmp(argv[i], "--tts-language=") == 0) {
+            language = argv[i] + strlen("--tts-language=");
         }
     }
 
@@ -564,6 +567,7 @@ int main(int argc, char* argv[])
             settings.SetUseExternalPopup(useExternalPopup);
         }
         settings.SetTTSMode(ttsMode);
+        settings.SetTTSLanguage(language);
         settings.SetUseHttp2(useHTTP2);
         webView->SetSettings(settings);
     }
