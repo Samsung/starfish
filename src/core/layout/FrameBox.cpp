@@ -1629,7 +1629,7 @@ static inline void paintGradient(Canvas* canvas, FrameBox* box,
 
         if (gradient->gradientImageDataCached() == nullptr) {
             auto imageData = BufferedNativeImageData::create(
-                ceil(imageWidth / imageScale), ceil(imageHeight / imageScale));
+                floor(imageWidth / imageScale), floor(imageHeight / imageScale));
             Canvas* cv = Canvas::create(box->node()->webView(), imageData);
             cv->scale(1 / imageScale, 1 / imageScale);
 
