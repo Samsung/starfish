@@ -465,6 +465,7 @@ test/cairo/internal-test/css/overflow/overflowhittest.html
 test/cairo/internal-test/css/overflow/fixed-positioned-parent-box-and-fixed-positioned-child-box.html
 test/cairo/internal-test/css/overflow/fixed-positioned-parent-box-and-transform-child-box.html
 test/cairo/internal-test/css/overflow/fixed-positioned-parent-box-and-will-change-child-box.html
+test/cairo/internal-test/css/overflow/relative-positioned-parent-and-will-change-child-box.html
 test/cairo/internal-test/canvas/compositing.html
 test/cairo/internal-test/css/presentational-hints/body-margin-presentational-hints.html
 test/cairo/internal-test/css/repaint/outline-repaint.html
