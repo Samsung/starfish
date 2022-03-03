@@ -755,6 +755,7 @@ public:
 
             while (f) {
                 frameList.push_back(f->asFrameBox());
+                f = f->layoutParent();
 
                 bool applyOverflow = status.canApplyOverflow(f);
                 if (applyOverflow) {
@@ -782,7 +783,6 @@ public:
                     }
                 }
 
-                f = f->layoutParent();
             }
         }
 
