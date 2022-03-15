@@ -160,6 +160,7 @@ void rewinddir(DIR* dir)
 */
 #else /* !defined(OS_WINDOWS) */
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #endif
@@ -292,19 +293,12 @@ private:
         struct stat statPath, statEntry;
         struct dirent* entry;
 
-        int r = stat(path, &statPath);
-        if (r < 0) {
-            return;
-        }
-        if (S_ISDIR(statPath.st_mode) == 0) {
-            STARFISH_LOG_ERROR("Is not directory : %s", path);
-            return;
-        }
         if ((dir = opendir(path)) == nullptr) {
             STARFISH_LOG_ERROR("Can`t open directory : %s", path);
             return;
         }
 
+        int fd = dirfd(dir);
         while ((entry = readdir(dir)) != NULL) {
             // Skip entries "." and ".."
             if (!strncmp(entry->d_name, ".", 1) ||
@@ -312,24 +306,23 @@ private:
                 continue;
             }
 
-            std::string fullPath(path);
-            fullPath += "/";
-            fullPath += entry->d_name;
-
-            int r = stat(fullPath.c_str(), &statEntry);
+            int r = fstatat(fd, entry->d_name, &statEntry, AT_SYMLINK_NOFOLLOW);
             if (r < 0) {
                 continue;
             }
 
             // recursively remove a nested directorys
             if (S_ISDIR(statEntry.st_mode) != 0) {
+                std::string fullPath(path);
+                fullPath += "/";
+                fullPath += entry->d_name;
                 removeDirectory(fullPath.c_str());
                 continue;
             }
 
             // remove a file object
-            if (unlink(fullPath.c_str()) != 0) {
-                STARFISH_LOG_ERROR("Can`t remove a file: %s", fullPath.c_str());
+            if (unlinkat(fd, entry->d_name, 0) != 0) {
+                STARFISH_LOG_ERROR("Can`t remove a file: %s", entry->d_name);
                 continue;
             }
         }
