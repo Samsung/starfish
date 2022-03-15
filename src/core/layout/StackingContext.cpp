@@ -436,7 +436,8 @@ void StackingContext::flushGraphicsBuffer()
     }
 }
 
-class CanvasStateRestorer {
+template <typename T>
+class StateRestorer {
 private:
     std::vector<std::pair<Frame*, std::pair<bool, bool>>>
         m_canApplyOverflowOrScrolls;
@@ -464,38 +465,170 @@ private:
         return std::make_pair(false, false);
     }
 
-public:
-    CanvasStateRestorer(
-        Canvas* canvas, StackingContext* sCtx, FrameBox* owner,
-        const StackingContext::PaintingStackingContextContext& ctx)
-        : m_canvas(canvas)
-        , m_ownerContext(sCtx)
+    bool needToRestore(StackingContext* stackingContext)
     {
-        canvas->save();
-        FrameBox* self = sCtx->owner();
+        Frame* parentFrame = stackingContext->owner()->layoutParent();
 
-        // TODO CanvasStateRestorer, CompositorStateRestorer,
-        // Frame::ComputeVisibleRectContext::uniteRect have same source
-
-        if (self->style()->position() != FixedPositionValue) {
-            bool needsRestore = false;
-            Frame* s = self->layoutParent();
-            while (s) {
-                if ((s->shouldApplyOverflow() &&
-                     (!s->needToEstablishStackingContext() ||
-                      (s->isFrameBox() &&
-                       !s->asFrameBox()->canOwnsStackingContext()))) ||
-                    (s->style() &&
-                     s->style()->position() == FixedPositionValue)) {
-                    needsRestore = true;
-                    break;
-                }
-                s = s->layoutParent();
+        while (parentFrame) {
+            if ((parentFrame->shouldApplyOverflow() &&
+                 (!parentFrame->needToEstablishStackingContext() ||
+                  (parentFrame->isFrameBox() &&
+                   !parentFrame->asFrameBox()->canOwnsStackingContext()))) ||
+                (parentFrame->style() &&
+                 parentFrame->style()->position() == FixedPositionValue)) {
+                return true;
             }
+            parentFrame = parentFrame->layoutParent();
+        }
 
-            if (!needsRestore) {
-                auto o = self->absolutePointIncludingScroll(owner, false);
-                canvas->translate(o.x(), o.y());
+        return false;
+    }
+
+    bool canBeNearestBufferedFrame(Frame* frame,
+                                   StackingContext* childStackingContext)
+    {
+        return frame && frame->asFrameBox()->stackingContext() &&
+               frame->asFrameBox()->stackingContext()->needsGraphicsBuffer() &&
+               frame->asFrameBox()->stackingContext()->isAncestorOf(
+                   childStackingContext);
+    }
+
+    void insertOverflowOrScroll(Frame* frame, OverflowStatus& status,
+                                bool& canScroll)
+    {
+        bool applyOverflow = status.canApplyOverflow(frame);
+        if (applyOverflow) {
+            status.reset(frame);
+            canScroll =
+                status.m_child->style()->position() != FixedPositionValue;
+            insertIntoCanApplyOverflowOrScrolls(
+                frame, std::make_pair(true, canScroll && frame &&
+                                                frame->isFrameBlockBox()));
+        } else {
+            if (status.m_seenAbsBlock &&
+                !status.m_seenContainingBlockForAbsBlock) {
+                canScroll = false;
+            }
+            insertIntoCanApplyOverflowOrScrolls(
+                frame, std::make_pair(false, canScroll && frame &&
+                                                 frame->isFrameBlockBox()));
+        }
+    }
+
+    bool isFixedPosition(Frame* frame)
+    {
+        return frame && frame->style() &&
+               frame->style()->position() == FixedPositionValue;
+    }
+
+    void translateIFrame(StackingContext* stackingContext)
+    {
+        FrameBox* iframeBox = stackingContext->owner()
+                                  ->node()
+                                  ->document()
+                                  ->browsingContext()
+                                  ->sourceElement()
+                                  ->frame()
+                                  ->asFrameBox();
+        m_canvasOrCompositor->translate(
+            iframeBox->borderLeft() + iframeBox->paddingLeft(),
+            iframeBox->borderTop() + iframeBox->paddingTop());
+    }
+
+    void applyStyleClip(ComputedStyle* style)
+    {
+        RectData* rect = style->clip();
+        if (rect) {
+            m_canvasOrCompositor->clip(Unit::Rect(
+                rect->left().numberData(), rect->top().numberData(),
+                rect->right().numberData(), rect->bottom().numberData()));
+        }
+    }
+
+    void clipIfNeedsGraphicsBuffer(
+        StackingContext* stackingContext,
+        const StackingContext::PaintingStackingContextContext& ctx)
+    {
+        StackingContext* parentStackingContext = stackingContext->parent();
+        while (parentStackingContext) {
+            if (parentStackingContext->needsGraphicsBuffer()) {
+                LayoutRect visibleRect = parentStackingContext->visibleRect();
+                LayoutUnit minX = visibleRect.x();
+                LayoutUnit minY = visibleRect.y();
+
+                if (ctx.willCompositing) {
+                    m_canvasOrCompositor->pixelSnappedClip(ctx.layerClipRect);
+                    m_canvasOrCompositor->translate(
+                        -ctx.layerBaseX - ctx.layerScrollX,
+                        -ctx.layerBaseY - ctx.layerScrollY);
+                }
+                m_canvasOrCompositor->translate(-minX, -minY);
+                break;
+            }
+            parentStackingContext = parentStackingContext->parent();
+        }
+    }
+
+    void postMatrixIfNeeds(StackingContext* stackingContext)
+    {
+        if (stackingContext) {
+            SkMatrix m = stackingContext->transformMatrix();
+            if (!m.isIdentity()) {
+                auto o = stackingContext->transformOrigin();
+                m_canvasOrCompositor->translate(o.x(), o.y());
+                m_canvasOrCompositor->postMatrix(m);
+                m_canvasOrCompositor->translate(-o.x(), -o.y());
+            }
+        }
+    }
+
+    void clipFrameBoxRect(FrameBox* frameBox)
+    {
+        Unit::Rect rect(frameBox->borderLeft(), frameBox->borderTop(),
+                        frameBox->width() - frameBox->borderWidth(),
+                        frameBox->height() - frameBox->borderHeight());
+        m_canvasOrCompositor->clip(rect);
+    }
+
+    void clipBorderRadiusIfNeeds(FrameBox* frameBox)
+    {
+        if (frameBox->hasFrameBorderRadius()) {
+            const LayoutRect rect(0, 0, frameBox->width(), frameBox->height());
+            frameBox->applyBorderRadiusClippingIfNeeds(m_canvasOrCompositor, rect);
+        }
+    }
+
+    void translatePosition(const LayoutUnit& x, const LayoutUnit& y)
+    {
+        m_canvasOrCompositor->translate(x, y);
+    }
+
+    void saveState()
+    {
+        m_canvasOrCompositor->save();
+    }
+
+public:
+    template <typename U = T, typename = typename std::enable_if<
+                                  std::is_same<Canvas, U>::value>::type>
+    StateRestorer(
+        U* canvas, StackingContext* childStackingContext,
+        FrameBox* parentFrameBox,
+        const StackingContext::PaintingStackingContextContext& paintingContext)
+        : m_canvasOrCompositor(canvas)
+        , m_opacity(1)
+    {
+        saveState();
+        if (!parentFrameBox) {
+            return;
+        }
+
+        FrameBox* childFrameBox = childStackingContext->owner();
+        if (!isFixedPosition(childFrameBox)) {
+            if (!needToRestore(childStackingContext)) {
+                auto o = childFrameBox->absolutePointIncludingScroll(
+                    parentFrameBox, false);
+                translatePosition(o.x(), o.y());
                 return;
             }
         }
@@ -505,51 +638,29 @@ public:
 
         m_canApplyOverflowOrScrolls.reserve(32);
 
-        Frame* nearstBufferedFrame = nullptr;
-        bool shareWithStackingBuffer = true;
+        Frame* nearestBufferedFrame = nullptr;
+        bool needToShareBuffer = true;
         {
-            Frame* f = self;
-            OverflowStatus status(f);
-            bool canScroll = OverflowStatus::isScrollableFrame(f);
+            Frame* frame = childFrameBox;
+            OverflowStatus status(frame);
+            bool canScroll = OverflowStatus::isScrollableFrame(frame);
 
-            while (f) {
-                frameList.push_back(f->asFrameBox());
-                f = f->layoutParent();
+            while (frame) {
+                frameList.push_back(frame->asFrameBox());
+                frame = frame->layoutParent();
 
-                if (shareWithStackingBuffer && f &&
-                    f->asFrameBox()->stackingContext() &&
-                    f->asFrameBox()->stackingContext()->needsGraphicsBuffer() &&
-                    f->asFrameBox()->stackingContext()->isAncestorOf(sCtx)) {
-                    nearstBufferedFrame = f;
-                    shareWithStackingBuffer = false;
+                if (needToShareBuffer &&
+                    canBeNearestBufferedFrame(frame, childStackingContext)) {
+                    nearestBufferedFrame = frame;
+                    needToShareBuffer = false;
                 }
 
-                if (shareWithStackingBuffer) {
-                    bool applyOverflow = status.canApplyOverflow(f);
-                    if (applyOverflow) {
-                        status.reset(f);
-                        canScroll = status.m_child->style()->position() !=
-                                    FixedPositionValue;
-                        insertIntoCanApplyOverflowOrScrolls(
-                            f, std::make_pair(true, canScroll && f &&
-                                                        f->isFrameBlockBox()));
-                    } else {
-                        if (status.m_seenAbsBlock &&
-                            !status.m_seenContainingBlockForAbsBlock) {
-                            canScroll = false;
-                        }
-
-                        insertIntoCanApplyOverflowOrScrolls(
-                            f, std::make_pair(false, canScroll && f &&
-                                                         f->isFrameBlockBox()));
-                    }
+                if (needToShareBuffer) {
+                    insertOverflowOrScroll(frame, status, canScroll);
                 }
 
-                if (canScroll) {
-                    if (f && f->style() &&
-                        f->style()->position() == FixedPositionValue) {
-                        canScroll = false;
-                    }
+                if (canScroll && isFixedPosition(frame)) {
+                    canScroll = false;
                 }
             }
         }
@@ -557,232 +668,107 @@ public:
         canvas->resetMatrixAndClip();
         canvas->resetTextDecorationData();
 
-        if (!ctx.willCompositing) {
-            canvas->pixelSnappedClip(ctx.screenClipRect);
+        if (!paintingContext.willCompositing) {
+            canvas->pixelSnappedClip(paintingContext.screenClipRect);
         }
-
-        StackingContext* sc = sCtx->parent();
-        while (true) {
-            if (sc == nullptr) {
-                break;
-            }
-            if (sc->needsGraphicsBuffer()) {
-                LayoutRect visibleRect = sc->visibleRect();
-                LayoutUnit minX = visibleRect.x();
-                LayoutUnit minY = visibleRect.y();
-
-                if (ctx.willCompositing) {
-                    canvas->pixelSnappedClip(ctx.layerClipRect);
-                    canvas->translate(-ctx.layerBaseX - ctx.layerScrollX,
-                                      -ctx.layerBaseY - ctx.layerScrollY);
-                }
-                canvas->translate(-minX, -minY);
-                break;
-            }
-            sc = sc->parent();
-        }
+        clipIfNeedsGraphicsBuffer(childStackingContext, paintingContext);
 
         auto iter = frameList.rbegin();
-        shareWithStackingBuffer = nearstBufferedFrame ? false : true;
-        LayoutUnit dx, dy;
+        needToShareBuffer = nearestBufferedFrame ? false : true;
         while (iter != frameList.rend()) {
-            FrameBox* b = *iter;
-            StackingContext* ctx = b->stackingContext();
+            FrameBox* frameBox = *iter;
 
-            if (b->style()) {
-                if (b != self) {
-                    if (b->shouldResetTextDecoration()) {
+            ComputedStyle* style = frameBox->style();
+            if (style) {
+                if (frameBox != childFrameBox) {
+                    if (frameBox->shouldResetTextDecoration()) {
                         canvas->resetTextDecorationData();
                     } else {
-                        canvas->mergeTextDecorationData(b->style());
+                        canvas->mergeTextDecorationData(frameBox->style());
                     }
                 }
             }
 
-            if (nearstBufferedFrame && nearstBufferedFrame == b) {
-                shareWithStackingBuffer = true;
+            if (nearestBufferedFrame && nearestBufferedFrame == frameBox) {
+                needToShareBuffer = true;
             }
 
-            if (!shareWithStackingBuffer) {
+            if (!needToShareBuffer) {
                 iter++;
                 continue;
             }
 
-            if (!(nearstBufferedFrame && nearstBufferedFrame == b)) {
-                dx += b->x();
-                dy += b->y();
+            if (!(nearestBufferedFrame && nearestBufferedFrame == frameBox)) {
+                translatePosition(frameBox->x(), frameBox->y());
             }
 
-            if (b->style()) {
-                auto overflowOrScroll = readFromCanApplyOverflowOrScrolls(b);
+            if (style) {
+                auto overflowOrScroll =
+                    readFromCanApplyOverflowOrScrolls(frameBox);
 
-                if (b != self) {
-                    if (b != nearstBufferedFrame) {
-                        StackingContext* ctx = b->stackingContext();
-                        if (ctx) {
-                            SkMatrix m =
-                                b->stackingContext()->transformMatrix();
-                            if (!m.isIdentity()) {
-                                canvas->translate(dx, dy);
-                                dx = dy = 0;
-
-                                auto o =
-                                    b->stackingContext()->transformOrigin();
-                                canvas->translate(o.x(), o.y());
-                                canvas->postMatrix(m);
-                                canvas->translate(-o.x(), -o.y());
-                            }
-                        }
+                StackingContext* stackingContext = frameBox->stackingContext();
+                if (frameBox != childFrameBox) {
+                    if (frameBox != nearestBufferedFrame) {
+                        postMatrixIfNeeds(stackingContext);
                     }
 
                     if (overflowOrScroll.first) {
-                        Unit::Rect rt(b->borderLeft() + dx, b->borderTop() + dy,
-                                      b->width() - b->borderWidth(),
-                                      b->height() - b->borderHeight());
-                        canvas->clip(rt);
-                        if (b->hasFrameBorderRadius()) {
-                            canvas->translate(dx, dy);
-                            const LayoutRect rect(0, 0, b->width(),
-                                                  b->height());
-                            b->applyBorderRadiusClippingIfNeeds(canvas, rect);
-                            canvas->translate(-dx, -dy);
-                        }
+                        clipFrameBoxRect(frameBox);
+                        clipBorderRadiusIfNeeds(frameBox);
                     }
 
-                    if (b->isAbsolutePositioned()) {
-                        RectData* rect = b->style()->clip();
-                        if (rect) {
-                            canvas->translate(dx, dy);
-                            canvas->clip(
-                                Unit::Rect(rect->left().numberData(),
-                                           rect->top().numberData(),
-                                           rect->right().numberData(),
-                                           rect->bottom().numberData()));
-                            canvas->translate(-dx, -dy);
-                        }
+                    if (style->isAbsolutePositioned()) {
+                        applyStyleClip(style);
                     }
 
                     if (overflowOrScroll.second) {
-                        dx += -b->asFrameBlockBox()->scrollLeft();
-                        dy += -b->asFrameBlockBox()->scrollTop();
+                        translatePosition(
+                            -frameBox->asFrameBlockBox()->scrollLeft(),
+                            -frameBox->asFrameBlockBox()->scrollTop());
                     }
                 }
-            }
 
-            if (ctx && ctx->isIFrameStackingContext() &&
-                nearstBufferedFrame != b) {
-                FrameBlockBox* document =
-                    ctx->owner()->layoutParent()->asFrameBlockBox();
-                FrameBox* iframeBox = ctx->owner()
-                                          ->node()
-                                          ->document()
-                                          ->browsingContext()
-                                          ->sourceElement()
-                                          ->frame()
-                                          ->asFrameBox();
-                canvas->translate(
-                    iframeBox->borderLeft() + iframeBox->paddingLeft(),
-                    iframeBox->borderTop() + iframeBox->paddingTop());
+                if (stackingContext &&
+                    stackingContext->isIFrameStackingContext() &&
+                    nearestBufferedFrame != frameBox) {
+                    translateIFrame(stackingContext);
+                }
             }
-
             iter++;
         }
-        canvas->translate(dx, dy);
-    }
-    ~CanvasStateRestorer()
-    {
-        m_canvas->restore();
     }
 
-    Canvas* m_canvas;
-    StackingContext* m_ownerContext;
-};
-
-class CompositorStateRestorer {
-public:
-    std::vector<std::pair<Frame*, std::pair<bool, bool>>>
-        m_canApplyOverflowOrScrolls;
-
-    void insertIntoCanApplyOverflowOrScrolls(Frame* f, std::pair<bool, bool> v)
-    {
-        auto len = m_canApplyOverflowOrScrolls.size();
-        for (size_t i = 0; i < len; i++) {
-            if (m_canApplyOverflowOrScrolls[i].first == f) {
-                m_canApplyOverflowOrScrolls[i].second = v;
-                return;
-            }
-        }
-        m_canApplyOverflowOrScrolls.push_back(std::make_pair(f, v));
-    }
-
-    std::pair<bool, bool> readFromCanApplyOverflowOrScrolls(Frame* f)
-    {
-        auto len = m_canApplyOverflowOrScrolls.size();
-        for (size_t i = 0; i < len; i++) {
-            if (m_canApplyOverflowOrScrolls[i].first == f) {
-                return m_canApplyOverflowOrScrolls[i].second;
-            }
-        }
-        return std::make_pair(false, false);
-    }
-
-public:
-    CompositorStateRestorer(Compositor* compositor, StackingContext* sCtx,
-                            FrameBox* owner)
-        : m_compositor(compositor)
+    template <typename U = T, typename = typename std::enable_if<
+                                  std::is_same<Compositor, U>::value>::type>
+    StateRestorer(U* compositor, StackingContext* childStackingContext,
+                  FrameBox* parentFrameBox)
+        : m_canvasOrCompositor(compositor)
         , m_opacity(1)
     {
-        compositor->save();
-
-        if (!owner) {
+        saveState();
+        if (!parentFrameBox) {
             return;
         }
 
-        FrameBox* self = sCtx->owner();
-        // TODO CanvasStateRestorer, CompositorStateRestorer,
-        // Frame::ComputeVisibleRectContext::uniteRect have same source
-
+        FrameBox* childFrameBox = childStackingContext->owner();
         VectorWithInlineStorage<32, FrameBox*, std::allocator<FrameBox*>>
             frameList;
 
         m_canApplyOverflowOrScrolls.reserve(32);
-
         {
-            Frame* f = self;
+            Frame* frame = static_cast<Frame*>(childFrameBox);
+            OverflowStatus status(frame);
+            bool canScroll = OverflowStatus::isScrollableFrame(frame);
 
-            OverflowStatus status(f);
-            bool canScroll = OverflowStatus::isScrollableFrame(f);
+            while (frame) {
+                frameList.push_back(frame->asFrameBox());
+                frame = frame->layoutParent();
 
-            while (f) {
-                frameList.push_back(f->asFrameBox());
-                f = f->layoutParent();
+                insertOverflowOrScroll(frame, status, canScroll);
 
-                bool applyOverflow = status.canApplyOverflow(f);
-                if (applyOverflow) {
-                    status.reset(f);
-                    canScroll = status.m_child->style()->position() !=
-                                FixedPositionValue;
-                    insertIntoCanApplyOverflowOrScrolls(
-                        f, std::make_pair(true, canScroll && f &&
-                                                    f->isFrameBlockBox()));
-                } else {
-                    if (status.m_seenAbsBlock &&
-                        !status.m_seenContainingBlockForAbsBlock) {
-                        canScroll = false;
-                    }
-
-                    insertIntoCanApplyOverflowOrScrolls(
-                        f, std::make_pair(false, canScroll && f &&
-                                                     f->isFrameBlockBox()));
+                if (canScroll && isFixedPosition(frame)) {
+                    canScroll = false;
                 }
-
-                if (canScroll) {
-                    if (f && f->style() &&
-                        f->style()->position() == FixedPositionValue) {
-                        canScroll = false;
-                    }
-                }
-
             }
         }
 
@@ -791,22 +777,18 @@ public:
 
         auto iter = frameList.rbegin();
         while (iter != frameList.rend()) {
-            FrameBox* b = *iter;
-            StackingContext* ctx = b->stackingContext();
-            compositor->translate(b->x(), b->y());
-            ComputedStyle* style = b->style();
+            FrameBox* frameBox = *iter;
+            translatePosition(frameBox->x(), frameBox->y());
+
+            ComputedStyle* style = frameBox->style();
             if (style) {
-                auto overflowOrScroll = readFromCanApplyOverflowOrScrolls(b);
+                auto overflowOrScroll =
+                    readFromCanApplyOverflowOrScrolls(frameBox);
 
-                if (ctx) {
-                    SkMatrix m = ctx->transformMatrix();
-                    if (!m.isIdentity()) {
-                        auto o = ctx->transformOrigin();
-                        compositor->translate(o.x(), o.y());
-                        compositor->postMatrix(m);
-                        compositor->translate(-o.x(), -o.y());
-                    }
+                StackingContext* stackingContext = frameBox->stackingContext();
+                postMatrixIfNeeds(stackingContext);
 
+                if (stackingContext) {
                     float n = style->opacity();
                     if (n != 1) {
                         opacity = opacity * n;
@@ -819,45 +801,25 @@ public:
                     }
                 }
 
-                if (overflowOrScroll.first && self != b) {
-                    Unit::Rect rt(b->borderLeft(), b->borderTop(),
-                                  b->width() - b->borderWidth(),
-                                  b->height() - b->borderHeight());
-                    compositor->clip(rt);
-                    if (b->hasFrameBorderRadius()) {
-                        const LayoutRect rect(0, 0, b->width(), b->height());
-                        b->applyBorderRadiusClippingIfNeeds(compositor, rect);
-                    }
+                if (overflowOrScroll.first && childFrameBox != frameBox) {
+                    clipFrameBoxRect(frameBox);
+                    clipBorderRadiusIfNeeds(frameBox);
                 }
 
                 if (style->isAbsolutePositioned()) {
-                    RectData* rect = style->clip();
-                    if (rect) {
-                        compositor->clip(Unit::Rect(
-                            rect->left().numberData(), rect->top().numberData(),
-                            rect->right().numberData(),
-                            rect->bottom().numberData()));
-                    }
+                    applyStyleClip(style);
                 }
 
-                if (overflowOrScroll.second && sCtx->owner() != b) {
-                    compositor->translate(-b->asFrameBlockBox()->scrollLeft(),
-                                          -b->asFrameBlockBox()->scrollTop());
+                if (overflowOrScroll.second &&
+                    childStackingContext->owner() != frameBox) {
+                    translatePosition(
+                        -frameBox->asFrameBlockBox()->scrollLeft(),
+                        -frameBox->asFrameBlockBox()->scrollTop());
                 }
 
-                if (ctx && ctx->isIFrameStackingContext()) {
-                    FrameBlockBox* document =
-                        ctx->owner()->layoutParent()->asFrameBlockBox();
-                    FrameBox* iframeBox = ctx->owner()
-                                              ->node()
-                                              ->document()
-                                              ->browsingContext()
-                                              ->sourceElement()
-                                              ->frame()
-                                              ->asFrameBox();
-                    compositor->translate(
-                        iframeBox->borderLeft() + iframeBox->paddingLeft(),
-                        iframeBox->borderTop() + iframeBox->paddingTop());
+                if (stackingContext &&
+                    stackingContext->isIFrameStackingContext()) {
+                    translateIFrame(stackingContext);
                 }
             }
             iter++;
@@ -869,15 +831,21 @@ public:
         }
     }
 
-    ~CompositorStateRestorer()
+    ~StateRestorer()
     {
         if (m_opacity != 1) {
-            m_compositor->endOpacityLayer();
+            m_canvasOrCompositor->endOpacityLayer();
         }
-        m_compositor->restore();
+        m_canvasOrCompositor->restore();
     }
 
-    Compositor* m_compositor;
+    T* canvasOrCompositor()
+    {
+        return m_canvasOrCompositor;
+    }
+
+private:
+    T* m_canvasOrCompositor;
     float m_opacity;
 };
 
@@ -1931,7 +1899,7 @@ void StackingContext::fillGraphicsBufferContents(
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                CanvasStateRestorer r(canvas, sCtx, m_owner, ctx);
+                StateRestorer<Canvas> r(canvas, sCtx, m_owner, ctx);
                 sCtx->paintStackingContext(canvas, ctx);
                 iter2++;
             }
@@ -1965,7 +1933,7 @@ void StackingContext::fillGraphicsBufferContents(
                 while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
 
-                    CanvasStateRestorer r(canvas, sCtx, m_owner, ctx);
+                    StateRestorer<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                     iter2++;
                 }
@@ -2840,7 +2808,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
                 StackingContext* sCtx = *iter2;
-                CanvasStateRestorer r(canvas, sCtx, m_owner, ctx);
+                StateRestorer<Canvas> r(canvas, sCtx, m_owner, ctx);
                 sCtx->paintStackingContext(canvas, ctx);
                 iter2++;
             }
@@ -2871,7 +2839,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 auto iter2 = child->begin();
                 while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
-                    CanvasStateRestorer r(canvas, sCtx, m_owner, ctx);
+                    StateRestorer<Canvas> r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                     iter2++;
                 }
@@ -2945,8 +2913,8 @@ void StackingContext::compositeScrollbar(Compositor* compositor)
                               ->contentDocument()
                               ->browsingContext();
                 {
-                    CompositorStateRestorer r(compositor, this,
-                                              parent()->owner());
+                    StateRestorer<Compositor> r(compositor, this,
+                                                parent()->owner());
                     compositor->translate(
                         m_owner->borderLeft() + m_owner->paddingLeft(),
                         m_owner->borderTop() + m_owner->paddingTop());
@@ -3000,11 +2968,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
 
-    CompositorStateRestorer r(compositor, this, parentBox);
+    StateRestorer<Compositor> r(compositor, this, parentBox);
 
     // If current matrix is invalid, we could not composite StackckingContext
     SkMatrix test;
-    if (!r.m_compositor->currentTransformMatrix().invert(&test)) {
+    if (!r.canvasOrCompositor()->currentTransformMatrix().invert(&test)) {
         return;
     }
 
@@ -3020,8 +2988,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                               ->browsingContext();
                 auto bgColor = bc->hasWindowBackgroundColor();
                 if (bgColor.first) {
-                    CompositorStateRestorer r(compositor, this,
-                                              parent()->owner());
+                    StateRestorer<Compositor> r(compositor, this,
+                                                parent()->owner());
 
                     compositor->save();
                     compositor->setFillColor(bgColor.second);
