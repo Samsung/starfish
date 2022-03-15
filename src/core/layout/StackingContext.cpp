@@ -1535,6 +1535,8 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
 #ifndef STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE
 #define STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE 6
 #endif
+
+#ifdef DISABLE_SCALE_OPTIMIZE
                 const int32_t minimumScale =
                     STARFISH_GRAPHICS_BUFFER_ADDITIONAL_FACTOR_MAX_SCALE;
 
@@ -1554,6 +1556,7 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                         std::min(ctx.baseAdditionalPixelRatio,
                                  m_rareData->m_additionalPixelRatio);
                 } else {
+#endif
                     float scale =
                         std::max(matrix.getScaleX(), matrix.getScaleY());
                     if (scale < minScale) {
@@ -1567,9 +1570,10 @@ void StackingContext::applyStackingContextPropertiesPostProcessing(
                     ctx.baseAdditionalPixelRatio =
                         std::max(ctx.baseAdditionalPixelRatio,
                                  m_rareData->m_additionalPixelRatio);
+#ifdef DISABLE_SCALE_OPTIMIZE
                 }
+#endif
             }
-
             if (oldAdditionalPixelRatio != m_rareData->m_additionalPixelRatio) {
                 m_owner->node()
                     ->webView()
