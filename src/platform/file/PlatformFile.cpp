@@ -243,25 +243,6 @@ static std::wstring toUtf16(std::string str)
 std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
                                                  FileMode mode)
 {
-    // windows is cannot use utf-8 encoded filename if there is non-ASCII char
-    // we should convert it as utf-16
-#if defined(OS_WINDOWS)
-    struct _stat64i32 s;
-    memset(&s, 0, sizeof(struct _stat64i32));
-    int r = _wstat(toUtf16(filePath).data(), &s);
-#else
-    struct stat s;
-    memset(&s, 0, sizeof(struct stat));
-    int r = stat(filePath.data(), &s);
-#endif
-    if (r < 0 && mode == FileMode::Read) {
-        return nullptr;
-    }
-
-    if ((s.st_mode & S_IFMT) == S_IFDIR) {
-        return nullptr;
-    }
-
 #if defined(OS_WINDOWS)
     const wchar_t* m = L"rb";
     if (mode == FileMode::Write) {
@@ -279,12 +260,30 @@ std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
     }
     FILE* fp = fopen(filePath.data(), m);
 #endif
-
-    if (fp) {
-        return std::unique_ptr<PlatformFile>(
-            new PlatformFilePosix(fp, filePath));
+    if (!fp) {
+        return nullptr;
     }
-    return nullptr;
+
+    // windows is cannot use utf-8 encoded filename if there is non-ASCII char
+    // we should convert it as utf-16
+#if defined(OS_WINDOWS)
+    struct _stat64i32 s;
+    memset(&s, 0, sizeof(struct _stat64i32));
+    int r = _wstat(toUtf16(filePath).data(), &s);
+#else
+    struct stat s;
+    memset(&s, 0, sizeof(struct stat));
+
+    int r = fstat(fileno(fp), &s);
+#endif
+    if (r < 0 && mode == FileMode::Read) {
+        return nullptr;
+    }
+
+    if ((s.st_mode & S_IFMT) == S_IFDIR) {
+        return nullptr;
+    }
+    return std::unique_ptr<PlatformFile>(new PlatformFilePosix(fp, filePath));
 }
 
 } // namespace Starfish
