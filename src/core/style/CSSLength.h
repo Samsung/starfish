@@ -94,12 +94,12 @@ protected:
 
 inline CSSLength operator*(const CSSLength& a, const float b)
 {
-    return CSSLength(a.value() * b);
+    return CSSLength(a.kind(), a.value() * b);
 }
 
 inline CSSLength operator*(const float a, const CSSLength& b)
 {
-    return CSSLength(a * b.value());
+    return CSSLength(b.kind(), a * b.value());
 }
 
 } // namespace Starfish

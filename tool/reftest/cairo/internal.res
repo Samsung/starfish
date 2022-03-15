@@ -26,6 +26,7 @@ test/cairo/internal-test/css/css-variables/customproperty_35.html
 test/cairo/internal-test/css/css-variables/customproperty_36.html
 test/cairo/internal-test/css/css-variables/customproperty_37.html
 test/cairo/internal-test/css/css-variables/customproperty_38.html
+test/cairo/internal-test/css/css-variables/customproperty_39.html
 test/cairo/internal-test/css/position/rtl-position-internal-test.html
 test/cairo/internal-test/css/background/background_properties.html
 test/cairo/internal-test/css/background/background_shorthand.html
@@ -271,6 +272,7 @@ test/cairo/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 test/cairo/internal-test/css/length/simple_calc.html
 test/cairo/internal-test/css/length/simple_calc2.html
 test/cairo/internal-test/css/length/calc_lineheight.html
+test/cairo/internal-test/css/length/calc_rem.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow2.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-transform.html
