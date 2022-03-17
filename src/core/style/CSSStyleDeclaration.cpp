@@ -1218,6 +1218,7 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
             continue;
         } else if (!foundTimingFunction &&
                    temp.updateValueVarReferences(toks)) {
+            temp.setValue(String::fromUTF8(tok.data(), tok.length()));
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
@@ -1289,6 +1290,7 @@ static bool parseAnimationShorthand(
             continue;
         } else if (!foundTimingFunction &&
                    temp.updateValueVarReferences(toks)) {
+            temp.setValue(String::fromUTF8(tok.data(), tok.length()));
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
