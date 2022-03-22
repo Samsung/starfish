@@ -263,7 +263,7 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
     state->throwException(                                             \
         Escargot::ValueRef::create(Escargot::ErrorObjectRef::create(   \
             state, Escargot::ErrorObjectRef::TypeError,                \
-            Escargot::StringRef::createFromASCII(MSG, strlen(MSG))))); \
+            toJSString(String::createASCIIString(MSG, strlen(MSG))))));\
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define _CHECK_TYPEOF(v, type)                        \
