@@ -5,7 +5,7 @@ on:
 
 jobs:
   check_source:
-    runs-on: [rat6]
+    runs-on: [legacy-rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
     # Set reasonable timeout value.
@@ -22,7 +22,7 @@ jobs:
 
   build_x64:
     needs: check_source
-    runs-on: [rat6]
+    runs-on: [legacy-rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
       options: --user root
@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 60
     # After the firewall registraion is done, a code runner should also be added to test work.
     # runs-on: [ self-hosted, code-2xlarge ]
-    runs-on: [rat6]
+    runs-on: [legacy-rat6]
     container:
       image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
       options: --user root
