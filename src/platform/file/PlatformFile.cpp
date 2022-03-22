@@ -277,10 +277,12 @@ std::unique_ptr<PlatformFile> PlatformFile::open(const std::string& filePath,
     int r = fstat(fileno(fp), &s);
 #endif
     if (r < 0 && mode == FileMode::Read) {
+        fclose(fp);
         return nullptr;
     }
 
     if ((s.st_mode & S_IFMT) == S_IFDIR) {
+        fclose(fp);
         return nullptr;
     }
     return std::unique_ptr<PlatformFile>(new PlatformFilePosix(fp, filePath));
