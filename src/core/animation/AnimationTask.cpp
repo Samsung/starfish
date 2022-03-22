@@ -1695,6 +1695,26 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
     return false;
 }
 
+static Length getLengthWidth(Frame* frame, Element* element, Length length)
+{
+    if (length.isCalc()) {
+        FrameBox* cb = containingBlock(frame);
+        return Length(Length::Fixed, length.calcData()->specifiedValue(
+                                         cb->contentWidth(), element));
+    }
+    return length;
+}
+
+static Length getLengthHeight(Frame* frame, Element* element, Length length)
+{
+    if (length.isCalc()) {
+        FrameBox* cb = containingBlock(frame);
+        return Length(Length::Fixed, length.calcData()->specifiedValue(
+                                         cb->contentHeight(), element));
+    }
+    return length;
+}
+
 #define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                             \
     STARFISH_ASSERT(currentAnimatedFromValue()->isLength() &&            \
                     currentAnimatedToValue()->isLength());               \
@@ -1919,15 +1939,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::Width);
             if (found == false) {
-                auto oldWidth = oldStyle->width();
-                auto newWidth = newStyle->width();
+                auto oldWidth =
+                    getLengthWidth(oldFrame, element, oldStyle->width());
+                auto newWidth =
+                    getLengthWidth(oldFrame, element, newStyle->width());
 
                 if ((oldWidth.isPercent() == true ||
                      oldWidth.isFixed() == true) &&
                     (newWidth.isPercent() == true ||
                      newWidth.isFixed() == true)) {
-                    auto fromValue = oldStyle->width();
-                    auto toValue = newStyle->width();
+                    auto fromValue = oldWidth;
+                    auto toValue = newWidth;
 
                     if (toValue.isPercent() == true &&
                         !fromValue.isPercent() == true) {
@@ -1960,7 +1982,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::Width,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newWidth);
+                        duration, delay, timingFunction, newStyle->width());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
@@ -1972,15 +1994,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::Height);
             if (found == false) {
-                auto oldHeight = oldStyle->height();
-                auto newHeight = newStyle->height();
+                auto oldHeight =
+                    getLengthHeight(oldFrame, element, oldStyle->height());
+                auto newHeight =
+                    getLengthHeight(oldFrame, element, newStyle->height());
 
                 if ((oldHeight.isPercent() == true ||
                      oldHeight.isFixed() == true) &&
                     (newHeight.isPercent() == true ||
                      newHeight.isFixed() == true)) {
-                    auto fromValue = oldStyle->height();
-                    auto toValue = newStyle->height();
+                    auto fromValue = oldHeight;
+                    auto toValue = newHeight;
 
                     if (toValue.isPercent() == true &&
                         fromValue.isPercent() == false) {
@@ -2014,7 +2038,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::Height,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newHeight);
+                        duration, delay, timingFunction, newStyle->height());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
@@ -2026,15 +2050,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::MinWidth);
             if (found == false) {
-                auto oldWidth = oldStyle->minWidth();
-                auto newWidth = newStyle->minWidth();
+                auto oldWidth =
+                    getLengthWidth(oldFrame, element, oldStyle->minWidth());
+                auto newWidth =
+                    getLengthWidth(oldFrame, element, newStyle->minWidth());
 
                 if ((oldWidth.isPercent() == true ||
                      oldWidth.isFixed() == true) &&
                     (newWidth.isPercent() == true ||
                      newWidth.isFixed() == true)) {
-                    auto fromValue = oldStyle->minWidth();
-                    auto toValue = newStyle->minWidth();
+                    auto fromValue = oldWidth;
+                    auto toValue = newWidth;
 
                     if (toValue.isPercent() == true &&
                         fromValue.isPercent() == false) {
@@ -2067,7 +2093,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::MinWidth,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newWidth);
+                        duration, delay, timingFunction, newStyle->minWidth());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
@@ -2079,15 +2105,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::MinHeight);
             if (found == false) {
-                auto oldHeight = oldStyle->minHeight();
-                auto newHeight = newStyle->minHeight();
+                auto oldHeight =
+                    getLengthHeight(oldFrame, element, oldStyle->minHeight());
+                auto newHeight =
+                    getLengthHeight(oldFrame, element, newStyle->minHeight());
 
                 if ((oldHeight.isPercent() == true ||
                      oldHeight.isFixed() == true) &&
                     (newHeight.isPercent() == true ||
                      newHeight.isFixed() == true)) {
-                    auto fromValue = oldStyle->minHeight();
-                    auto toValue = newStyle->minHeight();
+                    auto fromValue = oldHeight;
+                    auto toValue = newHeight;
 
                     if (toValue.isPercent() == true &&
                         fromValue.isPercent() == false) {
@@ -2121,7 +2149,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::MinHeight,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newHeight);
+                        duration, delay, timingFunction, newStyle->minHeight());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
@@ -2133,15 +2161,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::MaxWidth);
             if (found == false) {
-                auto oldWidth = oldStyle->maxWidth();
-                auto newWidth = newStyle->maxWidth();
+                auto oldWidth =
+                    getLengthWidth(oldFrame, element, oldStyle->maxWidth());
+                auto newWidth =
+                    getLengthWidth(oldFrame, element, newStyle->maxWidth());
 
                 if ((oldWidth.isPercent() == true ||
                      oldWidth.isFixed() == true) &&
                     (newWidth.isPercent() == true ||
                      newWidth.isFixed() == true)) {
-                    auto fromValue = oldStyle->maxWidth();
-                    auto toValue = newStyle->maxWidth();
+                    auto fromValue = oldWidth;
+                    auto toValue = newWidth;
 
                     if (toValue.isPercent() == true &&
                         fromValue.isPercent() == false) {
@@ -2174,7 +2204,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::MaxWidth,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newWidth);
+                        duration, delay, timingFunction, newStyle->maxWidth());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
@@ -2186,15 +2216,17 @@ bool applyTransitionIfNeeds(
             bool found = executor->hasActiveTransition(
                 element, CSSStyleValuePair::MaxHeight);
             if (found == false) {
-                auto oldHeight = oldStyle->maxHeight();
-                auto newHeight = newStyle->maxHeight();
+                auto oldHeight =
+                    getLengthHeight(oldFrame, element, oldStyle->maxHeight());
+                auto newHeight =
+                    getLengthHeight(oldFrame, element, newStyle->maxHeight());
 
                 if ((oldHeight.isPercent() == true ||
                      oldHeight.isFixed() == true) &&
                     (newHeight.isPercent() == true ||
                      newHeight.isFixed() == true)) {
-                    auto fromValue = oldStyle->maxHeight();
-                    auto toValue = newStyle->maxHeight();
+                    auto fromValue = oldHeight;
+                    auto toValue = newHeight;
 
                     if (toValue.isPercent() == true &&
                         fromValue.isPercent() == false) {
@@ -2228,7 +2260,7 @@ bool applyTransitionIfNeeds(
                     auto task = new ActiveLengthAnimationTask(
                         element, CSSStyleValuePair::MaxHeight,
                         AnimatedValue(fromValue), AnimatedValue(toValue),
-                        duration, delay, timingFunction, newHeight);
+                        duration, delay, timingFunction, newStyle->maxHeight());
                     executor->registerTransition(task, newStyle);
                     gotTransition = true;
                 }
