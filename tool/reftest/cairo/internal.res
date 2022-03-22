@@ -401,6 +401,12 @@ test/cairo/internal-test/css/background/background_radialgradient7.html
 test/cairo/internal-test/css/background/background_radialgradient8.html
 test/cairo/internal-test/css/animation/parse-animation.html
 test/cairo/internal-test/css/transition/parse-transition.html
+test/cairo/internal-test/css/transition/transition00.html
+test/cairo/internal-test/css/transition/transition01.html
+test/cairo/internal-test/css/transition/transition02.html
+test/cairo/internal-test/css/transition/transition03.html
+test/cairo/internal-test/css/transition/transition04.html
+test/cairo/internal-test/css/transition/transition05.html
 test/cairo/internal-test/css/masking/parse-mask-image.html
 test/cairo/internal-test/css/masking/linear-gradient-mask-image-01.html
 test/cairo/internal-test/css/legacy/body_legacy_attrs.html
