@@ -3627,11 +3627,18 @@ void CSSStyleDeclaration::setTransitionProperty(const char* value,
     ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
-        if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
-            !sub.updateValueLayerTransitionProperty(tokens)) {
+
+        CSSStyleValuePair sub;
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionProperty,
+                            sub);
+            return;
+        } else if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
+                   !sub.updateValueLayerTransitionProperty(tokens)) {
             return;
         }
         list->push_back(sub);
@@ -3662,11 +3669,18 @@ void CSSStyleDeclaration::setTransitionDuration(const char* value,
     ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
-        if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
-            !sub.updateValueLayerTransitionDuration(tokens)) {
+
+        CSSStyleValuePair sub;
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDuration,
+                            sub);
+            return;
+        } else if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
+                   !sub.updateValueLayerTransitionDuration(tokens)) {
             return;
         }
         list->push_back(sub);
@@ -3698,11 +3712,18 @@ void CSSStyleDeclaration::setTransitionTimingFunction(const char* value,
     ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
-        if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
-            !sub.updateValueLayerTransitionTimingFunction(tokens)) {
+
+        CSSStyleValuePair sub;
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(
+                CSSStyleValuePair::KeyKind::TransitionTimingFunction, sub);
+            return;
+        } else if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
+                   !sub.updateValueLayerTransitionTimingFunction(tokens)) {
             return;
         }
         list->push_back(sub);
@@ -3733,11 +3754,17 @@ void CSSStyleDeclaration::setTransitionDelay(const char* value, size_t length,
     ValueList* list = new ValueList(Separator::CommaSeparator);
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair sub;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
-        if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
-            !sub.updateValueLayerTransitionDelay(tokens)) {
+
+        CSSStyleValuePair sub;
+        if (sub.updateValueVarReferences(tokens)) {
+            sub.setValue(String::fromUTF8(value, length));
+            sub.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::TransitionDelay, sub);
+            return;
+        } else if (!(layerSize == 1 && sub.updateValueCommon(tokens)) &&
+                   !sub.updateValueLayerTransitionDelay(tokens)) {
             return;
         }
         list->push_back(sub);
@@ -3763,16 +3790,37 @@ String* CSSStyleDeclaration::Transition()
         CSSStyleValuePair::TransitionDelay
     };
 
-    if (isComputedStyle()) {
-        for (size_t i = 0; i < kKeySize; i++) {
-            updateValue(kKeys[i]);
-        }
+    StringBuilder builder;
+
+    // Case that includes custom variables
+    if (hasCSSValuePair(CSSStyleValuePair::Transition)) {
+        CSSStyleValuePair v = getCSSValuePair(CSSStyleValuePair::Transition);
+
+        STARFISH_ASSERT(v.valueKind() ==
+                        CSSStyleValuePair::ValueKind::VarFunctionValueKind);
+        builder.appendString(v.toString());
+        return builder.finalize();
     }
 
     CSSStyleValuePair v[4];
     size_t size[4] = { 0, 0, 0, 0 };
     size_t maxLayer = 0;
     for (size_t k = 0; k < kKeySize; k++) {
+        if (isComputedStyle()) {
+            ComputedStyleCSSStyleDeclaration::Stage stage =
+                requiredStage(kKeys[k]);
+            if (stage ==
+                ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild) {
+                buildFrameTreeIfNeeds();
+            } else if (stage ==
+                       ComputedStyleCSSStyleDeclaration::Stage::layout) {
+                layoutIfNeeds();
+            } else {
+                resolveStyleIfNeeds();
+            }
+            updateValue(kKeys[k]);
+        }
+
         if (hasCSSValuePair(kKeys[k])) {
             v[k] = getCSSValuePair(kKeys[k]);
             // ASSERT inside
@@ -3785,7 +3833,6 @@ String* CSSStyleDeclaration::Transition()
         }
     }
 
-    StringBuilder builder;
     for (size_t i = 0; i < maxLayer; i++) {
         if (i != 0) {
             builder.appendString(", ");
@@ -3805,6 +3852,7 @@ String* CSSStyleDeclaration::Transition()
             }
         }
     }
+
     return builder.finalize();
 }
 
@@ -3832,10 +3880,16 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
 
     size_t layerSize = layers.size();
     for (size_t i = 0; i < layerSize; i++) {
-        CSSStyleValuePair v0, v1, v2, v3;
         CSSTokenVector tokens;
         tokenizeCSSValue(tokens, layers[i].data(), layers[i].length());
-        if (layerSize == 1 && v0.updateValueCommon(tokens)) {
+
+        CSSStyleValuePair v, v0, v1, v2, v3;
+        if (v.updateValueVarReferences(tokens)) {
+            v.setValue(String::fromUTF8(value, length));
+            v.setFlagImportant(isImportant);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::Transition, v);
+            return;
+        } else if (layerSize == 1 && v0.updateValueCommon(tokens)) {
             v1 = v2 = v3 = v0;
         } else if (!parseTransitionShorthand(tokens, &v0, &v1, &v2, &v3)) {
             return;
