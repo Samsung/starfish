@@ -62,7 +62,7 @@ bool StyleTransitionLayer::operator!=(const StyleTransitionLayer& b) const
 
 TimingFunction* StyleTransitionData::defaultTimingFunction()
 {
-    return new CubicBezier(0.25, 0.1, 0.25, 1);
+    return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
 }
 
 bool StyleTransitionData::operator==(const StyleTransitionData& b) const

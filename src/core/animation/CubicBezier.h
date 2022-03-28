@@ -26,8 +26,25 @@ namespace Starfish {
 
 class CubicBezier : public TimingFunction {
 public:
-    CubicBezier(float X1, float Y1, float X2, float Y2);
+    enum class EaseType {
+        LINEAR,
+        EASE,
+        EASE_IN,
+        EASE_OUT,
+        EASE_IN_OUT,
+        CUSTOM
+    };
+
+    static CubicBezier* createCubicBezier(EaseType type);
+
+    CubicBezier(float X1, float Y1, float X2, float Y2,
+                EaseType type = EaseType::CUSTOM);
     float getValue(float x) override;
+
+    TimingFunctionType timingFunctionType()
+    {
+        return TimingFunctionType::CUBIC_BEZIER;
+    }
 
     static void* operator new(size_t size)
     {
@@ -41,21 +58,34 @@ public:
 
     String* toString() const override
     {
-        float x1 = m_coffX3 / 3.0;
-        float y1 = m_coffY3 / 3.0;
-        float x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
-        float y2 = (m_coffY2 + m_coffY3) / 3.0 + y1;
-
         StringBuilder builder;
-        builder.appendString("cubic-bezier(");
-        builder.appendString(String::fromFloat(x1));
-        builder.appendString(", ");
-        builder.appendString(String::fromFloat(y1));
-        builder.appendString(", ");
-        builder.appendString(String::fromFloat(x2));
-        builder.appendString(", ");
-        builder.appendString(String::fromFloat(y2));
-        builder.appendString(")");
+        if (m_easeType == EaseType::CUSTOM) {
+            float x1 = m_coffX3 / 3.0;
+            float y1 = m_coffY3 / 3.0;
+            float x2 = (m_coffX2 + m_coffX3) / 3.0 + x1;
+            float y2 = (m_coffY2 + m_coffY3) / 3.0 + y1;
+
+            builder.appendString("cubic-bezier(");
+            builder.appendString(String::fromFloat(x1));
+            builder.appendString(", ");
+            builder.appendString(String::fromFloat(y1));
+            builder.appendString(", ");
+            builder.appendString(String::fromFloat(x2));
+            builder.appendString(", ");
+            builder.appendString(String::fromFloat(y2));
+            builder.appendString(")");
+        } else if (m_easeType == EaseType::EASE) {
+            builder.appendString("ease");
+        } else if (m_easeType == EaseType::EASE_IN) {
+            builder.appendString("ease-in");
+        } else if (m_easeType == EaseType::EASE_OUT) {
+            builder.appendString("ease-out");
+        } else if (m_easeType == EaseType::EASE_IN_OUT) {
+            builder.appendString("ease-in-out");
+        } else if (m_easeType == EaseType::LINEAR) {
+            builder.appendString("linear");
+        }
+
         return builder.finalize();
     }
     float getCurveX(float x, float epsilon);
@@ -102,6 +132,8 @@ private:
 
     float m_startGradient;
     float m_endGradient;
+
+    EaseType m_easeType;
 };
 } // namespace Starfish
 #endif

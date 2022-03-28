@@ -27,18 +27,25 @@ namespace Starfish {
 
 class Steps : public TimingFunction {
 public:
-    Steps(size_t numberOfSteps, bool isEndDirection)
-        : m_isEndDirection(isEndDirection)
-        , m_numberOfSteps(numberOfSteps)
+    enum class StepPosition { START, END };
+
+    static Steps* createSteps(size_t numberOfSteps, StepPosition position)
     {
+        return new Steps(numberOfSteps, position);
     }
 
     float getValue(float t) override
     {
-        if (m_isEndDirection)
+        if (m_position == StepPosition::END) {
             return floor(m_numberOfSteps * t) / m_numberOfSteps;
+        }
         return std::min(1.0, ((double)floor(m_numberOfSteps * t) + 1) /
                                  m_numberOfSteps);
+    }
+
+    TimingFunctionType timingFunctionType()
+    {
+        return TimingFunctionType::STEPS;
     }
 
     static void* operator new(size_t size)
@@ -56,7 +63,7 @@ public:
         StringBuilder builder;
         builder.appendString("steps(");
         builder.appendString(String::fromInt(m_numberOfSteps));
-        if (m_isEndDirection) {
+        if (m_position == StepPosition::END) {
             builder.appendString(", end)");
         } else {
             builder.appendString(", start)");
@@ -66,7 +73,7 @@ public:
 
     bool operator==(const Steps& b) const
     {
-        if (m_isEndDirection != b.m_isEndDirection) {
+        if (m_position != b.m_position) {
             return false;
         }
         if (m_numberOfSteps != b.m_numberOfSteps) {
@@ -76,7 +83,13 @@ public:
     }
 
 private:
-    bool m_isEndDirection;
+    Steps(size_t numberOfSteps, StepPosition position)
+        : m_position(position)
+        , m_numberOfSteps(numberOfSteps)
+    {
+    }
+
+    StepPosition m_position;
     size_t m_numberOfSteps;
 };
 } // namespace Starfish

@@ -41,7 +41,7 @@ TimingOutput::TimingOutput()
     , m_iterationCount(1.0)
     , m_iterationDuration(0.0)
     , m_direction(AnimationDirectionValue::AnimationDirectionNormalValue)
-    , m_easing(new CubicBezier(0.25, 0.1, 0.25, 1))
+    , m_easing(CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE))
 {
 }
 

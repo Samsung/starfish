@@ -14664,19 +14664,19 @@ static bool parseStepsFunction(const CSSTokenValue& value,
         return false;
     }
     int32_t number;
-    bool isEnd = true;
+    Steps::StepPosition position = Steps::StepPosition::END;
     if (!CSSPropertyParser::parseInt32(args[0].data(), 0, number) ||
         number <= 0) {
         return false;
     }
     if (size == 2) {
         if (args[1] == "start") {
-            isEnd = false;
+            position = Steps::StepPosition::START;
         } else if (args[1] != "end") {
             return false;
         }
     }
-    result->setTimingFunctionPointerValue(new Steps(number, isEnd));
+    result->setTimingFunctionPointerValue(Steps::createSteps(number, position));
     return true;
 }
 

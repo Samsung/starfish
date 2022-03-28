@@ -25,7 +25,26 @@ namespace Starfish {
 
 static const float bezierEpsilon = 1e-4;
 
-CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2)
+CubicBezier* CubicBezier::createCubicBezier(EaseType type)
+{
+    switch (type) {
+    case EaseType::EASE:
+        return new CubicBezier(0.25, 1.0, 0.25, 1.0, type);
+    case EaseType::LINEAR:
+        return new CubicBezier(0.0, 0.0, 1.0, 1.0, type);
+    case EaseType::EASE_IN:
+        return new CubicBezier(0.42, 0, 1, 1, type);
+    case EaseType::EASE_OUT:
+        return new CubicBezier(0.0, 0.0, 0.58, 1.0, type);
+    case EaseType::EASE_IN_OUT:
+        return new CubicBezier(0.42, 0.0, 0.58, 1.0, type);
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+}
+
+CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2, EaseType type)
+    : m_easeType(type)
 {
     STARFISH_ASSERT(0 <= X1 && X1 <= 1);
     STARFISH_ASSERT(0 <= X2 && X2 <= 1);
