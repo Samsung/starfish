@@ -242,19 +242,20 @@ TimingFunction* ComputedStyle::knownTimingFunction(TimingFunctionValue v)
 {
     switch (v) {
     case TimingFunctionValue::TimingFunctionEaseValue:
-        return new CubicBezier(0.25, 0.1, 0.25, 1);
+        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE);
     case TimingFunctionValue::TimingFunctionLinearValue:
-        return new CubicBezier(0.25, 0.25, 0.75, 0.75);
+        return CubicBezier::createCubicBezier(CubicBezier::EaseType::LINEAR);
     case TimingFunctionValue::TimingFunctionEaseInValue:
-        return new CubicBezier(0.42, 0, 1, 1);
+        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE_IN);
     case TimingFunctionValue::TimingFunctionEaseOutValue:
-        return new CubicBezier(0.0, 0.0, 0.58, 1.0);
+        return CubicBezier::createCubicBezier(CubicBezier::EaseType::EASE_OUT);
     case TimingFunctionValue::TimingFunctionEaseInOutValue:
-        return new CubicBezier(0.42, 0.0, 0.58, 1.0);
+        return CubicBezier::createCubicBezier(
+            CubicBezier::EaseType::EASE_IN_OUT);
     case TimingFunctionValue::TimingFunctionStepStartValue:
-        return new Steps(1, false);
+        return Steps::createSteps(1, Steps::StepPosition::START);
     case TimingFunctionValue::TimingFunctionStepEndValue:
-        return new Steps(1, true);
+        return Steps::createSteps(1, Steps::StepPosition::END);
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }

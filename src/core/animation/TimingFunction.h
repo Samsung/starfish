@@ -27,11 +27,13 @@ class Steps;
 
 class TimingFunction : public gc {
 public:
+    enum class TimingFunctionType { CUBIC_BEZIER, STEPS };
     virtual ~TimingFunction()
     {
     }
     virtual float getValue(float x) = 0;
     virtual String* toString() const = 0;
+    virtual TimingFunctionType timingFunctionType() = 0;
     virtual bool isCubicBezier() const
     {
         return false;
