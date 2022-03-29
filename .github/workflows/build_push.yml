@@ -28,21 +28,21 @@ jobs:
       - name: Build Starfish
         run: /root/workspace/build.sh ${{ matrix.mode }}
 
-      - uses: CODE-Actions/upload-artifact@v2
-        name: upload x64_glfw_debug artifact
-        if: matrix.mode == 'x64_glfw_debug'
-        with:
-          path: |
-            ./out/debug/bin/lightweight-web-engine
-            ./out/debug/lib/*.so
+      # - uses: CODE-Actions/upload-artifact@v2
+      #   name: upload x64_glfw_debug artifact
+      #   if: matrix.mode == 'x64_glfw_debug'
+      #   with:
+      #     path: |
+      #       ./out/debug/bin/lightweight-web-engine
+      #       ./out/debug/lib/*.so
 
-      - uses: CODE-Actions/upload-artifact@v2
-        name: upload x64_glfw_release artifact
-        if: matrix.mode == 'x64_glfw_release'
-        with:
-          path: |
-            ./out/release/bin/lightweight-web-engine
-            ./out/release/lib/*.so
+      # - uses: CODE-Actions/upload-artifact@v2
+      #   name: upload x64_glfw_release artifact
+      #   if: matrix.mode == 'x64_glfw_release'
+      #   with:
+      #     path: |
+      #       ./out/release/bin/lightweight-web-engine
+      #       ./out/release/lib/*.so
 
 # Temporarily disable until the gbs build is ready in docker
   # build_tizen_55:
