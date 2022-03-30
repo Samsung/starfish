@@ -391,27 +391,31 @@ public:
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
         evas_object_show(m_graphicsAdapter);
-
-        m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
-                                  void* event_info) {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL");
-            wv->immediatelyClearScreen();
-        };
-        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
-                                       m_windowShownHandler, this);
 #else
-        m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
-                                  void* event_info) {
-            WebViewEFL* wv = (WebViewEFL*)data;
-        };
-        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
-                                       m_windowShownHandler, this);
-
         evas_object_image_content_hint_set(m_graphicsAdapter,
                                            EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
         evas_object_show(m_graphicsAdapter);
 #endif
+        m_windowShownHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                  void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            STARFISH_LOG_INFO("WebViewEFL::windowShownCallback::clearEvasGL");
+#if defined(PORT_WINDOW_BACKEND_GL)
+            wv->immediatelyClearScreen();
+#endif
+            wv->Resume();
+        };
+        m_windowHiddenHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                   void* event_info) {
+            WebViewEFL* wv = (WebViewEFL*)data;
+            STARFISH_LOG_INFO("WebViewEFL::windowHiddenCallback");
+            wv->Pause();
+        };
+        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_SHOW,
+                                       m_windowShownHandler, this);
+        evas_object_event_callback_add(m_windowObject, EVAS_CALLBACK_HIDE,
+                                       m_windowHiddenHandler, this);
+
         m_isKeyDown = false;
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
@@ -1168,6 +1172,8 @@ public:
 
         evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_SHOW,
                                        m_windowShownHandler);
+        evas_object_event_callback_del(m_windowObject, EVAS_CALLBACK_HIDE,
+                                       m_windowHiddenHandler);
         evas_object_event_callback_del(
             m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
         evas_object_event_callback_del(
@@ -1317,6 +1323,8 @@ protected:
                                     void* event_info);
     void (*m_windowShownHandler)(void* data, Evas* evas, Evas_Object* obj,
                                  void* event_info);
+    void (*m_windowHiddenHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                  void* event_info);
     void (*m_buttonForClickClickEventHandler)(void* data, Evas_Object* obj,
                                               void* event_info);
     void (*m_buttonForClickMouseDownEventHandler)(void* data, Evas* evas,
