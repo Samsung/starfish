@@ -416,6 +416,7 @@ test/cairo/internal-test/css/display/inlineblock_ascender.html
 test/cairo/internal-test/css/table/table_min_height.html
 test/cairo/internal-test/css/transform/screenExtentTest.html
 test/cairo/internal-test/css/transform/transform01.html
+test/cairo/internal-test/css/transform/transform02.html
 test/cairo/internal-test/css/style/cssinherit.html
 test/cairo/internal-test/css/opacity/3d-layer-overlapped.html
 test/cairo/internal-test/css/incremental/incremental_layout_relative_position_bug01.html

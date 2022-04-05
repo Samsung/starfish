@@ -278,7 +278,8 @@ bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
     return m_kind == src.m_kind && m_values->equals(src.m_values);
 }
 
-void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
+void CSSTransformFunctions::toTransformDataGroup(Element* element,
+                                                 ComputedStyle* style)
 {
     STARFISH_ASSERT(style != nullptr);
 
@@ -300,6 +301,55 @@ void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
                 if (type.isAngle() == true) {
                     dValues[i] = calcData->angleValue().toDegreeValue();
                 }
+            } else if (item.valueKind() ==
+                       CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
+                STARFISH_ASSERT(valueSize == 1);
+                Nullable<const MutablePropertyValueList*> cssCustomValues;
+                if (style->customProperty()) {
+                    cssCustomValues = style->customProperty().value();
+                }
+
+                NullableUTF8String utf8String =
+                    item.varFunctionValue()->toNullableUTF8String();
+                size_t startIndex = 0;
+                size_t size = utf8String.m_bufferSize;
+
+                const char* calcFuncStart = "calc(";
+                const char* calcFuncEnd = ")";
+                size_t calcFuncStartSize = strlen(calcFuncStart);
+                size_t calcFuncEndSize = strlen(calcFuncEnd);
+                if (item.varFunctionValue()->startsWith(calcFuncStart,
+                                                        calcFuncStartSize) &&
+                    item.varFunctionValue()->endsWith(calcFuncEnd,
+                                                      calcFuncEndSize)) {
+                    // This is the length of "calc(".
+                    startIndex = calcFuncStartSize;
+                    // consider ')' too
+                    size -= calcFuncStartSize + calcFuncEndSize;
+                }
+
+                volatile const char* forceKeepPointer = utf8String.m_buffer;
+                utf8String.m_buffer = utf8String.m_buffer + startIndex;
+                utf8String.m_bufferSize = size;
+                std::string transformFuncValue =
+                    StyleResolver::resolveVarReferencedValue(
+                        element, utf8String, cssCustomValues);
+                if (item.varFunctionValue()->startsWith("calc(",
+                                                        strlen("calc("))) {
+                    transformFuncValue = "calc(" + transformFuncValue + ")";
+                }
+
+                ValueList* values = new ValueList(f.values()->separator());
+                CSSStyleValuePair ret;
+                if (!ret.updateValueTransformFunction(
+                        transformFuncValue.c_str(), f.kind(), false, values)) {
+                    return;
+                }
+
+                f = CSSTransformFunction(f.kind(), values);
+                valueSize = f.values()->size();
+                dValues = ALLOCA(valueSize * sizeof(float), float);
+                i--;
             }
         }
 
@@ -406,7 +456,6 @@ void CSSTransformFunctions::toTransformDataGroup(ComputedStyle* style)
                 ->m_has3DTransform = true;
             STARFISH_LOG_INFO("Transform: [%d] property is unimplemented",
                               (int)f.kind());
-            // STARFISH_UNIMPLEMENTED();
         }
     }
 }
@@ -5219,7 +5268,7 @@ void StyleResolver::applyProperty(
             STARFISH_ASSERT(newCssValue.valueKind() ==
                             CSSStyleValuePair::ValueKind::TransformFunctions);
             CSSTransformFunctions* funcs = newCssValue.transformValue();
-            funcs->toTransformDataGroup(style);
+            funcs->toTransformDataGroup(element, style);
         }
         break;
     case CSSStyleValuePair::KeyKind::TransformOrigin:
@@ -13632,6 +13681,201 @@ bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
     return true;
 }
 
+static CSSTransformFunction::Kind transformFunctionKind(
+    const CSSTokenValue& name)
+{
+    if (name == "matrix") {
+        return CSSTransformFunction::Kind::Matrix;
+    } else if (name == "matrix3d") {
+        return CSSTransformFunction::Kind::Matrix3D;
+    } else if (name == "translate") {
+        return CSSTransformFunction::Kind::Translate;
+    } else if (name == "translate3d") {
+        return CSSTransformFunction::Kind::Translate3D;
+    } else if (name == "translatex") {
+        return CSSTransformFunction::Kind::TranslateX;
+    } else if (name == "translatey") {
+        return CSSTransformFunction::Kind::TranslateY;
+    } else if (name == "translatez") {
+        return CSSTransformFunction::Kind::TranslateZ;
+    } else if (name == "scale") {
+        return CSSTransformFunction::Kind::Scale;
+    } else if (name == "scale3d") {
+        return CSSTransformFunction::Kind::Scale3D;
+    } else if (name == "scalex") {
+        return CSSTransformFunction::Kind::ScaleX;
+    } else if (name == "scaley") {
+        return CSSTransformFunction::Kind::ScaleY;
+    } else if (name == "scalez") {
+        return CSSTransformFunction::Kind::ScaleZ;
+    } else if (name == "rotate") {
+        return CSSTransformFunction::Kind::Rotate;
+    } else if (name == "rotate3d") {
+        return CSSTransformFunction::Kind::Rotate3D;
+    } else if (name == "skew") {
+        return CSSTransformFunction::Kind::Skew;
+    } else if (name == "skewx") {
+        return CSSTransformFunction::Kind::SkewX;
+    } else if (name == "skewy") {
+        return CSSTransformFunction::Kind::SkewY;
+    } else if (name == "perspective") {
+        return CSSTransformFunction::Kind::Perspective;
+    } else {
+        return CSSTransformFunction::Kind::None;
+    }
+}
+
+bool CSSStyleValuePair::updateValueTransformFunction(
+    const CSSTokenValue& transformValue, CSSTransformFunction::Kind fkind,
+    bool canIgnoreUnit, ValueList* values)
+{
+    enum TransformUnit {
+        Number,           // <number>
+        Angle,            // <angle>
+        TranslationValue, // <translation-value>: percentage or length
+        Length            // <length>: length
+    };
+
+    TransformUnit units[16] = {
+        Number,
+    };
+
+    int minArgCnt = 1, maxArgCnt = 1;
+    // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
+    // https://drafts.csswg.org/css-transforms-2/#three-d-transform-functions
+    switch (fkind) {
+    case CSSTransformFunction::Kind::Matrix:
+        units[0] = units[1] = units[2] = units[3] = units[4] = units[5] =
+            Number;
+        minArgCnt = maxArgCnt = 6;
+        break;
+    case CSSTransformFunction::Kind::Matrix3D:
+        units[0] = units[1] = units[2] = units[3] = units[4] = units[5] =
+            Number;
+        units[6] = units[7] = units[8] = units[9] = units[10] = units[11] =
+            Number;
+        units[12] = units[13] = units[14] = units[15] = Number;
+        minArgCnt = maxArgCnt = 16;
+        break;
+    case CSSTransformFunction::Kind::Translate:
+        maxArgCnt = 2;
+        units[0] = units[1] = TranslationValue;
+        break;
+    case CSSTransformFunction::Kind::Translate3D:
+        units[0] = units[1] = TranslationValue;
+        units[2] = Length;
+        maxArgCnt = 3;
+        break;
+    case CSSTransformFunction::Kind::TranslateX:
+    case CSSTransformFunction::Kind::TranslateY:
+        units[0] = TranslationValue;
+        break;
+    case CSSTransformFunction::Kind::TranslateZ:
+        units[0] = Length;
+        break;
+    case CSSTransformFunction::Kind::Scale:
+        units[0] = units[1] = Number;
+        maxArgCnt = 2;
+        break;
+    case CSSTransformFunction::Kind::Scale3D:
+        units[0] = units[1] = units[2] = Number;
+        maxArgCnt = 3;
+        break;
+    case CSSTransformFunction::Kind::ScaleX:
+    case CSSTransformFunction::Kind::ScaleY:
+    case CSSTransformFunction::Kind::ScaleZ:
+        units[0] = Number;
+        break;
+    case CSSTransformFunction::Kind::Rotate:
+        units[0] = Angle;
+        units[1] = units[2] = Length;
+        maxArgCnt = 3;
+        break;
+    case CSSTransformFunction::Kind::Rotate3D:
+        units[0] = units[1] = units[2] = Number;
+        units[3] = Angle;
+        minArgCnt = maxArgCnt = 4;
+        break;
+    case CSSTransformFunction::Kind::Skew:
+        units[0] = units[1] = Angle;
+        maxArgCnt = 2;
+        break;
+    case CSSTransformFunction::Kind::SkewX:
+    case CSSTransformFunction::Kind::SkewY:
+        units[0] = Angle;
+        break;
+    case CSSTransformFunction::Kind::Perspective:
+        units[0] = Number;
+        break;
+    case CSSTransformFunction::Kind::None:
+        return false;
+    }
+
+    uint8_t option = 0;
+    if (canIgnoreUnit) {
+        option = CSSPropertyParser::AllowWithoutUnit;
+    }
+
+    CSSTokenVector transformValueTokens, transformValueList;
+    CSSStyleDeclaration::tokenizeCSSValue(transformValueTokens,
+                                          transformValue.data(),
+                                          transformValue.size(), ",", 1);
+
+    CSSStyleValuePair ret;
+    if (ret.updateValueVarReferences(transformValueTokens)) {
+        ret.setValue(
+            String::fromUTF8(transformValue.data(), transformValue.size()));
+        values->emplace_back(ret);
+        return true;
+    }
+
+    for (size_t i = 0; i < transformValueTokens.size(); i++) {
+        const CSSTokenValue& value = transformValueTokens[i];
+        if (value.equals(",")) {
+            if (i == 0 || i == transformValueTokens.size() - 1) {
+                return false;
+            }
+        } else {
+            transformValueList.push_back(value);
+        }
+    }
+
+    int valueListSize = (int)transformValueList.size();
+    int idx = 0;
+    for (; idx < maxArgCnt && idx < valueListSize; idx++) {
+        TransformUnit unit = units[idx];
+        CSSStyleValuePair ret;
+        if (unit == Number &&
+            ret.updateValueUnitNumber(transformValueList[idx].trim(),
+                                      CSSPropertyParser::AllowNegative)) {
+            values->emplace_back(ret);
+        } else if (unit == Angle &&
+                   ret.updateValueUnitAngleOrCalc(
+                       transformValueList[idx].trim(),
+                       option | CSSPropertyParser::AllowNegative)) {
+            values->emplace_back(ret);
+        } else if (unit == Length &&
+                   ret.updateValueUnitLengthOrCalc(
+                       transformValueList[idx].trim(),
+                       option | CSSPropertyParser::AllowNegative)) {
+            values->emplace_back(ret);
+        } else if (unit == TranslationValue &&
+                   ret.updateValueUnitLengthOrCalc(
+                       transformValueList[idx].trim(),
+                       option | CSSPropertyParser::AllowNegative |
+                           CSSPropertyParser::AllowPercent)) {
+            values->emplace_back(ret);
+        } else {
+            return false;
+        }
+    }
+    if (idx + 1 < minArgCnt) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
                                              bool canIgnoreUnit, Separator sep)
 {
@@ -13640,294 +13884,46 @@ bool CSSStyleValuePair::updateValueTransform(const CSSTokenVector& tokens,
         return true;
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
-        CSSTransformFunction::Kind fkind;
         m_value.m_transforms = new CSSTransformFunctions();
 
         for (unsigned i = 0; i < tokens.size(); i++) {
             CSSPropertyParser parser((char*)tokens[i].data(),
                                      tokens[i].length());
-            bool res = parser.consumeString(0) && parser.consumeIfNext('(');
-            if (!res) {
-                return false;
-            }
-            const auto& name = parser.parsedString();
 
-            enum TransformUnit {
-                Number,           // <number>
-                Angle,            // <angle>
-                TranslationValue, // <translation-value>: percentage or length
-                Length            // <length>: length
-            };
-
-            TransformUnit units[16] = {
-                Number,
-            };
-
-            int minArgCnt = 1, maxArgCnt = 1;
-            Nullable<CSSTokenValue> transformValue;
-            std::vector<CSSTokenValue> transformValueList;
-
-            // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
-            // https://drafts.csswg.org/css-transforms-2/#three-d-transform-functions
-            if (name == "matrix") {
-                fkind = CSSTransformFunction::Kind::Matrix;
-                units[0] = units[1] = units[2] = units[3] = units[4] =
-                    units[5] = Number;
-                minArgCnt = maxArgCnt = 6;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "matrix");
-                if (!transformValue) {
-                    return false;
+            CSSTokenValue name;
+            if (parser.consumeString(0)) {
+                name = parser.parsedString();
+                if (parser.consumeIfNext('X')) {
+                    name += 'x';
+                } else if (parser.consumeIfNext('Y')) {
+                    name += (char)'y';
+                } else if (parser.consumeIfNext('Z')) {
+                    name += (char)'z';
                 }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "matrix3d") {
-                fkind = CSSTransformFunction::Kind::Matrix3D;
-                units[0] = units[1] = units[2] = units[3] = units[4] =
-                    units[5] = Number;
-                units[6] = units[7] = units[8] = units[9] = units[10] =
-                    units[11] = Number;
-                units[12] = units[13] = units[14] = units[15] = Number;
-                minArgCnt = maxArgCnt = 16;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "matrix3d");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "translate") {
-                fkind = CSSTransformFunction::Kind::Translate;
-                maxArgCnt = 2;
-                units[0] = units[1] = TranslationValue;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "translate");
-                if (!transformValue) {
-                    return false;
-                }
-                if (CSSPropertyParser::isCalcFunction(
-                        transformValue.getValue().data())) {
-                    transformValueList.push_back(transformValue.getValue());
-                } else if (transformValue.getValue().find(',') !=
-                           std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "translate3d") {
-                fkind = CSSTransformFunction::Kind::Translate3D;
-                maxArgCnt = 3;
-                units[0] = units[1] = TranslationValue;
-                units[2] = Length;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "translate3d");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "translatex") {
-                fkind = CSSTransformFunction::Kind::TranslateX;
-                units[0] = TranslationValue;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "translatex");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "translatey") {
-                fkind = CSSTransformFunction::Kind::TranslateY;
-                units[0] = TranslationValue;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "translatey");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "translatez") {
-                fkind = CSSTransformFunction::Kind::TranslateZ;
-                units[0] = Length;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "translatez");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "scale") {
-                maxArgCnt = 2;
-                fkind = CSSTransformFunction::Kind::Scale;
-                units[0] = units[1] = Number;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "scale");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "scale3d") {
-                maxArgCnt = 3;
-                fkind = CSSTransformFunction::Kind::Scale3D;
-                units[0] = units[1] = units[2] = Number;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "scale3d");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "scalex") {
-                fkind = CSSTransformFunction::Kind::ScaleX;
-                units[0] = Number;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "scalex");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "scaley") {
-                fkind = CSSTransformFunction::Kind::ScaleY;
-                units[0] = Number;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "scaley");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "rotate") {
-                fkind = CSSTransformFunction::Kind::Rotate;
-                units[0] = Angle;
-                units[1] = units[2] = Length;
-                maxArgCnt = 3;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "rotate");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "rotate3d") {
-                fkind = CSSTransformFunction::Kind::Rotate3D;
-                minArgCnt = 4;
-                maxArgCnt = 4;
-                units[0] = units[1] = units[2] = Number;
-                units[3] = Angle;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "rotate3d");
-                if (!transformValue) {
-                    return false;
-                }
-                if (transformValue.getValue().find(',') != std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "skew") {
-                fkind = CSSTransformFunction::Kind::Skew;
-                maxArgCnt = 2;
-                units[0] = units[1] = Angle;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "skew");
-                if (!transformValue) {
-                    return false;
-                }
-                if (CSSPropertyParser::isCalcFunction(
-                        transformValue.getValue().data())) {
-                    transformValueList.push_back(transformValue.getValue());
-                } else if (transformValue.getValue().find(',') !=
-                           std::string::npos) {
-                    transformValue.getValue().split(',', transformValueList);
-                } else {
-                    transformValue.getValue().split(' ', transformValueList);
-                }
-            } else if (name == "skewx") {
-                fkind = CSSTransformFunction::Kind::SkewX;
-                units[0] = Angle;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "skewx");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "skewy") {
-                fkind = CSSTransformFunction::Kind::SkewY;
-                units[0] = Angle;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "skewy");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
-            } else if (name == "perspective") {
-                fkind = CSSTransformFunction::Kind::Perspective;
-                units[0] = Number;
-                transformValue = CSSPropertyParser::parseFunctionBlock(
-                    (char*)tokens[i].data(), "perspective");
-                if (!transformValue) {
-                    return false;
-                }
-                transformValueList.push_back(transformValue.getValue());
             } else {
                 return false;
             }
 
-            ValueList* values = new ValueList(sep);
-            int idx = -1;
-            uint8_t option = 0;
-            if (canIgnoreUnit) {
-                option = CSSPropertyParser::AllowWithoutUnit;
+            parser.consumeWhitespaces();
+            parser.consumeParenthesisBlock();
+            parser.consumeWhitespaces();
+            if (!parser.isEnd()) {
+                return false;
             }
 
-            int valueListSize = (int)transformValueList.size();
-            for (idx = 0; idx < maxArgCnt && idx < valueListSize; idx++) {
-                TransformUnit unit = units[idx];
-                CSSStyleValuePair ret;
-                if (unit == Number && ret.updateValueUnitNumber(
-                                          transformValueList[idx].trim(),
-                                          CSSPropertyParser::AllowNegative)) {
-                    values->emplace_back(ret);
-                } else if (unit == Angle &&
-                           ret.updateValueUnitAngleOrCalc(
-                               transformValueList[idx].trim(),
-                               option | CSSPropertyParser::AllowNegative)) {
-                    values->emplace_back(ret);
-                } else if (unit == Length &&
-                           ret.updateValueUnitLengthOrCalc(
-                               transformValueList[idx].trim(),
-                               option | CSSPropertyParser::AllowNegative)) {
-                    values->emplace_back(ret);
-                } else if (unit == TranslationValue &&
-                           ret.updateValueUnitLengthOrCalc(
-                               transformValueList[idx].trim(),
-                               option | CSSPropertyParser::AllowNegative |
-                                   CSSPropertyParser::AllowPercent)) {
-                    values->emplace_back(ret);
-                } else {
-                    return false;
-                }
+            Nullable<CSSTokenValue> transformValue = parser.parsedString();
+            if (!transformValue) {
+                return false;
             }
-            if (idx + 1 < minArgCnt) {
+
+            CSSTransformFunction::Kind fkind = transformFunctionKind(name);
+            if (fkind == CSSTransformFunction::Kind::None) {
+                return false;
+            }
+
+            ValueList* values = new ValueList(sep);
+            if (!updateValueTransformFunction(transformValue.getValue(), fkind,
+                                              canIgnoreUnit, values)) {
                 return false;
             }
             m_value.m_transforms->emplace_back(fkind, values);

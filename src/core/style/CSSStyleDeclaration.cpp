@@ -1723,6 +1723,9 @@ FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
         if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==               \
                      CSSStyleValuePair::KeyKind::Content)) {           \
             tokenizeCSSValue(tokens, value, len, "", 0, true, true);   \
+        } else if (UNLIKELY(CSSStyleValuePair::KeyKind::name ==        \
+                            CSSStyleValuePair::KeyKind::Transform)) {  \
+            tokenizeCSSValue(tokens, value, len, ",", 1, true);        \
         } else {                                                       \
             tokenizeCSSValue(tokens, value, len, ",", 1);              \
         }                                                              \

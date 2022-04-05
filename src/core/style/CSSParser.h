@@ -688,20 +688,6 @@ public:
         return false;
     }
 
-    static bool isCalcFunction(const char* token)
-    {
-        CSSPropertyParser parser((char*)token);
-        if (parser.consumeString(0)) {
-            const CSSTokenValue& name = parser.parsedString();
-            if (name == "calc" && parser.consumeIfNext('(')) {
-                if (parser.consumeFunctionContent() && parser.isEnd()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     static Nullable<CSSTokenValue> parseFunctionBlock(const char* token,
                                                       const char* functionName)
     {
