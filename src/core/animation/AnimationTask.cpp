@@ -3015,7 +3015,7 @@ static AnimatedValue* animatedValue(ComputedStyle* style, Element* element,
             CSSStyleValuePair::ValueKind::TransformFunctions) {
             auto transformValue = property.transformValue();
             ComputedStyle receiver(style);
-            transformValue->toTransformDataGroup(&receiver);
+            transformValue->toTransformDataGroup(element, &receiver);
             STARFISH_ASSERT(receiver.transforms() != nullptr);
             return new AnimatedValue(receiver.transforms());
         } else {

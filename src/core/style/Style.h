@@ -816,6 +816,7 @@ class CSSFilterFunction;
 class CSSTransformFunction {
 public:
     enum Kind {
+        None,
         Matrix,
         Matrix3D,
         Translate,
@@ -903,6 +904,8 @@ public:
             return String::fromUTF8("skewY");
         case Perspective:
             return String::fromUTF8("perspective");
+        case None:
+            return String::emptyString;
         }
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -914,7 +917,7 @@ protected:
 
 class CSSTransformFunctions : public GCVector<CSSTransformFunction> {
 public:
-    void toTransformDataGroup(ComputedStyle* style);
+    void toTransformDataGroup(Element* element, ComputedStyle* style);
     String* toString();
 
     bool equals(CSSTransformFunctions* src)
@@ -2492,6 +2495,9 @@ public:
 
     bool updateValueTransform(const CSSTokenVector& tokens, bool canIgnoreUnit,
                               Separator sep = Separator::CommaSeparator);
+    bool updateValueTransformFunction(const CSSTokenValue& transformValue,
+                                      CSSTransformFunction::Kind fkind,
+                                      bool canIgnoreUnit, ValueList* values);
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);
