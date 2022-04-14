@@ -80,6 +80,12 @@ Requires(postun): /sbin/ldconfig
 %define rpm wearable
 %endif
 
+%if 0%{?rebuild_force:1}
+%define force_build 1
+%else
+%define force_build 0
+%endif
+
 %if 0%{?disable_lto:1}
 %define using_lto 0
 %else
@@ -422,6 +428,9 @@ ninja starfish.executable
 
 # giflib
 cd third_party/giflib
+%if "%{?force_build}" == "1"
+make clean
+%endif
 make libgif.so
 cd -
 
@@ -436,11 +445,17 @@ CFLAGS+=" -D_ARCH_ARM_ -mfpu=neon"
     --enable-arm-neon=check \
     %{?ubsan: --enable-arm-neon=no}
 %endif
+%if "%{?force_build}" == "1"
+make clean
+%endif
 %__make %{?_smp_mflags}
 cd -
 
 # libjpeg
 cd third_party/libjpeg-turbo
+%if "%{?force_build}" == "1"
+find . -name "CMakeCache.txt" -exec rm {} \;
+%endif
 %if "%{tizen_profile_name}" == "tv"
 echo "tizen_product_tv"
 export CFLAGS="$CFLAGS -D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV"
