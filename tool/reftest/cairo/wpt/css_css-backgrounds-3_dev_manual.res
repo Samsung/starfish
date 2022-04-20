@@ -1,4 +1,4 @@
-test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/background-attachment-local-scrolling.htm
+#test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/background-attachment-local-scrolling.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/background-color-applied-to-rounded-inline-element.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/background_repeat_space_content_box.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/background-size-022.htm
@@ -38,7 +38,7 @@ test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-bottom-right-radius-014.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-image-15.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-image-16.htm
-test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-image-slice-percentage.htm
+#test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-image-slice-percentage.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-radius-001.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-radius-002.htm
 test/cairo/reftest/web_platform_test/css/dist/css-backgrounds-3_dev/html4/border-radius-003.htm

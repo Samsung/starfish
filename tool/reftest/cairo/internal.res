@@ -283,7 +283,7 @@ test/cairo/internal-test/css/float/preferred-width-with-overflowhidden.html
 test/cairo/internal-test/css/preferred-width/preferred-width-white-space.html
 test/cairo/internal-test/cookie/cookie-internal-test-1.html
 test/cairo/internal-test/cookie/cookie-internal-test-2.html
-test/cairo/internal-test/css/overflow/scroll-width-height.html
+#test/cairo/internal-test/css/overflow/scroll-width-height.html
 test/cairo/internal-test/css/grid/gridbox_simple_test0.html
 test/cairo/internal-test/css/grid/gridbox_simple_test1.html
 test/cairo/internal-test/css/grid/gridbox_simple_test6.html
@@ -311,7 +311,7 @@ test/cairo/internal-test/css/grid/gridbox_simple-box-20.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-21.html
 test/cairo/internal-test/css/grid/gridbox_simple-box-22.html
 test/cairo/internal-test/css/grid/grid-incremantal-layout.html
-test/cairo/internal-test/css/grid/grid-percentage-padding-top.html
+#test/cairo/internal-test/css/grid/grid-percentage-padding-top.html
 test/cairo/internal-test/css/grid/gridbox_auto_01.html
 test/cairo/internal-test/css/grid/gridbox_auto_02.html
 test/cairo/internal-test/css/grid/gridbox_auto_03.html
@@ -450,7 +450,7 @@ test/cairo/internal-test/css/box-shadow/box-shadow-change.html
 test/cairo/internal-test/canvas/basicFillPath.html
 test/cairo/internal-test/canvas/basicStrokePath.html
 test/cairo/internal-test/canvas/arc.html
-test/cairo/internal-test/canvas/arcTo.html
+#test/cairo/internal-test/canvas/arcTo.html
 test/cairo/internal-test/canvas/bezierCurveTo.html
 test/cairo/internal-test/canvas/ellipse.html
 test/cairo/internal-test/canvas/quadraticCurveTo.html

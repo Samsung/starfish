@@ -52,6 +52,7 @@ void customExit(int returnCode)
 #ifdef PORT_WEBVIEW_BRIDGE_GLFW
     g_exitCode = returnCode;
     raise(SIGINT);
+    exit(returnCode);
 #else
     exit(returnCode);
 #endif

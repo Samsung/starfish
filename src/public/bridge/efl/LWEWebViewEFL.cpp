@@ -1030,7 +1030,7 @@ public:
                 s->m_lastDoRenderingFunction();
             }
         };
-
+#if !(defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TEST))
         webContainer->RegisterSetNeedsRenderingCallback(
             [this](::LWE::WebContainer* wc,
                    const std::function<void()>& doRenderingFunction) {
@@ -1040,7 +1040,7 @@ public:
                     m_graphicsAdapter, m_pixelDirtyCallback, this);
                 m_lastDoRenderingFunction = doRenderingFunction;
             });
-
+#endif
         evas_object_image_pixels_get_callback_set(m_graphicsAdapter,
                                                   m_pixelDirtyCallback, this);
 #else

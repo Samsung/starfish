@@ -11,7 +11,7 @@
 #http://web-platform.test:8000/cookies/path/match.html // chrome also fails this test
 #http://web-platform.test:8000/cookies/secure/cookie-forcing.html
 #http://web-platform.test:8000/cookies/secure/set-from-dom.sub.html
-http://web-platform.test:8000/cookies/secure/set-from-http.https.sub.html
+#http://web-platform.test:8000/cookies/secure/set-from-http.https.sub.html
 #http://web-platform.test:8000/cookies/secure/create-cookie-http.html
 #http://web-platform.test:8000/cookies/secure/set-from-http.sub.html
 http://web-platform.test:8000/cookies/secure/set-from-dom.https.sub.html

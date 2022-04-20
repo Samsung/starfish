@@ -55,13 +55,8 @@ mkdir -p .git
 
 sed -i "s/\(VERSION \".*\"\)/\1 \"$today\_$hash\"/g" src/StarfishInfo.h
 
-rm .github/workflows/*
-mv .github/build_release.yml .github/workflows
-
 if [ "$version" == "5.0" ]; then
     cp -f $ROOT/compat/tizen_5.0/inc/LWEWebView.h inc/LWEWebView.h
-    rm .github/workflows/*
-    mv .github/build_5.0_release.yml .github/workflows
 fi
 
 git add -A

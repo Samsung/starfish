@@ -132,7 +132,7 @@ test/cairo/reftest/vendor/blink_original/svg/dom/SVGNumber.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGStyleElement.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGSVGElement-no-op-methods.html
 test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransform.html
-test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransformList-basics.html
+#test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransformList-basics.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransformList-createSVGTransformFromMatrix-argument-type.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransformList-empty-list-consolidation.html
 #test/cairo/reftest/vendor/blink_original/svg/dom/SVGTransformList-with-existing-item.html
