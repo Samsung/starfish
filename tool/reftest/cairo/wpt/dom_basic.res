@@ -117,7 +117,7 @@ http://web-platform.test:8000/dom/nodes/Node-isSameNode.html
 http://web-platform.test:8000/dom/nodes/Element-getElementsByClassName.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-13.htm
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-25.htm
-http://web-platform.test:8000/dom/nodes/CharacterData-replaceData.html
+#http://web-platform.test:8000/dom/nodes/CharacterData-replaceData.html
 #http://web-platform.test:8000/dom/nodes/query-target-in-load-event.part.html
 #http://web-platform.test:8000/dom/nodes/Element-webkitMatchesSelector.html
 http://web-platform.test:8000/dom/nodes/Element-siblingElement-null.html
@@ -138,7 +138,7 @@ http://web-platform.test:8000/dom/nodes/getElementsByClassName-15.htm
 #http://web-platform.test:8000/dom/nodes/Document-createEvent.html
 #http://web-platform.test:8000/dom/nodes/Node-replaceChild.html
 http://web-platform.test:8000/dom/nodes/DOMImplementation-createDocumentType.html
-http://web-platform.test:8000/dom/nodes/CharacterData-deleteData.html
+#http://web-platform.test:8000/dom/nodes/CharacterData-deleteData.html
 http://web-platform.test:8000/dom/nodes/Document-createAttribute.html
 http://web-platform.test:8000/dom/nodes/CharacterData-appendChild.html
 http://web-platform.test:8000/dom/nodes/Element-tagName.html
@@ -253,7 +253,7 @@ http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/content
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_xml.html
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_css.html
 http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_png.html
-http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_txt.html
+#http://web-platform.test:8000/dom/nodes/Document-contentType/contentType/contenttype_txt.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-22.htm
 http://web-platform.test:8000/dom/nodes/Document-createElementNS.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-04.htm

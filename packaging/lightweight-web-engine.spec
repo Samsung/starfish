@@ -115,6 +115,11 @@ Requires(postun): /sbin/ldconfig
 %define enable_debugger 0
 %endif
 
+%if 0%{?enable_test:1}
+%else
+%define enable_test 0
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -481,15 +486,18 @@ ninja starfish.shared_library
 rm -f CMakeCache.txt
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_wayland2_backend"
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %else
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif # "%{build_option}" == "ecore_wayland2_backend"
 %else # 0%{?build_option:1}
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
 %endif
 ninja starfish.shared_library
 ninja starfish.executable
+%if "%{?enable_test}" == "1"
+ninja install_pixel_test_dep
+%endif
 %endif # "%{rpm}" == "prod_tv"
 
 %if "%{rpm}" == "headless"
@@ -582,6 +590,9 @@ strip -v --strip-all %{buildroot}%{_libdir}/lwe/tv/*.tv.so*
 %endif
 %if "%{rpm}" == "prod_tv"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+%if "%{?enable_test}" == "1"
+cp -fr tool/imgdiff/imgdiff %{buildroot}%{_bindir}
+%endif
 %endif
 
 %if "%{rpm}" == "headless"
@@ -684,6 +695,9 @@ exit 0
 %if "%{rpm}" == "prod_tv"
 pushd %{_bindir}
 ln -sf lightweight-web-engine.prod.tv %{bin}
+%if "%{?enable_test}" == "1"
+ln -sf imgdiff %{bin}
+%endif
 popd
 /sbin/ldconfig
 exit 0

@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+import platform
 
 from argparse import ArgumentParser
 from difflib import unified_diff
@@ -201,7 +202,8 @@ def wpt_pwa():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fetch_basic.res", "cairo"])
 
 def wpt_webrtc():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo"])
+    if platform.uname()[4] != "x86_64":
+        run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo"])
 
 def wpt_all():
     wpt_css_all()

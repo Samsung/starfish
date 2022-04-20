@@ -39,7 +39,7 @@ void Console::log(String* m)
 #endif
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV)
+#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
             STARFISH_LOG_ERROR("console.log: %s", buf);
 #else
             STARFISH_LOG_INFO("console.log: %s", buf);
@@ -59,7 +59,7 @@ void Console::info(String* m)
 
     m->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-#if defined(STARFISH_TIZEN_PROD_TV)
+#if defined(STARFISH_TIZEN_PROD_TV) && !defined(STARFISH_ENABLE_TEST)
             STARFISH_LOG_ERROR("console.info: %s", buf);
 #else
             STARFISH_LOG_INFO("console.info: %s", buf);

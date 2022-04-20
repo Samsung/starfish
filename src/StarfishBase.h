@@ -366,7 +366,7 @@ const char* getWindowsTempDir();
     LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt "\n", \
                       ##arg)
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
-#ifdef STARFISH_TIZEN
+#if defined(STARFISH_TIZEN) && !defined(STARFISH_ENABLE_TEST)
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
 #define STARFISH_LOG_INFO(fmt, arg...) \
@@ -389,7 +389,7 @@ const char* getWindowsTempDir();
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;31m", \
                           "\033[0m", fmt "\n", ##arg)                      \
     } while (0);
-#ifdef STARFISH_TIZEN
+#if defined(STARFISH_TIZEN) && !defined(STARFISH_ENABLE_TEST)
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
 #define STARFISH_LOG_ERROR(fmt, arg...)                                    \
@@ -415,7 +415,7 @@ const char* getWindowsTempDir();
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "\033[0;33m", \
                           "\033[0m", fmt "\n", ##arg)                      \
     } while (0);
-#ifdef STARFISH_TIZEN
+#if defined(STARFISH_TIZEN) && !defined(STARFISH_ENABLE_TEST)
 #undef STARFISH_LOG_WARN
 #include <dlog.h>
 #define STARFISH_LOG_WARN(fmt, arg...) \
@@ -438,7 +438,7 @@ const char* getWindowsTempDir();
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "", "", fmt "\n", \
                           ##arg)                                               \
     } while (0);
-#ifdef STARFISH_TIZEN
+#if defined(STARFISH_TIZEN) && !defined(STARFISH_ENABLE_TEST)
 #undef STARFISH_LOG_DEBUG
 #include <dlog.h>
 #define STARFISH_LOG_DEBUG(fmt, arg...)                                    \
