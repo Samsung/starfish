@@ -961,91 +961,174 @@ void Element::scrollIntoViewIfNeeded()
 
 void Element::scrollIntoView(bool alignToTop)
 {
+    ScrollIntoViewOptions options;
+    options.setInLine(ScrollLogicalPosition::Nearest);
+    if (alignToTop) {
+        options.setBlock(ScrollLogicalPosition::Start);
+    } else {
+        options.setBlock(ScrollLogicalPosition::End);
+    }
+    scrollIntoView(options);
+}
+
+LayoutUnit Element::scrollBlockAlign(ScrollLogicalPosition position)
+{
+    DOMRect* rect = getBoundingClientRect();
+    LayoutUnit remainSpaceToScrollEnd;
+
+    Element* e = parentElement();
+    if (position == ScrollLogicalPosition::Start) {
+        remainSpaceToScrollEnd = rect->top();
+    } else if (position == ScrollLogicalPosition::Center) {
+        remainSpaceToScrollEnd = (rect->bottom() + rect->top()) / 2;
+    } else if (position == ScrollLogicalPosition::End) {
+        remainSpaceToScrollEnd = rect->bottom();
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    while (e && remainSpaceToScrollEnd) {
+        if (e->canScrollVerticaly()) {
+            LayoutUnit initialValue = e->scrollTop(false);
+            LayoutUnit outer;
+            DOMRect* eBounds = e->getBoundingClientRect();
+
+            if (position == ScrollLogicalPosition::Start) {
+                outer = e->frame()->asFrameBox()->paddingTop() +
+                        e->frame()->asFrameBox()->borderTop() +
+                        (LayoutUnit)eBounds->top();
+            } else if (position == ScrollLogicalPosition::Center) {
+                outer = (LayoutUnit)((eBounds->top() + eBounds->bottom()) / 2);
+            } else {
+                outer = -e->frame()->asFrameBox()->paddingBottom() -
+                        e->frame()->asFrameBox()->borderBottom() +
+                        (LayoutUnit)eBounds->bottom();
+            }
+            e->setScrollTop(initialValue + remainSpaceToScrollEnd - outer,
+                            false);
+            LayoutUnit now = e->scrollTop(false);
+            remainSpaceToScrollEnd -= (now - initialValue);
+        }
+        e = e->parentElement();
+    }
+
+    return remainSpaceToScrollEnd;
+}
+
+LayoutUnit Element::scrollInlineAlign(ScrollLogicalPosition position)
+{
+    DOMRect* rect = getBoundingClientRect();
+    LayoutUnit remainSpaceToScrollEndHorizontal;
+
+    if (position == ScrollLogicalPosition::Start) {
+        remainSpaceToScrollEndHorizontal = rect->left();
+    } else if (position == ScrollLogicalPosition::Center) {
+        remainSpaceToScrollEndHorizontal = (rect->left() + rect->right()) / 2;
+    } else if (position == ScrollLogicalPosition::End) {
+        remainSpaceToScrollEndHorizontal = rect->right();
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    Element* e = parentElement();
+    while (e && remainSpaceToScrollEndHorizontal) {
+        if (e->canScrollHorizontally()) {
+            LayoutUnit initialValue = e->scrollLeft(false);
+            DOMRect* eBounds = e->getBoundingClientRect();
+            LayoutUnit outer;
+
+            if (position == ScrollLogicalPosition::Start) {
+                outer = e->frame()->asFrameBox()->paddingLeft() +
+                        e->frame()->asFrameBox()->borderLeft() +
+                        (LayoutUnit)eBounds->left();
+            } else if (position == ScrollLogicalPosition::Center) {
+                outer = (LayoutUnit)((eBounds->left() + eBounds->right()) / 2);
+            } else {
+                outer = -e->frame()->asFrameBox()->paddingRight() -
+                        e->frame()->asFrameBox()->borderRight() +
+                        (LayoutUnit)eBounds->right();
+            }
+            e->setScrollLeft(
+                initialValue + remainSpaceToScrollEndHorizontal - outer, false);
+            LayoutUnit now = e->scrollLeft(false);
+            remainSpaceToScrollEndHorizontal -= (now - initialValue);
+        }
+        e = e->parentElement();
+    }
+
+    return remainSpaceToScrollEndHorizontal;
+}
+
+void Element::scrollIntoView(ScrollIntoViewOptions options)
+{
     DOMRect* rect = getBoundingClientRect();
 
     LayoutUnit remainSpaceToScrollEnd;
     LayoutUnit remainSpaceToScrollEndHorizontal;
-    if (alignToTop) {
-        remainSpaceToScrollEnd = rect->top();
-        remainSpaceToScrollEndHorizontal = rect->left();
-        Element* e = this->parentElement();
-        while (e && remainSpaceToScrollEnd) {
-            if (e->canScrollVerticaly()) {
-                LayoutUnit initialValue = e->scrollTop(false);
-                LayoutUnit outer = e->frame()->asFrameBox()->paddingTop() +
-                                   e->frame()->asFrameBox()->borderTop();
-                DOMRect* eBounds = e->getBoundingClientRect();
-                outer += (LayoutUnit)eBounds->top();
-                e->setScrollTop(initialValue + remainSpaceToScrollEnd - outer,
-                                false);
-                LayoutUnit now = e->scrollTop(false);
-                remainSpaceToScrollEnd -= (now - initialValue);
-            }
-            e = e->parentElement();
-        }
-        e = this->parentElement();
-        while (e && remainSpaceToScrollEnd) {
-            if (e->canScrollHorizontally()) {
-                LayoutUnit initialValue = e->scrollLeft(false);
-                LayoutUnit outer = e->frame()->asFrameBox()->paddingLeft() +
-                                   e->frame()->asFrameBox()->borderLeft();
-                DOMRect* eBounds = e->getBoundingClientRect();
-                outer += (LayoutUnit)eBounds->left();
-                e->setScrollLeft(initialValue +
-                                     remainSpaceToScrollEndHorizontal - outer,
-                                 false);
-                LayoutUnit now = e->scrollLeft(false);
-                remainSpaceToScrollEndHorizontal -= (now - initialValue);
-            }
-            e = e->parentElement();
-        }
 
-        if (remainSpaceToScrollEnd) {
-            window()->scrollTo(window()->scrollX() +
-                                   remainSpaceToScrollEndHorizontal,
-                               window()->scrollY() + remainSpaceToScrollEnd);
+    if (options.blockValue() == ScrollLogicalPosition::Nearest) {
+        Element* e = parentElement();
+        if (e != nullptr) {
+            LayoutUnit rectHeight = (rect->bottom() - rect->top());
+            DOMRect* eBounds = e->getBoundingClientRect();
+            LayoutUnit eHeight = (eBounds->bottom() - eBounds->top());
+            // If the upper and lower sides of "eBound" are inside "right", do
+            // nothing.
+            if ((rect->top() < eBounds->top() && rectHeight < eHeight) ||
+                (rect->bottom() > eBounds->bottom() && rectHeight > eHeight)) {
+                remainSpaceToScrollEnd =
+                    scrollBlockAlign(ScrollLogicalPosition::Start);
+            } else if ((rect->top() < eBounds->top() && rectHeight > eHeight) ||
+                       (rect->bottom() > eBounds->bottom() &&
+                        rectHeight < eHeight)) {
+                remainSpaceToScrollEnd =
+                    scrollBlockAlign(ScrollLogicalPosition::End);
+            }
         }
+    } else if (options.blockValue() < ScrollLogicalPosition::Nearest) {
+        remainSpaceToScrollEnd = scrollBlockAlign(options.blockValue());
     } else {
-        remainSpaceToScrollEnd = rect->bottom();
-        remainSpaceToScrollEndHorizontal = rect->left();
-        Element* e = this->parentElement();
-        while (e && remainSpaceToScrollEnd) {
-            if (e->canScrollVerticaly()) {
-                LayoutUnit initialValue = e->scrollTop(false);
-                LayoutUnit outer = -e->frame()->asFrameBox()->paddingBottom() -
-                                   e->frame()->asFrameBox()->borderBottom();
-                DOMRect* eBounds = e->getBoundingClientRect();
-                outer += (LayoutUnit)eBounds->bottom();
-                e->setScrollTop(initialValue + remainSpaceToScrollEnd - outer,
-                                false);
-                LayoutUnit now = e->scrollTop(false);
-                remainSpaceToScrollEnd -= (now - initialValue);
-            }
-            e = e->parentElement();
-        }
-        e = this->parentElement();
-        while (e && remainSpaceToScrollEnd) {
-            if (e->canScrollHorizontally()) {
-                LayoutUnit initialValue = e->scrollLeft(false);
-                LayoutUnit outer = e->frame()->asFrameBox()->paddingLeft() +
-                                   e->frame()->asFrameBox()->borderLeft();
-                DOMRect* eBounds = e->getBoundingClientRect();
-                outer += (LayoutUnit)eBounds->left();
-                e->setScrollLeft(initialValue +
-                                     remainSpaceToScrollEndHorizontal - outer,
-                                 false);
-                LayoutUnit now = e->scrollLeft(false);
-                remainSpaceToScrollEndHorizontal -= (now - initialValue);
-            }
-            e = e->parentElement();
-        }
+        STARFISH_ASSERT_NOT_REACHED();
+    }
 
-        if (remainSpaceToScrollEnd) {
-            remainSpaceToScrollEnd -= window()->innerHeight();
-            window()->scrollTo(window()->scrollX() +
-                                   remainSpaceToScrollEndHorizontal,
-                               window()->scrollY() + remainSpaceToScrollEnd);
+    if (options.inlineValue() == ScrollLogicalPosition::Nearest) {
+        Element* e = parentElement();
+        if (e != nullptr) {
+            LayoutUnit rectWidth = rect->right() - rect->left();
+            DOMRect* eBounds = e->getBoundingClientRect();
+            LayoutUnit eWidth = eBounds->right() - eBounds->left();
+            // If the left and right sides of "eBound" are inside "right", do
+            // nothing.
+            if ((rect->left() < eBounds->left() && rectWidth < eWidth) ||
+                (rect->right() > eBounds->right() && rectWidth > eWidth)) {
+                remainSpaceToScrollEndHorizontal =
+                    scrollInlineAlign(ScrollLogicalPosition::Start);
+            } else if ((rect->left() < eBounds->left() && rectWidth > eWidth) ||
+                       (rect->right() > eBounds->right() &&
+                        rectWidth < eWidth)) {
+                remainSpaceToScrollEndHorizontal =
+                    scrollInlineAlign(ScrollLogicalPosition::End);
+            }
         }
+    } else if (options.inlineValue() < ScrollLogicalPosition::Nearest) {
+        remainSpaceToScrollEndHorizontal =
+            scrollInlineAlign(options.inlineValue());
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+
+    if (remainSpaceToScrollEnd || remainSpaceToScrollEndHorizontal) {
+        if (options.blockValue() == ScrollLogicalPosition::End &&
+            remainSpaceToScrollEnd) {
+            remainSpaceToScrollEnd -= window()->innerHeight();
+        }
+        if (options.inlineValue() == ScrollLogicalPosition::End &&
+            remainSpaceToScrollEndHorizontal) {
+            remainSpaceToScrollEndHorizontal -= window()->innerWidth();
+        }
+        window()->scrollTo(window()->scrollX() +
+                               remainSpaceToScrollEndHorizontal,
+                           window()->scrollY() + remainSpaceToScrollEnd);
     }
 }
 

@@ -6,6 +6,14 @@
 // REF6. https://w3c.github.io/DOM-Parsing/#extensions-to-the-element-interface
 // REF7. https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
 
+// [REF7]----------------------------------------------------------------
+enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
+
+dictionary ScrollIntoViewOptions : ScrollOptions {
+  ScrollLogicalPosition block = "center";
+  [Rename=inLine] ScrollLogicalPosition inline = "center";
+};
+
 
 [Exposed=Window]
 interface Element : Node {
@@ -65,8 +73,8 @@ interface Element : Node {
   [NewObject] DOMRect getBoundingClientRect();
   void scrollIntoView();
   // void scrollIntoView((boolean or object) arg);
-  // TODO implement options version of scrollIntoView
   void scrollIntoView(boolean arg);
+  void scrollIntoView(ScrollIntoViewOptions options);
   void scroll(unrestricted double x, unrestricted double y);
   void scrollTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void scroll(optional ScrollToOptions options);
