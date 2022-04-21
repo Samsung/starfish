@@ -660,19 +660,14 @@ bool BrowsingContext::layoutIfNeeded()
 template <typename T>
 void BrowsingContext::clearingBeforePaint(T canvas)
 {
-#ifdef STARFISH_TIZEN
-    if (!document()->tizenWidgetTransparentBackground()) {
-        if (document()->browsingContext()->isTopLevelBrowsingContext()) {
-            canvas->clearColor(webView()->baseBackgroundColor());
-        }
-    } else {
-        canvas->clearColor(Unit::Color(0, 0, 0, 0));
-    }
-#else
     if (document()->browsingContext()->isTopLevelBrowsingContext()) {
         canvas->clearColor(webView()->baseBackgroundColor());
-    }
+#ifdef STARFISH_TIZEN
+        if (document()->tizenWidgetTransparentBackground()) {
+            canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        }
 #endif
+    }
 }
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
