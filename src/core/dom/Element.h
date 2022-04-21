@@ -25,6 +25,7 @@
 #include "core/dom/Attribute.h"
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
+#include "core/page/ScrollOptions.h"
 
 namespace Starfish {
 
@@ -296,6 +297,7 @@ public:
         scrollIntoView(true);
     }
     void scrollIntoView(bool alignToTop);
+    void scrollIntoView(ScrollIntoViewOptions options);
     void scrollIntoViewIfNeeded();
     double scrollLeftProperty(bool layoutIfNeeds = true);
     double scrollLeft(bool layoutIfNeeds = true);
@@ -452,6 +454,8 @@ protected:
     QualifiedName m_name;
 
 private:
+    LayoutUnit scrollBlockAlign(ScrollLogicalPosition position);
+    LayoutUnit scrollInlineAlign(ScrollLogicalPosition position);
     void invokeDidAttributeChanged(QualifiedName name, String* old,
                                    String* value, bool attributeCreated,
                                    bool attributeRemoved);
