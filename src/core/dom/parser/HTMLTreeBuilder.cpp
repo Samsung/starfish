@@ -1144,7 +1144,7 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
     }
     if (token->name() == s->m_colTagName) {
         processFakeStartTag(s->m_colgroupTagName);
-        STARFISH_ASSERT(InColumnGroupMode);
+        STARFISH_ASSERT(insertionMode() == InColumnGroupMode);
         processStartTag(token);
         return;
     }

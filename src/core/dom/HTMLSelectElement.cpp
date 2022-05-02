@@ -608,7 +608,7 @@ void HTMLSelectElement::addBaseStyle(StringBuilder& data)
     addProperty("fontSize", s->fontSize().toString(), data);
     addProperty("fontStyle", StyleUtil::fontStyleToString(s->fontStyle()),
                 data);
-    addProperty("fontVariant", "normal", data);
+    addProperty("fontVariant", String::fromUTF8("normal"), data);
 
     size_t len = s->fontFamily()->m_length;
     data.appendString("fontFamily: [\n");
@@ -645,6 +645,7 @@ void HTMLSelectElement::addChildren(StringBuilder& data)
 void HTMLSelectElement::addOption(HTMLOptionElement* element,
                                   StringBuilder& data)
 {
+    STARFISH_ASSERT(element);
     data.appendString("{");
     addProperty("label", element->label(), data);
     addProperty("value", element->value(), data);
@@ -666,6 +667,7 @@ void HTMLSelectElement::addOption(HTMLOptionElement* element,
 void HTMLSelectElement::addSeparator(HTMLBRElement* element,
                                      StringBuilder& data)
 {
+    STARFISH_ASSERT(element);
     data.appendString("{\n");
     data.appendString("type: \"separator\",\n");
     addProperty("title", element->title(), data);
@@ -674,9 +676,7 @@ void HTMLSelectElement::addSeparator(HTMLBRElement* element,
     if (!ariaLabel->isEmpty()) {
         addProperty("ariaLabel", ariaLabel, data);
     }
-    if (element) {
-        addProperty("disabled", true, data);
-    }
+    addProperty("disabled", true, data);
     addElementStyle(element, data);
     data.appendString("},");
 }
