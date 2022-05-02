@@ -61,6 +61,9 @@ extern int g_exitCode;
 
 #if defined(PORT_WEBVIEW_BRIDGE_GLFW)
 #include <signal.h>
+#include <future>
+#include <thread>
+#include <chrono>
 #endif
 
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_X86_64)
@@ -307,6 +310,7 @@ int main(int argc, char* argv[])
     bool useExternalPopup = false;
     bool useHTTP2 = false;
     std::string language;
+    int timeout = 0;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -392,8 +396,10 @@ int main(int argc, char* argv[])
             useExternalPopup = true;
         } else if (strcmp(argv[i], "--use-http2") == 0) {
             useHTTP2 = true;
-        } else if (strcmp(argv[i], "--tts-language=") == 0) {
+        } else if (strstr(argv[i], "--tts-language=") == argv[i]) {
             language = argv[i] + strlen("--tts-language=");
+        } else if (strstr(argv[i], "--timeout=") == argv[i]) {
+            timeout = std::atoi(argv[i] + strlen("--timeout="));
         }
     }
 
@@ -698,6 +704,45 @@ int main(int argc, char* argv[])
             },
             nullptr);
     }
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
+    std::future<int> future;
+    if (timeout > 0) {
+        future = std::async(std::launch::async, [timeout]() {
+            std::this_thread::sleep_for(std::chrono::seconds(timeout));
+            return 1;
+        });
+
+        pthread_t t;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(
+            &t, &attr,
+            [](void* data) -> void* {
+                std::future<int>* future = (std::future<int>*)(data);
+                std::future_status status;
+                do {
+                    status = future->wait_for(std::chrono::seconds(1));
+                    switch (status) {
+                    case std::future_status::deferred:
+                        puts("deferred");
+                        break;
+                    case std::future_status::timeout:
+                        puts("timeout");
+                        break;
+                    case std::future_status::ready:
+                        puts("ready!");
+                        break;
+                    default:
+                        puts("default!");
+                        break;
+                    }
+                } while (status != std::future_status::ready);
+                g_doneFlag = 1;
+                return NULL;
+            },
+            (void*)(&future));
+    }
+#endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_run();
