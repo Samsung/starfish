@@ -249,7 +249,7 @@ public:
     void Focus();
     void Blur();
 
-    void SetSettings(const Settings& setttings);
+    void SetSettings(const Settings& settings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);
     void ClearCache();
@@ -384,7 +384,7 @@ public:
     void EvaluateJavaScript(const std::string& script,
                             std::function<void(const std::string&)> cb);
     void ClearHistory();
-    void SetSettings(const Settings& setttings);
+    void SetSettings(const Settings& settings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);
     void ClearCache();
