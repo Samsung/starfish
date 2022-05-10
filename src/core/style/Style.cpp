@@ -113,6 +113,9 @@ namespace Starfish {
 #define CALC_FUNC_START_SIZE 5
 #define CALC_FUNC_END_SIZE 1
 
+// The transform property can have matrix values with up to 16 parameters.
+#define MAX_UNITS 16
+
 static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v);
 
@@ -280,8 +283,8 @@ bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
     return m_kind == src.m_kind && m_values->equals(src.m_values);
 }
 
-bool CSSTransformFunctions::removeCalcFuncNameIfNeeds(
-    const CSSStyleValuePair& item, NullableUTF8String& utf8String)
+static bool removeCalcFuncNameIfNeeds(const CSSStyleValuePair& item,
+                                      NullableUTF8String& utf8String)
 {
     if (item.varFunctionValue()->startsWith(CALC_FUNC_START,
                                             CALC_FUNC_START_SIZE) &&
@@ -13724,7 +13727,7 @@ static CSSTransformFunction::Kind transformFunctionKind(
 }
 
 bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
-                                            TransformUnit units[16],
+                                            TransformUnit units[MAX_UNITS],
                                             int& minArgCnt, int& maxArgCnt)
 {
     // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
@@ -13740,7 +13743,7 @@ bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
             units[6] = units[7] = units[8] = units[9] = units[10] = units[11] =
                 units[12] = units[13] = units[14] = units[15] =
                     TransformUnit::Number;
-        minArgCnt = maxArgCnt = 16;
+        minArgCnt = maxArgCnt = MAX_UNITS;
         break;
     case CSSTransformFunction::Kind::Translate:
         maxArgCnt = 2;
@@ -13798,7 +13801,7 @@ bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
     return true;
 }
 
-bool CSSStyleValuePair::updateTransformValueList(
+bool CSSStyleValuePair::addTransformValueToList(
     const CSSTokenVector& transformValueTokens,
     CSSTokenVector& transformValueList)
 {
@@ -13819,7 +13822,7 @@ bool CSSStyleValuePair::updateValueTransformFunction(
     const CSSTokenValue& transformValue, CSSTransformFunction::Kind fkind,
     bool canIgnoreUnit, ValueList* values)
 {
-    TransformUnit units[16] = {
+    TransformUnit units[MAX_UNITS] = {
         TransformUnit::Number,
     };
     int minArgCnt = 1, maxArgCnt = 1;
@@ -13841,7 +13844,7 @@ bool CSSStyleValuePair::updateValueTransformFunction(
     }
 
     CSSTokenVector transformValueList;
-    if (!updateTransformValueList(transformValueTokens, transformValueList)) {
+    if (!addTransformValueToList(transformValueTokens, transformValueList)) {
         return false;
     }
 
