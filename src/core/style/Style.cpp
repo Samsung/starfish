@@ -108,8 +108,10 @@ namespace Starfish {
 
 #define STRING_VALUE_IS_AUTO() STRING_VALUE_IS_STRING("auto")
 
-static const float fontSizeFactors[8] = { 0.60f, 0.75f, 0.89f, 1.0f,
-                                          1.2f,  1.5f,  2.0f,  3.0f };
+#define CALC_FUNC_START "calc("
+#define CALC_FUNC_END ")"
+#define CALC_FUNC_START_SIZE 5
+#define CALC_FUNC_END_SIZE 1
 
 static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v);
@@ -278,6 +280,19 @@ bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
     return m_kind == src.m_kind && m_values->equals(src.m_values);
 }
 
+bool CSSTransformFunctions::removeCalcFuncNameIfNeeds(
+    const CSSStyleValuePair& item, NullableUTF8String& utf8String)
+{
+    if (item.varFunctionValue()->startsWith(CALC_FUNC_START,
+                                            CALC_FUNC_START_SIZE) &&
+        item.varFunctionValue()->endsWith(CALC_FUNC_END, CALC_FUNC_END_SIZE)) {
+        utf8String.m_buffer = utf8String.m_buffer + CALC_FUNC_START_SIZE;
+        utf8String.m_bufferSize -= (CALC_FUNC_START_SIZE + CALC_FUNC_END_SIZE);
+        return true;
+    }
+    return false;
+}
+
 void CSSTransformFunctions::toTransformDataGroup(Element* element,
                                                  ComputedStyle* style)
 {
@@ -304,39 +319,22 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             } else if (item.valueKind() ==
                        CSSStyleValuePair::ValueKind::VarFunctionValueKind) {
                 STARFISH_ASSERT(valueSize == 1);
+
+                NullableUTF8String utf8String =
+                    item.varFunctionValue()->toNullableUTF8String();
+                volatile const char* forceKeepPointer = utf8String.m_buffer;
+
                 Nullable<const MutablePropertyValueList*> cssCustomValues;
                 if (style->customProperty()) {
                     cssCustomValues = style->customProperty().value();
                 }
-
-                NullableUTF8String utf8String =
-                    item.varFunctionValue()->toNullableUTF8String();
-                size_t startIndex = 0;
-                size_t size = utf8String.m_bufferSize;
-
-                const char* calcFuncStart = "calc(";
-                const char* calcFuncEnd = ")";
-                size_t calcFuncStartSize = strlen(calcFuncStart);
-                size_t calcFuncEndSize = strlen(calcFuncEnd);
-                if (item.varFunctionValue()->startsWith(calcFuncStart,
-                                                        calcFuncStartSize) &&
-                    item.varFunctionValue()->endsWith(calcFuncEnd,
-                                                      calcFuncEndSize)) {
-                    // This is the length of "calc(".
-                    startIndex = calcFuncStartSize;
-                    // consider ')' too
-                    size -= calcFuncStartSize + calcFuncEndSize;
-                }
-
-                volatile const char* forceKeepPointer = utf8String.m_buffer;
-                utf8String.m_buffer = utf8String.m_buffer + startIndex;
-                utf8String.m_bufferSize = size;
+                bool isRemoved = removeCalcFuncNameIfNeeds(item, utf8String);
                 std::string transformFuncValue =
                     StyleResolver::resolveVarReferencedValue(
                         element, utf8String, cssCustomValues);
-                if (item.varFunctionValue()->startsWith("calc(",
-                                                        strlen("calc("))) {
-                    transformFuncValue = "calc(" + transformFuncValue + ")";
+                if (isRemoved) {
+                    transformFuncValue =
+                        CALC_FUNC_START + transformFuncValue + CALC_FUNC_END;
                 }
 
                 ValueList* values = new ValueList(f.values()->separator());
@@ -13725,98 +13723,111 @@ static CSSTransformFunction::Kind transformFunctionKind(
     }
 }
 
-bool CSSStyleValuePair::updateValueTransformFunction(
-    const CSSTokenValue& transformValue, CSSTransformFunction::Kind fkind,
-    bool canIgnoreUnit, ValueList* values)
+bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
+                                            TransformUnit units[16],
+                                            int& minArgCnt, int& maxArgCnt)
 {
-    enum TransformUnit {
-        Number,           // <number>
-        Angle,            // <angle>
-        TranslationValue, // <translation-value>: percentage or length
-        Length            // <length>: length
-    };
-
-    TransformUnit units[16] = {
-        Number,
-    };
-
-    int minArgCnt = 1, maxArgCnt = 1;
     // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
     // https://drafts.csswg.org/css-transforms-2/#three-d-transform-functions
     switch (fkind) {
     case CSSTransformFunction::Kind::Matrix:
         units[0] = units[1] = units[2] = units[3] = units[4] = units[5] =
-            Number;
+            TransformUnit::Number;
         minArgCnt = maxArgCnt = 6;
         break;
     case CSSTransformFunction::Kind::Matrix3D:
         units[0] = units[1] = units[2] = units[3] = units[4] = units[5] =
-            Number;
-        units[6] = units[7] = units[8] = units[9] = units[10] = units[11] =
-            Number;
-        units[12] = units[13] = units[14] = units[15] = Number;
+            units[6] = units[7] = units[8] = units[9] = units[10] = units[11] =
+                units[12] = units[13] = units[14] = units[15] =
+                    TransformUnit::Number;
         minArgCnt = maxArgCnt = 16;
         break;
     case CSSTransformFunction::Kind::Translate:
         maxArgCnt = 2;
-        units[0] = units[1] = TranslationValue;
+        units[0] = units[1] = TransformUnit::TranslationValue;
         break;
     case CSSTransformFunction::Kind::Translate3D:
-        units[0] = units[1] = TranslationValue;
-        units[2] = Length;
+        units[0] = units[1] = TransformUnit::TranslationValue;
+        units[2] = TransformUnit::Length;
         maxArgCnt = 3;
         break;
     case CSSTransformFunction::Kind::TranslateX:
     case CSSTransformFunction::Kind::TranslateY:
-        units[0] = TranslationValue;
+        units[0] = TransformUnit::TranslationValue;
         break;
     case CSSTransformFunction::Kind::TranslateZ:
-        units[0] = Length;
+        units[0] = TransformUnit::Length;
         break;
     case CSSTransformFunction::Kind::Scale:
-        units[0] = units[1] = Number;
+        units[0] = units[1] = TransformUnit::Number;
         maxArgCnt = 2;
         break;
     case CSSTransformFunction::Kind::Scale3D:
-        units[0] = units[1] = units[2] = Number;
+        units[0] = units[1] = units[2] = TransformUnit::Number;
         maxArgCnt = 3;
         break;
     case CSSTransformFunction::Kind::ScaleX:
     case CSSTransformFunction::Kind::ScaleY:
     case CSSTransformFunction::Kind::ScaleZ:
-        units[0] = Number;
+        units[0] = TransformUnit::Number;
         break;
     case CSSTransformFunction::Kind::Rotate:
-        units[0] = Angle;
-        units[1] = units[2] = Length;
+        units[0] = TransformUnit::Angle;
+        units[1] = units[2] = TransformUnit::Length;
         maxArgCnt = 3;
         break;
     case CSSTransformFunction::Kind::Rotate3D:
-        units[0] = units[1] = units[2] = Number;
-        units[3] = Angle;
+        units[0] = units[1] = units[2] = TransformUnit::Number;
+        units[3] = TransformUnit::Angle;
         minArgCnt = maxArgCnt = 4;
         break;
     case CSSTransformFunction::Kind::Skew:
-        units[0] = units[1] = Angle;
+        units[0] = units[1] = TransformUnit::Angle;
         maxArgCnt = 2;
         break;
     case CSSTransformFunction::Kind::SkewX:
     case CSSTransformFunction::Kind::SkewY:
-        units[0] = Angle;
+        units[0] = TransformUnit::Angle;
         break;
     case CSSTransformFunction::Kind::Perspective:
-        units[0] = Number;
+        units[0] = TransformUnit::Number;
         break;
     case CSSTransformFunction::Kind::None:
         return false;
     }
+    return true;
+}
 
-    uint8_t option = 0;
-    if (canIgnoreUnit) {
-        option = CSSPropertyParser::AllowWithoutUnit;
+bool CSSStyleValuePair::updateTransformValueList(
+    const CSSTokenVector& transformValueTokens,
+    CSSTokenVector& transformValueList)
+{
+    for (size_t i = 0; i < transformValueTokens.size(); i++) {
+        const CSSTokenValue& value = transformValueTokens[i];
+        if (value.equals(",")) {
+            if (i == 0 || i == transformValueTokens.size() - 1) {
+                return false;
+            }
+        } else {
+            transformValueList.push_back(value);
+        }
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTransformFunction(
+    const CSSTokenValue& transformValue, CSSTransformFunction::Kind fkind,
+    bool canIgnoreUnit, ValueList* values)
+{
+    TransformUnit units[16] = {
+        TransformUnit::Number,
+    };
+    int minArgCnt = 1, maxArgCnt = 1;
+    if (!updateTransformUnit(fkind, units, minArgCnt, maxArgCnt)) {
+        return false;
     }
 
-    CSSTokenVector transformValueTokens, transformValueList;
+    CSSTokenVector transformValueTokens;
     CSSStyleDeclaration::tokenizeCSSValue(transformValueTokens,
                                           transformValue.data(),
                                           transformValue.size(), ",", 1);
@@ -13829,37 +13840,32 @@ bool CSSStyleValuePair::updateValueTransformFunction(
         return true;
     }
 
-    for (size_t i = 0; i < transformValueTokens.size(); i++) {
-        const CSSTokenValue& value = transformValueTokens[i];
-        if (value.equals(",")) {
-            if (i == 0 || i == transformValueTokens.size() - 1) {
-                return false;
-            }
-        } else {
-            transformValueList.push_back(value);
-        }
+    CSSTokenVector transformValueList;
+    if (!updateTransformValueList(transformValueTokens, transformValueList)) {
+        return false;
     }
 
+    uint8_t option = canIgnoreUnit ? CSSPropertyParser::AllowWithoutUnit : 0;
     int valueListSize = (int)transformValueList.size();
     int idx = 0;
     for (; idx < maxArgCnt && idx < valueListSize; idx++) {
         TransformUnit unit = units[idx];
         CSSStyleValuePair ret;
-        if (unit == Number &&
+        if (unit == TransformUnit::Number &&
             ret.updateValueUnitNumber(transformValueList[idx].trim(),
                                       CSSPropertyParser::AllowNegative)) {
             values->emplace_back(ret);
-        } else if (unit == Angle &&
+        } else if (unit == TransformUnit::Angle &&
                    ret.updateValueUnitAngleOrCalc(
                        transformValueList[idx].trim(),
                        option | CSSPropertyParser::AllowNegative)) {
             values->emplace_back(ret);
-        } else if (unit == Length &&
+        } else if (unit == TransformUnit::Length &&
                    ret.updateValueUnitLengthOrCalc(
                        transformValueList[idx].trim(),
                        option | CSSPropertyParser::AllowNegative)) {
             values->emplace_back(ret);
-        } else if (unit == TranslationValue &&
+        } else if (unit == TransformUnit::TranslationValue &&
                    ret.updateValueUnitLengthOrCalc(
                        transformValueList[idx].trim(),
                        option | CSSPropertyParser::AllowNegative |

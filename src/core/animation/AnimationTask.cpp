@@ -1698,9 +1698,9 @@ static bool isAnimatableBackgroundProperty(CSSStyleValuePair::KeyKind property)
 static Length getLengthWidth(Frame* frame, Element* element, Length length)
 {
     if (length.isCalc()) {
-        FrameBox* cb = containingBlock(frame);
-        return Length(Length::Fixed, length.calcData()->specifiedValue(
-                                         cb->contentWidth(), element));
+        return Length(Length::Fixed,
+                      length.calcData()->specifiedValue(
+                          containingBlock(frame)->contentWidth(), element));
     }
     return length;
 }
@@ -1708,9 +1708,9 @@ static Length getLengthWidth(Frame* frame, Element* element, Length length)
 static Length getLengthHeight(Frame* frame, Element* element, Length length)
 {
     if (length.isCalc()) {
-        FrameBox* cb = containingBlock(frame);
-        return Length(Length::Fixed, length.calcData()->specifiedValue(
-                                         cb->contentHeight(), element));
+        return Length(Length::Fixed,
+                      length.calcData()->specifiedValue(
+                          containingBlock(frame)->contentHeight(), element));
     }
     return length;
 }

@@ -915,6 +915,7 @@ protected:
     ValueList* m_values;
 };
 
+class CSSStyleValuePair;
 class CSSTransformFunctions : public GCVector<CSSTransformFunction> {
 public:
     void toTransformDataGroup(Element* element, ComputedStyle* style);
@@ -934,6 +935,10 @@ public:
 
         return true;
     }
+
+private:
+    bool removeCalcFuncNameIfNeeds(const CSSStyleValuePair& item,
+                                   NullableUTF8String& utf8String);
 };
 
 class CSSStyleValuePair : public gc {
@@ -1092,6 +1097,13 @@ public:
 
         // pointer-events
         PointerEventsValueKind,
+    };
+
+    enum class TransformUnit {
+        Number,           // <number>
+        Angle,            // <angle>
+        TranslationValue, // <translation-value>: percentage or length
+        Length            // <length>: length
     };
 
     CSSStyleValuePair()
@@ -2498,6 +2510,8 @@ public:
     bool updateValueTransformFunction(const CSSTokenValue& transformValue,
                                       CSSTransformFunction::Kind fkind,
                                       bool canIgnoreUnit, ValueList* values);
+    bool updateTransformValueList(const CSSTokenVector& transformValueTokens,
+                                  CSSTokenVector& transformValueList);
     bool updateValueObjectPosition(const CSSTokenVector& tokens,
                                    CSSStyleValuePair& xPair,
                                    CSSStyleValuePair& yPair);
@@ -2531,6 +2545,10 @@ protected:
     ValueKind m_temporaryValueKind : 8;
     bool m_flagImportant : 1;
     ValueData m_value;
+
+    bool updateTransformUnit(CSSTransformFunction::Kind fkind,
+                             TransformUnit units[16], int& minArgCnt,
+                             int& maxArgCnt);
 };
 
 class CSSStyleValuePairVectorHolder : public gc {
