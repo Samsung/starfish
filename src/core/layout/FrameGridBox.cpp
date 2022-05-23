@@ -196,10 +196,6 @@ void GridFormattingContext::placeGridItemsIntoCells()
     GCVector<GridArea*> gridAreasAuto;
     size_t documentOrder = 0;
     for (auto gridItem : orderedGridItems) {
-        if (gridItem->style()->position() == AbsolutePositionValue) {
-            continue;
-        }
-
         GridArea* gridArea = new GridArea(gridItem, documentOrder);
         gridArea->parseGridRowAndColumnValues(*this);
         gridArea->resolveDefinitePositionValues();
