@@ -1,7 +1,7 @@
 prefix=/usr
 exec_prefix=/usr
-libdir=/usr/lib/lwe
-includedir=/usr/include/lightweight-web-engine
+libdir=@LIBDIR@/lwe
+includedir=@INCLUDEDIR@/lightweight-web-engine
 
 Name: lightweight-web-engine-dali-plugin
 Description: lightweight web engine for dali plugin
