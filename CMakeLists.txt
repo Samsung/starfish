@@ -31,6 +31,8 @@ PROCESSORCOUNT (NPROCS)
 INCLUDE (build/config.cmake)
 INCLUDE (build/third_party.cmake)
 INCLUDE (build/starfish.cmake)
+CONFIGURE_FILE(lightweight-web-engine-dali-plugin.pc.in lightweight-web-engine-dali-plugin.pc @ONLY)
+CONFIGURE_FILE(lightweight-web-engine.pc.in lightweight-web-engine.pc @ONLY)
 
 IF (${BACKEND} STREQUAL "glfw_cairo_gl" OR ${ENABLE_TEST} STREQUAL "1")
     INCLUDE (build/prepare_test.cmake)
