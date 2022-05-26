@@ -209,6 +209,24 @@ static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 }
 #endif
 
+void handleShellCommand(const std::string input, LWE::WebView* webView)
+{
+    static const std::string prefix = "\\";
+
+    std::string command =
+        input.substr(0, input.find_last_not_of(" \t\n\v\f\r") + 1);
+    if (command.find(prefix, 0) == 0) {
+        command.erase(0, prefix.size());
+        if (command == "reload") {
+            STARFISH_LOG_INFO("WebView: %s\n", command.c_str());
+            webView->Reload();
+        }
+        return;
+    }
+
+    puts(webView->EvaluateJavaScript(input).c_str());
+}
+
 int main(int argc, char* argv[])
 {
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_X86_64)
@@ -633,7 +651,7 @@ int main(int argc, char* argv[])
                     ecore_animator_add(
                         [](void* data) -> Eina_Bool {
                             Pass* p = (Pass*)data;
-                            puts(p->webView->EvaluateJavaScript(p->buf).data());
+                            handleShellCommand(p->buf, p->webView);
                             delete[] p->buf;
                             delete p;
 
@@ -655,7 +673,7 @@ int main(int argc, char* argv[])
         uv_async_init(uv_default_loop(), idlerThreadAsyncHandle,
                       [](uv_async_t* handle) {
                           Pass* p = (Pass*)handle->data;
-                          puts(p->webView->EvaluateJavaScript(p->buf).data());
+                          handleShellCommand(p->buf, p->webView);
                           delete[] p->buf;
                           delete p;
                       });
