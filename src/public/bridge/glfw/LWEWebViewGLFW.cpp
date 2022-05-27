@@ -239,6 +239,42 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
                 keyValue = (KeyValue)(keyValue + (AKey - LowerAKey));
         } else if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9) {
             keyValue = (KeyValue)(KeyValue::Digit0Key + key - GLFW_KEY_0);
+            if (mods & GLFW_MOD_SHIFT) {
+                switch (keyValue) {
+                case KeyValue::Digit1Key:
+                    keyValue = KeyValue::ExclamationMarkKey;
+                    break;
+                case KeyValue::Digit2Key:
+                    keyValue = KeyValue::AtMarkKey;
+                    break;
+                case KeyValue::Digit3Key:
+                    keyValue = KeyValue::SharpMarkKey;
+                    break;
+                case KeyValue::Digit4Key:
+                    keyValue = KeyValue::DollarMarkKey;
+                    break;
+                case KeyValue::Digit5Key:
+                    keyValue = KeyValue::PercentMarkKey;
+                    break;
+                case KeyValue::Digit6Key:
+                    keyValue = KeyValue::CaretMarkKey;
+                    break;
+                case KeyValue::Digit7Key:
+                    keyValue = KeyValue::AmpersandMarkKey;
+                    break;
+                case KeyValue::Digit8Key:
+                    keyValue = KeyValue::AsteriskMarkKey;
+                    break;
+                case KeyValue::Digit9Key:
+                    keyValue = KeyValue::LeftParenthesisMarkKey;
+                    break;
+                case KeyValue::Digit0Key:
+                    keyValue = KeyValue::RightParenthesisMarkKey;
+                    break;
+                default:
+                    break;
+                }
+            }
         } else
             keyValue = KeyValue::UnidentifiedKey;
         break;
