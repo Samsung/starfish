@@ -25,9 +25,7 @@ namespace Starfish {
 
 class ProcessHost;
 class ServiceWorkerClientConnection;
-class ThreadPool;
-class IThread;
-class IORunnable;
+class PerProcess;
 class GlobalScope;
 class ServiceWorkerAgent;
 class PushServiceAgent;
@@ -49,7 +47,7 @@ public:
     static ServiceWorkerProcessManager* instance();
     static std::string createAddress(const std::string& lastAddress = "");
 
-    void init();
+    void init(PerProcess* perProcess);
     void destroy();
 
     ServiceWorkerClientConnection* getConnection(String* originSerialized);
@@ -65,15 +63,12 @@ public:
     }
 
 private:
-    ServiceWorkerProcessManager();
-    virtual ~ServiceWorkerProcessManager();
+    ServiceWorkerProcessManager() = default;
+    ~ServiceWorkerProcessManager() = default;
 
     static ServiceWorkerProcessManager* m_instance;
 
-    IThread* m_ioThread{ nullptr };
-    ThreadPool* m_threadPool{ nullptr };
-    IORunnable* m_ioRunnable{ nullptr };
-    MessageLoop* m_messageLoop{ nullptr };
+    PerProcess* perProcess_{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
 

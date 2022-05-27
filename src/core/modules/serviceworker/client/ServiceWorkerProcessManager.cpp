@@ -42,6 +42,8 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
+#include "core/modules/serviceworker/PerProcess.h"
+
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
@@ -68,62 +70,28 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
     if (m_instance == nullptr) {
         m_instance = new ServiceWorkerProcessManager();
     }
-
-    STARFISH_ASSERT(m_instance);
     return m_instance;
 }
 
-void ServiceWorkerProcessManager::init()
+void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 {
+    STARFISH_ASSERT(perProcess);
+
     GlobalOptions::instance().set("app", "CLIT");
 
     Message::init();
 
-    m_messageLoop = new MessageLoop();
-    m_threadPool =
-        new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop);
-
-    // start I/O runner
-    m_ioRunnable = new IORunnable(m_threadPool->messageLoop());
-    m_ioThread = new AdaptedThread(m_threadPool);
-
-    m_ioThread->start(m_ioRunnable);
+    perProcess_ = perProcess;
     m_pushServiceAgent = new PushServiceAgent();
 }
 
 void ServiceWorkerProcessManager::destroy()
 {
-    if (m_instance != nullptr) {
-        m_instance->~ServiceWorkerProcessManager();
-        m_instance = nullptr;
-    }
-}
-
-ServiceWorkerProcessManager::ServiceWorkerProcessManager()
-{
-}
-
-ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
-{
-    if (m_ioThread != nullptr) {
-        m_ioThread->stop();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    if (m_threadPool != nullptr) {
-        m_threadPool->destroy();
-    }
-
-    if (m_messageLoop != nullptr) {
-        m_messageLoop->destroy();
-    }
-
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
     // create mock instances
     if (m_agent != nullptr) {
         m_agent->destroy();
     }
-
 #endif
 }
 
@@ -146,7 +114,6 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     String* originSerialized)
 {
     STARFISH_ASSERT(originSerialized != nullptr);
-    STARFISH_ASSERT(m_threadPool != nullptr);
 
     std::string origin = CSTR(originSerialized);
 
@@ -163,7 +130,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
         // create mock instances
-        m_agent = ServiceWorkerAgent::create(LWE::g_starfishInstance);
+        m_agent =
+            ServiceWorkerAgent::create(LWE::g_starfishInstance, perProcess_);
 #else
         // TODO: extract process creation
         // TODO: check if instance exists
@@ -194,7 +162,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         if (processData->connection == nullptr) {
             processData->connection = new ServiceWorkerClientConnection();
             processData->connection->socket()->connect(address.c_str());
-            m_ioRunnable->addClient(processData->connection);
+            perProcess_->ioRunnable()->addClient(processData->connection);
         }
 #ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
         if (m_connection == nullptr) {
