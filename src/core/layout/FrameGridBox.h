@@ -113,7 +113,7 @@ public:
     GridArea(FrameBox* box, size_t id)
         : m_box(box)
         , m_index(id)
-    {  
+    {
         if (box) {
             m_isMarginLeftAuto = box->style()->margin().left().isAuto();
             m_isMarginRightAuto = box->style()->margin().right().isAuto();
@@ -368,6 +368,7 @@ public:
     GridCellTable();
     bool hasFreeSlot(size_t row, size_t col);
     void setOccupied(size_t row, size_t col);
+    std::string toString();
 
 private:
     std::bitset<MAX_TRACK * MAX_TRACK> m_gridCellTable;
