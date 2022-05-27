@@ -24,8 +24,7 @@
 namespace Starfish {
 
 class WebWorker;
-class MessageLoop;
-class ThreadPool;
+class PerProcess;
 class ServiceWorkerData;
 class NotificationService;
 class ServiceWorkerServer;
@@ -39,7 +38,8 @@ using ServiceWorkerAgentStateHandler = void (*)(ServiceWorkerAgentState);
 
 class ServiceWorkerAgent : public gc {
 public:
-    static ServiceWorkerAgent* create(Starfish* starfish);
+    static ServiceWorkerAgent* create(Starfish* starfish,
+                                      PerProcess* perProcess);
     static bool isCreated();
     static ServiceWorkerAgent* instance();
 
@@ -65,13 +65,12 @@ public:
 #endif
 
 private:
-    ServiceWorkerAgent(Starfish* starfish);
+    ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
 
     static ServiceWorkerAgent* m_instance;
     Starfish* m_starfish;
-    MessageLoop* m_messageLoop;
-    ThreadPool* m_threadPool;
+    PerProcess* perProcess_;
     ServiceWorkerServer* m_SWServer;
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
     NotificationService* m_notificationService;

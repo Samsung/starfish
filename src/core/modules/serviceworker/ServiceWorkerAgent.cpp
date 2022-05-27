@@ -24,8 +24,7 @@
 
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
@@ -42,18 +41,18 @@
 
 namespace Starfish {
 
-#if !defined(SERVICE_WORKER_THREAD_POOL_SIZE)
-#define SERVICE_WORKER_THREAD_POOL_SIZE 1
-#endif
-
 ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
 
-ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish)
+ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
+                                               PerProcess* perProcess)
 {
+    // TODO: remove this instantiation after checking service worker
+    // host running on another process. (host/ServiceWorkerExecutor)
+
     STARFISH_ASSERT(m_instance == nullptr);
     STARFISH_ASSERT(starfish != nullptr);
 
-    m_instance = new (NoGC) ServiceWorkerAgent(starfish);
+    m_instance = new ServiceWorkerAgent(starfish, perProcess);
 
     return m_instance;
 }
@@ -65,17 +64,17 @@ ServiceWorkerAgent* ServiceWorkerAgent::instance()
     return m_instance;
 }
 
-ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish)
+ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
+                                       PerProcess* perProcess)
     : m_starfish(starfish)
-    , m_messageLoop(new MessageLoop())
-    , m_threadPool(
-          new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop))
+    , perProcess_(perProcess)
     , m_SWServer(ServiceWorkerServer::instance())
     , m_notificationService(new NotificationService())
 {
-    STARFISH_ASSERT(starfish != nullptr);
+    STARFISH_ASSERT(starfish);
+    STARFISH_ASSERT(perProcess);
 
-    m_SWServer->init(m_threadPool);
+    m_SWServer->init(perProcess_->threadPool());
     m_SWServer->start();
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
@@ -115,16 +114,6 @@ void ServiceWorkerAgent::destroy()
     }
     m_webWorkerList.clear();
 #endif
-
-    if (m_threadPool != nullptr) {
-        m_threadPool->destroy();
-        m_threadPool = nullptr;
-    }
-
-    if (m_messageLoop != nullptr) {
-        m_messageLoop->destroy();
-        m_messageLoop = nullptr;
-    }
 
     m_instance->ServiceWorkerAgent::~ServiceWorkerAgent();
     GC_FREE(m_instance);

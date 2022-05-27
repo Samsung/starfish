@@ -28,6 +28,7 @@ class PlatformWindow;
 class NativeImageData;
 class LineBreakIteratorPool;
 class Mutex;
+class PerProcess;
 class ServiceWorkerProcessManager;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
@@ -96,7 +97,8 @@ protected:
     HTTPCache* m_httpCache;
 #endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
-    ServiceWorkerProcessManager* m_serviceWorkerProcessManager;
+    PerProcess* m_perProcess{ nullptr };
+    ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
 #endif
     size_t m_webViewInstanceCount;
 
