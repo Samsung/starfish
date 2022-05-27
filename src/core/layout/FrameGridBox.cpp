@@ -237,6 +237,9 @@ void GridFormattingContext::placeGridItemsIntoCells()
 
 void GridArea::parseGridRowAndColumnValues(GridFormattingContext& ctx)
 {
+    // NOTE: When `grid-row: n` is given, both gridRowStart() and gridRowEnd()
+    // returns n. The value for `grid-row-end` will be correctly adjusted in the
+    // later step. The same applies to `grid-column: n`.
     {
         String* gridRowStart = box()->style()->gridRowStart();
         String* gridRowEnd = box()->style()->gridRowEnd();
@@ -553,22 +556,34 @@ void GridFormattingContext::placeRemainingGridAreas(
 {
     size_t firstImplicitRow = 1;
     size_t firstImplicitColumn = 1;
-    for (size_t r = 1; r < m_gridTemplateRows.size(); r++) {
-        for (size_t c = 1; c < m_gridTemplateColumns.size(); c++) {
+    bool startPosFound = false;
+    for (size_t r = 1; r < m_gridTemplateRows.size() && !startPosFound; r++) {
+        for (size_t c = 1; c < m_gridTemplateColumns.size() && !startPosFound;
+             c++) {
             if (m_gridTemplateRows[r].isImplicitLine() &&
                 m_gridTemplateColumns[c].isImplicitLine()) {
                 firstImplicitRow = r;
                 firstImplicitColumn = c;
-                break;
+                startPosFound = true;
             }
         }
     }
 
     size_t curRow = firstImplicitRow;
     size_t curCol = firstImplicitColumn;
+
+    GridArea* prevGridArea = nullptr;
     for (auto gridArea : gridAreasAuto) {
         if (gridArea->hasRowAndColumnValues()) {
             continue;
+        }
+
+        if (gridArea->columnStart() != 0) {
+            curCol = gridArea->columnStart();
+            if (prevGridArea &&
+                (prevGridArea->columnStart() > gridArea->columnStart())) {
+                curRow++;
+            }
         }
 
         bool found = false;
@@ -605,6 +620,7 @@ void GridFormattingContext::placeRemainingGridAreas(
         }
 
         placeGridArea(gridArea);
+        prevGridArea = gridArea;
     }
 }
 
@@ -665,6 +681,23 @@ void GridCellTable::setOccupied(size_t row, size_t col)
     }
 
     m_gridCellTable[(row * GridCellTable::MAX_TRACK) + col] = true;
+}
+
+std::string GridCellTable::toString()
+{
+    std::string str;
+    for (size_t row = 1; row < MAX_TRACK; row++) {
+        for (size_t col = 1; col < MAX_TRACK; col++) {
+            if (hasFreeSlot(row, col)) {
+                str += '.';
+            } else {
+                str += '*';
+            }
+        }
+        str += '\n';
+    }
+
+    return str;
 }
 
 void GridFormattingContext::parseGridTemplateAreas()
