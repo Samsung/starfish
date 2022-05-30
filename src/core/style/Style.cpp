@@ -8467,7 +8467,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
                 Element* e = element->parentElement();
                 while (e) {
-                    if (e->style()->hasBlockLikeDisplay()) {
+                    if (e->style() && e->style()->hasBlockLikeDisplay()) {
                         break;
                     }
                     e = e->parentElement();
