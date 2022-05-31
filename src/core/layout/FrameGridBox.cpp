@@ -18,10 +18,12 @@
  */
 
 #include "StarfishConfig.h"
+
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameGridBox.h"
+#include "core/layout/FrameDocument.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
 
@@ -106,6 +108,7 @@ void GridFormattingContext::computeColumnsAndRows()
 {
     buildGridTrackTemplate();
     layoutGridItems();
+    layoutNonGridItems();
 }
 
 void GridFormattingContext::layoutGridItems()
@@ -196,6 +199,12 @@ void GridFormattingContext::placeGridItemsIntoCells()
     GCVector<GridArea*> gridAreasAuto;
     size_t documentOrder = 0;
     for (auto gridItem : orderedGridItems) {
+        if (gridItem->style()->position() == AbsolutePositionValue ||
+            gridItem->style()->position() == FixedPositionValue) {
+            m_nonGridItems.push_back(gridItem);
+            continue;
+        }
+
         GridArea* gridArea = new GridArea(gridItem, documentOrder);
         gridArea->parseGridRowAndColumnValues(*this);
         gridArea->resolveDefinitePositionValues();
@@ -1768,6 +1777,70 @@ void GridFormattingContext::applyAlignItemsCenter()
     }
 }
 
+void GridFormattingContext::layoutNonGridItems()
+{
+    // https://drafts.csswg.org/css-grid/#abspos
+    // https://www.w3.org/TR/css-position-3/#staticpos-rect
+    // GridItems with position: absolute do not participate in the grid layout.
+    LayoutUnit xPosSoFar =
+        m_container->borderLeft() + m_container->paddingLeft();
+    LayoutUnit yPosSoFar = m_container->borderTop() + m_container->paddingTop();
+
+    for (auto nonGridItem : m_nonGridItems) {
+        GridLayoutScope scope(nonGridItem);
+
+        nonGridItem->layout(m_layoutContext,
+                            Frame::LayoutWantToResolve::ResolveAll);
+
+        auto position = nonGridItem->style()->position();
+        if (position == AbsolutePositionValue) {
+            nonGridItem->setX(xPosSoFar);
+            nonGridItem->setY(yPosSoFar);
+        } else if (position == FixedPositionValue) {
+            repositionFixedNonGridItem(nonGridItem);
+        }
+    }
+}
+
+void GridFormattingContext::repositionFixedNonGridItem(FrameBox* nonGridItem)
+{
+    LayoutUnit xPosSoFar =
+        m_container->borderLeft() + m_container->paddingLeft();
+    LayoutUnit yPosSoFar = m_container->borderTop() + m_container->paddingTop();
+
+    LayoutLocation absLocation =
+        m_container->absolutePoint(m_layoutContext.frameDocument());
+    LengthData insets = m_container->insets();
+
+    if (nonGridItem->style()->top().isAuto()) {
+        nonGridItem->setY(yPosSoFar);
+    } else if (nonGridItem->style()->top().isFixed()) {
+        if (insets.top().isFixed()) {
+            nonGridItem->setY(nonGridItem->style()->top().fixed() -
+                              absLocation.y().toDouble() -
+                              insets.top().fixed());
+        } else {
+            STARFISH_UNIMPLEMENTED("insets: percentage");
+        }
+    } else {
+        STARFISH_UNIMPLEMENTED("nonGridItem: other units");
+    }
+
+    if (nonGridItem->style()->left().isAuto()) {
+        nonGridItem->setX(xPosSoFar);
+    } else if (nonGridItem->style()->left().isFixed()) {
+        if (insets.left().isFixed()) {
+            nonGridItem->setX(nonGridItem->style()->left().fixed() -
+                              absLocation.x().toDouble() -
+                              insets.left().fixed());
+        } else {
+            STARFISH_UNIMPLEMENTED("insets: percentage");
+        }
+    } else {
+        STARFISH_UNIMPLEMENTED("nonGridItem: other units");
+    }
+}
+
 bool GridFormattingContext::needsGridItemLayout(FrameBox* gridItem,
                                                 ComputedStyle* style,
                                                 bool testWidthOnly)
@@ -1882,5 +1955,17 @@ void FrameGridBox::layoutGrid(LayoutContext& ctx)
 {
     GridFormattingContext gridFormattingContext(ctx, this, contentWidth());
     gridFormattingContext.computeColumnsAndRows();
+}
+
+// https://www.w3.org/TR/css-position-3/#inset-properties
+// https://www.w3.org/TR/css-position-3/#staticpos-rect
+LengthData FrameGridBox::insets()
+{
+    if (style()->position() == AbsolutePositionValue ||
+        style()->position() == RelativePositionValue) {
+        return style()->offset();
+    }
+
+    return LengthData();
 }
 } // namespace Starfish
