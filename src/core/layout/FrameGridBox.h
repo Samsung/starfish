@@ -408,6 +408,7 @@ private:
     LayoutUnit m_columnGap;
 
     GridCellTable m_gridCellTable;
+    GCVector<FrameBox*> m_nonGridItems;
 
     void buildGridTrackTemplate();
     void layoutGridItems();
@@ -452,6 +453,9 @@ private:
     void resolveMinMaxContentSize(size_t gridTrackIndex);
     void applyAlignItemsCenter();
 
+    void layoutNonGridItems();
+    void repositionFixedNonGridItem(FrameBox* nonGridItem);
+
     LayoutSize fetchFixedMargin(FrameGridBox* grid, ComputedStyle* style);
     LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
                                              ComputedStyle* style);
@@ -494,6 +498,8 @@ public:
 
     void layoutGrid(LayoutContext& ctx);
     void computePreferredWidth(PreferredWidthContext& ctx) override;
+
+    LengthData insets();
 
     void* operator new(size_t size)
     {
