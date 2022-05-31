@@ -30,10 +30,7 @@ namespace Starfish {
 */
 
 class JobQueue;
-class IThread;
-class ThreadPool;
-class IORunnable;
-class MessageLoop;
+class PerProcess;
 class ProgramOptions;
 class ServiceWorkerJob;
 class ServiceWorkerHostJobHandler;
@@ -44,13 +41,14 @@ class ServiceWorkerContextManager;
 
 class ServiceWorkerServer : public gc, public ServiceWorkerServerInterface {
 public:
-    static ServiceWorkerServer* instance();
-    static void destroy();
+    ServiceWorkerServer();
+    virtual ~ServiceWorkerServer();
 
     ServiceWorkerServer(ServiceWorkerServer const&) = delete;
     void operator=(ServiceWorkerServer const&) = delete;
 
-    void init(ThreadPool* threadPool);
+    void init(PerProcess* perProcess);
+    void destroy();
     void start();
     void start(std::shared_ptr<ProgramOptions> programOptions);
 
@@ -65,17 +63,9 @@ public:
     DEFINE_SETTER(ServiceWorkerServerClient*, client, Client);
 
 private:
-    static ServiceWorkerServer* m_instance;
-
-    ServiceWorkerServer();
-    virtual ~ServiceWorkerServer();
-
     void registerConnection(ServiceWorkerHostConnection* connection);
 
-    MessageLoop* m_messageLoop{ nullptr };
-    IThread* m_ioThread{ nullptr };
-    ThreadPool* m_threadPool{ nullptr };
-    IORunnable* m_ioRunnable{ nullptr };
+    PerProcess* m_perProcess{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
     GCVector<ServiceWorkerHostConnection*> m_connections;

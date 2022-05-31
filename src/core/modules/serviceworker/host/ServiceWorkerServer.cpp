@@ -51,25 +51,14 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 
+#include "core/modules/serviceworker/PerProcess.h"
+
 namespace Starfish {
-
-ServiceWorkerServer* ServiceWorkerServer::m_instance = nullptr;
-
-ServiceWorkerServer* ServiceWorkerServer::instance()
-{
-    if (m_instance == nullptr) {
-        m_instance = new ServiceWorkerServer();
-    }
-
-    STARFISH_ASSERT(m_instance != nullptr);
-    return m_instance;
-}
 
 void ServiceWorkerServer::destroy()
 {
-    if (m_instance != nullptr) {
-        m_instance->~ServiceWorkerServer();
-        m_instance = nullptr;
+    if (m_client != nullptr) {
+        m_client->onSWServerTerminated();
     }
 }
 
@@ -79,14 +68,11 @@ ServiceWorkerServer::ServiceWorkerServer()
 
 ServiceWorkerServer::~ServiceWorkerServer()
 {
-    if (m_client != nullptr) {
-        m_client->onSWServerTerminated();
-    }
 }
 
-void ServiceWorkerServer::init(ThreadPool* threadPool)
+void ServiceWorkerServer::init(PerProcess* perProcess)
 {
-    STARFISH_ASSERT(threadPool != nullptr);
+    STARFISH_ASSERT(perProcess != nullptr);
 
 #ifdef STARFISH_WEBWORKER_HOST
     GlobalOptions::instance().set("app", "HOST");
@@ -94,15 +80,9 @@ void ServiceWorkerServer::init(ThreadPool* threadPool)
 
     Message::init();
 
-    m_threadPool = threadPool;
-    m_messageLoop = m_threadPool->messageLoop();
-
-    m_jobHandler = new ServiceWorkerHostJobHandler(m_messageLoop, this);
-    m_ioRunnable = new IORunnable(m_messageLoop);
-    m_ioThread = new AdaptedThread(m_threadPool);
-
-    // start I/O runner
-    m_ioThread->start(m_ioRunnable);
+    m_perProcess = perProcess;
+    m_jobHandler =
+        new ServiceWorkerHostJobHandler(m_perProcess->messageLoop(), this);
 }
 
 // TODO: use ServiceWorkerProcessManager::createAddress once its process
@@ -123,8 +103,6 @@ static std::string createAddress(const std::string& lastAddress = "")
 
 void ServiceWorkerServer::start()
 {
-    STARFISH_ASSERT(m_ioThread != nullptr);
-
     // create a connection
     m_connection = new ServiceWorkerHostConnection(this);
     registerConnection(m_connection);
@@ -133,7 +111,7 @@ void ServiceWorkerServer::start()
 
     SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s", address.c_str());
     m_connection->socket()->bind(address.c_str());
-    m_ioRunnable->addClient(m_connection);
+    m_perProcess->ioRunnable()->addClient(m_connection);
 }
 
 void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
@@ -154,10 +132,9 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
     SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s", origin.c_str());
 
     STARFISH_ASSERT(m_connection != nullptr);
-    STARFISH_ASSERT(m_ioRunnable != nullptr);
 
     m_connection->socket()->bind(address.c_str());
-    m_ioRunnable->addClient(m_connection);
+    m_perProcess->ioRunnable()->addClient(m_connection);
 }
 
 void ServiceWorkerServer::registerConnection(
@@ -195,7 +172,7 @@ bool ServiceWorkerServer::tryTerminate()
     if (jobHandler()->isEmptyRegistrationMap() == true) {
         m_isTerminating = true;
         // TODO: notify termination
-        m_messageLoop->addIdler(
+        m_perProcess->messageLoop()->addIdler(
             nullptr,
             [](size_t handle, void* data0) {
                 SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server");

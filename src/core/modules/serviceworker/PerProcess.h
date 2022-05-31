@@ -20,6 +20,7 @@
 #pragma once
 
 #include <GCUtil.h>
+#include <StarfishBase.h>
 
 namespace Starfish {
 
@@ -33,24 +34,18 @@ public:
     PerProcess();
     ~PerProcess() = default;
 
-    IORunnable *ioRunnable()
-    {
-        return ioRunnable_;
-    }
-
-    ThreadPool *threadPool()
-    {
-        return threadPool_;
-    }
+    DEFINE_GETTER(IORunnable *, ioRunnable);
+    DEFINE_GETTER(ThreadPool *, threadPool);
+    DEFINE_GETTER(MessageLoop *, messageLoop);
 
     void initialize();
     void destroy();
 
 private:
-    MessageLoop *messageLoop_{ nullptr };
-    ThreadPool *threadPool_{ nullptr };
-    IThread *ioThread_{ nullptr };
-    IORunnable *ioRunnable_{ nullptr };
+    MessageLoop *m_messageLoop{ nullptr };
+    ThreadPool *m_threadPool{ nullptr };
+    IThread *m_ioThread{ nullptr };
+    IORunnable *m_ioRunnable{ nullptr };
 };
 
 } // namespace Starfish
