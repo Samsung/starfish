@@ -70,7 +70,7 @@ private:
 
     static ServiceWorkerAgent* m_instance;
     Starfish* m_starfish;
-    PerProcess* perProcess_;
+    PerProcess* m_perProcess;
     ServiceWorkerServer* m_SWServer;
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
     NotificationService* m_notificationService;

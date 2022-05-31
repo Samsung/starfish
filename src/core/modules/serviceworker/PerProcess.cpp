@@ -40,25 +40,26 @@ PerProcess::PerProcess()
 
 void PerProcess::initialize()
 {
-    messageLoop_ = new MessageLoop();
-    threadPool_ = new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, messageLoop_);
-    ioRunnable_ = new IORunnable(messageLoop_);
-    ioThread_ = new AdaptedThread(threadPool_);
+    m_messageLoop = new MessageLoop();
+    m_threadPool =
+        new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop);
+    m_ioRunnable = new IORunnable(m_messageLoop);
+    m_ioThread = new AdaptedThread(m_threadPool);
 
-    ioThread_->start(ioRunnable_);
+    m_ioThread->start(m_ioRunnable);
 }
 
 void PerProcess::destroy()
 {
-    STARFISH_ASSERT(ioThread_);
-    STARFISH_ASSERT(threadPool_);
-    STARFISH_ASSERT(messageLoop_);
+    STARFISH_ASSERT(m_ioThread);
+    STARFISH_ASSERT(m_threadPool);
+    STARFISH_ASSERT(m_messageLoop);
 
-    ioThread_->stop();
+    m_ioThread->stop();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    threadPool_->destroy();
-    messageLoop_->destroy();
+    m_threadPool->destroy();
+    m_messageLoop->destroy();
 }
 
 } // namespace Starfish

@@ -67,14 +67,14 @@ ServiceWorkerAgent* ServiceWorkerAgent::instance()
 ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
                                        PerProcess* perProcess)
     : m_starfish(starfish)
-    , perProcess_(perProcess)
-    , m_SWServer(ServiceWorkerServer::instance())
+    , m_perProcess(perProcess)
     , m_notificationService(new NotificationService())
 {
     STARFISH_ASSERT(starfish);
     STARFISH_ASSERT(perProcess);
 
-    m_SWServer->init(perProcess_->threadPool());
+    m_SWServer = new ServiceWorkerServer;
+    m_SWServer->init(m_perProcess);
     m_SWServer->start();
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
