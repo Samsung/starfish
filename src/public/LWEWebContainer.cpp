@@ -1055,7 +1055,7 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
 void WebContainer::EvaluateJavaScript(
     const std::string& script, std::function<void(const std::string&)> cb)
 {
-    struct Params : public gc {
+    struct Params {
         Starfish::WebView* webview;
         std::string script;
         std::function<void(const std::string&)> cb;
