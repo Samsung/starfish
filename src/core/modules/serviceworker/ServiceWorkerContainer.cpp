@@ -470,6 +470,7 @@ void ServiceWorkerContainer::resolveJobPromise(
                     STARFISH_ASSERT(registration != nullptr);
                     STARFISH_ASSERT(serviceWorker != nullptr);
 
+                    registration->data()->scope = job->data()->scopeURL;
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
                     registration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
