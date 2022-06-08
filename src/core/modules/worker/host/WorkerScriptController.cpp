@@ -106,7 +106,7 @@ ScriptLoadResult WorkerScriptController::loadJavaScript(
     WorkerScriptControllerClient* client =
         new WorkerScriptControllerClient(this);
     resourceRequest->addResourceRequestClient(client);
-    resourceRequest->open(requestData);
+    resourceRequest->open(requestData, new HeadersData());
     resourceRequest->send();
 
     return client->scriptLoadResult();

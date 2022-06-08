@@ -35,7 +35,7 @@ using namespace Escargot;
 template class ScriptBindingWorkerInstance<WorkerGlobalScope>;
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 
-static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
+static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                                        ValueRef* key)
 {
     STARFISH_ASSERT(state != nullptr);
@@ -47,7 +47,7 @@ static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
         return self->scriptValue();
     }
 
-    return ValueRef::createEmpty();
+    return OptionalRef<ValueRef>();
 }
 
 template <typename T>
