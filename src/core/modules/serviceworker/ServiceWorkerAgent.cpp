@@ -50,7 +50,6 @@ ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
     // host running on another process. (host/ServiceWorkerExecutor)
 
     STARFISH_ASSERT(m_instance == nullptr);
-    STARFISH_ASSERT(starfish != nullptr);
 
     m_instance = new ServiceWorkerAgent(starfish, perProcess);
 
@@ -70,7 +69,6 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
     , m_perProcess(perProcess)
     , m_notificationService(new NotificationService())
 {
-    STARFISH_ASSERT(starfish);
     STARFISH_ASSERT(perProcess);
 
     m_SWServer = new ServiceWorkerServer;
@@ -95,6 +93,9 @@ bool ServiceWorkerAgent::isCreated()
 void ServiceWorkerAgent::destroy()
 {
     STARFISH_ASSERT(m_instance != nullptr);
+    if (m_clientFunc) {
+        m_clientFunc(ServiceWorkerAgentState::Terminated);
+    }
 
     if (m_SWServer != nullptr) {
         m_SWServer->destroy();

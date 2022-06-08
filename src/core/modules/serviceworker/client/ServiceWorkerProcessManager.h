@@ -21,6 +21,9 @@
     !defined(__StarfishServiceWorkerProcessManager__)
 #define __StarfishServiceWorkerProcessManager__
 
+#include "platform/process/base/ProcessType.h" // PID
+#include <future>
+
 namespace Starfish {
 
 class ProcessHost;
@@ -51,7 +54,7 @@ public:
     void destroy();
 
     ServiceWorkerClientConnection* getConnection(String* originSerialized);
-
+    bool startWorkerOnThread(std::string scriptURL);
     void registerActiveGlobalScope(Id<GlobalScope> id,
                                    GlobalScope* globalScope);
     void deregisterActiveGlobalScope(Id<GlobalScope> id);
@@ -68,12 +71,12 @@ private:
 
     static ServiceWorkerProcessManager* m_instance;
 
-    PerProcess* perProcess_{ nullptr };
+    PerProcess* m_perProcess{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
-    ServiceWorkerAgent* m_agent{ nullptr };
+    std::promise<void> m_promiseStopThreadSignal;
 #endif
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
