@@ -21,20 +21,17 @@
 #include "Starfish.h"
 #include "core/fileapi/FileReader.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/DOMParser.h"
 #include "core/dom/ProgressEvent.h"
 #include "core/fileapi/Blob.h"
-#include "core/page/Window.h"
-#include "core/page/WebView.h"
+#include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
-FileReader::FileReader(Document* document)
+FileReader::FileReader(ExecutionContext* executionContext)
     : EventTarget()
-    , DocumentHoldable(document)
+    , m_executionContext(executionContext)
     , m_readyState(ReadyState::Empty)
     , m_blob(nullptr)
     , m_result(nullptr)
@@ -51,7 +48,7 @@ DEFINE_EVENT_LISTENER(FileReader, loadend);
 
 ExecutionContext* FileReader::executionContext() const
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 
 ScriptBindingInstance* FileReader::scriptBindingInstance()
@@ -93,7 +90,7 @@ void FileReader::abort()
     }
 
     if (m_requstedIdler != 0) {
-        document()->window()->webView()->messageLoop()->removeIdler(
+        executionContext()->webBase()->messageLoop()->removeIdler(
             m_requstedIdler);
         m_requstedIdler = 0;
     }
@@ -134,8 +131,8 @@ void FileReader::read(Blob* blob, String* encoding)
     m_result = nullptr;
 
     // Implement UTF8 text only
-    m_requstedIdler = document()->window()->webView()->messageLoop()->addIdler(
-        document()->window(),
+    m_requstedIdler = executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext()->globalScope(),
         [](size_t handle, void* data) {
             FileReader* fr = (FileReader*)data;
             Blob* blob = fr->m_blob;
@@ -156,22 +153,33 @@ void FileReader::dispatchProgressEvent(ProgressState progState)
 {
     String* eventName = String::emptyString;
     if (progState == ProgressState::Progress) {
-        eventName =
-            document()->starfish()->staticStrings()->m_progress.localName();
+        eventName = executionContext()
+                        ->starfish()
+                        ->staticStrings()
+                        ->m_progress.localName();
     } else if (progState == ProgressState::InError) {
-        eventName =
-            document()->starfish()->staticStrings()->m_error.localName();
+        eventName = executionContext()
+                        ->starfish()
+                        ->staticStrings()
+                        ->m_error.localName();
     } else if (progState == ProgressState::Abort) {
-        eventName =
-            document()->starfish()->staticStrings()->m_abort.localName();
+        eventName = executionContext()
+                        ->starfish()
+                        ->staticStrings()
+                        ->m_abort.localName();
     } else if (progState == ProgressState::Load) {
-        eventName = document()->starfish()->staticStrings()->m_load.localName();
+        eventName =
+            executionContext()->starfish()->staticStrings()->m_load.localName();
     } else if (progState == ProgressState::LoadEnd) {
-        eventName =
-            document()->starfish()->staticStrings()->m_loadend.localName();
+        eventName = executionContext()
+                        ->starfish()
+                        ->staticStrings()
+                        ->m_loadend.localName();
     } else if (progState == ProgressState::LoadStart) {
-        eventName =
-            document()->starfish()->staticStrings()->m_loadstart.localName();
+        eventName = executionContext()
+                        ->starfish()
+                        ->staticStrings()
+                        ->m_loadstart.localName();
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }

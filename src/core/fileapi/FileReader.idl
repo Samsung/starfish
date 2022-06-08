@@ -1,6 +1,6 @@
 // https://w3c.github.io/FileAPI/#file-section
 
-[Constructor,ConstructorCallWith=Document
+[Constructor,ConstructorCallWith=ExecutionContext
 ,Exposed=(Window,Worker)]
 interface FileReader: EventTarget {
   // constructor();

@@ -2,7 +2,8 @@
 
 [
   Constructor(DOMString type, optional ProgressEventInit eventInitDict),
-  ConstructorCallWith=ExecutionContext
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker)
 ]
 interface ProgressEvent : Event {
   readonly attribute boolean lengthComputable;
