@@ -57,7 +57,11 @@ extern Starfish::Starfish* g_starfishInstance;
 
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
 
+#include <EscargotPublic.h>
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+using Escargot::Globals;
 
 namespace Starfish {
 
@@ -81,17 +85,14 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 
     Message::init();
 
-    perProcess_ = perProcess;
+    m_perProcess = perProcess;
     m_pushServiceAgent = new PushServiceAgent();
 }
 
 void ServiceWorkerProcessManager::destroy()
 {
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
-    // create mock instances
-    if (m_agent != nullptr) {
-        m_agent->destroy();
-    }
+    m_promiseStopThreadSignal.set_value();
 #endif
 }
 
@@ -108,6 +109,34 @@ std::string ServiceWorkerProcessManager::createAddress(
 #endif
 
     return address;
+}
+
+bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
+{
+    STARFISH_ASSERT(Globals::supportsThreading());
+
+    // TODO: create a Runnable for this thread once verified.
+    std::thread(
+        [](PerProcess* perProcess, std::future<void>&& stopTask) {
+            SWCLIENT_LOG_IF_ALLOWED(1, "Worker thread starts");
+
+            Globals::initializeThread();
+
+            // TODO: create global variables that a starfish instance has.
+            // We can not use the starfish instance on the main thread.
+            Starfish* starfish = nullptr;
+            ServiceWorkerAgent* agent =
+                ServiceWorkerAgent::create(starfish, perProcess);
+
+            stopTask.wait();
+
+            agent->destroy();
+
+            SWCLIENT_LOG_IF_ALLOWED(1, "Worker thread ends");
+        },
+        m_perProcess, std::move(m_promiseStopThreadSignal.get_future()))
+        .detach();
+    return true;
 }
 
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
@@ -129,9 +158,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
-        // create mock instances
-        m_agent =
-            ServiceWorkerAgent::create(LWE::g_starfishInstance, perProcess_);
+        startWorkerOnThread("");
 #else
         // TODO: extract process creation
         // TODO: check if instance exists
@@ -162,7 +189,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         if (processData->connection == nullptr) {
             processData->connection = new ServiceWorkerClientConnection();
             processData->connection->socket()->connect(address.c_str());
-            perProcess_->ioRunnable()->addClient(processData->connection);
+            m_perProcess->ioRunnable()->addClient(processData->connection);
         }
 #ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
         if (m_connection == nullptr) {
