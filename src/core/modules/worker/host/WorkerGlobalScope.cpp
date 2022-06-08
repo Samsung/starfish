@@ -36,6 +36,8 @@
 #include "core/dom/ErrorEvent.h"
 #include "core/dom/DOMException.h"
 
+#include "core/page/WindowOrWorkerGlobalScope.h"
+
 namespace Starfish {
 
 WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
@@ -165,6 +167,24 @@ Promise* WorkerGlobalScope::fetch(RequestInfo& input, RequestInit& init)
 {
     return Fetch::fetch(executionContext(), input, init);
 }
+
+String* WorkerGlobalScope::btoa(ExecutionContext* executionContext,
+                                String* data)
+{
+    return WindowOrWorkerGlobalScope::btoa(executionContext, data);
+}
+
+String* WorkerGlobalScope::atob(ExecutionContext* executionContext,
+                                String* data)
+{
+    return WindowOrWorkerGlobalScope::atob(executionContext, data);
+}
+
+Performance* WorkerGlobalScope::performance()
+{
+    return Performance::create(executionContext());
+}
+
 } // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */

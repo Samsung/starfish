@@ -88,7 +88,7 @@ ValueRef* setTimeoutWorkerGlobalScopeFunction(ExecutionStateRef* state,
     }
     // Handle argument arg0
     STARFISH_ASSERT(argv[0] != nullptr);
-    if (argv[0]->isFunction()) {
+    if (argv[0]->isCallable()) {
         td->listener = argv[0]->asObject();
     } else {
         String* bodyStr = toBrowserString(state, argv[0]);
@@ -139,7 +139,7 @@ ValueRef* setIntervalWorkerGlobalScopeFunction(ExecutionStateRef* state,
     }
     // Handle argument arg0
     STARFISH_ASSERT(argv[0] != nullptr);
-    if (argv[0]->isFunction()) {
+    if (argv[0]->isCallable()) {
         td->listener = argv[0]->asObject();
     } else {
         String* bodyStr = toBrowserString(state, argv[0]);

@@ -23,6 +23,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/page/GlobalScope.h"
 #include "core/fetch/Fetch.h"
+#include "core/extra/Performance.h"
 
 namespace Starfish {
 
@@ -91,6 +92,11 @@ public:
 
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
+
+    String* btoa(ExecutionContext* executionContext, String* data);
+    String* atob(ExecutionContext* executionContext, String* data);
+
+    Performance* performance();
 
 protected:
     WorkerGlobalScope(WebWorker* webWorker);
