@@ -1,5 +1,5 @@
 // https://www.w3.org/TR/webstorage/#the-storage-interface
-
+[Exposed=Window]
 interface Storage {
     [RaisesException] readonly attribute unsigned long length;
     [RaisesException] DOMString? key(unsigned long index);

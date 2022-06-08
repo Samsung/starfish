@@ -26,7 +26,7 @@
 namespace Starfish {
 
 class Blob;
-class FileReader : public EventTarget, public DocumentHoldable {
+class FileReader : public EventTarget {
 public:
     enum class ReadyState : uint8_t {
         Empty,
@@ -44,7 +44,7 @@ public:
         LoadEnd,
     };
 
-    FileReader(Document* document);
+    FileReader(ExecutionContext* executionContext);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(FileReader)
 
@@ -78,6 +78,7 @@ private:
     void read(Blob* blob);
     void dispatchProgressEvent(ProgressState progState);
 
+    ExecutionContext* m_executionContext;
     ReadyState m_readyState;
     Blob* m_blob;
     String* m_result;
