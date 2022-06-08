@@ -66,18 +66,10 @@ public:
         NULLABLE String* scriptURL = nullptr); // binding interface
     ServiceWorker* controller();               // binding interface
 
-    void startRegister(NULLABLE ResourceURL* scopeURL, ResourceURL* scriptURL,
-                       Promise* p, ServiceWorkerEnvironment* client);
-
-    void scheduleJob(ServiceWorkerJob* job) override;
-    ServiceWorkerJob* createJob(
-        ServiceWorkerJobType type, NULLABLE String* scopeURL,
-        NULLABLE String* scriptURL, Promise* p,
-        NULLABLE ServiceWorkerEnvironment* client) override;
     ServiceWorkerEnvironment* serviceWorkerEnvironment() override;
 
     NULLABLE ServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
-    void finishJob(ServiceWorkerJob* job);
+
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
@@ -105,6 +97,16 @@ private:
     GCUnorderedMap<Id<ServiceWorkerRequest>, ServiceWorkerRequest*, IdHash>
         m_requestMap;
     State m_state;
+
+    void startRegister(NULLABLE ResourceURL* scopeURL, ResourceURL* scriptURL,
+                       Promise* p, ServiceWorkerEnvironment* client);
+
+    void scheduleJob(ServiceWorkerJob* job) override;
+    ServiceWorkerJob* createJob(
+        ServiceWorkerJobType type, NULLABLE String* scopeURL,
+        NULLABLE String* scriptURL, Promise* p,
+        NULLABLE ServiceWorkerEnvironment* client) override;
+    void finishJob(ServiceWorkerJob* job);
 };
 } // namespace Starfish
 

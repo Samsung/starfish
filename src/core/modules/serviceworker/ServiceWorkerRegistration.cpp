@@ -34,7 +34,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
     , m_installingWorker(nullptr)
     , m_waitingWorker(nullptr)
     , m_activeWorker(nullptr)
-    , m_data(new ServiceWorkerRegistrationData)
+    , m_data(new ServiceWorkerRegistrationData())
     , m_jobClient(client)
     , m_pushManager(new PushManager(executionContext, this))
 {
