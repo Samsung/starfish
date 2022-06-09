@@ -62,10 +62,10 @@ public:
     void install(ServiceWorkerJob* job, ServiceWorkerData* worker,
                  ServiceWorkerRegistrationData* registration);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
-                                 const char* target,
-                                 NULLABLE ServiceWorkerData* source);
+                                 ServiceWorkerRegistrationState target,
+                                 Nullable<ServiceWorkerData*> source);
     void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
-    NULLABLE ServiceWorkerData* getNewestWorker(
+    Nullable<ServiceWorkerData*> getNewestWorker(
         ServiceWorkerRegistrationData* registration);
 
     void resolveJobPromise(

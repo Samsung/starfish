@@ -74,7 +74,7 @@ public:
 class ServiceWorkerData : public Archivable {
 public:
     String* scriptURL{ String::emptyString };
-    ServiceWorkerState state{ ServiceWorkerState::Installing };
+    ServiceWorkerState state{ ServiceWorkerState::Parsed };
     ServiceWorkerRegistrationId registrationId;
 
     // serialize/deserialize

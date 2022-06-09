@@ -39,6 +39,8 @@ String* ServiceWorker::state() const
     STARFISH_ASSERT(m_data != nullptr);
 
     switch (m_data->state) {
+    case ServiceWorkerState::Parsed:
+        return String::createASCIIString("parsed");
     case ServiceWorkerState::Installing:
         return String::createASCIIString("installing");
     case ServiceWorkerState::Installed:
