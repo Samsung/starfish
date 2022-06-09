@@ -464,6 +464,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
                      "URL whose newest worker has a different script URL"));
         // 4.2 Invoke Finish Job with job and abort these steps.
         finishJob(job);
+        return;
     }
 
     // NOTE: 5-8 is handled in `continuePendingUpdateJob`
