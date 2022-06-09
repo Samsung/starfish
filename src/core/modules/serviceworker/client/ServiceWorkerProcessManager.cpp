@@ -56,7 +56,7 @@ extern Starfish::Starfish* g_starfishInstance;
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
-
+#include "core/modules/serviceworker/WorkerConfig.h"
 #include <EscargotPublic.h>
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -79,6 +79,15 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
 
 void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 {
+    // TODO: there should be a better place to do this.
+    LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
+        if (GlobalOptions::instance().get<bool>("DEBUG_WORKER")) {
+            return true;
+        }
+        return false;
+    });
+
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
 
     GlobalOptions::instance().set("app", "CLIT");
@@ -113,12 +122,13 @@ std::string ServiceWorkerProcessManager::createAddress(
 
 bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(Globals::supportsThreading());
 
     // TODO: create a Runnable for this thread once verified.
     std::thread(
         [](PerProcess* perProcess, std::future<void>&& stopTask) {
-            SWCLIENT_LOG_IF_ALLOWED(1, "Worker thread starts");
+            LOGI(SVCWORKER, "Worker thread starts");
 
             Globals::initializeThread();
 
@@ -132,7 +142,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 
             agent->destroy();
 
-            SWCLIENT_LOG_IF_ALLOWED(1, "Worker thread ends");
+            LOGI(SVCWORKER, "Worker thread ends");
         },
         m_perProcess, std::move(m_promiseStopThreadSignal.get_future()))
         .detach();
@@ -209,6 +219,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 void ServiceWorkerProcessManager::registerActiveGlobalScope(
     Id<GlobalScope> id, GlobalScope* globalScope)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(globalScope != nullptr);
 
     SWCLIENT_LOG_IF_ALLOWED(1, "1: %s",
@@ -226,6 +237,7 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
     Id<GlobalScope> id)
 {
+    TRACE_SCOPE(SVCWORKER);
     // find activeWorker
     auto globalScope = findGlobalScope(id);
 

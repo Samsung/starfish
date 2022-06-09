@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "WorkerConfig.h"
 
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
@@ -46,6 +47,7 @@ ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
 ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
                                                PerProcess* perProcess)
 {
+    TRACE_SCOPE(SVCWORKER);
     // TODO: remove this instantiation after checking service worker
     // host running on another process. (host/ServiceWorkerExecutor)
 
@@ -92,6 +94,7 @@ bool ServiceWorkerAgent::isCreated()
 
 void ServiceWorkerAgent::destroy()
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(m_instance != nullptr);
     if (m_clientFunc) {
         m_clientFunc(ServiceWorkerAgentState::Terminated);
@@ -135,6 +138,7 @@ void ServiceWorkerAgent::registerOnStatusChangedHandler(
 
 void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
 {
+    TRACE_SCOPE(SVCWORKER);
 #if defined(STARFISH_WEBWORKER_HOST)
     STARFISH_ASSERT(serviceWorker != nullptr);
     // https://w3c.github.io/ServiceWorker/#run-service-worker
@@ -184,6 +188,7 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
 
 void ServiceWorkerAgent::runServiceWorker(String* scriptURL)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
     ServiceWorkerData* data = new ServiceWorkerData();
     data->scriptURL = scriptURL;
@@ -193,6 +198,7 @@ void ServiceWorkerAgent::runServiceWorker(String* scriptURL)
 void ServiceWorkerAgent::abortServiceWorkerScript(
     ServiceWorkerData* serviceWorker)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
 } // namespace Starfish

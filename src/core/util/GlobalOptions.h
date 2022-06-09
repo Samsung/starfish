@@ -17,6 +17,8 @@
  *  USA
  */
 
+#pragma once
+
 #include "core/util/ProgramOptions.h"
 
 namespace Starfish {

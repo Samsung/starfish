@@ -278,6 +278,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
 Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 {
+    TRACE_SCOPE(SVCWORKER);
     SWCLIENT_LOG_IF_ALLOWED(1, "0: %s", CSTR(rawClientURL));
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistration

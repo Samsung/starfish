@@ -20,6 +20,7 @@
 #ifndef __StarfishProgramOptions__
 #define __StarfishProgramOptions__
 
+#include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <functional>
@@ -43,7 +44,7 @@ public:
     template <typename T = std::string>
     T get(const char* key)
     {
-        STARFISH_ASSERT(key != nullptr);
+        assert(key != nullptr);
         T converted;
         std::istringstream in(m_map[key]);
         in >> converted >> std::ws;
@@ -53,7 +54,7 @@ public:
     template <typename T>
     void set(const char* key, const T& value)
     {
-        STARFISH_ASSERT(key != nullptr);
+        assert(key != nullptr);
         std::ostringstream out;
         out << value;
         m_map[key] = out.str();
