@@ -49,7 +49,7 @@ public:
     void updateWorkerState(ServiceWorkerRegistrationId id,
                            ServiceWorkerState target);
 
-    NULLABLE ServiceWorkerContainer* findServiceWorkerContainer(
+    Nullable<ServiceWorkerContainer*> findServiceWorkerContainer(
         ServiceWorkerContextId id);
 };
 

@@ -120,7 +120,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     return p;
 }
 
-void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
+void ServiceWorkerContainer::startRegister(Nullable<ResourceURL*> scopeURL,
                                            ResourceURL* scriptURL,
                                            Promise* promise,
                                            ServiceWorkerEnvironment* client)
@@ -174,7 +174,7 @@ void ServiceWorkerContainer::startRegister(NULLABLE ResourceURL* scopeURL,
 
     // 5. If scopeURL is null, set scopeURL to the result of parsing the string
     // "./" with scriptURL.
-    if (scopeURL == nullptr) {
+    if (!scopeURL.hasValue()) {
         scopeURL = new ResourceURL(scriptURL->urlString(),
                                    String::createASCIIString("./"));
         STARFISH_ASSERT(scopeURL != nullptr);
@@ -545,7 +545,7 @@ void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
     m_jobMap.erase(job->data()->id);
 }
 
-NULLABLE ServiceWorkerJob* ServiceWorkerContainer::findJob(
+Nullable<ServiceWorkerJob*> ServiceWorkerContainer::findJob(
     Id<ServiceWorkerJob> id)
 {
     auto it = m_jobMap.find(id);
