@@ -29,8 +29,10 @@ class ExecutionContext;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistration;
 
+// https://w3c.github.io/ServiceWorker/#serviceworker
 enum class ServiceWorkerState : unsigned {
-    Installing = 0,
+    Parsed,
+    Installing,
     Installed,
     Activating,
     Activated,

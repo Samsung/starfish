@@ -1,6 +1,7 @@
 // https://w3c.github.io/ServiceWorker/#serviceworker
 [STARFISH_ENABLE_SERVICE_WORKER]
 enum ServiceWorkerState {
+    "parsed",
     "installing",
     "installed",
     "activating",

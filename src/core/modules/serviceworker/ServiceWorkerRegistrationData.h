@@ -30,9 +30,9 @@ class ServiceWorkerRegistrationData : public Archivable {
 public:
     ServiceWorkerRegistrationId id;
     String* scope{ String::emptyString };
-    ServiceWorkerData* installingWorker{ nullptr };
-    ServiceWorkerData* waitingWorker{ nullptr };
-    ServiceWorkerData* activeWorker{ nullptr };
+    Nullable<ServiceWorkerData*> installingWorker;
+    Nullable<ServiceWorkerData*> waitingWorker;
+    Nullable<ServiceWorkerData*> activeWorker;
     ServiceWorkerUpdateViaCache updateViaCache{
         ServiceWorkerUpdateViaCache::None
     };
