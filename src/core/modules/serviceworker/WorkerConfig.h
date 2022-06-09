@@ -17,9 +17,12 @@
  *  USA
  */
 
+#pragma once
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "core/util/GlobalOptions.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,16 +19,34 @@
 
 #pragma once
 
-#include "core/util/ProgramOptions.h"
+#include "core/modules/serviceworker/util/Logger.h"
+
+class Trace : public Logger {
+public:
+    Trace(std::string id);
+    Trace(std::string id, const char* functionName, const char* filename,
+          const int line);
+};
 
 namespace Starfish {
 
-class GlobalOptions : public ProgramOptions {
-public:
-    static GlobalOptions& instance();
+#if !defined(NDEBUG)
 
-private:
-    GlobalOptions();
-};
+#define LOGI(id, ...) Trace(#id).print(__VA_ARGS__)
+
+#define TRACE(id, ...) \
+    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).print(__VA_ARGS__)
+
+#define TRACE_SCOPE(id, ...)      \
+    IndentCounter __counter(#id); \
+    TRACE(id, __VA_ARGS__)
+
+#else // else defined(NDEBUG)
+
+#define LOGI(id, ...)
+#define TRACE(id, ...)
+#define TRACE_SCOPE(id, ...)
+
+#endif
 
 } // namespace Starfish
