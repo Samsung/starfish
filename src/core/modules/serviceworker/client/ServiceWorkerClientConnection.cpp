@@ -166,16 +166,17 @@ void ServiceWorkerClientConnection::resolveJobPromise(
     STARFISH_ASSERT(job != nullptr);
 
     // find if this job owner context is still active.
-    NULLABLE auto serviceWorkerContainer =
+    auto serviceWorkerContainer =
         findServiceWorkerContainer(job->data()->contextId);
+    if (!serviceWorkerContainer.hasValue()) {
+        return;
+    }
 
-    if (serviceWorkerContainer != nullptr) {
-        // TODO: consider passing job data and move findjob into container
-        NULLABLE auto jobMatched =
-            serviceWorkerContainer->findJob(job->data()->id);
-        if (jobMatched != nullptr) {
-            serviceWorkerContainer->resolveJobPromise(jobMatched, registration);
-        }
+    // TODO: consider passing job data and move findjob into container
+    auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
+    if (jobMatched.hasValue()) {
+        serviceWorkerContainer->resolveJobPromise(jobMatched.value(),
+                                                  registration);
     }
 }
 
@@ -186,15 +187,15 @@ void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
     STARFISH_ASSERT(errorData != nullptr);
 
     // find if this job owner context is still active.
-    NULLABLE auto serviceWorkerContainer =
+    auto serviceWorkerContainer =
         findServiceWorkerContainer(job->data()->contextId);
+    if (!serviceWorkerContainer.hasValue()) {
+        return;
+    }
 
-    if (serviceWorkerContainer != nullptr) {
-        NULLABLE auto jobMatched =
-            serviceWorkerContainer->findJob(job->data()->id);
-        if (jobMatched != nullptr) {
-            serviceWorkerContainer->rejectJobPromise(jobMatched, errorData);
-        }
+    auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
+    if (jobMatched.hasValue()) {
+        serviceWorkerContainer->rejectJobPromise(jobMatched.value(), errorData);
     }
 }
 
@@ -205,7 +206,7 @@ void ServiceWorkerClientConnection::updateWorkerState(
     // TODO: 3. For each workerObject in workerObjects:
 }
 
-NULLABLE ServiceWorkerContainer*
+Nullable<ServiceWorkerContainer*>
 ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {

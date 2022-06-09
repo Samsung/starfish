@@ -68,7 +68,7 @@ public:
 
     ServiceWorkerEnvironment* serviceWorkerEnvironment() override;
 
-    NULLABLE ServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
+    Nullable<ServiceWorkerJob*> findJob(Id<ServiceWorkerJob> id);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,
@@ -98,7 +98,7 @@ private:
         m_requestMap;
     State m_state;
 
-    void startRegister(NULLABLE ResourceURL* scopeURL, ResourceURL* scriptURL,
+    void startRegister(Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL,
                        Promise* p, ServiceWorkerEnvironment* client);
 
     void scheduleJob(ServiceWorkerJob* job) override;
