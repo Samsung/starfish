@@ -35,6 +35,7 @@
 #include "core/dom/svg/SVGUseElement.h"
 #include "core/dom/svg/SVGDefsElement.h"
 #include "core/dom/svg/SVGLinearGradientElement.h"
+#include "core/dom/svg/SVGRadialGradientElement.h"
 #include "core/dom/svg/SVGStopElement.h"
 #include "core/dom/svg/SVGClipPathElement.h"
 #include "core/dom/svg/SVGMaskElement.h"
@@ -81,6 +82,9 @@ Element* SVGDocument::createSVGElement(Document* document,
                str->m_svglineargradientTagName == localName) {
         // FIXME: SVG tagnames should be case-sensitive
         return new SVGLinearGradientElement(document, qname);
+    } else if (str->m_svgradialGradientTagName == localName ||
+               str->m_svgradialgradientTagName == localName) {
+        return new SVGRadialGradientElement(document, qname);
     } else if (str->m_svgstopTagName == localName) {
         return new SVGStopElement(document, qname);
     } else if (str->m_svgclippathTagName == localName) {
