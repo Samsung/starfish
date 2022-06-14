@@ -20,15 +20,29 @@
 #pragma once
 
 #include "core/util/ProgramOptions.h"
+#include <memory>
+#include <string>
+#include <map>
+#include <set>
 
 namespace Starfish {
+
+struct ValueGroup {
+    std::set<std::string> positives;
+    std::set<std::string> negatives;
+    bool includeAsteriskInPositives{ false };
+};
 
 class GlobalOptions : public ProgramOptions {
 public:
     static GlobalOptions& instance();
+    bool has(const char* key, const char* value,
+             bool isAsteriskSupported = true);
 
 private:
     GlobalOptions();
+    void readEnvironmentValue(const char* key);
+    std::map<std::string, std::shared_ptr<ValueGroup>> m_valueGroup;
 };
 
 } // namespace Starfish

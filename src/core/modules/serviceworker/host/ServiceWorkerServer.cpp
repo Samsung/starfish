@@ -57,6 +57,7 @@ namespace Starfish {
 
 void ServiceWorkerServer::destroy()
 {
+    TRACE_SCOPE(HOST);
     if (m_client != nullptr) {
         m_client->onSWServerTerminated();
     }
@@ -72,11 +73,8 @@ ServiceWorkerServer::~ServiceWorkerServer()
 
 void ServiceWorkerServer::init(PerProcess* perProcess)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(perProcess != nullptr);
-
-#ifdef STARFISH_WEBWORKER_HOST
-    GlobalOptions::instance().set("app", "HOST");
-#endif
 
     Message::init();
 
@@ -103,19 +101,21 @@ static std::string createAddress(const std::string& lastAddress = "")
 
 void ServiceWorkerServer::start()
 {
+    TRACE_SCOPE(HOST);
     // create a connection
     m_connection = new ServiceWorkerHostConnection(this);
     registerConnection(m_connection);
 
     std::string address = createAddress();
 
-    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s", address.c_str());
+    TRACE(HOST, "host: bind: %s", address.c_str());
     m_connection->socket()->bind(address.c_str());
     m_perProcess->ioRunnable()->addClient(m_connection);
 }
 
 void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(programOptions != nullptr);
 
     std::string origin = programOptions->get("origin");
@@ -128,8 +128,8 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     std::string address = createAddress(encodedOrigin);
 
-    SWHOST_LOG_IF_ALLOWED(1, "host: bind: %s", address.c_str());
-    SWHOST_LOG_IF_ALLOWED(1, "host: origin: %s", origin.c_str());
+    TRACE(HOST, "host: bind: %s", address.c_str());
+    TRACE(HOST, "host: origin: %s", origin.c_str());
 
     STARFISH_ASSERT(m_connection != nullptr);
 
@@ -140,6 +140,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 void ServiceWorkerServer::registerConnection(
     ServiceWorkerHostConnection* connection)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(connection != nullptr);
     m_connections.push_back(connection);
 }
@@ -152,6 +153,7 @@ void ServiceWorkerServer::getConnections(
 
 ServiceWorkerHostJobHandler* ServiceWorkerServer::jobHandler()
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(m_jobHandler != nullptr);
     return m_jobHandler;
 }
@@ -163,7 +165,8 @@ bool ServiceWorkerServer::isTerminating()
 
 bool ServiceWorkerServer::tryTerminate()
 {
-    SWHOST_LOG_IF_ALLOWED(1, "0. called");
+    TRACE_SCOPE(HOST);
+    TRACE(HOST, "0. called");
 
     if (m_isTerminating == true) {
         return true;
@@ -175,12 +178,12 @@ bool ServiceWorkerServer::tryTerminate()
         m_perProcess->messageLoop()->addIdler(
             nullptr,
             [](size_t handle, void* data0) {
-                SWHOST_LOG_IF_ALLOWED(1, "1. destroy SW server");
+                TRACE(HOST, "1. destroy SW server");
                 castTo<ServiceWorkerServer*>(data0)->destroy();
             },
             this);
     } else {
-        SWHOST_LOG_IF_ALLOWED(1, "1. registration map isn't empty");
+        TRACE(HOST, "1. registration map isn't empty");
         return false;
     }
 

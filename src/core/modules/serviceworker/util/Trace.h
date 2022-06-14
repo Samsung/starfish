@@ -30,7 +30,13 @@ public:
 
 namespace Starfish {
 
-#if !defined(NDEBUG)
+#if defined(NDEBUG)
+
+#define LOGI(id, ...)
+#define TRACE(id, ...)
+#define TRACE_SCOPE(id, ...)
+
+#else
 
 #define LOGI(id, ...) Trace(#id).print(__VA_ARGS__)
 
@@ -40,12 +46,6 @@ namespace Starfish {
 #define TRACE_SCOPE(id, ...)      \
     IndentCounter __counter(#id); \
     TRACE(id, __VA_ARGS__)
-
-#else // else defined(NDEBUG)
-
-#define LOGI(id, ...)
-#define TRACE(id, ...)
-#define TRACE_SCOPE(id, ...)
 
 #endif
 

@@ -17,11 +17,12 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
-
 #include "core/util/GlobalOptions.h"
+#include "StarfishBase.h" // STARFISH_ASSERT
 
 namespace Starfish {
+
+static const int kMaxStringLength = 256;
 
 GlobalOptions& GlobalOptions::instance()
 {
@@ -32,29 +33,69 @@ GlobalOptions& GlobalOptions::instance()
 GlobalOptions::GlobalOptions()
 {
 #if !defined(NDEBUG)
-    const char* verbose;
-
-    verbose = getenv("DEBUG_WORKER");
-    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
-        set("DEBUG_WORKER", std::atoi(verbose));
-    } else {
-        set("DEBUG_WORKER", 0);
-    }
-
-    verbose = getenv("DEBUG_CAST");
-    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
-        set("DEBUG_CAST", std::atoi(verbose));
-    } else {
-        set("DEBUG_CAST", 0);
-    }
-
-    verbose = getenv("DEBUG_CAST_TARGET_IP");
-    if ((verbose != nullptr) && (strlen(verbose) > 0)) {
-        set("DEBUG_CAST_TARGET_IP", verbose);
-    } else {
-        set("DEBUG_CAST_TARGET_IP", 0);
-    }
+    readEnvironmentValue("TRACE");
+    readEnvironmentValue("DEBUG_CAST");
+    readEnvironmentValue("DEBUG_CAST_TARGET_IP");
 #endif
+}
+
+void GlobalOptions::readEnvironmentValue(const char* key)
+{
+    const char* value = getenv(key);
+    if ((value != nullptr) && (strnlen(value, kMaxStringLength) > 0)) {
+        set(key, value);
+
+        // parse a comma separated value.
+        std::string token;
+        std::stringstream ss(value);
+        std::shared_ptr<ValueGroup> tokens = std::make_shared<ValueGroup>();
+
+        while (std::getline(ss, token, ',')) {
+            if (token.find('-') == 0) {
+                tokens->negatives.insert(token.substr(1));
+                continue;
+            }
+            tokens->positives.insert(token);
+            if (token == "*") {
+                tokens->includeAsteriskInPositives = true;
+            }
+        }
+        m_valueGroup[key] = tokens;
+    } else {
+        set(key, 0);
+    }
+}
+
+bool GlobalOptions::has(const char* key, const char* value,
+                        bool isAsteriskSupported)
+{
+    STARFISH_ASSERT(key != nullptr);
+    STARFISH_ASSERT(value != nullptr);
+
+    std::shared_ptr<ValueGroup> tokens = m_valueGroup[key];
+    if (!tokens) {
+        return false;
+    }
+
+    if (!tokens->positives.empty()) {
+        /*
+            // usage: isAsteriskSupported
+            e.g) `export KEY=*,-VALUE`
+        */
+        if (!isAsteriskSupported || !tokens->includeAsteriskInPositives) {
+            if (tokens->positives.find(value) == tokens->positives.end()) {
+                return false;
+            }
+        }
+    }
+
+    if (!tokens->negatives.empty()) {
+        if (tokens->negatives.find(value) != tokens->negatives.end()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace Starfish

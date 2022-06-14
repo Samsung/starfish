@@ -25,15 +25,21 @@
 #include <thread>
 #include <regex>
 #include <set>
-#include <sstream>
 
 // --- Formatter ---
 
-std::string getPrettyFunctionName(const std::string fullname)
+std::string getPrettyFunctionName(const std::string fullname,
+                                  std::string prefixPattern)
 {
+    std::stringstream ss;
+    if (!prefixPattern.empty()) {
+        ss << "(?:" << prefixPattern << ")";
+    }
+    ss << R"(([\w\:~]+)\()";
+
     try {
         std::smatch match;
-        const std::regex re(R"(([\w\:~]+)\()");
+        const std::regex re(ss.str());
 
         if (std::regex_search(fullname, match, re) && match.size() > 1) {
             return match.str(1);
@@ -45,11 +51,11 @@ std::string getPrettyFunctionName(const std::string fullname)
 }
 
 std::string createCodeLocation(const char* functionName, const char* filename,
-                               const int line)
+                               const int line, std::string prefixPattern)
 {
     std::ostringstream oss;
-    oss << getPrettyFunctionName(functionName) << " (" << filename << ":"
-        << line << ")";
+    oss << getPrettyFunctionName(functionName, prefixPattern) << " ("
+        << filename << ":" << line << ")";
     return oss.str();
 }
 

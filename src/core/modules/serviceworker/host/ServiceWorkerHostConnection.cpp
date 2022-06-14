@@ -61,6 +61,7 @@ ServiceWorkerHostConnection::ServiceWorkerHostConnection(
 void ServiceWorkerHostConnection::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
 
     JsonWriter writer;
@@ -75,6 +76,7 @@ void ServiceWorkerHostConnection::resolveJobPromise(
 void ServiceWorkerHostConnection::rejectJobPromise(ServiceWorkerJob* job,
                                                    ErrorData* errorData)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(errorData != nullptr);
 
@@ -91,6 +93,7 @@ void ServiceWorkerHostConnection::rejectJobPromise(ServiceWorkerJob* job,
 void ServiceWorkerHostConnection::resolveRequest(
     ServiceWorkerRequest* request, NULLABLE Archivable* archivable)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(request != nullptr);
 
     JsonWriter writer;
@@ -105,6 +108,7 @@ void ServiceWorkerHostConnection::resolveRequest(
 void ServiceWorkerHostConnection::onUpdateWorkerState(
     ServiceWorkerRegistrationId id, ServiceWorkerState target)
 {
+    TRACE_SCOPE(HOST);
     JsonWriter writer;
     Message msg("updateWorkerState");
 
@@ -117,13 +121,14 @@ void ServiceWorkerHostConnection::onUpdateWorkerState(
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
                                              size_t len)
 {
+    TRACE_SCOPE(HOST);
     Connection::onReceived(socket, data, len);
 
     if (m_SWServer->isTerminating() == true) {
         // TODO: send request reject
-        SWHOST_LOG_IF_ALLOWED(1,
-                              "1. received data is ignored due to swserver is "
-                              "being terminated");
+        TRACE(HOST,
+              "1. received data is ignored due to swserver is "
+              "being terminated");
         return;
     }
 

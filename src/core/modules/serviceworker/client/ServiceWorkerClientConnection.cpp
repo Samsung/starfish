@@ -49,6 +49,8 @@
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
+#include "core/modules/serviceworker/util/Trace.h"
+
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Navigator.h"
 #include "core/dom/Document.h"
@@ -63,6 +65,7 @@ ServiceWorkerClientConnection::ServiceWorkerClientConnection()
 
 void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(job != nullptr);
 
     sendMessage("scheduleJob", job->data());
@@ -71,6 +74,7 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 void ServiceWorkerClientConnection::matchRegistration(
     ServiceWorkerRequest* request, String* clientURL)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURL != nullptr);
 
@@ -81,6 +85,7 @@ void ServiceWorkerClientConnection::matchRegistration(
 void ServiceWorkerClientConnection::updateServiceWorkerClient(
     ContextRequestData* request)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(request != nullptr);
 
     sendMessage("updateServiceWorkerClient", request);
@@ -90,6 +95,7 @@ void ServiceWorkerClientConnection::sendMessage(const char* msgName,
                                                 NULLABLE Archivable* param1,
                                                 NULLABLE Archivable* param2)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(msgName != nullptr);
 
     JsonWriter writer;
@@ -112,6 +118,7 @@ void ServiceWorkerClientConnection::sendMessage(const char* msgName,
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
                                                size_t len)
 {
+    TRACE_SCOPE(CLIENT);
     Connection::onReceived(socket, data, len);
 
     JsonReader reader(data);
@@ -163,6 +170,7 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
 void ServiceWorkerClientConnection::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(job != nullptr);
 
     // find if this job owner context is still active.
@@ -183,6 +191,7 @@ void ServiceWorkerClientConnection::resolveJobPromise(
 void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
                                                      ErrorData* errorData)
 {
+    TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(errorData != nullptr);
 
@@ -202,6 +211,7 @@ void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
 void ServiceWorkerClientConnection::updateWorkerState(
     ServiceWorkerRegistrationId id, ServiceWorkerState target)
 {
+    TRACE_SCOPE(CLIENT);
     // https://w3c.github.io/ServiceWorker/#update-worker-state
     // TODO: 3. For each workerObject in workerObjects:
 }
@@ -210,6 +220,7 @@ Nullable<ServiceWorkerContainer*>
 ServiceWorkerClientConnection::findServiceWorkerContainer(
     ServiceWorkerContextId id)
 {
+    TRACE_SCOPE(CLIENT);
     auto swpm = ServiceWorkerProcessManager::instance();
     auto globalScope = swpm->findGlobalScope(id);
 #if !defined(STARFISH_WEBWORKER_HOST)

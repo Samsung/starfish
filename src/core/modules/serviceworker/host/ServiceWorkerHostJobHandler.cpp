@@ -67,6 +67,7 @@ public:
 
     void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
     {
+        TRACE_SCOPE(HOST);
         STARFISH_ASSERT(request != nullptr);
         ProgressState progState = request->progressState();
     }
@@ -74,6 +75,7 @@ public:
     void onReadyStateChange(NULLABLE ResourceRequest* request,
                             bool fromExplicit)
     {
+        TRACE_SCOPE(HOST);
         if (request == nullptr) {
             // TODO: STARFISH_ASSERT(request != nullptr);
             continuePendingUpdateJob(nullptr);
@@ -95,6 +97,7 @@ public:
 
     void continuePendingUpdateJob(NULLABLE ResourceRequest* request)
     {
+        TRACE_SCOPE(HOST);
         auto job = m_job;
         auto registration = m_registration;
         auto newestWorker = m_serviveWorker;
@@ -201,9 +204,9 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
 
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
-                          toUnderlyingType(job->data()->type));
+    TRACE(HOST, "0: type: %d", toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     // 1. Let jobQueue be null.
@@ -225,8 +228,8 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     }
 
     // 5. If jobQueue is empty, then:
-    SWHOST_LOG_IF_ALLOWED(1, "5: is jobQueue empty? (%s)",
-                          jobQueue->empty() ? "true" : "false");
+    TRACE(HOST, "5: is jobQueue empty? (%s)",
+          jobQueue->empty() ? "true" : "false");
 
     if (jobQueue->empty()) {
         // 5.1. Set job’s containing job queue to jobQueue, and enqueue job to
@@ -253,6 +256,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 NULLABLE ServiceWorkerRegistrationData*
 ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(queriedScope != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
@@ -265,12 +269,12 @@ ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 
     for (const auto& pair : m_scopeToRegistrationMap) {
         if (pair.first->equals(queriedScope)) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)", CSTR(queriedScope));
+            TRACE(HOST, "1: %s (Found)", CSTR(queriedScope));
             return pair.second;
         }
     }
 
-    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)", CSTR(queriedScope));
+    TRACE(HOST, "1: %s (Not Found)", CSTR(queriedScope));
     return nullptr;
 }
 
@@ -278,26 +282,26 @@ NULLABLE ServiceWorkerRegistrationData*
 ServiceWorkerHostJobHandler::getRegistration(
     ServiceWorkerRegistrationId registrationId)
 {
+    TRACE_SCOPE(HOST);
     for (const auto& pair : m_scopeToRegistrationMap) {
         auto registration = pair.second;
         if (registration->id == registrationId) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: %s (Found)",
-                                  registrationId.toString().c_str());
+            TRACE(HOST, "1: %s (Found)", registrationId.toString().c_str());
             return registration;
         }
     }
 
-    SWHOST_LOG_IF_ALLOWED(1, "1: %s (Not Found)",
-                          registrationId.toString().c_str());
+    TRACE(HOST, "1: %s (Not Found)", registrationId.toString().c_str());
     return nullptr;
 }
 
 void ServiceWorkerHostJobHandler::setRegistration(
     String* scope, ServiceWorkerUpdateViaCache updateViaCache)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(scope != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s", CSTR(scope));
+    TRACE(HOST, "0: %s", CSTR(scope));
 
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
 
@@ -318,6 +322,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
 
 void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
 {
+    TRACE_SCOPE(HOST);
     // https://w3c.github.io/ServiceWorker/#run-job-algorithm
 
     // 1. Assert: jobQueue is not empty.
@@ -368,11 +373,13 @@ void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
 void ServiceWorkerHostJobHandler::queueTask(void (*fn)(size_t, void*),
                                             void* data)
 {
+    TRACE_SCOPE(HOST);
     m_messageLoop->addIdler(nullptr, fn, data);
 }
 
 void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#register-algorithm
@@ -396,6 +403,7 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 Nullable<ServiceWorkerData*> ServiceWorkerHostJobHandler::getNewestWorker(
     ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(registration != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#get-newest-worker
@@ -424,6 +432,7 @@ Nullable<ServiceWorkerData*> ServiceWorkerHostJobHandler::getNewestWorker(
 
 void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#update-algorithm
@@ -488,6 +497,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 void ServiceWorkerHostJobHandler::runServiceWorker(
     ServiceWorkerData* serviceWorker)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(serviceWorker != nullptr);
     // https://w3c.github.io/ServiceWorker/#run-service-worker
     // TODO: 1. Let script be serviceWorker’s script resource.
@@ -514,6 +524,7 @@ void ServiceWorkerHostJobHandler::install(
     ServiceWorkerJob* job, ServiceWorkerData* worker,
     ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(worker != nullptr);
     STARFISH_ASSERT(registration != nullptr);
@@ -549,6 +560,7 @@ void ServiceWorkerHostJobHandler::install(
 void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(job->hostConnection() != nullptr);
 
@@ -560,6 +572,7 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
 bool ServiceWorkerHostJobHandler::tryClearRegistration(
     ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#try-clear-registration-algorithm
 
@@ -604,6 +617,7 @@ bool ServiceWorkerHostJobHandler::tryClearRegistration(
 void ServiceWorkerHostJobHandler::clearRegistration(
     ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#clear-registration
 
@@ -664,6 +678,7 @@ void ServiceWorkerHostJobHandler::clearRegistration(
 void ServiceWorkerHostJobHandler::terminateServiceWorker(
     ServiceWorkerData* serviceWorker)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(serviceWorker != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#terminate-service-worker-algorithm
@@ -687,6 +702,7 @@ void ServiceWorkerHostJobHandler::terminateServiceWorker(
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
                                                    ErrorData* errorData)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(errorData != nullptr);
     // https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
@@ -698,6 +714,7 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
     ServiceWorkerRegistrationData* registration,
     ServiceWorkerRegistrationState target, Nullable<ServiceWorkerData*> source)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#update-registration-state-algorithm
 
@@ -728,6 +745,7 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
 void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
                                                     ServiceWorkerState state)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(worker != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#update-worker-state
@@ -753,9 +771,9 @@ void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
 
 void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
-                          toUnderlyingType(job->data()->type));
+    TRACE(HOST, "0: type: %d", toUnderlyingType(job->data()->type));
 
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
 
@@ -810,9 +828,9 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 
 void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
-    SWHOST_LOG_IF_ALLOWED(1, "0: type: %d",
-                          toUnderlyingType(job->data()->type));
+    TRACE(HOST, "0: type: %d", toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
 
@@ -835,10 +853,11 @@ NULLABLE ServiceWorkerRegistrationData*
 ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
                                                String* clientURLString)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURLString != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s", CSTR(clientURLString));
+    TRACE(HOST, "0: %s", CSTR(clientURLString));
 
     // https://w3c.github.io/ServiceWorker/#match-service-worker-registration
 
@@ -855,7 +874,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     for (const auto& pair : m_scopeToRegistrationMap) {
         ServiceWorkerRegistrationKey selectedRegistrationKey = pair.first;
 
-        SWHOST_LOG_IF_ALLOWED(1, "4: %s", CSTR(selectedRegistrationKey));
+        TRACE(HOST, "4: %s", CSTR(selectedRegistrationKey));
         if (clientURLString->startsWith(selectedRegistrationKey, false) ==
             false) {
             continue;
@@ -864,7 +883,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
         // 5. Set matchingScopeString to the longest value in scopeStringSet
         // which the value of clientURLString starts with, if it exists.
         if (matchingScopeString->length() < selectedRegistrationKey->length()) {
-            SWHOST_LOG_IF_ALLOWED(1, "5: %s", CSTR(selectedRegistrationKey));
+            TRACE(HOST, "5: %s", CSTR(selectedRegistrationKey));
             matchingScopeString = selectedRegistrationKey;
         }
     }
@@ -889,7 +908,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     // 9. If registration is not null and registration’s uninstalling flag is
     // set, return null.
     if ((registration != nullptr) && registration->isUninstalling()) {
-        SWHOST_LOG_IF_ALLOWED(1, "9: done");
+        TRACE(HOST, "9: done");
         return nullptr;
     }
 
@@ -900,14 +919,15 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
 void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
     ContextRequestData* request)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(request != nullptr);
 
-    SWHOST_LOG_IF_ALLOWED(1, "0: %s", request->contextId.toString().c_str());
+    TRACE(HOST, "0: %s", request->contextId.toString().c_str());
 
     if (request->type == ServiceWorkerClientRequestType::Register) {
         if (request->registrationId.isValid()) {
-            SWHOST_LOG_IF_ALLOWED(1, "1: client is registered to regId: %s",
-                                  request->registrationId.toString().c_str());
+            TRACE(HOST, "1: client is registered to regId: %s",
+                  request->registrationId.toString().c_str());
             auto iter = m_clientIdToRegistrationIdMap.find(request->contextId);
             if (iter == m_clientIdToRegistrationIdMap.end()) {
                 m_clientIdToRegistrationIdMap.insert(std::make_pair(
@@ -917,7 +937,7 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
             }
         }
     } else if (request->type == ServiceWorkerClientRequestType::Unregister) {
-        SWHOST_LOG_IF_ALLOWED(1, "1: client is unregistered");
+        TRACE(HOST, "1: client is unregistered");
         m_clientIdToRegistrationIdMap.erase(request->contextId);
 
     } else {
