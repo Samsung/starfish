@@ -33,8 +33,7 @@ public:
     void flush(std::stringstream& ss) override
     {
         // TODO: We use stdout for now since there is no macro to print a raw
-        // string only.
-        // STARFISH_LOG_INFO("%s", ss.str().c_str());
+        // string only. e.g) STARFISH_LOG_INFO("%s", ss.str().c_str());
         std::cout << ss.str();
     };
 
@@ -56,6 +55,8 @@ static void writeHeader(std::ostream& ss, const std::string& tag,
        << std::string(id).substr(0, TRACE_ID_LENGTH_LIMIT) << ") ";
 }
 
+static const char* kNamespacePattern = "Starfish::";
+
 Trace::Trace(std::string id, const char* functionName, const char* filename,
              const int line)
 {
@@ -65,8 +66,9 @@ Trace::Trace(std::string id, const char* functionName, const char* filename,
 
     writeHeader(m_stream, "TRACE", id);
     m_stream << IndentCounter::getString(id)
-             << createCodeLocation(functionName, filename, line) << " "
-             << CLR_RESET;
+             << createCodeLocation(functionName, filename, line,
+                                   kNamespacePattern)
+             << " " << CLR_RESET;
     initialize(StarfishOutput::instance());
 }
 

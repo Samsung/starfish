@@ -81,7 +81,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 {
     // TODO: there should be a better place to do this.
     LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
-        if (GlobalOptions::instance().get<bool>("DEBUG_WORKER")) {
+        if (GlobalOptions::instance().has("TRACE", id.c_str())) {
             return true;
         }
         return false;
@@ -89,8 +89,6 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
-
-    GlobalOptions::instance().set("app", "CLIT");
 
     Message::init();
 
@@ -100,6 +98,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 
 void ServiceWorkerProcessManager::destroy()
 {
+    TRACE_SCOPE(SVCWORKER);
 #if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
     m_promiseStopThreadSignal.set_value();
 #endif
@@ -152,6 +151,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     String* originSerialized)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(originSerialized != nullptr);
 
     std::string origin = CSTR(originSerialized);
@@ -181,9 +181,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
                        GlobalOptions::instance().get("DEBUG_WORKER"));
 
         if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
-            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: success");
+            TRACE(SVCWORKER, "launchProcess: success");
         } else {
-            SWCLIENT_LOG_IF_ALLOWED(1, "launchProcess: fail");
+            TRACE(SVCWORKER, "launchProcess: fail");
         }
 #endif
 
@@ -210,8 +210,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     STARFISH_ASSERT(processData->connection != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "client: connect: %s", address.c_str());
-    SWCLIENT_LOG_IF_ALLOWED(1, "client: origin: %s", origin.c_str());
+    TRACE(SVCWORKER, "client: connect: %s", address.c_str());
+    TRACE(SVCWORKER, "client: origin: %s", origin.c_str());
 
     return processData->connection;
 }
@@ -222,8 +222,7 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(globalScope != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s",
-                            CSTR(globalScope->executionContext()->urlString()));
+    TRACE(CLIENT, "1: %s", CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 
@@ -243,8 +242,7 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
 
     STARFISH_ASSERT(globalScope != nullptr);
 
-    SWCLIENT_LOG_IF_ALLOWED(1, "1: %s",
-                            CSTR(globalScope->executionContext()->urlString()));
+    TRACE(CLIENT, "1: %s", CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.erase(id);
 
@@ -263,6 +261,7 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
 NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
     Id<GlobalScope> id)
 {
+    TRACE_SCOPE(SVCWORKER);
     auto it = m_mapIdToActiveGlobalScope.find(id);
     if (it == m_mapIdToActiveGlobalScope.end()) {
         return nullptr;

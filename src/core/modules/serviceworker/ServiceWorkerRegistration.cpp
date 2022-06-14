@@ -103,7 +103,7 @@ ServiceWorker* ServiceWorkerRegistration::active() const
 Promise* ServiceWorkerRegistration::unregister()
 {
     STARFISH_ASSERT(m_jobClient != nullptr);
-    WORKER_LOG_IF_ALLOWED(1, "0: called");
+    TRACE_SCOPE(SVCWORKER, "0: called");
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-unregister
 

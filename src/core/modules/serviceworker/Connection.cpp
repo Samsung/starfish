@@ -55,7 +55,7 @@ void Connection::send(const char* data, size_t len)
 
     m_socket->send(data, len, SCK_DONTWAIT);
 
-    WORKER_LOG_IF_ALLOWED(3, COLOR_SEND "[SEND] %zu byte(s)" COLOR_RESET, len);
+    TRACE(CONNECTION, COLOR_SEND "[SEND] %zu byte(s)" COLOR_RESET, len);
 }
 
 Socket* Connection::socket()
@@ -73,8 +73,8 @@ void Connection::onReceived(Socket* socket, const char* data, size_t len)
     // recv buffer like a string.
     STARFISH_ASSERT(memchr(data, '\0', len));
 
-    WORKER_LOG_IF_ALLOWED(3, COLOR_RECV "[RECV] %zu byte(s)\n%s" COLOR_RESET,
-                          len, data);
+    TRACE(CONNECTION, COLOR_RECV "[RECV] %zu byte(s)\n%s" COLOR_RESET, len,
+          data);
 }
 
 void Connection::onStopped()
