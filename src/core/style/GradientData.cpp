@@ -112,32 +112,30 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
                                    const SideValue side, Length offset,
                                    bool isHorizontal)
 {
-    float origin = isHorizontal ? rect.x() : rect.y();
+    float origin = 0;
     int sign = 1;
     float edgeDistance = isHorizontal ? rect.width() : rect.height();
-    float x = rect.x();
-    float y = rect.y();
     // In this case the center of the gradient is given relative to an edge in
     // the form of: [ top | bottom | right | left ] [ <percentage> | <length> ].
     if (offset.isAuto() && side != SideValue::NoneSideValue) {
         switch (side) {
         case SideValue::TopSideValue:
             STARFISH_ASSERT(!isHorizontal);
-            return y;
+            return 0;
         case SideValue::LeftSideValue:
             STARFISH_ASSERT(isHorizontal);
-            return x;
+            return 0;
         case SideValue::BottomSideValue:
             STARFISH_ASSERT(!isHorizontal);
-            return y + rect.height();
+            return rect.height();
         case SideValue::RightSideValue:
             STARFISH_ASSERT(isHorizontal);
-            return x + rect.width();
+            return rect.width();
         case SideValue::CenterSideValue: {
             if (isHorizontal) {
-                return x + sign * .5f * edgeDistance;
+                return .5f * edgeDistance;
             } else {
-                return y + sign * .5f * edgeDistance;
+                return .5f * edgeDistance;
             }
         }
         default:
@@ -146,9 +144,9 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
         }
     } else if (!offset.isAuto() && side != SideValue::NoneSideValue) {
         if (side == SideValue::RightSideValue ||
-            side == SideValue::CenterSideValue) {
+            side == SideValue::BottomSideValue) {
             // For right/bottom, the offset is relative to the far edge.
-            origin = x + edgeDistance;
+            origin = edgeDistance;
             sign = -1;
         }
     }

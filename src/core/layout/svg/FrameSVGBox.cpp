@@ -29,7 +29,12 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/style/CalcData.h"
+#include "core/style/GradientData.h"
+#include "core/modules/canvas/NativeGradient.h"
+#include "core/dom/svg/SVGLinearGradientElement.h"
+#include "core/dom/svg/SVGRadialGradientElement.h"
 
 namespace Starfish {
 
@@ -159,6 +164,88 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     ctx.m_canvas->restore();
     paintChildrenWith(ctx);
     ctx.m_canvas->restore();
+}
+
+Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
+{
+    ResourceURL* resourceUrl = new ResourceURL(url);
+    if (!resourceUrl->isValid()) {
+        return nullptr;
+    }
+
+    // NOTE: Consider obtaining a reusable SVG node that is locally available
+    // under the same root SVGElement.
+    String* urlString = resourceUrl->string();
+    if (urlString->startsWith("#")) {
+        if (!node()) {
+            return nullptr;
+        }
+
+        String* id = urlString->substring(1, urlString->length() - 1);
+        SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
+        SVGElement* matchingSvg = owner->getSVGElementById(id);
+        if (!matchingSvg) {
+            return nullptr;
+        }
+
+        LayoutRect fRect = frameRect();
+        Unit::Rect rect =
+            Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
+        GradientDrawingInfo* info = nullptr;
+        GradientData* gData = nullptr;
+        ComputedStyle* style = matchingSvg->style();
+
+#define IS_SVGLENGTH_UNIT_TYPE(gradient, name)                                 \
+    (matchingSvg->asSVG##gradient##Element()->name()->baseVal()->unitType() == \
+     SVGLength::SVG_LENGTHTYPE_NUMBER)
+
+        if (matchingSvg->isSVGLinearGradientElement()) {
+            info = new GradientDrawingInfo(GradientType::LinearGradient, rect);
+            info->x1 = style->x1().specifiedValue(rect.width(), this);
+            info->y1 = style->y1().specifiedValue(rect.height(), this);
+            info->x2 = style->x2().specifiedValue(rect.maxX(), this);
+            info->y2 = style->y2().specifiedValue(rect.maxY(), this);
+            info->colorStops =
+                matchingSvg->asSVGLinearGradientElement()->colorStops();
+        } else if (matchingSvg->isSVGRadialGradientElement()) {
+            Length cx = style->cx();
+            Length cy = style->cy();
+            Length r = style->r();
+            gData = new RadialGradientData();
+            gData->setHorizontalSide(SideValue::LeftSideValue);
+            gData->setVerticalSide(SideValue::TopSideValue);
+            if (cx.isAuto()) {
+                cx = Length(Length::Percent, 0.5);
+            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, cx)) {
+                cx = Length(Length::Percent, cx.fixed());
+            }
+            if (cy.isAuto()) {
+                cy = Length(Length::Percent, 0.5);
+            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, cy)) {
+                cy = Length(Length::Percent, cy.fixed());
+            }
+            if (r.isAuto()) {
+                r = Length(Length::Percent, 0.5);
+            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, r)) {
+                r = Length(Length::Percent, r.fixed());
+            }
+            RadialGradientData* radialGradient = gData->asRadialGradientData();
+            radialGradient->setHorizontalSideOffset(cx);
+            radialGradient->setVerticalSideOffset(cy);
+            radialGradient->setFirstRadius(r);
+            radialGradient->setSecondRadius(r);
+            radialGradient->colorStopList() =
+                matchingSvg->asSVGRadialGradientElement()->colorStops();
+            info = radialGradient->makeGradientDrawingInfo(rect, this);
+        } else {
+            STARFISH_UNIMPLEMENTED();
+        }
+#undef GET_SVGLENGTH_UNIT_TYPE
+
+        return info;
+    }
+
+    return nullptr;
 }
 
 std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(

@@ -176,6 +176,8 @@ namespace Starfish {
     F(defs)                            \
     F(linearGradient)                  \
     F(lineargradient)                  \
+    F(radialGradient)                  \
+    F(radialgradient)                  \
     F(stop)                            \
     F(use)                             \
     F(clippath)                        \
