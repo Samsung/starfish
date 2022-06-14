@@ -21,8 +21,6 @@
 #include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingInstance.h"
 
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
 
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -34,7 +32,7 @@
 namespace Starfish {
 
 ScriptEngineInstance::ScriptEngineInstance(const char* locale,
-                                           const char* timezone, WebView* wv)
+                                           const char* timezone)
 {
 #ifdef STARFISH_TIZEN_PROD_TV
     // add argument for CodeCache directory

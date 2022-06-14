@@ -14,13 +14,13 @@ ENDIF()
 
 SET (STARFISH_WEBWORKER_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
+    ${LWE_DEFINES_ICU}
     -DGC_DEBUG # bdwgc
     -D_GLIBCXX_DEBUG
     -DSTARFISH_WEBWORKER_HOST
     -DSTARFISH_ENABLE_SERVICE_WORKER
     -DPORT_EVENTLOOP_BACKEND_LIBUV
     -DPORT_NEEDS_THREADED_PUBLIC_API
-    -DSTARFISH_ENABLE_CAST_SERVICE
 )
 
 SET (STARFISH_WEBWORKER_LIBRARIES_DEFAULT pthread curl ssl crypto)
@@ -31,6 +31,9 @@ SET (STARFISH_WEBWORKER_INCLUDE_ADDITIONAL_DIRS
     ${GCUTIL_ROOT}/bdwgc/include
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/rapidjson/include
+    ${ESCARGOT_ROOT}/third_party/runtime_icu_binder
+    ${THIRD_PARTY_ROOT}/libtuv/include
+    ${THIRD_PARTY_ROOT}/libtuv/src
     ${THIRD_PARTY_ROOT}/nanomsg/dist/include
     ${THIRD_PARTY_ROOT}/nanomsgcpp
     ${THIRD_PARTY_ROOT}/httplib)
@@ -54,7 +57,7 @@ FILE (GLOB_RECURSE STARFISH_IDL ${STARFISH_ROOT}/src/*.idl)
 SET (STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC)
 # TODO: include this interface or completely exclude in Worker.
 SET (EXCLUDE_INTERFACE_NAME 
-    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS")
+    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS" "ImageBitmap")
 FOREACH (IDL_FILE ${STARFISH_IDL})
     FILE (READ ${IDL_FILE} IDL_STRING)
     STRING (REGEX MATCH "[[].*Exposed=(Worker|.*,Worker)" MATCHED_IDL_FILE ${IDL_STRING})
@@ -87,7 +90,7 @@ FILE (GLOB STARFISH_WEBWORKER_DEFAULT_SRC
     ${STARFISH_ROOT}/src/platform/message_loop/*.cpp
     ${STARFISH_ROOT}/src/platform/network/curl/*.cpp
     ${STARFISH_ROOT}/src/platform/network/http/*.cpp
-    ${STARFISH_ROOT}/src/platform/file/File.cpp
+    ${STARFISH_ROOT}/src/platform/file/*.cpp
     ${STARFISH_ROOT}/src/platform/process/base/*.cpp
     ${STARFISH_ROOT}/src/platform/public/*.cpp
 )
@@ -100,6 +103,7 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/page/WebBase.cpp
     ${STARFISH_ROOT}/src/core/page/NavigatorMixin.cpp
     ${STARFISH_ROOT}/src/core/page/Serializer.cpp
+    ${STARFISH_ROOT}/src/core/modules/message_loop/*.cpp
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp
     ${STARFISH_ROOT}/src/core/modules/networking/*.cpp 
@@ -108,10 +112,15 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/push/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/notification/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/serviceworker/util/*.cpp
     ${STARFISH_ROOT}/src/core/modules/profiling/Profiling.cpp
     ${STARFISH_ROOT}/src/core/modules/cast/*.cpp
     ${STARFISH_ROOT}/src/core/dom/ExecutionContext.cpp
     ${STARFISH_ROOT}/src/core/dom/WebOrigin.cpp
+    ${STARFISH_ROOT}/src/core/dom/CloseEvent.cpp
+    ${STARFISH_ROOT}/src/core/dom/Event.cpp
+    ${STARFISH_ROOT}/src/core/dom/EventTarget.cpp
+    ${STARFISH_ROOT}/src/core/dom/DOMException.cpp
     ${STARFISH_ROOT}/src/core/csp/*.cpp
     ${STARFISH_ROOT}/src/core/fetch/*.cpp
     ${STARFISH_ROOT}/src/core/fetch/stream/*.cpp
@@ -142,6 +151,13 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/BufferSourceOrDOMStringBinding.cpp
     ${STARFISH_ROOT}/src/binding/NotificationOptionsBinding.cpp
     ${STARFISH_ROOT}/src/binding/DOMMatrix2DInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextDecoderOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ProgressEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringOrArrayBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/URLSearchParamsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CloseEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextDecodeOptionsBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST
@@ -155,6 +171,7 @@ SET (STARFISH_WEBWORKER_SRC_LIST
 # INCLUDE DIRS
 #######################################################
 SET (STARFISH_WEBWORKER_INCLUDE_DIRS
+    ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS}
     ${STARFISH_ROOT}/src
     ${STARFISH_ROOT}/inc
     ${STARFISH_WEBWORKER_INCLUDE_ADDITIONAL_DIRS}
@@ -164,11 +181,11 @@ SET (STARFISH_WEBWORKER_INCLUDE_DIRS
 # LINK LIBRARIES
 #######################################################
 SET (STARFISH_WEBWORKER_LINK_LIBRARIES
+    ${STARFISH_THIRD_PARTY_LIBS_LIBRARIES}
     ${STARFISH_WEBWORKER_LIBRARIES_THIRD_PARTY}
     ${STARFISH_WEBWORKER_LIBRARIES_DEFAULT}
     ${STARFISH_LIBRARIES_COMPILER}
 )
-
 #######################################################
 # BUILD TARGET
 #######################################################

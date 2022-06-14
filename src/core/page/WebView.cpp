@@ -588,7 +588,7 @@ void WebView::createScriptEngineInstance()
 {
     if (!m_scriptEngineInstance) {
         m_scriptEngineInstance = new ScriptEngineInstance(
-            locale().data(), timezoneID()->toUTF8NonGCString().data(), this);
+            locale().data(), timezoneID()->toUTF8NonGCString().data());
     }
 }
 

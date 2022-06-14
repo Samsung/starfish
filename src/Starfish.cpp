@@ -154,7 +154,10 @@ void Starfish::destroy()
 {
     STARFISH_LOG_INFO("Starfish::destroy");
     NetworkSharedResourceManager::destroy();
+
+#if !defined(STARFISH_WEBWORKER_HOST)
     LWE::CookieManager::Destroy();
+#endif
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (m_httpCache) {
