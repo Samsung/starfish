@@ -24,7 +24,6 @@
 #include "binding/ScriptWrappable.h"
 #include "core/extra/Console.h"
 #include "core/page/WebBase.h"
-#include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #if !defined(STARFISH_WEBWORKER_HOST)

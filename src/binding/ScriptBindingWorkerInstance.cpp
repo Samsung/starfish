@@ -114,7 +114,8 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
     F(EventSource)                         \
     F(FormData)                            \
     F(Option)                              \
-    F(Image)
+    F(Image)                               \
+    F(ImageBitmap)
 
 #define FOR_EACH_BINDING_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \

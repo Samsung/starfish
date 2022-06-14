@@ -32,7 +32,7 @@ using ScriptEngine = Escargot::VMInstanceRef*;
 
 class ScriptEngineInstance : public gc {
 public:
-    ScriptEngineInstance(const char* locale, const char* timezone, WebView* wv);
+    ScriptEngineInstance(const char* locale, const char* timezone);
 
     ScriptEngine engineInstance()
     {

@@ -93,40 +93,8 @@ void WebWorker::createScriptEngineInstance()
     STARFISH_ASSERT(isMainThread() == true);
 
     if (!m_scriptEngineInstance) {
-        PromiseJobListener listener = [](Escargot::ExecutionStateRef* state,
-                                         Escargot::JobRef* job) {
-            STARFISH_ASSERT(state != nullptr);
-            STARFISH_ASSERT(job != nullptr);
-
-            ExecutionContext* executionContext =
-                fetchExecutionContext(state->context());
-
-            executionContext->webBase()->messageLoop()->addIdler(
-                executionContext->globalScope(),
-                [](size_t, void* data, void* data2) {
-                    ExecutionContext* executionContext =
-                        static_cast<ExecutionContext*>(data);
-
-                    Escargot::JobRef* job = (Escargot::JobRef*)data2;
-                    auto sbresult = job->run();
-
-                    if (sbresult.error.hasValue()) {
-                        STARFISH_LOG_ERROR(
-                            "Uncaught %s",
-                            toBrowserString(
-                                executionContext->scriptBindingInstance(),
-                                Escargot::ValueRef::create(
-                                    sbresult.error.getValue()))
-                                ->toUTF8NonGCString()
-                                .data());
-                    }
-                },
-                executionContext, job);
-        };
-
         m_scriptEngineInstance = new ScriptEngineInstance(
-            locale().getName(), timezoneID()->toUTF8NonGCString().data(),
-            listener);
+            locale().data(), timezoneID()->toUTF8NonGCString().data());
     }
 }
 

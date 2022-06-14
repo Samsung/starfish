@@ -23,24 +23,25 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/host/ServiceWorkerExecutor.h"
+#include "core/modules/serviceworker/PerProcess.h"
 
 namespace Starfish {
 
 void ServiceWorkerExecutor::initialize(Starfish* starfish)
 {
     STARFISH_ASSERT(starfish != nullptr);
-
+    auto perProcess = new PerProcess();
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([&]() -> size_t {
         STARFISH_ASSERT(starfish != nullptr);
         if (ServiceWorkerAgent::isCreated() == false) {
-            ServiceWorkerAgent::create(starfish);
+            ServiceWorkerAgent::create(starfish, perProcess);
         }
         return 0;
     });
 #else
     if (ServiceWorkerAgent::isCreated() == false) {
-        ServiceWorkerAgent::create(starfish);
+        ServiceWorkerAgent::create(starfish, perProcess);
     }
 #endif
 }
@@ -66,7 +67,6 @@ void ServiceWorkerExecutor::registerOnStatusChangedHandler(
 {
     STARFISH_ASSERT(ServiceWorkerAgent::isCreated() == true);
     STARFISH_ASSERT(cb != nullptr);
-
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([&]() -> size_t {
         STARFISH_ASSERT(cb != nullptr);

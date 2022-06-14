@@ -21,16 +21,20 @@
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
 #include "binding/ScriptBindingInstance.h"
-#include "core/dom/Document.h"
+
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
+
+#if defined(STARFISH_ENABLE_DEBUGGER)
 #include "core/page/BrowsingContext.h"
+#endif
 
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/dom/Document.h"
 #else
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"

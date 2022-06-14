@@ -20,9 +20,14 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/WebView.h"
+
+#if defined(STARFISH_WEBWORKER_HOST)
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#else
 #include "core/page/Window.h"
+#endif
 
 #include "LWEWebView.h"
 #include <EscargotPublic.h>
@@ -33,6 +38,8 @@
 
 #define THREAD_MINIMUM_STACK_SIZE \
     4 * 1024 * 1024 // we need at least 4MB for stack
+
+using namespace Escargot;
 
 namespace Starfish {
 class EscargotStarfishPlatform : public Escargot::PlatformRef {
@@ -58,10 +65,12 @@ public:
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
-        Window* window = (Window*)relatedContext->globalObject()->extraData();
+        auto globalObject =
+            (STARFISH_GLOBAL_BINDING_CLASS*)relatedContext->globalObject()
+                ->extraData();
 
-        window->webView()->messageLoop()->addMicroTask(
-            window,
+        globalObject->webBase()->messageLoop()->addMicroTask(
+            globalObject,
             [](size_t handle, void* data) {
                 VMInstanceRef* vm = (VMInstanceRef*)data;
                 if (vm->hasPendingJob()) {
