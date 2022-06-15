@@ -934,6 +934,17 @@ inline Target downcast(Source* source)
 #endif
 }
 
+// if c++14 or above is not supported
+#if __cplusplus < 201402L || (defined(_MSC_VER) && _MSC_VER < 1915)
+namespace std {
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+} // namespace std
+#endif
+
 template <typename Target>
 inline Target castTo(void* source)
 {

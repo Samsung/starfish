@@ -59,6 +59,8 @@ extern Starfish::Starfish* g_starfishInstance;
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include <EscargotPublic.h>
 
+#include "core/modules/serviceworker/util/MessageQueue/MessageQueue.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 using Escargot::Globals;
@@ -119,6 +121,8 @@ std::string ServiceWorkerProcessManager::createAddress(
     return address;
 }
 
+static const int kMessageQueueTimeout = 500;
+
 bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 {
     TRACE_SCOPE(SVCWORKER);
@@ -131,13 +135,24 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 
             Globals::initializeThread();
 
+            auto messageQueue = std::make_unique<MessageQueue>();
+
             // TODO: create global variables that a starfish instance has.
             // We can not use the starfish instance on the main thread.
             Starfish* starfish = nullptr;
             ServiceWorkerAgent* agent =
                 ServiceWorkerAgent::create(starfish, perProcess);
 
-            stopTask.wait();
+            // start a message loop
+            messageQueue->run(kMessageQueueTimeout, [&]() -> bool {
+                // TODO: create a StopTask and push it into this queue.
+                if (stopTask.wait_for(std::chrono::milliseconds(1)) !=
+                    std::future_status::timeout) {
+                    messageQueue->stop();
+                    return false;
+                }
+                return true;
+            });
 
             agent->destroy();
 
