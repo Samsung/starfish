@@ -110,6 +110,7 @@ void ServiceWorkerServer::start()
 
     TRACE(HOST, "host: bind: %s", address.c_str());
     m_connection->socket()->bind(address.c_str());
+    // TODO: set the mq for the current thread where this server starts.
     m_perProcess->ioRunnable()->addClient(m_connection);
 }
 
@@ -134,6 +135,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
     STARFISH_ASSERT(m_connection != nullptr);
 
     m_connection->socket()->bind(address.c_str());
+    // TODO: set the mq for the current thread where this server starts.
     m_perProcess->ioRunnable()->addClient(m_connection);
 }
 

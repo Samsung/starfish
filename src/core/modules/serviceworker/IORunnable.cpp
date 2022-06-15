@@ -34,7 +34,7 @@ namespace Starfish {
 #define RECV_TIMEOUT 1000
 #define MAX_LISTEN_SOCKET 50
 
-IORunnable::IORunnable(MessageLoop* messageLoop)
+IORunnable::IORunnable(IMessageLoop* messageLoop)
     : m_messageLoop(messageLoop)
     , m_isFdUpdateNeeded(true)
     , m_isStopped(false)
@@ -123,12 +123,17 @@ void IORunnable::run()
                         Param* param = new Param();
                         STARFISH_ASSERT(param != nullptr);
 
-                        param->client = m_clients[i];
+                        Client* client = m_clients[i];
+                        param->client = client;
                         param->socket = socket;
                         param->buffer = buffer;
                         param->len = rc;
 
-                        m_messageLoop->addIdlerWithNoGCRootingInOtherThread(
+                        IMessageLoop* messageQueue = client->messageLoop()
+                                                         ? client->messageLoop()
+                                                         : m_messageLoop;
+
+                        messageQueue->addIdlerWithNoGCRootingInOtherThread(
                             nullptr,
                             [](size_t, void* data) {
                                 Param* p = castTo<Param*>(data);

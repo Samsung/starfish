@@ -20,15 +20,16 @@
 #ifndef __StarfishMessageLoop__
 #define __StarfishMessageLoop__
 
+#include "core/modules/message_loop/MessageLoopInterface.h"
+
 #ifdef STARFISH_WEBWORKER_HOST
-#define BASE_CLASS gc
+#define BASE_CLASS gc, public IMessageLoop
 #else
 #include "core/modules/message_loop/MessageLoopMixin.h"
-#define BASE_CLASS gc, public MessageLoopMixin
+#define BASE_CLASS gc, public MessageLoopMixin, public IMessageLoop
 #endif
 
 namespace Starfish {
-
 class GlobalScope;
 class Mutex;
 
@@ -49,12 +50,14 @@ public:
     size_t addIdler(GlobalScope* globalScope,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
-    size_t addIdlerWithNoGCRootingInOtherThread(
-        GlobalScope* globalScope, void (*fn)(size_t handle, void*), void* data);
+
     size_t addIdlerWithNoGCRootingInOtherThread(GlobalScope* globalScope,
-                                                void (*fn)(size_t handle, void*,
+                                                void (*fn)(size_t handle,
                                                            void*),
-                                                void* data, void* data1);
+                                                void* data) override;
+    size_t addIdlerWithNoGCRootingInOtherThread(
+        GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
+        void* data, void* data1) override;
 
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);

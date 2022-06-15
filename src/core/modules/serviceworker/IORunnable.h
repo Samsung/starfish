@@ -26,6 +26,7 @@ namespace Starfish {
 class Socket;
 class IRunnable;
 class MessageLoop;
+class IMessageLoop;
 class Client;
 
 class IORunnable : public IRunnable {
@@ -39,9 +40,13 @@ public:
                                 size_t len) = 0;
         virtual void onStopped() = 0;
         virtual Socket* socket() = 0;
+        virtual IMessageLoop* messageLoop()
+        {
+            return nullptr;
+        }
     };
 
-    IORunnable(MessageLoop* messageLoop);
+    IORunnable(IMessageLoop* messageLoop);
     virtual ~IORunnable();
 
     void run() override;
@@ -53,7 +58,7 @@ private:
     bool stopRequested();
     void closeClients();
 
-    MessageLoop* m_messageLoop;
+    IMessageLoop* m_messageLoop;
     GCVector<Client*> m_clients;
 
     std::atomic_bool m_isFdUpdateNeeded;
