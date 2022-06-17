@@ -24,6 +24,7 @@
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
 namespace Starfish {
 
@@ -73,16 +74,7 @@ String* ServiceWorkerRegistration::scope() const
 String* ServiceWorkerRegistration::updateViaCache() const
 {
     STARFISH_ASSERT(m_data != nullptr);
-
-    switch (m_data->updateViaCache) {
-    case ServiceWorkerUpdateViaCache::Imports:
-        return String::createASCIIString("imports");
-    case ServiceWorkerUpdateViaCache::All:
-        return String::createASCIIString("all");
-    case ServiceWorkerUpdateViaCache::None:
-        return String::createASCIIString("none");
-    }
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return TypeUtils::updateViaCacheToString(m_data->updateViaCache);
 }
 
 ServiceWorker* ServiceWorkerRegistration::installing() const

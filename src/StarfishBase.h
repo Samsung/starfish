@@ -635,6 +635,9 @@ protected:
 };
 
 template <typename T>
+using Optional = Nullable<T>;
+
+template <typename T>
 inline bool operator==(const T& a, const Nullable<T>& b)
 {
     return b == a;

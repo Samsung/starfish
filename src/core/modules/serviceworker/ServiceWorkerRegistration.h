@@ -21,13 +21,10 @@
     !defined(__StarfishServiceWorkerRegistration__)
 #define __StarfishServiceWorkerRegistration__
 
-#include "core/util/Id.h"
 #include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 #include "core/modules/serviceworker/push/PushManager.h"
 #include "core/modules/serviceworker/notification/NotificationOptions.h"
@@ -38,6 +35,7 @@ namespace Starfish {
 class ServiceWorker;
 class ServiceWorkerData;
 class String;
+class ServiceWorkerRegistrationData;
 
 class ServiceWorkerRegistration : public EventTarget {
 public:
