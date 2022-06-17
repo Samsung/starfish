@@ -22,6 +22,7 @@
 // #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
+
 #include "core/modules/serviceworker/RegistrationOptions.h"
 
 namespace Starfish {

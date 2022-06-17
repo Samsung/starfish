@@ -20,9 +20,7 @@
 #ifndef __StarfishRegistrationOptions__
 #define __StarfishRegistrationOptions__
 
-// FIXME: moving this to the source is correct.
-// binding generator doesn't include 'ScriptWrappable.h' for now.
-#include "binding/ScriptWrappable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
@@ -34,7 +32,23 @@ struct RegistrationOptions : public gc {
     String* scope() const;
     void setScope(String* pScope);
 
+    String* updateViaCache() const
+    {
+        return TypeUtils::updateViaCacheToString(m_updateViaCache);
+    };
+
+    void setUpdateViaCache(String* updateViaCache)
+    {
+        auto maybeUpdateViaCache =
+            TypeUtils::stringToUpdateViaCache(updateViaCache);
+        if (maybeUpdateViaCache) {
+            m_updateViaCache = maybeUpdateViaCache.value();
+        }
+    };
+
     String* m_scope;
+    ServiceWorkerUpdateViaCache m_updateViaCache =
+        ServiceWorkerUpdateViaCache::Imports;
 };
 } // namespace Starfish
 

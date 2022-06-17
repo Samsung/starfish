@@ -21,6 +21,8 @@
     !defined(__StarfishServiceWorkerJobData__)
 #define __StarfishServiceWorkerJobData__
 
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+
 namespace Starfish {
 
 class ServiceWorkerJobData : public Archivable {

@@ -1,6 +1,7 @@
-// [STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker)] // FIXME: this doesn't work in binding generator
+// https://w3c.github.io/ServiceWorker/#serviceworkercontainer
+[STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker)]
 dictionary RegistrationOptions {
-  [STARFISH_ENABLE_SERVICE_WORKER] USVString scope;
+  USVString scope;
   // WorkerType type = "classic";
-  // ServiceWorkerUpdateViaCache updateViaCache = "imports";
+  ServiceWorkerUpdateViaCache updateViaCache = "imports";
 };

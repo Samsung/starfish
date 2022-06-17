@@ -36,7 +36,7 @@
 
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 
 #include "core/page/GlobalScope.h"
@@ -83,7 +83,7 @@ ServiceWorkerEnvironment* ServiceWorkerContainer::serviceWorkerEnvironment()
 }
 
 Promise* ServiceWorkerContainer::registerServiceWorker(
-    String* rawScriptURL, NULLABLE RegistrationOptions* options)
+    String* rawScriptURL, RegistrationOptions& options)
 {
     STARFISH_ASSERT(rawScriptURL != nullptr);
 
@@ -107,23 +107,26 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     // 4. Let scopeURL be null
     ResourceURL* scopeURL = nullptr;
 
-    if ((options != nullptr) && (options->scope()->isEmpty() == false)) {
+    if (!options.scope()->isEmpty()) {
         // 5. If options.scope is present, set scopeURL to the result of parsing
         // options.scope with the context object’s relevant settings object’s
         // API base URL.
         scopeURL =
-            new ResourceURL(options->scope(), client->baseURL()->baseURI());
+            new ResourceURL(options.scope(), client->baseURL()->baseURI());
     }
 
-    startRegister(scopeURL, scriptURL, p, client);
+    // 6. Invoke Start Register with scopeURL, scriptURL, p, client, client’s
+    // creation URL, options["type"], and options["updateViaCache"].
+    // TODO: options["type"]
+    startRegister(scopeURL, scriptURL, p, client, options.m_updateViaCache);
 
     return p;
 }
 
-void ServiceWorkerContainer::startRegister(Nullable<ResourceURL*> scopeURL,
-                                           ResourceURL* scriptURL,
-                                           Promise* promise,
-                                           ServiceWorkerEnvironment* client)
+void ServiceWorkerContainer::startRegister(
+    Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL, Promise* promise,
+    ServiceWorkerEnvironment* client,
+    ServiceWorkerUpdateViaCache updateViaCache)
 {
     STARFISH_ASSERT(scriptURL != nullptr);
     STARFISH_ASSERT(promise != nullptr);
@@ -216,6 +219,7 @@ void ServiceWorkerContainer::startRegister(Nullable<ResourceURL*> scopeURL,
 
     // 11. Set job’s worker type to workerType.
     // 12. Set job’s update via cache mode to updateViaCache.
+    job->data()->updateViaCacheMode = updateViaCache;
 
     // 13. Set job’s referrer to referrer.
     job->data()->referrerURL =
@@ -413,11 +417,11 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
     m_requestMap.insert(std::make_pair(request->id, request));
 }
 
-Promise* ServiceWorkerContainer::registerServiceWorker(
-    String* url, RegistrationOptions& options)
+Promise* ServiceWorkerContainer::registerServiceWorker(String* url)
 {
     STARFISH_ASSERT(url != nullptr);
-    return registerServiceWorker(url, &options);
+    RegistrationOptions defaultOptions;
+    return registerServiceWorker(url, defaultOptions);
 }
 
 ServiceWorker* ServiceWorkerContainer::controller()

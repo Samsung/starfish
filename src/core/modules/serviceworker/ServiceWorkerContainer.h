@@ -33,7 +33,6 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 
 namespace Starfish {
@@ -44,6 +43,7 @@ class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
+class RegistrationOptions;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClientInterface {
@@ -57,9 +57,7 @@ public:
     virtual ExecutionContext* executionContext() const override;
     void dispose();
 
-    Promise* registerServiceWorker(
-        String* scriptURL,
-        NULLABLE RegistrationOptions* options = nullptr); // binding interface
+    Promise* registerServiceWorker(String* scriptURL); // binding interface
     Promise* registerServiceWorker(
         String* url, RegistrationOptions& options); // binding interface
     Promise* getRegistration(
@@ -99,7 +97,8 @@ private:
     State m_state;
 
     void startRegister(Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL,
-                       Promise* p, ServiceWorkerEnvironment* client);
+                       Promise* p, ServiceWorkerEnvironment* client,
+                       ServiceWorkerUpdateViaCache updateViaCache);
 
     void scheduleJob(ServiceWorkerJob* job) override;
     ServiceWorkerJob* createJob(

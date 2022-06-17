@@ -29,6 +29,7 @@ class String;
 class JobQueue;
 class IServiceWorkerHostConnection;
 class IServiceWorkerClientConnection;
+class ServiceWorkerJobData;
 
 class Job : public gc {
 };

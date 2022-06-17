@@ -21,6 +21,8 @@
     !defined(__StarfishServiceWorkerRegistrationData__)
 #define __StarfishServiceWorkerRegistrationData__
 
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+
 namespace Starfish {
 
 class String;

@@ -20,6 +20,8 @@
 #ifndef __StarfishId__
 #define __StarfishId__
 
+#include <functional>
+
 namespace Starfish {
 
 enum class CreatedIdType { UNIQUE, SHARED };
