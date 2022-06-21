@@ -171,7 +171,6 @@ void StdOut::flush(std::stringstream& stream)
 
 thread_local int s_indentCount = 0;
 thread_local int s_deltaCount = 0;
-thread_local std::set<std::string> s_counterIds;
 
 void IndentCounter::indent(std::string id)
 {
@@ -197,7 +196,6 @@ IndentCounter::IndentCounter(std::string id)
         return;
     }
     s_indentCount++;
-    s_counterIds.insert(id);
 }
 
 IndentCounter::~IndentCounter()
@@ -206,15 +204,10 @@ IndentCounter::~IndentCounter()
         return;
     }
     s_indentCount--;
-    s_counterIds.erase(m_id);
 }
 
 std::string IndentCounter::getString(std::string id)
 {
-    if (s_counterIds.find(id) == s_counterIds.end()) {
-        return "";
-    }
-
     assert(s_indentCount >= 0);
 
     std::ostringstream oss;

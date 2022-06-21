@@ -24,24 +24,59 @@
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/host/ServiceWorkerExecutor.h"
 #include "core/modules/serviceworker/PerProcess.h"
+#include "Starfish.h"
+
+#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "platform/file/PlatformDirectory.h"
+#include "core/util/String.h"
 
 namespace Starfish {
+
+class ExecutorResource {
+public:
+    static void acquire()
+    {
+        // create a directory for ipc handles
+        auto dir = PlatformDirectory::create();
+        if (!dir->open(String::createASCIIString(IPC_ADDRESS_PREFIX))) {
+            TRACE(HOST, "new %s", IPC_ADDRESS_PREFIX);
+            dir->mkDir();
+        }
+        dir->close();
+    }
+
+    static void release()
+    {
+        // release the directory for ipc handles
+        auto dir = PlatformDirectory::create();
+        if (dir->open(String::createASCIIString(IPC_ADDRESS_PREFIX))) {
+            TRACE(HOST, "rm %s", IPC_ADDRESS_PREFIX);
+            dir->removeDir();
+        }
+        dir->close();
+    }
+};
 
 void ServiceWorkerExecutor::initialize(Starfish* starfish)
 {
     STARFISH_ASSERT(starfish != nullptr);
-    auto perProcess = new PerProcess();
+
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([&]() -> size_t {
         STARFISH_ASSERT(starfish != nullptr);
+
+        ExecutorResource::acquire();
         if (ServiceWorkerAgent::isCreated() == false) {
-            ServiceWorkerAgent::create(starfish, perProcess);
+            ServiceWorkerAgent::create(starfish, starfish->perProcess());
         }
         return 0;
     });
 #else
     if (ServiceWorkerAgent::isCreated() == false) {
-        ServiceWorkerAgent::create(starfish, perProcess);
+        // TODO: Pass `starfish` only here. Do this now since `nullptr` is
+        // passed when SW runs on a single process.
+        ServiceWorkerAgent::create(starfish, starfish->perProcess());
     }
 #endif
 }
@@ -85,6 +120,7 @@ void ServiceWorkerExecutor::finalize()
         if (ServiceWorkerAgent::isCreated() == true) {
             ServiceWorkerAgent::instance()->destroy();
         }
+        ExecutorResource::release();
         return 0;
     });
 #else

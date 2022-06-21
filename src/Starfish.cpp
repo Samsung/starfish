@@ -30,11 +30,13 @@
 #include "platform/network/http/HTTPCache.h"
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#include "core/modules/serviceworker/PerProcess.h"
+#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/util/Id.h"
 #include "platform/process/base/ProcessType.h"
-#include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
 #endif
 
 #include "platform/network/curl/NetworkSharedResourceManager.h"
@@ -142,11 +144,13 @@ Starfish::Starfish(const char* localStorageFilePath,
     }
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
     m_perProcess = new PerProcess;
     m_perProcess->initialize();
+#if !defined(STARFISH_WEBWORKER_HOST)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init(m_perProcess);
+#endif
 #endif
 }
 
@@ -166,15 +170,17 @@ void Starfish::destroy()
     }
 #endif
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
-    if (m_serviceWorkerProcessManager) {
-        m_serviceWorkerProcessManager->destroy();
-        m_serviceWorkerProcessManager = nullptr;
-    }
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
     if (m_perProcess) {
         m_perProcess->destroy();
         m_perProcess = nullptr;
     }
+#if !defined(STARFISH_WEBWORKER_HOST)
+    if (m_serviceWorkerProcessManager) {
+        m_serviceWorkerProcessManager->destroy();
+        m_serviceWorkerProcessManager = nullptr;
+    }
+#endif
 #endif
 
     delete m_lineBreakIteratorPool;

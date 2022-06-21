@@ -44,10 +44,9 @@
 
 #include "core/modules/serviceworker/PerProcess.h"
 
-#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 namespace LWE {
 extern Starfish::Starfish* g_starfishInstance;
 }
@@ -60,6 +59,7 @@ extern Starfish::Starfish* g_starfishInstance;
 #include <EscargotPublic.h>
 
 #include "core/modules/serviceworker/util/MessageQueue/MessageQueue.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -81,14 +81,6 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
 
 void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 {
-    // TODO: there should be a better place to do this.
-    LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
-        if (GlobalOptions::instance().has("TRACE", id.c_str())) {
-            return true;
-        }
-        return false;
-    });
-
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
 
@@ -101,7 +93,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
 void ServiceWorkerProcessManager::destroy()
 {
     TRACE_SCOPE(SVCWORKER);
-#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
     m_promiseStopThreadSignal.set_value();
 #endif
 }
@@ -128,6 +120,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(Globals::supportsThreading());
 
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
     // TODO: create a Runnable for this thread once verified.
     std::thread(
         [](PerProcess* perProcess, std::future<void>&& stopTask) {
@@ -161,6 +154,9 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
         m_perProcess, std::move(m_promiseStopThreadSignal.get_future()))
         .detach();
     return true;
+#else
+    return false;
+#endif
 }
 
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
@@ -182,7 +178,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         processData = std::make_shared<ProcessData>();
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
 
-#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
         startWorkerOnThread("");
 #else
         // TODO: extract process creation
