@@ -75,15 +75,14 @@ private:
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
 
-#if !defined(SERVICE_WORKER_USE_SEPERATED_PROCESS)
-    std::promise<void> m_promiseStopThreadSignal;
-#endif
-
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;
-
     GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
         m_mapIdToActiveGlobalScope;
+
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+    std::promise<void> m_promiseStopThreadSignal;
+#endif
 };
 } // namespace Starfish
 

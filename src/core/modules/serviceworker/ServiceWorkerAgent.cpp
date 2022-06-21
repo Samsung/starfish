@@ -53,7 +53,7 @@ ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
 
     STARFISH_ASSERT(m_instance == nullptr);
 
-    m_instance = new ServiceWorkerAgent(starfish, perProcess);
+    m_instance = new (NoGC) ServiceWorkerAgent(starfish, perProcess);
 
     return m_instance;
 }
@@ -71,6 +71,7 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
     , m_perProcess(perProcess)
     , m_notificationService(new NotificationService())
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
 
     m_SWServer = new ServiceWorkerServer;

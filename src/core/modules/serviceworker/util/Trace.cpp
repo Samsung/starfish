@@ -45,10 +45,34 @@ public:
     }
 };
 
+static std::string randomString(std::string::size_type length)
+{
+    static const char* letters = "0123456789";
+    thread_local static std::mt19937 mt{ std::random_device{}() };
+    thread_local static std::uniform_int_distribution<std::string::size_type>
+        dist(0, sizeof(letters) - 1);
+
+    std::string s;
+    s.reserve(length);
+    while (length--) {
+        s += letters[dist(mt)];
+    }
+    return s;
+}
+
+static void writeThreadHeader(std::ostream& os)
+{
+    static thread_local std::string thisThreadId;
+    if (thisThreadId.empty()) {
+        thisThreadId = randomString(2);
+    }
+    os << "[" << thisThreadId << "] ";
+}
+
 static void writeHeader(std::ostream& ss, const std::string& tag,
                         const std::string& id)
 {
-    writeThreadIdentifier(ss);
+    writeThreadHeader(ss);
     ss << CLR_DIM << std::left << std::setfill(' ')
        << std::setw(TYPE_LENGTH_LIMIT) << tag << std::setw(0) << " ("
        << std::setw(TRACE_ID_LENGTH_LIMIT)

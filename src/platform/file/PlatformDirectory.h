@@ -20,7 +20,10 @@
 #ifndef __StarfishPaltformDirectory__
 #define __StarfishPaltformDirectory__
 
+#include <GCUtil.h>
+
 namespace Starfish {
+class String;
 
 class PlatformDirectory : public gc_cleanup {
 public:

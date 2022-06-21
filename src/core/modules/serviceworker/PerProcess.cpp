@@ -26,6 +26,8 @@
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/WorkerConfig.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -33,6 +35,14 @@ namespace Starfish {
 
 PerProcess::PerProcess()
 {
+    LogOption::setExternalIsEnabled([](const std::string& id) -> bool {
+        if (GlobalOptions::instance().has("TRACE", id.c_str())) {
+            return true;
+        }
+        return false;
+    });
+
+    TRACE_SCOPE(PERPROC);
     static bool isOnceCreated = false;
     STARFISH_ASSERT(!isOnceCreated);
     isOnceCreated = true;
@@ -40,7 +50,9 @@ PerProcess::PerProcess()
 
 void PerProcess::initialize()
 {
+    TRACE_SCOPE(PERPROC);
     m_messageLoop = new MessageLoop();
+
     m_threadPool =
         new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop);
     m_ioRunnable = new IORunnable(m_messageLoop);
@@ -51,6 +63,7 @@ void PerProcess::initialize()
 
 void PerProcess::destroy()
 {
+    TRACE_SCOPE(PERPROC);
     STARFISH_ASSERT(m_ioThread);
     STARFISH_ASSERT(m_threadPool);
     STARFISH_ASSERT(m_messageLoop);
