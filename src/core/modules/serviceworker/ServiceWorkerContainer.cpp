@@ -445,7 +445,7 @@ void ServiceWorkerContainer::resolveJobPromise(
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // TODO: get matched registration
 
-    // 2. If job’s client is not null, queue a task, on job’s client's
+    // 1. If job’s client is not null, queue a task, on job's client's
     // responsible event loop using the DOM manipulation task source, to run the
     // following substeps:
 
@@ -460,42 +460,42 @@ void ServiceWorkerContainer::resolveJobPromise(
                 ServiceWorkerContainer* container =
                     castTo<ServiceWorkerContainer*>(data1);
 
-                // 1. Let convertedValue be null.
+                // 1.1 Let convertedValue be null.
                 auto convertedValue = scriptNull();
 
-                // Handling Register Job or Update Job
                 if (job->data()->type == ServiceWorkerJobType::Register ||
                     job->data()->type == ServiceWorkerJobType::Update) {
+                    // 1.2. If job's job type is either register or update, set
+                    // convertedValue to the result of getting the service
+                    // worker registration object that represents value in job's
+                    // client.
+                    //
+                    // TODO: Implement `getting the service worker registration
+                    // object`
+                    // https://w3c.github.io/ServiceWorker/#get-the-service-worker-registration-object
                     auto registration = new ServiceWorkerRegistration(
                         container->executionContext(), container);
                     auto serviceWorker =
                         new ServiceWorker(container->executionContext());
 
-                    STARFISH_ASSERT(registration != nullptr);
-                    STARFISH_ASSERT(serviceWorker != nullptr);
-
                     registration->data()->scope = job->data()->scopeURL;
+                    registration->data()->updateViaCache =
+                        job->data()->updateViaCacheMode;
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
                     registration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
                         serviceWorker);
 
-                    // 2.1 If job’s job type is either register or update, set
-                    // convertedValue to the ServiceWorkerRegistration object
-                    // that represents value, in job’s client's Realm.
                     convertedValue = registration->scriptValue();
-
                 } else {
-                    // 2.2 Else, set convertedValue to value, in job’s client's
+                    // 1.3 Else, set convertedValue to value, in job's client's
                     // Realm.
                 }
 
-                // 2.3 Resolve job’s job promise with convertedValue.
+                // 1.4 Resolve job's job promise with convertedValue.
                 job->promise()->fulfill(convertedValue);
 
                 container->finishJob(job);
-
-                // TODO: 3. Resolve job’s job promise with convertedValue.
             },
             job, this);
     } else {
