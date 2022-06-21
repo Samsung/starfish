@@ -166,6 +166,104 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     ctx.m_canvas->restore();
 }
 
+#define IS_SVGLENGTH_UNIT_TYPE_NUMBER(gradient, name)         \
+    (svg##gradient##Element->name()->baseVal()->unitType() == \
+     SVGLength::SVG_LENGTHTYPE_NUMBER)
+
+static Nullable<GradientDrawingInfo*> makeLinearGradientDrawingInfo(
+    SVGLinearGradientElement* svgLinearGradientElement, LayoutRect layoutRect,
+    FrameBox* frameBox)
+{
+    ComputedStyle* computedStyle = svgLinearGradientElement->style();
+    Length x1 = computedStyle->x1();
+    Length y1 = computedStyle->y1();
+    Length x2 = computedStyle->x2();
+    Length y2 = computedStyle->y2();
+
+    if (x1.isAuto()) {
+        x1 = Length(Length::Percent, 0);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(LinearGradient, x1)) {
+        x1 = Length(Length::Percent, x1.fixed());
+    }
+    if (y1.isAuto()) {
+        y1 = Length(Length::Percent, 0);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(LinearGradient, y1)) {
+        y1 = Length(Length::Percent, y1.fixed());
+    }
+    if (x2.isAuto()) {
+        x2 = Length(Length::Percent, 0);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(LinearGradient, x2)) {
+        x2 = Length(Length::Percent, x2.fixed());
+    }
+    if (y2.isAuto()) {
+        y2 = Length(Length::Percent, 0);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(LinearGradient, y2)) {
+        y2 = Length(Length::Percent, y2.fixed());
+    }
+
+    GradientData* gradientData = new LinearGradientData();
+    gradientData->colorStopList() =
+        svgLinearGradientElement->asSVGLinearGradientElement()->colorStops();
+
+    Unit::Rect unitRect = Unit::Rect(layoutRect.x(), layoutRect.y(),
+                                     layoutRect.width(), layoutRect.height());
+    Nullable<GradientDrawingInfo*> gradientDrawingInfo =
+        gradientData->asLinearGradientData()->makeGradientDrawingInfo(unitRect,
+                                                                      frameBox);
+    gradientDrawingInfo->x1 = x1.specifiedValue(unitRect.width(), frameBox);
+    gradientDrawingInfo->y1 = y1.specifiedValue(unitRect.height(), frameBox);
+    gradientDrawingInfo->x2 = x2.specifiedValue(unitRect.width(), frameBox);
+    gradientDrawingInfo->y2 = y2.specifiedValue(unitRect.height(), frameBox);
+
+    return gradientDrawingInfo;
+}
+
+static Nullable<GradientDrawingInfo*> makeRadialGradientDrawingInfo(
+    SVGRadialGradientElement* svgRadialGradientElement, LayoutRect layoutRect,
+    FrameBox* frameBox)
+{
+    ComputedStyle* computedStyle = svgRadialGradientElement->style();
+    Length cx = computedStyle->cx();
+    Length cy = computedStyle->cy();
+    Length r = computedStyle->r();
+
+    if (cx.isAuto()) {
+        cx = Length(Length::Percent, 0.5);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(RadialGradient, cx)) {
+        cx = Length(Length::Percent, cx.fixed());
+    }
+    if (cy.isAuto()) {
+        cy = Length(Length::Percent, 0.5);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(RadialGradient, cy)) {
+        cy = Length(Length::Percent, cy.fixed());
+    }
+    if (r.isAuto()) {
+        r = Length(Length::Percent, 0.5);
+    } else if (IS_SVGLENGTH_UNIT_TYPE_NUMBER(RadialGradient, r)) {
+        r = Length(Length::Percent, r.fixed());
+    }
+
+    GradientData* gradientData = new RadialGradientData();
+    gradientData->setHorizontalSide(SideValue::LeftSideValue);
+    gradientData->setVerticalSide(SideValue::TopSideValue);
+
+    RadialGradientData* radialGradient = gradientData->asRadialGradientData();
+    radialGradient->setHorizontalSideOffset(cx);
+    radialGradient->setVerticalSideOffset(cy);
+    radialGradient->setFirstRadius(r);
+    radialGradient->setSecondRadius(r);
+    radialGradient->colorStopList() =
+        svgRadialGradientElement->asSVGRadialGradientElement()->colorStops();
+
+    Unit::Rect unitRect = Unit::Rect(layoutRect.x(), layoutRect.y(),
+                                     layoutRect.width(), layoutRect.height());
+    Nullable<GradientDrawingInfo*> gradientDrawingInfo =
+        radialGradient->makeGradientDrawingInfo(unitRect, frameBox);
+
+    return gradientDrawingInfo;
+}
+#undef IS_SVGLENGTH_UNIT_TYPE_NUMBER
+
 Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
 {
     ResourceURL* resourceUrl = new ResourceURL(url);
@@ -176,76 +274,36 @@ Nullable<GradientDrawingInfo*> FrameSVGBox::makeGradientDrawingInfo(String* url)
     // NOTE: Consider obtaining a reusable SVG node that is locally available
     // under the same root SVGElement.
     String* urlString = resourceUrl->string();
-    if (urlString->startsWith("#")) {
-        if (!node()) {
-            return nullptr;
-        }
-
-        String* id = urlString->substring(1, urlString->length() - 1);
-        SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
-        SVGElement* matchingSvg = owner->getSVGElementById(id);
-        if (!matchingSvg) {
-            return nullptr;
-        }
-
-        LayoutRect fRect = frameRect();
-        Unit::Rect rect =
-            Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
-        GradientDrawingInfo* info = nullptr;
-        GradientData* gData = nullptr;
-        ComputedStyle* style = matchingSvg->style();
-
-#define IS_SVGLENGTH_UNIT_TYPE(gradient, name)                                 \
-    (matchingSvg->asSVG##gradient##Element()->name()->baseVal()->unitType() == \
-     SVGLength::SVG_LENGTHTYPE_NUMBER)
-
-        if (matchingSvg->isSVGLinearGradientElement()) {
-            info = new GradientDrawingInfo(GradientType::LinearGradient, rect);
-            info->x1 = style->x1().specifiedValue(rect.width(), this);
-            info->y1 = style->y1().specifiedValue(rect.height(), this);
-            info->x2 = style->x2().specifiedValue(rect.maxX(), this);
-            info->y2 = style->y2().specifiedValue(rect.maxY(), this);
-            info->colorStops =
-                matchingSvg->asSVGLinearGradientElement()->colorStops();
-        } else if (matchingSvg->isSVGRadialGradientElement()) {
-            Length cx = style->cx();
-            Length cy = style->cy();
-            Length r = style->r();
-            gData = new RadialGradientData();
-            gData->setHorizontalSide(SideValue::LeftSideValue);
-            gData->setVerticalSide(SideValue::TopSideValue);
-            if (cx.isAuto()) {
-                cx = Length(Length::Percent, 0.5);
-            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, cx)) {
-                cx = Length(Length::Percent, cx.fixed());
-            }
-            if (cy.isAuto()) {
-                cy = Length(Length::Percent, 0.5);
-            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, cy)) {
-                cy = Length(Length::Percent, cy.fixed());
-            }
-            if (r.isAuto()) {
-                r = Length(Length::Percent, 0.5);
-            } else if (IS_SVGLENGTH_UNIT_TYPE(RadialGradient, r)) {
-                r = Length(Length::Percent, r.fixed());
-            }
-            RadialGradientData* radialGradient = gData->asRadialGradientData();
-            radialGradient->setHorizontalSideOffset(cx);
-            radialGradient->setVerticalSideOffset(cy);
-            radialGradient->setFirstRadius(r);
-            radialGradient->setSecondRadius(r);
-            radialGradient->colorStopList() =
-                matchingSvg->asSVGRadialGradientElement()->colorStops();
-            info = radialGradient->makeGradientDrawingInfo(rect, this);
-        } else {
-            STARFISH_UNIMPLEMENTED();
-        }
-#undef GET_SVGLENGTH_UNIT_TYPE
-
-        return info;
+    if (!urlString->startsWith("#")) {
+        return nullptr;
+    }
+    if (!node()) {
+        return nullptr;
     }
 
-    return nullptr;
+    String* id = urlString->substring(1, urlString->length() - 1);
+    SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
+    SVGElement* matchingSvg = owner->getSVGElementById(id);
+    if (!matchingSvg) {
+        return nullptr;
+    }
+
+    LayoutRect layoutRect = frameRect();
+    Nullable<GradientDrawingInfo*> gradientDrawingInfo = nullptr;
+    if (matchingSvg->isSVGLinearGradientElement()) {
+        // NOTE : There is a problem that width and height are different and the
+        // gradient direction is not normally drawn in cases other than 0, 90,
+        // 180, 270 degrees by a given x1, x2, y1, y2 value.
+        gradientDrawingInfo = makeLinearGradientDrawingInfo(
+            matchingSvg->asSVGLinearGradientElement(), layoutRect, this);
+    } else if (matchingSvg->isSVGRadialGradientElement()) {
+        gradientDrawingInfo = makeRadialGradientDrawingInfo(
+            matchingSvg->asSVGRadialGradientElement(), layoutRect, this);
+    } else {
+        STARFISH_UNIMPLEMENTED();
+    }
+
+    return gradientDrawingInfo;
 }
 
 std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
@@ -333,4 +391,4 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
 
     return result;
 }
-}
+} // namespace Starfish

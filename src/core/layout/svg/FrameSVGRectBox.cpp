@@ -61,7 +61,6 @@ void FrameSVGRectBox::paintSVG(PaintingContext& ctx)
         Unit::Rect rect = newPath->boundingRect(true).snapSizeToPixel();
         std::shared_ptr<NativeGradient> gradient =
             NativeGradient::create(info.getValue());
-        info->rect = rect;
         if (info->type == GradientType::LinearGradient) {
             ctx.m_canvas->drawLinearGradient(rect, info.getValue(),
                                              gradient.get());
