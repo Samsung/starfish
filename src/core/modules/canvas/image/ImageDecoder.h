@@ -70,6 +70,12 @@ public:
     static bool isAnimatedGIF(const std::vector<char>& inputBuffer);
 
 private:
+    enum class GifDisposeMethod {
+        None,
+        Background,
+        Restor,
+    };
+
     bool prepareAnimatedGIF();
 
     const std::vector<char>& m_inputBuffer;
@@ -78,6 +84,8 @@ private:
     void* m_gifBuffer;
     GifReadData m_gifReadData;
     uint32_t m_needsDownScaleImageResourceLargerThan;
+    int m_loopCount = 1;
+    bool m_hasLoopCount = false;
 };
 } // namespace Starfish
 
