@@ -2,6 +2,6 @@
 [STARFISH_ENABLE_SERVICE_WORKER, Exposed=(Window,Worker)]
 dictionary RegistrationOptions {
   USVString scope;
-  // WorkerType type = "classic";
+  WorkerType type = "classic";
   ServiceWorkerUpdateViaCache updateViaCache = "imports";
 };

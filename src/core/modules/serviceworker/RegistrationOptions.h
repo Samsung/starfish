@@ -21,6 +21,7 @@
 #define __StarfishRegistrationOptions__
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/worker/WorkerType.h"
 
 namespace Starfish {
 
@@ -31,6 +32,19 @@ struct RegistrationOptions : public gc {
 
     String* scope() const;
     void setScope(String* pScope);
+
+    String* type() const
+    {
+        return WorkerTypeUtils::workerTypeToString(m_type);
+    }
+
+    void setType(String* type)
+    {
+        auto maybeType = WorkerTypeUtils::stringToWorkerType(type);
+        if (maybeType) {
+            m_type = maybeType.value();
+        }
+    }
 
     String* updateViaCache() const
     {
@@ -47,6 +61,7 @@ struct RegistrationOptions : public gc {
     };
 
     String* m_scope;
+    WorkerType m_type = WorkerType::Classic;
     ServiceWorkerUpdateViaCache m_updateViaCache =
         ServiceWorkerUpdateViaCache::Imports;
 };
