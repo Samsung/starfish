@@ -225,6 +225,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
 
+        ctx.registerContentHeight(this, contentHeight());
+
         if (isAbsolutePositioned()) {
             Length height = style()->height();
             LengthData offset = style()->offset();
