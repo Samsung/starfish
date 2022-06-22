@@ -444,6 +444,7 @@ test/cairo/internal-test/css/flex/flex_svg_maxHeight_03.html
 test/cairo/internal-test/css/flex/flex_basis_size_01.html
 test/cairo/internal-test/css/flex/flex_align_items_center_with_grid_child.html
 test/cairo/internal-test/css/flex/flex_align_item_center_with_justify_content_flex_end.html
+test/cairo/internal-test/css/flex/register-content-height.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/bixby_logo_search.html
