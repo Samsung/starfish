@@ -35,6 +35,8 @@
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/client/ServiceWorkerJobClientInterface.h"
 
+#include "core/modules/worker/WorkerType.h"
+
 namespace Starfish {
 
 class Promise;
@@ -98,6 +100,7 @@ private:
 
     void startRegister(Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL,
                        Promise* p, ServiceWorkerEnvironment* client,
+                       WorkerType type,
                        ServiceWorkerUpdateViaCache updateViaCache);
 
     void scheduleJob(ServiceWorkerJob* job) override;

@@ -61,11 +61,6 @@ enum class ServiceWorkerJobType : unsigned {
     Update,
 };
 
-enum class WorkerType : unsigned {
-    Classic,
-    Module,
-};
-
 class TypeUtils {
 public:
     static Optional<ServiceWorkerUpdateViaCache> stringToUpdateViaCache(

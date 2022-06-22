@@ -117,15 +117,15 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 
     // 6. Invoke Start Register with scopeURL, scriptURL, p, client, client’s
     // creation URL, options["type"], and options["updateViaCache"].
-    // TODO: options["type"]
-    startRegister(scopeURL, scriptURL, p, client, options.m_updateViaCache);
+    startRegister(scopeURL, scriptURL, p, client, options.m_type,
+                  options.m_updateViaCache);
 
     return p;
 }
 
 void ServiceWorkerContainer::startRegister(
     Nullable<ResourceURL*> scopeURL, ResourceURL* scriptURL, Promise* promise,
-    ServiceWorkerEnvironment* client,
+    ServiceWorkerEnvironment* client, WorkerType type,
     ServiceWorkerUpdateViaCache updateViaCache)
 {
     STARFISH_ASSERT(scriptURL != nullptr);
@@ -218,6 +218,8 @@ void ServiceWorkerContainer::startRegister(
                          scriptURLWithNoFragment, promise, client);
 
     // 11. Set job’s worker type to workerType.
+    job->data()->workerType = type;
+
     // 12. Set job’s update via cache mode to updateViaCache.
     job->data()->updateViaCacheMode = updateViaCache;
 

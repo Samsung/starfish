@@ -21,6 +21,8 @@
     !defined(__StarfishServiceWorkerData__)
 #define __StarfishServiceWorkerData__
 
+#include "core/modules/worker/WorkerType.h"
+
 namespace Starfish {
 
 enum class ServiceWorkerRunningState {
