@@ -17,7 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishWorkerType__)
+// NOTE: WorkerType is needed for all builds
+#if !defined(__StarfishWorkerType__)
 #define __StarfishWorkerType__
 
 #include "StarfishBase.h"

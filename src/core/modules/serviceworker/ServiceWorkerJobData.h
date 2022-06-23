@@ -22,6 +22,7 @@
 #define __StarfishServiceWorkerJobData__
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
 
 namespace Starfish {
 

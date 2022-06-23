@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,27 +17,9 @@
  *  USA
  */
 
-// FIXME: The type of dictionary needs to supports STARFISH_ENABLE** flag
-// RegistrationOptions is also built on release now.
-
-#include "StarfishConfig.h"
-
-#include "core/modules/serviceworker/RegistrationOptions.h"
-
-namespace Starfish {
-
-RegistrationOptions::RegistrationOptions()
-    : m_scope(String::emptyString)
-{
-}
-
-String* RegistrationOptions::scope() const
-{
-    return m_scope;
-}
-
-void RegistrationOptions::setScope(String* scope)
-{
-    m_scope = scope;
-}
-} // namespace Starfish
+// NOTE: This enum is used in all builds
+enum ServiceWorkerUpdateViaCache {
+  "imports",
+  "all",
+  "none"
+};

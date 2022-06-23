@@ -74,7 +74,7 @@ String* ServiceWorkerRegistration::scope() const
 String* ServiceWorkerRegistration::updateViaCache() const
 {
     STARFISH_ASSERT(m_data != nullptr);
-    return TypeUtils::updateViaCacheToString(m_data->updateViaCache);
+    return UpdateViaCacheUtils::updateViaCacheToString(m_data->updateViaCache);
 }
 
 ServiceWorker* ServiceWorkerRegistration::installing() const
