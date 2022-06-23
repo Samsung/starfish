@@ -20,8 +20,9 @@
 #ifndef __StarfishRegistrationOptions__
 #define __StarfishRegistrationOptions__
 
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+// NOTE: RegistrationOptions is needed for all builds.
 #include "core/modules/worker/WorkerType.h"
+#include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
 
 namespace Starfish {
 
@@ -48,13 +49,13 @@ struct RegistrationOptions : public gc {
 
     String* updateViaCache() const
     {
-        return TypeUtils::updateViaCacheToString(m_updateViaCache);
+        return UpdateViaCacheUtils::updateViaCacheToString(m_updateViaCache);
     };
 
     void setUpdateViaCache(String* updateViaCache)
     {
         auto maybeUpdateViaCache =
-            TypeUtils::stringToUpdateViaCache(updateViaCache);
+            UpdateViaCacheUtils::stringToUpdateViaCache(updateViaCache);
         if (maybeUpdateViaCache) {
             m_updateViaCache = maybeUpdateViaCache.value();
         }

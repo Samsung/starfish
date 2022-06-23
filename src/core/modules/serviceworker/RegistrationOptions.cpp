@@ -19,7 +19,6 @@
 
 // FIXME: The type of dictionary needs to supports STARFISH_ENABLE** flag
 // RegistrationOptions is also built on release now.
-// #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
 
@@ -42,5 +41,3 @@ void RegistrationOptions::setScope(String* scope)
     m_scope = scope;
 }
 } // namespace Starfish
-
-// #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

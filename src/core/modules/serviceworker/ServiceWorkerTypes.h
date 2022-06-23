@@ -49,49 +49,10 @@ enum class ServiceWorkerRegistrationState : unsigned {
     Active,
 };
 
-enum class ServiceWorkerUpdateViaCache : uint8_t {
-    Imports,
-    All,
-    None,
-};
-
 enum class ServiceWorkerJobType : unsigned {
     Register,
     Unregister,
     Update,
-};
-
-class TypeUtils {
-public:
-    static Optional<ServiceWorkerUpdateViaCache> stringToUpdateViaCache(
-        String* upateViaCache)
-    {
-        if (upateViaCache->equals("imports")) {
-            return ServiceWorkerUpdateViaCache::Imports;
-        } else if (upateViaCache->equals("all")) {
-            return ServiceWorkerUpdateViaCache::All;
-        } else if (upateViaCache->equals("none")) {
-            return ServiceWorkerUpdateViaCache::None;
-        } else {
-            STARFISH_LOG_WARN("Invalid UpdateViaCache value");
-        }
-
-        return Optional<ServiceWorkerUpdateViaCache>();
-    }
-
-    static String* updateViaCacheToString(
-        ServiceWorkerUpdateViaCache updateViaCache)
-    {
-        switch (updateViaCache) {
-        case ServiceWorkerUpdateViaCache::Imports:
-            return String::createASCIIString("imports");
-        case ServiceWorkerUpdateViaCache::All:
-            return String::createASCIIString("all");
-        case ServiceWorkerUpdateViaCache::None:
-            return String::createASCIIString("none");
-        }
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
 };
 
 // NOTE: We consider ExecutionContext as service worker environment (a.k.a

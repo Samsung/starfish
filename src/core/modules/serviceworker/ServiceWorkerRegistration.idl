@@ -14,10 +14,3 @@ interface ServiceWorkerRegistration : EventTarget {
   // event
   // attribute EventHandler onupdatefound;
 };
-
-[STARFISH_ENABLE_SERVICE_WORKER]
-enum ServiceWorkerUpdateViaCache {
-  "imports",
-  "all",
-  "none"
-};
