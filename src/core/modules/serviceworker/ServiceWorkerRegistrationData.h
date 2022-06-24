@@ -33,7 +33,10 @@ class ServiceWorkerRegistrationData : public Archivable {
 public:
     ServiceWorkerRegistrationId id;
     String* scope{ String::emptyString };
-    Nullable<ServiceWorkerData*> installingWorker;
+
+    DEFINE_GETTER(Nullable<ServiceWorkerData*>, installingWorker);
+    void setInstallingWorker(Nullable<ServiceWorkerData*> worker);
+
     Nullable<ServiceWorkerData*> waitingWorker;
     Nullable<ServiceWorkerData*> activeWorker;
     ServiceWorkerUpdateViaCache updateViaCache{
@@ -52,6 +55,8 @@ public:
     void archive(Archiver& ar) override;
 
 private:
+    Nullable<ServiceWorkerData*> m_installingWorker;
+
     bool m_isUninstalling{ false };
 };
 

@@ -28,9 +28,74 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 
+#include "core/dom/Event.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/message_loop/MessageLoop.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
+
+#ifdef STARFISH_WEBWORKER_HOST
+
+class Task : public gc {
+public:
+    virtual void run() = 0;
+};
+
+class SendEventTask : public Task {
+public:
+    SendEventTask(ServiceWorkerData* worker, String* eventName)
+        : m_worker(worker)
+        , m_eventName(eventName)
+    {
+    }
+    void run() override
+    {
+        EventTarget* global = m_worker->globalObject();
+        if (global) {
+            TRACE(HOST, "Dispatch an Event");
+            // TODO: Use ExtendableEvent.
+            global->dispatchEvent(
+                new Event(global->executionContext(), m_eventName));
+        } else {
+            LOGI(HOST, "CHECK: global != nullptr");
+        }
+    }
+
+private:
+    ServiceWorkerData* m_worker;
+    String* m_eventName;
+};
+
+#endif
+
+void ServiceWorkerRegistrationData::setInstallingWorker(
+    Nullable<ServiceWorkerData*> worker)
+{
+    TRACE_SCOPE(HOST);
+
+#ifdef STARFISH_WEBWORKER_HOST
+    TRACE(HOST, "Add a task");
+    // https://w3c.github.io/ServiceWorker/#execution-context-events
+    // `install` event is dispated when the service worker's containing
+    //  service worker registration’s installing worker changes.
+    ServiceWorkerData* w = worker.getValue();
+    if (w == nullptr) {
+        w = m_installingWorker.getValue();
+    }
+    if (w) {
+        (new MessageLoop())
+            ->addIdler(
+                nullptr,
+                [](size_t handle, void* data) { ((Task*)data)->run(); },
+                new SendEventTask(w, String::createASCIIString("install")));
+    }
+#endif
+
+    m_installingWorker = worker;
+}
 
 const char* ServiceWorkerRegistrationData::archiveId() const
 {
@@ -41,7 +106,7 @@ void ServiceWorkerRegistrationData::archive(Archiver& ar)
 {
     ar.MemberId("id", id);
     ar.Member("scope") & scope;
-    ar.MemberArchivable("installingWorker", (Archivable*&)installingWorker);
+    ar.MemberArchivable("installingWorker", (Archivable*&)m_installingWorker);
     ar.MemberArchivable("waitingWorker", (Archivable*&)waitingWorker);
     ar.MemberArchivable("activeWorker", (Archivable*&)activeWorker);
     ar.MemberEnum("updateViaCache", updateViaCache);
