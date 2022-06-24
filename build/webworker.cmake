@@ -74,7 +74,7 @@ FOREACH (IDL_FILE ${STARFISH_IDL})
                     LIST (APPEND STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC ${SOURCE_FILE})
                 ENDIF()
                 #Add source file
-                SET (INTERFACE_BINDING_SRC ${STARFISH_ROOT}/src/binding/${MATCHED_INTERFACE_NAME}Binding.cpp)
+                SET (INTERFACE_BINDING_SRC ${STARFISH_ROOT}/src/binding/generated/${MATCHED_INTERFACE_NAME}Binding.cpp)
                 IF (EXISTS ${INTERFACE_BINDING_SRC})
                     LIST (APPEND STARFISH_WEBWORKER_EXPOSED_INTERFACE_SRC ${INTERFACE_BINDING_SRC})
                 ENDIF()
@@ -132,33 +132,33 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingWorkerInstance.cpp
-    ${STARFISH_ROOT}/src/binding/RequestInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
-    ${STARFISH_ROOT}/src/binding/ArrayBufferViewOrArrayBufferBinding.cpp
-    ${STARFISH_ROOT}/src/binding/SecurityPolicyViolationEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/ResponseInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/ErrorEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/DOMPointInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
-    ${STARFISH_ROOT}/src/binding/CustomEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/RequestOrUSVStringBinding.cpp
-    ${STARFISH_ROOT}/src/binding/RegistrationOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/WindowOrServiceWorkerBinding.cpp
-    ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/DOMStringOrSequenceBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
-    ${STARFISH_ROOT}/src/binding/PushSubscriptionOptionsInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/BufferSourceOrDOMStringBinding.cpp
-    ${STARFISH_ROOT}/src/binding/NotificationOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/DOMMatrix2DInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/TextDecoderOptionsBinding.cpp
     ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp
-    ${STARFISH_ROOT}/src/binding/ProgressEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/DOMStringOrArrayBufferBinding.cpp
-    ${STARFISH_ROOT}/src/binding/URLSearchParamsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/CloseEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/TextDecodeOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/RequestInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/ArrayBufferViewOrArrayBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/SecurityPolicyViolationEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/ResponseInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/ErrorEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/DOMPointInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/CustomEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/EventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/RequestOrUSVStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/RegistrationOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/WindowOrServiceWorkerBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/MessageEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/DOMStringOrSequenceBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/PushSubscriptionOptionsInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/BufferSourceOrDOMStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/NotificationOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/DOMMatrix2DInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/TextDecoderOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/ProgressEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/DOMStringOrArrayBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/URLSearchParamsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/CloseEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/TextDecodeOptionsBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST
@@ -201,7 +201,7 @@ ADD_EXECUTABLE (starfish.webworker
 
 # Create JavaScript binding source for worker
 ADD_CUSTOM_TARGET (CREATE_JSBINDINGSOURCE
-    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding --exposed Worker
+    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding/generated --exposed Worker
 )
 ADD_DEPENDENCIES (${STARFISH_WEBWORKER_OBJECT_LIBRARY} ${STARFISH_WEBWORKER_DEPENDENCIES} CREATE_JSBINDINGSOURCE)
 
