@@ -255,25 +255,21 @@ static void loggingJSErrorInfo(
     }
 }
 
-template <typename T>
-T* fetchGlobalObject(ContextRef* ctx)
-{
-    return static_cast<T*>(ctx->globalObject()->extraData());
-}
-
 ExecutionContext* fetchExecutionContext(ContextRef* ctx)
 {
-    return fetchGlobalObject(ctx)->executionContext();
+    auto eventTarget =
+        static_cast<EventTarget*>(ctx->globalObject()->extraData());
+    return eventTarget->executionContext();
 }
 
 WebBase* fetchWebBase(ContextRef* ctx)
 {
-    return fetchGlobalObject(ctx)->webBase();
+    return fetchExecutionContext(ctx)->webBase();
 }
 
 ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
 {
-    return fetchGlobalObject(ctx)->scriptBindingInstance();
+    return fetchExecutionContext(ctx)->scriptBindingInstance();
 }
 
 #if !defined(STARFISH_WEBWORKER_HOST)

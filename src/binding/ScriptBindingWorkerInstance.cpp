@@ -41,7 +41,8 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(key != nullptr);
     String* name = toBrowserString(state, key);
-    auto self = fetchGlobalObject(state->context());
+    auto self = static_cast<WorkerGlobalScope*>(
+        state->context()->globalObject()->extraData());
 
     if (name->equals("self") == true) {
         return self->scriptValue();

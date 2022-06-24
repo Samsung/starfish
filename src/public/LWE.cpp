@@ -22,6 +22,7 @@
 
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/dom/ExecutionContext.h"
 
 #if defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
@@ -65,12 +66,9 @@ public:
     virtual void markJSJobEnqueued(
         Escargot::ContextRef* relatedContext) override
     {
-        auto globalObject =
-            (STARFISH_GLOBAL_BINDING_CLASS*)relatedContext->globalObject()
-                ->extraData();
-
-        globalObject->webBase()->messageLoop()->addMicroTask(
-            globalObject,
+        auto executionContext = fetchExecutionContext(relatedContext);
+        executionContext->webBase()->messageLoop()->addMicroTask(
+            executionContext->globalScope(),
             [](size_t handle, void* data) {
                 VMInstanceRef* vm = (VMInstanceRef*)data;
                 if (vm->hasPendingJob()) {
