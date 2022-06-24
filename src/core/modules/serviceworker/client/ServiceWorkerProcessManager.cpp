@@ -60,6 +60,7 @@ extern Starfish::Starfish* g_starfishInstance;
 
 #include "core/modules/serviceworker/util/MessageQueue/MessageQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include <sys/stat.h>
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -144,6 +145,27 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 #endif
 }
 
+// TODO: There should be a better place for this.
+// Seemingly, PlatformFile can't check accessibility well in case
+// a type of a given file is for a pipe or a socket.
+static bool isFile(const std::string& name)
+{
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
+}
+
+bool ServiceWorkerProcessManager::processExist(const std::string identifier)
+{
+#if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+    STARFISH_ASSERT_NOT_REACHED();
+#endif
+    // Here we use the socket handle promised exists.
+    auto handlePath = Connection::Config::getHandlePath(identifier);
+    bool exist = isFile(handlePath);
+    TRACE(SVCWORKER, "result: %s", exist);
+    return exist;
+}
+
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     String* originSerialized)
 {
@@ -176,11 +198,14 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         args.push_back("--debug-worker=" +
                        GlobalOptions::instance().get("DEBUG_WORKER"));
 
-        if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
-            TRACE(SVCWORKER, "launchProcess: success");
-        } else {
-            TRACE(SVCWORKER, "launchProcess: fail");
+        if (!processExist(encodedOrigin)) {
+            if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
+                TRACE(SVCWORKER, "launchProcess: success");
+            } else {
+                TRACE(SVCWORKER, "launchProcess: fail");
+            }
         }
+
 #endif
 
     } else {

@@ -64,14 +64,14 @@ public:
         dir->close();
 
         // set the above directory path
-        Connection::Config::setHandlePath(path);
+        Connection::Config::setHandleDir(path);
     }
 
     static void release()
     {
         TRACE_SCOPE(CONFIG);
         // release the directory for ipc handles
-        auto path = Connection::Config::getHandlePath();
+        auto path = Connection::Config::getHandleDir();
         auto dir = PlatformDirectory::create();
         // TODO: Replace creating a GC-allocated string with `std::string`.
         if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
