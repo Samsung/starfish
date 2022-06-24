@@ -69,6 +69,8 @@ private:
     ServiceWorkerProcessManager() = default;
     ~ServiceWorkerProcessManager() = default;
 
+    bool processExist(const std::string identifier);
+
     static ServiceWorkerProcessManager* m_instance;
 
     PerProcess* m_perProcess{ nullptr };

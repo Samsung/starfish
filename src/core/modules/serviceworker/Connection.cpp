@@ -85,15 +85,31 @@ void Connection::onStopped()
 
 std::string Connection::Config::s_handlePath;
 
-void Connection::Config::setHandlePath(std::string path)
+void Connection::Config::setHandleDir(std::string path)
 {
     TRACE_SCOPE(CONFIG, "%s", path);
     s_handlePath = path;
 }
 
-std::string Connection::Config::getHandlePath()
+std::string Connection::Config::getHandleDir()
 {
     return s_handlePath;
+}
+
+std::string Connection::Config::getHandlePath(const std::string& last)
+{
+    std::stringstream ss;
+    STARFISH_ASSERT(s_handlePath.length() > 0);
+
+    ss << s_handlePath << "/";
+
+    // Appends more parts.
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    ss << "host";
+#else
+    ss << last;
+#endif
+    return ss.str();
 }
 
 std::string Connection::Config::createAddress(const std::string& last)
@@ -102,17 +118,10 @@ std::string Connection::Config::createAddress(const std::string& last)
 
 #ifdef SERVICE_WORKER_USE_SEPARATE_PROCESS
     // For Inter-Process Communication
-    ss << "ipc://" << s_handlePath << "/";
+    ss << "ipc://" << getHandlePath(last);
 #else
     // For In-Process Communication
     ss << "inproc://sw/";
-#endif
-
-    // Appends more parts.
-#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
-    ss << "host";
-#else
-    ss << last;
 #endif
 
     TRACE(CONFIG, "%s", ss.str());

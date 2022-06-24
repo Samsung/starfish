@@ -32,8 +32,9 @@ class Connection : public IORunnable::Client {
 public:
     class Config {
     public:
-        static void setHandlePath(std::string path);
-        static std::string getHandlePath();
+        static void setHandleDir(std::string path);
+        static std::string getHandleDir();
+        static std::string getHandlePath(const std::string& last = "");
         static std::string createAddress(const std::string& last = "");
 
     private:
