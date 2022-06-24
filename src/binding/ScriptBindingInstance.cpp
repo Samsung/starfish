@@ -260,7 +260,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                 if (self->isGlobalObject() == true &&                          \
                     self->extraData() != nullptr) {                            \
                     instance =                                                 \
-                        ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData())    \
+                        ((ScriptWrappable*)self->extraData())    \
                             ->scriptBindingInstance();                         \
                 } else {                                                       \
                     instance = fetchScriptBindingInstance(state->context());   \
@@ -274,7 +274,7 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
                 if (self->isGlobalObject() == true &&                          \
                     self->extraData() != nullptr) {                            \
                     instance =                                                 \
-                        ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData())    \
+                        ((ScriptWrappable*)self->extraData())    \
                             ->scriptBindingInstance();                         \
                 } else {                                                       \
                     instance = fetchScriptBindingInstance(state->context());   \
