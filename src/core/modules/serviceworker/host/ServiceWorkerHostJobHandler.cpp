@@ -412,10 +412,10 @@ Nullable<ServiceWorkerData*> ServiceWorkerHostJobHandler::getNewestWorker(
     // 2. Let newestWorker be null.
     ServiceWorkerData* newestWorker = nullptr;
 
-    if (registration->installingWorker) {
+    if (registration->installingWorker()) {
         // 3. If registration’s installing worker is not null, set newestWorker
         // to registration’s installing worker.
-        newestWorker = registration->installingWorker.value();
+        newestWorker = registration->installingWorker().value();
     } else if (registration->waitingWorker) {
         // 4. Else if registration’s waiting worker is not null, set
         // newestWorker to registration’s waiting worker.
@@ -588,8 +588,8 @@ bool ServiceWorkerHostJobHandler::tryClearRegistration(
     // 1.1 registration’s installing worker is null or the result of running
     // Service Worker Has No Pending Events with registration’s installing
     // worker is true.
-    if ((registration->installingWorker != nullptr) &&
-        (registration->installingWorker->hasPendingEvents() == true)) {
+    if ((registration->installingWorker() != nullptr) &&
+        (registration->installingWorker()->hasPendingEvents() == true)) {
         return false;
     }
 
@@ -623,13 +623,13 @@ void ServiceWorkerHostJobHandler::clearRegistration(
 
     // 1. Run the following steps atomically.
     // 2. If registration’s installing worker is not null, then:
-    if (registration->installingWorker) {
+    if (registration->installingWorker()) {
         // 2.1. Terminate registration’s installing worker.
-        terminateServiceWorker(registration->installingWorker.value());
+        terminateServiceWorker(registration->installingWorker().value());
 
         // 2.2. Run the `Update Worker State` algorithm passing registration’s
         // installing worker and redundant as the arguments.
-        updateWorkerState(registration->installingWorker.value(),
+        updateWorkerState(registration->installingWorker().value(),
                           ServiceWorkerState::Redundant);
 
         // 2.3 Run the Update Registration State algorithm passing registration,
@@ -725,7 +725,8 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
     switch (target) {
     case ServiceWorkerRegistrationState::Installing:
         // 2.1. Set registration’s installing worker to source.
-        registration->installingWorker = source;
+        registration->setInstallingWorker(source);
+
         // 2.2 For each registrationObject in registrationObjects:
         // 2.2.1 Queue a task to set the installing attribute of
         // registrationObject to the ServiceWorker object that represents
