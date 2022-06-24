@@ -81,6 +81,44 @@ void Connection::onStopped()
 {
 }
 
+// Config
+
+std::string Connection::Config::s_handlePath;
+
+void Connection::Config::setHandlePath(std::string path)
+{
+    TRACE_SCOPE(CONFIG, "%s", path);
+    s_handlePath = path;
+}
+
+std::string Connection::Config::getHandlePath()
+{
+    return s_handlePath;
+}
+
+std::string Connection::Config::createAddress(const std::string& last)
+{
+    std::stringstream ss;
+
+#ifdef SERVICE_WORKER_USE_SEPARATE_PROCESS
+    // For Inter-Process Communication
+    ss << "ipc://" << s_handlePath << "/";
+#else
+    // For In-Process Communication
+    ss << "inproc://sw/";
+#endif
+
+    // Appends more parts.
+#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
+    ss << "host";
+#else
+    ss << last;
+#endif
+
+    TRACE(CONFIG, "%s", ss.str());
+    return ss.str();
+}
+
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

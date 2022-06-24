@@ -98,21 +98,6 @@ void ServiceWorkerProcessManager::destroy()
 #endif
 }
 
-std::string ServiceWorkerProcessManager::createAddress(
-    const std::string& lastAddress)
-{
-    std::string address = IPC_PROTOCOL;
-    address.append(IPC_ADDRESS_PREFIX);
-
-#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
-    address.append(IPC_ADDRESS);
-#else
-    address.append(lastAddress);
-#endif
-
-    return address;
-}
-
 static const int kMessageQueueTimeout = 500;
 
 bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
@@ -170,7 +155,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::shared_ptr<ProcessData> processData = nullptr;
 
     std::string encodedOrigin = Base64Utils::encodeBase64(origin);
-    std::string address = createAddress(encodedOrigin);
+    std::string address = Connection::Config::createAddress(encodedOrigin);
 
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);

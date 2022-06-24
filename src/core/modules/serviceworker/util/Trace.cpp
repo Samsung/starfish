@@ -28,12 +28,31 @@
 #define CLR_RESET "\033[0m"
 #define CLR_DIM "\033[0;2m"
 
+// #define CLR_DIM "\033[0;2m"
+// #define CLR_RED "\033[0;31m"
+// #define CLR_GREEN "\033[0;32m"
+// #define CLR_GREY "\033[0;37m"
+// #define CLR_BLACK "\033[0;30m"
+// #define CLR_YELLOW "\033[0;33m"
+// #define CLR_BLUE "\033[0;34m"
+// #define CLR_MAGENTA "\033[0;35m"
+// #define CLR_CYAN "\033[0;36m"
+// #define CLR_DARKGREY "\033[01;30m"
+// #define CLR_BRED "\033[01;31m"
+// #define CLR_BYELLOW "\033[01;33m"
+// #define CLR_BBLUE "\033[01;34m"
+// #define CLR_BMAGENTA "\033[01;35m"
+// #define CLR_BCYAN "\033[01;36m"
+// #define CLR_BGREEN "\033[01;32m"
+// #define CLR_WHITE "\033[01;37m"
+// #define CLR_REDBG "\033[0;41m"
+
 class StarfishOutput : public Logger::Output {
 public:
     void flush(std::stringstream& ss) override
     {
-        // TODO: We use stdout for now since there is no macro to print a raw
-        // string only. e.g) STARFISH_LOG_INFO("%s", ss.str().c_str());
+        // NOTE: We use stdout for now since there is no macro to print
+        // a raw string only. e.g) STARFISH_LOG_INFO("%s", "blahblah");
         std::cout << ss.str();
     };
 
@@ -47,15 +66,16 @@ public:
 
 static std::string randomString(std::string::size_type length)
 {
-    static const char* letters = "0123456789";
+    static const char letters[] = "2345678";
     thread_local static std::mt19937 mt{ std::random_device{}() };
     thread_local static std::uniform_int_distribution<std::string::size_type>
-        dist(0, sizeof(letters) - 1);
+        dist(0, strnlen(letters, 20) - 1);
 
     std::string s;
     s.reserve(length);
     while (length--) {
-        s += letters[dist(mt)];
+        auto i = dist(mt);
+        s += letters[i];
     }
     return s;
 }
@@ -79,6 +99,15 @@ static void writeHeader(std::ostream& ss, const std::string& tag,
        << std::string(id).substr(0, TRACE_ID_LENGTH_LIMIT) << ") ";
 }
 
+static void writeThreadColorCode(std::ostream& os)
+{
+    static thread_local std::string colorCode;
+    if (colorCode.empty()) {
+        colorCode = randomString(1);
+    }
+    os << "\033[0;3" << colorCode << "m";
+}
+
 static const char* kNamespacePattern = "Starfish::";
 
 Trace::Trace(std::string id, const char* functionName, const char* filename,
@@ -89,6 +118,7 @@ Trace::Trace(std::string id, const char* functionName, const char* filename,
     }
 
     writeHeader(m_stream, "TRACE", id);
+    writeThreadColorCode(m_stream);
     m_stream << IndentCounter::getString(id)
              << createCodeLocation(functionName, filename, line,
                                    kNamespacePattern)

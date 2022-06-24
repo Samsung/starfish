@@ -83,21 +83,7 @@ void ServiceWorkerServer::init(PerProcess* perProcess)
         new ServiceWorkerHostJobHandler(m_perProcess->messageLoop(), this);
 }
 
-// TODO: use ServiceWorkerProcessManager::createAddress once its process
-// creation is seperated.
-static std::string createAddress(const std::string& lastAddress = "")
-{
-    std::string address = IPC_PROTOCOL;
-    address.append(IPC_ADDRESS_PREFIX);
-
-#ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
-    address.append(IPC_ADDRESS);
-#else
-    address.append(lastAddress);
-#endif
-
-    return address;
-}
+// TODO: maybe we can merge start() and start(...)
 
 void ServiceWorkerServer::start()
 {
@@ -106,9 +92,8 @@ void ServiceWorkerServer::start()
     m_connection = new ServiceWorkerHostConnection(this);
     registerConnection(m_connection);
 
-    std::string address = createAddress();
+    std::string address = Connection::Config::createAddress();
 
-    TRACE(HOST, "host: bind: %s", address.c_str());
     m_connection->socket()->bind(address.c_str());
     // TODO: set the mq for the current thread where this server starts.
     m_perProcess->ioRunnable()->addClient(m_connection);
@@ -127,10 +112,9 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     registerConnection(m_connection);
 
-    std::string address = createAddress(encodedOrigin);
+    std::string address = Connection::Config::createAddress(encodedOrigin);
 
-    TRACE(HOST, "host: bind: %s", address.c_str());
-    TRACE(HOST, "host: origin: %s", origin.c_str());
+    TRACE(HOST, "Origin: %s", origin.c_str());
 
     STARFISH_ASSERT(m_connection != nullptr);
 
