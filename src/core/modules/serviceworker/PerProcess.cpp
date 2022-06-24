@@ -29,9 +29,58 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
+#include "core/util/String.h"
+#include "platform/file/PlatformDirectory.h"
+#include "core/modules/serviceworker/Connection.h"
+
 namespace Starfish {
 
 #define SERVICE_WORKER_THREAD_POOL_SIZE 1
+
+class ProcessResource {
+public:
+    static void acquire()
+    {
+        std::string path;
+        const char* homePath = getenv("HOME");
+        if (!homePath || strlen(homePath) == 0) {
+            path = "/tmp";
+        } else {
+            path = homePath;
+        }
+        path += "/.ipc";
+
+        // create a directory for ipc handles
+        auto dir = PlatformDirectory::create();
+        // TODO: Replace creating a GC-allocated string with `std::string`.
+        if (!dir->open(
+                String::createASCIIString(path.c_str(), path.length()))) {
+            if (!dir->mkDir()) {
+                STARFISH_LOG_ERROR("FAIL: Create a directory for ipc handles.");
+                STARFISH_RELEASE_ASSERT(false);
+            }
+            TRACE(HOST, "New %s", path);
+        }
+        dir->close();
+
+        // set the above directory path
+        Connection::Config::setHandlePath(path);
+    }
+
+    static void release()
+    {
+        TRACE_SCOPE(CONFIG);
+        // release the directory for ipc handles
+        auto path = Connection::Config::getHandlePath();
+        auto dir = PlatformDirectory::create();
+        // TODO: Replace creating a GC-allocated string with `std::string`.
+        if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
+            dir->removeDir();
+            TRACE(HOST, "Remove %s", path);
+        }
+        dir->close();
+    }
+};
 
 PerProcess::PerProcess()
 {
@@ -51,6 +100,9 @@ PerProcess::PerProcess()
 void PerProcess::initialize()
 {
     TRACE_SCOPE(PERPROC);
+
+    ProcessResource::acquire();
+
     m_messageLoop = new MessageLoop();
 
     m_threadPool =
@@ -73,6 +125,8 @@ void PerProcess::destroy()
 
     m_threadPool->destroy();
     m_messageLoop->destroy();
+
+    ProcessResource::release();
 }
 
 } // namespace Starfish

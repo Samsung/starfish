@@ -70,28 +70,6 @@ using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using RequestId = Id<ServiceWorkerRequest>;
 using PushManagerId = Id<GlobalScope>;
 
-/*
-    * SERVICE_WORKER_USE_SEPARATE_PROCESS
-    : If true, a service worker runs on a separate process.
-
-    * SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
-    : If true, each service worker uses different handles for ipc.
-
-    * STARFISH_WEBWORKER_HOST
-    : Code blocks in this scope are only for service worker host.
-*/
-
-#define SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
-
-#ifdef SERVICE_WORKER_USE_SEPARATE_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX "/tmp/.ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw/"
-#endif
-#define IPC_ADDRESS "host"
-
 } // namespace Starfish
 
 #endif

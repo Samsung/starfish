@@ -21,6 +21,9 @@
 #ifndef __StarfishIORunnable__
 #define __StarfishIORunnable__
 
+#include "StarfishBase.h"
+#include "core/modules/threading/IRunnable.h"
+
 namespace Starfish {
 
 class Socket;

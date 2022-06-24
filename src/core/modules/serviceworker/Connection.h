@@ -21,12 +21,25 @@
 #ifndef __StarfishConnection__
 #define __StarfishConnection__
 
+#include "core/modules/serviceworker/IORunnable.h"
+#include <string>
+
 namespace Starfish {
 
 class Socket;
 
 class Connection : public IORunnable::Client {
 public:
+    class Config {
+    public:
+        static void setHandlePath(std::string path);
+        static std::string getHandlePath();
+        static std::string createAddress(const std::string& last = "");
+
+    private:
+        static std::string s_handlePath;
+    };
+
     Connection();
 
     void send(const char* data, size_t len);
