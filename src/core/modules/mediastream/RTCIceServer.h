@@ -26,9 +26,9 @@
 #include "binding/ScriptWrappable.h"
 
 #include "api/peer_connection_interface.h"
-#include "binding/DOMStringOrSequenceOfDOMStringUnion.h"
+#include "binding/generated/DOMStringOrSequenceOfDOMStringUnion.h"
 #include "core/modules/mediastream/RTCOAuthCredential.h"
-#include "binding/DOMStringOrRTCOAuthCredentialUnion.h"
+#include "binding/generated/DOMStringOrRTCOAuthCredentialUnion.h"
 
 namespace Starfish {
 

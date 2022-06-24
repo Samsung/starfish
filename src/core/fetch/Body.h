@@ -21,7 +21,7 @@
 #define __StarfishFetchBody__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
+#include "binding/generated/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
 namespace Starfish {

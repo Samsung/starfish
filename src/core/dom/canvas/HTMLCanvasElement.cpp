@@ -24,7 +24,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
-#include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
+#include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/modules/canvas/Canvas.h"
 #include "platform/canvas/image/ImageUtils.h"
 

@@ -34,7 +34,7 @@
 #include "core/modules/mediastream/MediaStream.h"
 #include "core/modules/mediastream/MediaStreamTrack.h"
 
-#include "binding/DOMStringOrMediaStreamTrackUnion.h"
+#include "binding/generated/DOMStringOrMediaStreamTrackUnion.h"
 
 #include "api/peer_connection_interface.h"
 #include "api/media_stream_interface.h"

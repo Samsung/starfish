@@ -21,7 +21,7 @@
 #define __StarfishWindowOrWorkerGlobalScope__
 
 #ifdef STARFISH_ENABLE_CANVAS
-#include "binding/CanvasImageSourceOrBlobOrImageDataUnion.h"
+#include "binding/generated/CanvasImageSourceOrBlobOrImageDataUnion.h"
 #include "core/dom/ImageBitmapOptions.h"
 namespace Starfish {
 typedef CanvasImageSourceOrBlobOrImageData ImageBitmapSource;

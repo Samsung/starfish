@@ -48,7 +48,7 @@
 #include "core/page/WebView.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
-#include "binding/NodeOrDOMStringUnion.h"
+#include "binding/generated/NodeOrDOMStringUnion.h"
 
 namespace Starfish {
 

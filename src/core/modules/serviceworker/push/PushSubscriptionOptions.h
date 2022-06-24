@@ -21,7 +21,7 @@
 #ifndef __StarfishPushSubscriptionOptions__
 #define __StarfishPushSubscriptionOptions__
 
-#include "binding/BufferSourceOrDOMStringUnion.h"
+#include "binding/generated/BufferSourceOrDOMStringUnion.h"
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {

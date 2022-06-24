@@ -21,7 +21,7 @@
 #define __StarfishMessageEvent__
 
 #include "Event.h"
-#include "binding/WindowOrServiceWorkerUnion.h"
+#include "binding/generated/WindowOrServiceWorkerUnion.h"
 
 namespace Starfish {
 

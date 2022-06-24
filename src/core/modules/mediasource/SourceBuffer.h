@@ -23,7 +23,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
-#include "binding/ArrayBufferViewOrArrayBufferUnion.h"
+#include "binding/generated/ArrayBufferViewOrArrayBufferUnion.h"
 
 namespace Starfish {
 
