@@ -21,7 +21,7 @@
 #define __StarfishTextDecoder__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/ArrayBufferViewOrArrayBufferUnion.h"
+#include "binding/generated/ArrayBufferViewOrArrayBufferUnion.h"
 
 namespace Starfish {
 

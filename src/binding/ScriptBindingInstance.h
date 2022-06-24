@@ -27,7 +27,7 @@ class FunctionObjectRef;
 class ExecutionStateRef;
 } // namespace Escargot
 
-#include "binding/Interfaces.h"
+#include "binding/generated/Interfaces.h"
 
 #ifdef TIZEN_DEVICE_API
 namespace DeviceAPI {

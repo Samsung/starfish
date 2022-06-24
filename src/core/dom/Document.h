@@ -23,7 +23,7 @@
 #include "core/dom/Node.h"
 #include "core/util/BloomFilter.h"
 #include "core/style/WebFont.h"
-#include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
+#include "binding/generated/HTMLScriptElementOrSVGScriptElementUnion.h"
 #include "binding/WindowProxy.h"
 
 // FIXME reduce cache size

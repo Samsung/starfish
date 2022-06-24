@@ -22,7 +22,7 @@
 
 #include <SkMatrix44.h>
 #include "core/dom/DOMMatrixReadOnly.h"
-#include "binding/DOMStringOrSequenceOfdoubleUnion.h"
+#include "binding/generated/DOMStringOrSequenceOfdoubleUnion.h"
 
 namespace Starfish {
 class DOMMatrix : public DOMMatrixReadOnly {

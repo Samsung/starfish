@@ -22,7 +22,7 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "binding/HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapUnion.h"
+#include "binding/generated/HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapUnion.h"
 #include "core/dom/DOMExceptionOr.h"
 
 namespace Starfish {

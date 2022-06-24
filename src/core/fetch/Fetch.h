@@ -20,7 +20,7 @@
 #ifndef __StarfishFetch__
 #define __StarfishFetch__
 
-#include "binding/RequestOrUSVStringUnion.h"
+#include "binding/generated/RequestOrUSVStringUnion.h"
 
 namespace Starfish {
 

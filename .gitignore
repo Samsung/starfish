@@ -23,11 +23,7 @@ build/android/**/*.iml
 build/android/**/local.properties
 
 # Binding Generator generated
-src/binding/*Binding.cpp
-src/binding/*Union.h
-src/binding/Interfaces.h
-!src/binding/*CustomBinding.cpp
-!src/binding/*CustomUnion.h
+src/binding/generated
 
 # Node releated
 node_modules

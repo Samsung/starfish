@@ -21,7 +21,7 @@
 #define __StarfishRequestInit__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
+#include "binding/generated/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/fetch/Headers.h"
 
 namespace Starfish {

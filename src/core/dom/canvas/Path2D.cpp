@@ -22,7 +22,7 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/canvas/CanvasPath.h"
-#include "binding/Path2DOrDOMStringUnion.h"
+#include "binding/generated/Path2DOrDOMStringUnion.h"
 #include "core/modules/canvas/Path.h"
 #include "core/dom/canvas/Path2D.h"
 #include "core/dom/ExecutionContext.h"

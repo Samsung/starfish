@@ -21,7 +21,7 @@
 #define __StarfishFileReader__
 
 #include "core/dom/EventTarget.h"
-#include "binding/DOMStringOrArrayBufferUnion.h"
+#include "binding/generated/DOMStringOrArrayBufferUnion.h"
 
 namespace Starfish {
 

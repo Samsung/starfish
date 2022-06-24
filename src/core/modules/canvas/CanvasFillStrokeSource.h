@@ -20,7 +20,7 @@
 #ifndef __StarfishCanvasFillStrokeSource__
 #define __StarfishCanvasFillStrokeSource__
 
-#include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
+#include "binding/generated/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
 
 namespace Starfish {
 

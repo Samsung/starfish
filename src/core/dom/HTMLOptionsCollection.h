@@ -22,8 +22,8 @@
 
 #include "core/dom/HTMLCollection.h"
 #include "binding/ScriptWrappable.h"
-#include "binding/HTMLElementOrlongUnion.h"
-#include "binding/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
+#include "binding/generated/HTMLElementOrlongUnion.h"
+#include "binding/generated/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
 

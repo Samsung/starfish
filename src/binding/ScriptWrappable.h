@@ -20,7 +20,7 @@
 #ifndef __StarfishScriptWrappable__
 #define __StarfishScriptWrappable__
 
-#include "binding/Interfaces.h"
+#include "binding/generated/Interfaces.h"
 
 namespace Escargot {
 class VMInstanceRef;

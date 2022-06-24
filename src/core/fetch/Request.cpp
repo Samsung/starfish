@@ -18,8 +18,8 @@
  */
 
 #include "StarfishConfig.h"
-#include "binding/RequestOrUSVStringUnion.h"
-#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
+#include "binding/generated/RequestOrUSVStringUnion.h"
+#include "binding/generated/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"

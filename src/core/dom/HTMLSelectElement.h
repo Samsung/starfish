@@ -21,8 +21,8 @@
 #define __StarfishHTMLSelectElement__
 
 #include "core/dom/HTMLFormElement.h"
-#include "binding/HTMLElementOrlongUnion.h"
-#include "binding/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
+#include "binding/generated/HTMLElementOrlongUnion.h"
+#include "binding/generated/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
 
 namespace Starfish {
 
