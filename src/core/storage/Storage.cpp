@@ -21,55 +21,55 @@
 
 #include "Storage.h"
 
-#include "browser/storage/StorageImpl.h"
+#include "core/storage/StorageInternal.h"
 #include "core/page/Window.h"
 
 namespace Starfish {
 
-Storage::Storage(Window* window, StorageImpl* storageImpl)
+Storage::Storage(Window* window, StorageInternal* storageInternal)
     : ScriptWrappable(this)
     , WindowHoldable(window)
-    , m_storageImpl(storageImpl)
+    , m_storageInternal(storageInternal)
 {
 }
 
 unsigned long Storage::length()
 {
-    return m_storageImpl->length();
+    return m_storageInternal->length();
 }
 
 Nullable<String*> Storage::key(unsigned long index)
 {
-    return m_storageImpl->key(index);
+    return m_storageInternal->key(index);
 }
 
 Nullable<String*> Storage::getItem(String* key)
 {
-    return m_storageImpl->getItem(key);
+    return m_storageInternal->getItem(key);
 }
 
 bool Storage::setItem(String* key, String* value)
 {
-    return m_storageImpl->setItem(key, value);
+    return m_storageInternal->setItem(key, value);
 }
 
 void Storage::defaultNamedEnumerator(GCVector<String*>& enums)
 {
-    enums = m_storageImpl->getKeyNames();
+    enums = m_storageInternal->getKeyNames();
 }
 
 bool Storage::defaultNamedDeleter(String* key)
 {
-    return m_storageImpl->removeItem(key);
+    return m_storageInternal->removeItem(key);
 }
 
 bool Storage::removeItem(String* key)
 {
-    return m_storageImpl->removeItem(key);
+    return m_storageInternal->removeItem(key);
 }
 
 void Storage::clear()
 {
-    m_storageImpl->clear();
+    m_storageInternal->clear();
 }
 } // namespace Starfish

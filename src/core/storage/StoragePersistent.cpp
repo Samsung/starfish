@@ -18,7 +18,8 @@
  */
 
 #include "StarfishConfig.h"
-#include "StorageManager.h"
+#include "core/storage/StoragePersistent.h"
+
 #include "core/dom/WebOrigin.h"
 #include "platform/file/PlatformFile.h"
 
@@ -30,7 +31,81 @@ typedef rapidjson::GenericValue<rapidjson::UTF8<>> JsonValue;
 
 namespace Starfish {
 
-StorageManager::StorageManager(String* localStoragePath)
+StoragePersistent::StoragePersistent(StorageType storageType,
+                                     WebOrigin* webOrigin,
+                                     String* localStoragePath)
+    : StorageInternal(storageType, webOrigin)
+{
+    m_diskWriter = new StorageDiskWriter(localStoragePath);
+    m_diskWriter->load(m_cache, m_webOrigin);
+}
+
+unsigned long StoragePersistent::length()
+{
+    return m_cache.size();
+}
+
+Nullable<String*> StoragePersistent::key(unsigned long index)
+{
+    if (index >= m_cache.size()) {
+        return nullptr;
+    }
+    auto itr = std::next(m_cache.begin(), index);
+    return itr->first;
+}
+
+Nullable<String*> StoragePersistent::getItem(String* key)
+{
+    auto itr = m_cache.find(key);
+    if (itr == m_cache.end()) {
+        return m_diskWriter->getItem(m_webOrigin, key);
+    }
+
+    return itr->second;
+}
+
+GCVector<String*> StoragePersistent::getKeyNames()
+{
+    GCVector<String*> ret;
+
+    auto iter = m_cache.begin();
+    while (iter != m_cache.end()) {
+        ret.push_back(iter->first);
+        iter++;
+    }
+
+    return ret;
+}
+
+bool StoragePersistent::setItem(String* key, String* value)
+{
+    auto iter = m_cache.find(key);
+    if (iter == m_cache.end()) {
+        m_cache.insert(std::make_pair(key, value));
+    } else {
+        iter->second = value;
+    }
+
+    m_diskWriter->setItem(m_webOrigin, key, value);
+
+    return true;
+}
+
+bool StoragePersistent::removeItem(String* key)
+{
+    m_cache.erase(key);
+    m_diskWriter->removeItem(m_webOrigin, key);
+
+    return true;
+}
+
+void StoragePersistent::clear()
+{
+    m_cache.clear();
+    m_diskWriter->clear(m_webOrigin);
+}
+
+StorageDiskWriter::StorageDiskWriter(String* localStoragePath)
     : m_localStoragePath(localStoragePath)
     , m_jsonDocument(new JsonDocument())
 {
@@ -38,14 +113,14 @@ StorageManager::StorageManager(String* localStoragePath)
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            StorageManager* mgr = (StorageManager*)obj;
+            StorageDiskWriter* mgr = (StorageDiskWriter*)obj;
             mgr->writeJsonDocumentAsFile();
             delete mgr->m_jsonDocument;
         },
         NULL, NULL, NULL);
 }
 
-Nullable<String*> StorageManager::getItem(WebOrigin* webOrigin, String* key)
+Nullable<String*> StorageDiskWriter::getItem(WebOrigin* webOrigin, String* key)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
     auto& allocator = m_jsonDocument->GetAllocator();
@@ -65,8 +140,8 @@ Nullable<String*> StorageManager::getItem(WebOrigin* webOrigin, String* key)
     return nullptr;
 }
 
-void StorageManager::load(GCUnorderedMap<String*, String*>& out,
-                          WebOrigin* webOrigin)
+void StorageDiskWriter::load(GCUnorderedMap<String*, String*>& out,
+                             WebOrigin* webOrigin)
 {
     loadFromFileToJsonDocument();
 
@@ -87,7 +162,8 @@ void StorageManager::load(GCUnorderedMap<String*, String*>& out,
     }
 }
 
-void StorageManager::setItem(WebOrigin* webOrigin, String* key, String* value)
+void StorageDiskWriter::setItem(WebOrigin* webOrigin, String* key,
+                                String* value)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
     auto& allocator = m_jsonDocument->GetAllocator();
@@ -116,7 +192,7 @@ void StorageManager::setItem(WebOrigin* webOrigin, String* key, String* value)
     writeJsonDocumentAsFile();
 }
 
-void StorageManager::removeItem(WebOrigin* webOrigin, String* key)
+void StorageDiskWriter::removeItem(WebOrigin* webOrigin, String* key)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
     auto& allocator = m_jsonDocument->GetAllocator();
@@ -131,7 +207,7 @@ void StorageManager::removeItem(WebOrigin* webOrigin, String* key)
     writeJsonDocumentAsFile();
 }
 
-void StorageManager::clear(WebOrigin* webOrigin)
+void StorageDiskWriter::clear(WebOrigin* webOrigin)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
 
@@ -143,7 +219,7 @@ void StorageManager::clear(WebOrigin* webOrigin)
     writeJsonDocumentAsFile();
 }
 
-unsigned long StorageManager::size(WebOrigin* webOrigin)
+unsigned long StorageDiskWriter::size(WebOrigin* webOrigin)
 {
     auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
 
@@ -155,7 +231,7 @@ unsigned long StorageManager::size(WebOrigin* webOrigin)
     return 0;
 }
 
-void StorageManager::loadFromFileToJsonDocument()
+void StorageDiskWriter::loadFromFileToJsonDocument()
 {
     auto fileIO = PlatformFile::open(m_localStoragePath, PlatformFile::Read);
     if (fileIO) {
@@ -171,7 +247,7 @@ void StorageManager::loadFromFileToJsonDocument()
     }
 }
 
-void StorageManager::writeJsonDocumentAsFile()
+void StorageDiskWriter::writeJsonDocumentAsFile()
 {
     JosnStringBuffer buffer;
     buffer.Clear();

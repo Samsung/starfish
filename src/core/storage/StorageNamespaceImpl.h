@@ -17,38 +17,38 @@
  *  USA
  */
 
-#ifndef __StarfishStorageImpl__
-#define __StarfishStorageImpl__
+#ifndef __StarfishStorageNamespaceImpl__
+#define __StarfishStorageNamespaceImpl__
 
+#include "core/dom/WebOrigin.h"
+#include "core/storage/StorageNamespace.h"
 #include "core/storage/StorageType.h"
 
 namespace Starfish {
 
-class WebOrigin;
+class StorageInternal;
 class StorageManager;
+class Window;
 
-class StorageImpl : public gc {
+using GCWebOriginToStorageMap =
+    std::unordered_map<WebOrigin*, StorageInternal*, WebOriginHash,
+                       WebOriginEqual,
+                       gc_allocator_ignore_off_page<
+                           std::pair<WebOrigin* const, StorageInternal*>>>;
+
+class StorageNamespaceImpl : public StorageNamespace {
 public:
-    StorageImpl(StorageType storageType, WebOrigin* webOrigin,
-                StorageManager* storageManager);
-    virtual ~StorageImpl();
+    StorageNamespaceImpl(StorageType storageType,
+                         Nullable<String*> localStoragePath);
+    virtual ~StorageNamespaceImpl(){};
 
-    unsigned long length();
-    Nullable<String*> key(unsigned long index);
-    Nullable<String*> getItem(String* key);
-    GCVector<String*> getKeyNames();
-    bool setItem(String* key, String* value);
-    bool removeItem(String* key);
-    void clear();
+    virtual Storage* storage(Window* window, WebOrigin* origin) override;
 
 private:
-    StorageImpl();
-
     StorageType m_storageType;
-    WebOrigin* m_webOrigin;
-    StorageManager* m_storageManager;
+    Nullable<String*> m_localStoragePath;
 
-    GCUnorderedMap<String*, String*> m_map;
+    GCWebOriginToStorageMap m_originToStorage;
 };
 } // namespace Starfish
 

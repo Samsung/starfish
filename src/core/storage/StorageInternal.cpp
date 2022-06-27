@@ -18,35 +18,33 @@
  */
 
 #include "StarfishConfig.h"
-#include "StorageImpl.h"
+#include "core/storage/StorageInternal.h"
 
-#include "StorageManager.h"
 #include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
-StorageImpl::~StorageImpl()
+StorageInternal::~StorageInternal()
 {
 }
 
-StorageImpl::StorageImpl(StorageType storageType, WebOrigin* webOrigin,
-                         StorageManager* storageManager)
+StorageInternal::StorageInternal(StorageType storageType, WebOrigin* webOrigin)
     : m_storageType(storageType)
     , m_webOrigin(webOrigin)
-    , m_storageManager(storageManager)
-    , m_map()
 {
-    if (m_storageManager) {
-        m_storageManager->load(m_map, m_webOrigin);
-    }
 }
 
-unsigned long StorageImpl::length()
+StorageMemory::StorageMemory(StorageType storageType, WebOrigin* webOrigin)
+    : StorageInternal(storageType, webOrigin)
+{
+}
+
+unsigned long StorageMemory::length()
 {
     return m_map.size();
 }
 
-Nullable<String*> StorageImpl::key(unsigned long index)
+Nullable<String*> StorageMemory::key(unsigned long index)
 {
     if (index >= m_map.size()) {
         return nullptr;
@@ -55,20 +53,17 @@ Nullable<String*> StorageImpl::key(unsigned long index)
     return itr->first;
 }
 
-Nullable<String*> StorageImpl::getItem(String* key)
+Nullable<String*> StorageMemory::getItem(String* key)
 {
     auto itr = m_map.find(key);
     if (itr == m_map.end()) {
-        if (m_storageManager) {
-            return m_storageManager->getItem(m_webOrigin, key);
-        }
         return nullptr;
     }
 
     return itr->second;
 }
 
-GCVector<String*> StorageImpl::getKeyNames()
+GCVector<String*> StorageMemory::getKeyNames()
 {
     GCVector<String*> ret;
 
@@ -81,7 +76,7 @@ GCVector<String*> StorageImpl::getKeyNames()
     return ret;
 }
 
-bool StorageImpl::setItem(String* key, String* value)
+bool StorageMemory::setItem(String* key, String* value)
 {
     auto iter = m_map.find(key);
     if (iter == m_map.end()) {
@@ -89,26 +84,19 @@ bool StorageImpl::setItem(String* key, String* value)
     } else {
         iter->second = value;
     }
-    if (m_storageManager) {
-        m_storageManager->setItem(m_webOrigin, key, value);
-    }
+
     return true;
 }
 
-bool StorageImpl::removeItem(String* key)
+bool StorageMemory::removeItem(String* key)
 {
     m_map.erase(key);
-    if (m_storageManager) {
-        m_storageManager->removeItem(m_webOrigin, key);
-    }
+
     return true;
 }
 
-void StorageImpl::clear()
+void StorageMemory::clear()
 {
     m_map.clear();
-    if (m_storageManager) {
-        m_storageManager->clear(m_webOrigin);
-    }
 }
 } // namespace Starfish
