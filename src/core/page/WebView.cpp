@@ -76,7 +76,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
-#include "browser/storage/WebStorageNamespaceProvider.h"
+#include "core/storage/WebStorageNamespaceProvider.h"
 #include "browser/history/HistoryManager.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/inspector/Inspector.h"

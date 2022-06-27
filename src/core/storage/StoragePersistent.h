@@ -17,23 +17,45 @@
  *  USA
  */
 
-#ifndef __StarfishStorageManager__
-#define __StarfishStorageManager__
+#ifndef __StarfishStoragePersistent__
+#define __StarfishStoragePersistent__
+
+#include "core/storage/StorageInternal.h"
 
 #include "rapidjson/document.h"
 
 namespace Starfish {
 
 class WebOrigin;
+class StorageDiskWriter;
 
 typedef rapidjson::GenericDocument<rapidjson::UTF8<>> JsonDocument;
 
-class StorageManager : public gc {
+class StoragePersistent : public StorageInternal {
 public:
-    StorageManager(String* localStoragePath);
-    ~StorageManager()
-    {
-    }
+    StoragePersistent(StorageType storageType, WebOrigin* webOrigin,
+                      String* localStoragePath);
+    virtual ~StoragePersistent(){};
+
+    unsigned long length() override;
+    Nullable<String*> key(unsigned long index) override;
+    Nullable<String*> getItem(String* key) override;
+    bool setItem(String* key, String* value) override;
+    bool removeItem(String* key) override;
+    void clear() override;
+
+    GCVector<String*> getKeyNames() override;
+
+private:
+    GCUnorderedMap<String*, String*> m_cache;
+    StorageDiskWriter* m_diskWriter = nullptr;
+};
+
+class StorageDiskWriter : public gc {
+public:
+    StorageDiskWriter(String* localStoragePath);
+    virtual ~StorageDiskWriter(){};
+
     void load(GCUnorderedMap<String*, String*>& out, WebOrigin* webOrigin);
     Nullable<String*> getItem(WebOrigin* webOrigin, String* key);
     void setItem(WebOrigin* webOrigin, String* key, String* value);
@@ -44,6 +66,7 @@ public:
 private:
     void loadFromFileToJsonDocument();
     void writeJsonDocumentAsFile();
+
     String* m_localStoragePath;
     JsonDocument* m_jsonDocument;
 };

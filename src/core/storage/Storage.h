@@ -28,7 +28,7 @@ namespace Starfish {
 
 class SecurityOriginData;
 class StorageManager;
-class StorageImpl;
+class StorageInternal;
 
 class Storage : public ScriptWrappable, public WindowHoldable {
 public:
@@ -40,7 +40,7 @@ public:
         return WindowHoldable::scriptBindingInstance();
     }
 
-    Storage(Window* window, StorageImpl* storageImpl);
+    Storage(Window* window, StorageInternal* storageInternal);
 
     // 4.1 Storage interface in IDL
     unsigned long length();
@@ -55,7 +55,7 @@ public:
 private:
     Storage();
 
-    StorageImpl* m_storageImpl;
+    StorageInternal* m_storageInternal = nullptr;
 };
 } // namespace Starfish
 

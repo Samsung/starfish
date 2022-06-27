@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishWebStorageNamespace__
-#define __StarfishWebStorageNamespace__
+#ifndef __StarfishStorageNamespace__
+#define __StarfishStorageNamespace__
 
 #include "binding/WindowHoldable.h"
 

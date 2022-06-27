@@ -22,39 +22,36 @@
 
 #include "core/storage/Storage.h"
 #include "core/storage/StorageType.h"
-#include "StorageImpl.h"
-#include "StorageManager.h"
+#include "core/storage/StorageInternal.h"
+#include "core/storage/StoragePersistent.h"
 
 namespace Starfish {
 
 StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
-                                           String* localStoragePath)
+                                           Nullable<String*> localStoragePath)
     : m_storageType(storageType)
-    , m_storageManager(nullptr)
-{
-    if (storageType == StorageType::Local &&
-        localStoragePath->equals("") == false) {
-        m_storageManager = new StorageManager(localStoragePath);
-    }
-}
-
-StorageNamespaceImpl::~StorageNamespaceImpl()
+    , m_localStoragePath(localStoragePath)
 {
 }
 
 Storage* StorageNamespaceImpl::storage(Window* window, WebOrigin* webOrigin)
 {
-    StorageImpl* storageImpl = nullptr;
+    StorageInternal* storageInternal = nullptr;
     auto itr = m_originToStorage.find(webOrigin);
     if (itr == m_originToStorage.end()) {
-        storageImpl =
-            new StorageImpl(m_storageType, webOrigin, m_storageManager);
-        m_originToStorage.insert(std::make_pair(webOrigin, storageImpl));
+        if (m_storageType == StorageType::Local &&
+            m_localStoragePath.hasValue()) {
+            storageInternal = new StoragePersistent(m_storageType, webOrigin,
+                                                    m_localStoragePath.value());
+        } else {
+            storageInternal = new StorageMemory(m_storageType, webOrigin);
+        }
+        m_originToStorage.insert(std::make_pair(webOrigin, storageInternal));
     } else {
-        storageImpl = itr->second;
+        storageInternal = itr->second;
     }
 
-    Storage* storage = new Storage(window, storageImpl);
+    Storage* storage = new Storage(window, storageInternal);
     return storage;
 }
 } // namespace Starfish
