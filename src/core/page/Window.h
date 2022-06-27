@@ -16,7 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if !defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWindow__)
+#if !defined(__StarfishWindow__)
 #define __StarfishWindow__
 
 #include "binding/WindowProxy.h"
@@ -46,6 +46,7 @@ class ScriptBindingInstance;
 class StorageNamespace;
 class WebView;
 class Scrolling;
+class LayoutUnit;
 
 typedef void (*TimerHandler)(void* data);
 

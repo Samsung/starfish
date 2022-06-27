@@ -406,7 +406,7 @@ void ScriptBindingWindowInstance::initJavaScriptBinding(
         state, globalObject, StringRef::createFromASCII(#exportName), \
         std::mem_fn(&ScriptBindingInstance::value##exportName),       \
         std::mem_fn(&ScriptBindingInstance::setValue##exportName));
-    STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+    STARFISH_ENUM_GLOBAL_BINDING_WINDOW_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
     fnEventTarget();
