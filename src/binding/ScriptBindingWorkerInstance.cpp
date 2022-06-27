@@ -70,13 +70,12 @@ void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
     ScriptBindingInstance::initJavaScriptBinding(context, state);
 
     GlobalObjectRef* globalObject = context->globalObject();
-// TODO: only bind classes exposed to Worker
 #define DECLARE_NAME_FOR_BINDING(exportName)                          \
     defineGlobalBindingNameAccessor(                                  \
         state, globalObject, StringRef::createFromASCII(#exportName), \
         std::mem_fn(&ScriptBindingInstance::value##exportName),       \
         std::mem_fn(&ScriptBindingInstance::setValue##exportName));
-    STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+    STARFISH_ENUM_GLOBAL_BINDING_WORKER_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
     fnEventTarget();
@@ -116,17 +115,22 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 }
 
 // TODO: Remove mockup function
+#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
 #define BINDING_WORKER_MOCKUP_INTERFACE(F) \
     F(CSS)                                 \
     F(CSSKeywordValue)                     \
     F(CSSNumericValue)                     \
     F(CSSStyleValue)                       \
+    F(CSSUnitValue)                        \
     F(DOMStringList)                       \
     F(EventSource)                         \
     F(FormData)                            \
     F(Option)                              \
     F(Image)                               \
-    F(ImageBitmap)
+    F(ImageBitmap)                         \
+    F(XMLHttpRequest)                      \
+    F(XMLHttpRequestEventTarget)           \
+    F(XMLHttpRequestUpload)
 
 #define FOR_EACH_BINDING_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \
@@ -139,6 +143,7 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 BINDING_WORKER_MOCKUP_INTERFACE(FOR_EACH_BINDING_FN)
 #undef FOR_EACH_BINDING_FN
 #undef BINDING_WORKER_MOCKUP_INTERFACE
+#endif
 } // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */
