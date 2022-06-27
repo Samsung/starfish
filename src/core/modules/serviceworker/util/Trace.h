@@ -32,6 +32,7 @@ namespace Starfish {
 
 #if defined(NDEBUG)
 
+#undef LOGI
 #define LOGI(id, ...)
 #define TRACE(id, ...)
 #define TRACE_SCOPE(id, ...)
