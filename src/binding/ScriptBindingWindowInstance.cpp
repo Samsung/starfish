@@ -399,6 +399,18 @@ void ScriptBindingWindowInstance::initJavaScriptBinding(
     STARFISH_ASSERT(context != nullptr && state != nullptr);
     ScriptBindingInstance::initJavaScriptBinding(context, state);
 
+    GlobalObjectRef* globalObject = context->globalObject();
+
+#define DECLARE_NAME_FOR_BINDING(exportName)                          \
+    defineGlobalBindingNameAccessor(                                  \
+        state, globalObject, StringRef::createFromASCII(#exportName), \
+        std::mem_fn(&ScriptBindingInstance::value##exportName),       \
+        std::mem_fn(&ScriptBindingInstance::setValue##exportName));
+    STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+#undef DECLARE_NAME_FOR_BINDING
+
+    fnEventTarget();
+
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     ObjectRef* avplay = ObjectRef::create(state);
 
@@ -491,7 +503,7 @@ void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
 }
 #if defined(STARFISH_ENABLE_DEBUGGER)
 void ScriptBindingWindowInstance::startDebugger(unsigned port,
-	int acceptTimeout)
+                                                int acceptTimeout)
 {
     std::string s = "--port=";
     s += std::to_string(port);
@@ -507,7 +519,7 @@ void ScriptBindingWindowInstance::pumpDebuggerEvents()
 
 bool ScriptBindingWindowInstance::isDebuggerEnabled()
 {
-	return m_scriptContext->isDebuggerRunning();
+    return m_scriptContext->isDebuggerRunning();
 }
 #endif
 } // namespace Starfish

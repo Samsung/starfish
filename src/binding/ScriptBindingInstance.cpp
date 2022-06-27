@@ -61,18 +61,56 @@ ScriptBindingInstance::ScriptBindingInstance(
     */
     m_scriptContext =
         ContextRef::create(engineInstance->engineInstance()).release();
-#ifdef TIZEN_DEVICE_API
-    m_deviceAPI = nullptr;
-#endif
-
-#define FOR_EACH_SCRIPTVALUE_FN(exportName) m_value##exportName = nullptr;
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
-#undef FOR_EACH_SCRIPTVALUE_FN
-
-#define FOR_EACH_SCRIPT_FN(exportName) m_fn##exportName = nullptr;
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
-#undef FOR_EACH_SCRIPT_FN
 }
+
+class GlobalBindingNameAccessorPropertyData
+    : public ObjectRef::NativeDataAccessorPropertyData {
+public:
+    GlobalBindingNameAccessorPropertyData(
+        ScriptBindingInstance* instance,
+        GlobalBindingNameAccessorGetter valueGetter,
+        GlobalBindingNameAccessorSetter valueSetter)
+        : NativeDataAccessorPropertyData(true, false, true, accessorGetter,
+                                         accessorSetter)
+        , m_instance(instance)
+        , m_valueGetter(valueGetter)
+        , m_valueSetter(valueSetter)
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        return GC_MALLOC(size);
+    }
+
+    static ValueRef* accessorGetter(
+        ExecutionStateRef* state, ObjectRef* self, ValueRef* receiver,
+        ObjectRef::NativeDataAccessorPropertyData* data)
+    {
+        auto globalBindingNameData =
+            reinterpret_cast<GlobalBindingNameAccessorPropertyData*>(data);
+        return globalBindingNameData->m_valueGetter(
+            globalBindingNameData->m_instance);
+    }
+
+    static bool accessorSetter(ExecutionStateRef* state, ObjectRef* self,
+                               ValueRef* receiver,
+                               ObjectRef::NativeDataAccessorPropertyData* data,
+                               ValueRef* setterInputData)
+    {
+        auto globalBindingNameData =
+            reinterpret_cast<GlobalBindingNameAccessorPropertyData*>(data);
+        globalBindingNameData->m_valueGetter(
+                                    globalBindingNameData->m_instance);
+        globalBindingNameData->m_valueSetter(globalBindingNameData->m_instance,
+                                              setterInputData);
+        return true;
+    }
+
+    ScriptBindingInstance* m_instance = nullptr;
+    GlobalBindingNameAccessorGetter m_valueGetter = nullptr;
+    GlobalBindingNameAccessorSetter m_valueSetter = nullptr;
+};
 
 void ScriptBindingInstance::initBinding()
 {
@@ -88,6 +126,16 @@ void ScriptBindingInstance::initBinding()
 #ifdef TIZEN_DEVICE_API
     m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
 #endif
+}
+
+void ScriptBindingInstance::defineGlobalBindingNameAccessor(
+    ExecutionStateRef* state, ObjectRef* object,
+    StringRef* name, GlobalBindingNameAccessorGetter getter,
+    GlobalBindingNameAccessorSetter setter)
+{
+    object->defineNativeDataAccessorProperty(
+        state, name,
+        new GlobalBindingNameAccessorPropertyData(this, getter, setter));
 }
 
 void ScriptBindingInstance::destroy()
@@ -250,43 +298,6 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
     STARFISH_ASSERT(state != nullptr);
     // binding names first
     GlobalObjectRef* globalObject = context->globalObject();
-#define DECLARE_NAME_FOR_BINDING(exportName)                                   \
-    ObjectRef::NativeDataAccessorPropertyData* newData##exportName =           \
-        new ObjectRef::NativeDataAccessorPropertyData(                         \
-            true, false, true,                                                 \
-            [](ExecutionStateRef* state, ObjectRef* self, ValueRef* receiver,  \
-               ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                ScriptBindingInstance* instance;                               \
-                if (self->isGlobalObject() == true &&                          \
-                    self->extraData() != nullptr) {                            \
-                    instance =                                                 \
-                        ((ScriptWrappable*)self->extraData())    \
-                            ->scriptBindingInstance();                         \
-                } else {                                                       \
-                    instance = fetchScriptBindingInstance(state->context());   \
-                }                                                              \
-                return instance->value##exportName();                          \
-            },                                                                 \
-            [](ExecutionStateRef* state, ObjectRef* self, ValueRef* receiver,  \
-               ObjectRef::NativeDataAccessorPropertyData* data,                \
-               ValueRef* setterInputData) -> bool {                            \
-                ScriptBindingInstance* instance;                               \
-                if (self->isGlobalObject() == true &&                          \
-                    self->extraData() != nullptr) {                            \
-                    instance =                                                 \
-                        ((ScriptWrappable*)self->extraData())    \
-                            ->scriptBindingInstance();                         \
-                } else {                                                       \
-                    instance = fetchScriptBindingInstance(state->context());   \
-                }                                                              \
-                instance->value##exportName();                                 \
-                instance->m_value##exportName = setterInputData;               \
-                return true;                                                   \
-            });                                                                \
-    globalObject->defineNativeDataAccessorProperty(                            \
-        state, StringRef::createFromASCII(#exportName), newData##exportName);
-    STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
-#undef DECLARE_NAME_FOR_BINDING
 
 #define DECLARE_NAME_FOR_UNIMPL_BINDING(exportName)                            \
     ObjectRef::NativeDataAccessorPropertyData* newData##exportName =           \
@@ -309,8 +320,6 @@ void ScriptBindingInstance::initJavaScriptBinding(ContextRef* context,
         state, StringRef::createFromASCII(#exportName), newData##exportName);
     STARFISH_ENUM_BINDING_UNIMPL_NAMES(DECLARE_NAME_FOR_UNIMPL_BINDING)
 #undef DECLARE_NAME_FOR_UNIMPL_BINDING
-
-    fnEventTarget();
 
     ObjectRef* console = ObjectRef::create(state);
 
