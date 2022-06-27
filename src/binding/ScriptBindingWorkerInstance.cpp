@@ -69,6 +69,16 @@ void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
     STARFISH_ASSERT(state != nullptr);
     ScriptBindingInstance::initJavaScriptBinding(context, state);
 
+    GlobalObjectRef* globalObject = context->globalObject();
+// TODO: only bind classes exposed to Worker
+#define DECLARE_NAME_FOR_BINDING(exportName)                          \
+    defineGlobalBindingNameAccessor(                                  \
+        state, globalObject, StringRef::createFromASCII(#exportName), \
+        std::mem_fn(&ScriptBindingInstance::value##exportName),       \
+        std::mem_fn(&ScriptBindingInstance::setValue##exportName));
+    STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+#undef DECLARE_NAME_FOR_BINDING
+
     fnEventTarget();
     fnWorkerGlobalScope();
     fnServiceWorkerGlobalScope();

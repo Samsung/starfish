@@ -23,6 +23,8 @@
 namespace Escargot {
 class ContextRef;
 class ValueRef;
+class StringRef;
+class ObjectRef;
 class FunctionObjectRef;
 class ExecutionStateRef;
 } // namespace Escargot
@@ -52,6 +54,13 @@ class ErrorEventInit;
 STARFISH_ENUM_BINDING_NAMES(FOR_EACH_DECLARE_FN);
 #undef FOR_EACH_DECLARE_FN
 
+class ScriptBindingInstance;
+
+using GlobalBindingNameAccessorGetter =
+    std::function<Escargot::ValueRef*(ScriptBindingInstance*)>;
+using GlobalBindingNameAccessorSetter =
+    std::function<void(ScriptBindingInstance*, Escargot::ValueRef*)>;
+
 class ScriptBindingInstance : public gc {
     friend class ScriptEngineInstance;
 
@@ -63,7 +72,13 @@ public:
 
     void initBinding();
 
-    virtual void destroy();
+    void defineGlobalBindingNameAccessor(Escargot::ExecutionStateRef* state,
+                                         Escargot::ObjectRef* object,
+                                         Escargot::StringRef* name,
+                                         GlobalBindingNameAccessorGetter getter,
+                                         GlobalBindingNameAccessorSetter setter);
+
+        virtual void destroy();
 
     virtual void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) = 0;
 #if defined(STARFISH_ENABLE_DEBUGGER)
@@ -81,7 +96,7 @@ public:
     }
     virtual bool isScriptingEnabled() = 0;
 
-#define FOR_EACH_GETTER_FN(exportName)                                   \
+#define FOR_EACH_BINDING_DECLARATION(exportName)                         \
     Escargot::FunctionObjectRef* fn##exportName()                        \
     {                                                                    \
         if (UNLIKELY(m_fn##exportName == nullptr)) {                     \
@@ -90,12 +105,8 @@ public:
                 reinterpret_cast<Escargot::ValueRef*>(m_fn##exportName); \
         }                                                                \
         return m_fn##exportName;                                         \
-    }
-
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_GETTER_FN)
-#undef FOR_EACH_GETTER_FN
-
-#define FOR_EACH_GETTER_VALUE_FN(exportName)                             \
+    }                                                                    \
+                                                                         \
     Escargot::ValueRef* value##exportName()                              \
     {                                                                    \
         if (UNLIKELY(m_fn##exportName == nullptr)) {                     \
@@ -104,21 +115,18 @@ public:
                 reinterpret_cast<Escargot::ValueRef*>(m_fn##exportName); \
         }                                                                \
         return m_value##exportName;                                      \
-    }
+    }                                                                    \
+                                                                         \
+    void setValue##exportName(Escargot::ValueRef* value)                 \
+    {                                                                    \
+        m_value##exportName = value;                                     \
+    }                                                                    \
+                                                                         \
+    Escargot::FunctionObjectRef* m_fn##exportName = nullptr;             \
+    Escargot::ValueRef* m_value##exportName = nullptr;
 
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_GETTER_VALUE_FN)
-#undef FOR_EACH_GETTER_VALUE_FN
-
-#define FOR_EACH_SCRIPT_FN(exportName) \
-    Escargot::FunctionObjectRef* m_fn##exportName;
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
-#undef FOR_EACH_SCRIPT_FN
-
-public:
-#define FOR_EACH_SCRIPTVALUE_FN(exportName) \
-    Escargot::ValueRef* m_value##exportName;
-    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
-#undef FOR_EACH_SCRIPTVALUE_FN
+    STARFISH_ENUM_BINDING_NAMES(FOR_EACH_BINDING_DECLARATION)
+#undef FOR_EACH_BINDING_DECLARATION
 
     Escargot::ContextRef* scriptContext()
     {
@@ -135,7 +143,7 @@ public:
 protected:
     Escargot::ContextRef* m_scriptContext;
 #ifdef TIZEN_DEVICE_API
-    ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI;
+    ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI = nullptr;
 #endif
     virtual void initJavaScriptBinding(Escargot::ContextRef* context,
                                        Escargot::ExecutionStateRef* state);
