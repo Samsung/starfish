@@ -110,7 +110,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
     // TODO: create a Runnable for this thread once verified.
     std::thread(
         [](PerProcess* perProcess, std::future<void>&& stopTask) {
-            LOGI(SVCWORKER, "Worker thread starts");
+            TRACE0(SVCWORKER, "Worker thread starts");
 
             Globals::initializeThread();
 
@@ -135,7 +135,7 @@ bool ServiceWorkerProcessManager::startWorkerOnThread(std::string scriptURL)
 
             agent->destroy();
 
-            LOGI(SVCWORKER, "Worker thread ends");
+            TRACE0(SVCWORKER, "Worker thread ends");
         },
         m_perProcess, std::move(m_promiseStopThreadSignal.get_future()))
         .detach();

@@ -98,7 +98,7 @@ $ ./Starfish
 [1] TRACE (ID1     )     Test::Func3 (Test.cpp:XX)
 ```
 
-### `LOGI(identifier[,data][,...args])`
+### `TRACE0(identifier[,data][,...args])`
 * identifier {string} An unique identifier assigned to this log. It doesn't require wrapped with double quotes, `"`.
 * data {arithmetic types|stream buffers|manipulators} C++ string that contains the text.
 * ...args {arithmetic types|stream buffers|manipulators} Additional arguments depending on the previous data.
@@ -112,7 +112,7 @@ class Test {
 
   void Func(Nullable<String*> url) {
     TRACE(ID1, "messages from TRACE with ID1");
-    LOGI(ID1, "messages from LOGI with ID1");
+    TRACE0(ID1, "messages from TRACE0 with ID1");
   }
 };
 ```
@@ -123,5 +123,5 @@ $ export TRACE=*
 $ ./Starfish
 
 [1] TRACE (ID1     )   Test::Func (Test.cpp:XX) messages from TRACE with ID1
-[1] TRACE (ID1     )   messages from LOGI with ID1
+[1] TRACE (ID1     )   messages from TRACE0 with ID1
 ```

@@ -28,26 +28,21 @@ public:
           const int line);
 };
 
-namespace Starfish {
-
 #if defined(NDEBUG)
 
-#undef LOGI
-#define LOGI(id, ...)
 #define TRACE(id, ...)
+#define TRACE0(id, ...)
 #define TRACE_SCOPE(id, ...)
 
 #else
 
-#define LOGI(id, ...) Trace(#id).print(__VA_ARGS__)
-
 #define TRACE(id, ...) \
     Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).print(__VA_ARGS__)
+
+#define TRACE0(id, ...) Trace(#id).print(__VA_ARGS__)
 
 #define TRACE_SCOPE(id, ...)      \
     IndentCounter __counter(#id); \
     TRACE(id, __VA_ARGS__)
 
 #endif
-
-} // namespace Starfish
