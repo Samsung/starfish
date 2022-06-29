@@ -20,7 +20,6 @@
 #include "StarfishConfig.h"
 #include "StorageNamespaceImpl.h"
 
-#include "core/storage/Storage.h"
 #include "core/storage/StorageType.h"
 #include "core/storage/StorageInternal.h"
 #include "core/storage/StoragePersistent.h"
@@ -34,7 +33,7 @@ StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
 {
 }
 
-Storage* StorageNamespaceImpl::storage(Window* window, WebOrigin* webOrigin)
+StorageInternal* StorageNamespaceImpl::storageInternal(WebOrigin* webOrigin)
 {
     StorageInternal* storageInternal = nullptr;
     auto itr = m_originToStorage.find(webOrigin);
@@ -51,7 +50,6 @@ Storage* StorageNamespaceImpl::storage(Window* window, WebOrigin* webOrigin)
         storageInternal = itr->second;
     }
 
-    Storage* storage = new Storage(window, storageInternal);
-    return storage;
+    return storageInternal;
 }
 } // namespace Starfish

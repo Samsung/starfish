@@ -21,6 +21,7 @@
 #define __StarfishStorageNamespaceImpl__
 
 #include "core/dom/WebOrigin.h"
+#include "core/storage/StorageInternal.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/StorageType.h"
 
@@ -42,7 +43,7 @@ public:
                          Nullable<String*> localStoragePath);
     virtual ~StorageNamespaceImpl(){};
 
-    virtual Storage* storage(Window* window, WebOrigin* origin) override;
+    virtual StorageInternal* storageInternal(WebOrigin* origin) override;
 
 private:
     StorageType m_storageType;

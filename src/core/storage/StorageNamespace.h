@@ -25,12 +25,12 @@
 namespace Starfish {
 
 class WebOrigin;
-class Storage;
+class StorageInternal;
 class Window;
 
 class StorageNamespace : public gc {
 public:
-    virtual Storage* storage(Window* window, WebOrigin* origin) = 0;
+    virtual StorageInternal* storageInternal(WebOrigin* origin) = 0;
     virtual ~StorageNamespace()
     {
     }

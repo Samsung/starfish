@@ -125,6 +125,10 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/csp/*.cpp
     ${STARFISH_ROOT}/src/core/fetch/*.cpp
     ${STARFISH_ROOT}/src/core/fetch/stream/*.cpp
+    ${STARFISH_ROOT}/src/core/storage/StorageInternal*.cpp
+    ${STARFISH_ROOT}/src/core/storage/StorageNamespace*.cpp
+    ${STARFISH_ROOT}/src/core/storage/StoragePersistent*.cpp
+    ${STARFISH_ROOT}/src/core/storage/WebStorage*.cpp
 )
 
 FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC

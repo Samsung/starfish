@@ -27,6 +27,8 @@ namespace Starfish {
 class WebOrigin;
 class StorageManager;
 
+using StorageKey = WebOrigin;
+
 class StorageInternal : public gc {
 public:
     StorageInternal(StorageType storageType, WebOrigin* webOrigin);
@@ -40,6 +42,8 @@ public:
     virtual void clear() = 0;
 
     virtual GCVector<String*> getKeyNames() = 0;
+
+    static Nullable<StorageKey*> getStorageKey(ExecutionContext* context);
 
 protected:
     StorageType m_storageType;

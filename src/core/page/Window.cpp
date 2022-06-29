@@ -220,14 +220,19 @@ Element* Window::frameElement()
 
 Storage* Window::localStorage()
 {
-    return browsingContext()->webView()->localStorageNamespace()->storage(
-        this, m_document->webOrigin());
+    auto storageInternal =
+        browsingContext()->webView()->localStorageNamespace()->storageInternal(
+            m_document->webOrigin());
+    return new Storage(this, storageInternal);
 }
 
 Storage* Window::sessionStorage()
 {
-    return browsingContext()->webView()->sessionStorageNamespace()->storage(
-        this, m_document->webOrigin());
+    auto storageInternal = browsingContext()
+                               ->webView()
+                               ->sessionStorageNamespace()
+                               ->storageInternal(m_document->webOrigin());
+    return new Storage(this, storageInternal);
 }
 
 void Window::postMessage(Window* source, ScriptValue message,
