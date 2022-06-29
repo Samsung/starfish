@@ -22,6 +22,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
+
 #include "core/storage/StorageType.h"
 
 namespace Starfish {

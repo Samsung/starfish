@@ -65,6 +65,7 @@ public:
     Promise* getRegistration(
         NULLABLE String* scriptURL = nullptr); // binding interface
     ServiceWorker* controller();               // binding interface
+    Promise* getRegistrations();               // binding interface
 
     ServiceWorkerEnvironment* serviceWorkerEnvironment() override;
 

@@ -43,6 +43,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/dom/DOMException.h"
 #include "core/page/WebBase.h"
+#include "core/storage/StorageInternal.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
@@ -375,6 +376,30 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
     matchRegistration(matchRegistrationRequest, clientURL);
 
     // 8. Return promise.
+    return promise;
+}
+
+// https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistrations
+Promise* ServiceWorkerContainer::getRegistrations()
+{
+    // 1. Let client be this's service worker client.
+    auto client = serviceWorkerEnvironment();
+
+    // 2. Let client storage key be the result of running obtain a storage key
+    // given client.
+    auto storageKey = StorageInternal::getStorageKey(client);
+
+    // 3. Let promise be a new promise.
+    auto promise = new Promise(scriptBindingInstance());
+
+    // TODO: Send and receive data from Job handler
+    STARFISH_UNIMPLEMENTED();
+
+    auto registrationsObjects =
+        createScriptArrayBuffer(scriptBindingInstance(), 0);
+    promise->fulfill(createScriptValue(registrationsObjects));
+
+    // 5. Return promise.
     return promise;
 }
 

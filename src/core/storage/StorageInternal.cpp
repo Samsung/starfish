@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "core/storage/StorageInternal.h"
 
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/WebOrigin.h"
 
 namespace Starfish {
@@ -32,6 +33,17 @@ StorageInternal::StorageInternal(StorageType storageType, WebOrigin* webOrigin)
     : m_storageType(storageType)
     , m_webOrigin(webOrigin)
 {
+}
+
+// https://storage.spec.whatwg.org/#obtain-a-storage-key
+Nullable<StorageKey*> StorageInternal::getStorageKey(ExecutionContext* context)
+{
+    if (context->webOrigin()->isOpaque()) {
+        return nullptr;
+    }
+
+    // TODO: 3. If the user has disabled storage, then return failure.
+    return WebOrigin::createDocumentOrigin(context->baseURL());
 }
 
 StorageMemory::StorageMemory(StorageType storageType, WebOrigin* webOrigin)
