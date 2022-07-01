@@ -60,7 +60,7 @@ public:
             global->dispatchEvent(
                 new Event(global->executionContext(), m_eventName));
         } else {
-            LOGI(HOST, "CHECK: global != nullptr");
+            TRACE0(HOST, "CHECK: global != nullptr");
         }
     }
 
