@@ -605,6 +605,17 @@ static void setTargetPixel(GifByteType* pBuffer, GifColorType* colorMapEntry)
     }
 }
 
+static void makeTranparentPixel(GifByteType* pBuffer)
+{
+    if (pBuffer) {
+        GifByteType* buffer = pBuffer;
+        *buffer++ = 0;
+        *buffer++ = 0;
+        *buffer++ = 0;
+        *buffer++ = 0;
+    }
+}
+
 static GifRowType* allocateTarget(int width, int height)
 {
     GifRowType* buffer = (GifRowType*)malloc(height * sizeof(GifRowType));
@@ -615,18 +626,6 @@ static GifRowType* allocateTarget(int width, int height)
         STARFISH_RELEASE_ASSERT(buffer[i] != nullptr);
     }
     return buffer;
-}
-
-static void clearTarget(int width, int height, GifRowType* buffer,
-                        GifWord backGroundColor)
-{
-    unsigned long size = width * sizeof(GifPixelType);
-    for (int i = 0; i < width; i++) {
-        buffer[0][i] = backGroundColor;
-    }
-    for (int i = 1; i < height; i++) {
-        memcpy(buffer[i], buffer[0], size);
-    }
 }
 
 static ImageDecoder::DecodeResult decodeGIF(
@@ -667,9 +666,6 @@ static ImageDecoder::DecodeResult decodeGIF(
 
     if (needsDecoding) {
         screenBuffer = allocateTarget(result.m_width, result.m_height);
-        clearTarget(result.m_width, result.m_height, screenBuffer,
-                    gifFile->SBackGroundColor);
-
         int transparentIndex = -1;
         do {
             DGifGetRecordType(gifFile, &recordType);
@@ -866,9 +862,6 @@ bool ImageDecoder::prepareAnimatedGIF()
             return false;
         }
         gifBuffer = allocateTarget(gifFile->SWidth, gifFile->SHeight);
-        clearTarget(gifFile->SWidth, gifFile->SHeight, gifBuffer,
-                    gifFile->SBackGroundColor);
-
         m_gifFile = gifFile;
         m_gifBuffer = gifBuffer;
     }
@@ -940,12 +933,15 @@ ImageDecoder::DecodeResult ImageDecoder::nextFrameOfAnimatedGIF(
                     for (int w = 0; w < (int)result.m_width; w++) {
                         GifByteType* buffer =
                             result.m_buffer + h * result.m_stride + w * 4;
-                        setTargetPixel(buffer, colorMapEntry);
+                        if (gifFile->SBackGroundColor != transparentIndex) {
+                            setTargetPixel(buffer, colorMapEntry);
+                        } else {
+                            makeTranparentPixel(buffer);
+                        }
                         buffer = buffer + 4;
                     }
                 }
             }
-
             {
                 // Convert GIF to RGBA
                 GifRowType gifRow = nullptr;
