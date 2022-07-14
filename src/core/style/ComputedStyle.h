@@ -1397,10 +1397,11 @@ public:
         m_rareComputedStyleData.ensureTransforms()->append(t);
     }
 
-    void setTransformRotate(double a)
+    void setTransformRotate(double a, Length x = Length(Length::Fixed, 0),
+                            Length y = Length(Length::Fixed, 0))
     {
         StyleTransformData t(StyleTransformData::OperationType::Rotate);
-        t.setRotate(a);
+        t.setRotate(a, x, y);
         m_rareComputedStyleData.ensureTransforms()->append(t);
     }
 

@@ -122,13 +122,14 @@ public:
         }
     }
 
-    void setRotate(double ang)
+    void setRotate(double ang, Length x = Length(Length::Fixed, 0),
+                   Length y = Length(Length::Fixed, 0))
     {
         STARFISH_ASSERT(m_type == Rotate);
         if (m_value.m_rotate == NULL) {
-            m_value.m_rotate = new RotateTransform(ang);
+            m_value.m_rotate = new RotateTransform(ang, x, y);
         } else {
-            m_value.m_rotate->setData(ang);
+            m_value.m_rotate->setData(ang, x, y);
         }
     }
 

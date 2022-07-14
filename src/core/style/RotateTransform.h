@@ -26,8 +26,10 @@ namespace Starfish {
 
 class RotateTransform : public gc {
 public:
-    RotateTransform(double angle)
+    RotateTransform(double angle, Length cx, Length cy)
         : m_angle(angle)
+        , m_cx(cx)
+        , m_cy(cy)
     {
     }
 
@@ -35,14 +37,26 @@ public:
     {
     }
 
-    void setData(double angle)
+    void setData(double angle, Length cx, Length cy)
     {
         m_angle = angle;
+        m_cx = cx;
+        m_cy = cy;
     }
 
     double angle()
     {
         return m_angle;
+    }
+
+    Length cx()
+    {
+        return m_cx;
+    }
+
+    Length cy()
+    {
+        return m_cy;
     }
 
     bool operator==(const RotateTransform& o)
@@ -57,6 +71,8 @@ public:
 
 private:
     double m_angle;
+    Length m_cx;
+    Length m_cy;
 };
 } // namespace Starfish
 

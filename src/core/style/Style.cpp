@@ -426,7 +426,30 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             style->setTransformScale(1, dValues[0]);
             break;
         case CSSTransformFunction::Kind::Rotate:
-            style->setTransformRotate(dValues[0]);
+            if (valueSize > 1) {
+                Length a, b(Length::Fixed, 0);
+                Nullable<Length> nA = convertValueToLength(
+                    (*f.values())[1].valueKind(), (*f.values())[1].value());
+                if (nA.hasValue() == true) {
+                    a = nA.getValue();
+                } else {
+                    break;
+                }
+                if (valueSize > 2) {
+                    Nullable<Length> nB = convertValueToLength(
+                        (*f.values())[2].valueKind(), (*f.values())[2].value());
+                    if (nB.hasValue()) {
+                        b = nB.getValue();
+                    } else {
+                        break;
+                    }
+                }
+
+                style->setTransformRotate(dValues[0], a, b);
+            } else {
+                style->setTransformRotate(dValues[0]);
+            }
+
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_hasComplexTransform = true;
