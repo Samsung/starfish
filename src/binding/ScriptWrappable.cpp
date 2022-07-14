@@ -873,13 +873,20 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
 #endif
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    static size_t s_evalUniqueID;
-    std::string s = fileName->toUTF8NonGCString();
-    s += "_";
-    s += std::to_string(++s_evalUniqueID);
-    s += ".js";
+    std::string fileNameForDebugger;
+
+    if (fileName->length()) {
+        const std::string filePrefix = "file://";
+        fileNameForDebugger = fileName->toUTF8NonGCString();
+
+        size_t pos = fileNameForDebugger.find(filePrefix);
+        if (pos != std::string::npos) {
+            fileNameForDebugger.erase(pos, filePrefix.length());
+        }
+    }
+
     auto scriptRef = ctx->scriptParser()->initializeScript(
-        source, toJSString(String::fromUTF8(s.data(), s.length())));
+        source, toJSString(String::fromUTF8(fileNameForDebugger.data(), fileNameForDebugger.length())));
 #else
     auto scriptRef =
         ctx->scriptParser()->initializeScript(source, toJSString(fileName));
