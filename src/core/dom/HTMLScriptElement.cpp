@@ -286,9 +286,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 Document::CurrentScriptManager currentScriptManager(document(),
                                                                     this);
                 ScriptProfileLogger logger;
-                evaluateString(
-                    window()->scriptBindingInstance(), script,
-                    String::createASCIIString("HTMLScriptElement innerText"));
+                evaluateString(window()->scriptBindingInstance(), script);
             }
             m_didScriptExecuted = true;
             return false;

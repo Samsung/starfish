@@ -290,9 +290,7 @@ bool SVGScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 Document::CurrentScriptManager currentScriptManager(document(),
                                                                     this);
                 ScriptProfileLogger logger;
-                evaluateString(
-                    window()->scriptBindingInstance(), script,
-                    String::createASCIIString("SVGScriptElement innerText"));
+                evaluateString(window()->scriptBindingInstance(), script);
             }
             m_didScriptExecuted = true;
             return false;

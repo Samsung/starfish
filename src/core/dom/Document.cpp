@@ -1923,8 +1923,7 @@ void Document::loadBuiltinPolyfill(String* localPath)
         STARFISH_LOG_INFO("Invalid built-in polyfill content.");
         return;
     }
-    evaluateString(window()->scriptBindingInstance(), data.getValue(),
-                   String::createASCIIString("builtinPolyfill"));
+    evaluateString(window()->scriptBindingInstance(), data.getValue());
     STARFISH_LOG_INFO("Built-in polyfill evaluated.");
 }
 

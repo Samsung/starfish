@@ -610,7 +610,7 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
         String* scriptString = toBrowserString(state, argv[0]);
         ScriptValue result = evaluateString(
             window->scriptBindingInstance(), scriptString,
-            String::createASCIIString("testAssertFunction"), &su);
+            String::emptyString, &su);
         if (su && result->toBoolean(state)) {
             return scriptUndefined();
         }
