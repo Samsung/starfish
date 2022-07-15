@@ -73,6 +73,6 @@ protected:
 
     float m_rx, m_ry;
 };
-}
+} // namespace Starfish
 
 #endif

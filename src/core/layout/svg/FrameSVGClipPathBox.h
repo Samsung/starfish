@@ -53,6 +53,6 @@ protected:
         FrameSVGBox::fillGCDescriptor(desc);
     }
 };
-}
+} // namespace Starfish
 
 #endif

@@ -88,4 +88,4 @@ Path* FrameSVGCircleBox::path()
 
     return path;
 }
-}
+} // namespace Starfish

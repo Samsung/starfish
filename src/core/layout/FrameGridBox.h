@@ -79,11 +79,13 @@ public:
         return m_spanValue > 1;
     }
 
-    size_t spanValue() {
+    size_t spanValue()
+    {
         return m_spanValue;
     }
 
-    void setSpanValue(size_t v) {
+    void setSpanValue(size_t v)
+    {
         m_spanValue = v;
     }
 
@@ -186,11 +188,13 @@ public:
         m_columnEndLine->setValue(v);
     }
 
-    bool isMarginLeftAuto() {
+    bool isMarginLeftAuto()
+    {
         return m_isMarginLeftAuto;
     }
 
-    bool isMarginRightAuto() {
+    bool isMarginRightAuto()
+    {
         return m_isMarginRightAuto;
     }
 
@@ -208,6 +212,7 @@ public:
     void resolveDefinitePositionValues();
     size_t rowSpanValue();
     size_t columnSpanValue();
+
 private:
     FrameBox* m_box;
     size_t m_index{ 0 };

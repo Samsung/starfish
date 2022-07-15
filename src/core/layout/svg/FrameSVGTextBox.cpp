@@ -94,4 +94,4 @@ void FrameSVGTextBox::paintSVG(PaintingContext& ctx)
     firstChild()->asFrameBlockBox()->paintContent(newCtx);
     newCtx.m_canvas->restore();
 }
-}
+} // namespace Starfish

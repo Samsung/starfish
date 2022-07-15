@@ -155,9 +155,15 @@ public:
 
     int tabIndex() override;
 
-    virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+    virtual NativeImageData::PreserveAspectRatioAlign preserveAspectRatioAlign()
     {
-        return m_preserveAspectRatioValue;
+        return m_preserveAspectRatioAlign;
+    }
+
+    virtual NativeImageData::PreserveAspectRatioMeetOrSlice
+    preserveAspectRatioMeetOrSlice()
+    {
+        return m_preserveAspectRatioMeetOrSlice;
     }
 
     bool hasClipPath()
@@ -178,7 +184,9 @@ public:
     SVGElement* getSVGElementById(String* id);
 
 protected:
-    NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
+    NativeImageData::PreserveAspectRatioAlign m_preserveAspectRatioAlign;
+    NativeImageData::PreserveAspectRatioMeetOrSlice
+        m_preserveAspectRatioMeetOrSlice;
     SVGElement* m_clipPathElement;
     SVGElement* m_maskElement;
 };

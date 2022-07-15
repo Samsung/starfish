@@ -126,21 +126,22 @@ void SVGSVGElement::styleForPresentationAttribute(
     }
 }
 
-NativeImageData::PreserveAspectRatioValue
-SVGSVGElement::preserveAspectRatioValue()
+NativeImageData::PreserveAspectRatioAlign
+SVGSVGElement::preserveAspectRatioAlign()
 {
     if (hasAttribute(starfish()->staticStrings()->m_preserveAspectRatio) ==
         SIZE_MAX) {
         bool hasViewbox =
             hasAttribute(starfish()->staticStrings()->m_viewBox) != SIZE_MAX;
-        bool hasWidth =
-            hasAttribute(starfish()->staticStrings()->m_width) != SIZE_MAX;
-        bool hasHeight =
-            hasAttribute(starfish()->staticStrings()->m_height) != SIZE_MAX;
-        return hasViewbox && hasWidth && hasHeight ? NativeImageData::xMidYMid
-                                                   : NativeImageData::None;
+        return hasViewbox ? NativeImageData::xMidYMid : NativeImageData::None;
     }
-    return m_preserveAspectRatioValue;
+    return m_preserveAspectRatioAlign;
+}
+
+NativeImageData::PreserveAspectRatioMeetOrSlice
+SVGSVGElement::preserveAspectRatioMeetOrSlice()
+{
+    return m_preserveAspectRatioMeetOrSlice;
 }
 
 SVGNumber* SVGSVGElement::createSVGNumber()

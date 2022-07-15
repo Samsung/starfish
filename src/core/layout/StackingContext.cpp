@@ -594,7 +594,8 @@ private:
     {
         if (frameBox->hasFrameBorderRadius()) {
             const LayoutRect rect(0, 0, frameBox->width(), frameBox->height());
-            frameBox->applyBorderRadiusClippingIfNeeds(m_canvasOrCompositor, rect);
+            frameBox->applyBorderRadiusClippingIfNeeds(m_canvasOrCompositor,
+                                                       rect);
         }
     }
 

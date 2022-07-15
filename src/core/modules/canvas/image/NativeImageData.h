@@ -35,7 +35,7 @@ constexpr size_t ExtraSmallNativeImageSize{ 16 };
 
 class NativeImageData : public gc {
 public:
-    enum PreserveAspectRatioValue ENSURE_ENUM_UNSIGNED {
+    enum PreserveAspectRatioAlign ENSURE_ENUM_UNSIGNED {
         None,
         xMinYMin,
         xMidYMin,
@@ -47,6 +47,12 @@ public:
         xMidYMax,
         xMaxYMax,
     };
+
+    enum PreserveAspectRatioMeetOrSlice : bool {
+        Meet,
+        Slice,
+    };
+
     static NativeImageData* attach(Canvas* canvas);
 
     virtual bool isAnimatedGIFNativeImageData() const
@@ -142,14 +148,24 @@ public:
         return false;
     }
 
-    PreserveAspectRatioValue preserveAspectRatioValue()
+    PreserveAspectRatioAlign preserveAspectRatioAlign()
     {
-        return m_preserveAspectRatioValue;
+        return m_preserveAspectRatioAlign;
     }
 
-    void setPreserveAspectRatioValue(PreserveAspectRatioValue v)
+    void setPreserveAspectRatioAlign(PreserveAspectRatioAlign v)
     {
-        m_preserveAspectRatioValue = v;
+        m_preserveAspectRatioAlign = v;
+    }
+
+    PreserveAspectRatioMeetOrSlice preserveAspectRatioMeetOrSlice()
+    {
+        return m_preserveAspectRatioMeetOrSlice;
+    }
+
+    void setPreserveAspectRatioMeetOrSlice(PreserveAspectRatioMeetOrSlice v)
+    {
+        m_preserveAspectRatioMeetOrSlice = v;
     }
 
     virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
@@ -183,9 +199,11 @@ public:
 protected:
     NativeImageData()
     {
-        m_preserveAspectRatioValue = None;
+        m_preserveAspectRatioAlign = None;
+        m_preserveAspectRatioMeetOrSlice = Meet;
     }
-    PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
+    PreserveAspectRatioAlign m_preserveAspectRatioAlign : 4;
+    PreserveAspectRatioMeetOrSlice m_preserveAspectRatioMeetOrSlice : 1;
 };
 } // namespace Starfish
 

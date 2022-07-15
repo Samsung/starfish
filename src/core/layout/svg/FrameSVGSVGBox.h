@@ -90,6 +90,6 @@ protected:
     bool m_isInnerSVG;
     Nullable<Unit::Rect> m_containerViewport;
 };
-}
+} // namespace Starfish
 
 #endif
