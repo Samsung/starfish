@@ -29,8 +29,10 @@ namespace Starfish {
 
 SVGElement::SVGElement(Document* document, const QualifiedName& qname)
     : Element(document, qname)
-    , m_preserveAspectRatioValue(
-          NativeImageData::PreserveAspectRatioValue::None)
+    , m_preserveAspectRatioAlign(
+          NativeImageData::PreserveAspectRatioAlign::None)
+    , m_preserveAspectRatioMeetOrSlice(
+          NativeImageData::PreserveAspectRatioMeetOrSlice::Meet)
     , m_clipPathElement(nullptr)
     , m_maskElement(nullptr)
 {
@@ -140,14 +142,29 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
     if (needsPreserveAspectRatioValue()) {
         if (name == starfish()->staticStrings()->m_preserveAspectRatio) {
+            auto utf8Str = value->toUTF8NonGCString();
+
+            String* align = String::emptyString;
+            String* meetOrSlice = String::fromUTF8("meet");
+
+            auto p = utf8Str.find(' ');
+            if (p != std::string::npos) {
+                std::string a = utf8Str.substr(0, p);
+                std::string b = utf8Str.substr(p, utf8Str.size());
+                align = String::fromUTF8(a.data(), a.size());
+                meetOrSlice = String::fromUTF8(b.data(), b.size());
+            } else {
+                align = String::fromUTF8(utf8Str.data(), utf8Str.size());
+            }
+
 #define SET_PARV(name)                                      \
-    else if (value->equals(#name))                          \
+    else if (align->equals(#name))                          \
     {                                                       \
-        m_preserveAspectRatioValue = NativeImageData::name; \
+        m_preserveAspectRatioAlign = NativeImageData::name; \
     }
 
-            if (value->equals("none")) {
-                m_preserveAspectRatioValue = NativeImageData::None;
+            if (align->equals("none")) {
+                m_preserveAspectRatioAlign = NativeImageData::None;
             }
             SET_PARV(xMinYMin)
             SET_PARV(xMidYMin)
@@ -163,6 +180,12 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
                 STARFISH_UNIMPLEMENTED();
             }
 #undef SET_PARV
+
+            if (meetOrSlice->equals("meet")) {
+                m_preserveAspectRatioMeetOrSlice = NativeImageData::Meet;
+            } else if (meetOrSlice->equals("slice")) {
+                m_preserveAspectRatioMeetOrSlice = NativeImageData::Slice;
+            }
         }
     }
 

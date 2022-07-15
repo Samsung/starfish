@@ -109,6 +109,6 @@ protected:
     bool m_hasClipPath;
     bool m_hasMask;
 };
-}
+} // namespace Starfish
 
 #endif

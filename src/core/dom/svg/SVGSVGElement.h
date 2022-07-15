@@ -83,8 +83,10 @@ public:
         return m_viewBox;
     }
 
-    virtual NativeImageData::PreserveAspectRatioValue preserveAspectRatioValue()
+    virtual NativeImageData::PreserveAspectRatioAlign preserveAspectRatioAlign()
         override;
+    virtual NativeImageData::PreserveAspectRatioMeetOrSlice
+    preserveAspectRatioMeetOrSlice() override;
 
     virtual void updateSVGAttributeNeeded(QualifiedName name);
 

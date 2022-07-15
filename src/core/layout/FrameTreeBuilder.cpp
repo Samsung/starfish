@@ -1090,7 +1090,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                             ctx);
     }
 
-    // This part was added to build svg frame for showing marker of the select element.
+    // This part was added to build svg frame for showing marker of the select
+    // element.
     if (currentFrame->isFrameOptionBox()) {
         Node* n = current->firstChild();
         while (n) {

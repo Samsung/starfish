@@ -225,9 +225,10 @@ static void traceRepaintRegionJob(
                     tracker, rt, lastStackingContextOwner);
 
                 if (currentFrameBox->isVisible()) {
-                    Node* stackingContextOwner = lastStackingContextOwner->node();
-                    auto iter2 =
-                        dirtyAreaMapPerStackingContext.find(stackingContextOwner);
+                    Node* stackingContextOwner =
+                        lastStackingContextOwner->node();
+                    auto iter2 = dirtyAreaMapPerStackingContext.find(
+                        stackingContextOwner);
                     if (iter2 == dirtyAreaMapPerStackingContext.end()) {
                         dirtyAreaMapPerStackingContext.insert(
                             std::make_pair(stackingContextOwner, rt));

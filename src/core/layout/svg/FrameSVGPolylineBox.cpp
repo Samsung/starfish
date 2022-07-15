@@ -74,4 +74,4 @@ Path* FrameSVGPolylineBox::path()
     }
     return nullptr;
 }
-}
+} // namespace Starfish

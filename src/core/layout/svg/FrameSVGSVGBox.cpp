@@ -177,16 +177,24 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     double sxToViewport = viewport.width() / svgWidth;
     double syToViewport = viewport.height() / svgHeight;
     double sToViewport = 1;
-    if (sxToViewport == 0 || syToViewport == 0 ||
-        std::isnan(sxToViewport) || std::isnan(syToViewport)) {
+    if (sxToViewport == 0 || syToViewport == 0 || std::isnan(sxToViewport) ||
+        std::isnan(syToViewport)) {
         canvas->restore();
         return;
     }
 
     bool hasViewBox = node()->asSVGSVGElement()->hasViewBox();
+
+    auto svgAlign = NativeImageData::None;
     if (hasViewBox) {
         sToViewport = std::min(sxToViewport, syToViewport);
-        canvas->scale(sToViewport, sToViewport);
+        svgAlign = node()->asSVGSVGElement()->preserveAspectRatioAlign();
+        if (svgAlign == NativeImageData::None) {
+            canvas->scale(sxToViewport, syToViewport);
+        } else {
+            // TODO: Should consider preserveAspectRatio meetOrSlice.
+            canvas->scale(sToViewport, sToViewport);
+        }
     } else {
         if (intrinsicSizeInfo.m_hasViewport) {
             canvas->scale(sxToViewport, syToViewport);
@@ -204,7 +212,11 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
             return;
         }
 
-        canvas->scale(sToContentSize, sToContentSize);
+        if (svgAlign == NativeImageData::None) {
+            canvas->scale(sx, sy);
+        } else {
+            canvas->scale(sToContentSize, sToContentSize);
+        }
 
         double tx = viewBox.x();
         double ty = viewBox.y();
@@ -218,12 +230,22 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         double dx = 0;
         double dy = 0;
         if (intrinsicSizeInfo.m_hasViewport) {
-            dx = (svgWidth - viewBox.width() * sToContentSize) / 2;
-            dy = (svgHeight - viewBox.height() * sToContentSize) / 2;
+            if (svgAlign == NativeImageData::None) {
+                dx = (svgWidth - viewBox.width() * sx) / 2;
+                dy = (svgHeight - viewBox.height() * sy) / 2;
+            } else {
+                dx = (svgWidth - viewBox.width() * sToContentSize) / 2;
+                dy = (svgHeight - viewBox.height() * sToContentSize) / 2;
+            }
         } else {
-            // scale to viewport directly
-            dx = (viewport.width() - svgWidth * sToViewport) / 2;
-            dy = (viewport.height() - svgHeight * sToViewport) / 2;
+            if (svgAlign == NativeImageData::None) {
+                dx = (viewport.width() - svgWidth * sx) / 2;
+                dy = (viewport.height() - svgHeight * sy) / 2;
+            } else {
+                // scale to viewport directly
+                dx = (viewport.width() - svgWidth * sToViewport) / 2;
+                dy = (viewport.height() - svgHeight * sToViewport) / 2;
+            }
         }
 
         if (dx < 0) {
@@ -233,8 +255,14 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
             dy = 0;
         }
 
-        canvas->translate(dx / (sToContentSize * sToViewport),
-                          dy / (sToContentSize * sToViewport));
+        if (svgAlign == NativeImageData::None) {
+            canvas->translate(dx / (sx * sxToViewport),
+                              dy / (sy * syToViewport));
+        } else {
+            // TODO: Should consider preserveAspectRatio alignment.
+            canvas->translate(dx / (sToContentSize * sToViewport),
+                              dy / (sToContentSize * sToViewport));
+        }
     }
 
     PaintingContext ctx(canvas);
@@ -257,4 +285,4 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     canvas->restore();
     canvas->setNeedsFastAntialias();
 }
-}
+} // namespace Starfish

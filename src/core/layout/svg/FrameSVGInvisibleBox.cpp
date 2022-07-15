@@ -46,4 +46,4 @@ void FrameSVGInvisibleBox::paintContent(PaintingContext& ctx)
 void FrameSVGInvisibleBox::paintSVG(PaintingContext& ctx)
 {
 }
-}
+} // namespace Starfish

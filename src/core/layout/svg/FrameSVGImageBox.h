@@ -44,10 +44,8 @@ public:
         // used (i.e. the ‘image’ element has an implicit ‘viewBox’ of '0 0
         // raster-image-width raster-image-height').
         NativeImageData* id = node()->asSVGImageElement()->imageData();
-        if (id &&
-            node()->asSVGImageElement()->preserveAspectRatioValue() ==
-                NativeImageData::None) {
-
+        if (id && node()->asSVGImageElement()->preserveAspectRatioAlign() ==
+                      NativeImageData::None) {
             auto styleWidth = style()->width();
             auto styleHeight = style()->height();
             FrameBox* cb = layoutParent()->asFrameBox();
@@ -76,12 +74,12 @@ public:
     {
         SVGImageElement* e = node()->asSVGImageElement();
         if (e->imageData()) {
-            if (e->preserveAspectRatioValue() == NativeImageData::None) {
+            auto svgAlign = e->preserveAspectRatioAlign();
+            if (svgAlign == NativeImageData::None) {
                 ctx.m_canvas->drawImage(e->imageData(),
                                         Unit::Rect(0, 0, width(), height()));
             } else {
                 NativeImageData* id = e->imageData();
-                auto v = e->preserveAspectRatioValue();
                 LayoutUnit containerWidth = width();
                 LayoutUnit containerHeight = height();
 
@@ -109,25 +107,25 @@ public:
 
                 LayoutUnit x, y;
 
-                if (v == NativeImageData::xMinYMin) {
-                } else if (v == NativeImageData::xMidYMin) {
+                if (svgAlign == NativeImageData::xMinYMin) {
+                } else if (svgAlign == NativeImageData::xMidYMin) {
                     x = remainX / 2;
-                } else if (v == NativeImageData::xMaxYMin) {
+                } else if (svgAlign == NativeImageData::xMaxYMin) {
                     x = remainX;
-                } else if (v == NativeImageData::xMinYMid) {
+                } else if (svgAlign == NativeImageData::xMinYMid) {
                     y = remainY / 2;
-                } else if (v == NativeImageData::xMidYMid) {
+                } else if (svgAlign == NativeImageData::xMidYMid) {
                     x = remainX / 2;
                     y = remainY / 2;
-                } else if (v == NativeImageData::xMaxYMid) {
+                } else if (svgAlign == NativeImageData::xMaxYMid) {
                     x = remainX;
                     y = remainY / 2;
-                } else if (v == NativeImageData::xMinYMax) {
+                } else if (svgAlign == NativeImageData::xMinYMax) {
                     y = remainY;
-                } else if (v == NativeImageData::xMidYMax) {
+                } else if (svgAlign == NativeImageData::xMidYMax) {
                     x = remainX / 2;
                     y = remainY;
-                } else if (v == NativeImageData::xMaxYMax) {
+                } else if (svgAlign == NativeImageData::xMaxYMax) {
                     x = remainX;
                     y = remainY;
                 }
@@ -160,6 +158,6 @@ protected:
         FrameSVGBox::fillGCDescriptor(desc);
     }
 };
-}
+} // namespace Starfish
 
 #endif

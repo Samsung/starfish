@@ -70,4 +70,4 @@ Path* FrameSVGLineBox::path()
 
     return path;
 }
-}
+} // namespace Starfish

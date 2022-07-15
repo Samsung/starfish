@@ -114,4 +114,4 @@ void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
         nativeImageMask,
         Unit::Rect(x, y, nativeImageMask->width(), nativeImageMask->height()));
 }
-}
+} // namespace Starfish

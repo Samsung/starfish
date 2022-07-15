@@ -244,4 +244,4 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement,
 
     return nullptr;
 }
-}
+} // namespace Starfish

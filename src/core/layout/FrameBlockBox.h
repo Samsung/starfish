@@ -118,8 +118,8 @@ public:
         FrameBox::dump(depth);
         StringView tv = text();
         auto s = tv.substring()->toUTF8NonGCString();
-        printf(" [(%s),DIR:%d, SRT:%d, End:%d]", s.data(),
-               (int)charDirection(), (int)tv.start(), (int)tv.end());
+        printf(" [(%s),DIR:%d, SRT:%d, End:%d]", s.data(), (int)charDirection(),
+               (int)tv.start(), (int)tv.end());
     }
 #endif
     virtual const char* name() override

@@ -65,7 +65,8 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
             return;
         }
 
-        if (id->preserveAspectRatioValue() == NativeImageData::None) {
+        auto svgAlign = id->preserveAspectRatioAlign();
+        if (svgAlign == NativeImageData::None) {
             Unit::Rect frameRect = Unit::Rect(
                 borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                 width() - borderWidth() - paddingWidth(),
@@ -88,7 +89,6 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
             canvas->translate(borderLeft() + paddingLeft(),
                               borderTop() + paddingTop());
 
-            auto v = id->preserveAspectRatioValue();
             LayoutUnit containerWidth =
                 width() - borderWidth() - paddingWidth();
             LayoutUnit containerHeight =
@@ -102,15 +102,20 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
             LayoutUnit imageDstWidth;
             LayoutUnit imageDstHeight;
 
-            if (containerWidth / containerHeight >
-                (float)id->width() / (float)id->height()) {
-                imageDstWidth =
-                    containerHeight * (float)id->width() / (float)id->height();
+            if (id->isSVGNativeImageData()) {
+                imageDstWidth = containerWidth;
                 imageDstHeight = containerHeight;
             } else {
-                imageDstWidth = containerWidth;
-                imageDstHeight =
-                    containerWidth * (float)id->height() / (float)id->width();
+                if (containerWidth / containerHeight >
+                    (float)id->width() / (float)id->height()) {
+                    imageDstWidth = containerHeight * (float)id->width() /
+                                    (float)id->height();
+                    imageDstHeight = containerHeight;
+                } else {
+                    imageDstWidth = containerWidth;
+                    imageDstHeight = containerWidth * (float)id->height() /
+                                     (float)id->width();
+                }
             }
 
             LayoutUnit remainX = containerWidth - imageDstWidth;
@@ -118,32 +123,44 @@ void FrameReplacedImage::paintReplaced(Canvas* canvas)
 
             LayoutUnit x, y;
 
-            if (v == NativeImageData::xMinYMin) {
-            } else if (v == NativeImageData::xMidYMin) {
+            if (svgAlign == NativeImageData::xMinYMin) {
+            } else if (svgAlign == NativeImageData::xMidYMin) {
                 x = remainX / 2;
-            } else if (v == NativeImageData::xMaxYMin) {
+            } else if (svgAlign == NativeImageData::xMaxYMin) {
                 x = remainX;
-            } else if (v == NativeImageData::xMinYMid) {
+            } else if (svgAlign == NativeImageData::xMinYMid) {
                 y = remainY / 2;
-            } else if (v == NativeImageData::xMidYMid) {
+            } else if (svgAlign == NativeImageData::xMidYMid) {
                 x = remainX / 2;
                 y = remainY / 2;
-            } else if (v == NativeImageData::xMaxYMid) {
+            } else if (svgAlign == NativeImageData::xMaxYMid) {
                 x = remainX;
                 y = remainY / 2;
-            } else if (v == NativeImageData::xMinYMax) {
+            } else if (svgAlign == NativeImageData::xMinYMax) {
                 y = remainY;
-            } else if (v == NativeImageData::xMidYMax) {
+            } else if (svgAlign == NativeImageData::xMidYMax) {
                 x = remainX / 2;
                 y = remainY;
-            } else if (v == NativeImageData::xMaxYMax) {
+            } else if (svgAlign == NativeImageData::xMaxYMax) {
                 x = remainX;
                 y = remainY;
             }
 
-            canvas->drawImage(id,
-                              Unit::Rect(x, y, imageDstWidth, imageDstHeight),
-                              style()->imageRendering());
+            Unit::Rect frameRect =
+                Unit::Rect(x, y, imageDstWidth, imageDstHeight);
+            if (style()->hasObjectSizing()) {
+                canvas->save();
+                canvas->clip(frameRect);
+                LayoutRect imgRect =
+                    computeObjectFit(id->width(), id->height());
+                canvas->drawImage(id,
+                                  Unit::Rect(imgRect.x(), imgRect.y(),
+                                             imgRect.width(), imgRect.height()),
+                                  style()->imageRendering());
+                canvas->restore();
+            } else {
+                canvas->drawImage(id, frameRect, style()->imageRendering());
+            }
         }
     }
 }

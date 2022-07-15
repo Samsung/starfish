@@ -82,4 +82,4 @@ Path* FrameSVGPolygonBox::path()
     }
     return nullptr;
 }
-}
+} // namespace Starfish

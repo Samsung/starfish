@@ -56,6 +56,6 @@ protected:
 
     static void makeLuminanceMask(NativeImageData* image);
 };
-}
+} // namespace Starfish
 
 #endif

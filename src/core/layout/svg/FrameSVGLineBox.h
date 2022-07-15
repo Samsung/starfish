@@ -94,6 +94,6 @@ protected:
     float m_x1, m_y1;
     float m_x2, m_y2;
 };
-}
+} // namespace Starfish
 
 #endif
