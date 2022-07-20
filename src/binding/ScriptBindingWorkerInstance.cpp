@@ -115,7 +115,7 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 }
 
 // TODO: Remove mockup function
-#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
+#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
 #define BINDING_WORKER_MOCKUP_INTERFACE(F) \
     F(CSS)                                 \
     F(CSSKeywordValue)                     \

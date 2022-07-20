@@ -24,6 +24,7 @@
 #include "core/page/GlobalScope.h"
 #include "core/fetch/Fetch.h"
 #include "core/extra/Performance.h"
+#include "core/page/WindowOrWorkerGlobalScope.h"
 
 namespace Starfish {
 
@@ -95,6 +96,16 @@ public:
 
     String* btoa(ExecutionContext* executionContext, String* data);
     String* atob(ExecutionContext* executionContext, String* data);
+
+#ifdef STARFISH_ENABLE_CANVAS
+    Promise* createImageBitmap(
+        ExecutionContext* executionContext, ImageBitmapSource image,
+        ImageBitmapOptions options = ImageBitmapOptions());
+    Promise* createImageBitmap(
+        ExecutionContext* executionContext, ImageBitmapSource image, int32_t sx,
+        int32_t sy, int32_t sw, int32_t sh,
+        ImageBitmapOptions options = ImageBitmapOptions());
+#endif
 
     Performance* performance();
 

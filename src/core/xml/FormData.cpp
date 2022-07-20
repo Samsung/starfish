@@ -23,10 +23,7 @@ using namespace Escargot;
 #include "StarfishConfig.h"
 #include "core/xml/FormData.h"
 #include "core/dom/ExecutionContext.h"
-
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/dom/HTMLFormElement.h"
-#endif
 
 namespace Starfish {
 
@@ -106,7 +103,6 @@ FormData::FormData(ExecutionContext* executionContext)
     m_list = new (GC) GCVector<FormDataSetItem*>();
 }
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 FormData::FormData(ExecutionContext* executionContext, HTMLFormElement* form)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
@@ -117,7 +113,6 @@ FormData::FormData(ExecutionContext* executionContext, HTMLFormElement* form)
         m_list = new (GC) GCVector<FormDataSetItem*>();
     }
 }
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 ScriptBindingInstance* FormData::scriptBindingInstance()
 {

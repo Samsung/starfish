@@ -51,11 +51,9 @@
 
 #include "core/modules/serviceworker/util/Trace.h"
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Navigator.h"
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
-#endif
 
 namespace Starfish {
 

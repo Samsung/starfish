@@ -26,13 +26,10 @@
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/csp/ContentSecurityPolicy.h"
-
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Element.h"
-#endif
 
 namespace Starfish {
 

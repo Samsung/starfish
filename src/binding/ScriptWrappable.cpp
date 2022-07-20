@@ -31,14 +31,13 @@
 #include "core/page/BrowsingContext.h"
 #endif
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
-#else
+#if defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
+#endif /* defined(STARFISH_WEBWORKER_HOST) */
 
 #include <EscargotPublic.h>
 
@@ -272,7 +271,6 @@ ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
     return fetchExecutionContext(ctx)->scriptBindingInstance();
 }
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 Window* fetchWindow(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
@@ -302,7 +300,6 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 class EscargotStringView : public String {
 public:

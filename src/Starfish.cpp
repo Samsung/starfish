@@ -32,13 +32,11 @@
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #include "core/modules/serviceworker/PerProcess.h"
-#if !defined(STARFISH_WEBWORKER_HOST)
+#endif
+
 #include "core/util/Id.h"
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
-#endif
-#endif
-
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {

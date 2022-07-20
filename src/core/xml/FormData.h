@@ -63,9 +63,7 @@ class FormData : public ScriptWrappable {
 public:
     FormData(ExecutionContext* executionContext);
 
-#if !defined(STARFISH_WEBWORKER_HOST)
     FormData(ExecutionContext* executionContext, HTMLFormElement* form);
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(FormData)
 

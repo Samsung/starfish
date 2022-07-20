@@ -26,9 +26,9 @@
 
 #if defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#else
-#include "core/page/Window.h"
 #endif
+
+#include "core/page/Window.h"
 
 #include "LWEWebView.h"
 #include <EscargotPublic.h>
