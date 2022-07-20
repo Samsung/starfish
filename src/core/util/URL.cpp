@@ -25,11 +25,8 @@
 #include "core/util/URL.h"
 #include "core/util/URLSearchParams.h"
 #include "core/page/WebBase.h"
-
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
-#endif
 
 namespace Starfish {
 
@@ -86,7 +83,7 @@ void URL::revokeObjectURL(ExecutionContext* executionContext,
     }
 }
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
 String* URL::createObjectURL(MediaSource* mediaSource)
 {
     BlobURLStore store;

@@ -53,12 +53,10 @@
 #include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
 
-#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/layout/LayoutUtil.h"
 #include "core/style/Length.h"
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
-#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #endif

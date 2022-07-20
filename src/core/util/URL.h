@@ -38,7 +38,7 @@ public:
     static void revokeObjectURL(ExecutionContext* executionContext,
                                 String* blobURLRef);
     static String* createObjectURL(Blob* blob);
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
+#if defined(STARFISH_ENABLE_MULTIMEDIA)
     static String* createObjectURL(MediaSource* mediaSource);
 #endif
 

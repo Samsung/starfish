@@ -180,6 +180,24 @@ String* WorkerGlobalScope::atob(ExecutionContext* executionContext,
     return WindowOrWorkerGlobalScope::atob(executionContext, data);
 }
 
+#ifdef STARFISH_ENABLE_CANVAS
+Promise* WorkerGlobalScope::createImageBitmap(
+    ExecutionContext* executionContext, ImageBitmapSource image,
+    ImageBitmapOptions options)
+{
+    return WindowOrWorkerGlobalScope::createImageBitmap(executionContext, image,
+                                                        options);
+}
+
+Promise* WorkerGlobalScope::createImageBitmap(
+    ExecutionContext* executionContext, ImageBitmapSource image, int32_t sx,
+    int32_t sy, int32_t sw, int32_t sh, ImageBitmapOptions options)
+{
+    return WindowOrWorkerGlobalScope::createImageBitmap(
+        executionContext, image, sx, sy, sw, sh, options);
+}
+#endif
+
 Performance* WorkerGlobalScope::performance()
 {
     return Performance::create(executionContext());

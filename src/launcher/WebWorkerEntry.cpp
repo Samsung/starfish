@@ -17,7 +17,8 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
+    defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
