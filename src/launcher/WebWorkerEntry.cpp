@@ -53,6 +53,8 @@ static inline bool startsWith(const std::string& string,
 
 int main(int argc, char* argv[])
 {
+    LoggerOption::instance()->parseEnv();
+
     STARFISH_ASSERT(argv != nullptr);
     STARFISH_LOG_INFO("WORKER STARTS");
 

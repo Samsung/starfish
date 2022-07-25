@@ -27,7 +27,21 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
+class LoggerOption {
+public:
+    static LoggerOption* instance();
+    bool isLogEnable(const char* location);
+    void registerFilterString(const std::string rawKeys);
+    void parseEnv();
+
+private:
+    LoggerOption() = default;
+    std::unordered_set<std::string> m_filters;
+    bool m_useFilter{ false };
+};
 
 namespace Starfish {
 

@@ -254,6 +254,8 @@ int main(int argc, char* argv[])
     mallopt(M_MMAP_MAX, 1024 * 1024);
 #endif
 
+    LoggerOption::instance()->parseEnv();
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     const char* defaultEngine = "gl";
     const char* engine = getenv("STARFISH_ELM_ENGINE");
