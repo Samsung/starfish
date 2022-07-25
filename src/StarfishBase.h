@@ -331,6 +331,8 @@ const char* getWindowsTempDir();
 } // namespace Starfish
 #endif
 
+#include "core/util/ProgramOptions.h"
+
 #if defined(STARFISH_WEBWORKER_HOST)
 #define STARFISH_LOG_TAG "[WORKER] "
 #else
@@ -362,10 +364,14 @@ const char* getWindowsTempDir();
                  __MODULE__, __func__, __LINE__, ##arg);
 #endif
 
-#define STARFISH_LOG_INFO(fmt, arg...)                                     \
-    LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt "\n", \
-                      ##arg)
+#define STARFISH_LOG_INFO(fmt, arg...)                                         \
+    if (LoggerOption::instance()->isLogEnable(__MODULE__)) {                   \
+        LOG_FUNCTION_TYPE(fprintf, stdout, STARFISH_LOG_TAG, "", "", fmt "\n", \
+                          ##arg)                                               \
+    }
+
 #define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
+
 #if defined(STARFISH_TIZEN) && !defined(STARFISH_ENABLE_TEST)
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
