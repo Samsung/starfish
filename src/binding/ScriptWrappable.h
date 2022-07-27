@@ -151,6 +151,10 @@ ScriptValue createScriptValue(double value);
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);
+ScriptValue createScriptFunction(
+    ScriptBindingInstance* instance, const std::string& name,
+    Escargot::ScriptNativeFunctionPointer nativeFunction, size_t argument,
+    bool isStrict = true, bool isConstructor = true);
 ScriptValue createAttributeStringEventFunction(EventTarget* instance,
                                                String* functionBody,
                                                bool& result);
@@ -414,8 +418,11 @@ public:
 class Promise : public gc {
 public:
     Promise(ScriptBindingInstance* instance);
+    Promise(ScriptBindingInstance* instance, ScriptValue scriptValue);
     void fulfill(ScriptValue v);
     void reject(ScriptValue v);
+    ScriptValue then(ScriptValue handler);
+    ScriptValue then(ScriptValue onFulfilled, ScriptValue onRejected);
     ScriptValue scriptValue()
     {
         return m_scriptValue;
@@ -425,6 +432,9 @@ protected:
     ScriptValue m_scriptValue;
     ScriptBindingInstance* m_instance;
 };
+
+Promise* toPromise(ScriptBindingInstance* instance, ScriptValue scriptValue);
+
 } // namespace Starfish
 
 #endif
