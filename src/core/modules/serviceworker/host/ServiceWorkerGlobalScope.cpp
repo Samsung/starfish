@@ -24,6 +24,14 @@
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/util/ParallelTask.h"
+#include "core/modules/serviceworker/ServiceWorker.h"
+#include "binding/ScriptWrappable.h"
+#include "core/modules/serviceworker/host/ServiceWorkerServer.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
 
@@ -32,6 +40,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
                                                    String* charSet)
     : WorkerGlobalScope(webWorker)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(webWorker != nullptr);
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(charSet != nullptr);
@@ -41,6 +50,90 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
             webWorker->scriptEngineInstance(), this);
 
     initGlobalScope(url, charSet);
+}
+
+ServiceWorker* ServiceWorkerGlobalScope::serviceWorker()
+{
+    TRACE_SCOPE(HOST);
+    // 4.1.3. serviceWorker
+    //
+    // The serviceWorker getter steps are to return the result of `getting the
+    // service worker object` that represents this's service worker in this's
+    // relevant settings object.
+
+    // TODO: `getting the service worker object`
+
+    STARFISH_UNIMPLEMENTED();
+    return nullptr;
+}
+
+void ServiceWorkerGlobalScope::setServiceWorkerData(
+    ServiceWorkerData* serviceWorker)
+{
+    TRACE_SCOPE(HOST);
+    m_serviceWorker = serviceWorker;
+}
+
+Promise* ServiceWorkerGlobalScope::skipWaiting()
+{
+    TRACE_SCOPE(HOST);
+    // Note: The skipWaiting() method allows this service worker to progress
+    // from the registration's waiting position to active even while service
+    // worker clients are using the registration.
+
+    // https://www.w3.org/TR/service-workers/#dom-serviceworkerglobalscope-skipwaiting
+    // The skipWaiting() method steps are:
+    // 1. Let promise be a new promise.
+    Promise* promise = new Promise(m_scriptBindingInstance);
+
+    // 2. Run the following substeps in parallel:
+    class SkipWaitingTask : public ParallelTask {
+    public:
+        SkipWaitingTask(ServiceWorkerGlobalScope* s, Promise* p)
+            : globalScope_(s)
+            , promise_(p)
+        {
+        }
+
+        void run() override
+        {
+            TRACE_SCOPE(HOST);
+            // TODO: use this serviceWorker
+            // auto serviceWorkerRef = globalScope_->serviceWorker();
+            ServiceWorkerData* serviceWorker =
+                globalScope_->serviceWorkerData();
+
+            STARFISH_ASSERT(serviceWorker != nullptr);
+
+            // 2-1. Set service worker's skip waiting flag.
+            serviceWorker->setSkipWaiting(true);
+
+            // 2-2. Invoke Try Activate with service worker's containing
+            // service worker registration.
+            ServiceWorkerHostJobHandler* jobHander =
+                ServiceWorkerAgent::instance()
+                    ->serviceWorkerServer()
+                    ->jobHandler();
+
+            ServiceWorkerRegistrationData* registration =
+                jobHander->getRegistration(serviceWorker->registrationId);
+            STARFISH_ASSERT(registration != nullptr);
+
+            jobHander->tryActivate(registration);
+
+            // 2-3. Resolve promise with undefined.
+            promise_->fulfill(scriptUndefined());
+        }
+
+    private:
+        ServiceWorkerGlobalScope* globalScope_{ nullptr };
+        Promise* promise_{ nullptr };
+    };
+
+    ParallelTask::queue(new SkipWaitingTask(this, promise));
+
+    // 3. Return promise.
+    return promise;
 }
 
 void* ServiceWorkerGlobalScope::operator new(size_t size)

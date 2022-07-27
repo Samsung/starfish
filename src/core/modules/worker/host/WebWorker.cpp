@@ -33,6 +33,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -75,6 +76,7 @@ WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
                              const char* timezoneID,
                              String* customUserAgentString)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(starfish != nullptr);
     STARFISH_ASSERT(locale != nullptr);
     STARFISH_ASSERT(timezoneID != nullptr);
@@ -85,6 +87,7 @@ WebWorker* WebWorker::create(Starfish* starfish, const char* locale,
 
 void WebWorker::destroy()
 {
+    TRACE_SCOPE(SVCWORKER);
     this->~WebWorker();
 }
 
@@ -110,8 +113,9 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-WorkerGlobalScope* WebWorker::createGlobalScope(String* scriptURL)
+ServiceWorkerGlobalScope* WebWorker::createGlobalScope(String* scriptURL)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
 
     clearBlobURLStore();

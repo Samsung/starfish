@@ -9,8 +9,9 @@
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   //[SameObject] readonly attribute Clients clients;
   //[SameObject] readonly attribute ServiceWorkerRegistration registration;
+  [SameObject] readonly attribute ServiceWorker serviceWorker;
 
-  //[NewObject] Promise<void> skipWaiting();
+  [NewObject] Promise<void> skipWaiting();
 
   //attribute EventHandler oninstall;
   //attribute EventHandler onactivate;

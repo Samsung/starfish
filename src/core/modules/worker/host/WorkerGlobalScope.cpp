@@ -37,8 +37,24 @@
 #include "core/dom/DOMException.h"
 
 #include "core/page/WindowOrWorkerGlobalScope.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
+
+static thread_local WorkerGlobalScope* g_currentGlobal;
+
+void WorkerGlobalScope::enter(WorkerGlobalScope* scope)
+{
+    TRACE_SCOPE(HOST);
+    // Currently a single WorkerGlobalScope instance on a process is considered.
+    STARFISH_ASSERT(g_currentGlobal == nullptr);
+    g_currentGlobal = scope;
+}
+
+WorkerGlobalScope* WorkerGlobalScope::getCurrent()
+{
+    return g_currentGlobal;
+}
 
 WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     : EventTarget()
@@ -54,6 +70,8 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
 {
+    TRACE_SCOPE(HOST);
+
     STARFISH_ASSERT(webWorker != nullptr);
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(charSet != nullptr);
@@ -122,6 +140,7 @@ void WorkerGlobalScope::clearInterval(int32_t id)
 
 void WorkerGlobalScope::importScripts(GCVector<String*>& urls)
 {
+    TRACE_SCOPE(HOST);
     if (urls.empty()) {
         return;
     }
@@ -138,6 +157,7 @@ void WorkerGlobalScope::importScripts(GCVector<String*>& urls)
 
 void WorkerGlobalScope::importScript(ResourceURL* url)
 {
+    TRACE_SCOPE(HOST);
     STARFISH_ASSERT(url != nullptr);
     if (url->isValid() == false) {
         throw new DOMException(executionContext(),
@@ -160,23 +180,27 @@ void WorkerGlobalScope::importScript(ResourceURL* url)
 
 Promise* WorkerGlobalScope::fetch(RequestInfo& input)
 {
+    TRACE_SCOPE(HOST);
     return Fetch::fetch(executionContext(), input);
 }
 
 Promise* WorkerGlobalScope::fetch(RequestInfo& input, RequestInit& init)
 {
+    TRACE_SCOPE(HOST);
     return Fetch::fetch(executionContext(), input, init);
 }
 
 String* WorkerGlobalScope::btoa(ExecutionContext* executionContext,
                                 String* data)
 {
+    TRACE_SCOPE(HOST);
     return WindowOrWorkerGlobalScope::btoa(executionContext, data);
 }
 
 String* WorkerGlobalScope::atob(ExecutionContext* executionContext,
                                 String* data)
 {
+    TRACE_SCOPE(HOST);
     return WindowOrWorkerGlobalScope::atob(executionContext, data);
 }
 
@@ -200,6 +224,7 @@ Promise* WorkerGlobalScope::createImageBitmap(
 
 Performance* WorkerGlobalScope::performance()
 {
+    TRACE_SCOPE(HOST);
     return Performance::create(executionContext());
 }
 

@@ -154,6 +154,13 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     auto workerGlobalScope =
         webWorker->createGlobalScope(serviceWorker->scriptURL);
     m_webWorkerList.push_back(webWorker);
+    TRACE(SVCWORKER, "create a global scope",
+          serviceWorker->scriptURL->toUTF8NonGCString());
+
+    // Register this global ccope as the current one.
+    WorkerGlobalScope::enter(workerGlobalScope);
+    workerGlobalScope->setServiceWorkerData(serviceWorker);
+
     // - Let realmExecutionContext be the created JavaScript execution context.
 
     // 4.2 Set serviceWorker’s global object to workerGlobalScope.

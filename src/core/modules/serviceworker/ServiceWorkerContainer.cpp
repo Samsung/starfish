@@ -86,6 +86,7 @@ ServiceWorkerEnvironment* ServiceWorkerContainer::serviceWorkerEnvironment()
 Promise* ServiceWorkerContainer::registerServiceWorker(
     String* rawScriptURL, RegistrationOptions& options)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(rawScriptURL != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-register
@@ -129,6 +130,7 @@ void ServiceWorkerContainer::startRegister(
     ServiceWorkerEnvironment* client, WorkerType type,
     ServiceWorkerUpdateViaCache updateViaCache)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
     STARFISH_ASSERT(promise != nullptr);
     STARFISH_ASSERT(client != nullptr);
@@ -237,6 +239,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(
     NULLABLE String* scriptURL, Promise* promise,
     NULLABLE ServiceWorkerEnvironment* client)
 {
+    TRACE_SCOPE(SVCWORKER);
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
@@ -262,11 +265,13 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(
 
 void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(job != nullptr);
 
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
+            TRACE_SCOPE(SVCWORKER);
             ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data1);
             WebOrigin* webOrigin = castTo<WebOrigin*>(data2);
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
@@ -286,7 +291,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 {
     TRACE_SCOPE(SVCWORKER);
-    TRACE(CLIENT, "0: %s", CSTR(rawClientURL));
+    TRACE(CLIENT, "0: ", CSTR(rawClientURL));
 
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistration
 
@@ -341,6 +346,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 
     matchRegistrationRequest->setPostTask(new RequestTask(
         [](ServiceWorkerRequest& req, TaskResult& results, TaskParam& params) {
+            TRACE_SCOPE(SVCWORKER);
             auto request = castTo<ServiceWorkerRequest*>(params[0]);
             auto container = castTo<ServiceWorkerContainer*>(params[1]);
 
@@ -355,7 +361,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
             if (registration != nullptr) {
                 // 7.2.1 Resolve promise with the ServiceWorkerRegistration
                 // object which represents registration.
-                TRACE(CLIENT, "7.2.1: %s", CSTR(registration->scope));
+                TRACE(CLIENT, "7.2.1: ", CSTR(registration->scope));
 
                 auto swRegistration = new ServiceWorkerRegistration(
                     container->executionContext(), container);
@@ -382,6 +388,7 @@ Promise* ServiceWorkerContainer::getRegistration(NULLABLE String* rawClientURL)
 // https://w3c.github.io/ServiceWorker/#navigator-service-worker-getRegistrations
 Promise* ServiceWorkerContainer::getRegistrations()
 {
+    TRACE_SCOPE(SVCWORKER);
     // 1. Let client be this's service worker client.
     auto client = serviceWorkerEnvironment();
 
@@ -421,12 +428,14 @@ ServiceWorkerRequest* ServiceWorkerContainer::createRequest(
 void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
                                                ResourceURL* clientURL)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURL != nullptr);
 
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
+            TRACE_SCOPE(SVCWORKER);
             auto swrequest = castTo<ServiceWorkerRequest*>(data1);
             auto urlString = castTo<String*>(data2);
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
@@ -446,6 +455,7 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
 
 Promise* ServiceWorkerContainer::registerServiceWorker(String* url)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(url != nullptr);
     RegistrationOptions defaultOptions;
     return registerServiceWorker(url, defaultOptions);
@@ -453,6 +463,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(String* url)
 
 ServiceWorker* ServiceWorkerContainer::controller()
 {
+    TRACE_SCOPE(SVCWORKER);
     // 1. Let client be the context object’s service worker client.
     ExecutionContext* context = executionContext();
 
@@ -467,6 +478,7 @@ ServiceWorker* ServiceWorkerContainer::controller()
 void ServiceWorkerContainer::resolveJobPromise(
     ServiceWorkerJob* job, NULLABLE ServiceWorkerRegistrationData* registration)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(job != nullptr);
 
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
@@ -483,6 +495,7 @@ void ServiceWorkerContainer::resolveJobPromise(
         context->webBase()->messageLoop()->addIdler(
             context->globalScope(),
             [](size_t handle, void* data, void* data1) {
+                TRACE_SCOPE(SVCWORKER);
                 ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
                 ServiceWorkerContainer* container =
                     castTo<ServiceWorkerContainer*>(data1);
@@ -533,6 +546,7 @@ void ServiceWorkerContainer::resolveJobPromise(
 void ServiceWorkerContainer::rejectJobPromise(ServiceWorkerJob* job,
                                               ErrorData* errorData)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(errorData != nullptr);
     // https://w3c.github.io/ServiceWorker/#reject-job-promise-algorithm
@@ -572,6 +586,7 @@ void ServiceWorkerContainer::rejectJobPromise(ServiceWorkerJob* job,
 
 void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(job != nullptr);
     m_jobMap.erase(job->data()->id);
 }
@@ -579,6 +594,7 @@ void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
 Nullable<ServiceWorkerJob*> ServiceWorkerContainer::findJob(
     Id<ServiceWorkerJob> id)
 {
+    TRACE_SCOPE(SVCWORKER);
     auto it = m_jobMap.find(id);
     if (it == m_jobMap.end()) {
         return nullptr;
@@ -589,6 +605,7 @@ Nullable<ServiceWorkerJob*> ServiceWorkerContainer::findJob(
 NULLABLE ServiceWorkerRequest* ServiceWorkerContainer::findRequest(
     Id<ServiceWorkerRequest> id)
 {
+    TRACE_SCOPE(SVCWORKER);
     auto it = m_requestMap.find(id);
     if (it == m_requestMap.end()) {
         return nullptr;
@@ -598,6 +615,7 @@ NULLABLE ServiceWorkerRequest* ServiceWorkerContainer::findRequest(
 
 void ServiceWorkerContainer::finishRequest(ServiceWorkerRequest* request)
 {
+    TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(request != nullptr);
     m_requestMap.erase(request->id);
 }

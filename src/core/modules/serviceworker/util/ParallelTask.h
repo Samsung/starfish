@@ -19,35 +19,14 @@
 
 #pragma once
 
-#include "core/modules/serviceworker/util/Logger.h"
+#include "StarfishConfig.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
-class Trace : public Logger {
+class ParallelTask : public gc {
 public:
-    Trace(std::string id);
-    Trace(std::string id, const char* functionName, const char* filename,
-          const int line);
+    virtual void run() = 0;
+
+    // static void queueTask(void (*fn)(size_t, void*), void* data);
+    static void queue(ParallelTask* task);
+    void start();
 };
-
-#if defined(NDEBUG)
-
-#define TRACE(id, ...)
-#define TRACE0(id, ...)
-#define TRACE_SCOPE(id, ...)
-
-#else
-
-#define TRACE(id, ...) \
-    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).log(__VA_ARGS__)
-
-#define TRACE0(id, ...) Trace(#id).log(__VA_ARGS__)
-
-#define TRACEF(id, ...) \
-    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).print(__VA_ARGS__)
-
-#define TRACEF0(id, ...) Trace(#id).print(__VA_ARGS__)
-
-#define TRACE_SCOPE(id, ...)      \
-    IndentCounter __counter(#id); \
-    TRACE(id, __VA_ARGS__)
-
-#endif

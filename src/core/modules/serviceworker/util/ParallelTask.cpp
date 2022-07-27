@@ -17,37 +17,29 @@
  *  USA
  */
 
-#pragma once
+#include "core/modules/serviceworker/util/ParallelTask.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
-#include "core/modules/serviceworker/util/Logger.h"
+using Starfish::MessageLoop;
 
-class Trace : public Logger {
-public:
-    Trace(std::string id);
-    Trace(std::string id, const char* functionName, const char* filename,
-          const int line);
-};
+void ParallelTask::start()
+{
+    (new MessageLoop())
+        ->addIdler(
+            nullptr,
+            [](size_t handle, void* data) {
+                static_cast<ParallelTask*>(data)->run();
+            },
+            this);
+}
 
-#if defined(NDEBUG)
-
-#define TRACE(id, ...)
-#define TRACE0(id, ...)
-#define TRACE_SCOPE(id, ...)
-
-#else
-
-#define TRACE(id, ...) \
-    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).log(__VA_ARGS__)
-
-#define TRACE0(id, ...) Trace(#id).log(__VA_ARGS__)
-
-#define TRACEF(id, ...) \
-    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).print(__VA_ARGS__)
-
-#define TRACEF0(id, ...) Trace(#id).print(__VA_ARGS__)
-
-#define TRACE_SCOPE(id, ...)      \
-    IndentCounter __counter(#id); \
-    TRACE(id, __VA_ARGS__)
-
-#endif
+void ParallelTask::queue(ParallelTask* task)
+{
+    (new MessageLoop())
+        ->addIdler(
+            nullptr,
+            [](size_t handle, void* data) {
+                static_cast<ParallelTask*>(data)->run();
+            },
+            task);
+}

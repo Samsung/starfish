@@ -23,6 +23,7 @@
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
+#include <string>
 
 namespace Starfish {
 
@@ -35,10 +36,12 @@ public:
     String* scope{ String::emptyString };
 
     DEFINE_GETTER(Nullable<ServiceWorkerData*>, installingWorker);
+    DEFINE_GETTER(Nullable<ServiceWorkerData*>, waitingWorker);
+    DEFINE_GETTER(Nullable<ServiceWorkerData*>, activeWorker);
     void setInstallingWorker(Nullable<ServiceWorkerData*> worker);
+    void setWaitingWorker(Nullable<ServiceWorkerData*> worker);
+    void setActiveWorker(Nullable<ServiceWorkerData*> worker);
 
-    Nullable<ServiceWorkerData*> waitingWorker;
-    Nullable<ServiceWorkerData*> activeWorker;
     ServiceWorkerUpdateViaCache updateViaCache{
         ServiceWorkerUpdateViaCache::None
     };
@@ -55,7 +58,11 @@ public:
     void archive(Archiver& ar) override;
 
 private:
+    Nullable<ServiceWorkerData*> m_waitingWorker;
+    Nullable<ServiceWorkerData*> m_activeWorker;
     Nullable<ServiceWorkerData*> m_installingWorker;
+
+    void sendEventTask(std::string eventname);
 
     bool m_isUninstalling{ false };
 };

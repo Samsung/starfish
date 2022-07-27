@@ -55,7 +55,7 @@ void Connection::send(const char* data, size_t len)
 
     m_socket->send(data, len, SCK_DONTWAIT);
 
-    TRACE(CONNECTION, COLOR_SEND "[SEND] %zu byte(s)" COLOR_RESET, len);
+    TRACEF(CONNECTION, COLOR_SEND "[SEND] %zu byte(s)" COLOR_RESET, len);
 }
 
 Socket* Connection::socket()
@@ -73,8 +73,8 @@ void Connection::onReceived(Socket* socket, const char* data, size_t len)
     // recv buffer like a string.
     STARFISH_ASSERT(memchr(data, '\0', len));
 
-    TRACE(CONNECTION, COLOR_RECV "[RECV] %zu byte(s)\n%s" COLOR_RESET, len,
-          data);
+    TRACEF(CONNECTION, COLOR_RECV "[RECV] %zu byte(s)\n%s" COLOR_RESET, len,
+           data);
 }
 
 void Connection::onStopped()
@@ -87,7 +87,7 @@ std::string Connection::Config::s_handlePath;
 
 void Connection::Config::setHandleDir(std::string path)
 {
-    TRACE_SCOPE(CONFIG, "%s", path);
+    TRACE_SCOPE(CONFIG, path);
     s_handlePath = path;
 }
 
@@ -124,7 +124,7 @@ std::string Connection::Config::createAddress(const std::string& last)
     ss << "inproc://sw/";
 #endif
 
-    TRACE(CONFIG, "%s", ss.str());
+    TRACE(CONFIG, ss.str());
     return ss.str();
 }
 

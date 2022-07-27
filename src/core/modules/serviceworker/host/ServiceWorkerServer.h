@@ -21,6 +21,8 @@
     !defined(__StarfishServiceWorkerHostProcess__)
 #define __StarfishServiceWorkerHostProcess__
 
+#include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
+
 namespace Starfish {
 
 /*
