@@ -162,7 +162,7 @@ bool ServiceWorkerProcessManager::processExist(const std::string identifier)
     // Here we use the socket handle promised exists.
     auto handlePath = Connection::Config::getHandlePath(identifier);
     bool exist = isFile(handlePath);
-    TRACE(SVCWORKER, "result: %s", exist);
+    TRACE(SVCWORKER, "result: ", exist);
     return exist;
 }
 
@@ -231,8 +231,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     STARFISH_ASSERT(processData->connection != nullptr);
 
-    TRACE(SVCWORKER, "client: connect: %s", address.c_str());
-    TRACE(SVCWORKER, "client: origin: %s", origin.c_str());
+    TRACE(SVCWORKER, "client: connect: ", address.c_str());
+    TRACE(SVCWORKER, "client: origin: ", origin.c_str());
 
     return processData->connection;
 }
@@ -243,7 +243,7 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(globalScope != nullptr);
 
-    TRACE(CLIENT, "1: %s", CSTR(globalScope->executionContext()->urlString()));
+    TRACE(CLIENT, "1: ", CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 
@@ -263,7 +263,7 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
 
     STARFISH_ASSERT(globalScope != nullptr);
 
-    TRACE(CLIENT, "1: %s", CSTR(globalScope->executionContext()->urlString()));
+    TRACE(CLIENT, "1: ", CSTR(globalScope->executionContext()->urlString()));
 
     m_mapIdToActiveGlobalScope.erase(id);
 

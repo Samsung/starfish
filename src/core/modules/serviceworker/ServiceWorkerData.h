@@ -91,6 +91,7 @@ public:
     DEFINE_GETTER_SETTER(WorkerType, type, Type);
     DEFINE_GETTER_SETTER(NULLABLE ScriptResourceMap_t*, urlToScriptResourceMap,
                          UrlToScriptResourceMap);
+    DEFINE_GETTER_SETTER(bool, skipWaiting, SkipWaiting);
 
     ScriptResource& scriptResource()
     {
@@ -106,6 +107,7 @@ private:
     ScriptResourceMap_t* m_urlToScriptResourceMap{ nullptr };
     WorkerType m_type{ WorkerType::Classic };
     ScriptResource m_scriptResource;
+    bool m_skipWaiting{ false };
 };
 
 } // namespace Starfish

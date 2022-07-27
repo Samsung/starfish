@@ -206,7 +206,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 {
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
-    TRACE(HOST, "0: type: %d", toUnderlyingType(job->data()->type));
+    TRACE(HOST, "0: type: ", toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     // 1. Let jobQueue be null.
@@ -228,8 +228,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     }
 
     // 5. If jobQueue is empty, then:
-    TRACE(HOST, "5: is jobQueue empty? (%s)",
-          jobQueue->empty() ? "true" : "false");
+    TRACE(HOST, "5: is jobQueue empty? ", jobQueue->empty() ? "true" : "false");
 
     if (jobQueue->empty()) {
         // 5.1. Set job’s containing job queue to jobQueue, and enqueue job to
@@ -269,12 +268,12 @@ ServiceWorkerHostJobHandler::getRegistration(String* queriedScope)
 
     for (const auto& pair : m_scopeToRegistrationMap) {
         if (pair.first->equals(queriedScope)) {
-            TRACE(HOST, "1: %s (Found)", CSTR(queriedScope));
+            TRACEF(HOST, "1: %s (Found)", CSTR(queriedScope));
             return pair.second;
         }
     }
 
-    TRACE(HOST, "1: %s (Not Found)", CSTR(queriedScope));
+    TRACEF(HOST, "1: %s (Not Found)", CSTR(queriedScope));
     return nullptr;
 }
 
@@ -286,12 +285,12 @@ ServiceWorkerHostJobHandler::getRegistration(
     for (const auto& pair : m_scopeToRegistrationMap) {
         auto registration = pair.second;
         if (registration->id == registrationId) {
-            TRACE(HOST, "1: %s (Found)", registrationId.toString().c_str());
+            TRACEF(HOST, "1: %s (Found)", registrationId.toString());
             return registration;
         }
     }
 
-    TRACE(HOST, "1: %s (Not Found)", registrationId.toString().c_str());
+    TRACEF(HOST, "1: %s (Not Found)", registrationId.toString());
     return nullptr;
 }
 
@@ -301,7 +300,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(scope != nullptr);
 
-    TRACE(HOST, "0: %s", CSTR(scope));
+    TRACE(HOST, "0: ", CSTR(scope));
 
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
 
@@ -416,14 +415,14 @@ Nullable<ServiceWorkerData*> ServiceWorkerHostJobHandler::getNewestWorker(
         // 3. If registration’s installing worker is not null, set newestWorker
         // to registration’s installing worker.
         newestWorker = registration->installingWorker().value();
-    } else if (registration->waitingWorker) {
+    } else if (registration->waitingWorker()) {
         // 4. Else if registration’s waiting worker is not null, set
         // newestWorker to registration’s waiting worker.
-        newestWorker = registration->waitingWorker.value();
-    } else if (registration->activeWorker) {
+        newestWorker = registration->waitingWorker().value();
+    } else if (registration->activeWorker()) {
         // 5. Else if registration’s active worker is not null, set newestWorker
         // to registration’s active worker.
-        newestWorker = registration->activeWorker.value();
+        newestWorker = registration->activeWorker().value();
     }
 
     // 6. Return newestWorker.
@@ -551,10 +550,101 @@ void ServiceWorkerHostJobHandler::install(
     // scope url and all the service workers
     // whose containing service worker registration is registration.
 
-    // 21. Invoke Finish Job with job.
+    // 17. Run the Update Registration State algorithm passing registration,
+    // "waiting" and registration’s installing worker as the arguments.
+    updateRegistrationState(registration,
+                            ServiceWorkerRegistrationState::Waiting, worker);
+
+    // 18. Run the Update Registration State algorithm passing registration,
+    // "installing" and null as the arguments.
+    updateRegistrationState(
+        registration, ServiceWorkerRegistrationState::Installing, nullptr);
+
+    // 19. Run the Update Worker State algorithm passing registration’s
+    // waiting worker and "installed" as the arguments.
+    updateWorkerState(worker, ServiceWorkerState::Installed);
+
+    // 20. Invoke Finish Job with job.
     finishJob(job);
 
-    // 23. Invoke Try Activate with registration.
+    // 21. Wait for all the tasks queued by Update Worker State invoked in this
+    // algorithm to have executed.
+    // TODO
+
+    // 22. Invoke Try Activate with registration.
+    //
+    // Note: If Try Activate does not trigger Activate here, Activate is tried
+    // again when the last client controlled by the existing active worker is
+    // unloaded, `skipWaiting()` is asynchronously called, or the extend
+    // lifetime promises for the existing active worker settle.
+    tryActivate(registration);
+}
+
+void ServiceWorkerHostJobHandler::tryActivate(
+    ServiceWorkerRegistrationData* registration)
+{
+    TRACE_SCOPE(HOST);
+    // https://w3c.github.io/ServiceWorker/#try-activate-algorithm
+
+    // 1. If registration’s waiting worker is null, return.
+    if (registration->waitingWorker().hasValue() == false) {
+        return;
+    }
+
+    // 2. If registration’s active worker is not null and registration’s active
+    // worker's state is "activating", return.
+    if (registration->activeWorker().hasValue() &&
+        registration->activeWorker().value()->state ==
+            ServiceWorkerState::Activating) {
+        // Note: If the existing active worker is still in activating state, the
+        // activation of the waiting worker is delayed.
+        return;
+    }
+
+    // 3. Invoke `Activate` with registration if either of the following is
+    // true:
+
+    // Condition 1 - registration’s active worker is null.
+    if (registration->activeWorker().hasValue() == false) {
+        return activate(registration);
+    }
+
+    // Condition 2 - The result of running `Service Worker Has No Pending
+    // Events` with registration’s `active worker` is true, and
+
+    bool condition1 =
+        serviceWorkerHasNoPendingEvents(registration->activeWorker().value());
+
+    // TODO: no `service worker client` is using registration
+    bool isNoServiceWorkerClientIsUsingRegistration = false;
+
+    // or registration’s waiting worker's `skip waiting flag` is set.
+    bool condition2 = (isNoServiceWorkerClientIsUsingRegistration ||
+                       registration->waitingWorker().value()->skipWaiting());
+
+    if (condition1 && condition2) {
+        return activate(registration);
+    }
+}
+
+void ServiceWorkerHostJobHandler::activate(
+    ServiceWorkerRegistrationData* registration)
+{
+    TRACE_SCOPE(HOST);
+    // TODO: https://www.w3.org/TR/service-workers/#activation-algorithm
+    STARFISH_UNIMPLEMENTED();
+}
+
+bool ServiceWorkerHostJobHandler::serviceWorkerHasNoPendingEvents(
+    ServiceWorkerData* serviceWorker)
+{
+    TRACE_SCOPE(HOST);
+    // https://w3c.github.io/ServiceWorker/#service-worker-has-no-pending-events
+    // 1. For each event of worker’s set of extended events:
+    // 1.1 If event is active, return false.
+
+    // 2. Return true.
+    return true;
 }
 
 void ServiceWorkerHostJobHandler::resolveJobPromise(
@@ -596,16 +686,16 @@ bool ServiceWorkerHostJobHandler::tryClearRegistration(
     // 1.2 registration’s waiting worker is null or the result of running
     // Service Worker Has No Pending Events with registration’s waiting
     // worker is true.
-    if ((registration->waitingWorker != nullptr) &&
-        (registration->waitingWorker->hasPendingEvents() == true)) {
+    if ((registration->waitingWorker() != nullptr) &&
+        (registration->waitingWorker()->hasPendingEvents() == true)) {
         return false;
     }
 
     // 1.3 registration’s active worker is null or the result of running
     // Service Worker Has No Pending Events with registration’s active
     // worker is true.
-    if ((registration->activeWorker != nullptr) &&
-        (registration->activeWorker->hasPendingEvents() == true)) {
+    if ((registration->activeWorker() != nullptr) &&
+        (registration->activeWorker()->hasPendingEvents() == true)) {
         return false;
     }
 
@@ -639,13 +729,13 @@ void ServiceWorkerHostJobHandler::clearRegistration(
     }
 
     // 3. If registration’s waiting worker is not null, then:
-    if (registration->waitingWorker) {
+    if (registration->waitingWorker()) {
         // 3.1 Terminate registration’s waiting worker.
-        terminateServiceWorker(registration->waitingWorker.value());
+        terminateServiceWorker(registration->waitingWorker().value());
 
         // 3.2 Run the Update Worker State algorithm passing registration’s
         // waiting worker and redundant as the arguments.
-        updateWorkerState(registration->waitingWorker.value(),
+        updateWorkerState(registration->waitingWorker().value(),
                           ServiceWorkerState::Redundant);
 
         // 3.3 Run the Update Registration State algorithm passing registration,
@@ -655,13 +745,13 @@ void ServiceWorkerHostJobHandler::clearRegistration(
     }
 
     // 4. If registration’s active worker is not null, then:
-    if (registration->activeWorker) {
+    if (registration->activeWorker()) {
         // 4.1 Terminate registration’s active worker.
-        terminateServiceWorker(registration->activeWorker.value());
+        terminateServiceWorker(registration->activeWorker().value());
 
         // 4.2 Run the Update Worker State algorithm passing registration’s
         // active worker and redundant as the arguments.
-        updateWorkerState(registration->activeWorker.value(),
+        updateWorkerState(registration->activeWorker().value(),
                           ServiceWorkerState::Redundant);
 
         // 4.3 Run the Update Registration State algorithm passing registration,
@@ -734,7 +824,17 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
         // installing worker is null.
         break;
     case ServiceWorkerRegistrationState::Waiting:
+        // 3.1 Set registration’s waiting worker to source.
+        registration->setWaitingWorker(source);
+
+        // 3.2 For each registrationObject in registrationObjects:
+        // 3.2.1 Queue a task to set the waiting attribute of registrationObject
+        // to null if registration’s waiting worker is null, or the result of
+        // getting the service worker object that represents registration’s
+        // waiting worker in registrationObject’s relevant settings object.
+        break;
     case ServiceWorkerRegistrationState::Active:
+        // 4.1 Set registration’s waiting worker to source.
         STARFISH_UNIMPLEMENTED();
         break;
     default:
@@ -831,7 +931,7 @@ void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
-    TRACE(HOST, "0: type: %d", toUnderlyingType(job->data()->type));
+    TRACE(HOST, "0: type: ", toUnderlyingType(job->data()->type));
 
     // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
 
@@ -858,7 +958,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     STARFISH_ASSERT(request != nullptr);
     STARFISH_ASSERT(clientURLString != nullptr);
 
-    TRACE(HOST, "0: %s", CSTR(clientURLString));
+    TRACE(HOST, "0: ", CSTR(clientURLString));
 
     // https://w3c.github.io/ServiceWorker/#match-service-worker-registration
 
@@ -875,7 +975,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
     for (const auto& pair : m_scopeToRegistrationMap) {
         ServiceWorkerRegistrationKey selectedRegistrationKey = pair.first;
 
-        TRACE(HOST, "4: %s", CSTR(selectedRegistrationKey));
+        TRACE(HOST, "4: ", CSTR(selectedRegistrationKey));
         if (clientURLString->startsWith(selectedRegistrationKey, false) ==
             false) {
             continue;
@@ -884,7 +984,7 @@ ServiceWorkerHostJobHandler::matchRegistration(ServiceWorkerRequest* request,
         // 5. Set matchingScopeString to the longest value in scopeStringSet
         // which the value of clientURLString starts with, if it exists.
         if (matchingScopeString->length() < selectedRegistrationKey->length()) {
-            TRACE(HOST, "5: %s", CSTR(selectedRegistrationKey));
+            TRACE(HOST, "5: ", CSTR(selectedRegistrationKey));
             matchingScopeString = selectedRegistrationKey;
         }
     }
@@ -923,7 +1023,7 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(request != nullptr);
 
-    TRACE(HOST, "0: %s", request->contextId.toString().c_str());
+    TRACE(HOST, "0: ", request->contextId.toString());
 
     if (request->type == ServiceWorkerClientRequestType::Register) {
         if (request->registrationId.isValid()) {

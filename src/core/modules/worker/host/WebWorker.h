@@ -25,6 +25,7 @@
 namespace Starfish {
 
 class WorkerGlobalScope;
+class ServiceWorkerGlobalScope;
 class ScriptEngineInstance;
 
 class WebWorker : public WebBase {
@@ -58,13 +59,13 @@ public:
         return m_scriptEngineInstance;
     }
 
-    WorkerGlobalScope* createGlobalScope(String* scriptURL);
+    ServiceWorkerGlobalScope* createGlobalScope(String* scriptURL);
 
 private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
               String* customUserAgentString);
 
-    WorkerGlobalScope* m_workerGlobalScope{ nullptr };
+    ServiceWorkerGlobalScope* m_workerGlobalScope{ nullptr };
     ScriptEngineInstance* m_scriptEngineInstance{ nullptr };
 
     void createScriptEngineInstance();

@@ -21,6 +21,8 @@
     !defined(__ServiceWorkerHostJobHandler__)
 #define __ServiceWorkerHostJobHandler__
 
+#include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
+
 namespace Starfish {
 
 class MessageLoop;
@@ -31,6 +33,7 @@ class JobQueue;
 class ServiceWorkerRegistrationData;
 class ErrorData;
 class ServiceWorkerServerInterface;
+class ContextRequestData;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -67,6 +70,10 @@ public:
     void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
     Nullable<ServiceWorkerData*> getNewestWorker(
         ServiceWorkerRegistrationData* registration);
+
+    void activate(ServiceWorkerRegistrationData* registration);
+    void tryActivate(ServiceWorkerRegistrationData* registration);
+    bool serviceWorkerHasNoPendingEvents(ServiceWorkerData* serviceWorker);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,

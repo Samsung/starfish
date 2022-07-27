@@ -37,9 +37,14 @@ public:
 #else
 
 #define TRACE(id, ...) \
+    Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).log(__VA_ARGS__)
+
+#define TRACE0(id, ...) Trace(#id).log(__VA_ARGS__)
+
+#define TRACEF(id, ...) \
     Trace(#id, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__).print(__VA_ARGS__)
 
-#define TRACE0(id, ...) Trace(#id).print(__VA_ARGS__)
+#define TRACEF0(id, ...) Trace(#id).print(__VA_ARGS__)
 
 #define TRACE_SCOPE(id, ...)      \
     IndentCounter __counter(#id); \

@@ -64,6 +64,11 @@ public:
     }
 #endif
 
+    ServiceWorkerServer* serviceWorkerServer()
+    {
+        return m_SWServer;
+    }
+
 private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();

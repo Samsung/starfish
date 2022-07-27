@@ -59,7 +59,7 @@ public:
                 STARFISH_LOG_ERROR("FAIL: Create a directory for ipc handles.");
                 STARFISH_RELEASE_ASSERT(false);
             }
-            TRACE(HOST, "New %s", path);
+            TRACE(HOST, "New ", path);
         }
         dir->close();
 
@@ -76,7 +76,7 @@ public:
         // TODO: Replace creating a GC-allocated string with `std::string`.
         if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
             dir->removeDir();
-            TRACE(HOST, "Remove %s", path);
+            TRACE(HOST, "Remove ", path);
         }
         dir->close();
     }

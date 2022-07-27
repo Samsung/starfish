@@ -114,7 +114,7 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     std::string address = Connection::Config::createAddress(encodedOrigin);
 
-    TRACE(HOST, "Origin: %s", origin.c_str());
+    TRACE(HOST, "Origin: ", origin);
 
     STARFISH_ASSERT(m_connection != nullptr);
 

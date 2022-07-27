@@ -50,6 +50,7 @@ ExecutionContext* ServiceWorkerRegistration::executionContext() const
 void ServiceWorkerRegistration::updateRegistrationState(
     ServiceWorkerRegistrationState state, ServiceWorker* serviceWorker)
 {
+    TRACE_SCOPE(SVCWORKER, toUnderlyingType(state));
     switch (state) {
     case ServiceWorkerRegistrationState::Installing:
         m_installingWorker = serviceWorker;

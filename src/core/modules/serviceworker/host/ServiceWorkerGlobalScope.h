@@ -26,6 +26,8 @@
 namespace Starfish {
 
 class WebWorker;
+class ServiceWorker;
+class ServiceWorkerData;
 class ResourceURL;
 class ErrorEventInit;
 
@@ -41,11 +43,22 @@ public:
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerGlobalScope() const override;
 
+    // bindings
+    ServiceWorker* serviceWorker();
+    Promise* skipWaiting();
+
+    void setServiceWorkerData(ServiceWorkerData* serviceWorker);
+    ServiceWorkerData* serviceWorkerData()
+    {
+        return m_serviceWorker;
+    }
+
 private:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         WorkerGlobalScope::fillGCDescriptor(desc);
     }
+    ServiceWorkerData* m_serviceWorker{ nullptr };
 };
 } // namespace Starfish
 

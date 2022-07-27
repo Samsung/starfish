@@ -63,6 +63,24 @@ public:
         return *this;
     }
 
+    template <typename T, typename... TArgs>
+    Logger& log(const T& v, TArgs... args)
+    {
+        m_stream << v << " ";
+        log(args...);
+        return *this;
+    }
+    template <typename T>
+    Logger& log(const T& v)
+    {
+        m_stream << v;
+        return *this;
+    }
+    Logger& log()
+    {
+        return *this;
+    }
+
     template <typename T, typename... Args>
     Logger& print(const char* format, T value, Args... args)
     {
