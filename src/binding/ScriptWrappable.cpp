@@ -575,6 +575,27 @@ ScriptValue createScriptValue(double value)
     return ValueRef::create(value);
 }
 
+static void dispatchErrorEventToWindow(
+    ScriptBindingInstance* instance,
+    Escargot::Evaluator::EvaluatorResult& result)
+{
+    ScriptValue errorValue = result.error.value();
+
+    ErrorEventInit errorInfo;
+    errorInfo.setMessage(toBrowserString(instance, errorValue));
+    if (result.stackTrace.size() > 0) {
+        size_t lastIndex = result.stackTrace.size() - 1;
+        errorInfo.setFilename(
+            toBrowserString(instance, result.stackTrace[lastIndex].srcName));
+        errorInfo.setLineno(result.stackTrace[lastIndex].loc.line);
+        errorInfo.setColno(result.stackTrace[lastIndex].loc.column);
+    }
+    errorInfo.setError(errorValue);
+    instance->dispatchErrorEventToGlobalScope(errorInfo);
+
+    loggingJSErrorInfo(instance, result);
+}
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error)
@@ -597,26 +618,44 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
         },
         argNames, argc, functionBody);
     if (result.error.hasValue()) {
-        ScriptValue errorValue = result.error.value();
         error = true;
-        // Dispatch error event to window
-        ErrorEventInit errorInfo;
-        errorInfo.setMessage(toBrowserString(instance, errorValue));
-        if (result.stackTrace.size() > 0) {
-            size_t lastIndex = result.stackTrace.size() - 1;
-            errorInfo.setFilename(toBrowserString(
-                instance, result.stackTrace[lastIndex].srcName));
-            errorInfo.setLineno(result.stackTrace[lastIndex].loc.line);
-            errorInfo.setColno(result.stackTrace[lastIndex].loc.column);
-        }
-        errorInfo.setError(errorValue);
-        instance->dispatchErrorEventToGlobalScope(errorInfo);
-
-        loggingJSErrorInfo(instance, result);
-        return errorValue;
-    } else {
-        return result.result;
+        dispatchErrorEventToWindow(instance, result);
+        return result.error.value();
     }
+
+    return result.result;
+}
+
+ScriptValue createScriptFunction(
+    ScriptBindingInstance* instance, const std::string& name,
+    Escargot::ScriptNativeFunctionPointer nativeFunction, size_t argc,
+    bool isStrict, bool isConstructor)
+{
+    ContextRef* context = instance->scriptContext();
+    auto nameString = AtomicStringRef::emptyAtomicString();
+    auto nameSize = name.size();
+
+    if (nameSize > 0) {
+        nameString = AtomicStringRef::create(context, name.data(), nameSize);
+    }
+
+    auto result = Evaluator::execute(
+        context,
+        [](ExecutionStateRef* state, AtomicStringRef* name,
+           Escargot::ScriptNativeFunctionPointer nativeFunction, size_t argc,
+           bool isStrict, bool isConstructor) -> ValueRef* {
+            FunctionObjectRef::NativeFunctionInfo info(name, nativeFunction,
+                                                       argc, isStrict, isConstructor);
+            return FunctionObjectRef::create(state, info);
+        },
+        nameString, nativeFunction, argc, isStrict, isConstructor);
+
+    if (result.error.hasValue()) {
+        dispatchErrorEventToWindow(instance, result);
+        return result.error.value();
+    }
+
+    return result.result;
 }
 
 ScriptValue createAttributeStringEventFunction(EventTarget* target,
@@ -1343,6 +1382,12 @@ Promise::Promise(ScriptBindingInstance* instance)
         }).result;
 }
 
+Promise::Promise(ScriptBindingInstance* instance, ScriptValue scriptValue)
+    : m_scriptValue(scriptValue)
+    , m_instance(instance)
+{
+}
+
 void Promise::fulfill(ScriptValue v)
 {
     ContextRef* ctx = m_instance->scriptContext();
@@ -1369,6 +1414,51 @@ void Promise::reject(ScriptValue v)
             return ValueRef::createUndefined();
         },
         this, v);
+}
+
+ScriptValue Promise::then(ScriptValue handler)
+{
+    ContextRef* ctx = m_instance->scriptContext();
+    auto result = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Promise* self,
+           ScriptValue handler) -> ValueRef* {
+            return self->m_scriptValue->asObject()->asPromiseObject()->then(
+                state, handler);
+        },
+        this, handler);
+
+    if (result.error.hasValue()) {
+        dispatchErrorEventToWindow(m_instance, result);
+        return result.error.value();
+    }
+
+    return result.result;
+}
+
+ScriptValue Promise::then(ScriptValue onFulfilled, ScriptValue onRejected)
+{
+    ContextRef* ctx = m_instance->scriptContext();
+    auto result = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Promise* self, ScriptValue onFulfilled,
+           ScriptValue onRejected) -> ValueRef* {
+            return self->m_scriptValue->asObject()->asPromiseObject()->then(
+                state, onFulfilled, onRejected);
+        },
+        this, onFulfilled, onRejected);
+
+    if (result.error.hasValue()) {
+        dispatchErrorEventToWindow(m_instance, result);
+        return result.error.value();
+    }
+
+    return result.result;
+}
+
+Promise* toPromise(ScriptBindingInstance* instance, ScriptValue scriptValue)
+{
+    return new Promise(instance, scriptValue);
 }
 
 AttributeEventFunction::AttributeEventFunction(EventTarget* target)
