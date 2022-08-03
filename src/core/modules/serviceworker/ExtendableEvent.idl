@@ -1,0 +1,20 @@
+// https://w3c.github.io/ServiceWorker/#extendableevent-interface
+// TODO: Exposed=Worker -> Exposed=ServiceWorker
+
+[ STARFISH_ENABLE_SERVICE_WORKER,
+  STARFISH_WEBWORKER_HOST,
+  Exposed=Worker, 
+  ConstructorCallWith=ExecutionContext
+]
+interface ExtendableEvent : Event {
+  constructor(DOMString type, optional ExtendableEventInit eventInitDict);
+  void waitUntil(Promise<any> f); 
+};
+
+[ STARFISH_ENABLE_SERVICE_WORKER,
+  STARFISH_WEBWORKER_HOST, 
+  Exposed=Worker
+]
+dictionary ExtendableEventInit : EventInit {
+  // Defined for the forward compostMessagepatibility across the derived events
+};

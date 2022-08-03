@@ -17,8 +17,6 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-
 #include "StarfishConfig.h"
 
 #include "core/util/ProgramOptions.h"
@@ -85,5 +83,3 @@ bool ProgramOptions::is(const char* key)
 }
 
 } // namespace Starfish
-
-#endif
