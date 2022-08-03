@@ -33,6 +33,7 @@
 #include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
+#include "core/modules/serviceworker/ExtendableEvent.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -51,9 +52,8 @@ public:
         WorkerGlobalScope* global = WorkerGlobalScope::getCurrent();
         if (global) {
             TRACE(HOST, "Dispatch an Event", m_eventName);
-            // TODO: Use ExtendableEvent.
-            global->dispatchEvent(
-                new Event(global->executionContext(), m_eventName));
+            global->dispatchEventByUA(
+                new ExtendableEvent(global->executionContext(), m_eventName));
         } else {
             TRACE0(HOST, "global is null");
         }
