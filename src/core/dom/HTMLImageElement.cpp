@@ -92,19 +92,18 @@ public:
         }
 
         m_element->m_imageData = imageData;
+        if (m_element->frame() && sizeBefore != sizeNow) {
+            if (!m_element->frame()->style()->width().isDefinite(false) ||
+                !m_element->frame()->style()->height().isDefinite(false)) {
+                m_element->setNeedsLayout();
+            }
+        }
+
         if (imageData->isAnimatedGIFNativeImageData()) {
             m_element->updateFrame(0);
         } else {
             if (m_element->frame()) {
                 m_element->setNeedsPainting();
-                if (sizeBefore != sizeNow) {
-                    if (!m_element->frame()->style()->width().isDefinite(
-                            false) ||
-                        !m_element->frame()->style()->height().isDefinite(
-                            false)) {
-                        m_element->setNeedsLayout();
-                    }
-                }
             }
         }
 

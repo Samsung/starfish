@@ -66,6 +66,10 @@ public:
     DecodeResult decodeJustImageSize();
     DecodeResult decode();
     DecodeResult nextFrameOfAnimatedGIF(uint8_t* targetBuffer);
+    int loopCount()
+    {
+        return m_loopCount;
+    }
 
     static bool isAnimatedGIF(const std::vector<char>& inputBuffer);
 
