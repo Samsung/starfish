@@ -20,6 +20,8 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__ConnectionInterface__)
 #define __ConnectionInterface__
 
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+
 namespace Starfish {
 
 class ServiceWorkerJob;
@@ -27,6 +29,8 @@ class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
 class Archivable;
 class ErrorData;
+class ContextRequestData;
+class FetchEventData;
 
 // IServiceWorkerHostConnection which is used on `Client`
 
@@ -39,6 +43,7 @@ public:
     virtual void matchRegistration(ServiceWorkerRequest* request,
                                    String* clientURL) = 0;
     virtual void updateServiceWorkerClient(ContextRequestData* request) = 0;
+    virtual void fetchEvent(FetchEventData* FetchEventData) = 0;
 
     // receive
     // NOTE: For rapid development, declaring receive handler isn't compulsory

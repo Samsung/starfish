@@ -35,6 +35,7 @@ public:
     Request(ExecutionContext* executionContext, RequestInfo& input);
     Request(ExecutionContext* executionContext, RequestInfo& input,
             RequestInit& init);
+    Request(ExecutionContext* executionContext, RequestData* data);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Request)
 
@@ -64,7 +65,6 @@ public:
     }
 
 private:
-    Request(ScriptBindingInstance* instance, RequestData* data);
     void initialize(RequestInfo* input, NULLABLE RequestInit* init = nullptr);
 
 protected:

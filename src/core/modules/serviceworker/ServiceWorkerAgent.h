@@ -21,6 +21,8 @@
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+
 namespace Starfish {
 
 class WebWorker;
@@ -29,6 +31,7 @@ class ServiceWorkerData;
 class NotificationService;
 class ServiceWorkerServer;
 class CastServer;
+class ServiceWorkerGlobalScopeProxy;
 
 enum class ServiceWorkerAgentState {
     Terminated,
@@ -69,6 +72,14 @@ public:
         return m_SWServer;
     }
 
+    ServiceWorkerGlobalScopeProxy* createGlobalScopeProxy(
+        ServiceWorkerContextId id);
+    void removeGlobalScopeProxy(ServiceWorkerContextId id);
+    Nullable<ServiceWorkerGlobalScopeProxy*> findGlobalScopeProxyByContextId(
+        ServiceWorkerContextId id);
+    ServiceWorkerGlobalScopeProxy* getGlobalScopeProxy(
+        ServiceWorkerContextId id);
+
 private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
@@ -80,6 +91,9 @@ private:
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
     NotificationService* m_notificationService;
     GCVector<WebWorker*> m_webWorkerList;
+    GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScopeProxy*,
+                   IdHash>
+        m_globalScopeProxyMap;
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     CastServer* m_castServer;
 #endif

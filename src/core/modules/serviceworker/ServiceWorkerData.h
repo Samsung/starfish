@@ -78,6 +78,7 @@ public:
     String* scriptURL{ String::emptyString };
     ServiceWorkerState state{ ServiceWorkerState::Parsed };
     ServiceWorkerRegistrationId registrationId;
+    ServiceWorkerContextId clientContextId;
 
     // serialize/deserialize
     const char* archiveId() const override;

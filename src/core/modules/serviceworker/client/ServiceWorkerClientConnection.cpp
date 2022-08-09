@@ -48,6 +48,7 @@
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 
 #include "core/modules/serviceworker/util/Trace.h"
 
@@ -87,6 +88,14 @@ void ServiceWorkerClientConnection::updateServiceWorkerClient(
     STARFISH_ASSERT(request != nullptr);
 
     sendMessage("updateServiceWorkerClient", request);
+}
+
+void ServiceWorkerClientConnection::fetchEvent(FetchEventData* FetchEventData)
+{
+    TRACE_SCOPE(CLIENT);
+    STARFISH_ASSERT(FetchEventData != nullptr);
+
+    sendMessage("fetchEvent", FetchEventData);
 }
 
 void ServiceWorkerClientConnection::sendMessage(const char* msgName,

@@ -161,6 +161,7 @@ public:
         auto worker = new ServiceWorkerData();
 
         worker->registrationId = registration->id;
+        worker->clientContextId = m_job->data()->contextId;
 
         // 12. Set 1) worker’s script url to job’s script url, 2) worker’s
         // script resource to script, 3) worker’s type to job’s worker type, and

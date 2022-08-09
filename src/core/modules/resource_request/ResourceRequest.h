@@ -373,6 +373,11 @@ public:
         m_abortRequestState = type;
     }
 
+    RequestData* requestData()
+    {
+        return m_requestData;
+    }
+
     ExecutionContext* executionContext()
     {
         return m_executionContext;

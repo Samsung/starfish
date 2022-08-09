@@ -110,6 +110,8 @@ private:
         NULLABLE String* scriptURL, Promise* p,
         NULLABLE ServiceWorkerEnvironment* client) override;
     void finishJob(ServiceWorkerJob* job);
+
+    void startClientMessageQueue();
 };
 } // namespace Starfish
 
