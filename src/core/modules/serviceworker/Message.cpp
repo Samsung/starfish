@@ -39,6 +39,7 @@
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 
 namespace Starfish {
 
@@ -162,6 +163,7 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
     ARCHIVE(ErrorData);
     ARCHIVE(UpdateWorkerStateData);
     ARCHIVE(ContextRequestData);
+    ARCHIVE(FetchEventData);
 
 #undef ARCHIVE
 

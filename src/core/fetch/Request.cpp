@@ -75,6 +75,14 @@ Request::Request(ExecutionContext* executionContext, RequestInfo& input,
     initialize(&input, &init);
 }
 
+Request::Request(ExecutionContext* executionContext, RequestData* data)
+    : ScriptWrappable(this)
+    , Body(executionContext)
+    , m_data(*data)
+    , m_headers(Headers(executionContext))
+{
+}
+
 static String* computeReferrer(String* referrer,
                                ExecutionContext* executionContext)
 {

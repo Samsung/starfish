@@ -50,6 +50,7 @@
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#include "core/modules/serviceworker/FetchEventHandler.h"
 #endif
 
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
@@ -62,6 +63,7 @@ ServiceWorkerContainer::ServiceWorkerContainer(
     , m_executionContext(executionContext)
     , m_state(State::Started)
 {
+    startClientMessageQueue();
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
@@ -618,6 +620,21 @@ void ServiceWorkerContainer::finishRequest(ServiceWorkerRequest* request)
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(request != nullptr);
     m_requestMap.erase(request->id);
+}
+
+void ServiceWorkerContainer::startClientMessageQueue()
+{
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    auto swProcessManager = ServiceWorkerProcessManager::instance();
+
+    auto fetchEventHandler = swProcessManager->findFetchEventHandler(
+        executionContext()->globalScope()->uid());
+    if (fetchEventHandler.hasValue()) {
+        auto connection = swProcessManager->getConnection(
+            executionContext()->webOrigin()->serialize());
+        fetchEventHandler->start(connection);
+    }
+#endif
 }
 
 } // namespace Starfish

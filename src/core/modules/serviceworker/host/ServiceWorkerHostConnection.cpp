@@ -32,6 +32,8 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
@@ -44,6 +46,7 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScopeProxy.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
@@ -141,6 +144,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     auto handler = m_SWServer->jobHandler();
 
     STARFISH_ASSERT(handler != nullptr);
+    TRACE(HOST, "onReceived:", msgName.data());
 
     // NOTE: consider using a message map to invoke member functions registered.
     if (msgName == "scheduleJob") {
@@ -159,7 +163,12 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     } else if (msgName == "updateServiceWorkerClient") {
         handler->updateServiceWorkerClient(
             downcast<ContextRequestData*>(msg.param(0)));
-
+    } else if (msgName == "fetchEvent") {
+        auto data = downcast<FetchEventData*>(msg.param(0));
+        auto contextId = data->contextId;
+        auto globalScopeproxy =
+            ServiceWorkerAgent::instance()->getGlobalScopeProxy(contextId);
+        globalScopeproxy->handleFetch(data->toRequestData());
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();

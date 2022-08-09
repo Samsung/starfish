@@ -51,6 +51,10 @@
 #define STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS 5000
 #endif
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#endif
+
 namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
 int64_t NetworkURLWorkerData::reqCnt = 0;
@@ -366,6 +370,9 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
     ResourceRequest* proxy)
     : m_orgProxy(proxy)
 {
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    proxy->addResourceRequestClient(new ServiceWorkerFetchTask());
+#endif
 }
 
 void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)

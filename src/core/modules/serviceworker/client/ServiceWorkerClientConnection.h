@@ -21,9 +21,13 @@
     !defined(__StarfishServiceWorkerClientConnection__)
 #define __StarfishServiceWorkerClientConnection__
 
+#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
+
 namespace Starfish {
 
 class ServiceWorkerContainer;
+class FetchEventData;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -36,6 +40,7 @@ public:
     void matchRegistration(ServiceWorkerRequest* request,
                            String* clientURL) override;
     void updateServiceWorkerClient(ContextRequestData* request) override;
+    void fetchEvent(FetchEventData* FetchEventData) override;
 
     void sendMessage(const char* msgName, NULLABLE Archivable* param1 = nullptr,
                      NULLABLE Archivable* param2 = nullptr);

@@ -22,6 +22,8 @@
 #define __StarfishServiceWorkerProcessManager__
 
 #include "platform/process/base/ProcessType.h" // PID
+#include "core/util/Id.h"
+
 #include <future>
 
 namespace Starfish {
@@ -32,6 +34,8 @@ class PerProcess;
 class GlobalScope;
 class ServiceWorkerAgent;
 class PushServiceAgent;
+class ServiceWorkerFetchTask;
+class FetchEventHandler;
 
 struct ProcessData {
     ProcessData()
@@ -65,6 +69,8 @@ public:
         return m_pushServiceAgent;
     }
 
+    Nullable<FetchEventHandler*> findFetchEventHandler(Id<GlobalScope> id);
+
 private:
     ServiceWorkerProcessManager() = default;
     ~ServiceWorkerProcessManager() = default;
@@ -81,6 +87,8 @@ private:
         m_mapOriginToProcessData;
     GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
         m_mapIdToActiveGlobalScope;
+    GCUnorderedMap<Id<GlobalScope>, FetchEventHandler*, IdHash>
+        m_fetchEventHandlers;
 
 #if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
     std::promise<void> m_promiseStopThreadSignal;

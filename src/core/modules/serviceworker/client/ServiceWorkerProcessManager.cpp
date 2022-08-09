@@ -42,6 +42,8 @@
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
+#include "core/modules/serviceworker/FetchEventHandler.h"
+
 #include "core/modules/serviceworker/PerProcess.h"
 
 #if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
@@ -247,6 +249,8 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 
+    m_fetchEventHandlers.insert(std::make_pair(id, new FetchEventHandler()));
+
     if (m_connection) {
         // TODO: check whether of not this context's serviceworker is valid.
         // m_connection->sendContextRequest(new ContextRequestData(
@@ -277,6 +281,8 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
         m_connection->updateServiceWorkerClient(new ContextRequestData(
             id, ServiceWorkerClientRequestType::Unregister, registrationId));
     }
+
+    m_fetchEventHandlers.erase(id);
 }
 
 NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
@@ -285,6 +291,18 @@ NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
     TRACE_SCOPE(SVCWORKER);
     auto it = m_mapIdToActiveGlobalScope.find(id);
     if (it == m_mapIdToActiveGlobalScope.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+Nullable<FetchEventHandler*> ServiceWorkerProcessManager::findFetchEventHandler(
+    Id<GlobalScope> id)
+{
+    auto it = m_fetchEventHandlers.find(id);
+
+    if (it == m_fetchEventHandlers.end()) {
+        TRACE_SCOPE(SVCWORKER);
         return nullptr;
     }
     return it->second;
