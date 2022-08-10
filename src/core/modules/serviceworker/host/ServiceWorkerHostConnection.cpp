@@ -108,14 +108,14 @@ void ServiceWorkerHostConnection::resolveRequest(
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
-void ServiceWorkerHostConnection::onUpdateWorkerState(
-    ServiceWorkerRegistrationId id, ServiceWorkerState target)
+void ServiceWorkerHostConnection::onUpdateWorkerState(String* scriptURL,
+                                                      ServiceWorkerState state)
 {
     TRACE_SCOPE(HOST);
     JsonWriter writer;
     Message msg("updateWorkerState");
 
-    msg.addParam(new UpdateWorkerStateData(id, target));
+    msg.addParam(new UpdateWorkerStateData(scriptURL, state));
     msg.archive(writer);
 
     send(writer.GetString(), writer.GetSize() + 1);

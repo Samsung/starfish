@@ -24,6 +24,7 @@
 namespace Starfish {
 
 class ServiceWorkerServerInterface;
+class String;
 
 class ServiceWorkerHostConnection final
     : public Connection,
@@ -41,7 +42,7 @@ public:
     void resolveRequest(ServiceWorkerRequest* request,
                         NULLABLE Archivable* archivable) override;
 
-    void onUpdateWorkerState(ServiceWorkerRegistrationId id,
+    void onUpdateWorkerState(String* scriptURL,
                              ServiceWorkerState target) override;
 
     // receive

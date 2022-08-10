@@ -51,7 +51,7 @@ public:
     {
         WorkerGlobalScope* global = WorkerGlobalScope::getCurrent();
         if (global) {
-            TRACE(HOST, "Dispatch an Event", m_eventName);
+            TRACE(HOST, "Dispatch an Event", CSTR(m_eventName));
             global->dispatchEventByUA(
                 new ExtendableEvent(global->executionContext(), m_eventName));
         } else {
@@ -69,7 +69,7 @@ void ServiceWorkerRegistrationData::sendEventTask(std::string eventname)
 {
     // TODO: Move this to WorkerGlobalScope
 #ifdef STARFISH_WEBWORKER_HOST
-    TRACE(HOST, "Add a task");
+    TRACE_SCOPE(HOST);
     (new MessageLoop())
         ->addIdler(
             nullptr,
@@ -103,7 +103,7 @@ void ServiceWorkerRegistrationData::setActiveWorker(
     Nullable<ServiceWorkerData*> worker)
 {
     TRACE_SCOPE(HOST);
-    sendEventTask("active");
+    sendEventTask("activate");
     m_activeWorker = worker;
 }
 
