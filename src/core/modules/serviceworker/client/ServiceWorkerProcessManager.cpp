@@ -181,6 +181,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::string encodedOrigin = Base64Utils::encodeBase64(origin);
     std::string address = Connection::Config::createAddress(encodedOrigin);
 
+    TRACE(SVCWORKER, "origin", origin);
+    TRACE(SVCWORKER, "encodedOrigin", encodedOrigin);
+
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);
     if (it == m_mapOriginToProcessData.end()) {
@@ -239,6 +242,39 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     return processData->connection;
 }
 
+const GCVector<ServiceWorkerEnvironment*>&
+ServiceWorkerProcessManager::getSettingsObjects(String* scriptURL)
+{
+    TRACE_SCOPE(SVCWORKER);
+
+    if (m_settingsObjectsNeedUpdated) {
+        m_settingsObjects.clear();
+
+        for (auto it = m_mapIdToActiveGlobalScope.begin();
+             it != m_mapIdToActiveGlobalScope.end(); it++) {
+            GlobalScope* globalScope = it->second;
+            auto executionContext = globalScope->executionContext();
+
+            // 3. Let settingsObjects be all environment settings objects whose
+            // origin is worker’s script url's origin.
+            auto url = new ResourceURL(scriptURL);
+            auto origin = url->baseURI();
+
+            TRACE(SVCWORKER, "worker’s script url's origin", CSTR(origin));
+            TRACE(SVCWORKER, "baseURL()->baseURI()",
+                  CSTR(executionContext->baseURL()->baseURI()));
+
+            if ((executionContext != nullptr) &&
+                origin->compare(executionContext->baseURL()->baseURI()) == 0) {
+                TRACE(SVCWORKER, "a settingsObject is found");
+                m_settingsObjects.push_back(it->second->executionContext());
+            }
+        }
+        m_settingsObjectsNeedUpdated = false;
+    }
+    return m_settingsObjects;
+}
+
 void ServiceWorkerProcessManager::registerActiveGlobalScope(
     Id<GlobalScope> id, GlobalScope* globalScope)
 {
@@ -256,6 +292,7 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
         // m_connection->sendContextRequest(new ContextRequestData(
         //     id, ServiceWorkerClientRequestType::Register));
     }
+    m_settingsObjectsNeedUpdated = true;
 }
 
 void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
@@ -281,6 +318,7 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
         m_connection->updateServiceWorkerClient(new ContextRequestData(
             id, ServiceWorkerClientRequestType::Unregister, registrationId));
     }
+    m_settingsObjectsNeedUpdated = true;
 
     m_fetchEventHandlers.erase(id);
 }

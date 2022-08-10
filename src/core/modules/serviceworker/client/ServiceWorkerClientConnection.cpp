@@ -51,6 +51,11 @@
 #include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 
 #include "core/modules/serviceworker/util/Trace.h"
+#include "Starfish.h"
+#include "core/dom/Event.h"
+#include "core/dom/EventTarget.h"
+#include "core/page/WebBase.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 #include "core/page/Navigator.h"
 #include "core/dom/Document.h"
@@ -154,6 +159,7 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto serviceWorkerContainer =
             findServiceWorkerContainer(request->contextId);
 
+        // Find a request matched.
         if (serviceWorkerContainer != nullptr) {
             NULLABLE Archivable* archivable = msg.param(1);
 
@@ -165,8 +171,9 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
             }
         }
     } else if (msgName == "updateWorkerState") {
+        // This is like a notification from the host.
         auto data = downcast<UpdateWorkerStateData*>(msg.param(0));
-        updateWorkerState(data->registrationId, data->state);
+        updateWorkerState(data->scriptURL, data->state);
 
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
@@ -215,12 +222,80 @@ void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
     }
 }
 
-void ServiceWorkerClientConnection::updateWorkerState(
-    ServiceWorkerRegistrationId id, ServiceWorkerState target)
+void ServiceWorkerClientConnection::updateWorkerState(String* scriptURL,
+                                                      ServiceWorkerState state)
 {
     TRACE_SCOPE(CLIENT);
     // https://w3c.github.io/ServiceWorker/#update-worker-state
-    // TODO: 3. For each workerObject in workerObjects:
+
+    // 3. Let settingsObjects be all environment settings objects whose origin
+    //    is worker’s script url's origin.
+
+    auto swpm = ServiceWorkerProcessManager::instance();
+    const GCVector<ServiceWorkerEnvironment*>& settingsObjects =
+        swpm->getSettingsObjects(scriptURL);
+
+    // 4. For each settingsObject of settingsObjects, queue a task on
+    //    settingsObject’s responsible event loop in the DOM manipulation task
+    //    source to run the following steps:
+
+    for (auto it = settingsObjects.begin(); it != settingsObjects.end(); it++) {
+        // NOTE: Starfish isn't used with multiple execution contexts. So there
+        // is only one settingsObject.
+
+        ExecutionContext* executionContext =
+            static_cast<ServiceWorkerEnvironment*>(*it);
+
+        struct Param {
+            Param(ExecutionContext* settingsObject_, ServiceWorkerState state_)
+            {
+                settingsObject = settingsObject_;
+                state = state_;
+            }
+            ServiceWorkerEnvironment* settingsObject;
+            ServiceWorkerState state;
+        };
+
+        executionContext->webBase()->messageLoop()->addIdler(
+            executionContext->globalScope(),
+            [](size_t handle, void* data0) {
+                TRACE_SCOPE(CLIENT);
+                Param* param = static_cast<Param*>(data0);
+                ServiceWorkerEnvironment* settingsObject =
+                    param->settingsObject;
+                // NOTE: In ExecutionContext.h, use activeServiceWorker instead
+                // of objectMap[worker].
+
+                // 4.1. Let objectMap be settingsObject’s service worker object
+                // map. 4.2. If objectMap[worker] does not exist, then abort
+                // these steps.
+                auto serviceWorker = settingsObject->activeServiceWorker();
+                if (serviceWorker == nullptr) {
+                    return;
+                }
+
+                // 4.3. Let workerObj be objectMap[worker].
+                auto workerObj = serviceWorker;
+
+                // 4.4. Set workerObj’s state to state.
+                TRACEF(CLIENT, "state: %d -> %d",
+                       toUnderlyingType(workerObj->data()->state),
+                       toUnderlyingType(param->state));
+                workerObj->data()->state = param->state;
+
+                // 4.5. Fire an event named statechange at workerObj.
+                // dispatchEvent
+                TRACE(CLIENT, "Fire 'statechange' event");
+                String* eventName = settingsObject->starfish()
+                                        ->staticStrings()
+                                        ->m_statechange.localName();
+                Event* e = new Event(settingsObject, eventName);
+                workerObj->dispatchEventByUA(workerObj, e);
+
+                delete param;
+            },
+            new Param(executionContext, state));
+    }
 }
 
 Nullable<ServiceWorkerContainer*>

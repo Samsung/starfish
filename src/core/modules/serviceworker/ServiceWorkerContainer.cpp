@@ -272,20 +272,19 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
-        [](size_t handle, void* data1, void* data2) {
+        [](size_t handle, void* data) {
             TRACE_SCOPE(SVCWORKER);
-            ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data1);
-            WebOrigin* webOrigin = castTo<WebOrigin*>(data2);
+            ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
-                    webOrigin->serialize());
+                    job->data()->scriptURL);
             swConnection->scheduleJob(job);
 #else
             STARFISH_UNIMPLEMENTED();
 #endif
         },
-        job, executionContext()->webOrigin());
+        job);
 
     m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
@@ -515,10 +514,16 @@ void ServiceWorkerContainer::resolveJobPromise(
                     // TODO: Implement `getting the service worker registration
                     // object`
                     // https://w3c.github.io/ServiceWorker/#get-the-service-worker-registration-object
+                    auto executionContext = container->executionContext();
+                    TRACE(SVCWORKER,
+                          "new ServiceWorkerRegistration Client Object");
                     auto registration = new ServiceWorkerRegistration(
-                        container->executionContext(), container);
-                    auto serviceWorker =
-                        new ServiceWorker(container->executionContext());
+                        executionContext, container);
+
+                    TRACE(SVCWORKER, "new ServiceWorker Client Object");
+                    auto serviceWorker = new ServiceWorker(executionContext);
+
+                    executionContext->setActiveServiceWorker(serviceWorker);
 
                     registration->data()->scope = job->data()->scopeURL;
                     registration->data()->updateViaCache =
