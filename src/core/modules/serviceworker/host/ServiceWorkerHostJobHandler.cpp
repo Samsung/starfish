@@ -312,6 +312,8 @@ void ServiceWorkerHostJobHandler::setRegistration(
     registration->scope = scope;
     registration->updateViaCache = updateViaCache;
 
+    TRACE(HOST, "Create a registration", registration->id.toString());
+
     auto iter = m_scopeToRegistrationMap.find(scope);
     if (iter == m_scopeToRegistrationMap.end()) {
         m_scopeToRegistrationMap.insert(std::make_pair(scope, registration));
@@ -633,7 +635,131 @@ void ServiceWorkerHostJobHandler::activate(
 {
     TRACE_SCOPE(HOST);
     // TODO: https://www.w3.org/TR/service-workers/#activation-algorithm
-    STARFISH_UNIMPLEMENTED();
+
+    // 1. If registration’s waiting worker is null, abort these steps.
+    if (!registration->waitingWorker()) {
+        return;
+    }
+    // 2. If registration’s active worker is not null, then:
+    if (registration->activeWorker()) {
+        // 2.1. Terminate registration’s active worker.
+
+        // 2.2. Run the Update Worker State algorithm passing registration’s
+        // active worker and "redundant" as the arguments.
+    }
+
+    // 3. Run the Update Registration State algorithm passing registration,
+    //    "active" and registration’s waiting worker as the arguments.
+    updateRegistrationState(registration,
+                            ServiceWorkerRegistrationState::Active,
+                            registration->waitingWorker().getValue());
+
+    // 4. Run the Update Registration State algorithm passing registration,
+    //    "waiting" and null as the arguments.
+    updateRegistrationState(registration,
+                            ServiceWorkerRegistrationState::Waiting, nullptr);
+
+    // 5. Run the Update Worker State algorithm passing registration’s active
+    //    worker and "activating" as the arguments.
+    updateWorkerState(registration->activeWorker().getValue(),
+                      ServiceWorkerState::Activating);
+
+    // Note: Once an active worker is activating, neither a runtime script error
+    // nor a force termination of the active worker prevents the active worker
+    // from getting activated.
+
+    // Note: Make sure to design activation handlers to do non-essential work
+    // (like cleanup). This is because activation handlers may not all run to
+    // completion, especially in the case of browser termination during
+    // activation. A Service Worker should be designed to function properly,
+    // even if the activation handlers do not all complete successfully.
+
+    // 6. Let matchedClients be a list of service worker clients whose creation
+    //    URL matches registration’s storage key and registration’s scope url.
+
+    // TODO: The step, 7, needs to be run on each clients.
+
+    // 7. For each client of matchedClients, queue a task on client’s
+    //    responsible event loop, using the DOM manipulation task source, to run
+    //    the following substeps:
+    {
+        // 7.1. Let readyPromise be client’s global object's
+        // ServiceWorkerContainer object’s ready promise.
+
+        // 7.2. If readyPromise is null, then continue.
+
+        // 7.3. If readyPromise is pending, resolve readyPromise with the the
+        // result of getting the service worker registration object that
+        // represents registration in readyPromise’s relevant settings object.
+    }
+
+    // 8. For each client of matchedClients:
+    {
+        // 8.1. If client is a window client, unassociate client’s responsible
+        // document from its application cache, if it has one.
+
+        // 8.2. Else if client is a shared worker client, unassociate client’s
+        // global object from its application cache, if it has one.
+
+        // Note: Resources will now use the service worker registration instead
+        // of the existing application cache.
+    }
+
+    // 9. For each service worker client client who is using registration:
+    {
+        // 9.1. Set client’s active worker to registration’s active worker.
+
+        // 9.2. Invoke Notify Controller Change algorithm with client as the
+        // argument.
+    }
+
+    // 10. Let activeWorker be registration’s active worker.
+    ServiceWorkerData* activeWorker = registration->activeWorker().getValue();
+
+    // 11. If the result of running the "Should Skip Event" algorithm with
+    //     activeWorker and "activate" is false, then:
+
+    if (shouldSkipEvent("activate", activeWorker)) {
+        // 11.1. If the result of running the Run Service Worker algorithm with
+        // activeWorker is not failure, then:
+
+        // 11.1.1. Queue a task task on activeWorker’s event loop using the DOM
+        // manipulation task source to run the following steps:
+
+        // 11.1.1.1. Let e be the result of creating an event with
+        // ExtendableEvent.
+
+        // 11.1.1.2. Initialize e’s type attribute to activate.
+
+        // 11.1.1.3. Dispatch e at activeWorker’s global object.
+
+        // 11.1.1.4. WaitForAsynchronousExtensions: Wait, in parallel, until e
+        // is not active.
+
+        // 11.1.2. Wait for task to have executed or been discarded.
+
+        // 11.1.3. Wait for the step labeled WaitForAsynchronousExtensions to
+        // complete.
+    }
+
+    // 12. Run the Update Worker State algorithm passing registration’s active
+    //     worker and "activated" as the arguments.
+    updateWorkerState(activeWorker, ServiceWorkerState::Activated);
+}
+
+bool ServiceWorkerHostJobHandler::shouldSkipEvent(
+    std::string eventName, ServiceWorkerData* serviceWorker)
+{
+    // Note: To avoid unnecessary delays, this specification permits skipping
+    // event dispatch when no event listeners for the event have been
+    // deterministically added in the service worker’s global during the very
+    // first script execution.
+
+    // If serviceWorker’s set of event types to handle does not contain
+    // eventName, then the user agent may return true.
+
+    // Return false.
+    return false;
 }
 
 bool ServiceWorkerHostJobHandler::serviceWorkerHasNoPendingEvents(
@@ -835,8 +961,14 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
         // waiting worker in registrationObject’s relevant settings object.
         break;
     case ServiceWorkerRegistrationState::Active:
-        // 4.1 Set registration’s waiting worker to source.
-        STARFISH_UNIMPLEMENTED();
+        // 4.1 Set registration’s active worker to source.
+        registration->setActiveWorker(source);
+
+        // 4.2 For each registrationObject in registrationObjects:
+        // 4.2.1 Queue a task to set the active attribute of registrationObject
+        // to null if registration’s active worker is null, or the result of
+        // getting the service worker object that represents registration’s
+        // active worker in registrationObject’s relevant settings object.
         break;
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -859,15 +991,14 @@ void ServiceWorkerHostJobHandler::updateWorkerState(ServiceWorkerData* worker,
     // associated with worker.
 
     // NOTE: strategy : Here, we simply broadcast this changes to all the
-    // connections. Clients ought to search ServiceWorkers which have a
-    // registraion containing the matched Id, and then, update the state of the
-    // ServiceWorkers.
+    // connections. Clients needs to search a ServiceWorker having a registraion
+    // with the matched Id, and then, update the state of the ServiceWorkers.
     GCVector<IServiceWorkerClientConnection*> connections;
 
     m_SWServer->getConnections(connections);
 
     for (const auto& connection : connections) {
-        connection->onUpdateWorkerState(worker->registrationId, state);
+        connection->onUpdateWorkerState(worker->scriptURL, state);
     }
 }
 

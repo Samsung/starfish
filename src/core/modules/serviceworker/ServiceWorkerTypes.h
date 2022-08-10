@@ -24,12 +24,12 @@
 #include "StarfishBase.h"
 #include "core/util/String.h"
 #include "core/util/Id.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 class GlobalScope;
 class ServiceWorkerJob;
-class ExecutionContext;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistration;
 

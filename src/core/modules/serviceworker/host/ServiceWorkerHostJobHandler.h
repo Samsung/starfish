@@ -22,6 +22,7 @@
 #define __ServiceWorkerHostJobHandler__
 
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
+#include <string>
 
 namespace Starfish {
 
@@ -74,6 +75,8 @@ public:
     void activate(ServiceWorkerRegistrationData* registration);
     void tryActivate(ServiceWorkerRegistrationData* registration);
     bool serviceWorkerHasNoPendingEvents(ServiceWorkerData* serviceWorker);
+    bool shouldSkipEvent(std::string eventName,
+                         ServiceWorkerData* serviceWorker);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,
