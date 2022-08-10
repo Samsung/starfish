@@ -66,7 +66,7 @@ public:
     virtual void resolveRequest(ServiceWorkerRequest* request,
                                 NULLABLE Archivable* registration) = 0;
 
-    virtual void onUpdateWorkerState(ServiceWorkerRegistrationId id,
+    virtual void onUpdateWorkerState(String* scriptURL,
                                      ServiceWorkerState target) = 0;
 
     // receive

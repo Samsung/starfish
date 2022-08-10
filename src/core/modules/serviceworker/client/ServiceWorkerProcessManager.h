@@ -21,7 +21,9 @@
     !defined(__StarfishServiceWorkerProcessManager__)
 #define __StarfishServiceWorkerProcessManager__
 
+#include "StarfishBase.h"
 #include "platform/process/base/ProcessType.h" // PID
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/util/Id.h"
 
 #include <future>
@@ -36,6 +38,7 @@ class ServiceWorkerAgent;
 class PushServiceAgent;
 class ServiceWorkerFetchTask;
 class FetchEventHandler;
+class String;
 
 struct ProcessData {
     ProcessData()
@@ -63,6 +66,8 @@ public:
                                    GlobalScope* globalScope);
     void deregisterActiveGlobalScope(Id<GlobalScope> id);
     NULLABLE GlobalScope* findGlobalScope(Id<GlobalScope> id);
+    const GCVector<ServiceWorkerEnvironment*>& getSettingsObjects(
+        String* scriptURL);
 
     PushServiceAgent* pushServiceAgent()
     {
@@ -85,10 +90,14 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;
+    // TODO: replace m_mapIdToActiveGlobalScope with m_settingsObjects.
     GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
         m_mapIdToActiveGlobalScope;
     GCUnorderedMap<Id<GlobalScope>, FetchEventHandler*, IdHash>
         m_fetchEventHandlers;
+
+    GCVector<ServiceWorkerEnvironment*> m_settingsObjects;
+    bool m_settingsObjectsNeedUpdated{ true };
 
 #if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
     std::promise<void> m_promiseStopThreadSignal;

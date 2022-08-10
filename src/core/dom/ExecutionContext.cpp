@@ -33,6 +33,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/networking/WebSocket.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -212,11 +213,13 @@ void ExecutionContext::dispatchEventIdleTimeByUA(Event* event)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 ServiceWorker* ExecutionContext::activeServiceWorker() const
 {
+    TRACE_SCOPE(CLIENT);
     return m_activeServiceWorker;
 };
 
 void ExecutionContext::setActiveServiceWorker(ServiceWorker* serviceWorker)
 {
+    TRACE_SCOPE(CLIENT);
     m_activeServiceWorker = serviceWorker;
 }
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */

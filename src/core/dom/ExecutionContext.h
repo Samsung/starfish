@@ -167,6 +167,10 @@ public:
     void setActiveServiceWorker(ServiceWorker* serviceWorker);
 
 private:
+    // TODO: We assume there is only one service worker per execution context.
+    // We should use a map if multiple sw needs to be supported.
+    // e.g) GCUnorderedMap<std::string, ServiceWorker*> m_mapServiceWorker;
+    // map<scriptURL, ServiceWorker*>
     ServiceWorker* m_activeServiceWorker{ nullptr };
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */
 };

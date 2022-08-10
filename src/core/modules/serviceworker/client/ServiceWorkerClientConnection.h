@@ -28,6 +28,7 @@ namespace Starfish {
 
 class ServiceWorkerContainer;
 class FetchEventData;
+class String;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -51,8 +52,7 @@ public:
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
-    void updateWorkerState(ServiceWorkerRegistrationId id,
-                           ServiceWorkerState target);
+    void updateWorkerState(String* scriptURL, ServiceWorkerState target);
 
     Nullable<ServiceWorkerContainer*> findServiceWorkerContainer(
         ServiceWorkerContextId id);

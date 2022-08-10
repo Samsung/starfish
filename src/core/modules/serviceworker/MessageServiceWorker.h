@@ -22,15 +22,15 @@
 #define __StarfishMessageServiceWorker__
 
 namespace Starfish {
+class String;
 
 class UpdateWorkerStateData : public Archivable {
 public:
-    ServiceWorkerRegistrationId registrationId;
+    String* scriptURL;
     ServiceWorkerState state;
 
     UpdateWorkerStateData() = default;
-    UpdateWorkerStateData(ServiceWorkerRegistrationId id,
-                          ServiceWorkerState target);
+    UpdateWorkerStateData(String* scriptURL, ServiceWorkerState target);
 
     // serialize/deserialize
     const char* archiveId() const override;

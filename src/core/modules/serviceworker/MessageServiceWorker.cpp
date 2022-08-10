@@ -30,10 +30,10 @@
 
 namespace Starfish {
 
-UpdateWorkerStateData::UpdateWorkerStateData(ServiceWorkerRegistrationId id,
-                                             ServiceWorkerState target)
-    : registrationId(id)
-    , state(target)
+UpdateWorkerStateData::UpdateWorkerStateData(String* scriptURL_,
+                                             ServiceWorkerState state_)
+    : scriptURL(scriptURL_)
+    , state(state_)
 {
 }
 
@@ -44,7 +44,7 @@ const char* UpdateWorkerStateData::archiveId() const
 
 void UpdateWorkerStateData::archive(Archiver& ar)
 {
-    ar.MemberId("registrationId", registrationId);
+    ar.Member("scriptURL") & scriptURL;
     ar.MemberEnum("state", state);
 }
 
