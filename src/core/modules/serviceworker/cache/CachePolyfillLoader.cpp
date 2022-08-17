@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,41 +17,29 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishWorkerScriptController__)
-#define __StarfishWorkerScriptController__
+#if defined(STARFISH_WEBWORKER_HOST)
 
-#include "StarfishBase.h"
+#include "StarfishConfig.h"
+#include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
+#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/serviceworker/util/Trace.h"
+
+#include "binding/generated/Js2c_CacheStorage.h"
 
 namespace Starfish {
 
-class ResourceRequest;
-class ScriptBindingInstance;
-
-enum class ScriptLoadResult {
-    NotHandled,
-    Success,
-    NetworkError,
-    ScriptError,
-};
-
-class WorkerScriptController : public gc {
-public:
-    WorkerScriptController(ExecutionContext* executionContext);
-
-    ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
-    bool evaluatefromString(String* string);
-
-    ExecutionContext* executionContext()
-    {
-        return m_executionContext;
+bool CachePolyfillLoader::load(WorkerScriptController* controller)
+{
+    TRACE(SVCWORKER, "Load: s_js2c_cache_min_js");
+    String* text = String::fromUTF8(s_js2c_cache_min_js.c_str(),
+                                    s_js2c_cache_min_js.size());
+    if (!controller->evaluatefromString(text)) {
+        STARFISH_LOG_ERROR("Fail to load global script: js2c_cache_min_js");
+        return false;
     }
+    return true;
+}
 
-private:
-    ExecutionContext* m_executionContext;
-
-    ScriptBindingInstance* scriptBindingInstance();
-};
 } // namespace Starfish
 
 #endif

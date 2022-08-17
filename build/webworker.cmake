@@ -110,6 +110,7 @@ FILE (GLOB STARFISH_WEBWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/networking/*.cpp
     ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/serviceworker/cache/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/push/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/notification/*.cpp
@@ -191,6 +192,27 @@ SET (STARFISH_WEBWORKER_LINK_LIBRARIES
     ${STARFISH_WEBWORKER_LIBRARIES_DEFAULT}
     ${STARFISH_LIBRARIES_COMPILER}
 )
+
+#######################################################
+# CUSTOM TARGET JS2C
+#######################################################
+macro(add_js2c_target name output source license fname)
+    add_custom_command(OUTPUT ${output}
+                       COMMENT "Js2c (${name})"
+                       COMMAND tool/js2c.py -s${source} -l${license} -o${fname}
+                       DEPENDS ${source}
+    )
+    add_custom_target(${name} DEPENDS ${output})
+    set(JS2C_DEPENDENCIES ${JS2C_DEPENDENCIES} ${name})
+endmacro()
+
+add_js2c_target(CacheStorage
+    "${CMAKE_SOURCE_DIR}/src/binding/generated/Js2c_CacheStorage.h"
+    "${CMAKE_SOURCE_DIR}/src/core/modules/serviceworker/cache/deps/cache-storage/dist/cache.min.js"
+    "${CMAKE_SOURCE_DIR}/src/core/modules/serviceworker/cache/deps/cache-storage/LICENSE"
+    "CacheStorage.h"
+)
+
 #######################################################
 # BUILD TARGET
 #######################################################
@@ -198,6 +220,7 @@ SET (STARFISH_WEBWORKER_OBJECT_LIBRARY starfish_webworker_object_library)
 SET (STARFISH_WEBWORKER_OUTPUT_NAME ${TARGETNAME}WebWorker)
 
 ADD_LIBRARY (${STARFISH_WEBWORKER_OBJECT_LIBRARY} OBJECT ${STARFISH_WEBWORKER_SRC_LIST})
+ADD_DEPENDENCIES (${STARFISH_WEBWORKER_OBJECT_LIBRARY} ${JS2C_DEPENDENCIES})
 
 ADD_EXECUTABLE (starfish.webworker
                 $<TARGET_OBJECTS:${STARFISH_WEBWORKER_OBJECT_LIBRARY}>

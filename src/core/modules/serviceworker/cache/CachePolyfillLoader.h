@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -16,42 +16,19 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+#pragma once
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishWorkerScriptController__)
-#define __StarfishWorkerScriptController__
-
-#include "StarfishBase.h"
+#if defined(STARFISH_WEBWORKER_HOST)
 
 namespace Starfish {
 
-class ResourceRequest;
-class ScriptBindingInstance;
+class WorkerScriptController;
 
-enum class ScriptLoadResult {
-    NotHandled,
-    Success,
-    NetworkError,
-    ScriptError,
-};
-
-class WorkerScriptController : public gc {
+class CachePolyfillLoader {
 public:
-    WorkerScriptController(ExecutionContext* executionContext);
-
-    ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
-    bool evaluatefromString(String* string);
-
-    ExecutionContext* executionContext()
-    {
-        return m_executionContext;
-    }
-
-private:
-    ExecutionContext* m_executionContext;
-
-    ScriptBindingInstance* scriptBindingInstance();
+    static bool load(WorkerScriptController* controller);
 };
+
 } // namespace Starfish
 
 #endif
