@@ -35,6 +35,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
 #include "core/modules/cast/CastServer.h"
@@ -177,12 +178,19 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     // task queues, queue them to serviceWorker’s event loop’s task queues
     // in the same order using their original task sources.
 
+    WorkerScriptController* workerScriptController =
+        workerGlobalScope->workerScriptController();
+
+    if (!CachePolyfillLoader::load(workerScriptController)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
     // 4.12 Let evaluationStatus be the result of running the classic script
     // script if script is a classic script, otherwise, the result of running
     // the module script script if script is a module script.
-    ScriptLoadResult evaluationStatus =
-        workerGlobalScope->workerScriptController()->loadJavaScript(
-            workerGlobalScope->executionContext()->documentURI());
+    ScriptLoadResult evaluationStatus = workerScriptController->loadJavaScript(
+        workerGlobalScope->executionContext()->documentURI());
     if (evaluationStatus != ScriptLoadResult::Success) {
         STARFISH_LOG_WARN("Fail to load script: %s",
                           CSTR(serviceWorker->scriptURL));

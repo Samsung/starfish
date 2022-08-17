@@ -21,6 +21,8 @@
     !defined(__StarfishWorkerScriptController__)
 #define __StarfishWorkerScriptController__
 
+#include "StarfishBase.h"
+
 namespace Starfish {
 
 class ResourceRequest;
