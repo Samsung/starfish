@@ -1,0 +1,37 @@
+{
+  "name": "cache-polyfill",
+  "version": "1.0.1",
+  "description": "cache polyfill, Offline storage, Wraps IndexedDB, without https/ssl",
+  "main": "dist/cache.min.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "@babel/core": "7.6.3",
+    "@babel/preset-env": "7.6.3",
+    "babel-plugin-transform-async-to-promises": "0.8.14",
+    "rollup": "1.23.1",
+    "rollup-plugin-babel": "4.3.3",
+    "rollup-plugin-commonjs": "10.1.0",
+    "rollup-plugin-terser": "5.1.2"
+  },
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jimmywarting/cache-polyfill.git"
+  },
+  "keywords": [
+    "cache",
+    "polyfill",
+    "Offline storage",
+    "IndexedDB"
+  ],
+  "author": "Jimmy Wärting",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jimmywarting/cache-polyfill/issues"
+  },
+  "homepage": "https://github.com/jimmywarting/cache-polyfill#readme"
+}
