@@ -39,55 +39,10 @@
 
 namespace Starfish {
 
-#ifdef STARFISH_WEBWORKER_HOST
-
-class SendEventTask : public ParallelTask {
-public:
-    SendEventTask(String* eventName)
-        : m_eventName(eventName)
-    {
-    }
-    void run() override
-    {
-        WorkerGlobalScope* global = WorkerGlobalScope::getCurrent();
-        if (global) {
-            TRACE(HOST, "Dispatch an Event", CSTR(m_eventName));
-            global->dispatchEventByUA(
-                new ExtendableEvent(global->executionContext(), m_eventName));
-        } else {
-            TRACE0(HOST, "global is null");
-        }
-    }
-
-private:
-    String* m_eventName;
-};
-
-#endif
-
-void ServiceWorkerRegistrationData::sendEventTask(std::string eventname)
-{
-    // TODO: Move this to WorkerGlobalScope
-#ifdef STARFISH_WEBWORKER_HOST
-    TRACE_SCOPE(HOST);
-    (new MessageLoop())
-        ->addIdler(
-            nullptr,
-            [](size_t handle, void* data) { ((ParallelTask*)data)->run(); },
-            new SendEventTask(String::createASCIIString(eventname.c_str(),
-                                                        eventname.length())));
-
-#endif
-}
-
 void ServiceWorkerRegistrationData::setInstallingWorker(
     Nullable<ServiceWorkerData*> worker)
 {
-    // https://w3c.github.io/ServiceWorker/#execution-context-events
-    // `install` event is dispated when the service worker's containing
-    //  service worker registration’s installing worker changes.
     TRACE_SCOPE(HOST);
-    sendEventTask("install");
     m_installingWorker = worker;
 }
 
@@ -95,7 +50,6 @@ void ServiceWorkerRegistrationData::setWaitingWorker(
     Nullable<ServiceWorkerData*> worker)
 {
     TRACE_SCOPE(HOST);
-    sendEventTask("waiting");
     m_waitingWorker = worker;
 }
 
@@ -103,7 +57,6 @@ void ServiceWorkerRegistrationData::setActiveWorker(
     Nullable<ServiceWorkerData*> worker)
 {
     TRACE_SCOPE(HOST);
-    sendEventTask("activate");
     m_activeWorker = worker;
 }
 
@@ -121,6 +74,33 @@ void ServiceWorkerRegistrationData::archive(Archiver& ar)
     ar.MemberArchivable("activeWorker", (Archivable*&)m_activeWorker);
     ar.MemberEnum("updateViaCache", updateViaCache);
 }
+
+#ifdef STARFISH_WEBWORKER_HOST
+
+void SendEventTask::run()
+{
+    WorkerGlobalScope* global = WorkerGlobalScope::getCurrent();
+    if (global) {
+        TRACE(HOST, "Dispatch an Event", CSTR(m_eventName));
+        global->dispatchEventByUA(
+            new ExtendableEvent(global->executionContext(), m_eventName));
+    } else {
+        TRACE0(HOST, "global is null");
+    }
+}
+
+void SendEventTask::enqueueTask(std::string eventname)
+{
+    TRACE_SCOPE(HOST);
+    (new MessageLoop())
+        ->addIdler(
+            nullptr,
+            [](size_t handle, void* data) { ((ParallelTask*)data)->run(); },
+            new SendEventTask(String::createASCIIString(eventname.c_str(),
+                                                        eventname.length())));
+}
+
+#endif
 
 } // namespace Starfish
 

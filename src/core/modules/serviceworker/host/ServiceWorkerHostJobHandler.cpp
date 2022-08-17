@@ -535,23 +535,84 @@ void ServiceWorkerHostJobHandler::install(
     // 1. Let installFailed be false.
     bool installFailed = false;
 
-    // 3. Run the Update Registration State algorithm passing registration,
+    // 2. Let newestWorker be the result of running Get Newest Worker algorithm
+    //    passing registration as its argument.
+
+    // 3. Set registration’s update via cache mode to job’s update via cache
+    //    mode.
+    registration->updateViaCache = job->data()->updateViaCacheMode;
+
+    // 4. Run the Update Registration State algorithm passing registration,
     // "installing" and worker as the arguments.
     updateRegistrationState(registration,
                             ServiceWorkerRegistrationState::Installing, worker);
 
-    // 4. Run the Update Worker State algorithm passing registration’s
+    // 5. Run the Update Worker State algorithm passing registration’s
     // installing worker and installing as the arguments.
     updateWorkerState(worker, ServiceWorkerState::Installing);
 
-    // 6. Invoke Resolve Job Promise with job and registration.
+    // TODO: 6. Assert: job’s job promise is not null.
+    // STARFISH_ASSERT(job->promise() != nullptr);
+
+    // 7. Invoke Resolve Job Promise with job and registration.
     resolveJobPromise(job, registration);
 
-    // 7. Queue a task to fire an event named updatefound at all the
-    // ServiceWorkerRegistration objects for all
-    // the service worker clients whose creation URL matches registration’s
-    // scope url and all the service workers
-    // whose containing service worker registration is registration.
+    // 8. Let settingsObjects be all environment settings objects whose origin
+    //    is registration’s scope url's origin.
+
+    // 9. For each settingsObject of settingsObjects, queue a task on
+    //    settingsObject’s responsible event loop in the DOM manipulation task
+    //    source to run the following steps:
+
+    // 9.1. Let registrationObjects be every ServiceWorkerRegistration object in
+    // settingsObject’s realm, whose service worker registration is
+    // registration.
+
+    // 9.2. For each registrationObject of registrationObjects, fire an event on
+    // registrationObject named updatefound.
+
+    // 10. Let installingWorker be registration’s installing worker.
+    auto installingWorker = registration->installingWorker();
+
+    // 11. If the result of running the Should Skip Event algorithm with
+    //     installingWorker and "install" is false, then:
+
+    // 11.1. Let forceBypassCache be true if job’s force bypass cache flag is
+    // set, and false otherwise.
+    // TODO: update job to have forceBypassCache
+
+    bool forceBypassCache = false;
+    if (forceBypassCache) {
+        // 11.2. If the result of running the Run Service Worker algorithm with
+        // installingWorker and forceBypassCache is failure, then:
+        // 11.2.1. Set installFailed to true.
+    } else {
+        // 11.3. Else:
+
+        // 11.3.1. Queue a task task on installingWorker’s event loop using the
+        // DOM manipulation task source to run the following steps:
+        // 11.3.1.1. Let e be the result of creating an event with
+        // ExtendableEvent.
+        // 11.3.1.2. Initialize e’s type attribute to install.
+        // 11.3.1.3. Dispatch e at installingWorker’s global object.
+        SendEventTask::enqueueTask("install");
+
+        // 11.3.1.4. WaitForAsynchronousExtensions: Run the following substeps
+        // in parallel:
+        // 11.3.1.4.1. Wait until e is not active.
+        // 11.3.1.4.2. If e’s timed out flag is set, set installFailed to true.
+
+        // 11.3.1.4.3. Let p be the result of getting a promise to wait for all
+        // of e’s extend lifetime promises.
+
+        // 11.3.1.4.4. Upon rejection of p, set installFailed to true.
+
+        //         If task is discarded, set installFailed to true.
+
+        // 11.3.2. Wait for task to have executed or been discarded.
+        // 11.3.3. Wait for the step labeled WaitForAsynchronousExtensions to
+        // complete.
+    }
 
     // 17. Run the Update Registration State algorithm passing registration,
     // "waiting" and registration’s installing worker as the arguments.
@@ -725,13 +786,11 @@ void ServiceWorkerHostJobHandler::activate(
 
         // 11.1.1. Queue a task task on activeWorker’s event loop using the DOM
         // manipulation task source to run the following steps:
-
         // 11.1.1.1. Let e be the result of creating an event with
         // ExtendableEvent.
-
         // 11.1.1.2. Initialize e’s type attribute to activate.
-
         // 11.1.1.3. Dispatch e at activeWorker’s global object.
+        SendEventTask::enqueueTask("activate");
 
         // 11.1.1.4. WaitForAsynchronousExtensions: Wait, in parallel, until e
         // is not active.
@@ -758,8 +817,10 @@ bool ServiceWorkerHostJobHandler::shouldSkipEvent(
     // If serviceWorker’s set of event types to handle does not contain
     // eventName, then the user agent may return true.
 
+    // TODO: A service worker has an associated set of event types to handle.
+    return true;
+
     // Return false.
-    return false;
 }
 
 bool ServiceWorkerHostJobHandler::serviceWorkerHasNoPendingEvents(

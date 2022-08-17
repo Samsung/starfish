@@ -23,6 +23,7 @@
 
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
+#include "core/modules/serviceworker/util/ParallelTask.h"
 #include <string>
 
 namespace Starfish {
@@ -62,9 +63,21 @@ private:
     Nullable<ServiceWorkerData*> m_activeWorker;
     Nullable<ServiceWorkerData*> m_installingWorker;
 
-    void sendEventTask(std::string eventname);
-
     bool m_isUninstalling{ false };
+};
+
+class SendEventTask : public ParallelTask {
+public:
+    SendEventTask(String* eventName)
+        : m_eventName(eventName)
+    {
+    }
+    void run() override;
+
+    static void enqueueTask(std::string eventname);
+
+private:
+    String* m_eventName;
 };
 
 } // namespace Starfish
