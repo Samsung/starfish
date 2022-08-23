@@ -137,33 +137,6 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
     return promise;
 }
 
-void ServiceWorkerGlobalScope::handleFetch(RequestData* data)
-{
-    struct Param {
-        Param(ServiceWorkerGlobalScope* globalScope_, RequestData* data_)
-            : globalScope(globalScope_)
-            , data(data_)
-        {
-        }
-        ServiceWorkerGlobalScope* globalScope;
-        RequestData* data;
-    };
-
-    webWorker()->messageLoop()->addMicroTask(
-        this,
-        [](size_t handle, void* data) {
-            auto p = static_cast<Param*>(data);
-            // TODO: dispatch FetchEvent
-            TRACE(HOST, "dispatch FetchEvent:",
-                  p->data->m_url->urlString()->toUTF8String().data());
-            p->globalScope->dispatchEventByUA(
-                new ExtendableEvent(p->globalScope->executionContext(),
-                                    String::createASCIIString("fetch")));
-            delete p;
-        },
-        new Param(this, data));
-}
-
 void* ServiceWorkerGlobalScope::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(ServiceWorkerGlobalScope));

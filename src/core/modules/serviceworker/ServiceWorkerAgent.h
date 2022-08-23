@@ -31,7 +31,7 @@ class ServiceWorkerData;
 class NotificationService;
 class ServiceWorkerServer;
 class CastServer;
-class ServiceWorkerGlobalScopeProxy;
+class ServiceWorkerGlobalScope;
 
 enum class ServiceWorkerAgentState {
     Terminated,
@@ -72,12 +72,10 @@ public:
         return m_SWServer;
     }
 
-    ServiceWorkerGlobalScopeProxy* createGlobalScopeProxy(
-        ServiceWorkerContextId id);
-    void removeGlobalScopeProxy(ServiceWorkerContextId id);
-    Nullable<ServiceWorkerGlobalScopeProxy*> findGlobalScopeProxyByContextId(
-        ServiceWorkerContextId id);
-    ServiceWorkerGlobalScopeProxy* getGlobalScopeProxy(
+    void addGlobalScope(ServiceWorkerContextId id,
+                        ServiceWorkerGlobalScope* globalScope);
+    void removeGlobalScope(ServiceWorkerContextId id);
+    Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
 private:
@@ -91,9 +89,8 @@ private:
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
     NotificationService* m_notificationService;
     GCVector<WebWorker*> m_webWorkerList;
-    GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScopeProxy*,
-                   IdHash>
-        m_globalScopeProxyMap;
+    GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScope*, IdHash>
+        m_globalScopeMap;
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     CastServer* m_castServer;
 #endif

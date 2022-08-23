@@ -73,6 +73,8 @@ private:
     ServiceWorkerRegistrationData* m_data;
     ServiceWorkerJobClientInterface* m_jobClient;
     PushManager* m_pushManager;
+
+    void handleTaskSource(String* scopeURL);
 };
 } // namespace Starfish
 

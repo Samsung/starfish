@@ -34,7 +34,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#include "core/modules/serviceworker/host/ServiceWorkerGlobalScopeProxy.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
@@ -155,8 +154,7 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     auto workerGlobalScope =
         webWorker->createGlobalScope(serviceWorker->scriptURL);
     m_webWorkerList.push_back(webWorker);
-    auto globalScopeProxy = getGlobalScopeProxy(serviceWorker->clientContextId);
-    globalScopeProxy->setGlobalScope(workerGlobalScope);
+    addGlobalScope(serviceWorker->clientContextId, workerGlobalScope);
 
     TRACE(SVCWORKER, "create a global scope",
           serviceWorker->scriptURL->toUTF8NonGCString());
@@ -194,50 +192,31 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     // 4.15. Run the responsible event loop specified by settingsObject until
     // it is destroyed.
 
-    // Run events that occurred before the globalScope was created.
-    globalScopeProxy->runPendingEvent();
-
 // 4.16. Empty workerGlobalScope’s list of active timers.
 #endif /* STARFISH_WEBWORKER_HOST */
 }
 
-ServiceWorkerGlobalScopeProxy* ServiceWorkerAgent::createGlobalScopeProxy(
-    ServiceWorkerContextId id)
+void ServiceWorkerAgent::addGlobalScope(ServiceWorkerContextId id,
+                                        ServiceWorkerGlobalScope* globalScope)
 {
-    STARFISH_ASSERT(m_globalScopeProxyMap.find(id) ==
-                    m_globalScopeProxyMap.end());
+    STARFISH_ASSERT(m_globalScopeMap.find(id) == m_globalScopeMap.end());
 
-    auto proxy = new ServiceWorkerGlobalScopeProxy(id);
-    m_globalScopeProxyMap.insert(std::make_pair(id, proxy));
-
-    return proxy;
+    m_globalScopeMap.insert(std::make_pair(id, globalScope));
 }
 
-void ServiceWorkerAgent::removeGlobalScopeProxy(ServiceWorkerContextId id)
+void ServiceWorkerAgent::removeGlobalScope(ServiceWorkerContextId id)
 {
-    m_globalScopeProxyMap.erase(id);
+    m_globalScopeMap.erase(id);
 }
 
-Nullable<ServiceWorkerGlobalScopeProxy*>
-ServiceWorkerAgent::findGlobalScopeProxyByContextId(ServiceWorkerContextId id)
+Nullable<ServiceWorkerGlobalScope*>
+ServiceWorkerAgent::findGlobalScopeByContextId(ServiceWorkerContextId id)
 {
-    auto it = m_globalScopeProxyMap.find(id);
-    if (it == m_globalScopeProxyMap.end()) {
+    auto it = m_globalScopeMap.find(id);
+    if (it == m_globalScopeMap.end()) {
         return nullptr;
     }
     return it->second;
-}
-
-ServiceWorkerGlobalScopeProxy* ServiceWorkerAgent::getGlobalScopeProxy(
-    ServiceWorkerContextId id)
-{
-    ServiceWorkerGlobalScopeProxy* proxy = nullptr;
-    auto nullableProxy = findGlobalScopeProxyByContextId(id);
-    if (nullableProxy.hasValue()) {
-        return nullableProxy.getValue();
-    }
-
-    return createGlobalScopeProxy(id);
 }
 
 void ServiceWorkerAgent::runServiceWorker(String* scriptURL)

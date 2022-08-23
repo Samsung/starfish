@@ -43,6 +43,8 @@ FetchEventData* FetchEventData::createFetchEventData(ResourceRequest* request)
     data->contextId = request->executionContext()->globalScope()->uid();
     data->baseURL = request->url()->baseURL();
     data->url = request->url()->urlString();
+    data->scopeURL = String::emptyString;
+    data->destination = request->requestDestination();
     // TODO: copy other options
     return data;
 }
@@ -51,6 +53,7 @@ RequestData* FetchEventData::toRequestData()
 {
     RequestData* data = new RequestData();
     data->m_url = new ResourceURL(url, baseURL);
+    data->m_destination = destination;
     return data;
 }
 
@@ -58,7 +61,7 @@ void ServiceWorkerFetchTask::onProgressEvent(ResourceRequest* request,
                                              bool isExplicitAction)
 {
     if (request->progressState() == ProgressState::Load) {
-        TRACE(CLIENT, "ServiceWorkerFetchTask::Load: %s",
+        TRACE(CLIENT, "ServiceWorkerFetchTask::Load:",
               request->url()->href()->toUTF8String().data());
         load(request);
     }

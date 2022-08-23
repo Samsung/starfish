@@ -27,16 +27,20 @@ namespace Starfish {
 
 class FetchEventData;
 class ServiceWorkerClientConnection;
+class GlobalScope;
 
 class FetchEventHandler : public gc {
 public:
     void addFetch(FetchEventData* data);
-    void start(ServiceWorkerClientConnection* connection);
+    void start(ServiceWorkerClientConnection* connection, String* scopeURL);
 
 private:
     GCVector<FetchEventData*> m_eventDatas;
     bool m_isStarted{ false };
     ServiceWorkerClientConnection* m_connection{ nullptr };
+    String* m_scopeURL{ nullptr }; // TODO: change to storage key
+
+    void sendEvent(FetchEventData* data);
 };
 } // namespace Starfish
 #endif
