@@ -20,11 +20,18 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "StarfishConfig.h"
 
+#include "core/page/GlobalScope.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
+
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
+#include "core/modules/serviceworker/FetchEventHandler.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 namespace Starfish {
 
@@ -54,6 +61,8 @@ void ServiceWorkerRegistration::updateRegistrationState(
     switch (state) {
     case ServiceWorkerRegistrationState::Installing:
         m_installingWorker = serviceWorker;
+        //  Start fetch event task
+        handleTaskSource(m_data->scope);
         break;
     case ServiceWorkerRegistrationState::Waiting:
         m_waitingWorker = serviceWorker;
@@ -139,6 +148,19 @@ Promise* ServiceWorkerRegistration::showNotification(
     notification->runNotification(promise);
 
     return promise;
+}
+
+void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
+{
+    auto swProcessManager = ServiceWorkerProcessManager::instance();
+
+    auto fetchEventHandler = swProcessManager->findFetchEventHandler(
+        executionContext()->globalScope()->uid());
+    if (fetchEventHandler.hasValue()) {
+        auto connection = swProcessManager->getConnection(
+            executionContext()->webOrigin()->serialize());
+        fetchEventHandler->start(connection, scopeURL);
+    }
 }
 
 } // namespace Starfish

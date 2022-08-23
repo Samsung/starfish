@@ -571,6 +571,9 @@ public:
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
     QualifiedName m_statechange;
 #endif
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    QualifiedName m_fetch;
+#endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

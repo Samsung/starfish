@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
 
@@ -178,4 +178,4 @@ bool ServiceWorkerServer::tryTerminate()
 
 } // namespace Starfish
 
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif // #ifdef STARFISH_WEBWORKER_HOST

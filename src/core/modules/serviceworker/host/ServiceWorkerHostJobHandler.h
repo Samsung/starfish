@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+#if defined(STARFISH_WEBWORKER_HOST) && \
     !defined(__ServiceWorkerHostJobHandler__)
 #define __ServiceWorkerHostJobHandler__
 
@@ -35,6 +35,7 @@ class ServiceWorkerRegistrationData;
 class ErrorData;
 class ServiceWorkerServerInterface;
 class ContextRequestData;
+class FetchEventData;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -104,6 +105,8 @@ public:
     {
         return m_scopeToRegistrationMap.size() == 0;
     }
+
+    void handleFetch(FetchEventData* data);
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);

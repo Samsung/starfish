@@ -41,6 +41,29 @@ RequestData::RequestData()
 {
 }
 
+// https://fetch.spec.whatwg.org/#subresource-request
+bool RequestData::isSubresourceRequest()
+{
+    switch (m_destination) {
+    case RequestDestination::Audio:
+    case RequestDestination::AudioWorkLet:
+    case RequestDestination::Font:
+    case RequestDestination::Image:
+    case RequestDestination::Manifest:
+    case RequestDestination::PaintWorkLet:
+    case RequestDestination::Script:
+    case RequestDestination::Style:
+    case RequestDestination::Track:
+    case RequestDestination::Video:
+    case RequestDestination::Xslt:
+        return true;
+        break;
+    default:
+        return false;
+        break;
+    }
+}
+
 MethodType RequestData::methodTypeFromString(String* input)
 {
     String* upper = input->toASCIIUpper();
@@ -180,6 +203,8 @@ RequestDestination RequestData::requestDestinationFromString(
         return RequestDestination::Report;
     } else if (inputString->equalsIgnoreCase("script")) {
         return RequestDestination::Script;
+    } else if (inputString->equalsIgnoreCase("serviceworker")) {
+        return RequestDestination::ServiceWorker;
     } else if (inputString->equalsIgnoreCase("sharedworker")) {
         return RequestDestination::SharedWorker;
     } else if (inputString->equalsIgnoreCase("style")) {

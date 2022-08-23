@@ -1,0 +1,31 @@
+// https://w3c.github.io/ServiceWorker/#fetchevent
+
+[ STARFISH_ENABLE_SERVICE_WORKER,
+  STARFISH_WEBWORKER_HOST,
+  Exposed=Worker,
+  ConstructorCallWith=ExecutionContext
+]
+interface FetchEvent : ExtendableEvent {
+  constructor(DOMString type, FetchEventInit eventInitDict);
+  [SameObject] readonly attribute Request request;
+  readonly attribute Promise<any> preloadResponse;
+  readonly attribute DOMString clientId;
+  readonly attribute DOMString resultingClientId;
+  readonly attribute DOMString replacesClientId;
+  readonly attribute Promise<undefined> handled;
+
+  void respondWith(Promise<Response> r);
+};
+
+[ STARFISH_ENABLE_SERVICE_WORKER,
+  STARFISH_WEBWORKER_HOST, 
+  Exposed=Worker
+]
+dictionary FetchEventInit : ExtendableEventInit {
+  required Request request;
+  Promise<any> preloadResponse;
+  DOMString clientId = "";
+  DOMString resultingClientId = "";
+  DOMString replacesClientId = "";
+  Promise<undefined> handled;
+};

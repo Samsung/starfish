@@ -46,11 +46,10 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-#include "core/modules/serviceworker/host/ServiceWorkerGlobalScopeProxy.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_WEBWORKER_HOST
 
 namespace Starfish {
 
@@ -165,10 +164,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
             downcast<ContextRequestData*>(msg.param(0)));
     } else if (msgName == "fetchEvent") {
         auto data = downcast<FetchEventData*>(msg.param(0));
-        auto contextId = data->contextId;
-        auto globalScopeproxy =
-            ServiceWorkerAgent::instance()->getGlobalScopeProxy(contextId);
-        globalScopeproxy->handleFetch(data->toRequestData());
+        handler->handleFetch(data);
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();
@@ -176,4 +172,4 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
 }
 
 } // namespace Starfish
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif // #ifdef STARFISH_WEBWORKER_HOST

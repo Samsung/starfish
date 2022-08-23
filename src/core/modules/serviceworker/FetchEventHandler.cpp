@@ -21,9 +21,10 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/FetchEventHandler.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/FetchEventHandler.h"
 
 namespace Starfish {
 
@@ -37,21 +38,37 @@ void FetchEventHandler::addFetch(FetchEventData* data)
 
     TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(m_connection);
-    m_connection->fetchEvent(data);
+    STARFISH_ASSERT(m_scopeURL);
+    sendEvent(data);
 }
 
-void FetchEventHandler::start(ServiceWorkerClientConnection* connection)
+void FetchEventHandler::start(ServiceWorkerClientConnection* connection,
+                              String* scopeURL)
 {
+    if (m_isStarted) {
+        return;
+    }
+
     TRACE_SCOPE(CLIENT);
+    STARFISH_ASSERT(connection);
+    STARFISH_ASSERT(scopeURL);
     m_connection = connection;
+    m_scopeURL = scopeURL;
 
     for (auto data : m_eventDatas) {
-        connection->fetchEvent(data);
+        sendEvent(data);
     }
 
     m_eventDatas.clear();
 
     m_isStarted = true;
+}
+
+void FetchEventHandler::sendEvent(FetchEventData* data)
+{
+    data->scopeURL = m_scopeURL;
+
+    m_connection->fetchEvent(data);
 }
 
 } // namespace Starfish

@@ -16,31 +16,25 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+#if defined(STARFISH_WEBWORKER_HOST)
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishFetchEventHandler__)
-#define __StarfishFetchEventHandler__
-
+#include "EscargotPublic.h"
 #include "StarfishConfig.h"
+#include "binding/ScriptWrappable.h"
+#include "core/dom/DOMException.h"
+#include "core/fetch/Response.h"
+#include "core/fetch/Body.h"
+#include "core/modules/serviceworker/util/Trace.h"
+
+#include "core/modules/serviceworker/FetchEvent.h"
 
 namespace Starfish {
 
-class FetchEventData;
-class ServiceWorkerClientConnection;
-class GlobalScope;
+void FetchEvent::respondWith(Promise* response)
+{
+    // TODO
+}
 
-class FetchEventHandler : public gc {
-public:
-    void addFetch(FetchEventData* data);
-    void start(ServiceWorkerClientConnection* connection, String* scopeURL);
-
-private:
-    GCVector<FetchEventData*> m_eventDatas;
-    bool m_isStarted{ false };
-    ServiceWorkerClientConnection* m_connection{ nullptr };
-    String* m_scopeURL{ nullptr }; // TODO: change to storage key
-
-    void sendEvent(FetchEventData* data);
-};
 } // namespace Starfish
+
 #endif

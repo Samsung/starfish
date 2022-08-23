@@ -37,14 +37,18 @@ public:
     ServiceWorkerContextId contextId;
     String* baseURL;
     String* url;
+    String* scopeURL;
+    RequestDestination destination;
 
     DEFINE_ARCHIVE_ID_GETTER(FetchEventData);
 
     void archive(Archiver& ar) override
     {
         ar.MemberId("contextId", contextId);
-        ar.Member("method") & baseURL;
+        ar.Member("baseURL") & baseURL;
         ar.Member("url") & url;
+        ar.Member("scopeURL") & scopeURL;
+        ar.MemberEnum("destination", destination);
     }
 
     static FetchEventData* createFetchEventData(ResourceRequest* request);

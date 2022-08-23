@@ -86,6 +86,7 @@ enum class RequestDestination {
     PaintWorkLet,
     Report,
     Script,
+    ServiceWorker,
     SharedWorker,
     Style,
     Track,
@@ -132,6 +133,8 @@ public:
     String* m_integrity;
     bool m_keepalive;
     ResourceURL* m_url;
+
+    bool isSubresourceRequest();
 
     static MethodType methodTypeFromString(String* inputString);
     static String* methodTypeString(MethodType method);

@@ -43,8 +43,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerGlobalScope() const override;
 
-    void handleFetch(RequestData* data);
-
     // bindings
     ServiceWorker* serviceWorker();
     Promise* skipWaiting();

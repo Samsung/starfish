@@ -17,37 +17,31 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerGlobalScopeProxy__)
-#define __StarfishServiceWorkerGlobalScopeProxy__
+#if defined(STARFISH_WEBWORKER_HOST) && !defined(__ServiceWorkerFetchJob__)
+#define __ServiceWorkerFetchJob__
 
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "StarfishConfig.h"
 
 namespace Starfish {
 
-class ServiceWorkerGlobalScope;
-class ExtendableEvent;
-class FetchEventData;
 class RequestData;
+class Response;
+class ServiceWorkerRegistration;
+class ServiceWorkerGlobalScope;
 
-class ServiceWorkerGlobalScopeProxy : public gc {
+class ServiceWorkerFetchJob : public gc {
 public:
-    ServiceWorkerGlobalScopeProxy(ServiceWorkerContextId& id)
-        : m_clientContextId(id)
-    {
-    }
-
-    void setGlobalScope(ServiceWorkerGlobalScope* scope);
-
-    void runPendingEvent();
-
-    void handleFetch(RequestData* data);
+    Nullable<Response*> handleFetch(ServiceWorkerGlobalScope* client,
+                                    RequestData* requestData);
 
 private:
-    ServiceWorkerContextId m_clientContextId;
-    ServiceWorkerGlobalScope* m_globalScope{ nullptr };
-    GCVector<RequestData*> m_pendingFetchEventData;
+    bool m_handleFetchFailed{ false };
+    bool m_respondWithEntered{ false };
+    bool m_eventCanceled{ false };
+    Response* m_response{ nullptr };
+    ServiceWorkerRegistration* m_registration{ nullptr };
 };
+
 } // namespace Starfish
 
 #endif

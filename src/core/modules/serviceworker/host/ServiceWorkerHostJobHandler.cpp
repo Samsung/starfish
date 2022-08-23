@@ -17,9 +17,10 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
@@ -43,8 +44,10 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
@@ -1239,6 +1242,22 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
     }
 }
 
+void ServiceWorkerHostJobHandler::handleFetch(FetchEventData* data)
+{
+    TRACE(HOST);
+    auto contextId = data->contextId;
+
+    auto clientValue =
+        ServiceWorkerAgent::instance()->findGlobalScopeByContextId(contextId);
+    if (!clientValue.hasValue()) {
+        TRACE(HOST);
+        return;
+    }
+
+    auto fetchJob = new ServiceWorkerFetchJob();
+    fetchJob->handleFetch(clientValue.getValue(), data->toRequestData());
+}
+
 } // namespace Starfish
 
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif // #ifdef STARFISH_WEBWORKER_HOST

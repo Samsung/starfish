@@ -567,6 +567,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "statechange"));
 #endif
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    m_fetch =
+        QualifiedName(AtomicString::createAtomicString(starfish, "fetch"));
+#endif
     m_ttsstart =
         QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));
     m_onttsstart =
