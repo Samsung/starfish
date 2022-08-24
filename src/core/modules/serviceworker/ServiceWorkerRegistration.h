@@ -64,6 +64,12 @@ public:
     DEFINE_GETTER_SETTER(ServiceWorkerRegistrationData*, data, Data);
     DEFINE_GETTER_SETTER(PushManager*, pushManager, PushManager);
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(updatefound);
+#undef VIRTUAL
+#undef OVERRIDE
+
 private:
     ExecutionContext* m_executionContext;
     ServiceWorker* m_installingWorker;

@@ -518,6 +518,9 @@ void ServiceWorkerContainer::resolveJobPromise(
                     auto registration = new ServiceWorkerRegistration(
                         executionContext, container);
 
+                    container->serviceWorkerRegistrations().push_back(
+                        registration);
+
                     TRACE(SVCWORKER, "new ServiceWorker Client Object");
                     auto serviceWorker = new ServiceWorker(executionContext);
 

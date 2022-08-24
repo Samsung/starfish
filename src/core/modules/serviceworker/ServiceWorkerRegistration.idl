@@ -12,5 +12,5 @@ interface ServiceWorkerRegistration : EventTarget {
   [NewObject] Promise<boolean> unregister();
 
   // event
-  // attribute EventHandler onupdatefound;
+  attribute EventHandler onupdatefound;
 };

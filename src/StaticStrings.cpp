@@ -565,6 +565,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || defined(STARFISH_ENABLE_WEBRTC)
     m_statechange = QualifiedName(
         AtomicString::createAtomicString(starfish, "statechange"));
+    m_updatefound = QualifiedName(
+        AtomicString::createAtomicString(starfish, "updatefound"));
 #endif
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
