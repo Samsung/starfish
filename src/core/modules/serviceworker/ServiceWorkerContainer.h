@@ -46,6 +46,7 @@ class ServiceWorker;
 class ServiceWorkerRequest;
 class ServiceWorkerClientConnection;
 class RegistrationOptions;
+class ServiceWorkerRegistration;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClientInterface {
@@ -86,6 +87,11 @@ public:
     NULLABLE ServiceWorkerRequest* findRequest(Id<ServiceWorkerRequest> id);
     void finishRequest(ServiceWorkerRequest* request);
 
+    GCVector<ServiceWorkerRegistration*>& serviceWorkerRegistrations()
+    {
+        return m_serviceWorkerRegistrations;
+    };
+
 private:
     enum class State {
         Started,
@@ -110,6 +116,8 @@ private:
         NULLABLE String* scriptURL, Promise* p,
         NULLABLE ServiceWorkerEnvironment* client) override;
     void finishJob(ServiceWorkerJob* job);
+
+    GCVector<ServiceWorkerRegistration*> m_serviceWorkerRegistrations;
 };
 } // namespace Starfish
 

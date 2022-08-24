@@ -337,6 +337,8 @@ void ServiceWorkerClientConnection::fireEventRequest(String* scriptURL,
             String* eventName;
         };
 
+        // NOTE: Searching globalScope() with contextId is required if multiple
+        // executionContexts (multiple WebViews) are supported.
         executionContext->webBase()->messageLoop()->addIdler(
             executionContext->globalScope(),
             [](size_t handle, void* data0) {
@@ -345,19 +347,28 @@ void ServiceWorkerClientConnection::fireEventRequest(String* scriptURL,
                 ServiceWorkerEnvironment* settingsObject =
                     param->settingsObject;
 
-                // Let objectMap be settingsObject’s service worker object map.
-                // If objectMap[worker] does not exist, then abort these steps.
-                // NOTE: In ExecutionContext.h, use activeServiceWorker instead
-                // of objectMap[worker].
-                auto serviceWorker = settingsObject->activeServiceWorker();
-                if (serviceWorker == nullptr) {
-                    return;
-                }
+                // NOTE: This is related to the step 9 below in
+                // https://w3c.github.io/ServiceWorker/#install.
 
-                // Fire an event
-                TRACEF(CLIENT, "Fire '%s' event", CSTR(param->eventName));
-                Event* e = new Event(settingsObject, param->eventName);
-                serviceWorker->dispatchEventByUA(serviceWorker, e);
+                // 9.1. Let registrationObjects be every
+                // ServiceWorkerRegistration object in settingsObject’s realm,
+                // whose service worker registration is registration.
+
+                auto window = settingsObject->document()->window();
+                auto serviceWorkerContainer =
+                    window->navigator()->serviceWorker();
+                auto registrationObjects =
+                    serviceWorkerContainer->serviceWorkerRegistrations();
+
+                // 9.2. For each registrationObject of registrationObjects, fire
+                // an event on registrationObject named `updatefound`. Find
+                // registrations
+                for (const auto registrationObject : registrationObjects) {
+                    TRACEF(CLIENT, "Fire '%s' event", CSTR(param->eventName));
+                    Event* e = new Event(settingsObject, param->eventName);
+                    registrationObject->dispatchEventByUA(registrationObject,
+                                                          e);
+                }
 
                 delete param;
             },

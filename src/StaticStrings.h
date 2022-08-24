@@ -570,6 +570,7 @@ public:
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
     QualifiedName m_statechange;
+    QualifiedName m_updatefound;
 #endif
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
     QualifiedName m_fetch;

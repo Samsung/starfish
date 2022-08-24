@@ -19,7 +19,7 @@
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 #include "StarfishConfig.h"
-
+#include "Starfish.h"
 #include "core/page/GlobalScope.h"
 
 #include "core/dom/ExecutionContext.h"
@@ -34,6 +34,28 @@
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 namespace Starfish {
+
+// DEFINE_EVENT_LISTENER(ServiceWorkerRegistration, updatefound);
+
+EventListener* ServiceWorkerRegistration::onupdatefound()
+{
+    TRACE_SCOPE(SWCWORKER);
+    QualifiedName attr = staticStrings()->m_updatefound;
+
+    return attributeEventListener(attr);
+}
+
+void ServiceWorkerRegistration::setOnupdatefound(EventListener* onupdatefound)
+{
+    TRACE_SCOPE(SWCWORKER);
+    QualifiedName attr = staticStrings()->m_updatefound;
+
+    if (onupdatefound) {
+        setAttributeEventListener(attr, onupdatefound);
+    } else {
+        clearAttributeEventListener(attr);
+    }
+}
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(
     ExecutionContext* executionContext, ServiceWorkerJobClientInterface* client)
