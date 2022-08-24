@@ -45,6 +45,8 @@ public:
     void onUpdateWorkerState(String* scriptURL,
                              ServiceWorkerState target) override;
 
+    void fireEventRequest(String* scriptURL, String* eventName) override;
+
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;
 

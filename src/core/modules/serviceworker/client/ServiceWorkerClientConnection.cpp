@@ -175,6 +175,10 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto data = downcast<UpdateWorkerStateData*>(msg.param(0));
         updateWorkerState(data->scriptURL, data->state);
 
+    } else if (msgName == "fireEventRequest") {
+        auto data = downcast<FireEventRequestData*>(msg.param(0));
+        fireEventRequest(data->scriptURL, data->eventName);
+
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();
@@ -263,12 +267,15 @@ void ServiceWorkerClientConnection::updateWorkerState(String* scriptURL,
                 Param* param = static_cast<Param*>(data0);
                 ServiceWorkerEnvironment* settingsObject =
                     param->settingsObject;
-                // NOTE: In ExecutionContext.h, use activeServiceWorker instead
-                // of objectMap[worker].
 
                 // 4.1. Let objectMap be settingsObject’s service worker object
-                // map. 4.2. If objectMap[worker] does not exist, then abort
-                // these steps.
+                // map.
+
+                // 4.2. If objectMap[worker] does not exist, then abort these
+                // steps.
+
+                // NOTE: In ExecutionContext.h, use activeServiceWorker instead
+                // of objectMap[worker].
                 auto serviceWorker = settingsObject->activeServiceWorker();
                 if (serviceWorker == nullptr) {
                     return;
@@ -295,6 +302,66 @@ void ServiceWorkerClientConnection::updateWorkerState(String* scriptURL,
                 delete param;
             },
             new Param(executionContext, state));
+    }
+}
+
+void ServiceWorkerClientConnection::fireEventRequest(String* scriptURL,
+                                                     String* eventName)
+{
+    TRACE_SCOPE(CLIENT);
+    // Let settingsObjects be all environment settings objects whose origin is
+    // worker’s script url's origin.
+
+    auto swpm = ServiceWorkerProcessManager::instance();
+    const GCVector<ServiceWorkerEnvironment*>& settingsObjects =
+        swpm->getSettingsObjects(scriptURL);
+
+    // For each settingsObject of settingsObjects, queue a task on
+    // settingsObject’s responsible event loop in the DOM manipulation task
+    // source to run the following steps:
+
+    for (auto it = settingsObjects.begin(); it != settingsObjects.end(); it++) {
+        // NOTE: Starfish isn't used with multiple execution contexts. So there
+        // is only one settingsObject.
+
+        ExecutionContext* executionContext =
+            static_cast<ServiceWorkerEnvironment*>(*it);
+
+        struct Param : public gc {
+            Param(ExecutionContext* settingsObject_, String* eventName_)
+            {
+                settingsObject = settingsObject_;
+                eventName = eventName_;
+            }
+            ServiceWorkerEnvironment* settingsObject;
+            String* eventName;
+        };
+
+        executionContext->webBase()->messageLoop()->addIdler(
+            executionContext->globalScope(),
+            [](size_t handle, void* data0) {
+                TRACE_SCOPE(CLIENT);
+                Param* param = static_cast<Param*>(data0);
+                ServiceWorkerEnvironment* settingsObject =
+                    param->settingsObject;
+
+                // Let objectMap be settingsObject’s service worker object map.
+                // If objectMap[worker] does not exist, then abort these steps.
+                // NOTE: In ExecutionContext.h, use activeServiceWorker instead
+                // of objectMap[worker].
+                auto serviceWorker = settingsObject->activeServiceWorker();
+                if (serviceWorker == nullptr) {
+                    return;
+                }
+
+                // Fire an event
+                TRACEF(CLIENT, "Fire '%s' event", CSTR(param->eventName));
+                Event* e = new Event(settingsObject, param->eventName);
+                serviceWorker->dispatchEventByUA(serviceWorker, e);
+
+                delete param;
+            },
+            new Param(executionContext, eventName));
     }
 }
 

@@ -560,20 +560,29 @@ void ServiceWorkerHostJobHandler::install(
     // 7. Invoke Resolve Job Promise with job and registration.
     resolveJobPromise(job, registration);
 
-    // 8. Let settingsObjects be all environment settings objects whose origin
-    //    is registration’s scope url's origin.
+    {
+        TRACE_SCOPE(HOST);
+        // 8. Let settingsObjects be all environment settings objects whose
+        //    origin is registration’s scope url's origin.
 
-    // 9. For each settingsObject of settingsObjects, queue a task on
-    //    settingsObject’s responsible event loop in the DOM manipulation task
-    //    source to run the following steps:
+        // 9. For each settingsObject of settingsObjects, queue a task on
+        //    settingsObject’s responsible event loop in the DOM manipulation
+        //    task source to run the following steps:
 
-    // 9.1. Let registrationObjects be every ServiceWorkerRegistration object in
-    // settingsObject’s realm, whose service worker registration is
-    // registration.
+        // 9.1. Let registrationObjects be every ServiceWorkerRegistration
+        // object in settingsObject’s realm, whose service worker registration
+        // is registration.
 
-    // 9.2. For each registrationObject of registrationObjects, fire an event on
-    // registrationObject named updatefound.
+        // 9.2. For each registrationObject of registrationObjects, fire an
+        // event on registrationObject named `updatefound`.
+        GCVector<IServiceWorkerClientConnection*> connections;
+        m_SWServer->getConnections(connections);
 
+        for (const auto& connection : connections) {
+            connection->fireEventRequest(
+                worker->scriptURL, String::createASCIIString("updatefound"));
+        }
+    }
     // 10. Let installingWorker be registration’s installing worker.
     auto installingWorker = registration->installingWorker();
 
@@ -644,7 +653,8 @@ void ServiceWorkerHostJobHandler::install(
     // again when the last client controlled by the existing active worker is
     // unloaded, `skipWaiting()` is asynchronously called, or the extend
     // lifetime promises for the existing active worker settle.
-    tryActivate(registration);
+
+    // TODO: tryActivate(registration);
 }
 
 void ServiceWorkerHostJobHandler::tryActivate(
