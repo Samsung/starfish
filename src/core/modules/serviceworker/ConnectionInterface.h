@@ -69,6 +69,8 @@ public:
     virtual void onUpdateWorkerState(String* scriptURL,
                                      ServiceWorkerState target) = 0;
 
+    virtual void fireEventRequest(String* scriptURL, String* eventName) = 0;
+
     // receive
     // NOTE: For rapid development, declaring receive handler isn't compulsory
     // for now. However, unimplemented message handler is detected in run time.

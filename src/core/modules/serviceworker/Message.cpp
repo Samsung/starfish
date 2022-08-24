@@ -156,6 +156,7 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
 #define ARCHIVE(NAME) \
     archiveIfMatched<NAME>(#NAME, id, ar, archivable, isAlreadyArchived);
 
+    // TODO: We could somehow remove the macro to register types.
     ARCHIVE(ServiceWorkerRequest);
     ARCHIVE(ServiceWorkerJobData);
     ARCHIVE(ServiceWorkerRegistrationData);
@@ -164,8 +165,16 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
     ARCHIVE(UpdateWorkerStateData);
     ARCHIVE(ContextRequestData);
     ARCHIVE(FetchEventData);
+    ARCHIVE(FireEventRequestData);
 
 #undef ARCHIVE
+
+    if (isAlreadyArchived == false) {
+        STARFISH_LOG_ERROR(
+            "'%s' isn't archived because it's unknow type. It may need to be "
+            "registered using the above `ARCHIVE` macro",
+            id.c_str());
+    }
 
     ar.EndObject();
 }

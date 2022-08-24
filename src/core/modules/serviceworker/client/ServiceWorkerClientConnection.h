@@ -53,6 +53,7 @@ public:
         NULLABLE ServiceWorkerRegistrationData* registration);
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
     void updateWorkerState(String* scriptURL, ServiceWorkerState target);
+    void fireEventRequest(String* scriptURL, String* eventName);
 
     Nullable<ServiceWorkerContainer*> findServiceWorkerContainer(
         ServiceWorkerContextId id);

@@ -120,6 +120,19 @@ void ServiceWorkerHostConnection::onUpdateWorkerState(String* scriptURL,
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
+void ServiceWorkerHostConnection::fireEventRequest(String* scriptURL,
+                                                   String* eventName)
+{
+    TRACE_SCOPE(HOST);
+    JsonWriter writer;
+    Message msg("fireEventRequest");
+
+    msg.addParam(new FireEventRequestData(scriptURL, eventName));
+    msg.archive(writer);
+
+    send(writer.GetString(), writer.GetSize() + 1);
+}
+
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
                                              size_t len)
 {

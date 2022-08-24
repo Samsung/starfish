@@ -85,6 +85,8 @@ void ExtendableEvent::waitUntil(Promise* promise)
 
 void ExtendableEvent::enqueueWaitUntilMicrotask()
 {
+    TRACE_SCOPE(HOST);
+
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data) {

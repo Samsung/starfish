@@ -21,6 +21,9 @@
     !defined(__StarfishMessageServiceWorker__)
 #define __StarfishMessageServiceWorker__
 
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+
 namespace Starfish {
 class String;
 
@@ -70,6 +73,28 @@ public:
         ar.MemberId("contextId", contextId);
         ar.MemberId("registrationId", registrationId);
         ar.MemberEnum("type", type);
+    }
+};
+
+class FireEventRequestData : public Archivable {
+public:
+    DEFINE_ARCHIVE_ID_GETTER(FireEventRequestData);
+
+    String* scriptURL;
+    String* eventName;
+
+    FireEventRequestData() = default;
+    FireEventRequestData(String* scriptURL_, String* eventName_)
+        : scriptURL(scriptURL_)
+        , eventName(eventName_)
+    {
+    }
+
+    // serialize/deserialize
+    void archive(Archiver& ar) override
+    {
+        ar.Member("scriptURL") & scriptURL;
+        ar.Member("eventName") & eventName;
     }
 };
 
