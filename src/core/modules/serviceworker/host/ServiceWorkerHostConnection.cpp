@@ -127,7 +127,8 @@ void ServiceWorkerHostConnection::fireEventRequest(String* scriptURL,
     JsonWriter writer;
     Message msg("fireEventRequest");
 
-    msg.addParam(new FireEventRequestData(scriptURL, eventName));
+    msg.addParam(new StringArchivable(TypeName::String, scriptURL));
+    msg.addParam(new StringArchivable(TypeName::String, eventName));
     msg.archive(writer);
 
     send(writer.GetString(), writer.GetSize() + 1);

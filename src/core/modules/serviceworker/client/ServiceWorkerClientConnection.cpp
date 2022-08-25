@@ -176,8 +176,9 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         updateWorkerState(data->scriptURL, data->state);
 
     } else if (msgName == "fireEventRequest") {
-        auto data = downcast<FireEventRequestData*>(msg.param(0));
-        fireEventRequest(data->scriptURL, data->eventName);
+        auto scriptURL = reinterpret_cast<StringArchivable*>(msg.param(0));
+        auto eventName = reinterpret_cast<StringArchivable*>(msg.param(1));
+        fireEventRequest(scriptURL->value(), eventName->value());
 
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());

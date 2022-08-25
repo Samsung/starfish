@@ -76,28 +76,6 @@ public:
     }
 };
 
-class FireEventRequestData : public Archivable {
-public:
-    DEFINE_ARCHIVE_ID_GETTER(FireEventRequestData);
-
-    String* scriptURL;
-    String* eventName;
-
-    FireEventRequestData() = default;
-    FireEventRequestData(String* scriptURL_, String* eventName_)
-        : scriptURL(scriptURL_)
-        , eventName(eventName_)
-    {
-    }
-
-    // serialize/deserialize
-    void archive(Archiver& ar) override
-    {
-        ar.Member("scriptURL") & scriptURL;
-        ar.Member("eventName") & eventName;
-    }
-};
-
 } // namespace Starfish
 
 #endif
