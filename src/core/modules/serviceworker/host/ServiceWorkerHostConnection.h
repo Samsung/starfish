@@ -21,10 +21,19 @@
     !defined(__StarfishServiceWorkerHostConnection__)
 #define __StarfishServiceWorkerHostConnection__
 
+#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/serviceworker/ConnectionInterface.h"
+
 namespace Starfish {
 
 class ServiceWorkerServerInterface;
+class ServiceWorkerJob;
+class ServiceWorkerRegistrationData;
+class ServiceWorkerRequest;
+class FetchEventResponseData;
 class String;
+class ErrorData;
+class Socket;
 
 class ServiceWorkerHostConnection final
     : public Connection,
@@ -50,6 +59,8 @@ public:
                              ServiceWorkerState target) override;
 
     void fireEventRequest(String* scriptURL, String* eventName) override;
+
+    void respondFetchEvent(FetchEventResponseData* data) override;
 
     // receive
     void onReceived(Socket* socket, const char* data, size_t len) override;

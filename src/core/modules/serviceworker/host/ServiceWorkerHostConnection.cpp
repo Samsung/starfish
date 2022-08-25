@@ -40,6 +40,7 @@
 #include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
+#include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -122,6 +123,20 @@ void ServiceWorkerHostConnection::onUpdateRegistrationState(
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
+void ServiceWorkerHostConnection::respondFetchEvent(
+    FetchEventResponseData* data)
+{
+    TRACE_SCOPE(HOST);
+    STARFISH_ASSERT(data);
+
+    JsonWriter writer;
+    Message msg("respondFetchEvent");
+    msg.addParam(data);
+    msg.archive(writer);
+
+    send(writer.GetString(), writer.GetSize() + 1);
+}
+
 void ServiceWorkerHostConnection::onUpdateWorkerState(String* scriptURL,
                                                       ServiceWorkerState state)
 {
@@ -192,8 +207,8 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
         handler->updateServiceWorkerClient(
             downcast<ContextRequestData*>(msg.param(0)));
     } else if (msgName == "fetchEvent") {
-        auto data = downcast<FetchEventData*>(msg.param(0));
-        handler->handleFetch(data);
+        auto data = downcast<FetchEventRequestData*>(msg.param(0));
+        handler->handleFetch(data, this);
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();

@@ -28,7 +28,7 @@
 namespace Starfish {
 
 class ServiceWorkerContainer;
-class FetchEventData;
+class FetchEventRequestData;
 class String;
 class ServiceWorkerData;
 class ServiceWorkerRegistrationData;
@@ -44,7 +44,7 @@ public:
     void matchRegistration(ServiceWorkerRequest* request,
                            String* clientURL) override;
     void updateServiceWorkerClient(ContextRequestData* request) override;
-    void fetchEvent(FetchEventData* FetchEventData) override;
+    void fetchEvent(FetchEventRequestData* FetchEventRequestData) override;
 
     void sendMessage(const char* msgName, NULLABLE Archivable* param1 = nullptr,
                      NULLABLE Archivable* param2 = nullptr);
@@ -60,6 +60,7 @@ public:
                                  ServiceWorkerData* source);
     void updateWorkerState(String* scriptURL, ServiceWorkerState target);
     void fireEventRequest(String* scriptURL, String* eventName);
+    void respondFetchEvent(FetchEventResponseData* data);
 
     Nullable<ServiceWorkerContainer*> findServiceWorkerContainer(
         ServiceWorkerContextId id);

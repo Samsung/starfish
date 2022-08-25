@@ -369,10 +369,10 @@ void AsyncNetworkWorkHelper::abortHandlerWrapper(NetworkURLWorkerData* nwd)
 NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
     ResourceRequest* proxy)
     : m_orgProxy(proxy)
-{
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
-    proxy->addResourceRequestClient(new ServiceWorkerFetchTask());
+    , m_serviceWorkerFetchTask(new ServiceWorkerFetchTask(proxy))
 #endif
+{
 }
 
 void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
@@ -380,6 +380,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(m_orgProxy->url()->isHTTPFamilyURL());
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    m_serviceWorkerFetchTask->request(body);
+#endif
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;

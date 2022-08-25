@@ -62,6 +62,7 @@ enum class ServiceWorkerJobType : unsigned {
 // ServiceWorkerEnvironment.
 using ServiceWorkerEnvironment = ExecutionContext;
 using ServiceWorkerRegistrationKey = String*;
+using ServiceWorkerFetchKey = String*;
 
 using ServiceWorkerJobId = Id<ServiceWorkerJob>;
 using ServiceWorkerContextId = Id<GlobalScope>;

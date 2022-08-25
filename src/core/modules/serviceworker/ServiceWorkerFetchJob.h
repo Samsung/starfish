@@ -21,18 +21,26 @@
 #define __ServiceWorkerFetchJob__
 
 #include "StarfishConfig.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
 class RequestData;
 class Response;
+class FetchEvent;
+class Promise;
 class ServiceWorkerRegistration;
 class ServiceWorkerGlobalScope;
+class ServiceWorkerHostConnection;
 
 class ServiceWorkerFetchJob : public gc {
 public:
-    ServiceWorkerFetchJob(ServiceWorkerGlobalScope* client)
+    ServiceWorkerFetchJob(ServiceWorkerGlobalScope* client,
+                          ServiceWorkerContextId contextId,
+                          ServiceWorkerHostConnection* connection)
         : m_client(client)
+        , m_connection(connection)
+        , m_contextId(contextId)
     {
     }
 
@@ -44,6 +52,9 @@ public:
     void successJob();
 
     DEFINE_GETTER(ServiceWorkerGlobalScope*, client);
+    DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
+    DEFINE_GETTER(ServiceWorkerContextId, contextId);
+    DEFINE_GETTER(String*, url);
     DEFINE_GETTER_SETTER(bool, handleFetchFailed, HandleFetchFailed);
     DEFINE_GETTER_SETTER(bool, respondWithEntered, RespondWithEntered);
     DEFINE_GETTER_SETTER(bool, eventCanceled, EventCanceled);
@@ -52,6 +63,9 @@ public:
 
 private:
     ServiceWorkerGlobalScope* m_client;
+    ServiceWorkerHostConnection* m_connection;
+    ServiceWorkerContextId m_contextId;
+    String* m_url{ nullptr };
     bool m_handleFetchFailed{ false };
     bool m_respondWithEntered{ false };
     bool m_eventCanceled{ false };
