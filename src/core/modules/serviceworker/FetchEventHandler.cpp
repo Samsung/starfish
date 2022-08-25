@@ -21,25 +21,30 @@
 
 #include "StarfishConfig.h"
 
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 #include "core/modules/serviceworker/FetchEventHandler.h"
 
 namespace Starfish {
 
-void FetchEventHandler::addFetch(FetchEventData* data)
+void FetchEventHandler::addFetch(ServiceWorkerFetchTask* task)
 {
+    m_fetchTaskMap.insert(
+        std::make_pair(task->resourceRequest()->url()->urlString(), task));
+
     if (!m_isStarted) {
         TRACE_SCOPE(CLIENT);
-        m_eventDatas.push_back(data);
+        m_pendingTasks.push_back(task);
         return;
     }
 
     TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(m_connection);
     STARFISH_ASSERT(m_scopeURL);
-    sendEvent(data);
+    sendEvent(task);
 }
 
 void FetchEventHandler::start(ServiceWorkerClientConnection* connection,
@@ -55,17 +60,35 @@ void FetchEventHandler::start(ServiceWorkerClientConnection* connection,
     m_connection = connection;
     m_scopeURL = scopeURL;
 
-    for (auto data : m_eventDatas) {
-        sendEvent(data);
+    for (auto task : m_pendingTasks) {
+        sendEvent(task);
     }
 
-    m_eventDatas.clear();
+    m_pendingTasks.clear();
 
     m_isStarted = true;
 }
 
-void FetchEventHandler::sendEvent(FetchEventData* data)
+void FetchEventHandler::respondFetchEvent(FetchEventResponseData* data)
 {
+    TRACE(CLIENT);
+
+    auto it = m_fetchTaskMap.find(data->url);
+    if (it == m_fetchTaskMap.end()) {
+        STARFISH_LOG_WARN("Cannot find fetch task!");
+        return;
+    }
+
+    auto task = it->second;
+    task->onResponse(data);
+
+    m_fetchTaskMap.erase(data->url);
+}
+
+void FetchEventHandler::sendEvent(ServiceWorkerFetchTask* task)
+{
+    auto data = FetchEventRequestData::createFetchEventRequestData(
+        task->resourceRequest());
     data->scopeURL = m_scopeURL;
 
     m_connection->fetchEvent(data);

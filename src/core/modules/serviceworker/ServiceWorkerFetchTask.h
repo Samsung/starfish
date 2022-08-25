@@ -21,45 +21,23 @@
     !defined(__StarfishServiceWorkerFetchTask__)
 #define __StarfishServiceWorkerFetchTask__
 
-#include "core/util/Archivable.h"
-#include "core/util/Archiver.h"
-#include "core/util/Id.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/resource_request/ResourceRequest.h"
-
 namespace Starfish {
 
 class ResourceRequest;
+class FetchEventResponseData;
 
-class FetchEventData : public Archivable {
+class ServiceWorkerFetchTask : public gc {
 public:
-    // data
-    ServiceWorkerContextId contextId;
-    String* baseURL;
-    String* url;
-    String* scopeURL;
-    RequestDestination destination;
+    ServiceWorkerFetchTask(ResourceRequest* resourceRequest);
 
-    DEFINE_ARCHIVE_ID_GETTER(FetchEventData);
+    void request(String* body);
 
-    void archive(Archiver& ar) override
-    {
-        ar.MemberId("contextId", contextId);
-        ar.Member("baseURL") & baseURL;
-        ar.Member("url") & url;
-        ar.Member("scopeURL") & scopeURL;
-        ar.MemberEnum("destination", destination);
-    }
+    void onResponse(FetchEventResponseData* data);
 
-    static FetchEventData* createFetchEventData(ResourceRequest* request);
-    RequestData* toRequestData();
-};
+    DEFINE_GETTER(ResourceRequest*, resourceRequest);
 
-class ServiceWorkerFetchTask : public ResourceRequestClient {
-public:
-    void onProgressEvent(ResourceRequest* request,
-                         bool isExplicitAction) override;
-    void load(ResourceRequest* request);
+private:
+    ResourceRequest* m_resourceRequest;
 };
 
 } // namespace Starfish

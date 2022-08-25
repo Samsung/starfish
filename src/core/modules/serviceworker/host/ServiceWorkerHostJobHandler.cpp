@@ -47,7 +47,7 @@
 #include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
@@ -1281,7 +1281,8 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
     }
 }
 
-void ServiceWorkerHostJobHandler::handleFetch(FetchEventData* data)
+void ServiceWorkerHostJobHandler::handleFetch(
+    FetchEventRequestData* data, ServiceWorkerHostConnection* connection)
 {
     TRACE(HOST);
     auto contextId = data->contextId;
@@ -1289,11 +1290,12 @@ void ServiceWorkerHostJobHandler::handleFetch(FetchEventData* data)
     auto clientValue =
         ServiceWorkerAgent::instance()->findGlobalScopeByContextId(contextId);
     if (!clientValue.hasValue()) {
-        TRACE(HOST);
+        STARFISH_LOG_WARN("Cannot find global scope!");
         return;
     }
 
-    auto fetchJob = new ServiceWorkerFetchJob(clientValue.getValue());
+    auto client = clientValue.getValue();
+    auto fetchJob = new ServiceWorkerFetchJob(client, contextId, connection);
     fetchJob->handleFetch(data->toRequestData());
 }
 

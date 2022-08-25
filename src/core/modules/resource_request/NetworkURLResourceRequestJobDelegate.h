@@ -29,6 +29,7 @@ class NetworkURLWorkerHelper;
 class HTTPCacheEntry;
 class HTTPHeaderMap;
 class HTTPTransaction;
+class ServiceWorkerFetchTask;
 
 struct CurlMultiRequestData;
 
@@ -128,6 +129,9 @@ private:
     void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
 
     ResourceRequest* m_orgProxy;
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+    ServiceWorkerFetchTask* m_serviceWorkerFetchTask;
+#endif
 };
 } // namespace Starfish
 

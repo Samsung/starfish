@@ -32,7 +32,8 @@ class ServiceWorkerRegistrationData;
 class Archivable;
 class ErrorData;
 class ContextRequestData;
-class FetchEventData;
+class FetchEventRequestData;
+class FetchEventResponseData;
 
 // IServiceWorkerHostConnection which is used on `Client`
 
@@ -45,7 +46,7 @@ public:
     virtual void matchRegistration(ServiceWorkerRequest* request,
                                    String* clientURL) = 0;
     virtual void updateServiceWorkerClient(ContextRequestData* request) = 0;
-    virtual void fetchEvent(FetchEventData* FetchEventData) = 0;
+    virtual void fetchEvent(FetchEventRequestData* FetchEventRequestData) = 0;
 
     // receive
     // NOTE: For rapid development, declaring receive handler isn't compulsory
@@ -76,6 +77,8 @@ public:
                                      ServiceWorkerState target) = 0;
 
     virtual void fireEventRequest(String* scriptURL, String* eventName) = 0;
+
+    virtual void respondFetchEvent(FetchEventResponseData* data) = 0;
 
     // receive
     // NOTE: For rapid development, declaring receive handler isn't compulsory

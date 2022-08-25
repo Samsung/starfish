@@ -22,25 +22,31 @@
 #define __StarfishFetchEventHandler__
 
 #include "StarfishConfig.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
-class FetchEventData;
+class ServiceWorkerFetchTask;
 class ServiceWorkerClientConnection;
+class FetchEventResponseData;
 class GlobalScope;
 
 class FetchEventHandler : public gc {
 public:
-    void addFetch(FetchEventData* data);
+    void addFetch(ServiceWorkerFetchTask* task);
     void start(ServiceWorkerClientConnection* connection, String* scopeURL);
 
+    void respondFetchEvent(FetchEventResponseData* data);
+
 private:
-    GCVector<FetchEventData*> m_eventDatas;
+    GCVector<ServiceWorkerFetchTask*> m_pendingTasks;
+    GCUnorderedMap<ServiceWorkerFetchKey, ServiceWorkerFetchTask*>
+        m_fetchTaskMap;
     bool m_isStarted{ false };
     ServiceWorkerClientConnection* m_connection{ nullptr };
     String* m_scopeURL{ nullptr }; // TODO: change to storage key
 
-    void sendEvent(FetchEventData* data);
+    void sendEvent(ServiceWorkerFetchTask* task);
 };
 } // namespace Starfish
 #endif

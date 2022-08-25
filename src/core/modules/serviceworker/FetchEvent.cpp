@@ -115,6 +115,7 @@ void FetchEvent::respondWith(Promise* response)
             } else {
                 TRACE_SCOPE(HOST);
                 auto response = responseResult->asResponse();
+                event->fetchJob()->setResponse(response);
                 auto potentialResponse = response->cloneWithoutBody();
 
                 if (response->bodyInit().hasValue()) {

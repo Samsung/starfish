@@ -48,7 +48,8 @@
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/FetchEventHandler.h"
+#include "core/modules/serviceworker/FetchEventData.h"
 
 #include "core/modules/serviceworker/util/Trace.h"
 #include "Starfish.h"
@@ -95,12 +96,13 @@ void ServiceWorkerClientConnection::updateServiceWorkerClient(
     sendMessage("updateServiceWorkerClient", request);
 }
 
-void ServiceWorkerClientConnection::fetchEvent(FetchEventData* FetchEventData)
+void ServiceWorkerClientConnection::fetchEvent(
+    FetchEventRequestData* FetchEventRequestData)
 {
     TRACE_SCOPE(CLIENT);
-    STARFISH_ASSERT(FetchEventData != nullptr);
+    STARFISH_ASSERT(FetchEventRequestData != nullptr);
 
-    sendMessage("fetchEvent", FetchEventData);
+    sendMessage("fetchEvent", FetchEventRequestData);
 }
 
 void ServiceWorkerClientConnection::sendMessage(const char* msgName,
@@ -183,6 +185,9 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto eventName = reinterpret_cast<StringArchivable*>(msg.param(1));
         fireEventRequest(scriptURL->value(), eventName->value());
 
+    } else if (msgName == "respondFetchEvent") {
+        auto data = reinterpret_cast<FetchEventResponseData*>(msg.param(0));
+        respondFetchEvent(data);
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();
@@ -491,6 +496,19 @@ void ServiceWorkerClientConnection::fireEventRequest(String* scriptURL,
             },
             new Param(executionContext, eventName));
     }
+}
+
+void ServiceWorkerClientConnection::respondFetchEvent(
+    FetchEventResponseData* data)
+{
+    auto handler =
+        ServiceWorkerProcessManager::instance()->findFetchEventHandler(
+            data->contextId);
+    if (!handler.hasValue()) {
+        TRACE(CLIENT);
+        return;
+    }
+    handler->respondFetchEvent(data);
 }
 
 Nullable<ServiceWorkerContainer*>

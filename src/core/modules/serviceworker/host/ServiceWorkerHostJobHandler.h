@@ -35,7 +35,8 @@ class ServiceWorkerRegistrationData;
 class ErrorData;
 class ServiceWorkerServerInterface;
 class ContextRequestData;
-class FetchEventData;
+class FetchEventRequestData;
+class ServiceWorkerHostConnection;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -106,7 +107,8 @@ public:
         return m_scopeToRegistrationMap.size() == 0;
     }
 
-    void handleFetch(FetchEventData* data);
+    void handleFetch(FetchEventRequestData* data,
+                     ServiceWorkerHostConnection* connection);
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);

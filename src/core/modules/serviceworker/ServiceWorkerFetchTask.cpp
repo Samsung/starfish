@@ -24,8 +24,6 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/WebOrigin.h"
 #include "core/page/GlobalScope.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -37,45 +35,30 @@
 
 namespace Starfish {
 
-FetchEventData* FetchEventData::createFetchEventData(ResourceRequest* request)
+ServiceWorkerFetchTask::ServiceWorkerFetchTask(ResourceRequest* resourceRequest)
+    : m_resourceRequest(resourceRequest)
 {
-    FetchEventData* data = new FetchEventData();
-    data->contextId = request->executionContext()->globalScope()->uid();
-    data->baseURL = request->url()->baseURL();
-    data->url = request->url()->urlString();
-    data->scopeURL = String::emptyString;
-    data->destination = request->requestDestination();
-    // TODO: copy other options
-    return data;
 }
 
-RequestData* FetchEventData::toRequestData()
+void ServiceWorkerFetchTask::request(String* body)
 {
-    RequestData* data = new RequestData();
-    data->m_url = new ResourceURL(url, baseURL);
-    data->m_destination = destination;
-    return data;
-}
+    TRACE(CLIENT, "ServiceWorkerFetchTask::Request:",
+          m_resourceRequest->url()->href()->toUTF8String().data());
 
-void ServiceWorkerFetchTask::onProgressEvent(ResourceRequest* request,
-                                             bool isExplicitAction)
-{
-    if (request->progressState() == ProgressState::Load) {
-        TRACE(CLIENT, "ServiceWorkerFetchTask::Load:",
-              request->url()->href()->toUTF8String().data());
-        load(request);
-    }
-}
-
-void ServiceWorkerFetchTask::load(ResourceRequest* request)
-{
     // TODO: check service-workers mode
     auto handler =
         ServiceWorkerProcessManager::instance()->findFetchEventHandler(
-            request->executionContext()->globalScope()->uid());
+            m_resourceRequest->executionContext()->globalScope()->uid());
     if (handler.hasValue()) {
-        handler->addFetch(FetchEventData::createFetchEventData(request));
+        handler->addFetch(this);
     }
+}
+
+void ServiceWorkerFetchTask::onResponse(FetchEventResponseData* data)
+{
+    // TODO: set m_resourceRequest->m_responseBody
+    TRACE(CLIENT, "ServiceWorkerFetchTask::Response:",
+          m_resourceRequest->url()->href()->toUTF8String().data());
 }
 
 } // namespace Starfish

@@ -30,7 +30,9 @@
 #include "core/fetch/ResponseData.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/FetchEvent.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
 
@@ -40,6 +42,7 @@ namespace Starfish {
 Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
 {
     TRACE(HOST);
+    m_url = requestData->m_url->urlString();
 
     m_handleFetchFailed = false;
     m_respondWithEntered = false;
@@ -167,11 +170,16 @@ void ServiceWorkerFetchJob::failJob()
 
 void ServiceWorkerFetchJob::successJob()
 {
-    TRACE(HOST);
+    TRACE(HOST, "successJob:", CSTR(m_url));
 
     if (eventHandled()) {
         eventHandled()->fulfill(scriptUndefined());
     }
+
+    auto data = FetchEventResponseData::createFetchEventResponseData(
+        m_contextId, m_response);
+    data->url = m_url; // TODO: change to url of Response
+    m_connection->respondFetchEvent(data);
 }
 
 } // namespace Starfish
