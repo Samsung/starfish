@@ -67,9 +67,9 @@ void ServiceWorkerRegistrationData::archive(Archiver& ar)
 {
     ar.MemberId("id", id);
     ar.Member("scope") & scope;
-    ar.MemberArchivable("installingWorker", (Archivable*&)m_installingWorker);
-    ar.MemberArchivable("waitingWorker", (Archivable*&)m_waitingWorker);
-    ar.MemberArchivable("activeWorker", (Archivable*&)m_activeWorker);
+    ar.MemberArchivable("installingWorker", (Archivable**)&m_installingWorker);
+    ar.MemberArchivable("waitingWorker", (Archivable**)&m_waitingWorker);
+    ar.MemberArchivable("activeWorker", (Archivable**)&m_activeWorker);
     ar.MemberEnum("updateViaCache", updateViaCache);
 }
 

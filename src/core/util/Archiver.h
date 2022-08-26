@@ -50,7 +50,7 @@ class String;
 class Archiver;
 class Archivable;
 
-using ArchivableHandler_t = void (*)(Archiver& ar, Archivable*& archivable);
+using ArchivableHandler_t = void (*)(Archiver& ar, Archivable** archivable);
 
 template <typename T>
 constexpr typename std::underlying_type<T>::type toUnderlyingType(T value)
@@ -126,12 +126,14 @@ public:
         }
     }
 
-    void MemberArchivable(const char* name, Archivable*& archivable)
+    void MemberArchivable(const char* name, Archivable** archivable_)
     {
         STARFISH_ASSERT(name != nullptr);
         STARFISH_ASSERT(m_fpArchivableHandler != nullptr);
+
+        ExecuteScope scope(this, name);
         Member(name);
-        m_fpArchivableHandler(*this, archivable);
+        m_fpArchivableHandler(*this, archivable_);
     }
 
     static void setArchivableHandler(ArchivableHandler_t fpArchivableHandler)

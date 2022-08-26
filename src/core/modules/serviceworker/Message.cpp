@@ -40,6 +40,7 @@
 #include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -60,8 +61,23 @@ void Message::addParam(NULLABLE Archivable* param)
     m_params.push_back(param);
 }
 
+class ArchiverObjectScope {
+public:
+    ArchiverObjectScope(Archiver& ar)
+    {
+        m_archiver = &ar;
+        m_archiver->StartObject();
+    }
+    ~ArchiverObjectScope()
+    {
+        m_archiver->EndObject();
+    }
+    Archiver* m_archiver{ nullptr };
+};
+
 void Message::archive(Archiver& ar)
 {
+    Archiver::ExecuteScope scope(&ar, "Message");
     /*
      * NOTE: Although using a binary serialization format with IDL is a better
      * approach, we go with the existing solution, json, first. Managing
@@ -71,11 +87,10 @@ void Message::archive(Archiver& ar)
      * we may consider using a serialization solution or a comprehensive IPC/RPC
      * solution later.
      */
-    ar.StartObject();
+    ArchiverObjectScope objectScope(ar);
 
     ar.Member("name") & m_name;
 
-    // array
     ar.Member("params");
     {
         size_t nParams = m_params.size();
@@ -87,13 +102,11 @@ void Message::archive(Archiver& ar)
         }
 
         for (size_t i = 0; i < nParams; i++) {
-            archive(ar, m_params[i]);
+            archive(ar, &m_params[i]);
         }
 
         ar.EndArray();
     }
-
-    ar.EndObject();
 }
 
 void Message::init()
@@ -114,47 +127,68 @@ NULLABLE Archivable* Message::param(size_t index)
 
 template <typename T>
 static void archiveIfMatched(const char* archiveId, std::string& id,
-                             Archiver& ar, Archivable*& archivable,
+                             Archiver& ar, Archivable** archivable_,
                              bool& isAlreadyArchived)
 {
     STARFISH_ASSERT(archiveId != nullptr);
 
     if (isAlreadyArchived == false && (id == archiveId)) {
         if (ar.IsReader()) {
-            archivable = new T;
+            (*archivable_) = new T;
         }
-        archivable->archive(ar);
+        (*archivable_)->archive(ar);
         isAlreadyArchived = true;
     }
 }
 
-void Message::archive(Archiver& ar, Archivable*& archivable)
+void Message::archive(Archiver& ar, Archivable** archivable_)
 {
-    if ((ar.IsReader() == false) && archivable == nullptr) {
-        // empty object
-        ar.StartObject();
-        ar.EndObject();
-        return;
+    ArchiverObjectScope objectScope(ar);
+
+    std::string id;
+
+    if (ar.IsReader()) {
+        if (ar.HasMember("_archiveId") == false) {
+            // unknown object
+            return;
+        }
+    } else {
+        if (*archivable_ == nullptr) {
+            // empty object or unknown
+            id = TypeName::Null;
+            ar.Member("_archiveId") & id;
+            return;
+        }
     }
-
-    std::string id = ar.IsReader() ? "" : archivable->archiveId();
-
-    ar.StartObject();
-
-    ar.Member("_archiveId") & id;
 
     bool isAlreadyArchived = false;
 
-    if (id == TypeName::String) {
+    id = ar.IsReader() ? "" : (*archivable_)->archiveId();
+
+    ar.Member("_archiveId") & id;
+
+    Archiver::ExecuteScope scope(&ar, id.c_str());
+
+    if (id == TypeName::Null) {
+        isAlreadyArchived = true;
+    } else if (id == TypeName::String) {
         if (ar.IsReader()) {
-            archivable = new StringArchivable(id.c_str(), String::emptyString);
+            (*archivable_) =
+                new StringArchivable(id.c_str(), String::emptyString);
         }
-        archivable->archive(ar);
+        (*archivable_)->archive(ar);
+        isAlreadyArchived = true;
+    } else if (id == TypeName::Integer) {
+        if (ar.IsReader()) {
+            (*archivable_) = new IntegerArchivable(id.c_str());
+        }
+        (*archivable_)->archive(ar);
         isAlreadyArchived = true;
     }
 
+// TODO: Use `switch-case` instead of `if-else`
 #define ARCHIVE(NAME) \
-    archiveIfMatched<NAME>(#NAME, id, ar, archivable, isAlreadyArchived);
+    archiveIfMatched<NAME>(#NAME, id, ar, archivable_, isAlreadyArchived);
 
     // TODO: We could somehow remove the macro to register types.
     ARCHIVE(ServiceWorkerRequest);
@@ -170,12 +204,10 @@ void Message::archive(Archiver& ar, Archivable*& archivable)
 
     if (isAlreadyArchived == false) {
         STARFISH_LOG_ERROR(
-            "'%s' isn't archived because it's unknow type. It may need to be "
-            "registered using the above `ARCHIVE` macro",
-            id.c_str());
+            "[%s] '%s' isn't un/archived because it's unknown type. It may need"
+            " to be registered using the above `ARCHIVE` macro.",
+            ar.IsReader() ? "Reader" : "Writer", id.c_str());
     }
-
-    ar.EndObject();
 }
 
 } // namespace Starfish
