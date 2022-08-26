@@ -22,6 +22,7 @@
 
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -45,10 +46,12 @@ public:
 
 // GenericArchivable
 
-#define MAX_TYPE_NAME 10
+#define MAX_TYPE_NAME 30
 
 struct TypeName {
     static const char String[];
+    static const char Integer[];
+    static const char Null[];
 };
 
 template <typename T>
@@ -74,6 +77,7 @@ public:
 
     void archive(Archiver& ar) override
     {
+        Archiver::ExecuteScope scope(&ar, archiveId());
         ar.Member("value") & m_value;
     }
 
@@ -85,6 +89,7 @@ private:
 };
 
 using StringArchivable = GenericArchivable<String*>;
+using IntegerArchivable = GenericArchivable<unsigned>;
 
 } // namespace Starfish
 

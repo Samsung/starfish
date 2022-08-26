@@ -131,6 +131,7 @@ JsonReader& JsonReader::EndObject()
 JsonReader& JsonReader::Member(const char* name)
 {
     STARFISH_ASSERT(name != nullptr);
+    ExecuteScope scope(this, name);
 
     if (mError == false) {
         if ((CURRENT.IsObject() == true) &&
