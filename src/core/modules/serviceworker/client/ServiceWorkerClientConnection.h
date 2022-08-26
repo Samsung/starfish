@@ -23,12 +23,15 @@
 
 #include "core/modules/serviceworker/Connection.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
 class ServiceWorkerContainer;
 class FetchEventData;
 class String;
+class ServiceWorkerData;
+class ServiceWorkerRegistrationData;
 
 class ServiceWorkerClientConnection final
     : public Connection,
@@ -52,6 +55,9 @@ public:
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
     void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+    void updateRegistrationState(ServiceWorkerRegistrationData* registration,
+                                 ServiceWorkerRegistrationState target,
+                                 ServiceWorkerData* source);
     void updateWorkerState(String* scriptURL, ServiceWorkerState target);
     void fireEventRequest(String* scriptURL, String* eventName);
 

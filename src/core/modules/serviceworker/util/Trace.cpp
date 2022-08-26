@@ -24,7 +24,7 @@
 #include <iomanip> // setfill and setw
 
 #define TYPE_LENGTH_LIMIT 5
-#define TRACE_ID_LENGTH_LIMIT 9
+#define TRACE_ID_LENGTH_LIMIT 10
 #define CLR_RESET "\033[0m"
 #define CLR_DIM "\033[0;2m"
 

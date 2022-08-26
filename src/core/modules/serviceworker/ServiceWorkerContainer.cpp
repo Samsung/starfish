@@ -493,11 +493,13 @@ void ServiceWorkerContainer::resolveJobPromise(
     if (context != nullptr) {
         context->webBase()->messageLoop()->addIdler(
             context->globalScope(),
-            [](size_t handle, void* data, void* data1) {
+            [](size_t handle, void* data, void* data1, void* data2) {
                 TRACE_SCOPE(SVCWORKER);
                 ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
                 ServiceWorkerContainer* container =
                     castTo<ServiceWorkerContainer*>(data1);
+                ServiceWorkerRegistrationData* registration =
+                    castTo<ServiceWorkerRegistrationData*>(data2);
 
                 // 1.1 Let convertedValue be null.
                 auto convertedValue = scriptNull();
@@ -515,26 +517,30 @@ void ServiceWorkerContainer::resolveJobPromise(
                     auto executionContext = container->executionContext();
                     TRACE(SVCWORKER,
                           "new ServiceWorkerRegistration Client Object");
-                    auto registration = new ServiceWorkerRegistration(
+                    auto newRegistrationObject = new ServiceWorkerRegistration(
                         executionContext, container);
 
                     container->serviceWorkerRegistrations().push_back(
-                        registration);
+                        newRegistrationObject);
 
                     TRACE(SVCWORKER, "new ServiceWorker Client Object");
                     auto serviceWorker = new ServiceWorker(executionContext);
 
                     executionContext->setActiveServiceWorker(serviceWorker);
 
-                    registration->data()->scope = job->data()->scopeURL;
-                    registration->data()->updateViaCache =
-                        job->data()->updateViaCacheMode;
+                    auto newRegistration = newRegistrationObject->data();
+
+                    newRegistration->id = registration->id;
+                    newRegistration->scope = registration->scope;
+                    newRegistration->updateViaCache =
+                        registration->updateViaCache;
+
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
-                    registration->updateRegistrationState(
+                    newRegistrationObject->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
                         serviceWorker);
 
-                    convertedValue = registration->scriptValue();
+                    convertedValue = newRegistrationObject->scriptValue();
                 } else {
                     // 1.3 Else, set convertedValue to value, in job's client's
                     // Realm.
@@ -545,7 +551,7 @@ void ServiceWorkerContainer::resolveJobPromise(
 
                 container->finishJob(job);
             },
-            job, this);
+            job, this, registration);
     } else {
         finishJob(job);
     }

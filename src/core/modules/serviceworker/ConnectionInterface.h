@@ -20,10 +20,12 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__ConnectionInterface__)
 #define __ConnectionInterface__
 
+#include "StarfishBase.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {
 
+class ServiceWorkerData;
 class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
@@ -65,6 +67,10 @@ public:
 
     virtual void resolveRequest(ServiceWorkerRequest* request,
                                 NULLABLE Archivable* registration) = 0;
+
+    virtual void onUpdateRegistrationState(
+        ServiceWorkerRegistrationData* registration,
+        ServiceWorkerRegistrationState target, ServiceWorkerData* source) = 0;
 
     virtual void onUpdateWorkerState(String* scriptURL,
                                      ServiceWorkerState target) = 0;

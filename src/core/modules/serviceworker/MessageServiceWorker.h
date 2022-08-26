@@ -26,6 +26,30 @@
 
 namespace Starfish {
 class String;
+class ServiceWorkerData;
+class ServiceWorkerRegistrationData;
+
+class UpdateRegistrationState : public Archivable {
+public:
+    DEFINE_ARCHIVE_ID_GETTER(UpdateRegistrationState);
+
+    ServiceWorkerRegistrationData* registration;
+    ServiceWorkerRegistrationState target;
+    ServiceWorkerData* source;
+
+    UpdateRegistrationState() = default;
+    UpdateRegistrationState(ServiceWorkerRegistrationData* registration_,
+                            ServiceWorkerRegistrationState target_,
+                            ServiceWorkerData* source_)
+        : registration(registration_)
+        , target(target_)
+        , source(source_)
+    {
+    }
+
+    // serialize/deserialize
+    void archive(Archiver& ar) override;
+};
 
 class UpdateWorkerStateData : public Archivable {
 public:
