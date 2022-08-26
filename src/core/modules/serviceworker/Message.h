@@ -34,7 +34,7 @@ public:
 
     // statics
     static void init();
-    static void archive(Archiver& arch, Archivable*& param);
+    static void archive(Archiver& arch, Archivable** param);
 
 private:
     String* m_name;

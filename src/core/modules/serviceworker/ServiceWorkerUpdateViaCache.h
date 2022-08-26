@@ -24,7 +24,7 @@ namespace Starfish {
 
 class String;
 
-enum class ServiceWorkerUpdateViaCache : uint8_t {
+enum class ServiceWorkerUpdateViaCache : unsigned {
     Imports,
     All,
     None,
