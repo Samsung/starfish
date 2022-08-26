@@ -36,12 +36,12 @@ public:
     ServiceWorkerRegistrationId id;
     String* scope{ String::emptyString };
 
-    DEFINE_GETTER(Nullable<ServiceWorkerData*>, installingWorker);
-    DEFINE_GETTER(Nullable<ServiceWorkerData*>, waitingWorker);
-    DEFINE_GETTER(Nullable<ServiceWorkerData*>, activeWorker);
-    void setInstallingWorker(Nullable<ServiceWorkerData*> worker);
-    void setWaitingWorker(Nullable<ServiceWorkerData*> worker);
-    void setActiveWorker(Nullable<ServiceWorkerData*> worker);
+    DEFINE_GETTER(ServiceWorkerData*, installingWorker);
+    DEFINE_GETTER(ServiceWorkerData*, waitingWorker);
+    DEFINE_GETTER(ServiceWorkerData*, activeWorker);
+    void setInstallingWorker(ServiceWorkerData* worker);
+    void setWaitingWorker(ServiceWorkerData* worker);
+    void setActiveWorker(ServiceWorkerData* worker);
 
     ServiceWorkerUpdateViaCache updateViaCache{
         ServiceWorkerUpdateViaCache::None
@@ -59,9 +59,9 @@ public:
     void archive(Archiver& ar) override;
 
 private:
-    Nullable<ServiceWorkerData*> m_waitingWorker;
-    Nullable<ServiceWorkerData*> m_activeWorker;
-    Nullable<ServiceWorkerData*> m_installingWorker;
+    ServiceWorkerData* m_waitingWorker{ nullptr };
+    ServiceWorkerData* m_activeWorker{ nullptr };
+    ServiceWorkerData* m_installingWorker{ nullptr };
 
     bool m_isUninstalling{ false };
 };

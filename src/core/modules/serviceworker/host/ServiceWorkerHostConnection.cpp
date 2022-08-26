@@ -107,6 +107,21 @@ void ServiceWorkerHostConnection::resolveRequest(
     send(writer.GetString(), writer.GetSize() + 1);
 }
 
+void ServiceWorkerHostConnection::onUpdateRegistrationState(
+    ServiceWorkerRegistrationData* registration,
+    ServiceWorkerRegistrationState target, ServiceWorkerData* source)
+{
+    TRACE_SCOPE(HOST);
+    JsonWriter writer;
+    Message msg("updateRegistrationState");
+
+    auto param = new UpdateRegistrationState(registration, target, source);
+    msg.addParam(param);
+    msg.archive(writer);
+
+    send(writer.GetString(), writer.GetSize() + 1);
+}
+
 void ServiceWorkerHostConnection::onUpdateWorkerState(String* scriptURL,
                                                       ServiceWorkerState state)
 {

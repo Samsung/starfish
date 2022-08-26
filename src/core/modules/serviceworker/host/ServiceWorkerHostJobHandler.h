@@ -68,9 +68,9 @@ public:
                  ServiceWorkerRegistrationData* registration);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
                                  ServiceWorkerRegistrationState target,
-                                 Nullable<ServiceWorkerData*> source);
+                                 ServiceWorkerData* source);
     void updateWorkerState(ServiceWorkerData* worker, ServiceWorkerState state);
-    Nullable<ServiceWorkerData*> getNewestWorker(
+    ServiceWorkerData* getNewestWorker(
         ServiceWorkerRegistrationData* registration);
 
     void activate(ServiceWorkerRegistrationData* registration);
