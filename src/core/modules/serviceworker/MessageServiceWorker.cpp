@@ -25,10 +25,22 @@
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
+
+// UpdateRegistrationState
+
+void UpdateRegistrationState::archive(Archiver& ar)
+{
+    ar.MemberArchivable("registration", (Archivable**)&registration);
+    ar.MemberEnum("target", target);
+    ar.MemberArchivable("source", (Archivable**)&source);
+}
+
+// UpdateWorkerStateData
 
 UpdateWorkerStateData::UpdateWorkerStateData(String* scriptURL_,
                                              ServiceWorkerState state_)

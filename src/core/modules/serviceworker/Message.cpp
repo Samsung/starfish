@@ -196,6 +196,7 @@ void Message::archive(Archiver& ar, Archivable** archivable_)
     ARCHIVE(ServiceWorkerRegistrationData);
     ARCHIVE(ServiceWorkerData);
     ARCHIVE(ErrorData);
+    ARCHIVE(UpdateRegistrationState);
     ARCHIVE(UpdateWorkerStateData);
     ARCHIVE(ContextRequestData);
     ARCHIVE(FetchEventData);

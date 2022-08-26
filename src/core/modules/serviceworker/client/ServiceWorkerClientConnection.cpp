@@ -140,7 +140,7 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
     auto msgName = msg.name();
 
     if (msgName == "resolveJobPromise") {
-        auto jobData = downcast<ServiceWorkerJobData*>(msg.param(0));
+        auto jobData = reinterpret_cast<ServiceWorkerJobData*>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
         NULLABLE auto registration =
@@ -148,14 +148,14 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         resolveJobPromise(job, registration);
 
     } else if (msgName == "rejectJobPromise") {
-        auto jobData = downcast<ServiceWorkerJobData*>(msg.param(0));
+        auto jobData = reinterpret_cast<ServiceWorkerJobData*>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
-        auto errorData = downcast<ErrorData*>(msg.param(1));
+        auto errorData = reinterpret_cast<ErrorData*>(msg.param(1));
         rejectJobPromise(job, errorData);
 
     } else if (msgName == "resolveRequest") {
-        auto request = downcast<ServiceWorkerRequest*>(msg.param(0));
+        auto request = reinterpret_cast<ServiceWorkerRequest*>(msg.param(0));
         auto serviceWorkerContainer =
             findServiceWorkerContainer(request->contextId);
 
@@ -170,9 +170,12 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
                 requestMatched->postTask()->run(requestMatched, { archivable });
             }
         }
+    } else if (msgName == "updateRegistrationState") {
+        auto data = reinterpret_cast<UpdateRegistrationState*>(msg.param(0));
+        updateRegistrationState(data->registration, data->target, data->source);
     } else if (msgName == "updateWorkerState") {
         // This is like a notification from the host.
-        auto data = downcast<UpdateWorkerStateData*>(msg.param(0));
+        auto data = reinterpret_cast<UpdateWorkerStateData*>(msg.param(0));
         updateWorkerState(data->scriptURL, data->state);
 
     } else if (msgName == "fireEventRequest") {
@@ -224,6 +227,119 @@ void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
     auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
     if (jobMatched.hasValue()) {
         serviceWorkerContainer->rejectJobPromise(jobMatched.value(), errorData);
+    }
+}
+
+void ServiceWorkerClientConnection::updateRegistrationState(
+    ServiceWorkerRegistrationData* registration,
+    ServiceWorkerRegistrationState target, ServiceWorkerData* source)
+{
+    // NOTE: This is related to the step below in
+    // https://w3c.github.io/ServiceWorker/#update-registration-state-algorithm.
+
+    TRACE_SCOPE(CLIENT);
+    // Let settingsObjects be all environment settings objects whose origin is
+    // worker’s script url's origin.
+
+    auto swpm = ServiceWorkerProcessManager::instance();
+    const GCVector<ServiceWorkerEnvironment*>& settingsObjects =
+        swpm->getSettingsObjects(registration->scope);
+
+    for (auto it = settingsObjects.begin(); it != settingsObjects.end(); it++) {
+        // NOTE: Starfish isn't used with multiple execution contexts. So there
+        // is only one settingsObject.
+
+        ExecutionContext* executionContext =
+            static_cast<ServiceWorkerEnvironment*>(*it);
+
+        // TODO: Use a UpdateRegistrationState instance as an input param.
+        struct Param : public gc {
+            Param(ExecutionContext* settingsObject_,
+                  UpdateRegistrationState* updateRegistrationState_)
+            {
+                settingsObject = settingsObject_;
+                updateRegistrationState = updateRegistrationState_;
+            }
+            ServiceWorkerEnvironment* settingsObject;
+            UpdateRegistrationState* updateRegistrationState;
+        };
+
+        // NOTE: Searching globalScope() with contextId is required if multiple
+        // executionContexts (multiple WebViews) are supported.
+        executionContext->webBase()->messageLoop()->addIdler(
+            executionContext->globalScope(),
+            [](size_t handle, void* data0) {
+                TRACE_SCOPE(CLIENT);
+                Param* param = static_cast<Param*>(data0);
+                ServiceWorkerEnvironment* settingsObject =
+                    param->settingsObject;
+                UpdateRegistrationState* newState =
+                    param->updateRegistrationState;
+
+                // NOTE: This is related to the step 9 below in
+                // https://w3c.github.io/ServiceWorker/#install.
+
+                auto window = settingsObject->document()->window();
+                auto serviceWorkerContainer =
+                    window->navigator()->serviceWorker();
+                auto registrationObjects =
+                    serviceWorkerContainer->serviceWorkerRegistrations();
+
+                // 9.2. For each registrationObject of registrationObjects, fire
+                // an event on registrationObject named `updatefound`. Find
+                // registrations
+
+                auto serviceWorker = settingsObject->activeServiceWorker();
+
+                for (const auto registrationObject : registrationObjects) {
+                    auto registration = registrationObject->data();
+                    if (registration->id == newState->registration->id) {
+                        ServiceWorker* serviceWorker =
+                            newState->source == nullptr
+                                ? nullptr
+                                : serviceWorkerContainer->controller();
+
+                        switch (newState->target) {
+                        case ServiceWorkerRegistrationState::Installing:
+                            // 4.2 For each registrationObject in
+                            // registrationObjects:
+
+                            // 4.2.1 Queue a task to set the active attribute of
+                            // registrationObject to null if registration’s
+                            // active worker is null,
+
+                            // or the result of getting the service worker
+                            // object that represents registration’s active
+                            // worker in registrationObject’s relevant settings
+                            // object.
+                            registration->setInstallingWorker(newState->source);
+                            registrationObject->updateRegistrationState(
+                                newState->target, serviceWorker);
+                            break;
+                        case ServiceWorkerRegistrationState::Waiting:
+                            // 3.1 Set registration’s waiting worker to source.
+                            registration->setWaitingWorker(newState->source);
+                            registrationObject->updateRegistrationState(
+                                newState->target, serviceWorker);
+                            break;
+                        case ServiceWorkerRegistrationState::Active:
+                            // 4.1 Set registration’s active worker to source.
+                            registration->setActiveWorker(newState->source);
+                            registrationObject->updateRegistrationState(
+                                newState->target, serviceWorker);
+                            break;
+                        default:
+                            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                            break;
+                        }
+                        break; // stop for-loop
+                    }
+                }
+
+                delete param;
+            },
+            new Param(executionContext, new UpdateRegistrationState(
+                                            registration, target, source)));
     }
 }
 
