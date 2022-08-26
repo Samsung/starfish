@@ -40,21 +40,19 @@
 namespace Starfish {
 
 void ServiceWorkerRegistrationData::setInstallingWorker(
-    Nullable<ServiceWorkerData*> worker)
+    ServiceWorkerData* worker)
 {
     TRACE_SCOPE(HOST);
     m_installingWorker = worker;
 }
 
-void ServiceWorkerRegistrationData::setWaitingWorker(
-    Nullable<ServiceWorkerData*> worker)
+void ServiceWorkerRegistrationData::setWaitingWorker(ServiceWorkerData* worker)
 {
     TRACE_SCOPE(HOST);
     m_waitingWorker = worker;
 }
 
-void ServiceWorkerRegistrationData::setActiveWorker(
-    Nullable<ServiceWorkerData*> worker)
+void ServiceWorkerRegistrationData::setActiveWorker(ServiceWorkerData* worker)
 {
     TRACE_SCOPE(HOST);
     m_activeWorker = worker;

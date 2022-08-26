@@ -42,6 +42,10 @@ public:
     void resolveRequest(ServiceWorkerRequest* request,
                         NULLABLE Archivable* archivable) override;
 
+    void onUpdateRegistrationState(ServiceWorkerRegistrationData* registration,
+                                   ServiceWorkerRegistrationState target,
+                                   ServiceWorkerData* source) override;
+
     void onUpdateWorkerState(String* scriptURL,
                              ServiceWorkerState target) override;
 
