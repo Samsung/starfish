@@ -25,6 +25,8 @@
 namespace Starfish {
 
 const char TypeName::String[] = "String";
+const char TypeName::Integer[] = "Integer";
+const char TypeName::Null[] = "Null";
 
 }; // namespace Starfish
 

@@ -41,6 +41,9 @@
 #ifndef __StarfishArchiver__
 #define __StarfishArchiver__
 
+#include "StarfishBase.h"
+#include "core/modules/serviceworker/util/Trace.h"
+
 namespace Starfish {
 
 class String;
@@ -57,8 +60,34 @@ constexpr typename std::underlying_type<T>::type toUnderlyingType(T value)
 
 class Archiver {
 public:
+    class ExecuteScope {
+    public:
+        ExecuteScope(Archiver* archiver, const char* name)
+            : m_archiver(archiver)
+            , m_name(name)
+        {
+        }
+        ~ExecuteScope()
+        {
+            // NOTE: leave this to remind a place where the logger should be
+            // placed for future debugging.
+            // if (m_archiver->IsReader()) {
+            //     TRACE_SCOPE(ARCHIVE, "[ R ] ", "key (", m_name, ")");
+            // }
+            if (m_archiver->HasError()) {
+                STARFISH_LOG_ERROR("[ %s ] key ( %s )",
+                                   m_archiver->IsReader() ? "R" : "W", m_name);
+            }
+        }
+
+    private:
+        Archiver* m_archiver{ nullptr };
+        const char* m_name;
+    };
+
     virtual ~Archiver(){};
     virtual operator bool() const = 0;
+    virtual bool HasError() const = 0;
     virtual Archiver& StartObject() = 0;
     virtual Archiver& Member(const char* name) = 0;
     virtual bool HasMember(const char* name) const = 0;
@@ -85,6 +114,8 @@ public:
     void MemberEnum(const char* name, T& enumValue)
     {
         STARFISH_ASSERT(name != nullptr);
+
+        ExecuteScope scope(this, name);
         unsigned enumNumber = 0;
         if (IsReader()) {
             Member(name) & enumNumber;
@@ -120,6 +151,10 @@ public:
     operator bool() const override
     {
         return !mError;
+    }
+    bool HasError() const override
+    {
+        return mError;
     }
 
     JsonReader& StartObject() override;
@@ -163,6 +198,10 @@ public:
     operator bool() const override
     {
         return true;
+    }
+    bool HasError() const override
+    {
+        return false;
     }
 
     JsonWriter& StartObject() override;
