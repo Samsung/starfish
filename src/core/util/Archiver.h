@@ -100,6 +100,8 @@ public:
     virtual Archiver& operator&(double& d) = 0;
     virtual Archiver& operator&(std::string& s) = 0;
     virtual Archiver& operator&(String*& s) = 0;
+    virtual Archiver& operator&(
+        std::unordered_map<std::string, std::string>& m) = 0;
     virtual Archiver& SetNull() = 0;
     virtual bool IsReader() = 0;
 
@@ -171,6 +173,8 @@ public:
     JsonReader& operator&(double& d)override;
     JsonReader& operator&(std::string& s)override;
     JsonReader& operator&(String*& s)override;
+    JsonReader& operator&(std::unordered_map<std::string, std::string>& m)
+        override;
     JsonReader& SetNull() override;
 
     bool IsReader() override
@@ -218,6 +222,8 @@ public:
     JsonWriter& operator&(double& d)override;
     JsonWriter& operator&(std::string& s)override;
     JsonWriter& operator&(String*& s)override;
+    JsonWriter& operator&(std::unordered_map<std::string, std::string>& m)
+        override;
     JsonWriter& SetNull() override;
 
     bool IsReader() override

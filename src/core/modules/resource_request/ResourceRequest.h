@@ -181,6 +181,11 @@ public:
         return m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync;
     }
 
+    const HeaderMap& resquestHeaderMap()
+    {
+        return m_requestHeaders->httpHeaderMap()->headerMap();
+    }
+
     const HeaderMap& responseHeaderMap()
     {
         return m_responseHeaders->httpHeaderMap()->headerMap();

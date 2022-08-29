@@ -39,9 +39,11 @@
 namespace Starfish {
 
 // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
-Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
+Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
+    FetchEventRequestData* data)
 {
     TRACE(HOST);
+    auto requestData = data->toRequestData();
     m_url = requestData->m_url->urlString();
 
     m_handleFetchFailed = false;
@@ -72,17 +74,24 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
     m_eventHandled = new Promise(scriptBindingInstance);
 
     struct Param : public gc {
-        Param(RequestData* data_, Promise* preloadResponse_,
+        Param(Request* request_, Promise* preloadResponse_,
               ServiceWorkerFetchJob* job_)
-            : data(data_)
+            : request(request_)
             , preloadResponse(preloadResponse_)
             , job(job_)
         {
         }
-        RequestData* data;
+        Request* request;
         Promise* preloadResponse;
         ServiceWorkerFetchJob* job;
     };
+
+    auto request = new Request(client()->executionContext(), requestData);
+    for (auto header : data->headerMap) {
+        request->headers()->set(
+            String::fromUTF8(header.first.data(), header.first.size()),
+            String::fromUTF8(header.second.data(), header.second.size()));
+    }
 
     client()->webWorker()->messageLoop()->addMicroTask(
         client(),
@@ -92,17 +101,16 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
             auto p = static_cast<Param*>(data);
             auto client = p->job->client();
             auto executionContext = client->executionContext();
-            auto requestData = p->data;
+            auto request = p->request;
             String* eventType = executionContext->starfish()
                                     ->staticStrings()
                                     ->m_fetch.localName();
             auto event = new FetchEvent(executionContext, eventType);
-            auto requestObject = new Request(executionContext, requestData);
 
-            requestObject->headers()->setGuard(Guard::Immutable);
+            request->headers()->setGuard(Guard::Immutable);
 
             event->setCancelable(true);
-            event->setRequest(requestObject);
+            event->setRequest(request);
             event->setPreloadResponse(p->preloadResponse);
             auto clientId = client->uid().toString();
             event->setClientId(
@@ -112,7 +120,7 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
             event->setFetchJob(p->job);
 
             TRACE(HOST, "dispatch FetchEvent:",
-                  requestData->m_url->urlString()->toUTF8String().data());
+                  request->url()->toUTF8String().data());
 
             client->dispatchEventByUA(event);
 
@@ -126,7 +134,7 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
             // 24-16. If response is null, request’s body is not null, and
             // request’s body's source is null, then:
         },
-        new Param(requestData, preloadResponse, this));
+        new Param(request, preloadResponse, this));
 
     // 25. Wait for task to have executed or for handleFetchFailed to be true.
 
