@@ -40,6 +40,7 @@ public:
     String* scopeURL;
     RequestDestination destination;
     String* method;
+    std::unordered_map<std::string, std::string> headerMap;
 
     DEFINE_ARCHIVE_ID_GETTER(FetchEventRequestData);
 
@@ -51,6 +52,7 @@ public:
         ar.Member("scopeURL") & scopeURL;
         ar.MemberEnum("destination", destination);
         ar.Member("method") & method;
+        ar.Member("headerMap") & headerMap;
     }
 
     static FetchEventRequestData* createFetchEventRequestData(

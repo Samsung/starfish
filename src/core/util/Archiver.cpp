@@ -281,6 +281,29 @@ JsonReader& JsonReader::operator&(String*& s)
     return *this;
 }
 
+JsonReader& JsonReader::operator&(
+    std::unordered_map<std::string, std::string>& m)
+{
+    if (mError == false) {
+        if (CURRENT.IsObject() == true) {
+            StartObject();
+
+            for (auto iter = CURRENT.MemberBegin(); iter != CURRENT.MemberEnd();
+                 iter++) {
+                m.insert(std::make_pair(std::string(iter->name.GetString()),
+                                        std::string(iter->value.GetString())));
+            }
+
+            EndObject();
+
+            Next();
+        } else {
+            mError = true;
+        }
+    }
+    return *this;
+}
+
 JsonReader& JsonReader::SetNull()
 {
     mError = true;
@@ -423,6 +446,22 @@ JsonWriter& JsonWriter::operator&(String*& s)
     } else {
         WRITER->String("", static_cast<rapidjson::SizeType>(0));
     }
+
+    return *this;
+}
+
+JsonWriter& JsonWriter::operator&(
+    std::unordered_map<std::string, std::string>& m)
+{
+    StartObject();
+
+    for (auto value : m) {
+        WRITER->Key(value.first.c_str());
+        WRITER->String(value.second.c_str(),
+                       static_cast<rapidjson::SizeType>(value.second.size()));
+    }
+
+    EndObject();
 
     return *this;
 }

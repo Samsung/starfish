@@ -39,6 +39,7 @@ FetchEventRequestData* FetchEventRequestData::createFetchEventRequestData(
     data->scopeURL = String::emptyString;
     data->destination = request->requestDestination();
     data->method = request->method();
+    data->headerMap = request->resquestHeaderMap();
     // TODO: copy other options
     return data;
 }

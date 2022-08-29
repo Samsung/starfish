@@ -25,7 +25,7 @@
 
 namespace Starfish {
 
-class RequestData;
+class FetchEventRequestData;
 class Response;
 class FetchEvent;
 class Promise;
@@ -44,7 +44,7 @@ public:
     {
     }
 
-    Nullable<Response*> handleFetch(RequestData* requestData);
+    Nullable<Response*> handleFetch(FetchEventRequestData* data);
 
     void onCompleteFetch(FetchEvent* event);
 

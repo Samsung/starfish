@@ -1296,7 +1296,7 @@ void ServiceWorkerHostJobHandler::handleFetch(
 
     auto client = clientValue.getValue();
     auto fetchJob = new ServiceWorkerFetchJob(client, contextId, connection);
-    fetchJob->handleFetch(data->toRequestData());
+    fetchJob->handleFetch(data);
 }
 
 } // namespace Starfish
