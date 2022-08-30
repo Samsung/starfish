@@ -62,10 +62,11 @@ public:
     void decrementPendingPromiseCount();
     unsigned int pendingPromisesCount();
 
-private:
+protected:
     unsigned int m_pendingPromisesCount{ 0 };
     GCVector<Promise*> m_extendLifetimePromises;
 
+private:
     bool isEventActive() const;
 };
 

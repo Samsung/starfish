@@ -423,6 +423,7 @@ public:
     void reject(ScriptValue v);
     ScriptValue then(ScriptValue handler);
     ScriptValue then(ScriptValue onFulfilled, ScriptValue onRejected);
+    ScriptValue promiseResult();
     ScriptValue scriptValue()
     {
         return m_scriptValue;

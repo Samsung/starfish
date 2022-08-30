@@ -36,16 +36,21 @@
 
 namespace Starfish {
 
-Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
-    ServiceWorkerGlobalScope* client, RequestData* requestData)
+// https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm
+Nullable<Response*> ServiceWorkerFetchJob::handleFetch(RequestData* requestData)
 {
     TRACE(HOST);
 
-    Response* response = nullptr;
+    m_handleFetchFailed = false;
+    m_respondWithEntered = false;
+    m_eventCanceled = false;
+    m_response = nullptr;
+    m_eventHandled = nullptr;
     ServiceWorkerRegistration* registration = nullptr;
+    auto scriptBindingInstance =
+        client()->executionContext()->scriptBindingInstance();
 
-    auto preloadResponse =
-        new Promise(client->executionContext()->scriptBindingInstance());
+    auto preloadResponse = new Promise(scriptBindingInstance);
 
     STARFISH_ASSERT(requestData->m_destination !=
                     RequestDestination::ServiceWorker);
@@ -55,32 +60,35 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
         return nullptr;
     }
 
-    // 15. Else if request is a non-subresource request, then:
     if (!requestData->isSubresourceRequest()) {
-        // TODO
+        // 15. Else if request is a non-subresource request, then:
     } else {
         // 16. Else if request is a subresource request, then:
-        // TODO
     }
 
+    m_eventHandled = new Promise(scriptBindingInstance);
+
     struct Param : public gc {
-        Param(ServiceWorkerGlobalScope* globalScope_, RequestData* data_,
-              Promise* preloadResponse_)
-            : globalScope(globalScope_)
-            , data(data_)
+        Param(RequestData* data_, Promise* preloadResponse_,
+              ServiceWorkerFetchJob* job_)
+            : data(data_)
             , preloadResponse(preloadResponse_)
+            , job(job_)
         {
         }
-        ServiceWorkerGlobalScope* globalScope;
         RequestData* data;
         Promise* preloadResponse;
+        ServiceWorkerFetchJob* job;
     };
 
-    client->webWorker()->messageLoop()->addMicroTask(
-        client,
+    client()->webWorker()->messageLoop()->addMicroTask(
+        client(),
         [](size_t handle, void* data) {
+            TRACE(HOST);
+
             auto p = static_cast<Param*>(data);
-            auto executionContext = p->globalScope->executionContext();
+            auto client = p->job->client();
+            auto executionContext = client->executionContext();
             auto requestData = p->data;
             String* eventType = executionContext->starfish()
                                     ->staticStrings()
@@ -93,21 +101,78 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
             event->setCancelable(true);
             event->setRequest(requestObject);
             event->setPreloadResponse(p->preloadResponse);
-            auto clientId = p->globalScope->uid().toString();
+            auto clientId = client->uid().toString();
             event->setClientId(
                 String::createASCIIString(clientId.data(), clientId.size()));
+            event->setHandled(p->job->eventHandled());
+
+            event->setFetchJob(p->job);
 
             TRACE(HOST, "dispatch FetchEvent:",
                   requestData->m_url->urlString()->toUTF8String().data());
 
-            // 24-12. Dispatch e at activeWorker’s global object.
-            p->globalScope->dispatchEventByUA(event);
+            client->dispatchEventByUA(event);
+
+            // 24-13. Invoke Update Service Worker Extended Events Set with
+            // activeWorker and e.
+
+            if (event->respondWithEntered()) {
+                p->job->setRespondWithEntered(true);
+            }
+
+            // 24-16. If response is null, request’s body is not null, and
+            // request’s body's source is null, then:
         },
-        new Param(client, requestData, preloadResponse));
+        new Param(requestData, preloadResponse, this));
 
     // 25. Wait for task to have executed or for handleFetchFailed to be true.
 
-    return response;
+    return m_response;
 }
+
+void ServiceWorkerFetchJob::onCompleteFetch(FetchEvent* event)
+{
+    TRACE(HOST);
+
+    if (event->respondWithError()) {
+        setHandleFetchFailed(true);
+    } else {
+        setResponse(event->potentialResponse());
+    }
+
+    if (!respondWithEntered()) {
+        if (eventCanceled()) {
+            return failJob();
+        }
+        return;
+    }
+
+    if (handleFetchFailed()) {
+        return failJob();
+    }
+
+    successJob();
+}
+
+void ServiceWorkerFetchJob::failJob()
+{
+    TRACE(HOST);
+    if (eventHandled()) {
+        auto exception =
+            new DOMException(client()->executionContext(),
+                             DOMException::NETWORK_ERR, "NetworkError");
+        eventHandled()->reject(exception->scriptValue());
+    }
+}
+
+void ServiceWorkerFetchJob::successJob()
+{
+    TRACE(HOST);
+
+    if (eventHandled()) {
+        eventHandled()->fulfill(scriptUndefined());
+    }
+}
+
 } // namespace Starfish
 #endif

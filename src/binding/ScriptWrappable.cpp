@@ -1456,6 +1456,23 @@ ScriptValue Promise::then(ScriptValue onFulfilled, ScriptValue onRejected)
     return result.result;
 }
 
+ScriptValue Promise::promiseResult() {
+    ContextRef* ctx = m_instance->scriptContext();
+    auto result = Evaluator::execute(
+        ctx,
+        [](ExecutionStateRef* state, Promise* self) -> ValueRef* {
+            return self->m_scriptValue->asObject()->asPromiseObject()->promiseResult();
+        },
+        this);
+
+    if (result.error.hasValue()) {
+        dispatchErrorEventToWindow(m_instance, result);
+        return result.error.value();
+    }
+
+    return result.result;
+}
+
 Promise* toPromise(ScriptBindingInstance* instance, ScriptValue scriptValue)
 {
     return new Promise(instance, scriptValue);

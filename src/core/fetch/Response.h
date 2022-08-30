@@ -95,6 +95,7 @@ public:
 
     void setHeadersFromHeaderMap(const HeaderMap& map);
 
+    Response* cloneWithoutBody();
     Response* clone();
 
     void setBody(String* string);

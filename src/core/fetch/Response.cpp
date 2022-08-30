@@ -160,11 +160,17 @@ Response* Response::redirect(ExecutionContext* executionContext, String* url,
     return response;
 }
 
-Response* Response::clone()
+Response* Response::cloneWithoutBody()
 {
     Response* clonedResponse = new Response(executionContext());
     clonedResponse->copyResponseData(this);
     clonedResponse->m_headers.copyHeaders(&m_headers);
+    return clonedResponse;
+}
+
+Response* Response::clone()
+{
+    Response* clonedResponse = cloneWithoutBody();
     clonedResponse->copyBody(this);
     return clonedResponse;
 }
