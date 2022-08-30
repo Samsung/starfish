@@ -24,6 +24,8 @@
 
 namespace Starfish {
 
+class ServiceWorkerFetchJob;
+
 class FetchEventInit : ExtendableEventInit {
     STARFISH_MAKE_STACK_ALLOCATED();
 
@@ -70,7 +72,8 @@ public:
 
     // binding
     DEFINE_GETTER_SETTER(Request*, request, Request);
-    DEFINE_GETTER_SETTER(Promise*, preloadResponse, PreloadResponse);
+    Promise* preloadResponse();
+    DEFINE_SETTER(Promise*, preloadResponse, PreloadResponse);
     DEFINE_GETTER_SETTER(String*, clientId, ClientId);
     DEFINE_GETTER_SETTER(String*, resultingClientId, ResultingClientId);
     DEFINE_GETTER_SETTER(String*, replacesClientId, ReplacesClientId);
@@ -80,6 +83,7 @@ public:
     DEFINE_GETTER_SETTER(bool, waitToRespond, WaitToRespond);
     DEFINE_GETTER_SETTER(bool, respondWithEntered, RespondWithEntered);
     DEFINE_GETTER_SETTER(bool, respondWithError, RespondWithError);
+    DEFINE_GETTER_SETTER(ServiceWorkerFetchJob*, fetchJob, FetchJob);
 
 private:
     Request* m_request;
@@ -93,6 +97,8 @@ private:
     bool m_waitToRespond{ false };
     bool m_respondWithEntered{ false };
     bool m_respondWithError{ false };
+
+    ServiceWorkerFetchJob* m_fetchJob{ nullptr };
 };
 
 } // namespace Starfish
