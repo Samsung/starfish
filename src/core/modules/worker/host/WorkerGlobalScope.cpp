@@ -39,6 +39,11 @@
 #include "core/page/WindowOrWorkerGlobalScope.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
+#include "Starfish.h"
+#include "core/storage/StorageNamespace.h"
+#include "core/storage/WebStorageNamespaceProvider.h"
+#include "core/modules/serviceworker/cache/CustomStorage.h"
+
 namespace Starfish {
 
 static thread_local WorkerGlobalScope* g_currentGlobal;
@@ -95,6 +100,26 @@ void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
     m_workerLocation = new WorkerLocation(m_executionContext, url);
     m_workerNavigator = new WorkerNavigator(m_executionContext);
     m_scriptBindingInstance->initBinding();
+
+    initCacheStorage();
+}
+
+CustomStorage* WorkerGlobalScope::workerStorage()
+{
+    TRACE_SCOPE(HOST);
+    auto storageInternal = m_localStorageNamespace->storageInternal(
+        m_executionContext->webOrigin());
+    return new CustomStorage(m_scriptBindingInstance, storageInternal);
+}
+
+void WorkerGlobalScope::initCacheStorage()
+{
+    TRACE_SCOPE(HOST);
+
+    m_storageNamespaceProvider = WebStorageNamespaceProvider::create(
+        m_webWorker->starfish()->localStorageFilePath());
+    m_localStorageNamespace =
+        m_storageNamespaceProvider->createLocalStorageNamespace();
 }
 
 void WorkerGlobalScope::dispatchErrorEvent(ErrorEventInit& errorInfo)

@@ -35,6 +35,10 @@ class WorkerNavigator;
 class ErrorEventInit;
 class ResourceURL;
 
+class StorageNamespaceProvider;
+class StorageNamespace;
+class CustomStorage;
+
 typedef void (*TimerHandler)(void* data);
 
 class WorkerGlobalScope : public EventTarget, public GlobalScope {
@@ -112,6 +116,9 @@ public:
 
     Performance* performance();
 
+    CustomStorage* workerStorage();
+    void initCacheStorage();
+
 protected:
     WorkerGlobalScope(WebWorker* webWorker);
 
@@ -121,6 +128,9 @@ protected:
     WorkerScriptController* m_workerScriptController;
     WorkerLocation* m_workerLocation;
     WorkerNavigator* m_workerNavigator;
+
+    StorageNamespaceProvider* m_storageNamespaceProvider{ nullptr };
+    StorageNamespace* m_localStorageNamespace{ nullptr };
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -132,6 +142,10 @@ protected:
                    GC_WORD_OFFSET(WorkerGlobalScope, m_workerScriptController));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerLocation));
         GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope, m_workerNavigator));
+        GC_set_bit(desc, GC_WORD_OFFSET(WorkerGlobalScope,
+                                        m_storageNamespaceProvider));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(WorkerGlobalScope, m_localStorageNamespace));
     }
 
     void initGlobalScope(ResourceURL* url, String* charSet);
