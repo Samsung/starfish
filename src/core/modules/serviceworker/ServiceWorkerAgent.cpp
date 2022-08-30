@@ -35,7 +35,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
 #include "core/modules/cast/CastServer.h"
@@ -180,11 +179,6 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
 
     WorkerScriptController* workerScriptController =
         workerGlobalScope->workerScriptController();
-
-    if (!CachePolyfillLoader::load(workerScriptController)) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return;
-    }
 
     // 4.12 Let evaluationStatus be the result of running the classic script
     // script if script is a classic script, otherwise, the result of running
