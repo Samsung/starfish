@@ -164,6 +164,7 @@ FILE (GLOB STARFISH_WEBWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/generated/URLSearchParamsBinding.cpp
     ${STARFISH_ROOT}/src/binding/generated/CloseEventInitBinding.cpp
     ${STARFISH_ROOT}/src/binding/generated/TextDecodeOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/CustomStorageBinding.cpp
 )
 
 SET (STARFISH_WEBWORKER_SRC_LIST

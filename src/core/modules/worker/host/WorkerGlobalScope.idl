@@ -17,6 +17,9 @@ interface WorkerGlobalScope : EventTarget {
   [Unimplemented] attribute EventHandler ononline;
   [Unimplemented] attribute EventHandler onrejectionhandled;
   [Unimplemented] attribute EventHandler onunhandledrejection;
+
+  // NOTE: The followings aren't the Web specification.
+  readonly attribute CustomStorage workerStorage;
 };
 
 WorkerGlobalScope implements WindowOrWorkerGlobalScope;
