@@ -43,6 +43,7 @@
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/WebStorageNamespaceProvider.h"
 #include "core/modules/serviceworker/cache/CustomStorage.h"
+#include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
 
 namespace Starfish {
 
@@ -115,6 +116,11 @@ CustomStorage* WorkerGlobalScope::workerStorage()
 void WorkerGlobalScope::initCacheStorage()
 {
     TRACE_SCOPE(HOST);
+
+    if (!CachePolyfillLoader::load(m_workerScriptController)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
 
     m_storageNamespaceProvider = WebStorageNamespaceProvider::create(
         m_webWorker->starfish()->localStorageFilePath());
