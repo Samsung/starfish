@@ -120,8 +120,9 @@ void Fetch::fail()
 Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info)
 {
     Promise* promise = new Promise(executionContext->scriptBindingInstance());
-    Fetch* f = new Fetch(executionContext, new Request(executionContext, info),
-                         promise);
+    auto request = info.isRequestValue() ? info.getRequestValue()
+                                         : new Request(executionContext, info);
+    Fetch* f = new Fetch(executionContext, request, promise);
     f->start();
 
     return promise;
@@ -131,8 +132,10 @@ Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info,
                       RequestInit& init)
 {
     Promise* promise = new Promise(executionContext->scriptBindingInstance());
-    Fetch* f = new Fetch(executionContext,
-                         new Request(executionContext, info, init), promise);
+    auto request = info.isRequestValue()
+                       ? info.getRequestValue()
+                       : new Request(executionContext, info, init);
+    Fetch* f = new Fetch(executionContext, request, promise);
     f->start();
 
     return promise;
