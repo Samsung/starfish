@@ -52,6 +52,7 @@ void* HTMLScriptElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLScriptElement)] = { 0 };
         HTMLElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLScriptElement, m_nonce));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLScriptElement));
         typeInited = true;
     }
@@ -459,7 +460,7 @@ void HTMLScriptElement::setSrc(String* src)
 String* HTMLScriptElement::nonce() const
 {
     if (m_nonce) {
-        return m_nonce;
+        return m_nonce.value();
     }
     return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
 }

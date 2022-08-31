@@ -66,6 +66,15 @@ public:
         , m_hashAlgorithmsUsed(0)
     {
         parseSource(token);
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                ContentSecurityPolicySourceListDirective* nr =
+                    (ContentSecurityPolicySourceListDirective*)obj;
+                HashSet().swap(nr->m_hashes);
+                HashSet().swap(nr->m_nonces);
+            },
+            NULL, NULL, NULL);
     }
 
     String* name()

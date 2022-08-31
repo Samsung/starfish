@@ -673,19 +673,7 @@ public:
     {
     }
 
-    T* value()
-    {
-        STARFISH_ASSERT(hasValue());
-        return m_value;
-    }
-
-    const T* value() const
-    {
-        STARFISH_ASSERT(hasValue());
-        return m_value;
-    }
-
-    T* getValue()
+    T* value() const
     {
         STARFISH_ASSERT(hasValue());
         return m_value;

@@ -51,6 +51,7 @@ void* SVGScriptElement::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGScriptElement)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGScriptElement, m_nonce));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGScriptElement));
         typeInited = true;
@@ -486,7 +487,7 @@ void SVGScriptElement::setXlinkHref(String* xlinkHref)
 String* SVGScriptElement::nonce() const
 {
     if (m_nonce) {
-        return m_nonce;
+        return m_nonce.value();
     }
     return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
 }

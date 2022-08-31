@@ -139,7 +139,7 @@ protected:
     bool m_isParserInserted;
     bool m_didScriptExecuted;
     bool m_shouldResumeParsing;
-    String* m_nonce;
+    Nullable<String*> m_nonce;
 };
 } // namespace Starfish
 

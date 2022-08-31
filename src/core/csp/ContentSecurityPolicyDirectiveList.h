@@ -79,6 +79,11 @@ private:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_contentSecurityPolicy));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_contextURL));
+
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_baseURI));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
@@ -96,6 +101,9 @@ private:
                                         m_scriptSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_styleSrc));
+
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_header));
     }
 
     void setDirective(ContentSecurityPolicySourceListDirective*& directive,
