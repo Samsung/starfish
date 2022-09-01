@@ -34,6 +34,7 @@ GlobalOptions::GlobalOptions()
 {
 #if !defined(NDEBUG)
     readEnvironmentValue("TRACE");
+    readEnvironmentValue("CACHE_MODULE_PATH");
     readEnvironmentValue("DEBUG_CAST");
     readEnvironmentValue("DEBUG_CAST_TARGET_IP");
 #endif
