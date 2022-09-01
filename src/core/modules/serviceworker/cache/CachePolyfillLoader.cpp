@@ -25,14 +25,76 @@
 #include "core/modules/serviceworker/util/Trace.h"
 
 #include "binding/generated/Js2c_CacheStorage.h"
+#include "core/util/GlobalOptions.h"
 
 namespace Starfish {
 
+class FileScope {
+public:
+    FileScope(const char* path, const char* mode)
+    {
+        m_file = std::fopen(path, mode);
+    }
+    ~FileScope()
+    {
+        if (m_file) {
+            std::fclose(m_file);
+        }
+    }
+    std::FILE* file()
+    {
+        return m_file;
+    }
+
+private:
+    std::FILE* m_file{ nullptr };
+};
+
+static bool readStringFromFile(const std::string& filepath, std::string& output)
+{
+    FileScope fileScope(filepath.c_str(), "r");
+    std::FILE* file = fileScope.file();
+
+    if (file == nullptr) {
+        return false;
+    }
+
+    std::fseek(file, 0, SEEK_END);
+    size_t size = std::ftell(file);
+    std::rewind(file);
+    output.resize(size);
+
+    if (std::fread(&output[0], sizeof(char), size, file) == 0) {
+        return false;
+    }
+
+    return true;
+}
+
 bool CachePolyfillLoader::load(WorkerScriptController* controller)
 {
-    TRACE(SVCWORKER, "Load: s_js2c_cache_min_js");
-    String* text = String::fromUTF8(s_js2c_cache_min_js.c_str(),
-                                    s_js2c_cache_min_js.size());
+    TRACE(CACHE, "Load: s_js2c_cache_min_js");
+
+    String* text;
+
+    if (GlobalOptions::instance().has("CACHE_MODULE_PATH") == false) {
+        text = String::fromUTF8(s_js2c_cache_min_js.c_str(),
+                                s_js2c_cache_min_js.size());
+    } else {
+        // Read the file from local storage.
+        std::string js2c_cache_min_js;
+        std::string filepath =
+            GlobalOptions::instance().get("CACHE_MODULE_PATH");
+
+        TRACE(CACHE, "Load file:", filepath);
+        if (readStringFromFile(filepath, js2c_cache_min_js) == false) {
+            STARFISH_LOG_ERROR("Fail to load script from file");
+            return false;
+        }
+        text = String::fromUTF8(js2c_cache_min_js.c_str(),
+                                js2c_cache_min_js.size());
+    }
+
     if (!controller->evaluatefromString(text)) {
         STARFISH_LOG_ERROR("Fail to load global script: js2c_cache_min_js");
         return false;
