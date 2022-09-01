@@ -16,7 +16,8 @@
     "rollup-plugin-terser": "5.1.2"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
   },
   "repository": {
     "type": "git",
