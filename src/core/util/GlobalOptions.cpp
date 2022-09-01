@@ -60,42 +60,56 @@ void GlobalOptions::readEnvironmentValue(const char* key)
                 tokens->includeAsteriskInPositives = true;
             }
         }
+
+        tokens->raw = value;
         m_valueGroup[key] = tokens;
     } else {
         set(key, 0);
     }
 }
 
-bool GlobalOptions::has(const char* key, const char* value,
+bool GlobalOptions::has(const char* key, const char* subKey,
                         bool isAsteriskSupported)
 {
     STARFISH_ASSERT(key != nullptr);
-    STARFISH_ASSERT(value != nullptr);
 
     std::shared_ptr<ValueGroup> tokens = m_valueGroup[key];
     if (!tokens) {
         return false;
+    } else if (!subKey) {
+        return true;
     }
 
     if (!tokens->positives.empty()) {
         /*
             // usage: isAsteriskSupported
-            e.g) `export KEY=*,-VALUE`
+            e.g) `export KEY=*,-SUBKEY`
         */
         if (!isAsteriskSupported || !tokens->includeAsteriskInPositives) {
-            if (tokens->positives.find(value) == tokens->positives.end()) {
+            if (tokens->positives.find(subKey) == tokens->positives.end()) {
                 return false;
             }
         }
     }
 
     if (!tokens->negatives.empty()) {
-        if (tokens->negatives.find(value) != tokens->negatives.end()) {
+        if (tokens->negatives.find(subKey) != tokens->negatives.end()) {
             return false;
         }
     }
 
     return true;
+}
+
+std::string GlobalOptions::get(const char* key)
+{
+    STARFISH_ASSERT(key != nullptr);
+
+    std::shared_ptr<ValueGroup> tokens = m_valueGroup[key];
+    if (!tokens) {
+        return "";
+    }
+    return tokens->raw;
 }
 
 } // namespace Starfish
