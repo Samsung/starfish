@@ -31,13 +31,15 @@ struct ValueGroup {
     std::set<std::string> positives;
     std::set<std::string> negatives;
     bool includeAsteriskInPositives{ false };
+    std::string raw;
 };
 
 class GlobalOptions : public ProgramOptions {
 public:
     static GlobalOptions& instance();
-    bool has(const char* key, const char* value,
+    bool has(const char* key, const char* subKey = nullptr,
              bool isAsteriskSupported = true);
+    std::string get(const char* key);
 
 private:
     GlobalOptions();
