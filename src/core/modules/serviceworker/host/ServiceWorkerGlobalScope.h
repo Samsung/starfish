@@ -30,6 +30,9 @@ class ServiceWorker;
 class ServiceWorkerData;
 class ResourceURL;
 class ErrorEventInit;
+class StorageNamespaceProvider;
+class StorageNamespace;
+class CustomStorage;
 
 class ServiceWorkerGlobalScope : public WorkerGlobalScope {
 public:
@@ -53,12 +56,21 @@ public:
         return m_serviceWorker;
     }
 
+    CustomStorage* workerStorage();
+    void initCacheStorage();
+
 private:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         WorkerGlobalScope::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ServiceWorkerGlobalScope,
+                                        m_storageNamespaceProvider));
+        GC_set_bit(desc, GC_WORD_OFFSET(ServiceWorkerGlobalScope,
+                                        m_localStorageNamespace));
     }
     ServiceWorkerData* m_serviceWorker{ nullptr };
+    StorageNamespaceProvider* m_storageNamespaceProvider{ nullptr };
+    StorageNamespace* m_localStorageNamespace{ nullptr };
 };
 } // namespace Starfish
 

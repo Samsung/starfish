@@ -20,4 +20,7 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   // event
   //attribute EventHandler onmessage; // event.source of the message events is Client object
   //attribute EventHandler onmessageerror;
+
+  // NOTE: The followings aren't the Web specification.
+  readonly attribute CustomStorage workerStorage;
 };

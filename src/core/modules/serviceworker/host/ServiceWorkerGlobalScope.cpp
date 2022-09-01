@@ -34,6 +34,12 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/ExtendableEvent.h"
 
+#include "Starfish.h"
+#include "core/storage/StorageNamespace.h"
+#include "core/storage/WebStorageNamespaceProvider.h"
+#include "core/modules/serviceworker/cache/CustomStorage.h"
+#include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
+
 namespace Starfish {
 
 ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
@@ -51,6 +57,30 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
             webWorker->scriptEngineInstance(), this);
 
     initGlobalScope(url, charSet);
+    initCacheStorage();
+}
+
+CustomStorage* ServiceWorkerGlobalScope::workerStorage()
+{
+    TRACE_SCOPE(HOST);
+    auto storageInternal = m_localStorageNamespace->storageInternal(
+        m_executionContext->webOrigin());
+    return new CustomStorage(m_scriptBindingInstance, storageInternal);
+}
+
+void ServiceWorkerGlobalScope::initCacheStorage()
+{
+    TRACE_SCOPE(HOST);
+
+    if (!CachePolyfillLoader::load(m_workerScriptController)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
+    m_storageNamespaceProvider = WebStorageNamespaceProvider::create(
+        m_webWorker->starfish()->localStorageFilePath());
+    m_localStorageNamespace =
+        m_storageNamespaceProvider->createLocalStorageNamespace();
 }
 
 ServiceWorker* ServiceWorkerGlobalScope::serviceWorker()
