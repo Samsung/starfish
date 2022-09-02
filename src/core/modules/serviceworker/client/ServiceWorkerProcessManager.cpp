@@ -224,8 +224,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     } else {
         if (processData->connection == nullptr) {
             processData->connection = new ServiceWorkerClientConnection();
-            processData->connection->socket()->connect(address.c_str());
             m_perProcess->ioRunnable()->addClient(processData->connection);
+            processData->connection->socket()->connect(address.c_str());
         }
 #ifdef SERVICE_WORKER_USE_SINGLE_HOST_CONNECTION
         if (m_connection == nullptr) {
