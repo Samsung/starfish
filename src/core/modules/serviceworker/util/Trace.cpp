@@ -89,12 +89,34 @@ static void writeThreadHeader(std::ostream& os)
     os << "[" << thisThreadId << "] ";
 }
 
+static std::ostream& writeTimestamp(std::ostream& os)
+{
+    const auto now = std::chrono::system_clock::now();
+    const auto s = std::chrono::duration_cast<std::chrono::seconds>(
+                       now.time_since_epoch()) %
+                   std::chrono::minutes(1);
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        now.time_since_epoch()) %
+                    std::chrono::seconds(1);
+    os << std::right << std::setfill('0') << std::setw(2) << s.count() << "."
+       << std::setw(3) << ms.count() << " " << std::setw(0)
+       << std::setfill(' ');
+
+    return os;
+}
+
+static void writeTag(std::ostream& os, const std::string& tag)
+{
+    os << std::setw(TYPE_LENGTH_LIMIT) << tag << std::setw(0) << " ";
+}
+
 static void writeHeader(std::ostream& ss, const std::string& tag,
                         const std::string& id)
 {
+    ss << CLR_DIM;
     writeThreadHeader(ss);
-    ss << CLR_DIM << std::left << std::setfill(' ')
-       << std::setw(TYPE_LENGTH_LIMIT) << tag << std::setw(0) << " ("
+    writeTimestamp(ss);
+    ss << std::left << std::setfill(' ') << "("
        << std::setw(TRACE_ID_LENGTH_LIMIT)
        << std::string(id).substr(0, TRACE_ID_LENGTH_LIMIT) << ") ";
 }
