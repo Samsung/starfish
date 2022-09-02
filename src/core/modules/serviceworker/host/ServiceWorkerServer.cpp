@@ -92,11 +92,9 @@ void ServiceWorkerServer::start()
     m_connection = new ServiceWorkerHostConnection(this);
     registerConnection(m_connection);
 
-    std::string address = Connection::Config::createAddress();
-
-    m_connection->socket()->bind(address.c_str());
-    // TODO: set the mq for the current thread where this server starts.
     m_perProcess->ioRunnable()->addClient(m_connection);
+    std::string address = Connection::Config::createAddress();
+    m_connection->socket()->bind(address.c_str());
 }
 
 void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
@@ -118,9 +116,8 @@ void ServiceWorkerServer::start(std::shared_ptr<ProgramOptions> programOptions)
 
     STARFISH_ASSERT(m_connection != nullptr);
 
-    m_connection->socket()->bind(address.c_str());
-    // TODO: set the mq for the current thread where this server starts.
     m_perProcess->ioRunnable()->addClient(m_connection);
+    m_connection->socket()->bind(address.c_str());
 }
 
 void ServiceWorkerServer::registerConnection(

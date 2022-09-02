@@ -49,7 +49,7 @@ public:
         }
     };
 
-    IORunnable(IMessageLoop* messageLoop);
+    IORunnable(IMessageLoop* messageLoop, unsigned int timeout = 1000);
     virtual ~IORunnable();
 
     void run() override;

@@ -28,17 +28,17 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/SocketNN.h"
 #include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
-#define RECV_TIMEOUT 1000
 #define MAX_LISTEN_SOCKET 50
 
-IORunnable::IORunnable(IMessageLoop* messageLoop)
+IORunnable::IORunnable(IMessageLoop* messageLoop, unsigned int timeout)
     : m_messageLoop(messageLoop)
     , m_isFdUpdateNeeded(true)
     , m_isStopped(false)
-    , m_rcvtimeout(RECV_TIMEOUT)
+    , m_rcvtimeout(timeout)
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -58,6 +58,8 @@ IORunnable::~IORunnable()
 
 void IORunnable::run()
 {
+    TRACE_SCOPE(SOCKET);
+
     class Param {
     public:
         Param()
@@ -92,14 +94,18 @@ void IORunnable::run()
 
         try {
             if (m_cv.wait_for(lock, timeout) == std::cv_status::timeout) {
+                // When no event comes while polling sockets, clients can
+                // not be updated during the timeout, m_rcvtimeout.
                 if (m_isFdUpdateNeeded == true) {
                     nSockets = m_clients.size();
-
                     for (int i = 0; i < nSockets; ++i) {
                         pfd[i].fd = m_clients[i]->socket()->getFd();
                         pfd[i].events = m_clients[i]->socket()->getEvents();
                     }
                     m_isFdUpdateNeeded = false;
+                    if (nSockets > 0) {
+                        TRACE(SOCKET, "Sockets", nSockets);
+                    }
                 }
             }
 
@@ -180,6 +186,7 @@ void IORunnable::stop()
 
 void IORunnable::addClient(Client* connection)
 {
+    TRACE_SCOPE(SOCKET);
     STARFISH_ASSERT(connection != nullptr);
     std::unique_lock<std::mutex> lock(m_mutex);
 
