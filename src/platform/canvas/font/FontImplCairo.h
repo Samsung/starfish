@@ -473,8 +473,8 @@ public:
         CHECK_ERROR;
         FT_Set_Pixel_Sizes(face, 0, 16);
         hbFace = hb_ft_font_create(face, [](void* userData) {});
-        STARFISH_LOG_ERROR("load system font %s %p %p", path.data(), face,
-                           hbFace);
+        STARFISH_LOG_INFO("load system font %s %p %p", path.data(), face,
+                          hbFace);
 
         auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);
         m_fontPathToFace.insert(std::make_pair(path, impl));
