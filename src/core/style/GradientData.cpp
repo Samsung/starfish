@@ -132,11 +132,7 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
             STARFISH_ASSERT(isHorizontal);
             return rect.width();
         case SideValue::CenterSideValue: {
-            if (isHorizontal) {
-                return .5f * edgeDistance;
-            } else {
-                return .5f * edgeDistance;
-            }
+            return .5f * edgeDistance;
         }
         default:
             STARFISH_ASSERT_NOT_REACHED();
