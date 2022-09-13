@@ -316,31 +316,33 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
 
     STARFISH_ASSERT(observer && observer->image());
 
-    FrameReplaced* frame = container()->frame()->asFrameReplaced();
-    BrowsingContext* b = container()->window()->browsingContext();
-    auto ptr = m_canvasSurface->mapBuffer();
+    if (observer && observer->image()) {
+        FrameReplaced* frame = container()->frame()->asFrameReplaced();
+        BrowsingContext* b = container()->window()->browsingContext();
+        auto ptr = m_canvasSurface->mapBuffer();
 
-    int canvasBufferSize =
-        m_canvasSurface->bufferStride() * m_canvasSurface->height();
-    {
-        Locker<Mutex> lock(*observer->imageLock());
-        int videoFrameSize =
-            observer->width() * observer->height() * observer->pixelStride();
+        int canvasBufferSize =
+            m_canvasSurface->bufferStride() * m_canvasSurface->height();
+        {
+            Locker<Mutex> lock(*observer->imageLock());
+            int videoFrameSize = observer->width() * observer->height() *
+                                 observer->pixelStride();
 
-        if (videoFrameSize != canvasBufferSize) {
-            STARFISH_LOG_WARN("videoFrameSize: %d != canvasBufferSize: %d",
-                              videoFrameSize, canvasBufferSize);
+            if (videoFrameSize != canvasBufferSize) {
+                STARFISH_LOG_WARN("videoFrameSize: %d != canvasBufferSize: %d",
+                                  videoFrameSize, canvasBufferSize);
+            }
+
+            memcpy(ptr, observer->image(),
+                   std::min(videoFrameSize, canvasBufferSize));
         }
 
-        memcpy(ptr, observer->image(),
-               std::min(videoFrameSize, canvasBufferSize));
+        m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
+            frame->x().toInt(), frame->y().toInt(), m_canvasSurface->width(),
+            m_canvasSurface->height());
+
+        b->setNeedsComposite();
     }
-
-    m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
-        frame->x().toInt(), frame->y().toInt(), m_canvasSurface->width(),
-        m_canvasSurface->height());
-
-    b->setNeedsComposite();
 }
 
 void MediaPlayerWebRtcTizen::onData(MediaStream::AudioTrackObserver* observer)
