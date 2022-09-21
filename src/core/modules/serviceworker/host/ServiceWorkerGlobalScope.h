@@ -33,6 +33,7 @@ class ErrorEventInit;
 class StorageNamespaceProvider;
 class StorageNamespace;
 class CustomStorage;
+class Internal;
 
 class ServiceWorkerGlobalScope : public WorkerGlobalScope {
 public:
@@ -58,6 +59,7 @@ public:
 
     CustomStorage* workerStorage();
     void initCacheStorage();
+    Internal* internal();
 
 private:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -71,6 +73,7 @@ private:
     ServiceWorkerData* m_serviceWorker{ nullptr };
     StorageNamespaceProvider* m_storageNamespaceProvider{ nullptr };
     StorageNamespace* m_localStorageNamespace{ nullptr };
+    Internal* m_internal{ nullptr };
 };
 } // namespace Starfish
 

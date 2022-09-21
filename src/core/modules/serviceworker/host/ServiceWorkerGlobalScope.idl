@@ -22,5 +22,8 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   //attribute EventHandler onmessageerror;
 
   // NOTE: The followings aren't the Web specification.
+  readonly attribute Internal internal;
+
+  // TODO: Move CustomStorage to Internal
   readonly attribute CustomStorage workerStorage;
 };

@@ -39,6 +39,7 @@
 #include "core/storage/WebStorageNamespaceProvider.h"
 #include "core/modules/serviceworker/cache/CustomStorage.h"
 #include "core/modules/serviceworker/cache/CachePolyfillLoader.h"
+#include "core/modules/serviceworker/host/Internal.h"
 
 namespace Starfish {
 
@@ -58,6 +59,8 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
 
     initGlobalScope(url, charSet);
     initCacheStorage();
+
+    m_internal = new Internal(m_scriptBindingInstance);
 }
 
 CustomStorage* ServiceWorkerGlobalScope::workerStorage()
@@ -81,6 +84,11 @@ void ServiceWorkerGlobalScope::initCacheStorage()
         m_webWorker->starfish()->localStorageFilePath());
     m_localStorageNamespace =
         m_storageNamespaceProvider->createLocalStorageNamespace();
+}
+
+Internal* ServiceWorkerGlobalScope::internal()
+{
+    return m_internal;
 }
 
 ServiceWorker* ServiceWorkerGlobalScope::serviceWorker()
