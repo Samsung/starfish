@@ -1,0 +1,4 @@
+[STARFISH_ENABLE_SERVICE_WORKER, Global=(ServiceWorker)]
+interface Internal {
+  [NewObject] Promise<any> open(DOMString name);
+};
