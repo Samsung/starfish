@@ -112,11 +112,11 @@ void WebRtcManager::deletePeerConnectionFactory(bool force)
         }
         m_mediaStreams.clear();
 
-        GCVector<RTCPeerConnection*> pcs;
-        pcs.insert(pcs.end(), m_peerConnections.begin(),
-                   m_peerConnections.end());
-        for (auto pc : pcs) {
-            pc->dispose();
+        for (auto peerConnection : m_peerConnections) {
+            if (peerConnection) {
+                peerConnection->dispose();
+                peerConnection = nullptr;
+            }
         }
         m_peerConnections.clear();
         peerConnectionCount = 0;
@@ -158,9 +158,10 @@ WebRtcManager::createPeerConnection(
 void WebRtcManager::deletePeerConnection(RTCPeerConnection* peerConnection)
 {
     WEBRTC_LOGI("<WebRtcManager::%s>", __func__);
-    peerConnectionCount--;
-    WEBRTC_LOGI("  peerConnectionCount: %d", peerConnectionCount);
     if (peerConnection) {
+        peerConnectionCount--;
+        WEBRTC_LOGI("  peerConnectionCount: %d", peerConnectionCount);
+
         m_peerConnections.erase(m_peerConnections.find(peerConnection));
     }
     deletePeerConnectionFactory();

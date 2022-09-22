@@ -117,9 +117,9 @@ AudioStreamTrack::AudioStreamTrack(
 
 AudioStreamTrack::~AudioStreamTrack()
 {
-    WEBRTC_LOGI("<%s self=%p>", __func__, (void*)this);
+    WEBRTC_LOGI("<AudioStreamTrack::%s self=%p>", __func__, (void*)this);
     dispose();
-    WEBRTC_LOGI("</%s self=%p>", __func__, (void*)this);
+    WEBRTC_LOGI("</AudioStreamTrack::%s self=%p>", __func__, (void*)this);
 }
 
 void AudioStreamTrack::dispose()
@@ -130,6 +130,7 @@ void AudioStreamTrack::dispose()
     } else {
         m_backend.release();
     }
+    m_attachedMediaStreams.clear();
     WEBRTC_LOGI("</AudioStreamTrack::%s self=%p>", __func__, (void*)this);
 }
 
@@ -161,12 +162,14 @@ VideoStreamTrack::~VideoStreamTrack()
 
 void VideoStreamTrack::dispose()
 {
+    WEBRTC_LOGI("<VideoStreamTrack::%s self=%p>", __func__, (void*)this);
     if (m_webRtcManager->peerConnectionFactory()) {
         m_backend = nullptr;
     } else {
         m_backend.release();
     }
     m_attachedMediaStreams.clear();
+    WEBRTC_LOGI("</VideoStreamTrack::%s self=%p>", __func__, (void*)this);
 }
 
 void VideoStreamTrack::play()

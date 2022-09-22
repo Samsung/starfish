@@ -67,8 +67,9 @@ void RTCRtpReceiver::dispose()
     } else {
         m_backend.release();
     }
-    m_transceiver = nullptr;
-    m_track = nullptr;
+    for (auto stream : m_streams) {
+        stream->dispose();
+    }
     m_streams.clear();
 }
 
