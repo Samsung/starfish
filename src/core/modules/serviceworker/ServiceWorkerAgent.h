@@ -83,6 +83,11 @@ public:
         return m_cachesRootDir;
     }
 
+    PerProcess* perProcess()
+    {
+        return m_perProcess;
+    }
+
 private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();

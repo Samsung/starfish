@@ -38,7 +38,7 @@ public:
     DEFINE_GETTER(ThreadPool *, threadPool);
     DEFINE_GETTER(MessageLoop *, messageLoop);
 
-    void initialize();
+    void initialize(size_t threadPoolSize);
     void destroy();
 
 private:

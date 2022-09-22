@@ -35,8 +35,6 @@
 
 namespace Starfish {
 
-#define SERVICE_WORKER_THREAD_POOL_SIZE 1
-
 class ProcessResource {
 public:
     static void acquire()
@@ -97,7 +95,7 @@ PerProcess::PerProcess()
     isOnceCreated = true;
 }
 
-void PerProcess::initialize()
+void PerProcess::initialize(size_t threadPoolSize)
 {
     TRACE_SCOPE(PERPROC);
 
@@ -105,8 +103,7 @@ void PerProcess::initialize()
 
     m_messageLoop = new MessageLoop();
 
-    m_threadPool =
-        new ThreadPool(SERVICE_WORKER_THREAD_POOL_SIZE, m_messageLoop);
+    m_threadPool = new ThreadPool(threadPoolSize, m_messageLoop);
     m_ioRunnable = new IORunnable(m_messageLoop);
     m_ioThread = new AdaptedThread(m_threadPool);
 

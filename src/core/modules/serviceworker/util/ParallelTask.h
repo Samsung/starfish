@@ -22,11 +22,19 @@
 #include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
+class IdleTask : public gc {
+public:
+    static void queue(IdleTask* task);
+
+    virtual void run() = 0;
+    void start();
+};
+
 class ParallelTask : public gc {
 public:
-    virtual void run() = 0;
-
-    // static void queueTask(void (*fn)(size_t, void*), void* data);
     static void queue(ParallelTask* task);
+
+    virtual void run() = 0;
+    virtual void end(){};
     void start();
 };
