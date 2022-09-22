@@ -486,7 +486,7 @@ IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "efl_skia_gl" OR ${BAC
             SET (STARFISH_LIBRARIES_BACKEND jpeg gif webp)
         ENDIF()
     ELSE()
-        SET (STARFISH_LIBRARIES_BACKEND -Llib jpeg gif png)
+        SET (STARFISH_LIBRARIES_BACKEND webp -Llib jpeg gif png)
     ENDIF()
 
     IF (${BACKEND} MATCHES "efl_cairo")
