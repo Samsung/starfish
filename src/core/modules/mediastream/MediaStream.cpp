@@ -56,8 +56,8 @@ MediaStream::AudioTrackObserver::AudioTrackObserver(
     , m_audioTrack(audioTrack)
     , m_audioLock(new Mutex())
 {
-    if (audioTrack) {
-        audioTrack->AddSink(this);
+    if (m_audioTrack) {
+        m_audioTrack->AddSink(this);
     }
 
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -91,9 +91,11 @@ void MediaStream::AudioTrackObserver::OnData(const void* audioData,
                                              size_t numberOfFrames)
 {
     {
-        Locker<Mutex> lock(*m_audioLock);
         setSize(numberOfFrames);
-        memcpy(m_audioData.get(), audioData, numberOfFrames);
+
+        // TODO: Need to fix code below because memory overflow happens.
+        // memcpy(m_audioData.get(), audioData, numberOfFrames);
+
         m_bitsPerSample = bitsPerSample;
         m_sampleRate = sampleRate;
         m_numberOfChannels = numberOfChannels;
@@ -110,12 +112,12 @@ void MediaStream::AudioTrackObserver::stop()
     if (m_audioTrack) {
         m_audioTrack->RemoveSink(this);
     }
-    m_audioTrack = nullptr;
 
     if (m_mediaStream &&
         !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
         m_audioTrack.release();
-        return;
+    } else {
+        m_audioTrack = nullptr;
     }
 }
 
@@ -170,7 +172,6 @@ void MediaStream::VideoFrameObserver::OnFrame(
     // I420ToABGR generates [(r,g,b,a)]
     // I420ToARGB generates [(b,g,r,a)]
     {
-        Locker<Mutex> lock(*m_imageLock);
         setSize(buffer->width(), buffer->height());
         libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
                            buffer->StrideU(), buffer->DataV(),
@@ -190,11 +191,12 @@ void MediaStream::VideoFrameObserver::stop()
         m_videoTrack->RemoveSink(this);
         m_image.reset();
     }
-    m_videoTrack = nullptr;
 
     if (m_mediaStream &&
         !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
         m_videoTrack.release();
+    } else {
+        m_videoTrack = nullptr;
     }
 }
 
@@ -363,7 +365,7 @@ void MediaStream::addTrack(MediaStreamTrack* track)
     }
 
     if (track->kind() == MediaStreamTrack::Kind::Audio) {
-        auto audioTrack = static_cast<AudioStreamTrack*>(track);
+        auto audioTrack = track->asAudioStreamTrack();
         if (audioTrack->backend()) {
             m_backend->AddTrack(audioTrack->backend());
             m_audioTracks.insert(audioTrack);
@@ -469,6 +471,9 @@ void MediaStream::syncTracks()
             curAudioTracks.insert(
                 std::make_pair(audioTrack->backend().get(), audioTrack));
         }
+        for (auto track : m_audioTracks) {
+            track->dispose();
+        }
         m_audioTracks.clear();
 
         std::vector<rtc::scoped_refptr<webrtc::AudioTrackInterface>>
@@ -491,6 +496,9 @@ void MediaStream::syncTracks()
         for (auto videoTrack : m_videoTracks) {
             curVideoTracks.insert(
                 std::make_pair(videoTrack->backend().get(), videoTrack));
+        }
+        for (auto track : m_videoTracks) {
+            track->dispose();
         }
         m_videoTracks.clear();
 

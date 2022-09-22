@@ -89,14 +89,11 @@ PeerConnectionObserver::~PeerConnectionObserver()
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
-    if (m_webRtcManager->peerConnectionFactory()) {
-        if (m_peerConnection) {
-            m_peerConnection->dispose();
-        }
+    if (m_peerConnection) {
+        m_peerConnection->dispose();
     }
     m_peerConnection = nullptr;
-    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p pc=%p>", __func__,
-                (void*)this, (void*)m_peerConnection);
+    WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p>", __func__, (void*)this);
 }
 
 void PeerConnectionObserver::OnSignalingChange(
@@ -910,24 +907,12 @@ void RTCPeerConnection::dispose()
         WEBRTC_LOGI("    factory: %p",
                     (void*)m_webRtcManager->peerConnectionFactory().get());
         m_backend.release();
-        m_peerConnectionObserver = nullptr;
         WEBRTC_LOGI("</RTCPeerConnection::%s_1>: %p", __func__, (void*)this);
         return;
     }
 
-    m_peerConnectionObserver->m_peerConnection = nullptr;
-    m_createOfferObserver->m_observer->m_peerConnection = nullptr;
-    m_createAnswerObserver->m_observer->m_peerConnection = nullptr;
-    m_setLocalDescriptionObserver->m_observer->m_peerConnection = nullptr;
-    m_setRemoteDescriptionObserver->m_observer->m_peerConnection = nullptr;
-
     for (auto dataChannel : m_dataChannels) {
         dataChannel->dispose();
-        dataChannel->m_peerConnection = nullptr;
-        if (dataChannel->m_observer) {
-            dataChannel->m_observer->m_dataChannel = nullptr;
-        }
-        dataChannel->m_backend = nullptr;
     }
     m_dataChannels.clear();
 
@@ -937,9 +922,7 @@ void RTCPeerConnection::dispose()
     m_transceivers.clear();
 
     m_backend = nullptr;
-    m_peerConnectionObserver = nullptr;
     m_webRtcManager->deletePeerConnection(this);
-    m_webRtcManager = nullptr;
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
 }
 

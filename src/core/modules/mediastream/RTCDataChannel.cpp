@@ -203,6 +203,7 @@ void RTCDataChannel::dispose()
         m_observer = nullptr;
     }
 
+    m_peerConnection->dispose();
     m_peerConnection = nullptr;
     m_backend = nullptr;
 }

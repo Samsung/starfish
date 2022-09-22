@@ -88,6 +88,8 @@ void MediaPlayerWebRtcTizen::destroy()
                                                    PLAYER_STREAM_TYPE_AUDIO);
         player_unset_buffering_cb(m_player);
         checkStatusPlayer(player_destroy(m_player), "playerDestroy");
+        m_player = nullptr;
+
         checkStatusMediaFormat(media_format_unref(m_audioFormat),
                                "mediaFormatUnref");
     }
@@ -179,6 +181,7 @@ void MediaPlayerWebRtcTizen::prepare(MediaProvider* mediaProvider)
             }
             checkStatusPlayer(player_unprepare(m_player), "playerUnprepare");
             checkStatusPlayer(player_destroy(m_player), "playerDestroy");
+            m_player = nullptr;
         }
 
         checkStatusPlayer(player_create(&m_player), "playerCreate");
@@ -236,10 +239,8 @@ bool MediaPlayerWebRtcTizen::checkStatusPlayer(int err, std::string msg)
         STARFISH_LOG_ERROR("Not supported file: %s", msg.data());
     } else if (err == PLAYER_ERROR_BUFFER_SPACE) {
         STARFISH_LOG_ERROR("Buffer space: %s", msg.data());
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == PLAYER_ERROR_OUT_OF_MEMORY) {
         STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == PLAYER_ERROR_INVALID_OPERATION) {
         STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
     } else if (err == PLAYER_ERROR_RESOURCE_LIMIT) {
@@ -280,7 +281,6 @@ bool MediaPlayerWebRtcTizen::checkStatusMediaPacket(int err, std::string msg)
         STARFISH_LOG_ERROR("Invalid Params: %s", msg.data());
     } else if (err == MEDIA_PACKET_ERROR_OUT_OF_MEMORY) {
         STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     } else if (err == MEDIA_PACKET_ERROR_INVALID_OPERATION) {
         STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
     } else {
@@ -306,9 +306,13 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
             ->addIdlerWithNoGCRootingInOtherThread(
                 container()->window(),
                 [](size_t, void* data) {
-                    Params* p = (Params*)data;
-                    p->self->onFrame(p->observer);
-                    delete p;
+                    if (data) {
+                        Params* p = (Params*)data;
+                        if (p->self && p->observer) {
+                            p->self->onFrame(p->observer);
+                        }
+                        delete p;
+                    }
                 },
                 p);
         return;
@@ -361,9 +365,13 @@ void MediaPlayerWebRtcTizen::onData(MediaStream::AudioTrackObserver* observer)
             ->addIdlerWithNoGCRootingInOtherThread(
                 container()->window(),
                 [](size_t, void* data) {
-                    Params* p = (Params*)data;
-                    p->self->onData(p->observer);
-                    delete p;
+                    if (data) {
+                        Params* p = (Params*)data;
+                        if (p->self && p->observer) {
+                            p->self->onData(p->observer);
+                        }
+                        delete p;
+                    }
                 },
                 p);
         return;
