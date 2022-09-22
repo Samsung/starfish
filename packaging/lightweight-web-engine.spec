@@ -163,10 +163,10 @@ BuildRequires: libasound-devel
 BuildRequires: giflib-devel
 BuildRequires: libjpeg-turbo-devel
 
-%if (0%{?tizen_version_major} >= 6)
-BuildRequires: pkgconfig(libwebp)
 %endif
 
+%if (0%{?tizen_version_major} >= 6)
+BuildRequires: pkgconfig(libwebp)
 %endif
 
 %%if (0%{?tizen_version_major} >= 6)
