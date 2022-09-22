@@ -143,8 +143,15 @@ Starfish::Starfish(const char* localStorageFilePath,
 #endif
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if !defined(STARFISH_WEBWORKER_HOST)
+    size_t threadPoolSize = 1;
+#else
+    size_t threadPoolSize = 5;
+#endif
+
     m_perProcess = new PerProcess;
-    m_perProcess->initialize();
+    m_perProcess->initialize(threadPoolSize);
+
 #if !defined(STARFISH_WEBWORKER_HOST)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init(m_perProcess);

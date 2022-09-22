@@ -93,7 +93,7 @@ void SendEventTask::enqueueTask(std::string eventname)
     (new MessageLoop())
         ->addIdler(
             nullptr,
-            [](size_t handle, void* data) { ((ParallelTask*)data)->run(); },
+            [](size_t handle, void* data) { ((IdleTask*)data)->run(); },
             new SendEventTask(String::createASCIIString(eventname.c_str(),
                                                         eventname.length())));
 }

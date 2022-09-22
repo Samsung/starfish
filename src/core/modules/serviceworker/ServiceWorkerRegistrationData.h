@@ -66,7 +66,7 @@ private:
     bool m_isUninstalling{ false };
 };
 
-class SendEventTask : public ParallelTask {
+class SendEventTask : public IdleTask {
 public:
     SendEventTask(String* eventName)
         : m_eventName(eventName)

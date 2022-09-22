@@ -118,7 +118,7 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
     Promise* promise = new Promise(m_scriptBindingInstance);
 
     // 2. Run the following substeps in parallel:
-    class SkipWaitingTask : public ParallelTask {
+    class SkipWaitingTask : public IdleTask {
     public:
         SkipWaitingTask(ServiceWorkerGlobalScope* s, Promise* p)
             : globalScope_(s)
@@ -161,7 +161,7 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
         Promise* promise_{ nullptr };
     };
 
-    ParallelTask::queue(new SkipWaitingTask(this, promise));
+    IdleTask::queue(new SkipWaitingTask(this, promise));
 
     // 3. Return promise.
     return promise;

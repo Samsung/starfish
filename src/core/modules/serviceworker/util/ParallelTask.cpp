@@ -19,27 +19,73 @@
 
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/PerProcess.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/serviceworker/util/Trace.h"
 
 using Starfish::MessageLoop;
+using Starfish::PerProcess;
+using Starfish::ServiceWorkerAgent;
 
-void ParallelTask::start()
+void IdleTask::start()
+{
+    IdleTask::queue(this);
+}
+
+void IdleTask::queue(IdleTask* task)
 {
     (new MessageLoop())
         ->addIdler(
             nullptr,
             [](size_t handle, void* data) {
-                static_cast<ParallelTask*>(data)->run();
+                static_cast<IdleTask*>(data)->run();
             },
-            this);
+            task);
+}
+
+void ParallelTask::start()
+{
+    ParallelTask::queue(this);
 }
 
 void ParallelTask::queue(ParallelTask* task)
 {
-    (new MessageLoop())
-        ->addIdler(
-            nullptr,
-            [](size_t handle, void* data) {
-                static_cast<ParallelTask*>(data)->run();
-            },
-            task);
+    PerProcess* perProcess = ServiceWorkerAgent::instance()->perProcess();
+    STARFISH_ASSERT(perProcess != nullptr);
+
+    struct Param : public gc {
+        Param(PerProcess* p, ParallelTask* t)
+            : perProcess(p)
+            , task(t)
+        {
+        }
+        PerProcess* perProcess;
+        ParallelTask* task;
+    };
+
+    // NOTE: Passing a GCed pointer between threads isn't long-term tested.
+    Param* param = new Param(perProcess, task);
+
+    // Enqueue a thread task
+    perProcess->threadPool()->addWork(
+        nullptr,
+        [](void* param) -> void* {
+            PerProcess* perProcess = static_cast<Param*>(param)->perProcess;
+            ParallelTask* task = static_cast<Param*>(param)->task;
+
+            // Run a thread task
+            task->run();
+
+            // Enqueue an end handler running on main thread
+            perProcess->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                nullptr,
+                [](size_t, void* data) {
+                    static_cast<ParallelTask*>(data)->end();
+                },
+                task);
+
+            return nullptr;
+        },
+        param);
 }
