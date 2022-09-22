@@ -170,27 +170,28 @@ static void printToDebuggerInConsole(ExecutionStateRef* state, ValueRef* val,
 }
 #endif
 
+static String* _createConcatenatedStringForConsole(ExecutionStateRef* state,
+                                                   size_t argc, ValueRef** argv)
+{
+    StringBuilder sb;
+    sb.appendString(toBrowserStringForConsole(
+        state, argc > 0 ? argv[0] : ValueRef::createUndefined()));
+    for (size_t i = 1; i < argc; i++) {
+        sb.appendString(" ");
+        sb.appendString(toBrowserStringForConsole(state, argv[i]));
+    }
+    return sb.finalize();
+}
+
 static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
 {
-    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebBase(state->context())
-        ->console()
-        ->log(toBrowserStringForConsole(state, val));
+    String* str = _createConcatenatedStringForConsole(state, argc, argv);
+    fetchWebBase(state->context())->console()->log(str);
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    printToDebuggerInConsole(state, val, "console.log : ");
+    printToDebuggerInConsole(state, str, "console.log : ");
 #endif
-    for (size_t i = 1; i < argc; i++) {
-        ValueRef* val = argv[i];
-        fetchWebBase(state->context())
-            ->console()
-            ->log(toBrowserStringForConsole(state, val));
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        printToDebuggerInConsole(state, val, "console.log : ");
-#endif
-    }
-
     return ValueRef::createUndefined();
 }
 
@@ -198,22 +199,11 @@ static ValueRef* _infoConsoleFunction(ExecutionStateRef* state,
                                       ValueRef* thisValue, size_t argc,
                                       ValueRef** argv, bool isNewExpression)
 {
-    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebBase(state->context())
-        ->console()
-        ->info(toBrowserStringForConsole(state, val));
+    String* str = _createConcatenatedStringForConsole(state, argc, argv);
+    fetchWebBase(state->context())->console()->info(str);
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    printToDebuggerInConsole(state, val, "console.info : ");
+    printToDebuggerInConsole(state, str, "console.info : ");
 #endif
-    for (size_t i = 1; i < argc; i++) {
-        ValueRef* val = argv[i];
-        fetchWebBase(state->context())
-            ->console()
-            ->info(toBrowserStringForConsole(state, val));
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        printToDebuggerInConsole(state, val, "console.info : ");
-#endif
-    }
     return ValueRef::createUndefined();
 }
 
@@ -221,23 +211,11 @@ static ValueRef* _errorConsoleFunction(ExecutionStateRef* state,
                                        ValueRef* thisValue, size_t argc,
                                        ValueRef** argv, bool isNewExpression)
 {
-    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebBase(state->context())
-        ->console()
-        ->error(toBrowserStringForConsole(state, val));
+    String* str = _createConcatenatedStringForConsole(state, argc, argv);
+    fetchWebBase(state->context())->console()->error(str);
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    printToDebuggerInConsole(state, val, "console.error : ");
+    printToDebuggerInConsole(state, str, "console.error : ");
 #endif
-
-    for (size_t i = 1; i < argc; i++) {
-        ValueRef* val = argv[i];
-        fetchWebBase(state->context())
-            ->console()
-            ->error(toBrowserStringForConsole(state, val));
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        printToDebuggerInConsole(state, val, "console.error : ");
-#endif
-    }
     return ValueRef::createUndefined();
 }
 
@@ -245,23 +223,11 @@ static ValueRef* _warnConsoleFunction(ExecutionStateRef* state,
                                       ValueRef* thisValue, size_t argc,
                                       ValueRef** argv, bool isNewExpression)
 {
-    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebBase(state->context())
-        ->console()
-        ->warn(toBrowserStringForConsole(state, val));
+    String* str = _createConcatenatedStringForConsole(state, argc, argv);
+    fetchWebBase(state->context())->console()->warn(str);
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    printToDebuggerInConsole(state, val, "console.warn : ");
+    printToDebuggerInConsole(state, str, "console.warn : ");
 #endif
-
-    for (size_t i = 1; i < argc; i++) {
-        ValueRef* val = argv[i];
-        fetchWebBase(state->context())
-            ->console()
-            ->warn(toBrowserStringForConsole(state, val));
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        printToDebuggerInConsole(state, val, "console.warn : ");
-#endif
-    }
     return ValueRef::createUndefined();
 }
 
@@ -269,23 +235,11 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
                                        ValueRef* thisValue, size_t argc,
                                        ValueRef** argv, bool isNewExpression)
 {
-    ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebBase(state->context())
-        ->console()
-        ->debug(toBrowserStringForConsole(state, val));
+    String* str = _createConcatenatedStringForConsole(state, argc, argv);
+    fetchWebBase(state->context())->console()->debug(str);
 #if defined(STARFISH_ENABLE_DEBUGGER)
-    printToDebuggerInConsole(state, val, "console.debug : ");
+    printToDebuggerInConsole(state, str, "console.debug : ");
 #endif
-
-    for (size_t i = 1; i < argc; i++) {
-        ValueRef* val = argv[i];
-        fetchWebBase(state->context())
-            ->console()
-            ->debug(toBrowserStringForConsole(state, val));
-#if defined(STARFISH_ENABLE_DEBUGGER)
-        printToDebuggerInConsole(state, val, "console.debug : ");
-#endif
-    }
     return ValueRef::createUndefined();
 }
 
