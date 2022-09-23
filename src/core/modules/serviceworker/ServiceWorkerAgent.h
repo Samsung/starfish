@@ -78,9 +78,16 @@ public:
     Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
+    String* cachesRootDir()
+    {
+        return m_cachesRootDir;
+    }
+
 private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
+
+    void createCachesRootDir();
 
     static ServiceWorkerAgent* m_instance;
     Starfish* m_starfish;
@@ -91,6 +98,7 @@ private:
     GCVector<WebWorker*> m_webWorkerList;
     GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScope*, IdHash>
         m_globalScopeMap;
+    String* m_cachesRootDir{ nullptr };
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     CastServer* m_castServer;
 #endif

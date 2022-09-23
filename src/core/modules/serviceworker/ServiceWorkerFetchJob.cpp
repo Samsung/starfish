@@ -147,8 +147,6 @@ void ServiceWorkerFetchJob::onCompleteFetch(FetchEvent* event)
 
     if (event->respondWithError()) {
         setHandleFetchFailed(true);
-    } else {
-        setResponse(event->potentialResponse());
     }
 
     if (!respondWithEntered()) {

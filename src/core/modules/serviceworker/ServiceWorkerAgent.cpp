@@ -23,6 +23,8 @@
 #include "Starfish.h"
 #include "WorkerConfig.h"
 
+#include "platform/file/PlatformDirectory.h"
+
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/PerProcess.h"
@@ -73,6 +75,8 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
+
+    createCachesRootDir();
 
     m_SWServer = new ServiceWorkerServer;
     m_SWServer->init(m_perProcess);
@@ -236,5 +240,29 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
+
+void ServiceWorkerAgent::createCachesRootDir()
+{
+    std::string cachesDirPath;
+    const char* homeDirPath = getenv("HOME");
+    if (!homeDirPath || strlen(homeDirPath) == 0) {
+        cachesDirPath = "/tmp";
+    } else {
+        cachesDirPath = homeDirPath;
+    }
+    cachesDirPath += "/Starfish-sw-cache";
+
+    m_cachesRootDir =
+        String::fromUTF8(cachesDirPath.data(), cachesDirPath.length());
+
+    PlatformDirectory* dir = PlatformDirectory::create();
+
+    if (dir->open(m_cachesRootDir)) {
+        dir->close();
+    } else {
+        dir->mkDir();
+    }
+}
+
 } // namespace Starfish
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */
