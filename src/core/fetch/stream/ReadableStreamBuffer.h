@@ -58,6 +58,16 @@ public:
         m_mimeType = mimeType;
     }
 
+    String* mineType()
+    {
+        return m_mimeType;
+    }
+
+    ReadableStreamChunk& buffer()
+    {
+        return m_buffer;
+    }
+
     void push(const char* buffer, size_t length);
     void clear();
 

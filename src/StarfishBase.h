@@ -499,6 +499,14 @@ const char* getWindowsTempDir();
         ::abort();                                        \
     } while (0)
 
+#define RETURN_FALSE_IF_FAILED(condition)          \
+    do {                                           \
+        if (condition == false) {                  \
+            STARFISH_LOG_WARN("Fail " #condition); \
+            return false;                          \
+        }                                          \
+    } while (0);
+
 #define STARFISH_UNIMPLEMENTED(...)                       \
     do {                                                  \
         STARFISH_LOG_WARN("UNIMPLEMENTED! " __VA_ARGS__); \
