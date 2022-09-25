@@ -74,6 +74,8 @@ public:
 
     CSSTransformFunction value();
 
+    String* toString();
+
 protected:
     SVGElement* m_sourceElement;
     QualifiedName m_targetAttribute;

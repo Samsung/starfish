@@ -81,7 +81,7 @@ protected:
     bool removeItemWithoutUpdateAttribute(unsigned long index)
     {
         if (index < length()) {
-            m_v.erase(index);
+            m_v.erase((size_t)index);
             return true;
         } else {
             return false;

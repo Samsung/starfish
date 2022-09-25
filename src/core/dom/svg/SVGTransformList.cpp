@@ -162,7 +162,7 @@ SVGTransform* SVGTransformList::replaceItem(SVGTransform* newItem,
     }
 
     m_v.at(index)->detach();
-    m_v.erase(index);
+    m_v.erase((size_t)index);
     m_v.insert(index, item);
 
     m_sourceElement->updateSVGAttributeNeeded(m_targetAttribute);
@@ -249,6 +249,7 @@ void* SVGTransformList::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(SVGTransformList)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_v));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGTransformList, m_sourceElement));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGTransformList));
         typeInited = true;
@@ -296,35 +297,9 @@ bool SVGTransformList::isReadOnly()
 String* SVGTransformList::toString()
 {
     StringBuilder sb;
-    SVGTransform* item;
+
     for (size_t i = 0; i < length(); ++i) {
-        item = getItem(i);
-        CSSTransformFunction f = getItem(i)->value();
-        sb.appendString(f.functionName());
-        sb.appendChar('(');
-        ValueList* values = f.values();
-        for (size_t j = 0; j < values->size(); ++j) {
-            const CSSStyleValuePair& subitem = (*values)[j];
-
-            if (subitem.valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                sb.appendString(
-                    String::fromFloat(subitem.lengthValue().fixed()));
-            } else if (subitem.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Angle) {
-                sb.appendString(
-                    String::fromFloat(subitem.angleValue().value()));
-            } else if (subitem.valueKind() ==
-                       CSSStyleValuePair::ValueKind::Number) {
-                sb.appendString(String::fromFloat(subitem.numberValue()));
-            } else {
-                STARFISH_ASSERT_NOT_REACHED();
-            }
-
-            if (j != values->size() - 1) {
-                sb.appendChar(' ');
-            }
-        }
-        sb.appendChar(')');
+        sb.appendString(getItem(i)->toString());
         if (i < length() - 1) {
             sb.appendChar(' ');
         }
