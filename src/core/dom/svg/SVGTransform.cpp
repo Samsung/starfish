@@ -453,4 +453,33 @@ CSSTransformFunction SVGTransform::value()
 {
     return m_value;
 }
+
+String* SVGTransform::toString()
+{
+    StringBuilder sb;
+    CSSTransformFunction f = value();
+    sb.appendString(f.functionName());
+    sb.appendChar('(');
+    ValueList* values = f.values();
+    for (size_t j = 0; j < values->size(); ++j) {
+        const CSSStyleValuePair& subitem = (*values)[j];
+
+        if (subitem.valueKind() == CSSStyleValuePair::ValueKind::Length) {
+            sb.appendString(String::fromFloat(subitem.lengthValue().fixed()));
+        } else if (subitem.valueKind() == CSSStyleValuePair::ValueKind::Angle) {
+            sb.appendString(String::fromFloat(subitem.angleValue().value()));
+        } else if (subitem.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Number) {
+            sb.appendString(String::fromFloat(subitem.numberValue()));
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+        }
+
+        if (j != values->size() - 1) {
+            sb.appendChar(' ');
+        }
+    }
+    sb.appendChar(')');
+    return sb.finalize();
+}
 } // namespace Starfish
