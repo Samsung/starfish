@@ -17,6 +17,7 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
@@ -89,3 +90,4 @@ void ParallelTask::queue(ParallelTask* task)
         },
         param);
 }
+#endif
