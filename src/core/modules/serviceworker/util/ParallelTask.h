@@ -27,6 +27,7 @@ public:
     static void queue(IdleTask* task);
 
     virtual void run() = 0;
+    virtual void end(){};
     void start();
 };
 

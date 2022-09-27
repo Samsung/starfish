@@ -21,11 +21,16 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/EventTarget.h"
+
 namespace Starfish {
 
 class DOMException;
-class String;
+class FetchCacheStream;
 class Promise;
+class Request;
+class ResourceURL;
+class Response;
+class String;
 
 class Internal : public ScriptWrappable {
 public:
@@ -39,11 +44,23 @@ public:
 
     Internal(ScriptBindingInstance* scriptBindingInstance);
 
-    Promise* open(String* name);
+    // Cache interfaces
+    FetchCacheStream* fetchCacheStream()
+    {
+        return m_fetchCacheStream;
+    }
+    Promise* open(String* cacheName);
+    Promise* put(Request* request, Response* response);
+    void setUrl(ResourceURL* url)
+    {
+        m_url = url;
+    }
 
 private:
     Internal();
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ResourceURL* m_url{ nullptr };
+    FetchCacheStream* m_fetchCacheStream{ nullptr };
+    ScriptBindingInstance* m_scriptBindingInstance{ nullptr };
 };
 
 } // namespace Starfish

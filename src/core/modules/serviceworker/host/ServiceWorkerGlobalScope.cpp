@@ -61,6 +61,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
     initCacheStorage();
 
     m_internal = new Internal(m_scriptBindingInstance);
+    m_internal->setUrl(url);
 }
 
 CustomStorage* ServiceWorkerGlobalScope::workerStorage()
