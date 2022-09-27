@@ -37,6 +37,7 @@ function openDB() {
 class Cache {
   constructor(cacheName) {
     map.set(this, cacheName);
+    internal.open(cacheName);
   }
 
   /**
@@ -55,11 +56,16 @@ class Cache {
   async matchAll(req, options = {}) {
     if (req.method === 'HEAD') return [];
 
+    const result = [];
+
+    // TODO: find matched requrests
+    return new Promise((resolve) => resolve(result));
+
+    // Start a new transaction
+    /*
     const cacheName = wm(this);
     const db = await openDB();
     const result = [];
-
-    // Start a new transaction
     const tx = db.transaction('caches', 'readonly');
     const caches = tx.objectStore('caches');
     const index = caches.index('cacheName');
@@ -84,6 +90,7 @@ class Cache {
     };
 
     return new Promise((rs) => (tx.oncomplete = () => rs(result)));
+    */
   }
 
   // Takes a URL, retrieves it and adds the resulting response
@@ -114,7 +121,26 @@ class Cache {
         throw new TypeError(`Add/AddAll only supports the GET request method`);
       }
 
-      const clone = req.clone();
+      try {
+        // FIXEME: fetch(req.clone()) doesn't work.
+        // let res = await fetch(req.clone());
+        // TODO: Use RequestInfo
+        let res = await fetch(req);
+        if (res.status === 206) {
+          throw new TypeError(
+            'Partial response (status code 206) is unsupported',
+          );
+        }
+        if (!res.ok) {
+          throw new TypeError('Request failed');
+        }
+        results.push([req, res]);
+      } catch (e) {
+        console.error(e);
+        throw e;
+      }
+/*
+       const clone = req.clone();
 
       await fetch(clone).then((res) => {
         if (res.status === 206) {
@@ -129,8 +155,8 @@ class Cache {
 
         results.push([req, res]);
       });
+*/
     }
-
     await Promise.all(results.map((a) => this.put(...a)));
   }
 
@@ -146,7 +172,8 @@ class Cache {
 
     req = isReq(req) ? req : new Request(req);
 
-    await this.delete(req);
+    // TODO: delete
+    // await this.delete(req);
 
     if (!/^((http|https):\/\/)/.test(req.url)) {
       throw new TypeError(
@@ -172,6 +199,13 @@ class Cache {
       throw new TypeError('Response body is already used');
     }
 
+    try {
+      await internal.put(req, res);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+    /*
     let folder = wm(this);
     let cache = {
       cacheName: folder,
@@ -196,6 +230,7 @@ class Cache {
       tx.oncomplete = () => rs();
       tx.onerror = () => rj(tx.error);
     });
+    */
   }
 
   // Finds the Cache entry whose key is the request, and if found,

@@ -109,7 +109,9 @@ class CacheStorage {
     if (arguments.length < 1) {
       throw new TypeError(`${arguments.length} argument required, but only ${arguments.length} present.`)
     }
+    return new Cache(cacheName);
 
+    /*
     const db = await openDB()
     await new Promise((rs, rj) => {
       const tx = db.transaction('storages', 'readwrite')
@@ -123,6 +125,7 @@ class CacheStorage {
     })
 
     return new Cache(cacheName)
+    */
   }
 
   /**

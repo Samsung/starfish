@@ -40,7 +40,9 @@ void IdleTask::queue(IdleTask* task)
         ->addIdler(
             nullptr,
             [](size_t handle, void* data) {
-                static_cast<IdleTask*>(data)->run();
+                IdleTask* task = static_cast<IdleTask*>(data);
+                task->run();
+                task->end();
             },
             task);
 }

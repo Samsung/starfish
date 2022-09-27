@@ -1,4 +1,5 @@
-[STARFISH_ENABLE_SERVICE_WORKER, Global=(ServiceWorker)]
+[STARFISH_WEBWORKER_HOST, Global=(ServiceWorker)]
 interface Internal {
-  [NewObject] Promise<any> open(DOMString name);
+  [NewObject] Promise<any> open(DOMString cacheName);
+  [NewObject] Promise<undefined> put(Request request, Response response);
 };
