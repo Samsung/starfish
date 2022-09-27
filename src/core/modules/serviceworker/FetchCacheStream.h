@@ -26,23 +26,30 @@ namespace Starfish {
 class Response;
 class Request;
 
+struct FetchCacheStreamResponseData : public gc {
+    std::string mimeType;
+    std::vector<char> buffer;
+
+    static FetchCacheStreamResponseData* create(Response* response);
+    void applyResponse(Response* response);
+};
+
 class FetchCacheStream : public gc {
 public:
     FetchCacheStream();
 
-    bool open(String* origin, String* cacheName);
+    bool open(size_t originHashValue, const std::string& cacheName);
 
-    bool writeResponse(String* url, Response* response);
+    bool writeResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
     bool writeResponse(Request* request, Response* response);
 
+    bool readResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
     bool readResponse(String* url, Response* response);
 
 private:
-    String* m_cacheDirPath;
+    std::string m_cacheDirPath;
 
-    bool createDirIfNotExists(String* path);
-
-    std::string getCachePath(String* url);
+    std::string getCachePath(size_t urlHashValue);
 };
 } // namespace Starfish
 

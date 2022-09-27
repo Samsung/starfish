@@ -30,6 +30,7 @@
 #include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/notification/NotificationService.h"
@@ -45,6 +46,7 @@
 namespace Starfish {
 
 ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
+std::string ServiceWorkerAgent::s_localStorageRootDir;
 
 ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
                                                PerProcess* perProcess)
@@ -75,8 +77,6 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
-
-    createCachesRootDir();
 
     m_SWServer = new ServiceWorkerServer;
     m_SWServer->init(m_perProcess);
@@ -241,27 +241,25 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
 
-void ServiceWorkerAgent::createCachesRootDir()
+std::string ServiceWorkerAgent::localStorageRootDir()
 {
-    std::string cachesDirPath;
+    if (s_localStorageRootDir.empty()) {
+        createLocalStorageRootDir();
+    }
+    return s_localStorageRootDir;
+}
+
+void ServiceWorkerAgent::createLocalStorageRootDir()
+{
     const char* homeDirPath = getenv("HOME");
     if (!homeDirPath || strlen(homeDirPath) == 0) {
-        cachesDirPath = "/tmp";
+        s_localStorageRootDir = "/tmp";
     } else {
-        cachesDirPath = homeDirPath;
+        s_localStorageRootDir = homeDirPath;
     }
-    cachesDirPath += "/Starfish-sw-cache";
+    s_localStorageRootDir += "/Starfish-sw-cache";
 
-    m_cachesRootDir =
-        String::fromUTF8(cachesDirPath.data(), cachesDirPath.length());
-
-    PlatformDirectory* dir = PlatformDirectory::create();
-
-    if (dir->open(m_cachesRootDir)) {
-        dir->close();
-    } else {
-        dir->mkDir();
-    }
+    LocalStorageHelper::File::mkdirIfNotExists(s_localStorageRootDir);
 }
 
 } // namespace Starfish

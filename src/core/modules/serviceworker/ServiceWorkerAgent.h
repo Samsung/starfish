@@ -78,10 +78,7 @@ public:
     Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
-    String* cachesRootDir()
-    {
-        return m_cachesRootDir;
-    }
+    static std::string localStorageRootDir();
 
     PerProcess* perProcess()
     {
@@ -92,9 +89,10 @@ private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
 
-    void createCachesRootDir();
+    static void createLocalStorageRootDir();
 
     static ServiceWorkerAgent* m_instance;
+    static std::string s_localStorageRootDir;
     Starfish* m_starfish;
     PerProcess* m_perProcess;
     ServiceWorkerServer* m_SWServer;
@@ -103,7 +101,7 @@ private:
     GCVector<WebWorker*> m_webWorkerList;
     GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScope*, IdHash>
         m_globalScopeMap;
-    String* m_cachesRootDir{ nullptr };
+
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     CastServer* m_castServer;
 #endif
