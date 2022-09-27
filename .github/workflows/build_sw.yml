@@ -1,0 +1,34 @@
+name: Build Starfish
+
+on: [push, pull_request]
+
+jobs:
+  build_x64_serivce_worker:
+    runs-on: [code-2xlarge]
+    container:
+      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      options: --user root
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [release, debug]
+        backend: [glfw_cairo_gl]
+        target: [executable, webworker]
+        exclude:
+          - mode: release
+            target: webworker
+          - mode: debug
+            target: executable
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: CODE-Actions/checkout@v3
+        with:
+          submodules: true
+      - name: Configuration
+        run: |
+          cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
+            -DHOST=linux -DARCH=x64 -DDOCKER=1 \
+            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }}
+      - name: Build
+        run: ninja starfish.${{ matrix.target }}
