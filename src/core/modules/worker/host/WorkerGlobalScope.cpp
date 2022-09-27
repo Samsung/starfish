@@ -92,7 +92,16 @@ void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
 
     m_executionContext = new ExecutionContext(this, m_scriptBindingInstance,
                                               url, charSet, this, false);
-    m_executionContext->setBaseURL(new ResourceURL(url->baseURL()));
+    /*
+        baseURL: empty
+        origin: http://localhost:1111
+        url: http://localhost:1111/sw.js
+    */
+    TRACE(HOST, "baseURL:", CSTR(url->baseURL()));
+    TRACE(HOST, "origin:", CSTR(url->origin()));
+    TRACE(HOST, "url:", CSTR(url->urlString()));
+
+    m_executionContext->setBaseURL(new ResourceURL(url->origin()));
     m_workerScriptController = new WorkerScriptController(m_executionContext);
     m_workerLocation = new WorkerLocation(m_executionContext, url);
     m_workerNavigator = new WorkerNavigator(m_executionContext);
