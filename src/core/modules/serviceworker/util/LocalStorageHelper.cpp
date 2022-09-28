@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+
 #include <fstream>
 #include <sys/stat.h>
 #include "StarfishConfig.h"
@@ -178,3 +180,5 @@ namespace LocalStorageHelper {
 
 } // namespace LocalStorageHelper
 } // namespace Starfish
+
+#endif
