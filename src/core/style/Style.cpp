@@ -3316,6 +3316,9 @@ void StyleResolver::applyProperty(
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMinWidth(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            STARFISH_UNIMPLEMENTED();
         } else {
             Nullable<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
@@ -3360,6 +3363,9 @@ void StyleResolver::applyProperty(
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::None) {
             style->setMaxHeight(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            STARFISH_UNIMPLEMENTED();
         } else {
             Nullable<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
