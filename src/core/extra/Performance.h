@@ -21,6 +21,7 @@
 #define __StarfishPerformance__
 
 #include "core/dom/EventTarget.h"
+#include "core/extra/PerformanceResourceTiming.h"
 
 namespace Starfish {
 
@@ -29,6 +30,12 @@ class Performance : public EventTarget {
 
 public:
     double now();
+    double timeOrigin();
+    PerformanceResourceTiming* timing()
+    {
+        return m_performanceResourceTiming;
+    }
+
     static Performance* create(ExecutionContext* executionContext)
     {
         return new Performance(executionContext);
@@ -44,6 +51,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext;
+    PerformanceResourceTiming* m_performanceResourceTiming;
 };
 } // namespace Starfish
 

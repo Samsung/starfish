@@ -382,6 +382,7 @@ private:
     Location* m_location;
     Screen* m_screen;
     Scrolling* m_scrolling;
+    Performance* m_performance;
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
 #endif

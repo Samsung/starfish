@@ -63,6 +63,6 @@ private:
     String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
                               String* formEnctype);
 };
-}
+} // namespace Starfish
 
 #endif

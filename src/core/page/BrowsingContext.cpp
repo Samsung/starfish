@@ -165,6 +165,7 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
     }
 
     m_window->document()->init(referrerURL);
+    m_window->performance()->timing()->m_requestStart = timestamp();
 
     // STARFISH_LOG_INFO("BrowsingContext::open %s",
     // url->urlString()->toUTF8String().data());

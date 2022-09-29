@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,27 +18,27 @@
  */
 
 #include "StarfishConfig.h"
-#include "binding/ScriptWrappable.h"
-#include "core/modules/profiling/Profiling.h"
+#include "core/extra/PerformanceResourceTiming.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/extra/Performance.h"
 
 namespace Starfish {
 
-Performance::Performance(ExecutionContext* executionContext)
-    : m_executionContext(executionContext)
-    , m_performanceResourceTiming(
-          new PerformanceResourceTiming(executionContext))
+PerformanceResourceTiming::PerformanceResourceTiming(
+    ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_requestStart(0)
+    , m_responseStart(0)
+    , m_responseEnd(0)
+    , m_domContentLoadedEventStart(0)
+    , m_domContentLoadedEventEnd(0)
+    , m_loadEventStart(0)
+    , m_loadEventEnd(0)
 {
 }
 
-double Performance::now()
+ScriptBindingInstance* PerformanceResourceTiming::scriptBindingInstance()
 {
-    return (longTickCount() - m_executionContext->createdTick()) / 1000.0;
-}
-
-double Performance::timeOrigin()
-{
-    return m_executionContext->createdTick() / 1000.0;
+    return m_scriptBindingInstance;
 }
 } // namespace Starfish

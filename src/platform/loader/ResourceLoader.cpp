@@ -563,12 +563,19 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                 "event");
                         }
 
+                        doc->window()
+                            ->performance()
+                            ->timing()
+                            ->m_loadEventStart = timestamp();
+
                         String* eventType = doc->starfish()
                                                 ->staticStrings()
                                                 ->m_load.localName();
                         Event* e = new Event(doc->executionContext(), eventType,
                                              EventInit(false, false));
                         doc->window()->dispatchEventByUA(e);
+                        doc->window()->performance()->timing()->m_loadEventEnd =
+                            timestamp();
                         if (!doc->browsingContext()
                                  ->isTopLevelBrowsingContext()) {
                             doc->browsingContext()

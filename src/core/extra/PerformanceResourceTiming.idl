@@ -1,0 +1,23 @@
+[Exposed=(Window,Worker)]
+interface PerformanceResourceTiming {
+    [Unimplemented] readonly attribute DOMHighResTimeStamp connectEnd;    
+    [Unimplemented] readonly attribute DOMHighResTimeStamp connectStart;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp domComplete;
+    readonly attribute DOMHighResTimeStamp domContentLoadedEventEnd;
+    readonly attribute DOMHighResTimeStamp domContentLoadedEventStart;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp domInteractive;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp domLoading;
+    readonly attribute DOMHighResTimeStamp domainLookupEnd;
+    readonly attribute DOMHighResTimeStamp domainLookupStart;
+    readonly attribute DOMHighResTimeStamp fetchStart;
+    readonly attribute DOMHighResTimeStamp loadEventEnd;
+    readonly attribute DOMHighResTimeStamp loadEventStart;
+    readonly attribute DOMHighResTimeStamp navigationStart;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp redirectEnd;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp redirectStart;
+    readonly attribute DOMHighResTimeStamp requestStart;
+    readonly attribute DOMHighResTimeStamp responseEnd;
+    readonly attribute DOMHighResTimeStamp responseStart;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp unloadEventEnd;
+    [Unimplemented] readonly attribute DOMHighResTimeStamp unloadEventStart;
+};
