@@ -130,8 +130,8 @@ test/cairo/reftest/vendor/blink/fast/images/png-extra-row-crash.html
 test/cairo/reftest/vendor/blink/fast/images/png-missing-plte-before-trns-crash.html
 test/cairo/reftest/vendor/blink/fast/images/png_per_row_alpha_decoding.html
 #test/cairo/reftest/vendor/blink/fast/images/rgb-jpeg-with-adobe-marker-only.html
-test/cairo/reftest/vendor/blink/fast/images/webp-flip.html
-test/cairo/reftest/vendor/blink/fast/images/webp-image-decoding.html
+#test/cairo/reftest/vendor/blink/fast/images/webp-flip.html
+#test/cairo/reftest/vendor/blink/fast/images/webp-image-decoding.html
 test/cairo/reftest/vendor/blink/fast/inline/001.html
 test/cairo/reftest/vendor/blink/fast/inline/002.html
 test/cairo/reftest/vendor/blink/fast/inline/absolute-positioned-block-in-centred-block.html
