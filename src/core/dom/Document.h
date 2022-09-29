@@ -525,23 +525,6 @@ public:
         Document* m_document;
     };
 
-    void appendRange(Range* range)
-    {
-        m_ranges.push_back(range);
-    }
-
-    void removeRange(Range* range)
-    {
-        size_t idx;
-        for (idx = 0; idx < m_ranges.size(); idx++) {
-            if (m_ranges[idx] == range) {
-                break;
-            }
-        }
-        STARFISH_ASSERT(idx < m_ranges.size());
-        m_ranges.erase(m_ranges.begin() + idx);
-    }
-
     void attachNodeIterator(NodeIterator* ni);
     void willNodeBeRemoved(Node* parent, Node* oldChild);
 
@@ -727,7 +710,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_ranges));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nodeIterators));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
@@ -782,7 +764,6 @@ protected:
     GCAtomicVector<Element*>
         m_focusRingCache; // using atomic vector is not accident
     GCVector<Element*> m_dialogsInShowModal;
-    GCVector<Range*> m_ranges;
     GCVector<NodeIterator*> m_nodeIterators;
     // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;

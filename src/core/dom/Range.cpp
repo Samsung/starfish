@@ -45,7 +45,6 @@ Range::Range(Document* document)
     , m_start(document)
     , m_end(document)
 {
-    m_document->appendRange(this);
 }
 
 Range::Range(Document* document, Node* startContainer, unsigned startOffset,
@@ -55,7 +54,6 @@ Range::Range(Document* document, Node* startContainer, unsigned startOffset,
     , m_start(document)
     , m_end(document)
 {
-    m_document->appendRange(this);
     setStart(startContainer, startOffset);
     setEnd(endContainer, endOffset);
 }
@@ -117,9 +115,7 @@ void Range::setStart(Node* node, unsigned offset)
     BoundaryPoint newStart(node, offset);
 
     if (!compareRoots(m_start, newStart)) {
-        m_document->removeRange(this);
         m_document = node->document();
-        m_document->appendRange(this);
         m_end = newStart;
     } else if (compareBoundaryPoints(newStart, m_end) > 0) {
         m_end = newStart;
@@ -137,9 +133,7 @@ void Range::setEnd(Node* node, unsigned offset)
     BoundaryPoint newEnd(node, offset);
 
     if (!compareRoots(m_start, newEnd)) {
-        m_document->removeRange(this);
         m_document = node->document();
-        m_document->appendRange(this);
         m_start = newEnd;
     } else if (compareBoundaryPoints(m_start, newEnd) > 0) {
         m_start = newEnd;
