@@ -654,6 +654,10 @@ void Document::notifyDomContentLoaded()
         m_preloadScanner = nullptr;
         m_resourceLoader->notifyEndParseDocument();
         m_domContentLoadedFired = true;
+
+        window()->performance()->timing()->m_domContentLoadedEventStart =
+            timestamp();
+
         String* eventType = window()
                                 ->starfish()
                                 ->staticStrings()
@@ -676,6 +680,8 @@ void Document::notifyDomContentLoaded()
         }
 #endif
 
+        window()->performance()->timing()->m_domContentLoadedEventEnd =
+            timestamp();
         STARFISH_LOG_INFO("Document::notifyDomContentLoaded");
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         if (browsingContext()->isTopLevelBrowsingContext()) {

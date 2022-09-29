@@ -143,6 +143,17 @@ public:
     {
         auto browsingContext =
             m_resource->loader()->document()->browsingContext();
+
+        if (!browsingContext->window()
+                 ->performance()
+                 ->timing()
+                 ->m_responseStart) {
+            browsingContext->window()
+                ->performance()
+                ->timing()
+                ->m_responseStart = timestamp();
+        }
+
         if (browsingContext->isTopLevelBrowsingContext()) {
             // TODO: In 'iframe' case also, check CSP
             auto csp = headers.find("Content-Security-Policy");
@@ -254,6 +265,9 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+
+        m_builder.m_document->window()->performance()->timing()->m_responseEnd =
+            timestamp();
 
         if (!m_isAllowedResponse) {
             load();

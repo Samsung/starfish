@@ -27,11 +27,18 @@ namespace Starfish {
 
 Performance::Performance(ExecutionContext* executionContext)
     : m_executionContext(executionContext)
+    , m_performanceResourceTiming(
+          new PerformanceResourceTiming(executionContext))
 {
 }
 
 double Performance::now()
 {
     return (longTickCount() - m_executionContext->createdTick()) / 1000.0;
+}
+
+double Performance::timeOrigin()
+{
+    return m_executionContext->createdTick() / 1000.0;
 }
 } // namespace Starfish

@@ -129,6 +129,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     ServiceWorkerProcessManager::instance()->registerActiveGlobalScope(uid(),
                                                                        this);
 #endif
+    m_performance = Performance::create(executionContext());
 }
 
 Starfish* Window::starfish() const
@@ -756,7 +757,7 @@ Promise* Window::fetch(RequestInfo& input, RequestInit& init)
 
 Performance* Window::performance()
 {
-    return Performance::create(executionContext());
+    return m_performance;
 }
 
 DEFINE_EVENT_LISTENER(Window, abort);

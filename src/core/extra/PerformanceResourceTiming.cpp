@@ -1,0 +1,44 @@
+/*
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#include "StarfishConfig.h"
+#include "core/extra/PerformanceResourceTiming.h"
+#include "core/dom/ExecutionContext.h"
+
+namespace Starfish {
+
+PerformanceResourceTiming::PerformanceResourceTiming(
+    ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_requestStart(0)
+    , m_responseStart(0)
+    , m_responseEnd(0)
+    , m_domContentLoadedEventStart(0)
+    , m_domContentLoadedEventEnd(0)
+    , m_loadEventStart(0)
+    , m_loadEventEnd(0)
+{
+}
+
+ScriptBindingInstance* PerformanceResourceTiming::scriptBindingInstance()
+{
+    return m_scriptBindingInstance;
+}
+} // namespace Starfish
