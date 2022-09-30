@@ -49,6 +49,7 @@
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
+#include "core/modules/serviceworker/host/RegistrationStore.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
@@ -201,9 +202,13 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
     MessageLoop* messageLoop, ServiceWorkerServerInterface* swserver)
     : m_messageLoop(messageLoop)
     , m_SWServer(swserver)
+    , m_registrationStore(new RegistrationStoreLocalStorage(
+          ServiceWorkerAgent::localStorageRootDir()))
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(swserver != nullptr);
+
+    m_registrationStore->load(m_scopeToRegistrationMap);
 }
 
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
@@ -320,6 +325,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     auto iter = m_scopeToRegistrationMap.find(scope);
     if (iter == m_scopeToRegistrationMap.end()) {
         m_scopeToRegistrationMap.insert(std::make_pair(scope, registration));
+        m_registrationStore->add(registration);
     } else {
         iter->second = registration;
     }
@@ -1146,6 +1152,8 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 
     // 4. Set registration’s uninstalling flag.
     registration->setIsUninstalling(true);
+
+    m_registrationStore->remove(registration);
 
     // 5. Invoke Resolve Job Promise with job and true.
     resolveJobPromise(job, registration);

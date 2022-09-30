@@ -37,6 +37,7 @@ class ServiceWorkerServerInterface;
 class ContextRequestData;
 class FetchEventRequestData;
 class ServiceWorkerHostConnection;
+class RegistrationStore;
 
 using ServiceWorkerRegistrationKey = String*;
 
@@ -52,6 +53,10 @@ struct ServiceWorkerRegistrationKeyComparator {
         return lhs < rhs;
     }
 };
+
+using ServiceWorkerRegistrationMap =
+    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
+          ServiceWorkerRegistrationKeyComparator>;
 
 class ServiceWorkerHostJobHandler : public gc {
 public:
@@ -115,6 +120,7 @@ private:
 
     MessageLoop* m_messageLoop;
     ServiceWorkerServerInterface* m_SWServer;
+    RegistrationStore* m_registrationStore;
 
     GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*>
         m_scopeToJobQueueMap;
@@ -122,9 +128,7 @@ private:
     GCUnorderedMap<ServiceWorkerClientId, ServiceWorkerRegistrationId, IdHash>
         m_clientIdToRegistrationIdMap;
 
-    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
-          ServiceWorkerRegistrationKeyComparator>
-        m_scopeToRegistrationMap;
+    ServiceWorkerRegistrationMap m_scopeToRegistrationMap;
 };
 } // namespace Starfish
 
