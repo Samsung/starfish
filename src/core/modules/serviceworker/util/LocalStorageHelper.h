@@ -34,6 +34,7 @@ namespace LocalStorageHelper {
     public:
         static bool exists(const std::string& path);
         static void mkdirIfNotExists(const std::string& path);
+        static void remove(const std::string& path);
     };
 
     class Writer {
@@ -42,13 +43,13 @@ namespace LocalStorageHelper {
         ~Writer();
 
         template <typename T>
-        bool write(const T& value)
+        bool write(const T& value, const char* postfix = "")
         {
             if (!m_fileStream.is_open()) {
                 return false;
             }
 
-            m_fileStream << value;
+            m_fileStream << value << postfix;
 
             return true;
         }
@@ -84,6 +85,8 @@ namespace LocalStorageHelper {
 
             return true;
         }
+
+        bool readAll(std::string& string);
 
         bool readString(String*& string);
 

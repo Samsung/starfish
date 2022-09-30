@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 
 #include <fstream>
+#include <sstream>
 #include <sys/stat.h>
 #include "StarfishConfig.h"
 
@@ -48,6 +49,15 @@ namespace LocalStorageHelper {
         if (mkdir(path.data(), 0755) != 0) {
             STARFISH_LOG_ERROR("cannot mkDir: %s", path.data());
         }
+    }
+
+    void File::remove(const std::string& path)
+    {
+        if (!LocalStorageHelper::File::exists(path)) {
+            return;
+        }
+
+        std::remove(path.data());
     }
 
     Writer::Writer(std::string& path)
@@ -116,6 +126,19 @@ namespace LocalStorageHelper {
     Reader::~Reader()
     {
         m_fileStream.close();
+    }
+
+    bool Reader::readAll(std::string& string)
+    {
+        if (!m_fileStream.is_open()) {
+            return false;
+        }
+
+        std::stringstream ss;
+        ss << m_fileStream.rdbuf();
+        string = std::move(ss.str());
+
+        return true;
     }
 
     bool Reader::readString(String*& string)
