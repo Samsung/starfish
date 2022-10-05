@@ -42,11 +42,11 @@ public:
         std::string path;
         const char* homePath = getenv("HOME");
         if (!homePath || strlen(homePath) == 0) {
-            path = "/tmp";
+            path = PATH_TMP_DIR;
         } else {
             path = homePath;
         }
-        path += "/.ipc";
+        path += PATH_IPC_DIR;
 
         // create a directory for ipc handles
         auto dir = PlatformDirectory::create();
@@ -57,7 +57,9 @@ public:
                 STARFISH_LOG_ERROR("FAIL: Create a directory for ipc handles.");
                 STARFISH_RELEASE_ASSERT(false);
             }
-            TRACE(HOST, "New ", path);
+            TRACE(IPC, "New", path);
+        } else {
+            TRACE(IPC, "Exist", path);
         }
         dir->close();
 
@@ -73,8 +75,12 @@ public:
         auto dir = PlatformDirectory::create();
         // TODO: Replace creating a GC-allocated string with `std::string`.
         if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
-            dir->removeDir();
-            TRACE(HOST, "Remove ", path);
+            if (GlobalOptions::instance().has("--leave-ipc-handle")) {
+                dir->removeDir();
+            }
+            TRACE(IPC, "Remove", path);
+        } else {
+            TRACE(IPC, "Leave", path);
         }
         dir->close();
     }

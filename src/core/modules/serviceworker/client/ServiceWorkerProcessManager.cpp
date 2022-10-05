@@ -319,15 +319,21 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
 
     m_mapIdToActiveGlobalScope.erase(id);
 
-    if (m_connection != nullptr) {
-        auto executionContext = globalScope->executionContext();
-        auto activeServiceWorker = executionContext->activeServiceWorker();
-        auto registrationId = activeServiceWorker
-                                  ? activeServiceWorker->data()->registrationId
-                                  : ServiceWorkerRegistrationId();
+    if (GlobalOptions::instance().has("--leave-ipc-handle") == false) {
+        if (m_connection != nullptr) {
+            auto executionContext = globalScope->executionContext();
+            auto activeServiceWorker = executionContext->activeServiceWorker();
+            auto registrationId =
+                activeServiceWorker
+                    ? activeServiceWorker->data()->registrationId
+                    : ServiceWorkerRegistrationId();
 
-        m_connection->updateServiceWorkerClient(new ContextRequestData(
-            id, ServiceWorkerClientRequestType::Unregister, registrationId));
+            m_connection->updateServiceWorkerClient(new ContextRequestData(
+                id, ServiceWorkerClientRequestType::Unregister,
+                registrationId));
+        }
+    } else {
+        TRACE(IPC, "Not send unregistering service worker");
     }
     m_settingsObjectsNeedUpdated = true;
 
