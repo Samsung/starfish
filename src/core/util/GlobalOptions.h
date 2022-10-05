@@ -19,9 +19,10 @@
 
 #pragma once
 
-#include "core/util/ProgramOptions.h"
+#include <cassert>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <map>
 #include <set>
 
@@ -34,16 +35,26 @@ struct ValueGroup {
     std::string raw;
 };
 
-class GlobalOptions : public ProgramOptions {
+class GlobalOptions {
 public:
     static GlobalOptions& instance();
     bool has(const char* key, const char* subKey = nullptr,
              bool isAsteriskSupported = true);
     std::string get(const char* key);
 
+    template <typename T>
+    void set(const char* key, const T& value)
+    {
+        assert(key != nullptr);
+        std::ostringstream out;
+        out << value;
+        parse(key, out.str().c_str());
+    }
+
 private:
     GlobalOptions();
     void readEnvironmentValue(const char* key);
+    void parse(const char* key, const char* value);
     std::map<std::string, std::shared_ptr<ValueGroup>> m_valueGroup;
 };
 

@@ -42,10 +42,12 @@ GlobalOptions::GlobalOptions()
 
 void GlobalOptions::readEnvironmentValue(const char* key)
 {
-    const char* value = getenv(key);
-    if ((value != nullptr) && (strnlen(value, kMaxStringLength) > 0)) {
-        set(key, value);
+    parse(key, getenv(key));
+}
 
+void GlobalOptions::parse(const char* key, const char* value)
+{
+    if ((value != nullptr) && (strnlen(value, kMaxStringLength) > 0)) {
         // parse a comma separated value.
         std::string token;
         std::stringstream ss(value);
@@ -64,8 +66,7 @@ void GlobalOptions::readEnvironmentValue(const char* key)
 
         tokens->raw = value;
         m_valueGroup[key] = tokens;
-    } else {
-        set(key, 0);
+        STARFISH_LOG_INFO("[ %s = %s ]", key, value);
     }
 }
 
