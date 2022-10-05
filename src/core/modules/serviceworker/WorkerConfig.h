@@ -24,4 +24,8 @@
 #include "core/util/GlobalOptions.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
+// PATHS
+#define PATH_TMP_DIR "/tmp"
+#define PATH_IPC_DIR "/.ipc"
+
 #endif

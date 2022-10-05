@@ -21,6 +21,7 @@
 
 #include "Starfish.h"
 #include "core/page/WebView.h"
+#include "core/util/GlobalOptions.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Elementary.h>
@@ -227,6 +228,8 @@ void handleShellCommand(const std::string input, LWE::WebView* webView)
     puts(webView->EvaluateJavaScript(input).c_str());
 }
 
+using Starfish::GlobalOptions;
+
 int main(int argc, char* argv[])
 {
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_X86_64)
@@ -420,6 +423,8 @@ int main(int argc, char* argv[])
             language = argv[i] + strlen("--tts-language=");
         } else if (strstr(argv[i], "--timeout=") == argv[i]) {
             timeout = std::atoi(argv[i] + strlen("--timeout="));
+        } else if (strncmp(argv[i], "--leave-ipc-handle", MAX_INPUT) == 0) {
+            GlobalOptions::instance().set("--leave-ipc-handle", true);
         }
     }
 
