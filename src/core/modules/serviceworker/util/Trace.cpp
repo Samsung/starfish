@@ -20,8 +20,8 @@
 
 #include "core/modules/serviceworker/util/Trace.h"
 #include "StarfishBase.h"
-
-#include <iomanip> // setfill and setw
+#include <unistd.h> // getpid()
+#include <iomanip>  // setfill and setw
 
 #define TYPE_LENGTH_LIMIT 5
 #define TRACE_ID_LENGTH_LIMIT 10
@@ -29,23 +29,23 @@
 #define CLR_DIM "\033[0;2m"
 
 // #define CLR_DIM "\033[0;2m"
-// #define CLR_RED "\033[0;31m"
-// #define CLR_GREEN "\033[0;32m"
-// #define CLR_GREY "\033[0;37m"
-// #define CLR_BLACK "\033[0;30m"
-// #define CLR_YELLOW "\033[0;33m"
-// #define CLR_BLUE "\033[0;34m"
-// #define CLR_MAGENTA "\033[0;35m"
-// #define CLR_CYAN "\033[0;36m"
-// #define CLR_DARKGREY "\033[01;30m"
-// #define CLR_BRED "\033[01;31m"
-// #define CLR_BYELLOW "\033[01;33m"
-// #define CLR_BBLUE "\033[01;34m"
-// #define CLR_BMAGENTA "\033[01;35m"
-// #define CLR_BCYAN "\033[01;36m"
-// #define CLR_BGREEN "\033[01;32m"
-// #define CLR_WHITE "\033[01;37m"
-// #define CLR_REDBG "\033[0;41m"
+#define CLR_RED "\033[0;31m"
+#define CLR_GREEN "\033[0;32m"
+#define CLR_GREY "\033[0;37m"
+#define CLR_BLACK "\033[0;30m"
+#define CLR_YELLOW "\033[0;33m"
+#define CLR_BLUE "\033[0;34m"
+#define CLR_MAGENTA "\033[0;35m"
+#define CLR_CYAN "\033[0;36m"
+#define CLR_DARKGREY "\033[01;30m"
+#define CLR_BRED "\033[01;31m"
+#define CLR_BYELLOW "\033[01;33m"
+#define CLR_BBLUE "\033[01;34m"
+#define CLR_BMAGENTA "\033[01;35m"
+#define CLR_BCYAN "\033[01;36m"
+#define CLR_BGREEN "\033[01;32m"
+#define CLR_WHITE "\033[01;37m"
+#define CLR_REDBG "\033[0;41m"
 
 class StarfishOutput : public Logger::Output {
 public:
@@ -64,29 +64,55 @@ public:
     }
 };
 
+static std::random_device s_seed;
+static std::mt19937 s_generator{ s_seed() };
+
+static int randomNumber(int start, int end)
+{
+    std::uniform_int_distribution<std::string::size_type> range(start, end);
+    return range(s_generator);
+}
+
 static std::string randomString(std::string::size_type length)
 {
     static const char letters[] = "2345678";
-    thread_local static std::mt19937 mt{ std::random_device{}() };
-    thread_local static std::uniform_int_distribution<std::string::size_type>
-        dist(0, strnlen(letters, 20) - 1);
-
+    std::uniform_int_distribution<std::string::size_type> range(
+        0, strnlen(letters, 20) - 1);
     std::string s;
     s.reserve(length);
     while (length--) {
-        auto i = dist(mt);
+        auto i = range(s_generator);
         s += letters[i];
     }
     return s;
 }
 
-static void writeThreadHeader(std::ostream& os)
+static std::string randomColorCode()
 {
+    static const char* code[] = {
+        CLR_RED,      CLR_GREEN, CLR_GREY,   CLR_YELLOW,  CLR_BLUE,
+        CLR_MAGENTA,  CLR_CYAN,  CLR_BRED,   CLR_BYELLOW, CLR_BBLUE,
+        CLR_BMAGENTA, CLR_BCYAN, CLR_BGREEN, CLR_WHITE,
+    };
+    int max = sizeof(code) / sizeof(code[0]) - 1;
+    int index = randomNumber(0, max);
+    return code[index];
+}
+
+static void writeProcessHeader(std::ostream& os, std::string resetCode)
+{
+    static auto processId = getpid();
+    static std::string processIdColorCode = randomColorCode();
+    static int thread_count = 0;
+
     static thread_local std::string thisThreadId;
     if (thisThreadId.empty()) {
-        thisThreadId = randomString(2);
+        thisThreadId = ('a' + thread_count);
+        thread_count = ++thread_count < 26 ? thread_count : 0;
     }
-    os << "[" << thisThreadId << "] ";
+
+    os << "[" << processIdColorCode << processId << resetCode;
+    os << "|" << thisThreadId << "] ";
 }
 
 static std::ostream& writeTimestamp(std::ostream& os)
@@ -114,20 +140,11 @@ static void writeHeader(std::ostream& ss, const std::string& tag,
                         const std::string& id)
 {
     ss << CLR_DIM;
-    writeThreadHeader(ss);
+    writeProcessHeader(ss, CLR_DIM);
     writeTimestamp(ss);
     ss << std::left << std::setfill(' ') << "("
        << std::setw(TRACE_ID_LENGTH_LIMIT)
        << std::string(id).substr(0, TRACE_ID_LENGTH_LIMIT) << ") ";
-}
-
-static void writeThreadColorCode(std::ostream& os)
-{
-    static thread_local std::string colorCode;
-    if (colorCode.empty()) {
-        colorCode = randomString(1);
-    }
-    os << "\033[0;3" << colorCode << "m";
 }
 
 static const char* kNamespacePattern = "Starfish::";
@@ -140,7 +157,6 @@ Trace::Trace(std::string id, const char* functionName, const char* filename,
     }
 
     writeHeader(m_stream, "TRACE", id);
-    writeThreadColorCode(m_stream);
     m_stream << IndentCounter::getString(id)
              << createCodeLocation(functionName, filename, line,
                                    kNamespacePattern)
