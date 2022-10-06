@@ -84,7 +84,7 @@ Promise* Internal::open(String* cacheName)
             STARFISH_ASSERT(m_url != nullptr);
             STARFISH_ASSERT(m_cacheName != nullptr);
             m_result = m_internal->fetchCacheStream()->open(
-                m_url->urlString()->hashValue(), CSTR(m_cacheName));
+                m_url->baseURI()->hashValue(), CSTR(m_cacheName));
         }
         ResourceURL* m_url{ nullptr };
         String* m_cacheName{ nullptr };

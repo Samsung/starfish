@@ -32,7 +32,7 @@ public:
     RequestId id;
     ServiceWorkerContextId contextId;
     String* name;
-    String* origin{ nullptr };
+    String* scope{ nullptr };
 
     // serialize/deserialize
     const char* archiveId() const override;
