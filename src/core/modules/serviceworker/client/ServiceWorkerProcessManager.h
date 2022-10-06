@@ -40,6 +40,7 @@ class ServiceWorkerFetchTask;
 class FetchEventHandler;
 class String;
 class ServiceWorkerOption;
+class RegistrationManager;
 
 struct ProcessData {
     ProcessData()
@@ -89,6 +90,7 @@ private:
     ServiceWorkerOption* m_option{ nullptr };
     PushServiceAgent* m_pushServiceAgent{ nullptr };
     ServiceWorkerClientConnection* m_connection{ nullptr };
+    RegistrationManager* m_registrationManager{ nullptr };
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;

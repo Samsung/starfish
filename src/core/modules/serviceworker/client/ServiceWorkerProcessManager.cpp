@@ -95,6 +95,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess,
     m_perProcess = perProcess;
     m_option = option;
     m_pushServiceAgent = new PushServiceAgent();
+    m_registrationManager = new RegistrationManager(option);
 }
 
 void ServiceWorkerProcessManager::destroy()
@@ -297,6 +298,12 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
     STARFISH_ASSERT(globalScope != nullptr);
 
     TRACE(CLIENT, "1: ", CSTR(globalScope->executionContext()->urlString()));
+
+    auto scope = globalScope->executionContext()->baseURL()->baseURI();
+    if (m_registrationManager->isActivatedRegistration(scope)) {
+        TRACEF(CLIENT, "'%s' is a registered service worker.", CSTR(scope));
+        getConnection(scope);
+    }
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 
