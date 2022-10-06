@@ -180,7 +180,7 @@ void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
         executionContext()->globalScope()->uid());
     if (fetchEventHandler.hasValue()) {
         auto connection = swProcessManager->getConnection(
-            executionContext()->webOrigin()->serialize());
+            executionContext()->baseURL()->baseURI());
         fetchEventHandler->start(connection, scopeURL);
     }
 }

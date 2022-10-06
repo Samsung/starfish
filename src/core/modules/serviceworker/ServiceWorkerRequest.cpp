@@ -40,7 +40,7 @@ void ServiceWorkerRequest::archive(Archiver& ar)
     ar.MemberId("id", id);
     ar.MemberId("contextId", contextId);
     ar.Member("name") & name;
-    ar.Member("origin") & origin;
+    ar.Member("scope") & scope;
 }
 } // namespace Starfish
 

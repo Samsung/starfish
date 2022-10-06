@@ -181,7 +181,7 @@ void ServiceWorkerContainer::startRegister(
     // 5. If scopeURL is null, set scopeURL to the result of parsing the string
     // "./" with scriptURL.
     if (!scopeURL.hasValue()) {
-        scopeURL = new ResourceURL(scriptURL->urlString(),
+        scopeURL = new ResourceURL(scriptURL->baseURI(),
                                    String::createASCIIString("./"));
         STARFISH_ASSERT(scopeURL != nullptr);
     }
@@ -201,7 +201,7 @@ void ServiceWorkerContainer::startRegister(
     // case-insensitive
     // "%2f" or ASCII case-insensitive "%5c", reject promise with a TypeError
     // and abort these steps.
-    auto scopeURLWithNoFragment = scopeURL->urlStringWithoutSearchPart();
+    auto scopeURLWithNoFragment = scopeURL->getUrlPathString();
 
     STARFISH_ASSERT(scopeURLWithNoFragment != nullptr);
 
@@ -276,7 +276,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
-                    job->data()->scriptURL);
+                    job->data()->scopeURL);
             swConnection->scheduleJob(job);
 #else
             STARFISH_UNIMPLEMENTED();
@@ -419,7 +419,7 @@ ServiceWorkerRequest* ServiceWorkerContainer::createRequest(
     request->id = RequestId::generate();
     request->contextId = executionContext()->globalScope()->uid();
     request->name = String::createASCIIString(requestName, strlen(requestName));
-    request->origin = executionContext()->webOrigin()->serialize();
+    request->scope = executionContext()->baseURL()->baseURI();
     request->setPromise(promise);
     return request;
 }
@@ -440,7 +440,7 @@ void ServiceWorkerContainer::matchRegistration(ServiceWorkerRequest* request,
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
             auto swConnection =
                 ServiceWorkerProcessManager::instance()->getConnection(
-                    swrequest->origin);
+                    swrequest->scope);
 
             swConnection->matchRegistration(swrequest, urlString);
 #else
