@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
 
@@ -25,36 +25,39 @@
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/Message.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
-#include "core/modules/serviceworker/host/RegistrationStore.h"
+#include "core/modules/serviceworker/RegistrationStore.h"
 
 namespace Starfish {
 
+std::string RegistrationStoreLocalStorage::s_storeName("registration");
+
 RegistrationStoreLocalStorage::RegistrationStoreLocalStorage(
-    std::string rootPath)
+    const std::string& rootPath)
     : m_rootPath(rootPath)
-    , m_storeName(std::string("registration"))
 {
-    m_listPath = rootPath + "/registrationList";
+    m_listPath = m_rootPath + "/registrationList";
     LocalStorageHelper::File::mkdirIfNotExists(m_rootPath);
 }
 
 void RegistrationStoreLocalStorage::saveRegistrationList()
 {
-    TRACEF(HOST, "size(%zu)", m_registrationSW.size());
+    TRACEF(SVCWORKER, "size(%zu)", m_registrationSW.size());
 
     LocalStorageHelper::Writer fileWriter(m_listPath);
     fileWriter.write(m_registrationSW.size(), " ");
     for (const auto& r : m_registrationSW) {
-        fileWriter.writeString(r);
+        fileWriter.write(r.first, " ");
+        fileWriter.writeString(r.second);
     }
 }
 
 void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
 {
-    TRACE(HOST);
+    TRACE(SVCWORKER);
 
     if (!LocalStorageHelper::File::exists(m_listPath)) {
         return;
@@ -65,8 +68,11 @@ void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
     reader.read(size);
 
     for (size_t i = 0; i < size; i++) {
+        size_t hash;
+        reader.read(hash);
         std::string path;
         reader.readString(path);
+
         LocalStorageHelper::Reader fileReader(path);
         std::string buffer;
         if (fileReader.readAll(buffer)) {
@@ -83,12 +89,12 @@ void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
 
 void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
 {
-    TRACE(HOST, CSTR(data->scope));
+    TRACE(SVCWORKER, CSTR(data->scope));
 
     auto appPath = getInstalledSWDirPath(data->scope);
     LocalStorageHelper::File::mkdirIfNotExists(appPath);
 
-    auto dataPath = appPath + "/" + m_storeName;
+    auto dataPath = appPath + "/" + s_storeName;
 
     JsonWriter jsonWriter;
     Message msg("registration");
@@ -98,21 +104,19 @@ void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
     LocalStorageHelper::Writer fileWriter(dataPath);
     fileWriter.write(jsonWriter.GetString(), jsonWriter.GetSize());
 
-    m_registrationSW.push_back(dataPath);
+    m_registrationSW.insert(std::make_pair(data->scope->hashValue(), dataPath));
 
     saveRegistrationList();
 }
 
 void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)
 {
-    TRACE(HOST, CSTR(data->scope));
+    TRACE(SVCWORKER, CSTR(data->scope));
 
-    auto dataPath = getInstalledSWDirPath(data->scope) + "/" + m_storeName;
-
+    auto dataPath = getInstalledSWDirPath(data->scope) + "/" + s_storeName;
     LocalStorageHelper::File::remove(dataPath);
 
-    auto itr =
-        std::find(m_registrationSW.begin(), m_registrationSW.end(), dataPath);
+    auto itr = m_registrationSW.find(data->scope->hashValue());
     if (itr != m_registrationSW.end()) {
         m_registrationSW.erase(itr);
 
@@ -120,11 +124,35 @@ void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)
     }
 }
 
-std::string RegistrationStoreLocalStorage::getInstalledSWDirPath(String* scope)
+void RegistrationStoreLocalStorage::loadRegistrationList(
+    std::unordered_map<size_t, std::string>& list)
 {
-    auto scopeURL = new ResourceURL(scope);
-    return m_rootPath + "/" + std::to_string(scopeURL->origin()->hashValue());
+    TRACE(SVCWORKER);
+
+    if (!LocalStorageHelper::File::exists(m_listPath)) {
+        return;
+    }
+
+    LocalStorageHelper::Reader reader(m_listPath);
+    size_t size = 0;
+    reader.read(size);
+
+    for (size_t i = 0; i < size; i++) {
+        size_t hash;
+        reader.read(hash);
+
+        std::string path;
+        reader.readString(path);
+
+        list.insert(std::make_pair(hash, std::move(path)));
+    }
+}
+
+std::string RegistrationStoreLocalStorage::getInstalledSWDirPath(
+    String* scopeURL)
+{
+    return m_rootPath + "/" + std::to_string(scopeURL->hashValue());
 }
 
 } // namespace Starfish
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_SERVICE_WORKER */

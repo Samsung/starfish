@@ -78,8 +78,6 @@ public:
     Nullable<ServiceWorkerGlobalScope*> findGlobalScopeByContextId(
         ServiceWorkerContextId id);
 
-    static std::string localStorageRootDir();
-
     PerProcess* perProcess()
     {
         return m_perProcess;
@@ -89,10 +87,9 @@ private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
 
-    static void createLocalStorageRootDir();
+    void createLocalStorageRootDir();
 
     static ServiceWorkerAgent* m_instance;
-    static std::string s_localStorageRootDir;
     Starfish* m_starfish;
     PerProcess* m_perProcess;
     ServiceWorkerServer* m_SWServer;

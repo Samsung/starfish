@@ -28,6 +28,7 @@
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/PerProcess.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
@@ -46,7 +47,6 @@
 namespace Starfish {
 
 ServiceWorkerAgent* ServiceWorkerAgent::m_instance = nullptr;
-std::string ServiceWorkerAgent::s_localStorageRootDir;
 
 ServiceWorkerAgent* ServiceWorkerAgent::create(Starfish* starfish,
                                                PerProcess* perProcess)
@@ -78,7 +78,7 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
 
-    m_SWServer = new ServiceWorkerServer;
+    m_SWServer = new ServiceWorkerServer(m_starfish);
     m_SWServer->init(m_perProcess);
     m_SWServer->start();
 
@@ -86,6 +86,7 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
     m_castServer = CastServer::instance();
     m_castServer->start();
 #endif
+    createLocalStorageRootDir();
 }
 
 ServiceWorkerAgent::~ServiceWorkerAgent()
@@ -241,25 +242,10 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
     STARFISH_ASSERT(serviceWorker != nullptr);
 }
 
-std::string ServiceWorkerAgent::localStorageRootDir()
-{
-    if (s_localStorageRootDir.empty()) {
-        createLocalStorageRootDir();
-    }
-    return s_localStorageRootDir;
-}
-
 void ServiceWorkerAgent::createLocalStorageRootDir()
 {
-    const char* homeDirPath = getenv("HOME");
-    if (!homeDirPath || strlen(homeDirPath) == 0) {
-        s_localStorageRootDir = "/tmp";
-    } else {
-        s_localStorageRootDir = homeDirPath;
-    }
-    s_localStorageRootDir += "/Starfish-sw-cache";
-
-    LocalStorageHelper::File::mkdirIfNotExists(s_localStorageRootDir);
+    LocalStorageHelper::File::mkdirIfNotExists(
+        m_starfish->serviceWorkerOption()->localStorageRootDir());
 }
 
 } // namespace Starfish

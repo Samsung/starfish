@@ -40,7 +40,7 @@ struct FetchCacheStreamResponseData : public gc {
 
 class FetchCacheStream : public gc {
 public:
-    FetchCacheStream();
+    FetchCacheStream(const std::string& rootPath);
 
     bool open(size_t originHashValue, const std::string& cacheName);
 

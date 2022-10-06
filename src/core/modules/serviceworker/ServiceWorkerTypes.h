@@ -32,6 +32,7 @@ class GlobalScope;
 class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistration;
+class ServiceWorkerRegistrationData;
 
 // https://w3c.github.io/ServiceWorker/#serviceworker
 enum class ServiceWorkerState : unsigned {
@@ -70,6 +71,18 @@ using ServiceWorkerClientId = ServiceWorkerContextId;
 using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using RequestId = Id<ServiceWorkerRequest>;
 using PushManagerId = Id<GlobalScope>;
+
+struct ServiceWorkerRegistrationKeyComparator {
+    bool operator()(const ServiceWorkerRegistrationKey& lhs,
+                    const ServiceWorkerRegistrationKey& rhs) const
+    {
+        return lhs < rhs;
+    }
+};
+
+using ServiceWorkerRegistrationMap =
+    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
+          ServiceWorkerRegistrationKeyComparator>;
 
 } // namespace Starfish
 

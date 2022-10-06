@@ -32,6 +32,7 @@
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #include "core/modules/serviceworker/PerProcess.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #endif
 
 #include "core/util/Id.h"
@@ -152,9 +153,11 @@ Starfish::Starfish(const char* localStorageFilePath,
     m_perProcess = new PerProcess;
     m_perProcess->initialize(threadPoolSize);
 
+    m_serviceWorkerOption = new ServiceWorkerOption();
+
 #if !defined(STARFISH_WEBWORKER_HOST)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
-    m_serviceWorkerProcessManager->init(m_perProcess);
+    m_serviceWorkerProcessManager->init(m_perProcess, m_serviceWorkerOption);
 #endif
 #endif
 }
