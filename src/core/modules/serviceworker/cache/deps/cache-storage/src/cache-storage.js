@@ -1,24 +1,27 @@
-const Cache = require('./cache')
+const Cache = require('./cache');
 
-function openDB () {
-  return new Promise(rs => {
+function openDB() {
+  return new Promise((rs) => {
     // Open (or create) the database
-    const open = indexedDB.open('cachestorage', 4)
+    const open = indexedDB.open('cachestorage', 4);
     // Create the schema
     open.onupgradeneeded = function () {
-      const db = open.result
+      const db = open.result;
       // cointains all storage containsers
-      db.createObjectStore('storages', { keyPath: 'cacheName' })
+      db.createObjectStore('storages', { keyPath: 'cacheName' });
       // contains all cache of request and responses
-      db.createObjectStore('caches', { autoIncrement: true })
-        .createIndex('cacheName', 'cacheName', { unique: false })
-    }
+      db.createObjectStore('caches', { autoIncrement: true }).createIndex(
+        'cacheName',
+        'cacheName',
+        { unique: false },
+      );
+    };
 
     open.onsuccess = () => {
       // Start a new transaction
-      rs(open.result)
-    }
-  })
+      rs(open.result);
+    };
+  });
 }
 
 class CacheStorage {
@@ -26,42 +29,42 @@ class CacheStorage {
    * [delete description]
    * @return {[type]} [description]
    */
-  async delete (cacheName) {
+  async delete(cacheName) {
     // Should resolve to false if there is nothing to delete
-    const keys = await this.keys()
+    const keys = await this.keys();
 
     if (!keys.includes(cacheName)) {
-      return false
+      return false;
     }
 
-    const db = await openDB()
+    const db = await openDB();
 
     // Start a new transaction
-    const tx = db.transaction(['storages', 'caches'], 'readwrite')
-    tx.objectStore('storages').delete(cacheName)
+    const tx = db.transaction(['storages', 'caches'], 'readwrite');
+    tx.objectStore('storages').delete(cacheName);
 
-    const caches = tx.objectStore('caches')
-    const index = caches.index('cacheName')
-    const request = index.getAllKeys(IDBKeyRange.only(cacheName))
+    const caches = tx.objectStore('caches');
+    const index = caches.index('cacheName');
+    const request = index.getAllKeys(IDBKeyRange.only(cacheName));
 
     request.onsuccess = function (tx) {
       for (let key of this.result) {
-        caches.delete(key)
+        caches.delete(key);
       }
-    }
+    };
 
     return new Promise((rs, rj) => {
-      tx.oncomplete = () => rs(true)
-      tx.onerror = () => rj(false)
-    })
+      tx.oncomplete = () => rs(true);
+      tx.onerror = () => rj(false);
+    });
   }
 
   /**
    * [has description]
    * @return {Boolean} [description]
    */
-  has (cacheName) {
-    return this.keys().then(keys => keys.includes(cacheName))
+  has(cacheName) {
+    return this.keys().then((keys) => keys.includes(cacheName));
   }
 
   /**
@@ -71,15 +74,16 @@ class CacheStorage {
    *
    * @return <Promise>Array keyList
    */
-  async keys () {
-    const db = await openDB()
+  async keys() {
+    const db = await openDB();
 
     // Start a new transaction
-    const keys = db.transaction('storages', 'readonly').objectStore('storages').getAllKeys()
+    const keys = db
+      .transaction('storages', 'readonly')
+      .objectStore('storages')
+      .getAllKeys();
 
-    return new Promise(rs =>
-      keys.onsuccess = () => rs(keys.result)
-    )
+    return new Promise((rs) => (keys.onsuccess = () => rs(keys.result)));
   }
 
   /**
@@ -89,13 +93,13 @@ class CacheStorage {
    *
    * @return Promise
    */
-  async match (...args) {
-    let keys = await this.keys()
+  async match(...args) {
+    let keys = await this.keys();
 
     for (let key of keys) {
-      let cache = await this.open(key)
-      let result = await cache.match(...args)
-      if (result) return result
+      let cache = await this.open(key);
+      let result = await cache.match(...args);
+      if (result) return result;
     }
   }
 
@@ -105,9 +109,11 @@ class CacheStorage {
    *
    * @return {[type]} [description]
    */
-  async open (cacheName) {
+  async open(cacheName) {
     if (arguments.length < 1) {
-      throw new TypeError(`${arguments.length} argument required, but only ${arguments.length} present.`)
+      throw new TypeError(
+        `${arguments.length} argument required, but only ${arguments.length} present.`,
+      );
     }
     return new Cache(cacheName);
 
@@ -132,13 +138,13 @@ class CacheStorage {
    * [description]
    * @return {[type]} [description]
    */
-  [Symbol.toStringTag] () {
-    return 'CacheStorage'
+  [Symbol.toStringTag]() {
+    return 'CacheStorage';
   }
 }
 
 module.exports = {
   Cache,
   CacheStorage,
-  caches: new CacheStorage()
-}
+  caches: new CacheStorage(),
+};
