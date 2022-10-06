@@ -30,6 +30,7 @@
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/WebOrigin.h"
 
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/Message.h"
@@ -54,6 +55,7 @@ extern Starfish::Starfish* g_starfishInstance;
 }
 #endif
 #include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/client/RegistrationManager.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #include "core/modules/serviceworker/push/PushServiceAgent.h"
@@ -82,7 +84,8 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::instance()
     return m_instance;
 }
 
-void ServiceWorkerProcessManager::init(PerProcess* perProcess)
+void ServiceWorkerProcessManager::init(PerProcess* perProcess,
+                                       ServiceWorkerOption* option)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
@@ -90,6 +93,7 @@ void ServiceWorkerProcessManager::init(PerProcess* perProcess)
     Message::init();
 
     m_perProcess = perProcess;
+    m_option = option;
     m_pushServiceAgent = new PushServiceAgent();
 }
 

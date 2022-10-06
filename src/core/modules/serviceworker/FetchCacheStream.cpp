@@ -56,8 +56,8 @@ void FetchCacheStreamResponseData::applyResponse(Response* response)
                                                       buffer.end());
 }
 
-FetchCacheStream::FetchCacheStream()
-    : m_cacheDirPath(ServiceWorkerAgent::localStorageRootDir())
+FetchCacheStream::FetchCacheStream(const std::string& rootPath)
+    : m_cacheDirPath(rootPath)
 {
 }
 

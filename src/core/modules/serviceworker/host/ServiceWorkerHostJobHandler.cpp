@@ -37,6 +37,7 @@
 
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/JobQueue.h"
@@ -48,8 +49,8 @@
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/FetchEventData.h"
+#include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
-#include "core/modules/serviceworker/host/RegistrationStore.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
@@ -199,11 +200,12 @@ private:
 };
 
 ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
-    MessageLoop* messageLoop, ServiceWorkerServerInterface* swserver)
+    Starfish* starfish, MessageLoop* messageLoop,
+    ServiceWorkerServerInterface* swserver)
     : m_messageLoop(messageLoop)
     , m_SWServer(swserver)
     , m_registrationStore(new RegistrationStoreLocalStorage(
-          ServiceWorkerAgent::localStorageRootDir()))
+          starfish->serviceWorkerOption()->localStorageRootDir()))
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(swserver != nullptr);

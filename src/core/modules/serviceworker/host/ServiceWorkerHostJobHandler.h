@@ -26,6 +26,7 @@
 
 namespace Starfish {
 
+class Starfish;
 class MessageLoop;
 class ServiceWorker;
 class ServiceWorkerJob;
@@ -46,21 +47,9 @@ struct RegistrationIdentifier : public gc {
     String* m_origin;
 };
 
-struct ServiceWorkerRegistrationKeyComparator {
-    bool operator()(const ServiceWorkerRegistrationKey& lhs,
-                    const ServiceWorkerRegistrationKey& rhs) const
-    {
-        return lhs < rhs;
-    }
-};
-
-using ServiceWorkerRegistrationMap =
-    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
-          ServiceWorkerRegistrationKeyComparator>;
-
 class ServiceWorkerHostJobHandler : public gc {
 public:
-    ServiceWorkerHostJobHandler(MessageLoop* messageLoop,
+    ServiceWorkerHostJobHandler(Starfish* starfish, MessageLoop* messageLoop,
                                 ServiceWorkerServerInterface* server);
 
     void scheduleJob(ServiceWorkerJob* job);

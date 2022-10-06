@@ -21,6 +21,7 @@
     !defined(__StarfishServiceWorkerHostProcess__)
 #define __StarfishServiceWorkerHostProcess__
 
+#include "binding/StarfishHoldable.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 
 namespace Starfish {
@@ -41,9 +42,11 @@ class ServiceWorkerRegistrationData;
 class IServiceWorkerClientConnection;
 class ServiceWorkerContextManager;
 
-class ServiceWorkerServer : public gc, public ServiceWorkerServerInterface {
+class ServiceWorkerServer : public gc,
+                            public ServiceWorkerServerInterface,
+                            StarfishHoldable {
 public:
-    ServiceWorkerServer();
+    ServiceWorkerServer(Starfish* starfish);
     virtual ~ServiceWorkerServer();
 
     ServiceWorkerServer(ServiceWorkerServer const&) = delete;

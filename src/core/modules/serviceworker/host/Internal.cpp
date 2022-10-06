@@ -20,8 +20,11 @@
 #if defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 #include "Internal.h"
 #include "binding/ScriptBindingInstance.h"
+#include "core/page/WebBase.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/serviceworker/FetchCacheStream.h"
@@ -67,7 +70,11 @@ Internal::Internal(ScriptBindingInstance* scriptBindingInstance)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(scriptBindingInstance)
 {
-    m_fetchCacheStream = new FetchCacheStream();
+    auto starfish =
+        fetchWebBase(scriptBindingInstance->scriptContext())->starfish();
+
+    m_fetchCacheStream = new FetchCacheStream(
+        starfish->serviceWorkerOption()->localStorageRootDir());
 }
 
 Promise* Internal::open(String* cacheName)

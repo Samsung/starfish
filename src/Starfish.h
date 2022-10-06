@@ -30,6 +30,7 @@ class LineBreakIteratorPool;
 class Mutex;
 class PerProcess;
 class ServiceWorkerProcessManager;
+class ServiceWorkerOption;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 class HTTPCache;
 #endif
@@ -103,12 +104,18 @@ public:
         return m_perProcess;
     }
 
+    ServiceWorkerOption* serviceWorkerOption()
+    {
+        return m_serviceWorkerOption;
+    }
+
 protected:
     PerProcess* m_perProcess{ nullptr };
 
 #if !defined(STARFISH_WEBWORKER_HOST)
     ServiceWorkerProcessManager* m_serviceWorkerProcessManager{ nullptr };
 #endif
+    ServiceWorkerOption* m_serviceWorkerOption;
 
 #endif // STARFISH_ENABLE_SERVICE_WORKER
 

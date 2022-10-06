@@ -17,10 +17,11 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
     !defined(__StarfishServiceWorkerRegistrationStore__)
 #define __StarfishServiceWorkerRegistrationStore__
 
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 
 namespace Starfish {
@@ -35,6 +36,8 @@ public:
     virtual void load(ServiceWorkerRegistrationMap& map) = 0;
     virtual void add(ServiceWorkerRegistrationData* data) = 0;
     virtual void remove(ServiceWorkerRegistrationData* data) = 0;
+    virtual void loadRegistrationList(
+        std::unordered_map<size_t, std::string>& list) = 0;
 
 protected:
     RegistrationStore(){};
@@ -42,20 +45,23 @@ protected:
 
 class RegistrationStoreLocalStorage final : public RegistrationStore {
 public:
-    RegistrationStoreLocalStorage(std::string rootPath);
+    RegistrationStoreLocalStorage(const std::string& rootPath);
     virtual ~RegistrationStoreLocalStorage(){};
 
     void load(ServiceWorkerRegistrationMap& map) override;
     void add(ServiceWorkerRegistrationData* data) override;
     void remove(ServiceWorkerRegistrationData* data) override;
+    void loadRegistrationList(
+        std::unordered_map<size_t, std::string>& list) override;
 
 private:
-    std::string m_rootPath;
-    std::string m_storeName;
-    std::string m_listPath;
-    std::vector<std::string> m_registrationSW;
+    static std::string s_storeName;
 
-    std::string getInstalledSWDirPath(String* scope);
+    std::string m_rootPath;
+    std::string m_listPath;
+    std::unordered_map<size_t, std::string> m_registrationSW;
+
+    std::string getInstalledSWDirPath(String* scopeURL);
     void saveRegistrationList();
 };
 

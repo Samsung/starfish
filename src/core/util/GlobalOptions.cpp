@@ -38,6 +38,10 @@ GlobalOptions::GlobalOptions()
     readEnvironmentValue("DEBUG_CAST");
     readEnvironmentValue("DEBUG_CAST_TARGET_IP");
 #endif
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    readEnvironmentValue("SW_STORAGE");
+#endif
 }
 
 void GlobalOptions::readEnvironmentValue(const char* key)
