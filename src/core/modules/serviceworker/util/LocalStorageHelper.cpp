@@ -28,6 +28,10 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
 
+#include <iostream>
+#include <vector>
+#include <dirent.h> // DIR
+
 namespace Starfish {
 
 namespace LocalStorageHelper {
@@ -58,6 +62,45 @@ namespace LocalStorageHelper {
         }
 
         std::remove(path.data());
+    }
+
+    static bool filterFileType(unsigned char d_type, File::Type type)
+    {
+        uint8_t t = static_cast<uint8_t>(type);
+        switch (d_type) {
+        case DT_REG:
+            return (t & static_cast<uint8_t>(File::Type::REGULAR));
+        case DT_DIR:
+            return (t & static_cast<uint8_t>(File::Type::DIRECTORY));
+        }
+        return false;
+    }
+
+    bool File::getFileNamesInDirectory(std::vector<std::string>& result,
+                                       const std::string& path, Type type)
+    {
+        DIR* dir_ptr;
+        struct dirent* entry;
+
+        result.clear();
+
+        if ((dir_ptr = opendir(path.c_str())) != nullptr) {
+            while ((entry = readdir(dir_ptr)) != nullptr) {
+                if (entry->d_type == DT_DIR &&
+                    (!strncmp(entry->d_name, ".", NAME_MAX) ||
+                     !strncmp(entry->d_name, "..", NAME_MAX))) {
+                    continue;
+                }
+                if (filterFileType(entry->d_type, type)) {
+                    result.push_back(entry->d_name);
+                }
+            }
+            closedir(dir_ptr);
+        } else {
+            perror("opendir");
+            return false;
+        }
+        return true;
     }
 
     Writer::Writer(std::string& path)

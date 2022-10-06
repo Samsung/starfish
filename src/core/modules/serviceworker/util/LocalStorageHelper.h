@@ -23,6 +23,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <string>
 
 namespace Starfish {
 
@@ -32,9 +34,16 @@ namespace LocalStorageHelper {
 
     class File {
     public:
+        enum class Type : uint8_t {
+            UNKNOWN = 0,
+            REGULAR = 1,
+            DIRECTORY = 2,
+        };
         static bool exists(const std::string& path);
         static void mkdirIfNotExists(const std::string& path);
         static void remove(const std::string& path);
+        static bool getFileNamesInDirectory(std::vector<std::string>& result,
+                                            const std::string& path, Type type);
     };
 
     class Writer {
