@@ -452,6 +452,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res,
                 data.m_resource = res;
                 m_imageResourceCache.insert(
                     std::make_pair(std::move(url), data));
+                m_imageResourceCacheLRUList.push_back(res);
             } else {
                 ResourceCacheData& data = iter->second;
                 Resource* resourceInCache = data.m_resource;
@@ -464,7 +465,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res,
                     m_imageResourceCacheLRUList.erase(iter);
                 }
 
-                m_imageResourceCacheLRUList.push_back(res);
+                m_imageResourceCacheLRUList.push_back(resourceInCache);
                 cacheHit(resourceInCache, res, syncLevel);
                 return true;
             }
