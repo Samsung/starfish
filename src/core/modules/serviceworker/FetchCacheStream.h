@@ -21,6 +21,10 @@
     !defined(__StarfishServiceWorkerFetchCacheStream__)
 #define __StarfishServiceWorkerFetchCacheStream__
 
+namespace Escargot {
+class ValueVectorRef;
+}
+
 namespace Starfish {
 
 class Response;
@@ -46,8 +50,11 @@ public:
     bool readResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
     bool readResponse(String* url, Response* response);
 
+    bool getKeys(Escargot::ValueVectorRef* result);
+
 private:
     std::string m_cacheDirPath;
+    std::string m_cacheScopeDirPath;
 
     std::string getCachePath(size_t urlHashValue);
 };

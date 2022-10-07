@@ -72,6 +72,8 @@ bool FetchCacheStream::open(size_t originHashValue,
     m_cacheDirPath = m_cacheDirPath + "/" + hashValue;
     LocalStorageHelper::File::mkdirIfNotExists(m_cacheDirPath);
 
+    m_cacheScopeDirPath = m_cacheDirPath;
+
     m_cacheDirPath = m_cacheDirPath + "/" + cacheName;
     LocalStorageHelper::File::mkdirIfNotExists(m_cacheDirPath);
 
@@ -133,6 +135,25 @@ bool FetchCacheStream::readResponse(String* url, Response* response)
 
     RETURN_FALSE_IF_FAILED(reader.readVector(streamBuffer->buffer()));
 
+    return true;
+}
+
+bool FetchCacheStream::getKeys(Escargot::ValueVectorRef* result)
+{
+    STARFISH_ASSERT(result != nullptr);
+
+    std::vector<std::string> entries;
+
+    if (!LocalStorageHelper::File::getFileNamesInDirectory(
+            entries, m_cacheScopeDirPath,
+            LocalStorageHelper::File::Type::DIRECTORY)) {
+        return false;
+    }
+
+    for (const auto& entry : entries) {
+        result->pushBack(
+            StringRef::createFromUTF8(entry.data(), entry.length()));
+    }
     return true;
 }
 

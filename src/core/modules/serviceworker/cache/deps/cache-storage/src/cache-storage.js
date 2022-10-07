@@ -75,6 +75,7 @@ class CacheStorage {
    * @return <Promise>Array keyList
    */
   async keys() {
+    /*
     const db = await openDB();
 
     // Start a new transaction
@@ -84,6 +85,16 @@ class CacheStorage {
       .getAllKeys();
 
     return new Promise((rs) => (keys.onsuccess = () => rs(keys.result)));
+    */
+    return new Promise(async (resolve) => {
+      let result = [];
+      try {
+        result = await internal.cache_storage_keys();
+        resolve(result);
+      } catch (e) {
+        throw e;
+      }
+    });
   }
 
   /**
