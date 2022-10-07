@@ -51,6 +51,10 @@ public:
     }
     Promise* open(String* cacheName);
     Promise* put(Request* request, Response* response);
+
+    // CacheStorage
+    Promise* cache_storage_keys();
+
     void setUrl(ResourceURL* url)
     {
         m_url = url;
