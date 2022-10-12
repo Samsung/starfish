@@ -49,19 +49,23 @@ class Cache {
    * @param  {[type]}  args [description]
    * @return {Promise}      [description]
    */
-  async match(...args) {
-    return (await this.matchAll(...args))[0];
+  async match(req, options) {
+    return (await this.matchAll(req, options))[0];
   }
 
   // Returns a Promise that resolves to an array
   // of all matching requests in the Cache object.
   async matchAll(req, options = {}) {
     if (req.method === 'HEAD') return [];
-
-    const result = [];
-
-    // TODO: find matched requrests
-    return new Promise((resolve) => resolve(result));
+    return new Promise(async (resolve) => {
+      let result = [];
+      try {
+        result = await internal.matchAll(this[kWrap], req.url);
+        resolve(result);
+      } catch (e) {
+        throw e;
+      }
+    });
 
     // Start a new transaction
     /*
