@@ -138,14 +138,17 @@ bool FetchCacheStream::readResponse(String* url, Response* response)
     return true;
 }
 
-bool FetchCacheStream::getKeys(Escargot::ValueVectorRef* result)
+bool FetchCacheStream::getKeys(size_t cacheScopeDirHash, ValueVectorRef* result)
 {
     STARFISH_ASSERT(result != nullptr);
 
     std::vector<std::string> entries;
 
+    std::string cacheScopeDirPath =
+        m_cacheDirPath + "/" + std::to_string(cacheScopeDirHash);
+
     if (!LocalStorageHelper::File::getFileNamesInDirectory(
-            entries, m_cacheScopeDirPath,
+            entries, cacheScopeDirPath,
             LocalStorageHelper::File::Type::DIRECTORY)) {
         return false;
     }

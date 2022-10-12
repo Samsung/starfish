@@ -21,6 +21,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/EventTarget.h"
+#include "core/fetch/Request.h"
 
 namespace Starfish {
 
@@ -31,6 +32,7 @@ class Request;
 class ResourceURL;
 class Response;
 class String;
+class ExecutionContext;
 
 class Internal : public ScriptWrappable {
 public:
@@ -49,11 +51,11 @@ public:
     {
         return m_fetchCacheStream;
     }
-    Promise* open(String* cacheName);
-    Promise* put(Request* request, Response* response);
 
-    // CacheStorage
-    Promise* cache_storage_keys();
+    Promise* open(String* cacheName); // binding interface
+    Promise* put(ValueRef* self, Request* request,
+                 Response* response); // binding interface
+    Promise* cache_storage_keys();    // binding interface
 
     void setUrl(ResourceURL* url)
     {

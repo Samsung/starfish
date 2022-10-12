@@ -34,10 +34,12 @@ function openDB() {
   });
 }
 
+const kWrap = Symbol('kWrap');
+
 class Cache {
-  constructor(cacheName) {
+  constructor(cacheName, wrap) {
     map.set(this, cacheName);
-    internal.open(cacheName);
+    this[kWrap] = wrap;
   }
 
   /**
@@ -200,7 +202,7 @@ class Cache {
     }
 
     try {
-      await internal.put(req, res);
+      await internal.put(this[kWrap], req, res);
     } catch (e) {
       console.error(e);
       throw e;
