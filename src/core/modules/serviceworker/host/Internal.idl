@@ -1,8 +1,10 @@
 [STARFISH_WEBWORKER_HOST, Global=(ServiceWorker)]
 interface Internal {
   // https://w3c.github.io/ServiceWorker/#cache-interface
-  [NewObject] Promise<undefined> put(any self, Request request, Response response);
-  [NewObject] Promise<undefined> put(Request request, Response response);
+  [NewObject] Promise<undefined>
+          put(object fetchCacheStreamWrap, Request request, Response response);
+  [NewObject, CallWith=ExecutionContext] Promise<FrozenArray<Response>>
+          matchAll(object fetchCacheStreamWrap, RequestInfo request);
 
   // https://w3c.github.io/ServiceWorker/#cachestorage-interface
   [NewObject] Promise<any> open(DOMString cacheName);

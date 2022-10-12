@@ -53,9 +53,12 @@ public:
     }
 
     Promise* open(String* cacheName); // binding interface
-    Promise* put(ValueRef* self, Request* request,
+    Promise* put(ObjectRef* fetchCacheStreamWrap, Request* request,
                  Response* response); // binding interface
     Promise* cache_storage_keys();    // binding interface
+    Promise* matchAll(ExecutionContext* executionContext,
+                      ObjectRef* fetchCacheStreamWrap,
+                      RequestInfo& request); // binding interface
 
     void setUrl(ResourceURL* url)
     {

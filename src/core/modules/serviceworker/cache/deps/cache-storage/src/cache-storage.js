@@ -104,12 +104,12 @@ class CacheStorage {
    *
    * @return Promise
    */
-  async match(...args) {
+  async match(request, options) {
     let keys = await this.keys();
 
     for (let key of keys) {
       let cache = await this.open(key);
-      let result = await cache.match(...args);
+      let result = await cache.match(request, options);
       if (result) return result;
     }
   }

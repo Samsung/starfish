@@ -160,7 +160,8 @@ Promise* Internal::open(String* cacheName)
     return promise;
 }
 
-Promise* Internal::put(ValueRef* self, Request* request, Response* response)
+Promise* Internal::put(ObjectRef* fetchCacheStreamWrap, Request* request,
+                       Response* response)
 {
     class CachePutTask : public CacheTask {
     public:
@@ -187,7 +188,71 @@ Promise* Internal::put(ValueRef* self, Request* request, Response* response)
     task->m_request = request;
     task->m_response = response;
     task->m_fetchCacheStream =
-        ObjectWrap::Unwrap<FetchCacheStream>(self->asObject());
+        ObjectWrap::Unwrap<FetchCacheStream>(fetchCacheStreamWrap);
+    task->start();
+
+    return promise;
+}
+
+Promise* Internal::matchAll(ExecutionContext* executionContext,
+                            ObjectRef* fetchCacheStreamWrap,
+                            RequestInfo& requestInfo)
+{
+    /*
+        TODO: Support search options (ignoreSearch/Method/Vary)
+    */
+    class CacheMatchAllTask : public CacheTask {
+    public:
+        CacheMatchAllTask(Internal* i, Promise* p)
+            : CacheTask(i, p)
+        {
+        }
+
+        void run() override
+        {
+            TRACE(INTERNAL, taskId(), CSTR(m_url));
+            STARFISH_ASSERT(m_url != nullptr);
+            STARFISH_ASSERT(m_context != nullptr);
+            STARFISH_ASSERT(m_response != nullptr);
+            STARFISH_ASSERT(m_fetchCacheStream != nullptr);
+
+            ValueVectorRef* elements = ValueVectorRef::create();
+
+            if (!m_fetchCacheStream->readResponse(m_url, m_response)) {
+                TRACE(INTERNAL, taskId(), "readResponse 'false'");
+                m_result = false;
+                return;
+            }
+
+            elements->pushBack(m_response->scriptValue());
+
+            const auto& r = Evaluator::execute(
+                m_context,
+                [](ExecutionStateRef* state,
+                   ValueVectorRef* elements) -> ValueRef* {
+                    return ArrayObjectRef::create(state, elements);
+                },
+                elements);
+
+            STARFISH_ASSERT(r.isSuccessful());
+            m_result = true;
+            m_resultValue = r.result->asArrayObject();
+        }
+        String* m_url{ nullptr };
+        ContextRef* m_context{ nullptr };
+        Response* m_response{ nullptr };
+        FetchCacheStream* m_fetchCacheStream{ nullptr };
+    };
+
+    auto promise = new Promise(m_scriptBindingInstance);
+    auto task = new CacheMatchAllTask(this, promise);
+    task->m_context = m_scriptBindingInstance->scriptContext();
+
+    task->m_fetchCacheStream =
+        ObjectWrap::Unwrap<FetchCacheStream>(fetchCacheStreamWrap);
+    task->m_url = (new Request(executionContext, requestInfo))->url();
+    task->m_response = new Response(executionContext);
+
     task->start();
 
     return promise;
