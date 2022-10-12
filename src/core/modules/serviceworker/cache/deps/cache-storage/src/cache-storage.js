@@ -126,7 +126,8 @@ class CacheStorage {
         `${arguments.length} argument required, but only ${arguments.length} present.`,
       );
     }
-    return new Cache(cacheName);
+    const wrap = await internal.open(cacheName);
+    return new Cache(cacheName, wrap);
 
     /*
     const db = await openDB()

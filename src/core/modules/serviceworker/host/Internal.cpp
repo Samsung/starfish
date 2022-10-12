@@ -29,6 +29,8 @@
 #include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/serviceworker/FetchCacheStream.h"
 #include "core/fetch/Fetch.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/fetch/Response.h"
 
 using namespace Escargot;
 
@@ -42,11 +44,12 @@ public:
         , m_promise(p)
     {
         m_resultValue = scriptUndefined();
+        m_taskId = ++CacheTask::s_taskId;
     }
 
     void end() override
     {
-        TRACE_SCOPE(INTERNAL, "result", m_result);
+        TRACE_SCOPE(INTERNAL, taskId(), "result", m_result);
         if (m_result) {
             m_promise->fulfill(m_resultValue);
         } else {
@@ -59,11 +62,45 @@ public:
         return m_promise;
     }
 
+    int taskId()
+    {
+        return m_taskId;
+    }
+
 protected:
     bool m_result{ false };
     ValueRef* m_resultValue{ nullptr };
     Internal* m_internal;
     Promise* m_promise;
+    static int s_taskId;
+
+private:
+    int m_taskId{ 0 };
+};
+
+int CacheTask::s_taskId = 0;
+
+class ObjectWrap {
+public:
+    template <class T>
+    static inline T* Unwrap(ObjectRef* object)
+    {
+        STARFISH_ASSERT(object != nullptr);
+        STARFISH_ASSERT(object->extraData() != nullptr);
+        return reinterpret_cast<T*>(object->extraData());
+    }
+
+    static ObjectRef* Wrap(ContextRef* context, void* data)
+    {
+        const auto& r = Evaluator::execute(
+            context, [](ExecutionStateRef* state) -> ValueRef* {
+                return ObjectRef::create(state);
+            });
+        STARFISH_ASSERT(r.isSuccessful());
+        ObjectRef* object = r.result->asObject();
+        object->setExtraData(data);
+        return object;
+    }
 };
 
 Internal::Internal(ScriptBindingInstance* scriptBindingInstance)
@@ -88,28 +125,42 @@ Promise* Internal::open(String* cacheName)
 
         void run() override
         {
+            String* url = m_url->urlString();
+            size_t hash = url->hashValue();
+            TRACE(INTERNAL, taskId(), CSTR(url), hash, CSTR(m_cacheName));
             STARFISH_ASSERT(m_url != nullptr);
             STARFISH_ASSERT(m_cacheName != nullptr);
-            m_result = m_internal->fetchCacheStream()->open(
-                m_url->baseURI()->hashValue(), CSTR(m_cacheName));
+            STARFISH_ASSERT(m_context != nullptr);
+
+            auto fetchCacheStream = new FetchCacheStream(m_localStorageRootDir);
+            m_result = fetchCacheStream->open(m_url->urlString()->hashValue(),
+                                              CSTR(m_cacheName));
+            if (m_result) {
+                m_resultValue = ObjectWrap::Wrap(m_context, fetchCacheStream);
+            }
         }
         ResourceURL* m_url{ nullptr };
         String* m_cacheName{ nullptr };
+        ContextRef* m_context{ nullptr };
+        std::string m_localStorageRootDir;
     };
-
-    String* baseURI = m_url->baseURI();
-    TRACE_SCOPE(INTERNAL, CSTR(baseURI), baseURI->hashValue(), CSTR(cacheName));
 
     auto promise = new Promise(m_scriptBindingInstance);
     auto task = new CacheOpenTask(this, promise);
+    auto context = m_scriptBindingInstance->scriptContext();
+    auto starfish = fetchWebBase(context)->starfish();
+
     task->m_url = m_url;
     task->m_cacheName = cacheName;
+    task->m_context = context;
+    task->m_localStorageRootDir =
+        starfish->serviceWorkerOption()->localStorageRootDir();
     task->start();
 
     return promise;
 }
 
-Promise* Internal::put(Request* request, Response* response)
+Promise* Internal::put(ValueRef* self, Request* request, Response* response)
 {
     class CachePutTask : public CacheTask {
     public:
@@ -120,21 +171,23 @@ Promise* Internal::put(Request* request, Response* response)
 
         void run() override
         {
+            TRACE(INTERNAL, taskId(), CSTR(m_request->url()));
             STARFISH_ASSERT(m_request != nullptr);
             STARFISH_ASSERT(m_response != nullptr);
-            m_result = m_internal->fetchCacheStream()->writeResponse(
-                m_request, m_response);
+            STARFISH_ASSERT(m_fetchCacheStream != nullptr);
+            m_result = m_fetchCacheStream->writeResponse(m_request, m_response);
         }
         Request* m_request{ nullptr };
         Response* m_response{ nullptr };
+        FetchCacheStream* m_fetchCacheStream{ nullptr };
     };
-
-    TRACE_SCOPE(INTERNAL, CSTR(request->url()));
 
     auto promise = new Promise(m_scriptBindingInstance);
     auto task = new CachePutTask(this, promise);
     task->m_request = request;
     task->m_response = response;
+    task->m_fetchCacheStream =
+        ObjectWrap::Unwrap<FetchCacheStream>(self->asObject());
     task->start();
 
     return promise;
@@ -151,12 +204,14 @@ Promise* Internal::cache_storage_keys()
 
         void run() override
         {
+            TRACE(INTERNAL, taskId());
             STARFISH_ASSERT(m_url != nullptr);
             STARFISH_ASSERT(m_context != nullptr);
 
             ValueVectorRef* elements = ValueVectorRef::create();
 
-            m_internal->fetchCacheStream()->getKeys(elements);
+            m_internal->fetchCacheStream()->getKeys(
+                m_url->urlString()->hashValue(), elements);
 
             // TODO: Check what happens if this works on another thread.
             const auto& r = Evaluator::execute(
@@ -167,17 +222,14 @@ Promise* Internal::cache_storage_keys()
                 },
                 elements);
 
-            if ((m_result = r.isSuccessful())) {
-                m_resultValue = r.result->asArrayObject();
-            }
+            STARFISH_ASSERT(r.isSuccessful());
+            m_result = true;
+            m_resultValue = r.result->asArrayObject();
         }
 
         ResourceURL* m_url{ nullptr };
         ContextRef* m_context{ nullptr };
     };
-
-    String* baseURI = m_url->baseURI();
-    TRACE(INTERNAL, CSTR(baseURI), baseURI->hashValue());
 
     auto promise = new Promise(m_scriptBindingInstance);
     auto task = new CacheStroageKeysTask(this, promise);

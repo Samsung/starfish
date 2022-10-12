@@ -50,7 +50,7 @@ public:
     bool readResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
     bool readResponse(String* url, Response* response);
 
-    bool getKeys(Escargot::ValueVectorRef* result);
+    bool getKeys(size_t cacheScopeDirHash, ValueVectorRef* result);
 
 private:
     std::string m_cacheDirPath;
