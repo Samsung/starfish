@@ -76,6 +76,7 @@ public:
 class ServiceWorkerData : public Archivable {
 public:
     String* scriptURL{ String::emptyString };
+    String* scopeURL{ String::emptyString };
     ServiceWorkerState state{ ServiceWorkerState::Parsed };
     ServiceWorkerRegistrationId registrationId;
     ServiceWorkerContextId clientContextId;

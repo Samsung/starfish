@@ -113,7 +113,7 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-ServiceWorkerGlobalScope* WebWorker::createGlobalScope(String* scriptURL)
+ServiceWorkerGlobalScope* WebWorker::createGlobalScope(ResourceURL* scriptURL)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
@@ -128,9 +128,8 @@ ServiceWorkerGlobalScope* WebWorker::createGlobalScope(String* scriptURL)
 
     removeScriptEngineInstance();
     createScriptEngineInstance();
-    ResourceURL* resourceURL = new ResourceURL(scriptURL);
     m_workerGlobalScope = new ServiceWorkerGlobalScope(
-        this, resourceURL, String::createASCIIString("UTF-8"));
+        this, scriptURL, String::createASCIIString("UTF-8"));
 
     return m_workerGlobalScope;
 }

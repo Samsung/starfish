@@ -37,6 +37,7 @@ const char* ServiceWorkerData::archiveId() const
 void ServiceWorkerData::archive(Archiver& ar)
 {
     ar.Member("scriptURL") & scriptURL;
+    ar.Member("scopeURL") & scopeURL;
     ar.MemberEnum("state", state);
 }
 

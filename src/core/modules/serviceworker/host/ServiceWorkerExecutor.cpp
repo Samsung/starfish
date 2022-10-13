@@ -53,19 +53,17 @@ void ServiceWorkerExecutor::initialize(Starfish* starfish)
 #endif
 }
 
-void ServiceWorkerExecutor::runServiceWorker(const std::string& scriptURL)
+void ServiceWorkerExecutor::runServiceWorker(ResourceURL* scriptURL)
 {
     STARFISH_ASSERT(ServiceWorkerAgent::isCreated() == true);
 
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
     MessageLoop::runOnMainThreadSync([scriptURL]() -> size_t {
-        ServiceWorkerAgent::instance()->runServiceWorker(
-            String::fromUTF8(scriptURL.data(), scriptURL.size()));
+        ServiceWorkerAgent::instance()->runServiceWorker(scriptURL);
         return 0;
     });
 #else
-    ServiceWorkerAgent::instance()->runServiceWorker(
-        String::fromUTF8(scriptURL.data(), scriptURL.size()));
+    ServiceWorkerAgent::instance()->runServiceWorker(scriptURL);
 #endif
 }
 

@@ -101,7 +101,7 @@ void WorkerGlobalScope::initGlobalScope(ResourceURL* url, String* charSet)
     TRACE(HOST, "origin:", CSTR(url->origin()));
     TRACE(HOST, "url:", CSTR(url->urlString()));
 
-    m_executionContext->setBaseURL(new ResourceURL(url->origin()));
+    m_executionContext->setBaseURL(new ResourceURL(url->baseURL()));
     m_workerScriptController = new WorkerScriptController(m_executionContext);
     m_workerLocation = new WorkerLocation(m_executionContext, url);
     m_workerNavigator = new WorkerNavigator(m_executionContext);
