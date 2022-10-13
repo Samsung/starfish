@@ -981,16 +981,21 @@ public:
         STARFISH_ASSERT(element != nullptr);
 
         for (auto animations = m_activeAnimations.begin();
-             animations != m_activeAnimations.end(); animations++) {
-            for (auto task = (*animations).second.begin();
-                 task != (*animations).second.end();) {
-                if ((*task)->targetElement() == element &&
-                    (*task)->property() == p &&
-                    (*task)->backgroundLayer() == layer) {
-                    task = (*animations).second.erase(task);
-                } else {
-                    task++;
+             animations != m_activeAnimations.end();) {
+            if ((*animations).second.size() == 0) {
+                animations = m_activeAnimations.erase(animations);
+            } else {
+                for (auto task = (*animations).second.begin();
+                     task != (*animations).second.end();) {
+                    if ((*task)->targetElement() == element &&
+                        (*task)->property() == p &&
+                        (*task)->backgroundLayer() == layer) {
+                        task = (*animations).second.erase(task);
+                    } else {
+                        task++;
+                    }
                 }
+                animations++;
             }
         }
     }
