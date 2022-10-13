@@ -28,6 +28,18 @@ namespace Starfish {
 
 class ServiceWorkerRegistrationData;
 class FetchCacheStream;
+class JsonWriter;
+class JsonReader;
+
+struct RegistrationStoreData : public gc {
+    size_t scopeHash{ 0 };
+    std::string registrationDataPath;
+    String* scriptURL;
+    std::string scriptPath;
+
+    bool writeJsonData(JsonWriter& writer);
+    bool readJsonData(JsonReader& reader);
+};
 
 class RegistrationStore : public gc {
 public:
@@ -36,8 +48,10 @@ public:
     virtual void load(ServiceWorkerRegistrationMap& map) = 0;
     virtual void add(ServiceWorkerRegistrationData* data) = 0;
     virtual void remove(ServiceWorkerRegistrationData* data) = 0;
-    virtual void loadRegistrationList(
-        std::unordered_map<size_t, std::string>& list) = 0;
+    virtual void loadRegistrationList() = 0;
+    virtual void saveWorkerScripts(String* scope, String* urlString,
+                                   String* scriptText) = 0;
+    virtual bool hasRegistraionSW(String* scope) = 0;
 
 protected:
     RegistrationStore(){};
@@ -51,18 +65,22 @@ public:
     void load(ServiceWorkerRegistrationMap& map) override;
     void add(ServiceWorkerRegistrationData* data) override;
     void remove(ServiceWorkerRegistrationData* data) override;
-    void loadRegistrationList(
-        std::unordered_map<size_t, std::string>& list) override;
+    void loadRegistrationList() override;
+    void saveWorkerScripts(String* scope, String* urlString,
+                           String* scriptText) override;
+    bool hasRegistraionSW(String* scope) override;
 
 private:
     static std::string s_storeName;
+    static std::string s_scriptName;
 
     std::string m_rootPath;
     std::string m_listPath;
-    std::unordered_map<size_t, std::string> m_registrationSW;
+    GCUnorderedMap<size_t, RegistrationStoreData*> m_registrationSW;
 
-    std::string getInstalledSWDirPath(String* scopeURL);
+    std::string getInstalledSWDirPath(size_t scopeHash);
     void saveRegistrationList();
+    RegistrationStoreData* getRegistraionStoreData(size_t scopeHash);
 };
 
 } // namespace Starfish

@@ -27,6 +27,7 @@ namespace Starfish {
 
 class ResourceRequest;
 class ScriptBindingInstance;
+class RegistrationStore;
 
 enum class ScriptLoadResult {
     NotHandled,
@@ -47,8 +48,19 @@ public:
         return m_executionContext;
     }
 
+    void setRegistrationStore(RegistrationStore* registrationStore)
+    {
+        m_registrationStore = registrationStore;
+    }
+
+    Nullable<RegistrationStore*> registrationStore()
+    {
+        return m_registrationStore;
+    }
+
 private:
     ExecutionContext* m_executionContext;
+    Nullable<RegistrationStore*> m_registrationStore;
 
     ScriptBindingInstance* scriptBindingInstance();
 };

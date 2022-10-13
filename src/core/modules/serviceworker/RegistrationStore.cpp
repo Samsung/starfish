@@ -34,6 +34,41 @@
 namespace Starfish {
 
 std::string RegistrationStoreLocalStorage::s_storeName("registration");
+std::string RegistrationStoreLocalStorage::s_scriptName("script");
+
+bool RegistrationStoreData::writeJsonData(JsonWriter& writer)
+{
+    writer.StartObject();
+    writer.Member("scopeHash") & scopeHash;
+    writer.Member("registrationDataPath") & registrationDataPath;
+    writer.Member("scriptURL") & scriptURL;
+    writer.Member("scriptPath") & scriptPath;
+    writer.EndObject();
+
+    if (writer.HasError()) {
+        STARFISH_LOG_WARN("Cannot write RegistrationStoreData");
+        return false;
+    }
+
+    return true;
+}
+
+bool RegistrationStoreData::readJsonData(JsonReader& reader)
+{
+    reader.StartObject();
+    reader.Member("scopeHash") & scopeHash;
+    reader.Member("registrationDataPath") & registrationDataPath;
+    reader.Member("scriptURL") & scriptURL;
+    reader.Member("scriptPath") & scriptPath;
+    reader.EndObject();
+
+    if (reader.HasError()) {
+        STARFISH_LOG_WARN("Cannot read RegistrationStoreData");
+        return false;
+    }
+
+    return true;
+}
 
 RegistrationStoreLocalStorage::RegistrationStoreLocalStorage(
     const std::string& rootPath)
@@ -43,19 +78,7 @@ RegistrationStoreLocalStorage::RegistrationStoreLocalStorage(
     LocalStorageHelper::File::mkdirIfNotExists(m_rootPath);
 }
 
-void RegistrationStoreLocalStorage::saveRegistrationList()
-{
-    TRACEF(SVCWORKER, "size(%zu)", m_registrationSW.size());
-
-    LocalStorageHelper::Writer fileWriter(m_listPath);
-    fileWriter.write(m_registrationSW.size(), " ");
-    for (const auto& r : m_registrationSW) {
-        fileWriter.write(r.first, " ");
-        fileWriter.writeString(r.second);
-    }
-}
-
-void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
+void RegistrationStoreLocalStorage::loadRegistrationList()
 {
     TRACE(SVCWORKER);
 
@@ -63,26 +86,85 @@ void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
         return;
     }
 
-    LocalStorageHelper::Reader reader(m_listPath);
+    std::string rawJsonString;
+
+    {
+        LocalStorageHelper::Reader reader(m_listPath);
+        if (!reader.readAll(rawJsonString)) {
+            STARFISH_LOG_WARN("Cannot read registration list file");
+            return;
+        }
+    }
+
+    JsonReader jsonReader(rawJsonString.data());
+
     size_t size = 0;
-    reader.read(size);
+    jsonReader.StartArray(&size);
 
     for (size_t i = 0; i < size; i++) {
-        size_t hash;
-        reader.read(hash);
-        std::string path;
-        reader.readString(path);
+        auto data = new RegistrationStoreData;
+        auto result = data->readJsonData(jsonReader);
+        STARFISH_ASSERT(result);
+        m_registrationSW.insert(std::make_pair(data->scopeHash, data));
+    }
+    jsonReader.EndArray();
 
-        LocalStorageHelper::Reader fileReader(path);
-        std::string buffer;
-        if (fileReader.readAll(buffer)) {
-            JsonReader reader(buffer.data());
-            Message msg;
-            msg.archive(reader);
+    if (jsonReader.HasError()) {
+        STARFISH_LOG_WARN("Cannot read Json data");
+    }
+}
 
-            auto msgname = msg.name();
-            auto data = downcast<ServiceWorkerRegistrationData*>(msg.param(0));
-            map.insert(std::make_pair(data->scope, data));
+void RegistrationStoreLocalStorage::saveRegistrationList()
+{
+    TRACEF(SVCWORKER, "size(%zu)", m_registrationSW.size());
+
+    JsonWriter jsonWriter;
+    jsonWriter.StartArray();
+    for (const auto& r : m_registrationSW) {
+        auto result = r.second->writeJsonData(jsonWriter);
+        STARFISH_ASSERT(result);
+    }
+    jsonWriter.EndArray();
+
+    if (jsonWriter.HasError()) {
+        STARFISH_LOG_WARN("Cannot save RegistrationStoreList");
+        return;
+    }
+
+    {
+        LocalStorageHelper::Writer fileWriter(m_listPath);
+        fileWriter.write(jsonWriter.GetString(), jsonWriter.GetSize());
+    }
+}
+
+bool RegistrationStoreLocalStorage::hasRegistraionSW(String* scope)
+{
+    return m_registrationSW.find(scope->hashValue()) != m_registrationSW.end();
+}
+
+void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
+{
+    TRACE(SVCWORKER);
+
+    loadRegistrationList();
+
+    for (const auto& registrationSW : m_registrationSW) {
+        auto path = registrationSW.second->registrationDataPath;
+        if (LocalStorageHelper::File::exists(path)) {
+            LocalStorageHelper::Reader fileReader(path);
+            std::string buffer;
+            if (fileReader.readAll(buffer)) {
+                JsonReader reader(buffer.data());
+                Message msg;
+                msg.archive(reader);
+
+                auto msgname = msg.name();
+                auto data =
+                    downcast<ServiceWorkerRegistrationData*>(msg.param(0));
+
+                TRACE(SVCWORKER, "load registration", CSTR(data->scope));
+                map.insert(std::make_pair(data->scope, data));
+            }
         }
     }
 }
@@ -91,7 +173,8 @@ void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
 {
     TRACE(SVCWORKER, CSTR(data->scope));
 
-    auto appPath = getInstalledSWDirPath(data->scope);
+    auto scopeHash = data->scope->hashValue();
+    auto appPath = getInstalledSWDirPath(scopeHash);
     LocalStorageHelper::File::mkdirIfNotExists(appPath);
 
     auto dataPath = appPath + "/" + s_storeName;
@@ -104,7 +187,8 @@ void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
     LocalStorageHelper::Writer fileWriter(dataPath);
     fileWriter.write(jsonWriter.GetString(), jsonWriter.GetSize());
 
-    m_registrationSW.insert(std::make_pair(data->scope->hashValue(), dataPath));
+    auto storeData = getRegistraionStoreData(scopeHash);
+    storeData->registrationDataPath = dataPath;
 
     saveRegistrationList();
 }
@@ -113,10 +197,11 @@ void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)
 {
     TRACE(SVCWORKER, CSTR(data->scope));
 
-    auto dataPath = getInstalledSWDirPath(data->scope) + "/" + s_storeName;
+    auto scopeHash = data->scope->hashValue();
+    auto dataPath = getInstalledSWDirPath(scopeHash) + "/" + s_storeName;
     LocalStorageHelper::File::remove(dataPath);
 
-    auto itr = m_registrationSW.find(data->scope->hashValue());
+    auto itr = m_registrationSW.find(scopeHash);
     if (itr != m_registrationSW.end()) {
         m_registrationSW.erase(itr);
 
@@ -124,34 +209,56 @@ void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)
     }
 }
 
-void RegistrationStoreLocalStorage::loadRegistrationList(
-    std::unordered_map<size_t, std::string>& list)
+void RegistrationStoreLocalStorage::saveWorkerScripts(String* scope,
+                                                      String* urlString,
+                                                      String* scriptText)
 {
-    TRACE(SVCWORKER);
+    TRACE(SVCWORKER, CSTR(scope), CSTR(urlString));
 
-    if (!LocalStorageHelper::File::exists(m_listPath)) {
+    auto scopeHash = scope->hashValue();
+
+    auto data = getRegistraionStoreData(scopeHash);
+    data->scopeHash = scopeHash;
+    data->scriptURL = urlString;
+
+    auto appPath = getInstalledSWDirPath(scopeHash);
+    LocalStorageHelper::File::mkdirIfNotExists(appPath);
+
+    data->scriptPath = appPath + "/" + s_scriptName;
+
+    LocalStorageHelper::Writer fileWriter(data->scriptPath);
+    auto scriptTextUTF8String = scriptText->toUTF8NonGCString();
+    if (!fileWriter.write(scriptTextUTF8String.data(),
+                          scriptTextUTF8String.size())) {
+        STARFISH_LOG_WARN("Cannot save Worker script");
         return;
     }
 
-    LocalStorageHelper::Reader reader(m_listPath);
-    size_t size = 0;
-    reader.read(size);
+    saveRegistrationList();
 
-    for (size_t i = 0; i < size; i++) {
-        size_t hash;
-        reader.read(hash);
-
-        std::string path;
-        reader.readString(path);
-
-        list.insert(std::make_pair(hash, std::move(path)));
-    }
+    return;
 }
 
 std::string RegistrationStoreLocalStorage::getInstalledSWDirPath(
-    String* scopeURL)
+    size_t scopeHash)
 {
-    return m_rootPath + "/" + std::to_string(scopeURL->hashValue());
+    return m_rootPath + "/" + std::to_string(scopeHash);
+}
+
+RegistrationStoreData* RegistrationStoreLocalStorage::getRegistraionStoreData(
+    size_t scopeHash)
+{
+    RegistrationStoreData* data = nullptr;
+
+    auto itr = m_registrationSW.find(scopeHash);
+    if (itr == m_registrationSW.end()) {
+        data = new RegistrationStoreData();
+        m_registrationSW.insert(std::make_pair(scopeHash, data));
+    } else {
+        data = itr->second;
+    }
+
+    return data;
 }
 
 } // namespace Starfish
