@@ -172,6 +172,7 @@ public:
         // script resource to script, 3) worker’s type to job’s worker type, and
         // 4) worker’s script resource map to updatedResourceMap.
         worker->scriptURL = job->data()->scriptURL;
+        worker->scopeURL = job->data()->scopeURL;
         worker->setType(job->data()->workerType);
         worker->setUrlToScriptResourceMap(updatedResourceMap);
         worker->scriptResource().script = script;

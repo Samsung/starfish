@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     }
 
     LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
-                         "/tmp/Starfish_WebWorkerCookies.txt", "/tmp");
+                         "/tmp/Starfish_WebWorkerCookies.txt", "/tmp/sfw");
 
     Starfish::ServiceWorkerExecutor::initialize(LWE::g_starfishInstance);
 
@@ -83,7 +83,11 @@ int main(int argc, char* argv[])
         });
 
     if (scriptURL.empty() == false) {
-        Starfish::ServiceWorkerExecutor::runServiceWorker(scriptURL);
+        // TODO: make it with scope url
+        auto url =
+            new Starfish::ResourceURL(Starfish::String::createASCIIString(
+                scriptURL.data(), scriptURL.length()));
+        Starfish::ServiceWorkerExecutor::runServiceWorker(url);
     }
 
     struct sigaction act;

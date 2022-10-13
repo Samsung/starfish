@@ -25,10 +25,12 @@
 
 namespace Starfish {
 
+class ResourceURL;
+
 class ServiceWorkerExecutor {
 public:
     static void initialize(Starfish* starfish);
-    static void runServiceWorker(const std::string& scriptURL);
+    static void runServiceWorker(ResourceURL* scriptURL);
     static void registerOnStatusChangedHandler(
         ServiceWorkerAgentStateHandler cb);
     static void finalize();

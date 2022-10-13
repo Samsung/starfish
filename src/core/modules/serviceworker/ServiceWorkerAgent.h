@@ -52,7 +52,7 @@ public:
     void registerOnStatusChangedHandler(ServiceWorkerAgentStateHandler cb);
 
     void runServiceWorker(ServiceWorkerData* serviceWorker);
-    void runServiceWorker(String* scriptURL);
+    void runServiceWorker(ResourceURL* scriptURL);
     void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
 
     NotificationService* notificationService()

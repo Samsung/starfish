@@ -156,8 +156,8 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     // Let workerGlobalScope be the created object.
     WebWorker* webWorker = WebWorker::create(m_starfish, "ko-KR", "Asia/Seoul",
                                              String::emptyString);
-    auto workerGlobalScope =
-        webWorker->createGlobalScope(serviceWorker->scriptURL);
+    auto workerGlobalScope = webWorker->createGlobalScope(
+        new ResourceURL(serviceWorker->scriptURL, serviceWorker->scopeURL));
     m_webWorkerList.push_back(webWorker);
     addGlobalScope(serviceWorker->clientContextId, workerGlobalScope);
 
@@ -226,12 +226,13 @@ ServiceWorkerAgent::findGlobalScopeByContextId(ServiceWorkerContextId id)
     return it->second;
 }
 
-void ServiceWorkerAgent::runServiceWorker(String* scriptURL)
+void ServiceWorkerAgent::runServiceWorker(ResourceURL* scriptURL)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
     ServiceWorkerData* data = new ServiceWorkerData();
-    data->scriptURL = scriptURL;
+    data->scriptURL = scriptURL->urlString();
+    data->scopeURL = scriptURL->baseURI();
     runServiceWorker(data);
 }
 

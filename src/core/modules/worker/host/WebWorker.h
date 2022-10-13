@@ -59,7 +59,7 @@ public:
         return m_scriptEngineInstance;
     }
 
-    ServiceWorkerGlobalScope* createGlobalScope(String* scriptURL);
+    ServiceWorkerGlobalScope* createGlobalScope(ResourceURL* scriptURL);
 
 private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
