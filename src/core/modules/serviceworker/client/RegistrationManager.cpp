@@ -33,16 +33,12 @@ RegistrationManager::RegistrationManager(ServiceWorkerOption* option)
     : m_registrationStore(
           new RegistrationStoreLocalStorage(option->localStorageRootDir()))
 {
-    m_registrationStore->loadRegistrationList(m_registrationList);
+    m_registrationStore->loadRegistrationList();
 }
 
 bool RegistrationManager::isActivatedRegistration(String* scope)
 {
-    auto hashValue = scope->hashValue();
-    TRACE(CLIENT, hashValue);
-
-    auto itr = m_registrationList.find(hashValue);
-    return itr != m_registrationList.end();
+    return m_registrationStore->hasRegistraionSW(scope);
 }
 
 } // namespace Starfish

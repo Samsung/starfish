@@ -23,6 +23,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
@@ -58,6 +59,17 @@ public:
                     String::fromUTF8(response.data(), response.size());
                 if (m_workerScriptController->evaluatefromString(text)) {
                     m_scriptLoadResult = ScriptLoadResult::Success;
+                    if (m_workerScriptController->registrationStore()
+                            .hasValue()) {
+                        m_workerScriptController->registrationStore()
+                            ->saveWorkerScripts(
+                                m_workerScriptController->executionContext()
+                                    ->baseURL()
+                                    ->baseURI(),
+                                m_workerScriptController->executionContext()
+                                    ->urlString(),
+                                text);
+                    }
                 } else {
                     m_scriptLoadResult = ScriptLoadResult::ScriptError;
                 }

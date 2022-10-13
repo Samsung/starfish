@@ -228,6 +228,22 @@ JsonReader& JsonReader::operator&(unsigned& u)
     return *this;
 }
 
+STARFISH_ASSERT_STATIC(sizeof(void*) == 8,
+                       "Fixme archiving size_t on 32bit target");
+
+JsonReader& JsonReader::operator&(size_t& u)
+{
+    if (mError == false) {
+        if (CURRENT.IsUint64() == true) {
+            u = CURRENT.GetUint64();
+            Next();
+        } else {
+            mError = true;
+        }
+    }
+    return *this;
+}
+
 JsonReader& JsonReader::operator&(int& i)
 {
     if (mError == false) {
@@ -417,6 +433,12 @@ JsonWriter& JsonWriter::operator&(bool& b)
 JsonWriter& JsonWriter::operator&(unsigned& u)
 {
     WRITER->Uint(u);
+    return *this;
+}
+
+JsonWriter& JsonWriter::operator&(size_t& u)
+{
+    WRITER->Uint64(u);
     return *this;
 }
 

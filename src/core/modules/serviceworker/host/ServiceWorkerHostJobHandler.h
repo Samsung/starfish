@@ -104,6 +104,11 @@ public:
     void handleFetch(FetchEventRequestData* data,
                      ServiceWorkerHostConnection* connection);
 
+    RegistrationStore* registrationStore()
+    {
+        return m_registrationStore;
+    }
+
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
 

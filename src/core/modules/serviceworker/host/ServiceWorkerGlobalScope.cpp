@@ -23,6 +23,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/util/Trace.h"
@@ -59,6 +60,12 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
 
     initGlobalScope(url, charSet);
     initCacheStorage();
+
+    ServiceWorkerHostJobHandler* jobHander =
+        ServiceWorkerAgent::instance()->serviceWorkerServer()->jobHandler();
+
+    m_workerScriptController->setRegistrationStore(
+        jobHander->registrationStore());
 
     m_internal = new Internal(m_scriptBindingInstance);
     m_internal->setUrl(url);
