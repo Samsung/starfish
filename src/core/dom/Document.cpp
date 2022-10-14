@@ -203,7 +203,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     CSSStyleSheet* userAgentStyleSheet =
         new CSSStyleSheet(this, String::createASCIIString(ua));
     userAgentStyleSheet->parseSheetIfneeds();
-    std::vector<CSSStyleDeclaration*> webFonts;
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
                                            webFonts,
                                            userAgentStyleSheet->url());
