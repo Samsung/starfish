@@ -265,7 +265,7 @@ void BrowsingContext::resolveStyleIfNeeds()
             size_t sheets = document()->styleResolver().sheets().size();
             document()->m_webFontList.clear();
             size_t offset = 0;
-            std::vector<CSSStyleDeclaration*> webFonts;
+            std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
 
             // We can use non gc vector
             // because CSSStyleSheets has string reference to each
@@ -312,7 +312,7 @@ void BrowsingContext::resolveStyleIfNeeds()
 
 #if !defined(PORT_CANVAS_BACKEND_MOCK)
             for (size_t i = 0; i < webFonts.size(); i++) {
-                CSSStyleDeclaration* decl = webFonts[i];
+                CSSStyleDeclaration* decl = webFonts[i].first;
                 if (!decl->hasCSSValuePair(
                         CSSStyleValuePair::KeyKind::FontFamily) ||
                     decl->getCSSValuePair(
@@ -425,11 +425,18 @@ void BrowsingContext::resolveStyleIfNeeds()
                 auto fontFaceData = src->data()[indexes[0]];
 
                 if (std::get<1>(fontFaceData) != FontFaceSrcData::Local) {
-                    ResourceURL* fontURL =
-                        new ResourceURL(std::get<0>(fontFaceData),
-                                        document()->documentURI()->urlString());
-
+                    ResourceURL* fontURL = nullptr;
                     FontResource* res = nullptr;
+                    if (webFonts[i].second && (webFonts[i].second)->isValid()) {
+                        fontURL =
+                            new ResourceURL(std::get<0>(fontFaceData),
+                                            (webFonts[i].second)->urlString());
+                    } else {
+                        fontURL = new ResourceURL(
+                            std::get<0>(fontFaceData),
+                            document()->documentURI()->urlString());
+                    }
+
                     for (size_t i = 0;
                          i < document()->m_loadedWebFontList.size(); i++) {
                         if (fontURL->urlString()->equals(

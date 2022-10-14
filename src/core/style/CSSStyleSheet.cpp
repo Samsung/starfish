@@ -213,7 +213,7 @@ bool CSSStyleSheet::matchesMediaQueries(
 
 void CSSStyleSheet::collectRulesFromImportedSheet(
     GCVector<StyleRuleImport*>& rules,
-    std::vector<CSSStyleDeclaration*>& webFonts,
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
     MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
@@ -247,8 +247,8 @@ void CSSStyleSheet::collectRulesFromImportedSheet(
 
 void CSSStyleSheet::collectStyleRules(
     GCVector<StyleRuleBase*>& rules,
-    std::vector<CSSStyleDeclaration*>& webFonts, ResourceURL* url,
-    MediaQueryResultList* viewportDependentResult,
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>>& webFonts,
+    ResourceURL* url, MediaQueryResultList* viewportDependentResult,
     MediaQueryResultList* deviceDependentResult)
 {
     if (disabled()) {
@@ -272,7 +272,8 @@ void CSSStyleSheet::collectStyleRules(
                                   deviceDependentResult);
             }
         } else if (rule->isFontFaceRule()) {
-            webFonts.push_back(rule->asStyleRuleFontFace()->styleDeclaration());
+            webFonts.push_back(std::make_pair(
+                rule->asStyleRuleFontFace()->styleDeclaration(), url));
         } else if (rule->isSupportsRule()) {
             StyleRuleSupports* supports = rule->asStyleRuleSupports();
             if (supports->isSupported()) {
@@ -367,7 +368,7 @@ void CSSStyleSheet::willAddToDocument()
                                       ->styleResolver()
                                       .deviceDependentMediaQueryResults();
 
-    std::vector<CSSStyleDeclaration*> webFonts;
+    std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     clearStyleRules();
     collectRulesFromImportedSheet(importRules(), webFonts,
                                   viewportDependentResult,
