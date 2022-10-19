@@ -51,7 +51,8 @@ public:
     void onWebWorkerTerminated(WebWorker* worker);
     void registerOnStatusChangedHandler(ServiceWorkerAgentStateHandler cb);
 
-    void runServiceWorker(ServiceWorkerData* serviceWorker);
+    void runServiceWorker(ServiceWorkerData* serviceWorker,
+                          bool forceBypassCache = false);
     void runServiceWorker(ResourceURL* scriptURL);
     void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
 

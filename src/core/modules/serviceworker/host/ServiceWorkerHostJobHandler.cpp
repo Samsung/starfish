@@ -328,7 +328,6 @@ void ServiceWorkerHostJobHandler::setRegistration(
     auto iter = m_scopeToRegistrationMap.find(scope);
     if (iter == m_scopeToRegistrationMap.end()) {
         m_scopeToRegistrationMap.insert(std::make_pair(scope, registration));
-        m_registrationStore->add(registration);
     } else {
         iter->second = registration;
     }
@@ -404,6 +403,18 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 
     if (registration != nullptr) {
         // 5. If registration is not null, then:
+        auto newstWorker = getNewestWorker(registration);
+        if (newstWorker &&
+            job->data()->scriptURL->equals(newstWorker->scriptURL) &&
+            job->data()->workerType == newstWorker->type() &&
+            job->data()->updateViaCacheMode ==
+                newstWorker->updateViaCacheMode()) {
+            TRACE_SCOPE(HOST);
+
+            resolveJobPromise(job, registration);
+            finishJob(job);
+            return;
+        }
     } else {
         // 6. Invoke Set Registration algorithm with job’s scope url and job’s
         // update via cache mode.
@@ -513,7 +524,7 @@ void ServiceWorkerHostJobHandler::startServiceWorkerContext(
 {
     TRACE(HOST, CSTR(serviceWorkerData->scopeURL));
 
-    // TODO: run service worker
+    ServiceWorkerAgent::instance()->runServiceWorker(serviceWorkerData, true);
 }
 
 void ServiceWorkerHostJobHandler::runServiceWorker(
@@ -1089,6 +1100,9 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
                                                       source);
             }
         }
+
+        m_registrationStore->add(registration);
+
         break;
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

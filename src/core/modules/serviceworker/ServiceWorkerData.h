@@ -25,6 +25,7 @@
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
 #include "core/modules/worker/WorkerType.h"
+#include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
 
 namespace Starfish {
 
@@ -97,6 +98,8 @@ public:
     DEFINE_GETTER_SETTER(NULLABLE ScriptResourceMap_t*, urlToScriptResourceMap,
                          UrlToScriptResourceMap);
     DEFINE_GETTER_SETTER(bool, skipWaiting, SkipWaiting);
+    DEFINE_GETTER_SETTER(ServiceWorkerUpdateViaCache, updateViaCacheMode,
+                         UpdateViaCacheMode);
 
     ScriptResource& scriptResource()
     {
@@ -113,6 +116,9 @@ private:
     WorkerType m_type{ WorkerType::Classic };
     ScriptResource m_scriptResource;
     bool m_skipWaiting{ false };
+    ServiceWorkerUpdateViaCache m_updateViaCacheMode{
+        ServiceWorkerUpdateViaCache::Imports
+    };
 };
 
 } // namespace Starfish
