@@ -58,6 +58,7 @@ public:
     void registerServiceWorker(ServiceWorkerJob* job);
     void unregisterServiceWorker(ServiceWorkerJob* job);
     void update(ServiceWorkerJob* job);
+    void startServiceWorkerContext(ServiceWorkerData* serviceWorkerData);
     void runServiceWorker(ServiceWorkerData* serviceWorker);
     void install(ServiceWorkerJob* job, ServiceWorkerData* worker,
                  ServiceWorkerRegistrationData* registration);

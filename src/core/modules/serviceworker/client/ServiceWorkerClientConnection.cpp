@@ -105,6 +105,15 @@ void ServiceWorkerClientConnection::fetchEvent(
     sendMessage("fetchEvent", FetchEventRequestData);
 }
 
+void ServiceWorkerClientConnection::startServiceWorkerContext(
+    ServiceWorkerData* serviceWorkerData)
+{
+    TRACE_SCOPE(CLIENT);
+    STARFISH_ASSERT(serviceWorkerData != nullptr);
+
+    sendMessage("startServiceWorkerContext", serviceWorkerData);
+}
+
 void ServiceWorkerClientConnection::sendMessage(const char* msgName,
                                                 NULLABLE Archivable* param1,
                                                 NULLABLE Archivable* param2)

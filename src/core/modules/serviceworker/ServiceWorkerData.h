@@ -21,6 +21,9 @@
     !defined(__StarfishServiceWorkerData__)
 #define __StarfishServiceWorkerData__
 
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/util/Archivable.h"
 #include "core/modules/worker/WorkerType.h"
 
 namespace Starfish {

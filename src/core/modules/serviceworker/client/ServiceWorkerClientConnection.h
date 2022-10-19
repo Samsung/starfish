@@ -45,6 +45,8 @@ public:
                            String* clientURL) override;
     void updateServiceWorkerClient(ContextRequestData* request) override;
     void fetchEvent(FetchEventRequestData* FetchEventRequestData) override;
+    void startServiceWorkerContext(
+        ServiceWorkerData* serviceWorkerData) override;
 
     void sendMessage(const char* msgName, NULLABLE Archivable* param1 = nullptr,
                      NULLABLE Archivable* param2 = nullptr);

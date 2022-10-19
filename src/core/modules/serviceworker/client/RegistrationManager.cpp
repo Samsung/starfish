@@ -24,6 +24,8 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/RegistrationStore.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/RegistrationManager.h"
 
@@ -39,6 +41,24 @@ RegistrationManager::RegistrationManager(ServiceWorkerOption* option)
 bool RegistrationManager::isActivatedRegistration(String* scope)
 {
     return m_registrationStore->hasRegistraionSW(scope);
+}
+
+void RegistrationManager::startRegisteredServiceWorkerContext(
+    ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
+    String* scope)
+{
+    TRACE(CLIENT);
+
+    auto scopeHash = scope->hashValue();
+    auto storeData = m_registrationStore->findRegistraionStoreData(scopeHash);
+    STARFISH_ASSERT(storeData.hasValue());
+
+    auto worker = new ServiceWorkerData();
+    worker->clientContextId = id;
+    worker->scopeURL = storeData->scopeURL;
+    worker->scriptURL = storeData->scriptURL;
+
+    connection->startServiceWorkerContext(worker);
 }
 
 } // namespace Starfish

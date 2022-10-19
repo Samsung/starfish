@@ -209,6 +209,9 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data,
     } else if (msgName == "fetchEvent") {
         auto data = downcast<FetchEventRequestData*>(msg.param(0));
         handler->handleFetch(data, this);
+    } else if (msgName == "startServiceWorkerContext") {
+        auto data = downcast<ServiceWorkerData*>(msg.param(0));
+        handler->startServiceWorkerContext(data);
     } else {
         STARFISH_LOG_ERROR("Unknown message is received: %s", msgName.c_str());
         STARFISH_ASSERT_NOT_REACHED();

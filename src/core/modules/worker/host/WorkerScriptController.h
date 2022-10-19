@@ -33,6 +33,7 @@ enum class ScriptLoadResult {
     NotHandled,
     Success,
     NetworkError,
+    FileError,
     ScriptError,
 };
 
@@ -41,6 +42,7 @@ public:
     WorkerScriptController(ExecutionContext* executionContext);
 
     ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
+    ScriptLoadResult loadJavaScriptFromCache(ResourceURL* resourceURL);
     bool evaluatefromString(String* string);
 
     ExecutionContext* executionContext()

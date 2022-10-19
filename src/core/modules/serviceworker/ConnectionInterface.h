@@ -47,6 +47,8 @@ public:
                                    String* clientURL) = 0;
     virtual void updateServiceWorkerClient(ContextRequestData* request) = 0;
     virtual void fetchEvent(FetchEventRequestData* FetchEventRequestData) = 0;
+    virtual void startServiceWorkerContext(
+        ServiceWorkerData* serviceWorkerData) = 0;
 
     // receive
     // NOTE: For rapid development, declaring receive handler isn't compulsory
