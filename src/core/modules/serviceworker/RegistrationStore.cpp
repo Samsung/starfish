@@ -39,8 +39,8 @@ std::string RegistrationStoreLocalStorage::s_scriptName("script");
 bool RegistrationStoreData::writeJsonData(JsonWriter& writer)
 {
     writer.StartObject();
-    writer.Member("scopeHash") & scopeHash;
     writer.Member("registrationDataPath") & registrationDataPath;
+    writer.Member("scopeURL") & scopeURL;
     writer.Member("scriptURL") & scriptURL;
     writer.Member("scriptPath") & scriptPath;
     writer.EndObject();
@@ -56,8 +56,8 @@ bool RegistrationStoreData::writeJsonData(JsonWriter& writer)
 bool RegistrationStoreData::readJsonData(JsonReader& reader)
 {
     reader.StartObject();
-    reader.Member("scopeHash") & scopeHash;
     reader.Member("registrationDataPath") & registrationDataPath;
+    reader.Member("scopeURL") & scopeURL;
     reader.Member("scriptURL") & scriptURL;
     reader.Member("scriptPath") & scriptPath;
     reader.EndObject();
@@ -105,7 +105,9 @@ void RegistrationStoreLocalStorage::loadRegistrationList()
         auto data = new RegistrationStoreData;
         auto result = data->readJsonData(jsonReader);
         STARFISH_ASSERT(result);
-        m_registrationSW.insert(std::make_pair(data->scopeHash, data));
+
+        m_registrationSW.insert(
+            std::make_pair(data->scopeURL->hashValue(), data));
     }
     jsonReader.EndArray();
 
@@ -218,7 +220,7 @@ void RegistrationStoreLocalStorage::saveWorkerScripts(String* scope,
     auto scopeHash = scope->hashValue();
 
     auto data = getRegistraionStoreData(scopeHash);
-    data->scopeHash = scopeHash;
+    data->scopeURL = scope;
     data->scriptURL = urlString;
 
     auto appPath = getInstalledSWDirPath(scopeHash);
@@ -239,6 +241,32 @@ void RegistrationStoreLocalStorage::saveWorkerScripts(String* scope,
     return;
 }
 
+Nullable<String*> RegistrationStoreLocalStorage::loadWorkerScript(String* scope)
+{
+    TRACE(HOST);
+
+    auto scopeHash = scope->hashValue();
+    auto storeData = findRegistraionStoreData(scopeHash);
+    if (!storeData.hasValue()) {
+        return nullptr;
+    }
+
+    if (!LocalStorageHelper::File::exists(storeData->scriptPath)) {
+        return nullptr;
+    }
+
+    std::string script;
+
+    {
+        LocalStorageHelper::Reader reader(storeData->scriptPath);
+        if (!reader.readAll(script)) {
+            return nullptr;
+        }
+    }
+
+    return String::fromUTF8(script.data(), script.size());
+}
+
 std::string RegistrationStoreLocalStorage::getInstalledSWDirPath(
     size_t scopeHash)
 {
@@ -248,17 +276,24 @@ std::string RegistrationStoreLocalStorage::getInstalledSWDirPath(
 RegistrationStoreData* RegistrationStoreLocalStorage::getRegistraionStoreData(
     size_t scopeHash)
 {
-    RegistrationStoreData* data = nullptr;
-
-    auto itr = m_registrationSW.find(scopeHash);
-    if (itr == m_registrationSW.end()) {
-        data = new RegistrationStoreData();
-        m_registrationSW.insert(std::make_pair(scopeHash, data));
-    } else {
-        data = itr->second;
+    auto storeData = findRegistraionStoreData(scopeHash);
+    if (storeData.hasValue()) {
+        return storeData.getValue();
     }
 
-    return data;
+    auto newStoreData = new RegistrationStoreData();
+    m_registrationSW.insert(std::make_pair(scopeHash, newStoreData));
+    return newStoreData;
+}
+
+Nullable<RegistrationStoreData*>
+RegistrationStoreLocalStorage::findRegistraionStoreData(size_t scopeHash)
+{
+    auto itr = m_registrationSW.find(scopeHash);
+    if (itr == m_registrationSW.end()) {
+        return nullptr;
+    }
+    return itr->second;
 }
 
 } // namespace Starfish

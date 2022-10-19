@@ -124,6 +124,22 @@ ScriptLoadResult WorkerScriptController::loadJavaScript(
     return client->scriptLoadResult();
 }
 
+ScriptLoadResult WorkerScriptController::loadJavaScriptFromCache(
+    ResourceURL* resourceURL)
+{
+    auto scope = resourceURL->baseURI();
+    auto script = m_registrationStore->loadWorkerScript(scope);
+    if (!script.hasValue()) {
+        return ScriptLoadResult::FileError;
+    }
+
+    if (!evaluatefromString(script.getValue())) {
+        return ScriptLoadResult::ScriptError;
+    }
+
+    return ScriptLoadResult::Success;
+}
+
 bool WorkerScriptController::evaluatefromString(String* string)
 {
     STARFISH_ASSERT(string != nullptr);

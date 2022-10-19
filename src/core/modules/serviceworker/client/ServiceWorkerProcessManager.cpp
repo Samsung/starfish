@@ -302,7 +302,8 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
     auto scope = globalScope->executionContext()->baseURL()->baseURI();
     if (m_registrationManager->isActivatedRegistration(scope)) {
         TRACEF(CLIENT, "'%s' is a registered service worker.", CSTR(scope));
-        getConnection(scope);
+        m_registrationManager->startRegisteredServiceWorkerContext(
+            getConnection(scope), id, scope);
     }
 
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));

@@ -39,6 +39,8 @@ void ServiceWorkerData::archive(Archiver& ar)
     ar.Member("scriptURL") & scriptURL;
     ar.Member("scopeURL") & scopeURL;
     ar.MemberEnum("state", state);
+    ar.MemberId("registrationId", registrationId);
+    ar.MemberId("clientContextId", clientContextId);
 }
 
 } // namespace Starfish

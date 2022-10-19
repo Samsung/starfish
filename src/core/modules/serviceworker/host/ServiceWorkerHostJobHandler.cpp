@@ -508,6 +508,14 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
     client->onReadyStateChange(nullptr, true);
 }
 
+void ServiceWorkerHostJobHandler::startServiceWorkerContext(
+    ServiceWorkerData* serviceWorkerData)
+{
+    TRACE(HOST, CSTR(serviceWorkerData->scopeURL));
+
+    // TODO: run service worker
+}
+
 void ServiceWorkerHostJobHandler::runServiceWorker(
     ServiceWorkerData* serviceWorker)
 {

@@ -31,10 +31,12 @@ public:
     RegistrationManager(ServiceWorkerOption* option);
 
     bool isActivatedRegistration(String* scope);
+    void startRegisteredServiceWorkerContext(
+        ServiceWorkerClientConnection* connection, Id<GlobalScope> id,
+        String* scope);
 
 private:
     RegistrationStore* m_registrationStore;
-    std::unordered_map<size_t, std::string> m_registrationList;
 };
 
 } // namespace Starfish

@@ -32,8 +32,8 @@ class JsonWriter;
 class JsonReader;
 
 struct RegistrationStoreData : public gc {
-    size_t scopeHash{ 0 };
     std::string registrationDataPath;
+    String* scopeURL;
     String* scriptURL;
     std::string scriptPath;
 
@@ -51,7 +51,10 @@ public:
     virtual void loadRegistrationList() = 0;
     virtual void saveWorkerScripts(String* scope, String* urlString,
                                    String* scriptText) = 0;
+    virtual Nullable<String*> loadWorkerScript(String* scope) = 0;
     virtual bool hasRegistraionSW(String* scope) = 0;
+    virtual Nullable<RegistrationStoreData*> findRegistraionStoreData(
+        size_t scopeHash) = 0;
 
 protected:
     RegistrationStore(){};
@@ -68,7 +71,10 @@ public:
     void loadRegistrationList() override;
     void saveWorkerScripts(String* scope, String* urlString,
                            String* scriptText) override;
+    Nullable<String*> loadWorkerScript(String* scope) override;
     bool hasRegistraionSW(String* scope) override;
+    Nullable<RegistrationStoreData*> findRegistraionStoreData(
+        size_t scopeHash) override;
 
 private:
     static std::string s_storeName;
