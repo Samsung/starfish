@@ -142,7 +142,8 @@ void ServiceWorkerAgent::registerOnStatusChangedHandler(
     m_clientFunc = func;
 }
 
-void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
+void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
+                                          bool forceBypassCache)
 {
     TRACE_SCOPE(SVCWORKER);
 #if defined(STARFISH_WEBWORKER_HOST)
@@ -188,8 +189,18 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker)
     // 4.12 Let evaluationStatus be the result of running the classic script
     // script if script is a classic script, otherwise, the result of running
     // the module script script if script is a module script.
-    ScriptLoadResult evaluationStatus = workerScriptController->loadJavaScript(
-        workerGlobalScope->executionContext()->documentURI());
+    ScriptLoadResult evaluationStatus = ScriptLoadResult::NotHandled;
+
+    if (forceBypassCache) {
+        TRACE(HOST, "Load main script from cache");
+        evaluationStatus = workerScriptController->loadJavaScriptFromCache(
+            workerGlobalScope->executionContext()->documentURI());
+    } else {
+        TRACE(HOST, "Load main script from network");
+        evaluationStatus = workerScriptController->loadJavaScript(
+            workerGlobalScope->executionContext()->documentURI());
+    }
+
     if (evaluationStatus != ScriptLoadResult::Success) {
         STARFISH_LOG_WARN("Fail to load script: %s",
                           CSTR(serviceWorker->scriptURL));
