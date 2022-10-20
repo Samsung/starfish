@@ -38,6 +38,13 @@ namespace Starfish {
 ServiceWorkerFetchTask::ServiceWorkerFetchTask(ResourceRequest* resourceRequest)
     : m_resourceRequest(resourceRequest)
 {
+    auto fetchEventHandler =
+        ServiceWorkerProcessManager::instance()->findFetchEventHandler(
+            m_resourceRequest->executionContext()->globalScope()->uid());
+    STARFISH_ASSERT(fetchEventHandler.hasValue());
+
+    m_fetchEventHandler = fetchEventHandler.getValue();
+    m_id = m_fetchEventHandler->fetchTaskId();
 }
 
 void ServiceWorkerFetchTask::request(String* body)

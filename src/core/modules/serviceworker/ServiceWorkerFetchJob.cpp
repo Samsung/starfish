@@ -43,6 +43,7 @@ Nullable<Response*> ServiceWorkerFetchJob::handleFetch(
     FetchEventRequestData* data)
 {
     TRACE(HOST);
+    m_id = data->fetchTaskId;
     auto requestData = data->toRequestData();
     m_url = requestData->m_url->urlString();
 
@@ -183,8 +184,7 @@ void ServiceWorkerFetchJob::successJob()
     }
 
     auto data = FetchEventResponseData::createFetchEventResponseData(
-        m_contextId, m_response);
-    data->url = m_url; // TODO: change to url of Response
+        m_contextId, m_id, m_response);
     m_connection->respondFetchEvent(data);
 }
 

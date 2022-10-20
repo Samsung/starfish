@@ -54,10 +54,12 @@ RequestData* FetchEventRequestData::toRequestData()
 }
 
 FetchEventResponseData* FetchEventResponseData::createFetchEventResponseData(
-    ServiceWorkerContextId id, Response* response)
+    ServiceWorkerContextId contextId, ServiceWorkerFetchKey fetchTaskId,
+    Response* response)
 {
     auto data = new FetchEventResponseData();
-    data->contextId = id;
+    data->contextId = contextId;
+    data->fetchTaskId = fetchTaskId;
     data->url = response->url();
     return data;
 }
