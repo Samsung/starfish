@@ -47,6 +47,8 @@ public:
 
     virtual void load(ServiceWorkerRegistrationMap& map) = 0;
     virtual void add(ServiceWorkerRegistrationData* data) = 0;
+    virtual Nullable<ServiceWorkerRegistrationData*> get(
+        const std::string& path) = 0;
     virtual void remove(ServiceWorkerRegistrationData* data) = 0;
     virtual void loadRegistrationList() = 0;
     virtual void saveWorkerScripts(String* scope, String* urlString,
@@ -67,6 +69,8 @@ public:
 
     void load(ServiceWorkerRegistrationMap& map) override;
     void add(ServiceWorkerRegistrationData* data) override;
+    Nullable<ServiceWorkerRegistrationData*> get(
+        const std::string& path) override;
     void remove(ServiceWorkerRegistrationData* data) override;
     void loadRegistrationList() override;
     void saveWorkerScripts(String* scope, String* urlString,

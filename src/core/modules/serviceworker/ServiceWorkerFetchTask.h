@@ -33,7 +33,7 @@ class ServiceWorkerFetchTask : public gc {
 public:
     ServiceWorkerFetchTask(ResourceRequest* resourceRequest);
 
-    void request(String* body);
+    bool request(String* body);
 
     void onResponse(FetchEventResponseData* data);
 

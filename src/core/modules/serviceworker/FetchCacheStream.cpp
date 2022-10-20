@@ -21,6 +21,8 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/profiling/Profiling.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
@@ -54,10 +56,15 @@ void FetchCacheStreamResponseData::applyResponse(Response* response)
     response->createReadableStream();
     response->body()->streamBuffer()->buffer().assign(buffer.begin(),
                                                       buffer.end());
+    if (!cachePath.empty()) {
+        response->setCachePath(cachePath);
+    }
 }
 
-FetchCacheStream::FetchCacheStream(const std::string& rootPath)
+FetchCacheStream::FetchCacheStream(const std::string& rootPath,
+                                   bool useComplexKey)
     : m_cacheDirPath(rootPath)
+    , m_useComplexKey(useComplexKey)
 {
 }
 
@@ -80,9 +87,18 @@ bool FetchCacheStream::open(size_t originHashValue,
     return true;
 }
 
+bool FetchCacheStream::open(const std::string& dirName)
+{
+    m_cacheDirPath = m_cacheDirPath + "/" + dirName;
+    LocalStorageHelper::File::mkdirIfNotExists(m_cacheDirPath);
+
+    return true;
+}
+
 bool FetchCacheStream::writeResponse(size_t urlHashValue,
                                      FetchCacheStreamResponseData* data)
 {
+    TRACE(SVCWORKER);
     auto path = getCachePath(urlHashValue);
 
     LocalStorageHelper::Writer writer(path);
@@ -90,14 +106,18 @@ bool FetchCacheStream::writeResponse(size_t urlHashValue,
 
     RETURN_FALSE_IF_FAILED(writer.writeVector(data->buffer));
 
+    data->cachePath = path;
+
     return true;
 }
 
-bool FetchCacheStream::writeResponse(Request* request, Response* response)
+bool FetchCacheStream::writeResponse(size_t urlHashValue, Response* response)
 {
     STARFISH_ASSERT(isMainThread());
+    TRACE(SVCWORKER);
 
-    auto path = getCachePath(request->url()->hashValue());
+    auto path = getCachePath(urlHashValue);
+    response->createReadableStream();
     auto streamBuffer = response->body()->streamBuffer();
 
     LocalStorageHelper::Writer writer(path);
@@ -105,12 +125,20 @@ bool FetchCacheStream::writeResponse(Request* request, Response* response)
 
     RETURN_FALSE_IF_FAILED(writer.writeVector(streamBuffer->buffer()));
 
+    response->setCachePath(path);
+
     return true;
+}
+
+bool FetchCacheStream::writeResponse(Request* request, Response* response)
+{
+    return writeResponse(request->url()->hashValue(), response);
 }
 
 bool FetchCacheStream::readResponse(size_t urlHashValue,
                                     FetchCacheStreamResponseData* data)
 {
+    TRACE(SVCWORKER);
     auto path = getCachePath(urlHashValue);
 
     LocalStorageHelper::Reader reader(path);
@@ -123,6 +151,7 @@ bool FetchCacheStream::readResponse(size_t urlHashValue,
 bool FetchCacheStream::readResponse(String* url, Response* response)
 {
     STARFISH_ASSERT(isMainThread());
+    TRACE(SVCWORKER);
 
     auto path = getCachePath(url->hashValue());
     response->createReadableStream();
@@ -138,7 +167,25 @@ bool FetchCacheStream::readResponse(String* url, Response* response)
     return true;
 }
 
-bool FetchCacheStream::getKeys(size_t cacheScopeDirHash, ValueVectorRef* result)
+bool FetchCacheStream::readResponseFromFile(const std::string& path,
+                                            ResourceRequest* resourceRequest)
+{
+    if (!LocalStorageHelper::File::exists(path)) {
+        return false;
+    }
+    TRACE(SVCWORKER);
+
+    LocalStorageHelper::Reader reader(path);
+    RETURN_FALSE_IF_FAILED(
+        reader.readString(resourceRequest->m_responseData->m_mimeType));
+    RETURN_FALSE_IF_FAILED(
+        reader.readVector(resourceRequest->m_responseData->m_responseBody));
+
+    return true;
+}
+
+bool FetchCacheStream::getKeys(size_t cacheScopeDirHash,
+                               Escargot::ValueVectorRef* result)
 {
     STARFISH_ASSERT(result != nullptr);
 
@@ -162,7 +209,12 @@ bool FetchCacheStream::getKeys(size_t cacheScopeDirHash, ValueVectorRef* result)
 
 std::string FetchCacheStream::getCachePath(size_t urlHashValue)
 {
-    return m_cacheDirPath + "/" + std::to_string(urlHashValue);
+    auto path = m_cacheDirPath + "/" + std::to_string(urlHashValue);
+    if (m_useComplexKey) {
+        path.append("_").append(std::to_string(longTickCount()));
+    }
+
+    return path;
 }
 
 } // namespace Starfish

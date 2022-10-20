@@ -29,10 +29,12 @@ namespace Starfish {
 
 class Response;
 class Request;
+class ResourceRequest;
 
 struct FetchCacheStreamResponseData : public gc {
     std::string mimeType;
     std::vector<char> buffer;
+    std::string cachePath;
 
     static FetchCacheStreamResponseData* create(Response* response);
     void applyResponse(Response* response);
@@ -40,21 +42,29 @@ struct FetchCacheStreamResponseData : public gc {
 
 class FetchCacheStream : public gc {
 public:
-    FetchCacheStream(const std::string& rootPath);
+    FetchCacheStream(const std::string& rootPath, bool useComplexKey = false);
 
     bool open(size_t originHashValue, const std::string& cacheName);
+    bool open(const std::string& dirName);
 
     bool writeResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
+    bool writeResponse(size_t urlHashValue, Response* response);
     bool writeResponse(Request* request, Response* response);
 
     bool readResponse(size_t urlHashValue, FetchCacheStreamResponseData* data);
     bool readResponse(String* url, Response* response);
 
-    bool getKeys(size_t cacheScopeDirHash, ValueVectorRef* result);
+    static bool readResponseFromFile(const std::string& path,
+                                     ResourceRequest* resourceRequest);
+
+    bool getKeys(size_t cacheScopeDirHash, Escargot::ValueVectorRef* result);
+
+    DEFINE_GETTER(bool, useComplexKey);
 
 private:
     std::string m_cacheDirPath;
     std::string m_cacheScopeDirPath;
+    bool m_useComplexKey;
 
     std::string getCachePath(size_t urlHashValue);
 };

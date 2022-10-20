@@ -103,7 +103,7 @@ namespace LocalStorageHelper {
         return true;
     }
 
-    Writer::Writer(std::string& path)
+    Writer::Writer(const std::string& path)
     {
         TRACEF(LOCALSTORAGE, path.data());
         m_fileStream.open(path.data(), std::ios::binary);
@@ -160,7 +160,7 @@ namespace LocalStorageHelper {
         return writeBuffer(vector.data(), vector.size());
     }
 
-    Reader::Reader(std::string& path)
+    Reader::Reader(const std::string& path)
     {
         TRACEF(LOCALSTORAGE, path.data());
         m_fileStream.open(path.data(), std::ios::binary);

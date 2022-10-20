@@ -84,6 +84,11 @@ public:
         return m_perProcess;
     }
 
+    Starfish* starfish()
+    {
+        return m_starfish;
+    }
+
 private:
     ServiceWorkerAgent(Starfish* starfish, PerProcess* perProcess);
     virtual ~ServiceWorkerAgent();
