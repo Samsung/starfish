@@ -48,7 +48,7 @@ namespace LocalStorageHelper {
 
     class Writer {
     public:
-        Writer(std::string& path);
+        Writer(const std::string& path);
         ~Writer();
 
         template <typename T>
@@ -80,7 +80,7 @@ namespace LocalStorageHelper {
 
     class Reader {
     public:
-        Reader(std::string& path);
+        Reader(const std::string& path);
         ~Reader();
 
         template <typename T>

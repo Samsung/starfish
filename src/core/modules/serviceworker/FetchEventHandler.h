@@ -40,6 +40,8 @@ public:
 
     ServiceWorkerFetchKey fetchTaskId();
 
+    DEFINE_GETTER_SETTER(bool, fetchFromServiceWorker, FetchFromServiceWorker);
+
 private:
     GCVector<ServiceWorkerFetchTask*> m_pendingTasks;
     GCUnorderedMap<ServiceWorkerFetchKey, ServiceWorkerFetchTask*>
@@ -47,6 +49,7 @@ private:
     bool m_isStarted{ false };
     ServiceWorkerClientConnection* m_connection{ nullptr };
     String* m_scopeURL{ nullptr }; // TODO: change to storage key
+    bool m_fetchFromServiceWorker{ false };
     ServiceWorkerFetchKey m_fetchTaskId{ 0 };
 
     void sendEvent(ServiceWorkerFetchTask* task);

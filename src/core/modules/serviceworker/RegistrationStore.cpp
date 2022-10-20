@@ -152,21 +152,9 @@ void RegistrationStoreLocalStorage::load(ServiceWorkerRegistrationMap& map)
 
     for (const auto& registrationSW : m_registrationSW) {
         auto path = registrationSW.second->registrationDataPath;
-        if (LocalStorageHelper::File::exists(path)) {
-            LocalStorageHelper::Reader fileReader(path);
-            std::string buffer;
-            if (fileReader.readAll(buffer)) {
-                JsonReader reader(buffer.data());
-                Message msg;
-                msg.archive(reader);
-
-                auto msgname = msg.name();
-                auto data =
-                    downcast<ServiceWorkerRegistrationData*>(msg.param(0));
-
-                TRACE(SVCWORKER, "load registration", CSTR(data->scope));
-                map.insert(std::make_pair(data->scope, data));
-            }
+        auto data = get(path);
+        if (data.hasValue()) {
+            map.insert(std::make_pair(data->scope, data.getValue()));
         }
     }
 }
@@ -193,6 +181,30 @@ void RegistrationStoreLocalStorage::add(ServiceWorkerRegistrationData* data)
     storeData->registrationDataPath = dataPath;
 
     saveRegistrationList();
+}
+
+Nullable<ServiceWorkerRegistrationData*> RegistrationStoreLocalStorage::get(
+    const std::string& path)
+{
+    if (!LocalStorageHelper::File::exists(path)) {
+        return nullptr;
+    }
+
+    LocalStorageHelper::Reader fileReader(path);
+    std::string buffer;
+    if (fileReader.readAll(buffer)) {
+        JsonReader reader(buffer.data());
+        Message msg;
+        msg.archive(reader);
+
+        auto msgname = msg.name();
+        auto data = downcast<ServiceWorkerRegistrationData*>(msg.param(0));
+
+        TRACE(SVCWORKER, "load registration", CSTR(data->scope));
+        return data;
+    }
+
+    return nullptr;
 }
 
 void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)

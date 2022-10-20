@@ -20,16 +20,21 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/WebOrigin.h"
 #include "core/page/GlobalScope.h"
+#include "core/modules/serviceworker/util/LocalStorageHelper.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/FetchEventHandler.h"
+#include "core/modules/serviceworker/FetchEventData.h"
+#include "core/modules/serviceworker/FetchCacheStream.h"
 #include "core/fetch/Request.h"
 #include "core/page/WebBase.h"
 
@@ -47,25 +52,50 @@ ServiceWorkerFetchTask::ServiceWorkerFetchTask(ResourceRequest* resourceRequest)
     m_id = m_fetchEventHandler->fetchTaskId();
 }
 
-void ServiceWorkerFetchTask::request(String* body)
+bool ServiceWorkerFetchTask::request(String* body)
 {
-    TRACE(CLIENT, "ServiceWorkerFetchTask::Request:",
-          m_resourceRequest->url()->href()->toUTF8String().data());
+    TRACE(CLIENT, m_resourceRequest->url()->href()->toUTF8String().data(),
+          CSTR(body));
 
-    // TODO: check service-workers mode
-    auto handler =
-        ServiceWorkerProcessManager::instance()->findFetchEventHandler(
-            m_resourceRequest->executionContext()->globalScope()->uid());
-    if (handler.hasValue()) {
-        handler->addFetch(this);
+    if (!m_fetchEventHandler->fetchFromServiceWorker()) {
+        return false;
     }
+
+    m_fetchEventHandler->addFetch(this);
+    return true;
 }
 
 void ServiceWorkerFetchTask::onResponse(FetchEventResponseData* data)
 {
-    // TODO: set m_resourceRequest->m_responseBody
-    TRACE(CLIENT, "ServiceWorkerFetchTask::Response:",
-          m_resourceRequest->url()->href()->toUTF8String().data());
+    TRACE(CLIENT, m_resourceRequest->url()->href()->toUTF8String().data());
+
+    if (!data->isSuccessful) {
+        m_resourceRequest->handleError(ProgressState::InError,
+                                       RequestErrorType::UnknownError);
+        return;
+    }
+
+    bool result = false;
+    if (data->isCached) {
+        TRACE(CLIENT, "Response from cache");
+        result = FetchCacheStream::readResponseFromFile(data->cachePath,
+                                                        m_resourceRequest);
+
+    } else {
+        TRACE(CLIENT, "Response from ServiceWorker fetch");
+        result = FetchCacheStream::readResponseFromFile(data->responsePath,
+                                                        m_resourceRequest);
+        LocalStorageHelper::File::remove(data->responsePath);
+    }
+
+    if (!result) {
+        m_resourceRequest->handleError(ProgressState::InError,
+                                       RequestErrorType::UnknownError);
+        TRACE(CLIENT, "Fail to read script file");
+        return;
+    }
+
+    m_resourceRequest->handleResponseEOF();
 }
 
 } // namespace Starfish

@@ -107,6 +107,20 @@ private:
 
     void handleBodyInit(Nullable<BodyInit>& body);
     void copyResponseData(Response* destResponse);
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+public:
+    void setCachePath(const std::string& path)
+    {
+        m_cachePath = path;
+    }
+    const std::string& cachePath() const
+    {
+        return m_cachePath;
+    }
+
+private:
+    std::string m_cachePath;
+#endif
 };
 } // namespace Starfish
 

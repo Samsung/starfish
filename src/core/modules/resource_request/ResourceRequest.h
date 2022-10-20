@@ -121,6 +121,8 @@ class ResourceRequest : public gc, public ResourceRequestJobInterface {
     friend class UnknownURLResourceRequestJobDelegate;
     friend class EventSource;
     friend class Resource;
+    friend class FetchCacheStream;
+    friend class ServiceWorkerFetchTask;
 
 public:
     virtual ~ResourceRequest()

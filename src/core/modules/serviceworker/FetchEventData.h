@@ -68,6 +68,10 @@ public:
     ServiceWorkerContextId contextId;
     ServiceWorkerFetchKey fetchTaskId;
     String* url;
+    bool isCached{ false };
+    bool isSuccessful{ false };
+    std::string cachePath;
+    std::string responsePath;
 
     DEFINE_ARCHIVE_ID_GETTER(FetchEventResponseData);
 
@@ -76,6 +80,10 @@ public:
         ar.MemberId("contextId", contextId);
         ar.Member("fetchTaskId") & fetchTaskId;
         ar.Member("url") & url;
+        ar.Member("isCached") & isCached;
+        ar.Member("isSuccessful") & isSuccessful;
+        ar.Member("cachePath") & cachePath;
+        ar.Member("responsePath") & responsePath;
     }
 
     static FetchEventResponseData* createFetchEventResponseData(

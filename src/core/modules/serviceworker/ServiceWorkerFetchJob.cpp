@@ -28,10 +28,14 @@
 #include "core/modules/worker/host/WebWorker.h"
 #include "core/fetch/Response.h"
 #include "core/fetch/ResponseData.h"
+#include "core/fetch/stream/ReadableStreamBuffer.h"
+#include "core/fetch/stream/ReadableStream.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 #include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
+#include "core/modules/serviceworker/FetchCacheStream.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/FetchEvent.h"
 #include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
@@ -173,6 +177,12 @@ void ServiceWorkerFetchJob::failJob()
                              DOMException::NETWORK_ERR, "NetworkError");
         eventHandled()->reject(exception->scriptValue());
     }
+
+    auto data = FetchEventResponseData::createFetchEventResponseData(
+        m_contextId, m_id, m_response);
+    data->isSuccessful = false;
+
+    m_connection->respondFetchEvent(data);
 }
 
 void ServiceWorkerFetchJob::successJob()
@@ -185,6 +195,24 @@ void ServiceWorkerFetchJob::successJob()
 
     auto data = FetchEventResponseData::createFetchEventResponseData(
         m_contextId, m_id, m_response);
+    data->url = m_url;
+    data->isSuccessful = true;
+
+    if (m_response->cachePath().empty()) {
+        data->isCached = false;
+        auto stream = new FetchCacheStream(ServiceWorkerAgent::instance()
+                                               ->starfish()
+                                               ->serviceWorkerOption()
+                                               ->localStorageRootDir(),
+                                           true);
+        stream->open("temp");
+        stream->writeResponse(data->url->hashValue(), m_response);
+        data->responsePath = m_response->cachePath();
+    } else {
+        data->isCached = true;
+        data->cachePath = m_response->cachePath();
+    }
+
     m_connection->respondFetchEvent(data);
 }
 

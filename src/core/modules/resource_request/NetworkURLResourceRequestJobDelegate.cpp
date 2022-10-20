@@ -381,7 +381,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     STARFISH_ASSERT(m_orgProxy->url()->isHTTPFamilyURL());
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
-    m_serviceWorkerFetchTask->request(body);
+    if (m_serviceWorkerFetchTask->request(body)) {
+        return;
+    }
 #endif
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 

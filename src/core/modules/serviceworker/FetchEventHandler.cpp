@@ -70,7 +70,7 @@ void FetchEventHandler::start(ServiceWorkerClientConnection* connection,
 
 void FetchEventHandler::respondFetchEvent(FetchEventResponseData* data)
 {
-    TRACE(CLIENT, m_fetchTaskMap.size());
+    TRACE(CLIENT);
 
     auto it = m_fetchTaskMap.find(data->fetchTaskId);
     if (it == m_fetchTaskMap.end()) {

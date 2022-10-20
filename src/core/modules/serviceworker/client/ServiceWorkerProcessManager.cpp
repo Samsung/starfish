@@ -299,16 +299,24 @@ void ServiceWorkerProcessManager::registerActiveGlobalScope(
 
     TRACE(CLIENT, "1: ", CSTR(globalScope->executionContext()->urlString()));
 
+    m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
+
+    auto fetchEventHandler = new FetchEventHandler();
+    m_fetchEventHandlers.insert(std::make_pair(id, fetchEventHandler));
+
     auto scope = globalScope->executionContext()->baseURL()->baseURI();
     if (m_registrationManager->isActivatedRegistration(scope)) {
         TRACEF(CLIENT, "'%s' is a registered service worker.", CSTR(scope));
-        m_registrationManager->startRegisteredServiceWorkerContext(
-            getConnection(scope), id, scope);
+        TRACE(CLIENT, "ServiceWorker network mode");
+
+        auto connection = getConnection(scope);
+        m_registrationManager->startRegisteredServiceWorkerContext(connection,
+                                                                   id, scope);
+        fetchEventHandler->start(connection, scope);
+        fetchEventHandler->setFetchFromServiceWorker(true);
+    } else {
+        TRACE(CLIENT, "Starfish network mode");
     }
-
-    m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
-
-    m_fetchEventHandlers.insert(std::make_pair(id, new FetchEventHandler()));
 
     if (m_connection) {
         // TODO: check whether of not this context's serviceworker is valid.
@@ -348,8 +356,6 @@ void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
         TRACE(IPC, "Not send unregistering service worker");
     }
     m_settingsObjectsNeedUpdated = true;
-
-    m_fetchEventHandlers.erase(id);
 }
 
 NULLABLE GlobalScope* ServiceWorkerProcessManager::findGlobalScope(
