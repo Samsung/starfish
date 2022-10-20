@@ -32,8 +32,7 @@ namespace Starfish {
 
 void FetchEventHandler::addFetch(ServiceWorkerFetchTask* task)
 {
-    m_fetchTaskMap.insert(
-        std::make_pair(task->resourceRequest()->url()->urlString(), task));
+    m_fetchTaskMap.insert(std::make_pair(task->id(), task));
 
     if (!m_isStarted) {
         TRACE_SCOPE(CLIENT);
@@ -41,7 +40,7 @@ void FetchEventHandler::addFetch(ServiceWorkerFetchTask* task)
         return;
     }
 
-    TRACE_SCOPE(CLIENT);
+    TRACE_SCOPE(CLIENT, CSTR(task->resourceRequest()->url()->urlString()));
     STARFISH_ASSERT(m_connection);
     STARFISH_ASSERT(m_scopeURL);
     sendEvent(task);
@@ -71,18 +70,21 @@ void FetchEventHandler::start(ServiceWorkerClientConnection* connection,
 
 void FetchEventHandler::respondFetchEvent(FetchEventResponseData* data)
 {
-    TRACE(CLIENT);
+    TRACE(CLIENT, m_fetchTaskMap.size());
 
-    auto it = m_fetchTaskMap.find(data->url);
+    auto it = m_fetchTaskMap.find(data->fetchTaskId);
     if (it == m_fetchTaskMap.end()) {
         STARFISH_LOG_WARN("Cannot find fetch task!");
         return;
     }
 
     auto task = it->second;
+    STARFISH_ASSERT(
+        task->resourceRequest()->url()->urlString()->equals(data->url));
+
     task->onResponse(data);
 
-    m_fetchTaskMap.erase(data->url);
+    m_fetchTaskMap.erase(it);
 }
 
 void FetchEventHandler::sendEvent(ServiceWorkerFetchTask* task)
@@ -90,8 +92,15 @@ void FetchEventHandler::sendEvent(ServiceWorkerFetchTask* task)
     auto data = FetchEventRequestData::createFetchEventRequestData(
         task->resourceRequest());
     data->scopeURL = m_scopeURL;
+    data->fetchTaskId = task->id();
 
+    TRACE(CLIENT, CSTR(data->url));
     m_connection->fetchEvent(data);
+}
+
+ServiceWorkerFetchKey FetchEventHandler::fetchTaskId()
+{
+    return m_fetchTaskId++;
 }
 
 } // namespace Starfish

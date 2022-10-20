@@ -72,6 +72,7 @@ private:
     Response* m_response{ nullptr };
     Promise* m_eventHandled{ nullptr };
     ServiceWorkerRegistration* m_registration{ nullptr };
+    ServiceWorkerFetchKey m_id{ 0 };
 };
 
 } // namespace Starfish

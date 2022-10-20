@@ -21,10 +21,13 @@
     !defined(__StarfishServiceWorkerFetchTask__)
 #define __StarfishServiceWorkerFetchTask__
 
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+
 namespace Starfish {
 
 class ResourceRequest;
 class FetchEventResponseData;
+class FetchEventHandler;
 
 class ServiceWorkerFetchTask : public gc {
 public:
@@ -35,9 +38,12 @@ public:
     void onResponse(FetchEventResponseData* data);
 
     DEFINE_GETTER(ResourceRequest*, resourceRequest);
+    DEFINE_GETTER(ServiceWorkerFetchKey, id);
 
 private:
     ResourceRequest* m_resourceRequest;
+    FetchEventHandler* m_fetchEventHandler;
+    ServiceWorkerFetchKey m_id{ 0 };
 };
 
 } // namespace Starfish

@@ -35,6 +35,7 @@ class FetchEventRequestData : public Archivable {
 public:
     // data
     ServiceWorkerContextId contextId;
+    ServiceWorkerFetchKey fetchTaskId;
     String* baseURL;
     String* url;
     String* scopeURL;
@@ -47,6 +48,7 @@ public:
     void archive(Archiver& ar) override
     {
         ar.MemberId("contextId", contextId);
+        ar.Member("fetchTaskId") & fetchTaskId;
         ar.Member("baseURL") & baseURL;
         ar.Member("url") & url;
         ar.Member("scopeURL") & scopeURL;
@@ -64,6 +66,7 @@ class FetchEventResponseData : public Archivable {
 public:
     // data
     ServiceWorkerContextId contextId;
+    ServiceWorkerFetchKey fetchTaskId;
     String* url;
 
     DEFINE_ARCHIVE_ID_GETTER(FetchEventResponseData);
@@ -71,11 +74,13 @@ public:
     void archive(Archiver& ar) override
     {
         ar.MemberId("contextId", contextId);
+        ar.Member("fetchTaskId") & fetchTaskId;
         ar.Member("url") & url;
     }
 
     static FetchEventResponseData* createFetchEventResponseData(
-        ServiceWorkerContextId id, Response* response);
+        ServiceWorkerContextId id, ServiceWorkerFetchKey fetchTaskId,
+        Response* response);
 };
 
 } // namespace Starfish
