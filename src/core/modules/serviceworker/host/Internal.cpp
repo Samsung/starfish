@@ -43,13 +43,15 @@ public:
         : m_internal(i)
         , m_promise(p)
     {
-        m_resultValue = scriptUndefined();
+        m_resultValue = ValueRef::createUndefined();
         m_taskId = ++CacheTask::s_taskId;
     }
 
     void end() override
     {
-        TRACE_SCOPE(INTERNAL, taskId(), "result", m_result);
+        TRACE_SCOPE(INTERNAL, taskId(), "result", m_result,
+                    m_resultValue->isUndefined());
+
         if (m_result) {
             m_promise->fulfill(m_resultValue);
         } else {
@@ -218,13 +220,11 @@ Promise* Internal::matchAll(ExecutionContext* executionContext,
 
             ValueVectorRef* elements = ValueVectorRef::create();
 
-            if (!m_fetchCacheStream->readResponse(m_url, m_response)) {
+            if (m_fetchCacheStream->readResponse(m_url, m_response)) {
+                elements->pushBack(m_response->scriptValue());
+            } else {
                 TRACE(INTERNAL, taskId(), "readResponse 'false'");
-                m_result = false;
-                return;
             }
-
-            elements->pushBack(m_response->scriptValue());
 
             const auto& r = Evaluator::execute(
                 m_context,
