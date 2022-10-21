@@ -57,11 +57,12 @@ bool ServiceWorkerFetchTask::request(String* body)
     TRACE(CLIENT, m_resourceRequest->url()->href()->toUTF8String().data(),
           CSTR(body));
 
+    m_fetchEventHandler->addFetch(this);
+
     if (!m_fetchEventHandler->fetchFromServiceWorker()) {
         return false;
     }
 
-    m_fetchEventHandler->addFetch(this);
     return true;
 }
 

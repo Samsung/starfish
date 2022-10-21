@@ -83,14 +83,14 @@ void ServiceWorkerRegistration::updateRegistrationState(
     switch (state) {
     case ServiceWorkerRegistrationState::Installing:
         m_installingWorker = serviceWorker;
-        //  Start fetch event task
-        handleTaskSource(m_data->scope);
         break;
     case ServiceWorkerRegistrationState::Waiting:
         m_waitingWorker = serviceWorker;
         break;
     case ServiceWorkerRegistrationState::Active:
         m_activeWorker = serviceWorker;
+        //  Start fetch event task
+        handleTaskSource(m_data->scope);
         break;
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
