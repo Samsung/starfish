@@ -58,6 +58,7 @@ public:
     bool isTextType();
 
     bool bodyUsed();
+    bool bodyDisturbedOrLocked();
 
     Nullable<BodyInit> bodyInit() const;
     void setBodyInit(const Nullable<BodyInit>& bodyInit);
