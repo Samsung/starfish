@@ -61,6 +61,11 @@ public:
 
     DEFINE_GETTER(bool, useComplexKey);
 
+    const std::string& cacheDirPath()
+    {
+        return m_cacheDirPath;
+    }
+
 private:
     std::string m_cacheDirPath;
     std::string m_cacheScopeDirPath;

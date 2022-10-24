@@ -212,7 +212,8 @@ Promise* Internal::matchAll(ExecutionContext* executionContext,
 
         void run() override
         {
-            TRACE(INTERNAL, taskId(), CSTR(m_url));
+            TRACE(INTERNAL, taskId(), CSTR(m_url),
+                  m_fetchCacheStream->cacheDirPath());
             STARFISH_ASSERT(m_url != nullptr);
             STARFISH_ASSERT(m_context != nullptr);
             STARFISH_ASSERT(m_response != nullptr);
@@ -221,9 +222,10 @@ Promise* Internal::matchAll(ExecutionContext* executionContext,
             ValueVectorRef* elements = ValueVectorRef::create();
 
             if (m_fetchCacheStream->readResponse(m_url, m_response)) {
+                TRACE(INTERNAL, taskId(), "Found");
                 elements->pushBack(m_response->scriptValue());
             } else {
-                TRACE(INTERNAL, taskId(), "readResponse 'false'");
+                TRACE(INTERNAL, taskId(), "Not found");
             }
 
             const auto& r = Evaluator::execute(
