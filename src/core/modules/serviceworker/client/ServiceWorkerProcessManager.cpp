@@ -189,8 +189,6 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     TRACE(SVCWORKER, "origin", origin);
     TRACE(SVCWORKER, "encodedOrigin", encodedOrigin);
 
-    bool isProcessJustLaunched = false;
-
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);
     if (it == m_mapOriginToProcessData.end()) {
@@ -213,7 +211,6 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
         if (!processExist(encodedOrigin)) {
             if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
                 TRACE(SVCWORKER, "launchProcess: success");
-                isProcessJustLaunched = true;
             } else {
                 TRACE(SVCWORKER, "launchProcess: fail");
             }
@@ -246,14 +243,6 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     TRACE(SVCWORKER, "client: connect: ", address.c_str());
     TRACE(SVCWORKER, "client: origin: ", origin.c_str());
-
-    if (isProcessJustLaunched) {
-        // FIXME: Enqueue a job on serviceWorkerClientConnection::scheduleJob if
-        // the service worker process isn't ready to listen.
-        TRACE(SVCWORKER, "Sleep to give some time to the process ready");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        TRACE(SVCWORKER, "/Sleep");
-    }
 
     return processData->connection;
 }

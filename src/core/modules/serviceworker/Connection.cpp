@@ -53,7 +53,17 @@ void Connection::send(const char* data, size_t len)
     STARFISH_ASSERT(data != nullptr);
     STARFISH_ASSERT(len > 0);
 
-    m_socket->send(data, len, SCK_DONTWAIT);
+    try {
+        // Note: At the first sending, send() works in blocking mode. Since
+        // we're using IPC or in-process commnication for service worker, we
+        // assume that we can wait till the endpoint is ready.
+        m_socket->send(data, len, m_blockingMode ? SCK_WAIT : SCK_DONTWAIT);
+        if (m_blockingMode == true) {
+            m_blockingMode = false;
+        }
+    } catch (const Socket::Exception& e) {
+        STARFISH_LOG_ERROR("Sending data is failed due to %s", e.what());
+    }
 
     TRACEF(CONNECTION, COLOR_SEND "[SEND] %zu byte(s)" COLOR_RESET, len);
 }

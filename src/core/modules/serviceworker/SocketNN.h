@@ -23,6 +23,7 @@
 
 namespace Starfish {
 
+#define SCK_WAIT 0
 #define SCK_DONTWAIT 1
 
 class SocketNN : public Socket {
