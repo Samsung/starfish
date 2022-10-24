@@ -35,6 +35,8 @@
 
 namespace Starfish {
 
+#define IO_EVENT_POLLING_TIMEOUT_MS 300
+
 class ProcessResource {
 public:
     static void acquire()
@@ -108,7 +110,7 @@ void PerProcess::initialize(size_t threadPoolSize)
     m_messageLoop = new MessageLoop();
 
     m_threadPool = new ThreadPool(threadPoolSize, m_messageLoop);
-    m_ioRunnable = new IORunnable(m_messageLoop);
+    m_ioRunnable = new IORunnable(m_messageLoop, IO_EVENT_POLLING_TIMEOUT_MS);
     m_ioThread = new AdaptedThread(m_threadPool);
 
     m_ioThread->start(m_ioRunnable);
@@ -121,8 +123,10 @@ void PerProcess::destroy()
     STARFISH_ASSERT(m_threadPool);
     STARFISH_ASSERT(m_messageLoop);
 
+    TRACE(PERPROC, "Start waiting for the I/O thread stopped");
     m_ioThread->stop();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    TRACE(PERPROC, "Stop waiting");
 
     m_threadPool->destroy();
     m_messageLoop->destroy();

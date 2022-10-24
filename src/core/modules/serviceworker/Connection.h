@@ -50,6 +50,9 @@ public:
 
 protected:
     Socket* m_socket;
+
+private:
+    bool m_blockingMode{ true };
 };
 
 } // namespace Starfish
