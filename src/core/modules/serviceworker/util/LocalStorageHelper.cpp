@@ -57,6 +57,8 @@ namespace LocalStorageHelper {
 
     void File::remove(const std::string& path)
     {
+        TRACE(LOCALSTORAGE, path.data());
+
         if (!LocalStorageHelper::File::exists(path)) {
             return;
         }
@@ -134,7 +136,7 @@ namespace LocalStorageHelper {
 
         TRACEF(LOCALSTORAGE, "size(%zu)", size);
 
-        m_fileStream << size;
+        writeBufferSize(size);
         m_fileStream.write(buffer, sizeof(char) * size);
         return true;
     }
@@ -158,6 +160,11 @@ namespace LocalStorageHelper {
     bool Writer::writeVector(const std::vector<char>& vector)
     {
         return writeBuffer(vector.data(), vector.size());
+    }
+
+    void Writer::writeBufferSize(size_t size)
+    {
+        write(size, " ");
     }
 
     Reader::Reader(const std::string& path)
@@ -190,8 +197,7 @@ namespace LocalStorageHelper {
             return false;
         }
 
-        size_t size = 0;
-        m_fileStream >> size;
+        size_t size = readBufferSize();
         if (size > 0) {
             TRACEF(LOCALSTORAGE, "size(%zu)", size);
 
@@ -210,8 +216,7 @@ namespace LocalStorageHelper {
             return false;
         }
 
-        size_t size = 0;
-        m_fileStream >> size;
+        size_t size = readBufferSize();
         if (size > 0) {
             TRACEF(LOCALSTORAGE, "size(%zu)", size);
 
@@ -232,8 +237,7 @@ namespace LocalStorageHelper {
 
         STARFISH_ASSERT(vector.size() == 0);
 
-        size_t size = 0;
-        m_fileStream >> size;
+        size_t size = readBufferSize();
         if (size > 0) {
             TRACEF(LOCALSTORAGE, "size(%zu)", size);
 
@@ -242,6 +246,15 @@ namespace LocalStorageHelper {
         }
 
         return true;
+    }
+
+    size_t Reader::readBufferSize()
+    {
+        size_t size = 0;
+        read(size);
+        m_fileStream.seekg(1, std::ios_base::cur); // read WhiteSapce
+
+        return size;
     }
 
 } // namespace LocalStorageHelper
