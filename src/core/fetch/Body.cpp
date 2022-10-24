@@ -66,6 +66,11 @@ bool Body::bodyUsed()
     return m_readableStream ? m_readableStream->disturbed() : false;
 }
 
+bool Body::bodyDisturbedOrLocked()
+{
+    return m_readableStream ? m_readableStream->isDisturbedOrLocked() : false;
+}
+
 Promise* Body::arrayBuffer()
 {
     createReadableStream();
@@ -391,16 +396,33 @@ void Body::pushResponseData(ResourceRequest* request)
 
 void Body::copyBody(Body* body)
 {
-    m_contentType = body->contentType();
+    auto contentType = body->contentType()->toUTF8NonGCString();
+    m_contentType = String::fromUTF8(contentType.data(), contentType.size());
 
     auto srcBody = body->bodyInit();
     if (srcBody.hasValue()) {
         BodyInit srcBodyValue = srcBody.getValue();
         if (srcBodyValue.isUSVStringValue()) {
-            m_bodyInit =
-                BodyInit::createUSVString(srcBodyValue.getUSVStringValue());
+            auto bodyValueString =
+                srcBodyValue.getUSVStringValue()->toUTF8NonGCString();
+            m_bodyInit = BodyInit::createUSVString(String::fromUTF8(
+                bodyValueString.data(), bodyValueString.size()));
         } else {
             STARFISH_UNIMPLEMENTED();
+        }
+    } else {
+        if (body->body()) {
+            createReadableStream();
+            auto srcBuffer = body->body()->streamBuffer();
+            auto destBuffer = m_readableStream->streamBuffer();
+
+            if (destBuffer->size() > 0) {
+                destBuffer->clear();
+            }
+
+            destBuffer->push(srcBuffer->data(), srcBuffer->size());
+            destBuffer->setType(srcBuffer->type());
+            destBuffer->setMimeType(srcBuffer->mineType());
         }
     }
 }

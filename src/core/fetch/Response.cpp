@@ -170,6 +170,11 @@ Response* Response::cloneWithoutBody()
 
 Response* Response::clone()
 {
+    if (bodyDisturbedOrLocked()) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR);
+    }
+
     Response* clonedResponse = cloneWithoutBody();
     clonedResponse->copyBody(this);
     return clonedResponse;
