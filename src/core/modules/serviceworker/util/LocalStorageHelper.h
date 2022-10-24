@@ -76,6 +76,8 @@ namespace LocalStorageHelper {
 
     private:
         std::ofstream m_fileStream;
+
+        void writeBufferSize(size_t size);
     };
 
     class Reader {
@@ -105,6 +107,8 @@ namespace LocalStorageHelper {
 
     private:
         std::ifstream m_fileStream;
+
+        size_t readBufferSize();
     };
 
 } // namespace LocalStorageHelper
