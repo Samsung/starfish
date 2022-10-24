@@ -145,6 +145,8 @@ bool FetchCacheStream::readResponse(size_t urlHashValue,
     RETURN_FALSE_IF_FAILED(reader.readString(data->mimeType));
     RETURN_FALSE_IF_FAILED(reader.readVector(data->buffer));
 
+    data->cachePath = path;
+
     return true;
 }
 
@@ -163,6 +165,8 @@ bool FetchCacheStream::readResponse(String* url, Response* response)
     response->setMimeType(mineType);
 
     RETURN_FALSE_IF_FAILED(reader.readVector(streamBuffer->buffer()));
+
+    response->setCachePath(path);
 
     return true;
 }
