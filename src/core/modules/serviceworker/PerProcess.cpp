@@ -75,12 +75,10 @@ public:
         auto dir = PlatformDirectory::create();
         // TODO: Replace creating a GC-allocated string with `std::string`.
         if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
-            if (GlobalOptions::instance().has("--leave-ipc-handle")) {
+            if (!GlobalOptions::instance().has("--leave-ipc-handle")) {
                 dir->removeDir();
+                TRACE(IPC, "Remove", path);
             }
-            TRACE(IPC, "Remove", path);
-        } else {
-            TRACE(IPC, "Leave", path);
         }
         dir->close();
     }
