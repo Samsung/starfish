@@ -160,6 +160,8 @@ void IORunnable::run()
         }
     };
 
+    TRACE(SOCKET, "I/O loop is stopped");
+
     m_isStopped = true;
 
     for (const auto& connection : m_clients) {
@@ -172,6 +174,8 @@ void IORunnable::run()
     }
 
     closeClients();
+
+    TRACE(SOCKET, "Runner is stopped");
 }
 
 void IORunnable::setStopper(std::future<void>&& stopper)
@@ -181,6 +185,7 @@ void IORunnable::setStopper(std::future<void>&& stopper)
 
 void IORunnable::stop()
 {
+    TRACE_SCOPE(SOCKET);
     m_isStopped = true;
 };
 
