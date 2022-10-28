@@ -81,10 +81,10 @@ public:
             relatedContext->vmInstance());
     }
 
-    virtual LoadModuleResult onLoadModule(
-        Escargot::ContextRef* relatedContext,
-        Escargot::ScriptRef* whereRequestFrom,
-        Escargot::StringRef* moduleSrc) override
+    virtual LoadModuleResult onLoadModule(Escargot::ContextRef* relatedContext,
+                                          Escargot::ScriptRef* whereRequestFrom,
+                                          Escargot::StringRef* moduleSrc,
+                                          ModuleType type) override
     {
         return LoadModuleResult(Escargot::ErrorObjectRef::Code::None,
                                 Escargot::StringRef::emptyString());
@@ -99,11 +99,11 @@ public:
 
     virtual void hostImportModuleDynamically(ContextRef* relatedContext,
                                              ScriptRef* referrer,
-                                             StringRef* src,
+                                             StringRef* src, ModuleType type,
                                              PromiseObjectRef* promise) override
     {
         LoadModuleResult loadedModuleResult =
-            onLoadModule(relatedContext, referrer, src);
+            onLoadModule(relatedContext, referrer, src, type);
 
         Evaluator::EvaluatorResult executionResult = Evaluator::execute(
             relatedContext,
@@ -145,6 +145,11 @@ public:
             executionResult.isSuccessful() ? executionResult.result
                                            : executionResult.error.value(),
             promise);
+    }
+
+    virtual void markJSJobFromAnotherThreadExists(
+        ContextRef* relatedContext) override
+    {
     }
 };
 } // namespace Starfish
