@@ -94,15 +94,46 @@ void MediaPlayerAudioTizen::prepare(ResourceURL* url)
 
 void MediaPlayerAudioTizen::onAudioDownloadCompleted()
 {
-    audio_out_create_new(AUDIO_SAMPLE_RATE, AUDIO_CHANNEL_STEREO,
-                         AUDIO_SAMPLE_TYPE_S16_LE, &m_audioOut);
+    int error_code = SOUND_MANAGER_ERROR_NONE;
 
     sound_stream_info_h streamInfo = nullptr;
-    sound_manager_create_stream_information(SOUND_STREAM_TYPE_NOTIFICATION,
-                                            nullptr, nullptr, &streamInfo);
+    error_code = sound_manager_create_stream_information(
+        SOUND_STREAM_TYPE_NOTIFICATION, nullptr, nullptr, &streamInfo);
 
-    audio_out_set_sound_stream_info(m_audioOut, streamInfo);
-    audio_out_prepare(m_audioOut);
+    if (SOUND_MANAGER_ERROR_NONE != error_code) {
+        STARFISH_LOG_ERROR(
+            "sound_manager_create_stream_information has problem. , error "
+            "code: %d\n",
+            error_code);
+        return;
+    }
+
+    error_code = AUDIO_IO_ERROR_NONE;
+    error_code = audio_out_create_new(AUDIO_SAMPLE_RATE, AUDIO_CHANNEL_STEREO,
+                                      AUDIO_SAMPLE_TYPE_S16_LE, &m_audioOut);
+
+    if (AUDIO_IO_ERROR_NONE != error_code) {
+        STARFISH_LOG_ERROR(
+            "audio_out_create_new has problem. , error code: %d\n", error_code);
+        return;
+    }
+
+    error_code = audio_out_set_sound_stream_info(m_audioOut, streamInfo);
+
+    if (AUDIO_IO_ERROR_NONE != error_code) {
+        STARFISH_LOG_ERROR(
+            "audio_out_set_sound_stream_info has problem. , error code: %d\n",
+            error_code);
+        return;
+    }
+
+    error_code = audio_out_prepare(m_audioOut);
+
+    if (AUDIO_IO_ERROR_NONE != error_code) {
+        STARFISH_LOG_ERROR("audio_out_prepare has problem. , error code: %d\n",
+                           error_code);
+        return;
+    }
 
     MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(
