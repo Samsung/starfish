@@ -7,7 +7,10 @@ jobs:
   build_x64:
     runs-on: [ self-hosted,code-2xlarge ]
     container:
-      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
     strategy:
       matrix:
@@ -21,6 +24,9 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: true
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
 
       - name: Reset Submodule
         run: git submodule foreach --recursive git reset --hard

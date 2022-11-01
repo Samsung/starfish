@@ -1,13 +1,17 @@
 name: Build Starfish
 
 on:
-  pull_request:
+  pull_request_target:
 
 jobs:
   check_source:
     runs-on: [legacy-rat6]
     container:
-      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     # Set reasonable timeout value.
     timeout-minutes: 30
 
@@ -24,7 +28,10 @@ jobs:
     needs: check_source
     runs-on: [legacy-rat6]
     container:
-      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
     strategy:
       matrix:
@@ -38,6 +45,9 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: true
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
 
       - name: Reset Submodule
         run: git submodule foreach --recursive git reset --hard
@@ -75,7 +85,10 @@ jobs:
     # runs-on: [ self-hosted, code-2xlarge ]
     runs-on: [legacy-rat6]
     container:
-      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
 
     steps:
@@ -83,6 +96,10 @@ jobs:
         uses: CODE-Actions/checkout@v2
         with:
           submodules: false
+
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+
       - name: Checkout Testcase..
         run: |
           git submodule init
@@ -104,7 +121,9 @@ jobs:
           /root/workspace/set_up_hosts.sh
 
       - name: Build image diff tool
-        run: ninja install_pixel_test_dep
+        run: |
+          cmake --clean-first CMakeLists.txt -DMODE=debug -DBACKEND=glfw_cairo_gl -DDOCKER=1 -DWEBRTC=1 -G Ninja
+          ninja install_pixel_test_dep
 
       - name: Run internal_test
         run: |

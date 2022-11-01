@@ -1,12 +1,15 @@
 name: Build Starfish
 
-on: [push, pull_request]
+on: [pull_request_target]
 
 jobs:
   build_x64_serivce_worker:
     runs-on: [code-2xlarge]
     container:
-      image: art.sec.samsung.net/lws_docker/health_sdk/health-sdk:latest
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
       options: --user root
     strategy:
       fail-fast: false
