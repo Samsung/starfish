@@ -76,12 +76,12 @@ public:
     virtual void pruneInternalDataIfPossible() override
     {
         if (m_imageDecoder->loopCount() == 0) {
-            if (m_imageSurface) {
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
+            if (m_imageSurface) {
                 cairo_surface_destroy(m_imageSurface);
                 m_imageSurface = nullptr;
-#endif
             }
+#endif
             if (m_inputBuffer.size() > 0) {
                 m_inputBuffer.clear();
             }
