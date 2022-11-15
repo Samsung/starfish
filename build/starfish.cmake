@@ -58,6 +58,13 @@ IF (${ARCH} STREQUAL "x64" OR ${HOST} STREQUAL "tizen")
     )
 ENDIF()
 
+IF (${ARCH} STREQUAL "x64")
+    SET (STARFISH_INCLUDE_DIRS
+    ${STARFISH_INCLUDE_DIRS}
+    ${STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS}
+    )
+ENDIF()
+
 #######################################################
 # LINK LIBRARIES
 #######################################################

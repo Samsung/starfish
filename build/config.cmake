@@ -596,6 +596,10 @@ SET (STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS
     ${THIRD_PARTY_ROOT}/libwebsockets/build/${HOST}/${ARCH}/${MODE}/include
 )
 
+SET (STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS
+    ${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include
+)
+
 IF (${WEBRTC} STREQUAL "1")
     SET (STARFISH_WEBRTC_ADDITIONAL_INCLUDE_DIRS
         ${THIRD_PARTY_ROOT}/webrtc/src
@@ -603,7 +607,7 @@ IF (${WEBRTC} STREQUAL "1")
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/abseil-cpp
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/jsoncpp/source/include
         ${THIRD_PARTY_ROOT}/webrtc/src/third_party/libyuv/include
-        ${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include
+        ${STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS}
     )
 ENDIF()
 
