@@ -78,9 +78,11 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
 
+#if defined(STARFISH_WEBWORKER_HOST)
     m_SWServer = new ServiceWorkerServer(m_starfish);
     m_SWServer->init(m_perProcess);
     m_SWServer->start();
+#endif
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     m_castServer = CastServer::instance();
@@ -107,7 +109,9 @@ void ServiceWorkerAgent::destroy()
     }
 
     if (m_SWServer != nullptr) {
+#if defined(STARFISH_WEBWORKER_HOST)
         m_SWServer->destroy();
+#endif
         m_SWServer = nullptr;
     }
 

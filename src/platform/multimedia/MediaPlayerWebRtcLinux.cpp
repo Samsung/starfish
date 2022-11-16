@@ -50,12 +50,6 @@ MediaPlayer* MediaPlayerWebRtc::create(HTMLMediaElement* element)
 MediaPlayerWebRtcLinux::MediaPlayerWebRtcLinux(HTMLMediaElement* element)
     : MediaPlayerWebRtc(element)
 {
-    if (element->isHTMLVideoElement()) {
-        HTMLVideoElement* elem = element->asHTMLVideoElement();
-        m_canvasSurface =
-            CanvasSurface::create(m_container->webView()->platformWindow(),
-                                  elem->width(), elem->height());
-    }
 }
 
 MediaPlayerWebRtcLinux::~MediaPlayerWebRtcLinux()
@@ -148,6 +142,10 @@ void MediaPlayerWebRtcLinux::prepareMediaSource()
 
 void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
 {
+    if (!observer->image()){
+        return;
+    }
+
     if (!isMainThread()) {
         struct Params {
             MediaPlayerWebRtcLinux* self;
@@ -172,16 +170,32 @@ void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
 
     STARFISH_ASSERT(observer->image() != nullptr);
 
+    int videoFrameWidth = observer->width();
+    int videoFrameHeight = observer->height();
+
+    if (!m_canvasSurface || m_canvasSurface->width() != videoFrameWidth ||
+        m_canvasSurface->height() != videoFrameHeight) {
+        if (m_canvasSurface != nullptr) {
+            m_canvasSurface->detachNativeBuffer();
+            m_canvasSurface = nullptr;
+        }
+        if (container()->isHTMLVideoElement()) {
+            HTMLVideoElement* elem = container()->asHTMLVideoElement();
+            m_canvasSurface =
+                CanvasSurface::create(container()->webView()->platformWindow(),
+                                      videoFrameWidth, videoFrameHeight);
+        }
+    }
+
     FrameReplaced* frame = container()->frame()->asFrameReplaced();
     BrowsingContext* b = container()->window()->browsingContext();
     auto ptr = m_canvasSurface->mapBuffer();
 
     memcpy(ptr, observer->image(),
-           observer->width() * observer->height() * observer->pixelStride());
+           videoFrameWidth * videoFrameHeight * observer->pixelStride());
 
     m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
-        frame->x().toInt(), frame->y().toInt(), m_canvasSurface->width(),
-        m_canvasSurface->height());
+        0, 0, m_canvasSurface->width(), m_canvasSurface->height());
 
     b->setNeedsComposite();
 }

@@ -214,9 +214,23 @@ void PeerConnectionObserver::OnTrack(
     m_peerConnection->syncTransceivers();
     RTCRtpTransceiver* rtpTransceiver =
         m_peerConnection->getTransceiver(transceiver);
+    if (!rtpTransceiver) {
+        WEBRTC_LOGI("Transceiver is null");
+        WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>");
+        return;
+    }
     RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
+    if (!rtpReceiver) {
+        WEBRTC_LOGI("Receiver is null");
+        WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>");
+        return;
+    }
     MediaStreamTrack* track = rtpReceiver->track();
-
+    if (!track) {
+        WEBRTC_LOGI("MediaTrack is null");
+        WEBRTC_LOGI("</PeerConnectionObserver::OnTrack self=%p>");
+        return;
+    }
     GCVector<MediaStream*> rtpStreams;
     for (auto stream : rtpReceiver->streams()) {
         stream->addTrack(track);
