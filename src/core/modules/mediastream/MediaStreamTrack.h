@@ -198,9 +198,6 @@ public:
     {
         return true;
     }
-
-private:
-    rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices;
 };
 
 class MediaStreamTrackObserver {

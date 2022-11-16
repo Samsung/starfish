@@ -105,6 +105,7 @@ IF (${HOST} STREQUAL "tizen")
         -DSIZE_MAX=0xffffffff
         #-DSTARFISH_IGNORE_SSL_VERIFYPEER
         #-DSTARFISH_ENABLE_INSPECTOR
+        -DSTARFISH_ENABLE_WEBSOCKET
         -DSTARFISH_ENABLE_TEST
         #-DSTARFISH_MEDIAPLAYER_DEBUG
         -DSTARFISH_ENABLE_ANIMATION
@@ -121,7 +122,8 @@ IF (${HOST} STREQUAL "tizen")
         #-DSTARFISH_ENABLE_TEST
         #-DSTARFISH_MEDIAPLAYER_DEBUG
         -DSTARFISH_ENABLE_ANIMATION
-    )
+        -DSTARFISH_ENABLE_WEBSOCKET
+        )
     ENDIF()
 ENDIF()
 
@@ -302,7 +304,11 @@ ENDIF()
 
 SET (CXXFLAGS_FROM_ENV $ENV{CXXFLAGS})
 SEPARATE_ARGUMENTS(CXXFLAGS_FROM_ENV)
-SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
+IF (${WEBRTC} STREQUAL "1")
+    SET (LWE_CXXFLAGS_DEFAULT -std=c++14 -g3 -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC -Wno-deprecated-copy)
+ELSE()
+    SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
+ENDIF()
 
 IF (${COMPILER} STREQUAL "gcc")
     SET (LWE_CXXFLAGS_COMPILER -frounding-math -fsignaling-nans -Wno-unused-but-set-variable -Wno-unused-but-set-parameter)
@@ -438,7 +444,7 @@ IF (${HOST} STREQUAL "tizen")
     IF (${CUSTOM} STREQUAL "unified_common")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-network-connection)
     ELSEIF (${CUSTOM} MATCHES "mobile")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-network-connection)
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-network-connection capi-media-audio-io)
     ELSEIF (${CUSTOM} MATCHES "wearable")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager capi-system-info capi-system-device)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
