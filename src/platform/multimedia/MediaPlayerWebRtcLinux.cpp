@@ -142,7 +142,7 @@ void MediaPlayerWebRtcLinux::prepareMediaSource()
 
 void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
 {
-    if (!observer->image()){
+    if (!observer->image()) {
         return;
     }
 
