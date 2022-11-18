@@ -65,7 +65,7 @@ def is_checked_by_clang(file):
 def check_tidy(src_dir, update, base, stats):
     clang_format = spawn.find_executable(base)
     if not clang_format:
-        clang_format = spawn.find_executable("clang-format")
+        clang_format = spawn.find_executable("clang-format-8")
         if clang_format:
             print("Using %s instead of %s" % (clang_format, base))
         else:
@@ -120,7 +120,7 @@ def check_tidy(src_dir, update, base, stats):
 
 def main():
     parser = ArgumentParser(description='Starfish Source Format Checker and Updater')
-    parser.add_argument('--clang-format', metavar='PATH', default='clang-format',
+    parser.add_argument('--clang-format', metavar='PATH', default='clang-format-8',
                         help='path to clang-format (default: %(default)s)')
     parser.add_argument('--update', action='store_true',
                         help='reformat files')
