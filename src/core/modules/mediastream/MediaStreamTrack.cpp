@@ -191,7 +191,8 @@ void VideoStreamTrack::VideoStreamTrackObserver::OnFrame(
 WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext)
     : WebCamStreamTrack(executionContext, nullptr)
 {
-    rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices = WebCamStreamTrackCapturer::create();
+    rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices =
+        WebCamStreamTrackCapturer::create();
     if (m_videoDevices) {
         rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
             peerConnectionFactory = this->executionContext()
