@@ -195,7 +195,7 @@ def wpt_websocket():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/websocket.res", "cairo"])
 
 def wpt_xhr():
-    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_basic.res", "cairo", "-p4"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/xhr_single_thread.res", "cairo", "-p1"])
 
 def wpt_pwa():
