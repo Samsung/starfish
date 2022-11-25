@@ -425,8 +425,7 @@ ninja starfish.shared_library
 ninja starfish.executable
 %endif
 
-
-%if "%{rpm}" == "prod_tv"
+%if "%{rpm}" == "prod_tv" || "%{rpm}" == "flutter"
 
 # build external image decoder
 %if "%{?use_embedded_image_decoder}" == "1"
@@ -474,6 +473,9 @@ export CFLAGS="$CFLAGS -D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV"
 cd -
 
 %endif
+%endif
+
+%if "%{rpm}" == "prod_tv"
 
 %if "%{?skip_dali_build}" == "0"
 # For Dali
@@ -556,7 +558,7 @@ ninja starfish.executable
 %if "%{rpm}" == "flutter"
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.flutter -G Ninja
+cmake CMakeLists.txt -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=flutter -DBACKEND=flutter -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.flutter -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
