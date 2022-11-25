@@ -96,33 +96,23 @@ IF (${ARCH} STREQUAL "x64")
 ENDIF()
 
 IF (${HOST} STREQUAL "tizen")
+    SET(LWE_DEFINES_HOST
+        -DSTARFISH_TIZEN
+        -DSTARFISH_TIZEN_OBS
+        -DTIZEN_DEVICE_API
+        -DSIZE_MAX=0xffffffff
+        -DSTARFISH_ENABLE_ANIMATION
+    )
     IF (${ENABLE_TEST} STREQUAL "1")
-        SET (LWE_DEFINES_HOST
-        -DSTARFISH_TIZEN
-        -DSTARFISH_TIZEN_OBS
-        # -DSTARFISH_ENABLE_MULTIMEDIA
-        -DTIZEN_DEVICE_API
-        -DSIZE_MAX=0xffffffff
-        #-DSTARFISH_IGNORE_SSL_VERIFYPEER
-        #-DSTARFISH_ENABLE_INSPECTOR
-        -DSTARFISH_ENABLE_WEBSOCKET
-        -DSTARFISH_ENABLE_TEST
-        #-DSTARFISH_MEDIAPLAYER_DEBUG
-        -DSTARFISH_ENABLE_ANIMATION
+        SET(LWE_DEFINES_HOST
+            ${LWE_DEFINES_HOST}
+            -DSTARFISH_ENABLE_TEST
         )
-    ELSE()
-        SET (LWE_DEFINES_HOST
-        -DSTARFISH_TIZEN
-        -DSTARFISH_TIZEN_OBS
-        # -DSTARFISH_ENABLE_MULTIMEDIA
-        -DTIZEN_DEVICE_API
-        -DSIZE_MAX=0xffffffff
-        #-DSTARFISH_IGNORE_SSL_VERIFYPEER
-        #-DSTARFISH_ENABLE_INSPECTOR
-        #-DSTARFISH_ENABLE_TEST
-        #-DSTARFISH_MEDIAPLAYER_DEBUG
-        -DSTARFISH_ENABLE_ANIMATION
-        -DSTARFISH_ENABLE_WEBSOCKET
+    ENDIF()
+    IF (NOT (${CUSTOM} STREQUAL "flutter"))
+        SET(LWE_DEFINES_HOST
+            ${LWE_DEFINES_HOST}
+            -DSTARFISH_ENABLE_WEBSOCKET
         )
     ENDIF()
 ENDIF()
@@ -355,11 +345,13 @@ SET (LDFLAGS_FROM_ENV $ENV{LDFLAGS})
 SEPARATE_ARGUMENTS(LDFLAGS_FROM_ENV)
 
 SET (LWE_LDFLAGS_DEFAULT -Wl,--gc-sections -Wl,-rpath=/usr/local/lib)
-IF (${HOST} STREQUAL "linux")
+IF (${CUSTOM} STREQUAL "flutter")
+    SET (LWE_LDFLAGS_CUSTOM -Wl,-rpath='\$\$ORIGIN')
+ELSEIF (${HOST} STREQUAL "linux")
     SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
 ENDIF()
 
-SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST} ${LWE_LDFLAGS_LTO} ${LWE_LDFLAGS_ASAN} ${LDFLAGS_FROM_ENV})
+SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_CUSTOM} ${LWE_LDFLAGS_HOST} ${LWE_LDFLAGS_LTO} ${LWE_LDFLAGS_ASAN} ${LDFLAGS_FROM_ENV})
 #######################################################
 # PACKAGES
 #######################################################
@@ -455,6 +447,8 @@ IF (${HOST} STREQUAL "tizen")
     ELSEIF (${CUSTOM} STREQUAL "prod_tv")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog vconf-internal-keys-tv capi-network-connection capi-media-player tts capi-media-audio-io capi-appfw-app-common)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_VCONF REQUIRED vconf)
+    ELSEIF (${CUSTOM} STREQUAL "flutter")
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog)
     ENDIF()
 ENDIF()
 
