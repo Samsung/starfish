@@ -172,6 +172,7 @@ void MediaStream::VideoFrameObserver::OnFrame(
     // I420ToABGR generates [(r,g,b,a)]
     // I420ToARGB generates [(b,g,r,a)]
     {
+        Locker<Mutex> lock(*imageLock());
         setSize(buffer->width(), buffer->height());
         libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
                            buffer->StrideU(), buffer->DataV(),

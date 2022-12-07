@@ -58,6 +58,7 @@
 #include "rtc_base/strings/json.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "pc/rtp_transceiver.h"
 
 namespace Starfish {
 
@@ -1056,7 +1057,10 @@ RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backendTransceiver)
 {
     for (auto transceiver : m_transceivers) {
-        if (transceiver->backend() == backendTransceiver.get()) {
+        if (backendTransceiver.get() ==
+            static_cast<webrtc::RtpTransceiverProxyWithInternal<
+                webrtc::RtpTransceiver>*>(transceiver->backend().get())
+                ->internal()) {
             return transceiver;
         }
     }

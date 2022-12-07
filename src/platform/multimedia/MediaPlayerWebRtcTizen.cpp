@@ -338,6 +338,7 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
     }
 
     if (m_canvasSurface && observer && observer->image()) {
+        Locker<Mutex> lock(*observer->imageLock());
         FrameReplaced* frame = container()->frame()->asFrameReplaced();
         BrowsingContext* b = container()->window()->browsingContext();
         auto ptr = m_canvasSurface->mapBuffer();
