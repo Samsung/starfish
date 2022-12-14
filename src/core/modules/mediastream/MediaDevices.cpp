@@ -90,7 +90,10 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             delete p;
 
             // 1-3: TODO: Accept constraint sets
-            if (!constraints.m_audio && !constraints.m_video) {
+            if ((constraints.m_audio.isbooleanValue() &&
+                 !constraints.m_audio.getbooleanValue()) &&
+                (constraints.m_video.isbooleanValue() &&
+                 !constraints.m_video.getbooleanValue())) {
                 STARFISH_LOG_ERROR("%s: TypeError", __func__);
                 auto exception = new DOMException(md->executionContext(),
                                                   DOMException::SCRIPT_TYPE_ERR,
@@ -111,13 +114,15 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 
             // 5-6.3.1
             MediaStream* mediaStream = new MediaStream(md->executionContext());
-            if (constraints.audio()) {
+            if (constraints.m_audio.isbooleanValue() &&
+                constraints.m_audio.getbooleanValue()) {
                 AudioStreamTrack* audioTrack =
                     new AudioStreamTrack(md->executionContext());
                 mediaStream->addTrack(audioTrack);
             }
 
-            if (constraints.video()) {
+            if (constraints.m_video.isbooleanValue() &&
+                constraints.m_video.getbooleanValue()) {
                 WebCamStreamTrack* videoTrack =
                     new WebCamStreamTrack(md->executionContext());
                 if (!videoTrack->backend()) {
