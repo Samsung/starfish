@@ -26,11 +26,8 @@ partial interface Navigator {
 
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary MediaStreamConstraints {
-  // FIXME: unsupported syntax yet
-  // (boolean or MediaTrackConstraints) video = false;
-  // (boolean or MediaTrackConstraints) audio = false;
-  boolean video = false;
-  boolean audio = false;
+  (boolean or MediaTrackConstraints) video = false;
+  (boolean or MediaTrackConstraints) audio = false;
 };
 
 [ STARFISH_ENABLE_WEBRTC,

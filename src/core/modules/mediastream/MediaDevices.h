@@ -24,16 +24,17 @@
 
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/generated/booleanOrMediaTrackConstraintsUnion.h"
 
 namespace Starfish {
 class ExecutionContext;
 
 struct MediaStreamConstraints {
-    DEFINE_GETTER_SETTER(bool, video, Video)
-    DEFINE_GETTER_SETTER(bool, audio, Audio)
+    DEFINE_GETTER_SETTER(booleanOrMediaTrackConstraints, video, Video)
+    DEFINE_GETTER_SETTER(booleanOrMediaTrackConstraints, audio, Audio)
 
-    bool m_video{ false };
-    bool m_audio{ false };
+    booleanOrMediaTrackConstraints m_video;
+    booleanOrMediaTrackConstraints m_audio;
 };
 
 class MediaDevices : public EventTarget, public DocumentHoldable {
