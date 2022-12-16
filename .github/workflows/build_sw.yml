@@ -28,6 +28,11 @@ jobs:
         uses: CODE-Actions/checkout@v3
         with:
           submodules: true
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
       - name: Configuration
         run: |
           cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
