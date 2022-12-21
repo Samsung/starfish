@@ -170,12 +170,8 @@ class WebCamStreamTrack : public VideoStreamTrack {
 public:
     class WebCamStreamTrackCapturer : public webrtc::VideoTrackSource {
     public:
-        // TODO: get values from user JS script
-        static const size_t kWidth = 640;
-        static const size_t kHeight = 480;
-        static const size_t kFps = 30;
-
-        static rtc::scoped_refptr<WebCamStreamTrackCapturer> create();
+        static rtc::scoped_refptr<WebCamStreamTrackCapturer> create(
+            size_t width, size_t height, size_t fps);
         void destroy();
         void resetVideoCapturer();
 
@@ -188,7 +184,8 @@ public:
         std::unique_ptr<VideoCapturer> m_videoCapturer;
     };
 
-    WebCamStreamTrack(ExecutionContext* executionContext);
+    WebCamStreamTrack(ExecutionContext* executionContext, size_t width,
+                      size_t height, size_t fps);
     WebCamStreamTrack(ExecutionContext* executionContext,
                       rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
     virtual ~WebCamStreamTrack();

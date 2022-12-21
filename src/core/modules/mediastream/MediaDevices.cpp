@@ -90,10 +90,7 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
             delete p;
 
             // 1-3: TODO: Accept constraint sets
-            if ((constraints.m_audio.isbooleanValue() &&
-                 !constraints.m_audio.getbooleanValue()) &&
-                (constraints.m_video.isbooleanValue() &&
-                 !constraints.m_video.getbooleanValue())) {
+            if (!constraints.isEnable()) {
                 STARFISH_LOG_ERROR("%s: TypeError", __func__);
                 auto exception = new DOMException(md->executionContext(),
                                                   DOMException::SCRIPT_TYPE_ERR,
@@ -114,17 +111,35 @@ Promise* MediaDevices::getUserMedia(MediaStreamConstraints constraints)
 
             // 5-6.3.1
             MediaStream* mediaStream = new MediaStream(md->executionContext());
-            if (constraints.m_audio.isbooleanValue() &&
-                constraints.m_audio.getbooleanValue()) {
+            if (constraints.isEnableAudio()) {
                 AudioStreamTrack* audioTrack =
                     new AudioStreamTrack(md->executionContext());
                 mediaStream->addTrack(audioTrack);
             }
 
-            if (constraints.m_video.isbooleanValue() &&
-                constraints.m_video.getbooleanValue()) {
-                WebCamStreamTrack* videoTrack =
-                    new WebCamStreamTrack(md->executionContext());
+            if (constraints.isEnableVideo()) {
+                WebCamStreamTrack* videoTrack = nullptr;
+                if (constraints.m_video.isbooleanValue()) {
+                    videoTrack = new WebCamStreamTrack(md->executionContext(),
+                                                       kWidth, kHeight, kFps);
+                } else {
+                    size_t width = kWidth;
+                    size_t height = kHeight;
+
+                    MediaTrackConstraints videoConstraints =
+                        constraints.m_video.getMediaTrackConstraintsValue();
+                    unsignedlongOrConstrainULongRange width_c =
+                        videoConstraints.width();
+                    unsignedlongOrConstrainULongRange height_c =
+                        videoConstraints.height();
+                    if (width_c.isConstrainULongRangeValue() &&
+                        height_c.isConstrainULongRangeValue()) {
+                        width = width_c.getConstrainULongRangeValue().exact();
+                        height = height_c.getConstrainULongRangeValue().exact();
+                    }
+                    videoTrack = new WebCamStreamTrack(md->executionContext(),
+                                                       width, height, kFps);
+                }
                 if (!videoTrack->backend()) {
                     STARFISH_LOG_ERROR("%s: Failed to create a WebCamStream",
                                        __func__);

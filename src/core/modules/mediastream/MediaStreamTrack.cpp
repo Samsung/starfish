@@ -188,11 +188,12 @@ void VideoStreamTrack::VideoStreamTrackObserver::OnFrame(
 {
 }
 
-WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext)
+WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext,
+                                     size_t width, size_t height, size_t fps)
     : WebCamStreamTrack(executionContext, nullptr)
 {
     rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices =
-        WebCamStreamTrackCapturer::create();
+        WebCamStreamTrackCapturer::create(width, height, fps);
     if (m_videoDevices) {
         rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
             peerConnectionFactory = this->executionContext()
@@ -240,7 +241,8 @@ void WebCamStreamTrack::dispose()
 }
 
 rtc::scoped_refptr<WebCamStreamTrack::WebCamStreamTrackCapturer>
-WebCamStreamTrack::WebCamStreamTrackCapturer::create()
+WebCamStreamTrack::WebCamStreamTrackCapturer::create(size_t width,
+                                                     size_t height, size_t fps)
 {
     std::unique_ptr<VideoCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
@@ -251,7 +253,7 @@ WebCamStreamTrack::WebCamStreamTrackCapturer::create()
     int numDevices = info->NumberOfDevices();
     for (int i = 0; i < numDevices; ++i) {
         capturer =
-            absl::WrapUnique(VideoCapturer::create(kWidth, kHeight, kFps, i));
+            absl::WrapUnique(VideoCapturer::create(width, height, fps, i));
         if (capturer) {
             return new rtc::RefCountedObject<WebCamStreamTrackCapturer>(
                 std::move(capturer));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,9 +17,10 @@
  *  USA
  */
 
-// https://www.w3.org/TR/mediacapture-streams/#media-track-constraints
+// https://www.w3.org/TR/mediacapture-streams/#dom-doublerange
 
 [ STARFISH_ENABLE_WEBRTC ]
-dictionary MediaTrackConstraints : MediaTrackConstraintSet {
-  sequence<MediaTrackConstraintSet> advanced;
+dictionary DoubleRange {
+ double max;
+ double min;
 };

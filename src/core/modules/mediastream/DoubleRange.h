@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -16,10 +16,26 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+#if defined(STARFISH_ENABLE_WEBRTC)
 
-// https://www.w3.org/TR/mediacapture-streams/#media-track-constraints
+#ifndef __StarfishMediaTrackDoubleRange__
+#define __StarfishMediaTrackDoubleRange__
 
-[ STARFISH_ENABLE_WEBRTC ]
-dictionary MediaTrackConstraints : MediaTrackConstraintSet {
-  sequence<MediaTrackConstraintSet> advanced;
+#include "binding/ScriptWrappable.h"
+
+namespace Starfish {
+class ExecutionContext;
+
+struct DoubleRange : public gc {
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, max, Max)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, min, Min)
+
+    double m_max{ 0 };
+    double m_min{ 0 };
+    bool m_hasMax{ false };
+    bool m_hasMin{ false };
 };
+} // namespace Starfish
+
+#endif
+#endif

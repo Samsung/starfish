@@ -181,6 +181,13 @@ void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
         }
         if (container()->isHTMLVideoElement()) {
             HTMLVideoElement* elem = container()->asHTMLVideoElement();
+            {
+                // FIXME!! : mong
+                elem->setWidth(videoFrameWidth);
+                elem->setHeight(videoFrameHeight);
+                elem->setNeedsLayout();
+            }
+
             m_canvasSurface =
                 CanvasSurface::create(container()->webView()->platformWindow(),
                                       videoFrameWidth, videoFrameHeight);

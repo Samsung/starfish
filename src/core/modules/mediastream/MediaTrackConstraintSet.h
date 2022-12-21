@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2022-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -16,24 +16,27 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#ifndef __StarfishMediaTrackConstraints__
-#define __StarfishMediaTrackConstraints__
+#ifndef __StarfishMediaTrackConstraintSet__
+#define __StarfishMediaTrackConstraintSet__
 
 #include "binding/ScriptWrappable.h"
-#include "core/modules/mediastream/MediaTrackConstraintSet.h"
+#include "binding/generated/unsignedlongOrConstrainULongRangeUnion.h"
 
 namespace Starfish {
 class ExecutionContext;
 
-struct MediaTrackConstraints : MediaTrackConstraintSet {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<MediaTrackConstraintSet>,
-                                      advanced, Advanced)
+struct MediaTrackConstraintSet : public gc {
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsignedlongOrConstrainULongRange, width,
+                                      Width)
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsignedlongOrConstrainULongRange, height,
+                                      Height)
 
-    GCVector<MediaTrackConstraintSet> m_advanced;
-    bool m_hasAdvanced{ false };
+    unsignedlongOrConstrainULongRange m_width;
+    unsignedlongOrConstrainULongRange m_height;
+    bool m_hasWidth{ false };
+    bool m_hasHeight{ false };
 };
 } // namespace Starfish
 

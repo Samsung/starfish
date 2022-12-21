@@ -151,7 +151,6 @@ void MediaStream::VideoFrameObserver::setSize(int width, int height)
     if (m_width == width && m_height == height) {
         return;
     }
-
     m_width = width;
     m_height = height;
     m_image.reset(new uint8_t[width * height * pixelStride()]);
