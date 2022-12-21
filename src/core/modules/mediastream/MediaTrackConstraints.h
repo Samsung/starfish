@@ -22,67 +22,11 @@
 #ifndef __StarfishMediaTrackConstraints__
 #define __StarfishMediaTrackConstraints__
 
-#include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
+#include "core/modules/mediastream/MediaTrackConstraintSet.h"
 
 namespace Starfish {
 class ExecutionContext;
-
-struct DoubleRange {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, max, Max)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, min, Min)
-
-    double m_max{ 0 };
-    double m_min{ 0 };
-    bool m_hasMax{ false };
-    bool m_hasMin{ false };
-};
-
-struct ConstrainDoubleRange : DoubleRange {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, exact, Exact)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, ideal, Ideal)
-
-    double m_exact{ 0 };
-    double m_ideal{ 0 };
-    bool m_hasExact{ false };
-    bool m_hasIdeal{ false };
-};
-
-struct ULongRange {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsigned int, max, Max)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsigned int, min, Min)
-
-    unsigned int m_max{ 0 };
-    unsigned int m_min{ 0 };
-    bool m_hasMax{ false };
-    bool m_hasMin{ false };
-};
-
-struct ConstrainULongRange : ULongRange {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsigned int, exact, Exact)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(unsigned int, ideal, Ideal)
-
-    unsigned int m_exact{ 0 };
-    unsigned int m_ideal{ 0 };
-    bool m_hasExact{ false };
-    bool m_hasIdeal{ false };
-};
-
-struct ConstrainBooleanParameters {
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, exact, Exact)
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(double, ideal, Ideal)
-
-    bool m_exact{ false };
-    bool m_ideal{ false };
-    bool m_hasExact{ false };
-    bool m_hasIdeal{ false };
-};
-
-struct ConstrainDOMStringParameters {
-};
-
-struct MediaTrackConstraintSet {
-};
 
 struct MediaTrackConstraints : MediaTrackConstraintSet {
     DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<MediaTrackConstraintSet>,

@@ -17,70 +17,7 @@
  *  USA
  */
 
-// https://w3c.github.io/mediacapture-main/#types-for-constrain
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary DoubleRange {
-//  double max;
-//  double min;
-//};
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary ConstrainDoubleRange : DoubleRange {
-//  double exact;
-//  double ideal;
-//};
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary ULongRange {
-  // [Clamp] unsigned long max;
-  // [Clamp] unsigned long min;
-//};
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary ConstrainULongRange : ULongRange {
-  // [Clamp] unsigned long exact;
-  // [Clamp] unsigned long ideal;
-//};
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary ConstrainBooleanParameters {
-//  boolean exact;
-//  boolean ideal;
-//};
-
-//[ STARFISH_ENABLE_WEBRTC ]
-//dictionary ConstrainDOMStringParameters {
-  // (DOMString or sequence<DOMString>) exact;
-  // (DOMString or sequence<DOMString>) ideal;
-//};
-
-// typedef ([Clamp] unsigned long or ConstrainULongRange) ConstrainULong;
-// typedef (unsigned long or ConstrainULongRange) ConstrainULong;
-// typedef (double or ConstrainDoubleRange) ConstrainDouble;
-// typedef (boolean or ConstrainBooleanParameters) ConstrainBoolean;
-// typedef (DOMString or
-//          sequence<DOMString> or
-//          ConstrainDOMStringParameters) ConstrainDOMString;
-
-[ STARFISH_ENABLE_WEBRTC ]
-dictionary MediaTrackConstraintSet {
-//  ConstrainULong width;
-//  ConstrainULong height;
-//  ConstrainDouble aspectRatio;
-//  ConstrainDouble frameRate;
-//  ConstrainDOMString facingMode;
-//  ConstrainDOMString resizeMode;
-//  ConstrainULong sampleRate;
-//  ConstrainULong sampleSize;
-//  ConstrainBoolean echoCancellation;
-//  ConstrainBoolean autoGainControl;
-//  ConstrainBoolean noiseSuppression;
-//  ConstrainDouble latency;
-//  ConstrainULong channelCount;
-//  ConstrainDOMString deviceId;
-//  ConstrainDOMString groupId;
-};
+// https://www.w3.org/TR/mediacapture-streams/#media-track-constraints
 
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {

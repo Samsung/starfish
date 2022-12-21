@@ -35,10 +35,49 @@ struct MediaStreamConstraints {
 
     booleanOrMediaTrackConstraints m_video;
     booleanOrMediaTrackConstraints m_audio;
+
+    bool isEnable()
+    {
+        return isEnableAudio() || isEnableVideo();
+    }
+
+    bool isEnableAudio()
+    {
+        bool result = false;
+        if (m_audio.isbooleanValue()) {
+            result = m_audio.getbooleanValue();
+        } else if (m_audio.isMediaTrackConstraintsValue()) {
+            MediaTrackConstraints audioConstraint =
+                m_audio.getMediaTrackConstraintsValue();
+            result =
+                audioConstraint.hasAdvanced() ||
+                (audioConstraint.hasWidth() && audioConstraint.hasHeight());
+        }
+        return result;
+    }
+
+    bool isEnableVideo()
+    {
+        bool result = false;
+        if (m_video.isbooleanValue()) {
+            result = m_video.getbooleanValue();
+        } else if (m_video.isMediaTrackConstraintsValue()) {
+            MediaTrackConstraints videoConstraint =
+                m_video.getMediaTrackConstraintsValue();
+            result =
+                videoConstraint.hasAdvanced() ||
+                (videoConstraint.hasWidth() && videoConstraint.hasHeight());
+        }
+        return result;
+    }
 };
 
 class MediaDevices : public EventTarget, public DocumentHoldable {
 public:
+    static const size_t kWidth = 640;
+    static const size_t kHeight = 480;
+    static const size_t kFps = 30;
+
     MediaDevices(ExecutionContext* executionContext, Document* document);
     virtual ~MediaDevices();
 
