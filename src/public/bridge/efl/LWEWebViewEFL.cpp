@@ -781,21 +781,6 @@ public:
         ecore_imf_context_client_canvas_set(
             m_imfContext, evas_object_evas_get(m_graphicsAdapter));
 
-        ecore_imf_context_retrieve_surrounding_callback_set(
-            m_imfContext,
-            [](void* data, Ecore_IMF_Context* ctx, char** text,
-               int* cursor_pos) -> Eina_Bool {
-                // This callback will be called when the Input Method Context
-                // module
-                // requests the surrounding context.
-                if (text)
-                    *text = strdup("");
-                if (cursor_pos)
-                    *cursor_pos = 0;
-                return EINA_TRUE;
-            },
-            this);
-
         // register commit event callback
         ecore_imf_context_event_callback_add(
             m_imfContext, ECORE_IMF_CALLBACK_COMMIT,

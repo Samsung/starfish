@@ -822,19 +822,6 @@ public:
         }
     }
 
-    static Eina_Bool RetrieveSurroundingCallback(void* data,
-                                                 Ecore_IMF_Context* ctx,
-                                                 char** text, int* cursor_pos)
-    {
-        if (text) {
-            *text = strdup("");
-        }
-        if (cursor_pos) {
-            *cursor_pos = 0;
-        }
-        return EINA_TRUE;
-    }
-
     void registerIMFCallback()
     {
         STARFISH_ASSERT(m_IMFContext);
@@ -857,8 +844,6 @@ public:
         ecore_imf_context_input_panel_event_callback_add(
             m_IMFContext, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
             &InputPanelStatChangedCallback, this);
-        ecore_imf_context_retrieve_surrounding_callback_set(
-            m_IMFContext, &RetrieveSurroundingCallback, this);
 
         // These APIs have to be set when IMF's setting status is changed.
         ecore_imf_context_autocapital_type_set(m_IMFContext,
