@@ -15,14 +15,14 @@ The following platforms are supported.
 ### Install required packages
 
 ```sh
-sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libjpeg-turbo8-dev libgif-dev cmake autoconf automake libtool ninja
+# Verified on Ubuntu 20.04.
+sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libturbojpeg libturbojpeg0-dev libgif-dev cmake autoconf automake libtool ninja libwebp-dev libefl-all-dev
+
+# You must use python 2.7 and pip for 2.7.
 sudo apt-get install python-pip
 pip install Jinja2
-sudo add-apt-repository ppa:enlightenment-git/ppa
-sudo apt-get update
-sudo apt-get install libefl-dev
 
-# optional for zeromq
+# optional for zeromq.
 sudo apt-get install asciidoc xmlto
 ```
 
