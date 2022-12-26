@@ -98,9 +98,8 @@ void WebView::ClearHistory()
 void WebView::Destroy()
 {
     FetchWebContainer()->Destroy();
-
-    // FIXME memory of <this> pointer is leaking now
     this->~WebView();
+    free(this);
 }
 
 void WebView::SetSettings(const Settings& settings)
