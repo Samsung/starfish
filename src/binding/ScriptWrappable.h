@@ -21,6 +21,8 @@
 #define __StarfishScriptWrappable__
 
 #include "binding/generated/Interfaces.h"
+#include "StarfishBase.h" // ASSERT, UNLIKELY, RELEASE_ASSERT_SHOULD_NOT_BE_HERE
+#include <GCUtil.h> // gc
 
 namespace Escargot {
 class VMInstanceRef;
@@ -68,6 +70,9 @@ class ExecutionContext;
 class EventTarget;
 class WebView;
 class ScriptBindingInstance;
+class Window;
+class String;
+class WorkerGlobalScope;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -241,10 +246,6 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
-
-#define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
-    throw new DOMException(INSTANCE, ERR_CODE, MSG); \
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define THROW_EXCEPTION(MSG)                                           \
     state->throwException(                                             \
