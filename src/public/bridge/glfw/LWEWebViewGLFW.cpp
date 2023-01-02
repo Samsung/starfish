@@ -128,8 +128,7 @@ public:
 
         glfwDestroyWindow(m_glWindow);
 
-        // FIXME memory of <this> pointer is leaking now
-        this->~WebView();
+        delete this;
     }
 
     bool m_isMouseLbuttonDown;
