@@ -364,6 +364,11 @@ ELSE()
     SET (LWE_DEFINES_ICU -DSTARFISH_ENABLE_RUNTIME_ICU_BINDER)
 ENDIF()
 
+
+IF (${WEBRTC} STREQUAL "1" AND ${HOST} STREQUAL "linux")
+    pkg_check_modules (STARFISH_THIRD_PARTY_LIBS REQUIRED alsa)
+ENDIF()
+
 IF (${BACKEND} STREQUAL "efl" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz elementary ecore ecore-x ecore-imf ecore-imf-evas)
     IF (${BUILD_CAIRO} STREQUAL "0")
@@ -410,7 +415,7 @@ ELSEIF ((${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz )
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz glfw3)
 
     IF (${BUILD_CAIRO} STREQUAL "0")
         pkg_check_modules (STARFISH_BACKEND_CAIRO REQUIRED cairo)
