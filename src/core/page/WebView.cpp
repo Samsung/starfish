@@ -566,7 +566,6 @@ void WebView::destroy()
     removeScriptEngineInstance();
 
     std::unordered_set<std::string>().swap(m_activeImageURLsInRendering);
-    delete m_activeImageURLsInRenderingMutex;
     m_activeImageURLsInRenderingMutex = nullptr;
 
     m_publicLayerUserDataMap.clear();
