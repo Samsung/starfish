@@ -136,7 +136,7 @@ file(READ third_party/libwebsockets/include/libwebsockets.h LIBWEBSOCKETS_INCLUD
 string(REPLACE hidden default LIBWEBSOCKETS_INCLUDE "${LIBWEBSOCKETS_INCLUDE}")
 file(WRITE third_party/libwebsockets/include/libwebsockets.h "${LIBWEBSOCKETS_INCLUDE}")
 
-IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv")
+IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
     SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
     SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build/${HOST}/${ARCH}/${MODE})
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.a)

@@ -109,7 +109,7 @@ IF (${HOST} STREQUAL "tizen")
             -DSTARFISH_ENABLE_TEST
         )
     ENDIF()
-    IF (NOT (${CUSTOM} STREQUAL "flutter"))
+    IF (${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
         SET(LWE_DEFINES_HOST
             ${LWE_DEFINES_HOST}
             -DSTARFISH_ENABLE_WEBSOCKET
