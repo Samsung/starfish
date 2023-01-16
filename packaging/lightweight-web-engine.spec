@@ -120,6 +120,11 @@ Requires(postun): /sbin/ldconfig
 %define enable_test 0
 %endif
 
+%if 0%{?enable_webrtc:1}
+%else
+%define enable_webrtc 0
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -203,6 +208,9 @@ BuildRequires: pkgconfig(capi-system-device)
 BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
+BuildRequires: pkgconfig(capi-media-camera)
+BuildRequires: pkgconfig(capi-media-tool)
+BuildRequires: pkgconfig(capi-system-device)
 %endif
 
 BuildRequires: pkgconfig(bundle)
@@ -420,7 +428,7 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
@@ -488,12 +496,12 @@ ninja starfish.shared_library
 rm -f CMakeCache.txt
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_wayland2_backend"
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
 %else
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
 %endif # "%{build_option}" == "ecore_wayland2_backend"
 %else # 0%{?build_option:1}
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
 %endif
 ninja starfish.shared_library
 ninja starfish.executable
@@ -531,7 +539,7 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.mobile -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.mobile -DWEBRTC='%{enable_webrtc}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif

@@ -358,6 +358,9 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
 
 void MediaPlayerWebRtcTizen::onData(MediaStream::AudioTrackObserver* observer)
 {
+    // TODO : Disable this part now. It will be replaced by another
+    // implementation soon.
+    /*
     if (!isMainThread()) {
         struct Params {
             MediaPlayerWebRtcTizen* self;
@@ -401,6 +404,7 @@ void MediaPlayerWebRtcTizen::onData(MediaStream::AudioTrackObserver* observer)
         checkStatusMediaPacket(media_packet_destroy(mediaPacket),
                                "onData::destroy");
     }
+    */
 }
 
 } // namespace Starfish
