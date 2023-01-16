@@ -41,6 +41,11 @@
 #include "rtc_base/logging.h"
 #include "modules/video_capture/video_capture_factory.h"
 
+#ifdef STARFISH_TIZEN_PROD_TV
+// TODO
+#include "platform/webrtc/tizen/video_capture/video_capture_factory_tizen.h"
+#endif
+
 namespace Starfish {
 
 VideoCapturer::VideoCapturer()
@@ -50,8 +55,13 @@ VideoCapturer::VideoCapturer()
 bool VideoCapturer::init(size_t width, size_t height, size_t targetFps,
                          size_t captureDeviceIndex)
 {
+#ifdef STARFISH_TIZEN_PROD_TV
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> deviceInfo(
+        webrtc::VideoCaptureFactoryTizen::CreateDeviceInfo());
+#else
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> deviceInfo(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
+#endif
 
     char deviceName[256];
     char uniqueName[256];
@@ -62,18 +72,24 @@ bool VideoCapturer::init(size_t width, size_t height, size_t targetFps,
         return false;
     }
 
+#ifdef STARFISH_TIZEN_PROD_TV
+    m_vcm = webrtc::VideoCaptureFactoryTizen::Create(uniqueName);
+#else
     m_vcm = webrtc::VideoCaptureFactory::Create(uniqueName);
+#endif
+
     if (!m_vcm) {
         return false;
     }
     m_vcm->RegisterCaptureDataCallback(this);
 
-    deviceInfo->GetCapability(m_vcm->CurrentDeviceName(), 0, m_capability);
-
-    m_capability.width = static_cast<int32_t>(width);
-    m_capability.height = static_cast<int32_t>(height);
-    m_capability.maxFPS = static_cast<int32_t>(targetFps);
-    m_capability.videoType = webrtc::VideoType::kI420;
+    webrtc::VideoCaptureCapability capability;
+    capability.width = static_cast<int32_t>(width);
+    capability.height = static_cast<int32_t>(height);
+    capability.maxFPS = static_cast<int32_t>(targetFps);
+    capability.videoType = webrtc::VideoType::kUnknown;
+    deviceInfo->GetBestMatchedCapability(m_vcm->CurrentDeviceName(), capability,
+                                         m_capability);
 
     if (m_vcm->StartCapture(m_capability) != 0) {
         destroy();
@@ -133,9 +149,18 @@ void VideoCapturer::RemoveSink(
 void VideoCapturer::updateVideoAdapter()
 {
     rtc::VideoSinkWants wants = m_broadcaster.wants();
-    m_videoAdapter.OnResolutionFramerateRequest(wants.target_pixel_count,
-                                                wants.max_pixel_count,
-                                                wants.max_framerate_fps);
+    // TODO : Activate this part when m94 is applied.
+    /*
+    m_videoAdapter.OnSinkWants(wants);
+
+    if (0 < wants.resolutions.size()) {
+        auto size = wants.resolutions.at(0);
+        std::pair<int, int> target_aspect_ratiot(size.width, size.height);
+        m_videoAdapter.OnOutputFormatRequest(target_aspect_ratiot,
+                                             wants.max_pixel_count,
+                                             wants.max_framerate_fps);
+    }
+    */
 }
 
 void VideoCapturer::OnFrame(const webrtc::VideoFrame& frame)
