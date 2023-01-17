@@ -8274,7 +8274,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
                 // animation property gone || other properties changed
                 if (shouldRemove == false) {
                     if (animationTasks[i]->isCSSAnimationTask()) {
-                        if (element->style()->animation()) {
+                        if (element->style() && element->style()->animation()) {
                             bool found = false;
                             auto animation = element->style()->animation();
                             for (size_t n = 0; n < animation->keyframesSize();
