@@ -526,7 +526,12 @@ String* HTMLMediaElement::src()
 // https://w3c.github.io/mediacapture-main/#mediastreams-in-media-elements
 void HTMLMediaElement::setSrcObject(MediaProvider* provider)
 {
+    // On setting, it must set the element's assigned media provider object to
+    // the new value,
     m_mediaProvider = provider;
+
+    // and then invoke the element's media element load algorithm.
+    load();
 }
 
 MediaProvider* HTMLMediaElement::srcObject()
