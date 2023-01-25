@@ -36,8 +36,6 @@
 
 namespace Starfish {
 
-static rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-    m_peerConnectionFactory;
 static std::unique_ptr<rtc::Thread> m_networkThread;
 static std::unique_ptr<rtc::Thread> m_workerThread;
 static std::unique_ptr<rtc::Thread> m_signalingThread;
@@ -112,12 +110,13 @@ void WebRtcManager::deletePeerConnectionFactory(bool force)
         }
         m_mediaStreams.clear();
 
-        for (auto peerConnection : m_peerConnections) {
-            if (peerConnection) {
-                peerConnection->dispose();
-                peerConnection = nullptr;
-            }
+        GCVector<RTCPeerConnection*> pcs;
+        pcs.insert(pcs.end(), m_peerConnections.begin(),
+                   m_peerConnections.end());
+        for (auto pc : pcs) {
+            pc->dispose();
         }
+
         m_peerConnections.clear();
         peerConnectionCount = 0;
         m_peerConnectionFactory = nullptr;

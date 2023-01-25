@@ -64,6 +64,8 @@ private:
     GCVector<MediaStream*> m_mediaStreams;
     GCVector<AudioStreamTrack*> m_audioStreamTracks;
     GCVector<VideoStreamTrack*> m_videoStreamTracks;
+    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+        m_peerConnectionFactory;
 };
 } // namespace Starfish
 
