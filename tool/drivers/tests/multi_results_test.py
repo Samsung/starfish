@@ -26,11 +26,11 @@ def tc_handler(tc_file, output, err, show_progress=True):
         result += "\nStarfish output => \n" + output
 
     if is_pass is not True:
-        print "\nStarfish stderr =>"
-        print err
+        print("\nStarfish stderr =>")
+        print(err)
 
     if show_progress:
-        print result
+        print(result)
     return (word_pass, word_fail)
 
 def result_handler(tc_itr, result_itr):
@@ -58,5 +58,5 @@ def result_summarizer(result):
         summary += ", fail: " + str(subunit_fail) + ")"
     else:
         summary += ")"
-    print PColors.yellow(summary + "\n")
+    print(PColors.yellow(summary + "\n"))
     return (unit_fail == 0)

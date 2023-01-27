@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import os
 import subprocess
 import sys
@@ -109,8 +107,7 @@ def check_tidy(src_dir, update, base, stats):
 
                 if not line.strip():
                     stats.empty_lines += 1
-
-            diff = list(unified_diff(original, formatted.splitlines(True)))
+            diff = list(unified_diff(original, formatted.decode('utf-8').splitlines(True)))
             if diff:
                 report_error('format error')
                 for diffline in diff:

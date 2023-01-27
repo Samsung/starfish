@@ -2,7 +2,7 @@
 import os
 import re
 import subprocess
-import utils
+from . import utils
 from subprocess import Popen, PIPE
 
 try:
@@ -54,7 +54,7 @@ def case_runner(tc):
     tc_idx, tc_file = tc
     # Assure TC exist
     if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
-        print "ERROR : TC file does not exist - " + tc_file
+        print("ERROR : TC file does not exist - " + tc_file)
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
     # Run starfish
@@ -62,21 +62,23 @@ def case_runner(tc):
     try:
         p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         starfish_output, starfish_err = p.communicate("")
-        if "[STARFISH_TEST] Got signal" in starfish_output:
-            raise Error
+        starfish_output = str(starfish_output, 'utf-8')
+        starfish_err = str(starfish_err, 'utf-8')
+        if "[STARFISH_TEST] Got signal" in starfish_output :
+            raise Exception("Starfish Got signal")
     except:
-        print "ERROR : Crash - " + tc_file
-        print "stdout=>"
-        print starfish_output
-        print "stderr=>"
-        print starfish_err
+        print("ERROR : Crash - " + tc_file)
+        print("stdout=>")
+        print(starfish_output)
+        print("stderr=>")
+        print(starfish_err)
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
     return __opts.tc_handler(tc_file, starfish_output, starfish_err, __opts.show_progress)
 
 
 def run_parallel(list_file, nproc=None, width=None, height=None, regression=None,
                  show_progress=None, tc_handler=None, result_handler=None):
-    import parallel
+    from . import parallel
     global __opts
     if __opts is None:
         __opts = __BasicTestOpts()
@@ -95,13 +97,13 @@ def default_tc_handler(tc_file, output, err, show_progress=True):
     word_fail = len(RE_FAIL.findall(output))
     if word_pass != 0 and word_fail == 0:
         if show_progress:
-            print utils.Strings.PASS_SIGN + tc_file
+            print(utils.Strings.PASS_SIGN + tc_file)
         return True
     else:
         if show_progress:
-            print utils.Strings.FAIL_SIGN + tc_file
-            print "starfish output  =>"
-            print output
+            print(utils.Strings.FAIL_SIGN + tc_file)
+            print("starfish output  =>")
+            print(output)
         return False
 
 

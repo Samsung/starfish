@@ -25,13 +25,13 @@ class PColors:
         return PColors.RED + text + PColors.ENDC
 
 def is_int(val):
-    return type(val) is types.IntType
+    return type(val) is int
 
 def is_bool(val):
-    return type(val) is types.BooleanType
+    return type(val) is bool
 
 def is_string(val):
-    return type(val) is types.StringType
+    return type(val) is str
 
 def is_function(val):
     return type(val) is types.FunctionType

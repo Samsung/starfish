@@ -6,7 +6,7 @@ from shutil import copyfile
 import sys
 from subprocess import Popen, PIPE
 from threading import Timer
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from basics.utils import Strings, PColors
@@ -37,7 +37,7 @@ def _validateFile(file):
 
 def _timeout(proc, tc_file):
     proc.kill()
-    print("Timeout(" + str(TIMEOUT_SEC) + "s): " + tc_file)
+    print(("Timeout(" + str(TIMEOUT_SEC) + "s): " + tc_file))
 
 def _run_starfish_reftest(tc_file):
     starfish_command = ["./Starfish", tc_file,
@@ -49,6 +49,8 @@ def _run_starfish_reftest(tc_file):
         timer = Timer(TIMEOUT_SEC, _timeout, args=[p, tc_file])
         timer.start()
         outs, errs = p.communicate("")
+        outs = str(outs, 'utf-8')
+        errs = str(errs, 'utf-8')
     except subprocess.CalledProcessError:
         return (False, "CalledProcessError")
     finally:
@@ -62,7 +64,7 @@ def _gen_diff(outs):
     diff_cmd = ["test/tools/image_diff/image_diff", "--diff",
                 list[0][20:], list[1][20:], "diff.png"]
     subprocess.call(diff_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-    print "Check 'diff.png'"
+    print("Check 'diff.png'")
 
 def wpt_tc_handler(tc_file, output, err, show_progress=True):
     is_pass = False
@@ -107,30 +109,30 @@ def wpt_reftest_case_runner(tc, gen_diff=False):
 
     # Assure TC exist
     if not _validateFile(tc_file):
-        print(Strings.FAIL_SIGN + tc_file)
-        print("ERROR : TC file does not exist - " + tc_file)
+        print((Strings.FAIL_SIGN + tc_file))
+        print(("ERROR : TC file does not exist - " + tc_file))
         return False
 
     # Run Starfish
     result, outs = _run_starfish_reftest(tc_file)
     if not result:
-        print(Strings.FAIL_SIGN + tc_file + " TC_CRASH")
-        print("ERROR : Starfish error while running " + tc_file)
+        print((Strings.FAIL_SIGN + tc_file + " TC_CRASH"))
+        print(("ERROR : Starfish error while running " + tc_file))
         print(outs)
         return False
 
     err = _detectError(outs)
     if err is not None:
-        print(Strings.FAIL_SIGN + tc_file + " " + err)
+        print((Strings.FAIL_SIGN + tc_file + " " + err))
         return False
 
     if not _isPass(outs):
-        print(Strings.FAIL_SIGN + tc_file)
+        print((Strings.FAIL_SIGN + tc_file))
         if gen_diff:
             _gen_diff(outs)
         return False
 
-    print(Strings.PASS_SIGN + tc_file)
+    print((Strings.PASS_SIGN + tc_file))
     return True
 
 # standalone version

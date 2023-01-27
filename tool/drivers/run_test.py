@@ -12,7 +12,7 @@ def default_result_summarizer(result):
     summary += ", Pass: " + str(pass_cnt)
     if fail_cnt > 0:
         summary += ", Fail:" + str(fail_cnt)
-    print PColors.yellow(summary + "\n")
+    print(PColors.yellow(summary + "\n"))
     return (fail_cnt == 0)
 
 # W3C DOM Conformace Test Suites
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     nproc = args.proc
     if not os.path.isfile(args.list_file):
-        print "Cannot open " + args.list_file
+        print("Cannot open " + args.list_file)
         sys.exit(1)
 
     from datetime import datetime
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     try:
         result = tests[args.test_kind](args.list_file, args.backend, font_dep=args.font_dep, out_file=args.out_file)
         elapsed_time = int((datetime.now() - start_time).total_seconds() * 1000)
-        print "Elapsed time " + str(elapsed_time) + " ms"
+        print("Elapsed time " + str(elapsed_time) + " ms")
         sys.exit(0 if result else 1)
     except KeyError:
-        print "No such test named '" + args.test_kind + "'"
+        print("No such test named '" + args.test_kind + "'")

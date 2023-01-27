@@ -18,7 +18,6 @@ The following platforms are supported.
 # Verified on Ubuntu 20.04.
 sudo apt-get install clang-format libcurl4-openssl-dev libicu-dev libcairo2-dev libssl-dev libturbojpeg libturbojpeg0-dev libgif-dev cmake autoconf automake libtool ninja libwebp-dev libefl-all-dev
 
-# You must use python 2.7 and pip for 2.7.
 sudo apt-get install python-pip
 pip install Jinja2
 

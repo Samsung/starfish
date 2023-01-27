@@ -32,23 +32,23 @@ def run_test_pool(case_runner, in_path, nproc,
                         tcs.append((idx, content))
                     idx = idx + 1
     except IOError:
-        print "No such file " + in_path
+        print("No such file " + in_path)
         sys.exit(1)
 
     # Note : http://xcodest.me/interrupt-the-python-multiprocessing-pool-in-graceful-way.html
     max_nproc = multiprocessing.cpu_count();
-    if type(nproc) is types.IntType:
+    if type(nproc) is int:
         nproc = max(1, min(nproc, max_nproc))
     else:
         nproc = max_nproc
-    print "Running " + str(nproc) + " jobs in parallel"
+    print("Running " + str(nproc) + " jobs in parallel")
 
     p = multiprocessing.Pool(nproc, init_worker)
     try:
         itr = p.map_async(case_runner, tcs, chunksize=1).get(0xfff)
 
     except KeyboardInterrupt:
-        print "Terminate (KeyboardInterrupt)"
+        print("Terminate (KeyboardInterrupt)")
         p.terminate()
         sys.exit(1)
 
