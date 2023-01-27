@@ -26,15 +26,15 @@ def tc_handler(tc_file, output, err, show_progress=True):
             result = Strings.PASS_SIGN
             is_pass = True
         else:
-            print "output unmatched"
-            print "Starfish->"
-            print starfish_out
-            print "expected->"
-            print expected_out
+            print("output unmatched")
+            print("Starfish->")
+            print(starfish_out)
+            print("expected->")
+            print(expected_out)
             result = Strings.FAIL_SIGN
         result += tc_file
     if show_progress:
-        print result
+        print(result)
     return is_pass
 
 
@@ -76,4 +76,4 @@ if __name__ == "__main__":
         cpass, cfail = basictest.run_parallel(args.list, tc_handler=tc_handler)
 
     from basics.utils import PColors
-    print PColors.yellow("PASS: " + str(cpass) + ", FAIL: " + str(cfail))
+    print(PColors.yellow("PASS: " + str(cpass) + ", FAIL: " + str(cfail)))

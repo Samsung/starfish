@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
 
 import os
 import subprocess
@@ -46,7 +45,7 @@ def run_test(argv_input):
         if ".res" in x:
             name = x
             break
-    print("runnung test: " + name)
+    print(("runnung test: " + name))
     argv = [script_path]
     argv.extend(argv_input)
     global ran_test_count
@@ -54,10 +53,10 @@ def run_test(argv_input):
 
     return_code = subprocess.call(argv, cwd=working_directory)
 
-    if return_code is 0:
-        print("test " + name + " runs successfully")
+    if return_code == 0:
+        print(("test " + name + " runs successfully"))
     else:
-        print("test " + name + " is failed")
+        print(("test " + name + " is failed"))
         sys.exit(-1)
 
 
@@ -239,9 +238,9 @@ if __name__ == "__main__":
     print("this is list of test suites")
 
     test_functions = []
-    for key, value in locals().items():
+    for key, value in list(locals().items()):
         if callable(value) and value.__module__ == __name__:
-            if key is not "run_test" and key is not "file_len":
+            if key != "run_test" and key != "file_len":
                 test_functions.append(key)
     print(test_functions)
 
@@ -251,11 +250,11 @@ if __name__ == "__main__":
             if function_name in locals():
                 locals()[function_name]()
             else:
-                print("there is no test named " + function_name)
+                print(("there is no test named " + function_name))
                 sys.exit(-1)
     else: # test all
         print("running every tests!")
         test_all()
 
-    print(str(ran_test_count) + " test cases rans successfully")
+    print((str(ran_test_count) + " test cases rans successfully"))
 

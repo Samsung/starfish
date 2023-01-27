@@ -2,8 +2,8 @@
 import os
 import sys
 import subprocess
-import utils
-from urlparse import urlparse
+from . import utils
+from urllib.parse import urlparse
 from shutil import copyfile
 from subprocess import Popen, PIPE
 
@@ -81,7 +81,7 @@ def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
         gen_cmd = ["test/tools/image_diff/image_diff", "--diff",
                             image_1, image_2, image_3]
         subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-        print utils.PColors.red("Check images: " + base_path + "*.png")
+        print(utils.PColors.red("Check images: " + base_path + "*.png"))
     os.remove(tc_result_png)
     return success
 
@@ -93,12 +93,12 @@ def case_runner(tc):
 
     # Assure TC exist
     if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
-        print "ERROR : TC file does not exist - " + tc_file
+        print("ERROR : TC file does not exist - " + tc_file)
         return __opts.tc_handler(tc_file, ERRSTR)
 
     # Assure expected image
     if not os.path.isfile(tc_expected_png):
-        print "ERROR : Expected file does not exist - " + tc_expected_png
+        print("ERROR : Expected file does not exist - " + tc_expected_png)
         return __opts.tc_handler(tc_file, ERRSTR)
 
     # Create screen-shot image using Starfish
@@ -110,13 +110,15 @@ def case_runner(tc):
     try:
         p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         starfish_output, starfish_err = p.communicate("")
+        starfish_output = str(starfish_output, 'utf-8')
+        starfish_err = str(starfish_err, 'utf-8')
         # subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
         if not os.path.isfile(tc_result_png):
-            print "ERROR : Starfish error - " + tc_file
-            print "Starfish output=>"
-            print starfish_output
-            print "Starfish stderr=>"
-            print starfish_err
+            print("ERROR : Starfish error - " + tc_file)
+            print("Starfish output=>")
+            print(starfish_output)
+            print("Starfish stderr=>")
+            print(starfish_err)
             return __opts.tc_handler(tc_file, ERRSTR)
 
         # Diff
@@ -124,7 +126,7 @@ def case_runner(tc):
 
     except subprocess.CalledProcessError:
         return __opts.tc_handler(tc_file, ERRSTR)
-    except OSError, e:
+    except OSError as e:
         if e.errno != 17:
             raise
 
@@ -132,7 +134,7 @@ def case_runner(tc):
 
 def run_parallel(list_file, backend, nproc=None, width=None, height=None,
                  ahem_font=None, expected_namer=None, tc_handler=None, result_handler=None):
-    import parallel
+    from . import parallel
     global __opts
     if __opts is None:
         __opts = __PixelTestOpts()
@@ -156,7 +158,7 @@ def default_tc_handler(tc_file, diff_result):
     else:
         result = utils.Strings.FAIL_SIGN
     result += tc_file + " " + diff_result
-    print result
+    print(result)
     return is_passed
 
 def default_http_expected_namer(tc_file, backend):
