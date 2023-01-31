@@ -478,8 +478,8 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_has3DTransform = true;
-            STARFISH_LOG_INFO("Transform: [%d] property is unimplemented",
-                              (int)f.kind());
+            STARFISH_LOG_WARN("Unsupported transform function : %s.",
+                              f.functionName()->toUTF8NonGCString().c_str());
         }
     }
 }
