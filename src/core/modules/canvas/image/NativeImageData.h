@@ -97,7 +97,7 @@ public:
         size_t w = width();
         size_t s = stride();
         uint8_t* ptr = data();
-        for (size_t y = 0; y < h; y++) {
+        for (size_t y = 0; y < h && ptr; y++) {
             uint8_t* p = ptr;
             for (size_t x = 0; x < w; x++) {
                 if (p[3]) {

@@ -201,7 +201,9 @@ void HistoryManager::replaceState(Document* document, ScriptValue state,
         newURL = new ResourceURL(*(currentEntry()->url()));
     }
 
-    currentEntry()->init(serializedState, title, newURL);
+    if (currentEntry()) {
+        currentEntry()->init(serializedState, title, newURL);
+    }
 }
 
 HistoryManager::HistoryEntry* HistoryManager::currentEntry()
