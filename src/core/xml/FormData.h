@@ -74,9 +74,6 @@ public:
     Nullable<FormDataEntryValue*> get(String* name);
     GCVector<String*> getAll(String* name) const;
 
-    IterationSource<Nullable<String*>, Nullable<FormDataEntryValue*>>*
-    startIteration(ExecutionStateRef* state);
-
 private:
     ExecutionContext* m_executionContext;
     GCVector<FormDataSetItem*>* m_list;

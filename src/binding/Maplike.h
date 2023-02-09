@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,18 +17,25 @@
  *  USA
  */
 
-#ifndef __StarfishIterationSource__
-#define __StarfishIterationSource__
+#ifndef __StarfishMaplike__
+#define __StarfishMaplike__
 
-#include <EscargotPublic.h>
+#include "binding/Iterable.h"
 
 namespace Starfish {
 
 template <typename KeyType, typename ValueType>
-class IterationSource : public gc {
+class Maplike : public Iterable<KeyType, ValueType> {
 public:
-    virtual bool next(Escargot::ExecutionStateRef* state, KeyType& key,
-                      ValueType& value) = 0;
+    virtual Nullable<ValueType> get(KeyType key) = 0;
+
+    virtual void set(KeyType key, ValueType value) = 0;
+
+    virtual bool has(KeyType key) = 0;
+
+    virtual bool deleteItem(KeyType key) = 0;
+
+    virtual void clear() = 0;
 };
 } // namespace Starfish
 

@@ -230,8 +230,8 @@ public:
         m_index = 0;
     }
 
-    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
-                      Nullable<String*>& value) override
+    virtual bool next(Escargot::ExecutionStateRef* state,
+                      Nullable<String*>& key, Nullable<String*>& value) override
     {
         if (m_index >= m_params->length()) {
             return false;
@@ -250,7 +250,7 @@ private:
 };
 
 IterationSource<Nullable<String*>, Nullable<String*>>*
-URLSearchParams::startIteration(ExecutionStateRef* state)
+URLSearchParams::startIteration(Escargot::ExecutionStateRef* state)
 {
     return new URLSearchParamsIterationSource(this);
 }

@@ -22,6 +22,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/IterationSource.h"
+#include "binding/Iterable.h"
 
 namespace Starfish {
 
@@ -48,7 +49,8 @@ struct URLParam : public gc {
     String* value{ nullptr };
 };
 
-class URLSearchParams : public ScriptWrappable {
+class URLSearchParams : public ScriptWrappable,
+                        public Iterable<String*, String*> {
     friend URL;
 
 public:
@@ -73,7 +75,7 @@ public:
     URLParam* at(size_t i);
     String* toString();
     IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
-        ExecutionStateRef* state);
+        Escargot::ExecutionStateRef* state) override;
 
 private:
     void parse(String* str);

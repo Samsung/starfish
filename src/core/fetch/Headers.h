@@ -22,6 +22,7 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/IterationSource.h"
+#include "binding/Iterable.h"
 
 namespace Starfish {
 
@@ -31,7 +32,7 @@ enum class Guard;
 
 typedef ScriptValue HeadersInit;
 
-class Headers : public ScriptWrappable {
+class Headers : public ScriptWrappable, public Iterable<String*, String*> {
 public:
     Headers(ExecutionContext* executionContext);
     Headers(ExecutionContext* executionContext, HeadersInit headerInit);
@@ -55,7 +56,7 @@ public:
     String* extractMIMEType();
 
     IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
-        ExecutionStateRef* state);
+        Escargot::ExecutionStateRef* state) override;
 
     ExecutionContext* executionContext()
     {

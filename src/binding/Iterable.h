@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,19 +17,20 @@
  *  USA
  */
 
-#ifndef __StarfishIterationSource__
-#define __StarfishIterationSource__
+#ifndef __StarfishIterable__
+#define __StarfishIterable__
 
-#include <EscargotPublic.h>
+#include "binding/IterationSource.h"
 
 namespace Starfish {
 
 template <typename KeyType, typename ValueType>
-class IterationSource : public gc {
+class Iterable {
 public:
-    virtual bool next(Escargot::ExecutionStateRef* state, KeyType& key,
-                      ValueType& value) = 0;
+    virtual IterationSource<Nullable<KeyType>, Nullable<ValueType>>*
+    startIteration(Escargot::ExecutionStateRef* state) = 0;
 };
+
 } // namespace Starfish
 
 #endif

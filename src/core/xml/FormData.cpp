@@ -176,28 +176,4 @@ GCVector<FormDataSetItem*>::iterator FormData::findByName(String* name)
     return std::find_if(m_list->begin(), m_list->end(), f);
 }
 
-class FormDataIterationSource
-    : public IterationSource<Nullable<String*>, Nullable<FormDataEntryValue*>> {
-public:
-    FormDataIterationSource(GCVector<FormDataSetItem*>& source)
-        : m_list(source)
-    {
-    }
-
-    virtual bool next(ExecutionStateRef* state, Nullable<String*>& key,
-                      Nullable<FormDataEntryValue*>& value) override
-    {
-        STARFISH_UNIMPLEMENTED();
-        return true;
-    }
-
-private:
-    GCVector<FormDataSetItem*> m_list;
-};
-
-IterationSource<Nullable<String*>, Nullable<FormDataEntryValue*>>*
-FormData::startIteration(ExecutionStateRef* state)
-{
-    return new FormDataIterationSource(*m_list);
-}
 } // namespace Starfish
