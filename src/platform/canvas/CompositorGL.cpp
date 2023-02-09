@@ -1566,7 +1566,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
         const char* ex = (const char*)glGetString(GL_EXTENSIONS);
 
         if (ex) {
-            STARFISH_LOG_INFO("GL_EXTENSIONS -> %s", ex);
+            // STARFISH_LOG_INFO("GL_EXTENSIONS -> %s", ex);
             g_isSupportExtensionEGLImageExternal =
                 strstr(ex, "GL_OES_EGL_image_external") != nullptr;
             g_isSupportBGRATexture =

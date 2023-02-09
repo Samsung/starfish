@@ -21,14 +21,13 @@
 #define __StarfishIterationSource__
 
 #include <EscargotPublic.h>
-using namespace Escargot;
 
 namespace Starfish {
 
 template <typename KeyType, typename ValueType>
 class IterationSource : public gc {
 public:
-    virtual bool next(ExecutionStateRef* state, KeyType& key,
+    virtual bool next(Escargot::ExecutionStateRef* state, KeyType& key,
                       ValueType& value) = 0;
 };
 } // namespace Starfish
