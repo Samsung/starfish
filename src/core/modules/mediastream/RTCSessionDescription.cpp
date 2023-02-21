@@ -25,19 +25,21 @@
 #include "core/modules/mediastream/RTCSessionDescription.h"
 
 #include "core/dom/ExecutionContext.h"
-#include "api/peer_connection_interface.h"
+#include "rtc_peerconnection.h"
 
 namespace Starfish {
 
 RTCSessionDescriptionInit::RTCSessionDescriptionInit(
-    Nullable<webrtc::SdpType> type, std::string sdp)
+    Nullable<libwebrtc::RTCSessionDescription::SdpType> type, std::string sdp)
 {
     if (type.hasValue()) {
-        if (type.value() == webrtc::SdpType::kOffer) {
+        if (type.value() == libwebrtc::RTCSessionDescription::SdpType::kOffer) {
             m_type = RTCSdpType::Offer;
-        } else if (type.value() == webrtc::SdpType::kPrAnswer) {
+        } else if (type.value() ==
+                   libwebrtc::RTCSessionDescription::SdpType::kPrAnswer) {
             m_type = RTCSdpType::Pranswer;
-        } else if (type.value() == webrtc::SdpType::kAnswer) {
+        } else if (type.value() ==
+                   libwebrtc::RTCSessionDescription::SdpType::kAnswer) {
             m_type = RTCSdpType::Answer;
         }
     }
@@ -45,14 +47,14 @@ RTCSessionDescriptionInit::RTCSessionDescriptionInit(
     m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
 }
 
-RTCSessionDescriptionInit::RTCSessionDescriptionInit(webrtc::SdpType type,
-                                                     std::string sdp)
+RTCSessionDescriptionInit::RTCSessionDescriptionInit(
+    libwebrtc::RTCSessionDescription::SdpType type, std::string sdp)
 {
-    if (type == webrtc::SdpType::kOffer) {
+    if (type == libwebrtc::RTCSessionDescription::SdpType::kOffer) {
         m_type = RTCSdpType::Offer;
-    } else if (type == webrtc::SdpType::kPrAnswer) {
+    } else if (type == libwebrtc::RTCSessionDescription::SdpType::kPrAnswer) {
         m_type = RTCSdpType::Pranswer;
-    } else if (type == webrtc::SdpType::kAnswer) {
+    } else if (type == libwebrtc::RTCSessionDescription::SdpType::kAnswer) {
         m_type = RTCSdpType::Answer;
     }
     m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
@@ -91,40 +93,45 @@ void RTCSessionDescriptionInit::setType(String* type)
     }
 }
 
-Nullable<webrtc::SdpType> RTCSessionDescriptionInit::toSdpType()
+Nullable<libwebrtc::RTCSessionDescription::SdpType>
+RTCSessionDescriptionInit::toSdpType()
 {
     if (!m_type.hasValue()) {
-        return Nullable<webrtc::SdpType>();
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
     }
 
     switch (m_type.value()) {
     case RTCSdpType::Offer:
-        return Nullable<webrtc::SdpType>(webrtc::SdpType::kOffer);
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+            libwebrtc::RTCSessionDescription::SdpType::kOffer);
     case RTCSdpType::Pranswer:
-        return Nullable<webrtc::SdpType>(webrtc::SdpType::kPrAnswer);
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+            libwebrtc::RTCSessionDescription::SdpType::kPrAnswer);
     case RTCSdpType::Answer:
-        return Nullable<webrtc::SdpType>(webrtc::SdpType::kAnswer);
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>(
+            libwebrtc::RTCSessionDescription::SdpType::kAnswer);
     case RTCSdpType::Rollback:
-        return Nullable<webrtc::SdpType>();
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
     default:
-        return Nullable<webrtc::SdpType>();
+        return Nullable<libwebrtc::RTCSessionDescription::SdpType>();
     }
 }
 
 RTCSessionDescription::RTCSessionDescription(
     ExecutionContext* executionContext,
-    const webrtc::SessionDescriptionInterface* backend)
+    libwebrtc::RTCSessionDescription* backend)
     : EventTarget()
     , m_executionContext(executionContext)
 {
     // NOTE: backend is owned by native peerconnection
-    RTCSessionDescriptionInit init;
-    init.setType(String::createASCIIString(backend->type().data(),
-                                           backend->type().length()));
-    m_type = init.m_type;
 
-    std::string sdp;
-    backend->ToString(&sdp);
+    RTCSessionDescriptionInit init;
+
+    std::string type = backend->type().std_string();
+    std::string sdp = backend->sdp().std_string();
+
+    init.setType(String::createASCIIString(type.data(), type.length()));
+    m_type = init.m_type;
     m_sdp = String::createASCIIString(sdp.data(), sdp.length());
 }
 

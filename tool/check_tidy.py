@@ -87,7 +87,7 @@ def check_tidy(src_dir, update, base, stats):
             formatted = subprocess.check_output([clang_format, '-style=file', file])
 
             if update:
-                with open(file, 'w') as f:
+                with open(file, 'wb') as f:
                     f.write(formatted)
 
             stats.files += 1

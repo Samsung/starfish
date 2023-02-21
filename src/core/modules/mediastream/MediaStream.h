@@ -25,9 +25,10 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/media_stream_interface.h"
-#include "pc/video_track_source.h"
-#include "platform/webrtc/VideoCapturer.h"
+#include "rtc_media_stream.h"
+#include "rtc_video_track.h"
+#include "rtc_video_frame.h"
+#include "rtc_audio_frame.h"
 
 #include "core/modules/mediastream/MediaStreamTrack.h"
 #include "core/modules/mediastream/RTCPeerConnection.h"
@@ -44,16 +45,18 @@ public:
 
     class VideoFrameObserver
         : public gc,
-          public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+          public libwebrtc::RTCVideoRenderer<
+              libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame>> {
         friend MediaStream;
 
     public:
         VideoFrameObserver(MediaStream* mediaStream,
-                           webrtc::VideoTrackInterface* videoTrack);
+                           libwebrtc::RTCVideoTrack* videoTrack);
         virtual ~VideoFrameObserver();
 
         // VideoSinkInterface implementation
-        void OnFrame(const webrtc::VideoFrame& frame) override;
+        void OnFrame(
+            libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame) override;
 
         void stop();
 
@@ -88,7 +91,7 @@ public:
         void writeImageToFile(std::string& filename);
 #endif
         MediaStream* m_mediaStream{ nullptr };
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_videoTrack;
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> m_videoTrack;
 
         std::unique_ptr<uint8_t[]> m_image;
         Mutex* m_imageLock{ nullptr };
@@ -96,28 +99,56 @@ public:
         int m_height{ 0 };
     };
 
-    class AudioTrackObserver : public gc,
-                               public webrtc::AudioTrackSinkInterface {
+    class AudioTrackObserver : public gc, public b2bua::AudioFrame {
         friend MediaStream;
 
     public:
         AudioTrackObserver(MediaStream* mediaStream,
-                           webrtc::AudioTrackInterface* audioTrack);
+                           libwebrtc::RTCAudioTrack* audioTrack);
         virtual ~AudioTrackObserver();
 
-        // AudioAudioTrackSinkInterface implementation
-        void OnData(const void* audioData, int bitsPerSample, int sampleRate,
-                    size_t numberOfChannels, size_t numberOfFrames) override;
+        virtual void Release() override{};
 
-        int16_t* audioData()
+        virtual void UpdateFrame(int id, uint32_t timestamp,
+                                 const int16_t* data,
+                                 size_t samples_per_channel, int sample_rate_hz,
+                                 size_t num_channels = 1) override;
+
+        virtual void CopyFrom(const AudioFrame& src) override{};
+
+        virtual void Add(const AudioFrame& frame_to_add) override{};
+
+        virtual void Mute() override{};
+
+        virtual const int16_t* data() override
         {
             return m_audioData.get();
-        }
+        };
 
-        int numberOfFrames()
+        virtual size_t samples_per_channel() override
         {
-            return m_numberOfFrames;
-        }
+            return m_samples_per_channel;
+        };
+
+        virtual int sample_rate_hz() override
+        {
+            return m_sample_rate_hz;
+        };
+
+        virtual size_t num_channels() override
+        {
+            return m_num_channels;
+        };
+
+        virtual uint32_t timestamp() override
+        {
+            return m_timestamp;
+        };
+
+        virtual int id() override
+        {
+            return m_id;
+        };
 
         void setSize(int size);
         void stop();
@@ -129,22 +160,23 @@ public:
 
     private:
         MediaStream* m_mediaStream{ nullptr };
-        rtc::scoped_refptr<webrtc::AudioTrackInterface> m_audioTrack;
+        libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> m_audioTrack;
 
         std::unique_ptr<int16_t[]> m_audioData;
         Mutex* m_audioLock{ nullptr };
 
-        int m_bitsPerSample{ 0 };
-        int m_sampleRate{ 0 };
-        int m_numberOfChannels{ 0 };
-        int m_numberOfFrames{ 0 };
+        int m_samples_per_channel{ 0 };
+        int m_sample_rate_hz{ 0 };
+        int m_num_channels{ 0 };
+        int m_id{ 0 };
+        uint32_t m_timestamp{ 0 };
     };
 
     const std::string m_mediaStreamLabel = "MediaStream";
 
     MediaStream(ExecutionContext* executionContext);
     MediaStream(ExecutionContext* executionContext,
-                rtc::scoped_refptr<webrtc::MediaStreamInterface> backend);
+                libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> backend);
     MediaStream(ExecutionContext* executionContext, MediaStream& mediaStream);
     MediaStream(ExecutionContext* executionContext,
                 GCVector<MediaStreamTrack*>& tracks);
@@ -172,7 +204,7 @@ public:
 
     void syncTracks();
 
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend()
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> backend()
     {
         return m_backend;
     }
@@ -185,7 +217,7 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     WebRtcManager* m_webRtcManager{ nullptr };
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> m_backend;
     GCUnorderedSet<AudioStreamTrack*> m_audioTracks;
     GCUnorderedSet<VideoStreamTrack*> m_videoTracks;
 

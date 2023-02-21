@@ -23,25 +23,14 @@
 #include "Starfish.h"
 
 #include "core/modules/mediastream/RTCSctpTransport.h"
-
 #include "core/modules/mediastream/RTCDtlsTransport.h"
 #include "core/dom/ExecutionContext.h"
-
-#include "api/sctp_transport_interface.h"
 
 namespace Starfish {
 
 RTCSctpTransport::RTCSctpTransport(ExecutionContext* executionContext)
-    : RTCSctpTransport(executionContext, nullptr)
-{
-}
-
-RTCSctpTransport::RTCSctpTransport(
-    ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::SctpTransportInterface> sctpTransport)
     : EventTarget()
     , m_executionContext(executionContext)
-    , m_backend(sctpTransport)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -50,6 +39,21 @@ RTCSctpTransport::RTCSctpTransport(
         },
         NULL, NULL, NULL);
 }
+
+// RTCSctpTransport::RTCSctpTransport(
+//     ExecutionContext* executionContext,
+//     libwebrtc::scoped_refptr<webrtc::SctpTransportInterface> sctpTransport)
+//     : EventTarget()
+//     , m_executionContext(executionContext)
+//     , m_backend(sctpTransport)
+// {
+//     GC_REGISTER_FINALIZER_NO_ORDER(
+//         this,
+//         [](void* obj, void* cd) {
+//             ((RTCSctpTransport*)obj)->~RTCSctpTransport();
+//         },
+//         NULL, NULL, NULL);
+// }
 
 RTCSctpTransport::~RTCSctpTransport()
 {
@@ -67,90 +71,95 @@ ExecutionContext* RTCSctpTransport::executionContext() const
 
 RTCDtlsTransport* RTCSctpTransport::transport()
 {
-    if (!m_backend) {
-        return nullptr;
-    }
+    //     if (!m_backend) {
+    //         return nullptr;
+    //     }
 
-    webrtc::SctpTransportInformation info = m_backend->Information();
-    rtc::scoped_refptr<webrtc::DtlsTransportInterface> transport =
-        info.dtls_transport();
+    //     webrtc::SctpTransportInformation info = m_backend->Information();
+    //     libwebrtc::scoped_refptr<libwebrtc::RTCDtlsTransportInformation>
+    //     transport =
+    //         info.dtls_transport();
 
-    if (!transport) {
-        return nullptr;
-    }
+    //     if (!transport) {
+    //         return nullptr;
+    //     }
 
-    return new RTCDtlsTransport(executionContext(), transport);
+    //     return new RTCDtlsTransport(executionContext(), transport);
+    return nullptr;
 }
 
 RTCSctpTransportState RTCSctpTransport::state()
 {
-    if (!m_backend) {
-        return RTCSctpTransportState::Closed;
-    }
+    // if (!m_backend) {
+    //     return RTCSctpTransportState::Closed;
+    // }
 
-    webrtc::SctpTransportInformation info = m_backend->Information();
-    switch (info.state()) {
-    case webrtc::SctpTransportState::kConnecting:
-        return RTCSctpTransportState::Connecting;
-    case webrtc::SctpTransportState::kConnected:
-        return RTCSctpTransportState::Connected;
-    case webrtc::SctpTransportState::kClosed:
-        return RTCSctpTransportState::Closed;
-    default:
-        // WebRTC has more internal states
-        return RTCSctpTransportState::Closed;
-    }
+    // webrtc::SctpTransportInformation info = m_backend->Information();
+    // switch (info.state()) {
+    // case webrtc::SctpTransportState::kConnecting:
+    //     return RTCSctpTransportState::Connecting;
+    // case webrtc::SctpTransportState::kConnected:
+    //     return RTCSctpTransportState::Connected;
+    // case webrtc::SctpTransportState::kClosed:
+    //     return RTCSctpTransportState::Closed;
+    // default:
+    //     // WebRTC has more internal states
+    //     return RTCSctpTransportState::Closed;
+    // }
+    return RTCSctpTransportState::Closed;
 }
 
 String* RTCSctpTransport::stateStr()
 {
-    if (!m_backend) {
-        return String::createASCIIString("closed");
-    }
+    // if (!m_backend) {
+    //     return String::createASCIIString("closed");
+    // }
 
-    RTCSctpTransportState info = state();
-    switch (info) {
-    case RTCSctpTransportState::Connecting:
-        return String::createASCIIString("connecting");
-    case RTCSctpTransportState::Connected:
-        return String::createASCIIString("connected");
-    case RTCSctpTransportState::Closed:
-        return String::createASCIIString("closed");
-    default:
-        // WebRTC has more internal states
-        return String::createASCIIString("closed");
-    }
+    // RTCSctpTransportState info = state();
+    // switch (info) {
+    // case RTCSctpTransportState::Connecting:
+    //     return String::createASCIIString("connecting");
+    // case RTCSctpTransportState::Connected:
+    //     return String::createASCIIString("connected");
+    // case RTCSctpTransportState::Closed:
+    //     return String::createASCIIString("closed");
+    // default:
+    //     // WebRTC has more internal states
+    //     return String::createASCIIString("closed");
+    // }
+    return String::createASCIIString("closed");
 }
 
 double RTCSctpTransport::maxMessageSize()
 {
-    if (!m_backend) {
-        return 0;
-    }
+    // if (!m_backend) {
+    //     return 0;
+    // }
 
-    webrtc::SctpTransportInformation info = m_backend->Information();
-    absl::optional<double> size = info.MaxMessageSize();
-    if (!size.has_value()) {
-        return 0;
-    }
+    // webrtc::SctpTransportInformation info = m_backend->Information();
+    // absl::optional<double> size = info.MaxMessageSize();
+    // if (!size.has_value()) {
+    //     return 0;
+    // }
 
-    return size.value();
+    // return size.value();
+    return 0;
 }
 
 Nullable<uint32_t> RTCSctpTransport::maxChannels()
 {
     Nullable<uint32_t> result;
-    if (!m_backend) {
-        return result;
-    }
+    // if (!m_backend) {
+    //     return result;
+    // }
 
-    webrtc::SctpTransportInformation info = m_backend->Information();
-    absl::optional<int> channels = info.MaxChannels();
-    if (!channels.has_value()) {
-        return result;
-    }
+    // webrtc::SctpTransportInformation info = m_backend->Information();
+    // absl::optional<int> channels = info.MaxChannels();
+    // if (!channels.has_value()) {
+    //     return result;
+    // }
 
-    result = channels.value();
+    // result = channels.value();
     return result;
 }
 

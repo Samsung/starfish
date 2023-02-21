@@ -23,34 +23,35 @@
 #include "Starfish.h"
 
 #include "core/modules/mediastream/RTCDtlsTransport.h"
-
 #include "core/dom/ExecutionContext.h"
-
-#include "core/modules/mediastream/RTCIceTransport.h"
-#include "api/dtls_transport_interface.h"
+// #include "core/modules/mediastream/RTCIceTransport.h"
 
 namespace Starfish {
 
-RTCDtlsTransport::RTCDtlsTransport(ExecutionContext* executionContext)
-    : RTCDtlsTransport(executionContext, nullptr)
-{
-}
+class RTCIceTransport;
 
-RTCDtlsTransport::RTCDtlsTransport(
-    ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::DtlsTransportInterface> rtpDtlsTransport)
+RTCDtlsTransport::RTCDtlsTransport(ExecutionContext* executionContext)
     : EventTarget()
     , m_executionContext(executionContext)
+// : RTCDtlsTransport(executionContext, nullptr)
 {
-    m_backend = rtpDtlsTransport;
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((RTCDtlsTransport*)obj)->~RTCDtlsTransport();
-        },
-        NULL, NULL, NULL);
 }
+
+// RTCDtlsTransport::RTCDtlsTransport(
+//     ExecutionContext* executionContext,
+//     libwebrtc::scoped_refptr<libwebrtc::RTCDtlsTransport> rtpDtlsTransport)
+//     : EventTarget()
+//     , m_executionContext(executionContext)
+// {
+//     m_backend = rtpDtlsTransport;
+
+//     GC_REGISTER_FINALIZER_NO_ORDER(
+//         this,
+//         [](void* obj, void* cd) {
+//             ((RTCDtlsTransport*)obj)->~RTCDtlsTransport();
+//         },
+//         NULL, NULL, NULL);
+// }
 
 RTCDtlsTransport::~RTCDtlsTransport()
 {
@@ -68,42 +69,50 @@ ExecutionContext* RTCDtlsTransport::executionContext() const
 
 RTCIceTransport* RTCDtlsTransport::iceTransport()
 {
-    if (!m_backend) {
-        return nullptr;
-    }
+    // if (!m_backend) {
+    //     return nullptr;
+    // }
 
-    rtc::scoped_refptr<webrtc::IceTransportInterface> iceTransport =
-        m_backend->ice_transport();
-    if (!iceTransport) {
-        return nullptr;
-    }
+    // libwebrtc::scoped_refptr<libwebrtc::IceTransport> iceTransport =
+    //     m_backend->ice_transport();
+    // if (!iceTransport) {RTCDtlsTransport.cpp
+    //     return nullptr;
+    // }
 
-    if (m_iceTransport) {
-        m_iceTransport->setBackend(iceTransport);
-    } else {
-        m_iceTransport = new RTCIceTransport(executionContext(), iceTransport);
-    }
+    // if (m_iceTransport) {
+    //     m_iceTransport->setBackend(iceTransport);
+    // } else {
+    //     m_iceTransport = new RTCIceTransport(executionContext(),
+    //     iceTransport);
+    // }
 
-    return m_iceTransport;
+    // return m_iceTransport;
+    return nullptr;
 }
 
 String* RTCDtlsTransport::stateStr()
 {
-    webrtc::DtlsTransportInformation info = m_backend->Information();
-    switch (info.state()) {
-    case webrtc::DtlsTransportState::kNew:
-        return String::createASCIIString("new");
-    case webrtc::DtlsTransportState::kConnecting:
-        return String::createASCIIString("connecting");
-    case webrtc::DtlsTransportState::kConnected:
-        return String::createASCIIString("connected");
-    case webrtc::DtlsTransportState::kClosed:
-        return String::createASCIIString("closed");
-    case webrtc::DtlsTransportState::kFailed:
-        return String::createASCIIString("failed");
-    default:
-        return String::createASCIIString("failed");
-    }
+    // scoped_refptr<RTCDtlsTransportInformation> info =
+    // m_backend->GetInformation(); switch (info->state()) { case
+    // libwebrtc::RTCDtlsTransportInformation::RTCDtlsTransportState::kNew:
+    //     return String::createASCIIString("new");
+    // case
+    // libwebrtc::RTCDtlsTransportInformation::RTCDtlsTransportState::kConnecting:
+    //     return String::createASCIIString("connecting");
+    // case
+    // libwebrtc::RTCDtlsTransportInformation::RTCDtlsTransportState::kConnected:
+    //     return String::createASCIIString("connected");
+    // case
+    // libwebrtc::RTCDtlsTransportInformation::RTCDtlsTransportState::kClosed:
+    //     return String::createASCIIString("closed");
+    // case
+    // libwebrtc::RTCDtlsTransportInformation::RTCDtlsTransportState::kFailed:
+    //     return String::createASCIIString("failed");
+    // default:
+    //     return String::createASCIIString("failed");
+    // }
+
+    return String::createASCIIString("failed");
 }
 
 #if 0

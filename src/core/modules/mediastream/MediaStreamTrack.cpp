@@ -30,10 +30,8 @@
 #include "core/page/Navigator.h"
 #include "core/modules/mediastream/WebRtcManager.h"
 #include "core/modules/mediastream/RTCPeerConnection.h"
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_factory.h"
 
-#include "api/peer_connection_interface.h"
+#include "rtc_peerconnection_factory.h"
 
 namespace Starfish {
 MediaStreamTrack::MediaStreamTrack(ExecutionContext* executionContext)
@@ -103,7 +101,7 @@ AudioStreamTrack::AudioStreamTrack(ExecutionContext* executionContext)
 
 AudioStreamTrack::AudioStreamTrack(
     ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> backend)
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> backend)
     : MediaStreamTrack(executionContext)
 {
     m_kind = Kind::Audio;
@@ -141,7 +139,7 @@ VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
 
 VideoStreamTrack::VideoStreamTrack(
     ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> backend)
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend)
     : MediaStreamTrack(executionContext)
 {
     m_kind = Kind::Video;
@@ -178,42 +176,70 @@ void VideoStreamTrack::play()
 }
 
 VideoStreamTrack::VideoStreamTrackObserver::VideoStreamTrackObserver(
-    webrtc::VideoTrackInterface* trackToRender)
+    libwebrtc::RTCVideoTrack* trackToRender)
 {
-    trackToRender->AddOrUpdateSink(this, rtc::VideoSinkWants());
+    trackToRender->AddRenderer(this);
 }
 
 void VideoStreamTrack::VideoStreamTrackObserver::OnFrame(
-    const webrtc::VideoFrame& frame)
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame)
 {
 }
 
 WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext,
-                                     size_t width, size_t height, size_t fps)
+                                     size_t width_, size_t height_, size_t fps_)
     : WebCamStreamTrack(executionContext, nullptr)
 {
-    rtc::scoped_refptr<WebCamStreamTrackCapturer> m_videoDevices =
-        WebCamStreamTrackCapturer::create(width, height, fps);
-    if (m_videoDevices) {
-        rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-            peerConnectionFactory = this->executionContext()
-                                        ->document()
-                                        ->window()
-                                        ->navigator()
-                                        ->webRtcManager()
-                                        ->createPeerConnectionFactory();
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoCapturer> video_capturer;
+    char strNameUTF8[256];
+    char strGuidUTF8[256];
+    int nb_video_devices = m_webRtcManager->videoDevice()->NumberOfDevices();
 
-        STARFISH_ASSERT(peerConnectionFactory);
-        m_backend = peerConnectionFactory->CreateVideoTrack(m_videoTrackLabel,
-                                                            m_videoDevices);
-    } else {
+    int32_t width = MediaDevices::kWidth;
+    int32_t height = MediaDevices::kHeight;
+    int32_t fps = MediaDevices::kFps;
+
+    for (int i = 0; i < nb_video_devices; i++) {
+        m_webRtcManager->videoDevice()->GetDeviceName(i, strNameUTF8, 256,
+                                                      strGuidUTF8, 256);
+        // if (sourceId != "" && sourceId == strGuidUTF8) {
+        video_capturer = m_webRtcManager->videoDevice()->Create(
+            strNameUTF8, i, width, height, fps);
+        break;
+        // }
+    }
+    if (nb_video_devices == 0)
+        return;
+
+    if (!video_capturer.get()) {
+        m_webRtcManager->videoDevice()->GetDeviceName(0, strNameUTF8, 128,
+                                                      strGuidUTF8, 128);
+        video_capturer = m_webRtcManager->videoDevice()->Create(
+            strNameUTF8, 0, width, height, fps);
+    }
+
+    if (!video_capturer.get())
+        return;
+
+    const char* video_source_label = "video_input";
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
+        libwebrtc::RTCMediaConstraints::Create();
+
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoSource> source =
+        m_webRtcManager->peerConnectionFactory()->CreateVideoSource(
+            video_capturer, video_source_label, constraints);
+
+    m_backend = m_webRtcManager->peerConnectionFactory()->CreateVideoTrack(
+        source, m_videoTrackLabel.c_str());
+
+    if (!m_backend.get()) {
         STARFISH_LOG_ERROR("%s: construction failed", __func__);
     }
 }
 
 WebCamStreamTrack::WebCamStreamTrack(
     ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> backend)
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend)
     : VideoStreamTrack(executionContext, backend)
 {
     WEBRTC_LOGI("<WebCamStreamTrack::%s self=%p>", __func__, (void*)this);
@@ -235,58 +261,9 @@ void WebCamStreamTrack::dispose()
     } else {
         m_backend.release();
     }
-    m_source = nullptr;
+    // m_source = nullptr;
     m_attachedMediaStreams.clear();
     WEBRTC_LOGI("</WebCamStreamTrack::%s self=%p>", __func__, (void*)this);
-}
-
-rtc::scoped_refptr<WebCamStreamTrack::WebCamStreamTrackCapturer>
-WebCamStreamTrack::WebCamStreamTrackCapturer::create(size_t width,
-                                                     size_t height, size_t fps)
-{
-    std::unique_ptr<VideoCapturer> capturer;
-    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
-        webrtc::VideoCaptureFactory::CreateDeviceInfo());
-    if (!info) {
-        return nullptr;
-    }
-    int numDevices = info->NumberOfDevices();
-    for (int i = 0; i < numDevices; ++i) {
-        capturer =
-            absl::WrapUnique(VideoCapturer::create(width, height, fps, i));
-        if (capturer) {
-            return new rtc::RefCountedObject<WebCamStreamTrackCapturer>(
-                std::move(capturer));
-        }
-    }
-
-    return nullptr;
-}
-
-WebCamStreamTrack::WebCamStreamTrackCapturer::WebCamStreamTrackCapturer(
-    std::unique_ptr<VideoCapturer> capturer)
-    : VideoTrackSource(/*remote=*/false)
-    , m_videoCapturer(std::move(capturer))
-{
-}
-
-void WebCamStreamTrack::WebCamStreamTrackCapturer::destroy()
-{
-    if (m_videoCapturer) {
-        m_videoCapturer->destroy();
-    }
-    m_videoCapturer = nullptr;
-}
-
-void WebCamStreamTrack::WebCamStreamTrackCapturer::resetVideoCapturer()
-{
-    m_videoCapturer = nullptr;
-}
-
-rtc::VideoSourceInterface<webrtc::VideoFrame>*
-WebCamStreamTrack::WebCamStreamTrackCapturer::source()
-{
-    return m_videoCapturer.get();
 }
 } // namespace Starfish
 #endif

@@ -25,7 +25,8 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
+#include "base/scoped_ref_ptr.h"
+// #include "rtc_dtls_transport.h"
 
 namespace Starfish {
 
@@ -40,9 +41,10 @@ enum class RTCDtlsTransportState {
 class RTCDtlsTransport : public EventTarget {
 public:
     RTCDtlsTransport(ExecutionContext* executionContext);
-    RTCDtlsTransport(
-        ExecutionContext* executionContext,
-        rtc::scoped_refptr<webrtc::DtlsTransportInterface> rpcDtlsTransport);
+    // RTCDtlsTransport(
+    //     ExecutionContext* executionContext,
+    //     libwebrtc::scoped_refptr<libwebrtc::RTCDtlsTransport>
+    //     rpcDtlsTransport);
     virtual ~RTCDtlsTransport();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDtlsTransport)
@@ -61,7 +63,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
-    rtc::scoped_refptr<webrtc::DtlsTransportInterface> m_backend;
+    // libwebrtc::scoped_refptr<libwebrtc::RTCDtlsTransport> m_backend;
     RTCIceTransport* m_iceTransport{ nullptr };
 };
 } // namespace Starfish

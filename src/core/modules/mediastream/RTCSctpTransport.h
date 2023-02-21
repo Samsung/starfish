@@ -25,8 +25,6 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
-
 namespace Starfish {
 
 enum class RTCSctpTransportState {
@@ -38,9 +36,10 @@ enum class RTCSctpTransportState {
 class RTCSctpTransport : public EventTarget {
 public:
     RTCSctpTransport(ExecutionContext* executionContext);
-    RTCSctpTransport(
-        ExecutionContext* executionContext,
-        rtc::scoped_refptr<webrtc::SctpTransportInterface> rpcSctpTransport);
+    // RTCSctpTransport(
+    //     ExecutionContext* executionContext,
+    //     libwebrtc::scoped_refptr<webrtc::SctpTransportInterface>
+    //     rpcSctpTransport);
     virtual ~RTCSctpTransport();
     virtual ExecutionContext* executionContext() const;
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCSctpTransport)
@@ -60,7 +59,7 @@ public:
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
-    rtc::scoped_refptr<webrtc::SctpTransportInterface> m_backend;
+    // libwebrtc::scoped_refptr<webrtc::SctpTransportInterface> m_backend;
 };
 } // namespace Starfish
 #endif

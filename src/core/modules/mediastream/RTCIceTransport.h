@@ -27,8 +27,7 @@
 
 #include "core/modules/mediastream/RTCIceCandidate.h"
 
-#include "api/peer_connection_interface.h"
-#include "api/ice_transport_interface.h"
+// #include "rtc_ice_transport.h"
 
 namespace Starfish {
 
@@ -45,8 +44,9 @@ enum RTCIceTransportState {
 class RTCIceTransport : public EventTarget {
 public:
     RTCIceTransport(ExecutionContext* executionContext);
-    RTCIceTransport(ExecutionContext* executionContext,
-                    rtc::scoped_refptr<webrtc::IceTransportInterface> backend);
+    // RTCIceTransport(ExecutionContext* executionContext,
+    //                 libwebrtc::scoped_refptr<libwebrtc::IceTransport>
+    //                 backend);
 
     virtual ~RTCIceTransport();
 
@@ -57,11 +57,12 @@ public:
     GCVector<RTCIceCandidate*> getRemoteCandidates();
     Nullable<RTCIceCandidatePair> getSelectedCandidatePair();
 
-    void setBackend(rtc::scoped_refptr<webrtc::IceTransportInterface> backend);
+    // void setBackend(libwebrtc::scoped_refptr<libwebrtc::IceTransport>
+    // backend);
 
 private:
     ExecutionContext* m_executionContext{ nullptr };
-    rtc::scoped_refptr<webrtc::IceTransportInterface> m_backend;
+    // libwebrtc::scoped_refptr<libwebrtc::IceTransport> m_backend;
 };
 } // namespace Starfish
 #endif

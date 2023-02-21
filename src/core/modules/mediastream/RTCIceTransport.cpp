@@ -23,32 +23,29 @@
 #include "Starfish.h"
 
 #include "core/modules/mediastream/RTCIceTransport.h"
-
 #include "core/dom/ExecutionContext.h"
-
-#include "p2p/base/ice_transport_internal.h"
 
 namespace Starfish {
 
 RTCIceTransport::RTCIceTransport(ExecutionContext* executionContext)
-    : RTCIceTransport(executionContext, nullptr)
+// : RTCIceTransport(executionContext, nullptr)
 {
 }
 
-RTCIceTransport::RTCIceTransport(
-    ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::IceTransportInterface> backend)
-    : EventTarget()
-    , m_executionContext(executionContext)
-{
-    m_backend = backend;
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((RTCIceTransport*)obj)->~RTCIceTransport();
-        },
-        NULL, NULL, NULL);
-}
+// RTCIceTransport::RTCIceTransport(
+//     ExecutionContext* executionContext,
+//     libwebrtc::scoped_refptr<libwebrtc::IceTransport> backend)
+//     : EventTarget()
+//     , m_executionContext(executionContext)
+// {
+//     m_backend = backend;
+//     GC_REGISTER_FINALIZER_NO_ORDER(
+//         this,
+//         [](void* obj, void* cd) {
+//             ((RTCIceTransport*)obj)->~RTCIceTransport();
+//         },
+//         NULL, NULL, NULL);
+// }
 
 RTCIceTransport::~RTCIceTransport()
 {
@@ -68,24 +65,24 @@ ExecutionContext* RTCIceTransport::executionContext() const
 String* RTCIceTransport::state()
 {
     // TODO: libwebrtc requires to access to internal data
-    webrtc::IceTransportState state =
-        m_backend->internal()->GetIceTransportState();
-    switch (state) {
-    case webrtc::IceTransportState::kNew:
-        return String::createASCIIString("new");
-    case webrtc::IceTransportState::kChecking:
-        return String::createASCIIString("checking");
-    case webrtc::IceTransportState::kConnected:
-        return String::createASCIIString("connected");
-    case webrtc::IceTransportState::kCompleted:
-        return String::createASCIIString("completed");
-    case webrtc::IceTransportState::kFailed:
-        return String::createASCIIString("failed");
-    case webrtc::IceTransportState::kDisconnected:
-        return String::createASCIIString("disconnected");
-    case webrtc::IceTransportState::kClosed:
-        return String::createASCIIString("closed");
-    }
+    // webrtc::IceTransportState state =
+    //     m_backend->internal()->GetIceTransportState();
+    // switch (state) {
+    // case webrtc::IceTransportState::kNew:
+    //     return String::createASCIIString("new");
+    // case webrtc::IceTransportState::kChecking:
+    //     return String::createASCIIString("checking");
+    // case webrtc::IceTransportState::kConnected:
+    //     return String::createASCIIString("connected");
+    // case webrtc::IceTransportState::kCompleted:
+    //     return String::createASCIIString("completed");
+    // case webrtc::IceTransportState::kFailed:
+    //     return String::createASCIIString("failed");
+    // case webrtc::IceTransportState::kDisconnected:
+    //     return String::createASCIIString("disconnected");
+    // case webrtc::IceTransportState::kClosed:
+    //     return String::createASCIIString("closed");
+    // }
 
     return String::emptyString;
 }
@@ -105,11 +102,11 @@ Nullable<RTCIceCandidatePair> RTCIceTransport::getSelectedCandidatePair()
     return pair;
 }
 
-void RTCIceTransport::setBackend(
-    rtc::scoped_refptr<webrtc::IceTransportInterface> backend)
-{
-    m_backend = backend;
-}
+// void RTCIceTransport::setBackend(
+//     libwebrtc::scoped_refptr<libwebrtc::IceTransport> backend)
+// {
+//     m_backend = backend;
+// }
 } // namespace Starfish
 
 #endif

@@ -26,10 +26,7 @@
 #include "binding/ScriptWrappable.h"
 #include "core/util/String.h"
 
-namespace webrtc {
-class SessionDescriptionInterface;
-enum class SdpType;
-} // namespace webrtc
+#include "rtc_session_description.h"
 
 namespace Starfish {
 class ExecutionContext;
@@ -57,14 +54,17 @@ public:
     {
     }
 
-    RTCSessionDescriptionInit(Nullable<webrtc::SdpType> type, std::string sdp);
-    RTCSessionDescriptionInit(webrtc::SdpType type, std::string sdp);
+    RTCSessionDescriptionInit(
+        Nullable<libwebrtc::RTCSessionDescription::SdpType> type,
+        std::string sdp);
+    RTCSessionDescriptionInit(libwebrtc::RTCSessionDescription::SdpType type,
+                              std::string sdp);
 
     String* type();
     void setType(String* type);
     DEFINE_GETTER_SETTER(String*, sdp, Sdp);
 
-    Nullable<webrtc::SdpType> toSdpType();
+    Nullable<libwebrtc::RTCSessionDescription::SdpType> toSdpType();
 
 private:
     Nullable<RTCSdpType> m_type;
@@ -74,7 +74,7 @@ private:
 class RTCSessionDescription : public EventTarget {
 public:
     RTCSessionDescription(ExecutionContext* executionContext,
-                          const webrtc::SessionDescriptionInterface* backend);
+                          libwebrtc::RTCSessionDescription* backend);
     RTCSessionDescription(ExecutionContext* executionContext,
                           RTCSessionDescriptionInit& sessionDescriptionInit);
     virtual ~RTCSessionDescription();

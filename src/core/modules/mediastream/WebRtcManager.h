@@ -21,7 +21,10 @@
 
 #include "StarfishConfig.h"
 
-#include "api/peer_connection_interface.h"
+#include "rtc_peerconnection.h"
+#include "rtc_peerconnection_factory.h"
+#include "rtc_video_device.h"
+#include "rtc_audio_device.h"
 
 namespace Starfish {
 class RTCPeerConnection;
@@ -37,24 +40,30 @@ public:
 
     void dispose();
 
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory>
     peerConnectionFactory();
 
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-    createPeerConnectionFactory();
-
-    rtc::scoped_refptr<webrtc::PeerConnectionInterface> createPeerConnection(
-        const webrtc::PeerConnectionInterface::RTCConfiguration& configuration,
-        webrtc::PeerConnectionDependencies dependencies);
+    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> createPeerConnection(
+        const libwebrtc::RTCConfiguration& configuration);
     void deletePeerConnection(RTCPeerConnection* peerConnection);
 
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> createAudioTrack(
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> createAudioTrack(
         String* label);
 
     void addPeerConnection(RTCPeerConnection* peerConnection);
     void addMediaStream(MediaStream* mediaStream);
     void addAudioStreamTrack(AudioStreamTrack* audioStreamTrack);
     void addVideoStreamTrack(VideoStreamTrack* videoStreamTrack);
+
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioDevice> audioDevice()
+    {
+        return m_audioDevice;
+    }
+
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoDevice> videoDevice()
+    {
+        return m_videoDevice;
+    }
 
 private:
     void initPeerConnectionFactory();
@@ -64,8 +73,10 @@ private:
     GCVector<MediaStream*> m_mediaStreams;
     GCVector<AudioStreamTrack*> m_audioStreamTracks;
     GCVector<VideoStreamTrack*> m_videoStreamTracks;
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory>
         m_peerConnectionFactory;
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioDevice> m_audioDevice;
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoDevice> m_videoDevice;
 };
 } // namespace Starfish
 

@@ -375,121 +375,19 @@ ENDIF()
 SET (WEBRTC_DIR ${THIRD_PARTY_ROOT}/webrtc/src)
 
 IF (${WEBRTC} STREQUAL "1")
-    SET (GN_DIR ${WEBRTC_DIR}/buildtools/gn)
-    SET (GN_BUILD_PATH ${GN_DIR}/out/${HOST}/${ARCH})
-    SET (GN_TARGET ${GN_DIR}/out/${HOST}/${ARCH}/gn)
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${GN_TARGET}
-                        WORKING_DIRECTORY ${GN_DIR}
-                        COMMAND echo "BUILDING GN"
-                        COMMAND python build/gen.py --platform linux --host linux --out-path ${GN_BUILD_PATH} --no-last-commit-position
-                        COMMAND ninja -C ${GN_BUILD_PATH}
+    EXECUTE_PROCESS (
+        WORKING_DIRECTORY ${STARFISH_ROOT}/third_party/webrtc
+        COMMAND git submodule update --init
     )
-
-    ADD_CUSTOM_TARGET ( gn
-                        DEPENDS ${GN_TARGET}
-                        COMMAND echo "GN TARGET"
-    )
-ENDIF()
-
-IF (${WEBRTC} STREQUAL "1")
-    IF (${HOST} STREQUAL "linux") # for local build on Linux
-        SET (WEBRTC_BUILD_ARGS
-            "target_cpu=\\\"x64\\\""
-            "rtc_ssl_root=\\\"${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/include\\\""
-        )
-    ELSEIF (${HOST} STREQUAL "tizen") # for all gbs builds
-        IF (${ARCH} STREQUAL "arm")
-            SET (WEBRTC_BUILD_ARGS
-                "target_cpu=\\\"arm\\\""
-                "rtc_ssl_root=\\\"/usr/include/openssl\\\""
-            )
-        ELSEIF (${ARCH} STREQUAL "aarch64")
-            SET (WEBRTC_BUILD_ARGS
-                "target_cpu=\\\"arm64\\\""
-                "rtc_ssl_root=\\\"/usr/include/openssl\\\""
-            )
-        ELSEIF (${ARCH} STREQUAL "x86_64")
-            SET (WEBRTC_BUILD_ARGS
-                "target_cpu=\\\"x64\\\""
-                "rtc_ssl_root=\\\"/usr/include/openssl\\\""
-            )
-        ELSEIF (${ARCH} STREQUAL "i686")
-            SET (WEBRTC_BUILD_ARGS
-                "target_cpu=\\\"x86\\\""
-                "rtc_ssl_root=\\\"/usr/include/openssl\\\""
-            )
-        ENDIF()
-        IF (${FP_MODE} STREQUAL "hard")
-            SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "use_hard_fp=true")
-        ELSE()
-            SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "use_hard_fp=false")
-        ENDIF()
-    ENDIF()
-
-    IF (${MODE} STREQUAL "debug")
-        SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "is_debug=true")
-    ELSE()
-        SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS} "is_debug=false")
-    ENDIF()
-
-    SET (WEBRTC_BUILD_ARGS ${WEBRTC_BUILD_ARGS}
-        "is_clang=false"
-        "treat_warnings_as_errors=false"
-        "use_custom_libcxx=false"
-        "use_udev=false"
-        "use_ozone=true"
-        "use_cxx11=true"
-        "enable_iterator_debugging=true"
-        "enable_nacl=false"
-        "use_glib=true"
-        "use_rtti=false"
-        "use_gold=false"
-        "use_sysroot=false"
-        "build_with_chromium=false"
-        "rtc_build_ssl=false"
-        "rtc_build_tools=false"
-        "rtc_build_examples=false"
-        "rtc_enable_protobuf=false"
-        "rtc_build_json=true"
-        "use_system_libjpeg=true"
-        "use_system_freetype=true"
-        "use_system_harfbuzz=true"
-        "rtc_include_tests=false"
-    )
-
-    SET(WEBRTC_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
+    SET(WEBRTC_BUILD_PATH libwebrtc/libs/${HOST}/${ARCH}/${MODE})
     SET(WEBRTC_LOCAL_TARGET ${WEBRTC_DIR}/${WEBRTC_BUILD_PATH}/libwebrtc.so)
     SET(WEBRTC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc.so)
-
-    IF (${HOST} STREQUAL "linux") # for local build on Linux
-        ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
-                            WORKING_DIRECTORY ${WEBRTC_DIR}
-                            DEPENDS ${OPENSSL_TARGET}
-                            COMMAND echo "BUILD WEBRTC"
-                            COMMAND ${WEBRTC_DIR}/buildtools/x86_64/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
-                            COMMAND ${WEBRTC_DIR}/buildtools/ninja -C ${WEBRTC_BUILD_PATH} webrtc
-                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so -lpthread -lm
-        )
-    ELSE (${HOST} STREQUAL "tizen") # for all gbs builds
-        ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_LOCAL_TARGET}
-                            WORKING_DIRECTORY ${WEBRTC_DIR}
-                            DEPENDS ${OPENSSL_TARGET} #${GN_TARGET}
-                            COMMAND echo "BUILD WEBRTC"
-                            COMMAND ${WEBRTC_DIR}/buildtools/${ARCH}/gn gen ${WEBRTC_BUILD_PATH} --no-parallel --args="${WEBRTC_BUILD_ARGS}"
-                            COMMAND ninja -C ${WEBRTC_BUILD_PATH} webrtc
-                            # for custom openssl, use ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so
-                            COMMAND ${COMPILER} -shared -fPIC -o ${WEBRTC_BUILD_PATH}/libwebrtc.so -Wl,-soname,libwebrtc.so -Wl,--whole-archive ${WEBRTC_BUILD_PATH}/obj/libwebrtc.a  -Wl,--no-whole-archive -lssl -lcrypto -lpthread -lm
-        )
-    ENDIF()
-
     ADD_CUSTOM_COMMAND (OUTPUT ${WEBRTC_TARGET}
                         WORKING_DIRECTORY ${WEBRTC_DIR}
                         DEPENDS ${WEBRTC_LOCAL_TARGET}
                         COMMENT "COPY WEBRTC"
                         COMMAND cp ${WEBRTC_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
-
     ADD_CUSTOM_TARGET (webrtc
                        DEPENDS ${WEBRTC_TARGET}
                        COMMAND echo "WEBRTC TARGET"

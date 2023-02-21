@@ -25,7 +25,7 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
+#include "rtc_ice_candidate.h"
 
 namespace Starfish {
 class ExecutionContext;
@@ -85,7 +85,7 @@ public:
         return usernameFragment();
     }
 
-    std::unique_ptr<webrtc::IceCandidateInterface> genBackend();
+    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> genBackend();
 
 private:
     ExecutionContext* m_executionContext{ nullptr };

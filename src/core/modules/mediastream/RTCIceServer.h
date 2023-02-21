@@ -25,7 +25,6 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
 #include "binding/generated/DOMStringOrSequenceOfDOMStringUnion.h"
 #include "core/modules/mediastream/RTCOAuthCredential.h"
 #include "binding/generated/DOMStringOrRTCOAuthCredentialUnion.h"

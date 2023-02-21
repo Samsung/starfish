@@ -28,16 +28,8 @@
 namespace Starfish {
 
 RTCCertificate::RTCCertificate(ExecutionContext* executionContext)
-    : RTCCertificate(executionContext, nullptr)
-{
-}
-
-RTCCertificate::RTCCertificate(
-    ExecutionContext* executionContext,
-    rtc::scoped_refptr<rtc::RTCCertificate> certificate)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
-    , m_backend(certificate)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -52,8 +44,8 @@ ScriptBindingInstance* RTCCertificate::scriptBindingInstance()
 
 bool RTCCertificate::equals(RTCCertificate* certificate)
 {
-    // Using the overriden == operator
-    return m_backend == certificate->backend();
+    STARFISH_UNIMPLEMENTED();
+    return false;
 }
 } // namespace Starfish
 

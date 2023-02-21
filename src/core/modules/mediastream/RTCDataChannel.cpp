@@ -39,6 +39,21 @@
 
 namespace Starfish {
 
+static const char* DataStateString(libwebrtc::RTCDataChannelState state)
+{
+    switch (state) {
+    case libwebrtc::RTCDataChannelState::RTCDataChannelConnecting:
+        return "connecting";
+    case libwebrtc::RTCDataChannelState::RTCDataChannelOpen:
+        return "open";
+    case libwebrtc::RTCDataChannelState::RTCDataChannelClosing:
+        return "closing";
+    case libwebrtc::RTCDataChannelState::RTCDataChannelClosed:
+        return "closed";
+    }
+    return "";
+}
+
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
@@ -67,39 +82,44 @@ RTCDataChannelObserver::~RTCDataChannelObserver()
                 (void*)this, (void*)m_dataChannel);
 }
 
-void RTCDataChannelObserver::OnStateChange()
+void RTCDataChannelObserver::OnStateChange(libwebrtc::RTCDataChannelState state)
 {
     if (!m_dataChannel) {
         return;
     }
 
     if (!isMainThread()) {
+        struct Params {
+            RTCDataChannelObserver* self;
+            libwebrtc::RTCDataChannelState channelState;
+        };
+
+        Params* p = new Params{ this, state };
         m_dataChannel->executionContext()
             ->webBase()
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
                 m_dataChannel->executionContext()->globalScope(),
                 [](size_t, void* data) {
-                    RTCDataChannelObserver* observer =
-                        (RTCDataChannelObserver*)data;
-                    observer->OnStateChange();
+                    Params* p = (Params*)data;
+                    p->self->OnStateChange(p->channelState);
+                    delete p;
                 },
-                this);
+                p);
         return;
     }
 
     if (m_dataChannel && m_dataChannel->backend()) {
-        std::string state = webrtc::DataChannelInterface::DataStateString(
-            m_dataChannel->backend()->state());
-
+        std::string stateStr = DataStateString(state);
         String* eventType =
-            String::createASCIIString(state.data(), state.length());
+            String::createASCIIString(stateStr.data(), stateStr.length());
         Event* e = new Event(m_dataChannel->executionContext(), eventType);
         m_dataChannel->dispatchEventByUA(e);
     }
 }
 
-void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
+void RTCDataChannelObserver::OnMessage(const char* buffer, int length,
+                                       bool binary)
 {
 #if 0
     if (!m_dataChannel) {
@@ -147,7 +167,7 @@ void RTCDataChannelObserver::OnMessage(const webrtc::DataBuffer& buffer)
 RTCDataChannel::RTCDataChannel(
     ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
     RTCDataChannelInit init,
-    rtc::scoped_refptr<webrtc::DataChannelInterface> dataChannel)
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> dataChannel)
     : EventTarget()
     , m_executionContext(executionContext)
     , m_peerConnection(peerConnection)
@@ -224,42 +244,37 @@ String* RTCDataChannel::label()
         return String::emptyString;
     }
 
-    std::string label = m_backend->label();
+    std::string label = m_backend->label().std_string();
     return String::createASCIIString(label.data(), label.length());
 }
 
 bool RTCDataChannel::ordered()
 {
     if (!m_peerConnection) {
-        return String::emptyString;
+        return false;
     }
-
-    return m_backend->ordered();
+    STARFISH_UNIMPLEMENTED();
+    return false;
 }
 
 Nullable<uint32_t> RTCDataChannel::maxPacketLifeTime()
 {
     Nullable<uint32_t> ret;
-    absl::optional<int> r = m_backend->maxPacketLifeTime();
-    if (r.has_value()) {
-        ret = r.value();
-    }
+    STARFISH_UNIMPLEMENTED();
     return ret;
 }
 
 Nullable<uint32_t> RTCDataChannel::maxRetransmits()
 {
     Nullable<uint32_t> ret;
-    absl::optional<int> r = m_backend->maxRetransmitsOpt();
-    if (r.has_value()) {
-        ret = r.value();
-    }
+    STARFISH_UNIMPLEMENTED();
     return ret;
 }
 
 bool RTCDataChannel::negotiated()
 {
-    return m_backend->negotiated();
+    STARFISH_UNIMPLEMENTED();
+    return false;
 }
 
 Nullable<uint32_t> RTCDataChannel::id()
@@ -274,8 +289,7 @@ Nullable<uint32_t> RTCDataChannel::id()
 
 String* RTCDataChannel::readyState()
 {
-    std::string state =
-        webrtc::DataChannelInterface::DataStateString(m_backend->state());
+    std::string state = DataStateString(m_backend->state());
     return String::createASCIIString(state.data(), state.length());
 }
 
@@ -301,9 +315,9 @@ void RTCDataChannel::send(String* data)
     if (!m_peerConnection) {
         return;
     }
-
-    webrtc::DataBuffer buffer(data->toUTF8NonGCString().data());
-    m_backend->Send(buffer);
+    // TODO:FIXME!!
+    std::string dataStr = data->toUTF8NonGCString();
+    m_backend->Send((uint8_t*)dataStr.data(), dataStr.length());
 }
 
 } // namespace Starfish

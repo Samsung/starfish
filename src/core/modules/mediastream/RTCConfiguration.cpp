@@ -136,67 +136,62 @@ bool RTCConfiguration::isValid()
     return false;
 }
 
-webrtc::PeerConnectionInterface::RTCConfiguration RTCConfiguration::genBackend()
+libwebrtc::RTCConfiguration RTCConfiguration::genBackend()
 {
-    webrtc::PeerConnectionInterface::RTCConfiguration config;
-
+    libwebrtc::RTCConfiguration config;
+    libwebrtc::IceServer* ice_servers = config.ice_servers;
+    int i = 0;
     for (auto& iceServer : m_iceServers) {
-        webrtc::PeerConnectionInterface::IceServer server;
-        bool hasIceServer = false;
-
+        libwebrtc::IceServer& server = ice_servers[i];
         if (iceServer.hasUsername()) {
-            server.username = iceServer.username()->toUTF8NonGCString().data();
-            hasIceServer = true;
+            server.username = libwebrtc::string(
+                iceServer.username()->toUTF8NonGCString().data());
         }
 
         if (iceServer.credential().isDOMStringValue()) {
-            server.password = iceServer.credential()
-                                  .getDOMStringValue()
-                                  ->toUTF8NonGCString()
-                                  .data();
-            hasIceServer = true;
+            server.password = libwebrtc::string(iceServer.credential()
+                                                    .getDOMStringValue()
+                                                    ->toUTF8NonGCString()
+                                                    .data());
         }
 
         for (auto url : iceServer.m_urls) {
-            server.urls.push_back(url->toUTF8NonGCString().data());
-            hasIceServer = true;
+            // server.urls.push_back(url->toUTF8NonGCString().data());
+            server.uri = libwebrtc::string(url->toUTF8NonGCString().data());
         }
-
-        if (hasIceServer) {
-            config.servers.push_back(std::move(server));
-        }
+        i++;
     }
 
     if (m_iceTransportPolicy == RTCIceTransportPolicy::Relay) {
-        config.type =
-            webrtc::PeerConnectionInterface::IceTransportsType::kRelay;
+        config.type = libwebrtc::IceTransportsType::kRelay;
     } else if (m_iceTransportPolicy == RTCIceTransportPolicy::All) {
-        config.type = webrtc::PeerConnectionInterface::IceTransportsType::kAll;
+        config.type = libwebrtc::IceTransportsType::kAll;
+    } else if (m_iceTransportPolicy == RTCIceTransportPolicy::NoHost) {
+        config.type = libwebrtc::IceTransportsType::kNoHost;
+    } else if (m_iceTransportPolicy == RTCIceTransportPolicy::None) {
+        config.type = libwebrtc::IceTransportsType::kNone;
     }
 
     if (m_bundlePolicy == RTCBundlePolicy::Balanced) {
-        config.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::
-            kBundlePolicyBalanced;
+        config.bundle_policy = libwebrtc::BundlePolicy::kBundlePolicyBalanced;
     } else if (m_bundlePolicy == RTCBundlePolicy::MaxBundle) {
-        config.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::
-            kBundlePolicyMaxBundle;
+        config.bundle_policy = libwebrtc::BundlePolicy::kBundlePolicyMaxBundle;
     } else if (m_bundlePolicy == RTCBundlePolicy::MaxCompat) {
-        config.bundle_policy = webrtc::PeerConnectionInterface::BundlePolicy::
-            kBundlePolicyMaxCompat;
+        config.bundle_policy = libwebrtc::BundlePolicy::kBundlePolicyMaxCompat;
     }
 
     if (m_rtcpMuxPolicy == RTCRtcpMuxPolicy::Negotiate) {
-        config.rtcp_mux_policy = webrtc::PeerConnectionInterface::
-            RtcpMuxPolicy::kRtcpMuxPolicyNegotiate;
+        config.rtcp_mux_policy =
+            libwebrtc::RtcpMuxPolicy::kRtcpMuxPolicyNegotiate;
     } else if (m_rtcpMuxPolicy == RTCRtcpMuxPolicy::Require) {
-        config.rtcp_mux_policy = webrtc::PeerConnectionInterface::
-            RtcpMuxPolicy::kRtcpMuxPolicyRequire;
+        config.rtcp_mux_policy =
+            libwebrtc::RtcpMuxPolicy::kRtcpMuxPolicyRequire;
     }
 
     config.ice_candidate_pool_size = m_iceCandidatePoolSize;
-
     return config;
 }
+
 } // namespace Starfish
 
 #endif

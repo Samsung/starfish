@@ -25,7 +25,7 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
+#include "rtc_data_channel.h"
 
 namespace Starfish {
 class RTCDataChannel;
@@ -52,16 +52,16 @@ struct RTCDataChannelInit {
     bool m_hasId{ false };
 };
 
-class RTCDataChannelObserver : public gc, public webrtc::DataChannelObserver {
+class RTCDataChannelObserver : public gc,
+                               public libwebrtc::RTCDataChannelObserver {
     friend class RTCDataChannel;
     friend class RTCPeerConnection;
 
 public:
     RTCDataChannelObserver(RTCDataChannel* dataChannel);
     virtual ~RTCDataChannelObserver();
-    void OnStateChange() override;
-    void OnMessage(const webrtc::DataBuffer& buffer) override;
-    void OnBufferedAmountChange(uint64_t sent_data_size) override{};
+    void OnStateChange(libwebrtc::RTCDataChannelState state) override;
+    void OnMessage(const char* buffer, int length, bool binary) override;
 
 private:
     RTCDataChannel* m_dataChannel{ nullptr };
@@ -75,7 +75,7 @@ public:
     RTCDataChannel(
         ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
         RTCDataChannelInit init,
-        rtc::scoped_refptr<webrtc::DataChannelInterface> rpcSctpTransport);
+        libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> rpcSctpTransport);
     virtual ~RTCDataChannel();
     void dispose();
 
@@ -108,7 +108,7 @@ public:
 
     void send(String* data);
 
-    rtc::scoped_refptr<webrtc::DataChannelInterface> backend()
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> backend()
     {
         return m_backend;
     }
@@ -123,7 +123,7 @@ private:
     String* m_priority{ String::createASCIIString("low") };
     String* m_binaryType{ String::createASCIIString("blob") };
 
-    rtc::scoped_refptr<webrtc::DataChannelInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> m_backend;
 };
 } // namespace Starfish
 #endif

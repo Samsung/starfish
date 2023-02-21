@@ -37,13 +37,11 @@
 #include "core/page/Window.h"
 #include "core/page/WebBase.h"
 
-#include "api/rtp_sender_interface.h"
-
 namespace Starfish {
 
 RTCRtpSender::RTCRtpSender(
     ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
-    rtc::scoped_refptr<webrtc::RtpSenderInterface> rtpSender)
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> rtpSender)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_transceiver(transceiver)
@@ -82,38 +80,21 @@ ScriptBindingInstance* RTCRtpSender::scriptBindingInstance()
 
 MediaStreamTrack* RTCRtpSender::track()
 {
-    if (m_track) {
-        if (m_track->isAudioStreamTrack()) {
-            STARFISH_RELEASE_ASSERT(
-                m_track->asAudioStreamTrack()->backend().get() ==
-                m_backend->track().get());
-        } else {
-            STARFISH_RELEASE_ASSERT(
-                m_track->asVideoStreamTrack()->backend().get() ==
-                m_backend->track().get());
-        }
-
-        return m_track;
-    }
-
     return m_track;
 }
 
 bool RTCRtpSender::setTrack(MediaStreamTrack* track)
 {
     m_track = track;
-
-    webrtc::MediaStreamTrackInterface* newTrack = nullptr;
-
-    if (track) {
-        if (track->isAudioStreamTrack()) {
-            newTrack = track->asAudioStreamTrack()->backend();
-        } else if (track->isVideoStreamTrack()) {
-            newTrack = track->asVideoStreamTrack()->backend();
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaTrack> newTrack;
+    if (m_track) {
+        if (m_track->isAudioStreamTrack()) {
+            newTrack = m_track->asAudioStreamTrack()->backend();
+        } else if (m_track->isVideoStreamTrack()) {
+            newTrack = m_track->asVideoStreamTrack()->backend();
         }
     }
-
-    bool r = backend()->SetTrack(newTrack);
+    bool r = backend()->set_track(newTrack);
     if (!r) {
         STARFISH_LOG_ERROR("%s: failed", __func__);
     }
@@ -150,10 +131,11 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
     bool hasValidMediaType = false;
     if (withTrack) {
         if (withTrack->isAudioStreamTrack() &&
-            (m_backend->media_type() == cricket::MEDIA_TYPE_AUDIO)) {
+            (m_backend->media_type() == libwebrtc::RTCMediaType::AUDIO)) {
             hasValidMediaType = true;
         } else if (withTrack->isVideoStreamTrack() &&
-                   (m_backend->media_type() == cricket::MEDIA_TYPE_AUDIO)) {
+                   (m_backend->media_type() ==
+                    libwebrtc::RTCMediaType::VIDEO)) {
             hasValidMediaType = true;
         }
     } else {
@@ -182,9 +164,9 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
     // 6.2-6.3
     bool sending = false;
     if ((m_transceiver->backend()->current_direction() ==
-         webrtc::RtpTransceiverDirection::kSendRecv) ||
+         libwebrtc::RTCRtpTransceiverDirection::kSendRecv) ||
         (m_transceiver->backend()->current_direction() ==
-         webrtc::RtpTransceiverDirection::kSendOnly)) {
+         libwebrtc::RTCRtpTransceiverDirection::kSendOnly)) {
         sending = true;
     }
 
@@ -237,15 +219,15 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
 
 void RTCRtpSender::setStreams(GCVector<MediaStream*>& streams)
 {
-    std::vector<std::string> streamIds;
+    std::vector<libwebrtc::string> streamIds;
     for (auto stream : streams) {
         streamIds.push_back(stream->backend()->id());
     }
 
-    m_backend->SetStreams(streamIds);
+    m_backend->set_stream_ids(streamIds);
 }
 
-rtc::scoped_refptr<webrtc::RtpSenderInterface> RTCRtpSender::backend()
+libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> RTCRtpSender::backend()
 {
     return m_backend;
 }

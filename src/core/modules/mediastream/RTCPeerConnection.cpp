@@ -51,14 +51,7 @@
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 
-#include "api/rtp_transceiver_interface.h"
-#include "api/sctp_transport_interface.h"
-#include "api/media_stream_interface.h"
-#include "rtc_base/physical_socket_server.h"
-#include "rtc_base/strings/json.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
-#include "pc/rtp_transceiver.h"
+#include "rtc_rtp_sender.h"
 
 namespace Starfish {
 
@@ -97,13 +90,13 @@ PeerConnectionObserver::~PeerConnectionObserver()
     WEBRTC_LOGI("</PeerConnectionObserver::%s self=%p>", __func__, (void*)this);
 }
 
-void PeerConnectionObserver::OnSignalingChange(
-    webrtc::PeerConnectionInterface::SignalingState newState)
+void PeerConnectionObserver::OnSignalingState(
+    libwebrtc::RTCSignalingState newState)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
-    if (newState == webrtc::PeerConnectionInterface::SignalingState::kClosed) {
+    if (newState == libwebrtc::RTCSignalingState::RTCSignalingStateClosed) {
         return;
     }
 
@@ -113,7 +106,7 @@ void PeerConnectionObserver::OnSignalingChange(
 
     struct Params {
         PeerConnectionObserver* self;
-        webrtc::PeerConnectionInterface::SignalingState newState;
+        libwebrtc::RTCSignalingState newState;
     };
 
     Params* p = new Params{ this, newState };
@@ -150,30 +143,26 @@ void PeerConnectionObserver::OnSignalingChange(
             p);
 }
 
-void PeerConnectionObserver::OnAddStream(
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream)
-{
-}
-
 #if defined(STARFISH_WEBRTC_DEBUG)
-class AudioTrackObserver : public webrtc::AudioTrackSinkInterface {
-    virtual void OnData(const void* audioData, int bitsPerSample,
-                        int sampleRate, size_t numberOfChannels,
-                        size_t numberOfFrames)
+class AudioTrackObserver : public b2bua::AudioFrame {
+    virtual void UpdateFrame(int id, uint32_t timestamp, const int16_t* data,
+                             size_t samples_per_channel, int sample_rate_hz,
+                             size_t num_channels)
     {
     }
 };
 
-class VideoFrameObserver : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class VideoFrameObserver
+    : public libwebrtc::RTCVideoRenderer<
+          libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame>> {
 public:
-    void OnFrame(const webrtc::VideoFrame& frame) override
-    {
-    }
+    void OnFrame(
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame) override{};
 };
 #endif
 
 void PeerConnectionObserver::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver)
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
@@ -185,7 +174,7 @@ void PeerConnectionObserver::OnTrack(
 
         struct Params {
             PeerConnectionObserver* self;
-            rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver;
+            libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver;
         };
 
         Params* p = new Params{ this, transceiver };
@@ -238,17 +227,6 @@ void PeerConnectionObserver::OnTrack(
         rtpStreams.push_back(stream);
     }
 
-#if defined(STARFISH_WEBRTC_DEBUG)
-    if (track->isAudioStreamTrack()) {
-        AudioTrackObserver* audioTrackObserver = new AudioTrackObserver();
-        track->asAudioStreamTrack()->backend()->AddSink(audioTrackObserver);
-    } else if (track->isVideoStreamTrack()) {
-        VideoFrameObserver* videoFrameObserver = new VideoFrameObserver();
-        track->asVideoStreamTrack()->backend()->AddOrUpdateSink(
-            videoFrameObserver, rtc::VideoSinkWants());
-    }
-#endif
-
     String* eventType =
         executionContext()->starfish()->staticStrings()->m_track.localName();
     RTCTrackEventInit init(rtpReceiver, track, rtpStreams, rtpTransceiver);
@@ -258,7 +236,7 @@ void PeerConnectionObserver::OnTrack(
 
 // https://w3c.github.io/webrtc-pc/#event-datachannel
 void PeerConnectionObserver::OnDataChannel(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> channel)
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
@@ -270,7 +248,7 @@ void PeerConnectionObserver::OnDataChannel(
 
         struct Params {
             PeerConnectionObserver* self;
-            rtc::scoped_refptr<webrtc::DataChannelInterface> channel;
+            libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel;
         };
 
         Params* p = new Params{ this, channel };
@@ -361,16 +339,16 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
     return;
 }
 
-void PeerConnectionObserver::OnIceConnectionChange(
-    webrtc::PeerConnectionInterface::IceConnectionState newState)
+void PeerConnectionObserver::OnIceConnectionState(
+    libwebrtc::RTCIceConnectionState newState)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
-    if (newState == webrtc::PeerConnectionInterface::IceConnectionState::
-                        kIceConnectionClosed ||
-        newState ==
-            webrtc::PeerConnectionInterface::kIceConnectionDisconnected) {
+    if (newState ==
+            libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed ||
+        newState == libwebrtc::RTCIceConnectionState::
+                        RTCIceConnectionStateDisconnected) {
         WEBRTC_LOGI("</PeerConnectionObserver::OnIceConnectionChange1 self=%p>",
                     (void*)this);
         return;
@@ -386,7 +364,7 @@ void PeerConnectionObserver::OnIceConnectionChange(
 
         struct Params {
             PeerConnectionObserver* self;
-            webrtc::PeerConnectionInterface::IceConnectionState newState;
+            libwebrtc::RTCIceConnectionState newState;
         };
 
         Params* p = new Params{ this, newState };
@@ -408,7 +386,7 @@ void PeerConnectionObserver::OnIceConnectionChange(
                         return;
                     }
 
-                    p->self->OnIceConnectionChange(p->newState);
+                    p->self->OnIceConnectionState(p->newState);
                     WEBRTC_LOGI(
                         "</PeerConnectionObserver::OnIceConnectionChange "
                         "self=%p>",
@@ -427,14 +405,14 @@ void PeerConnectionObserver::OnIceConnectionChange(
     m_peerConnection->dispatchEventByUA(e);
 }
 
-void PeerConnectionObserver::OnConnectionChange(
-    webrtc::PeerConnectionInterface::PeerConnectionState newState)
+void PeerConnectionObserver::OnIceGatheringState(
+    libwebrtc::RTCIceGatheringState newState)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
 
     if (newState ==
-        webrtc::PeerConnectionInterface::PeerConnectionState::kClosed) {
+        libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete) {
         return;
     }
 
@@ -445,61 +423,7 @@ void PeerConnectionObserver::OnConnectionChange(
 
         struct Params {
             PeerConnectionObserver* self;
-            webrtc::PeerConnectionInterface::PeerConnectionState newState;
-        };
-
-        Params* p = new Params{ this, newState };
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-
-                    if (!p->self->m_peerConnection ||
-                        p->self->m_peerConnection->isClosed()) {
-                        return;
-                    }
-
-                    p->self->OnConnectionChange(p->newState);
-                    WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnConnectionChange "
-                        "self=%p>",
-                        (void*)p->self);
-                    delete p;
-                },
-                p);
-        return;
-    }
-
-    String* eventType = executionContext()
-                            ->starfish()
-                            ->staticStrings()
-                            ->m_connectionstatechange.localName();
-    Event* e = new Event(executionContext(), eventType);
-    m_peerConnection->dispatchEventByUA(e);
-}
-
-void PeerConnectionObserver::OnIceGatheringChange(
-    webrtc::PeerConnectionInterface::IceGatheringState newState)
-{
-    WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
-                (void*)this, (void*)m_peerConnection);
-
-    if (newState == webrtc::PeerConnectionInterface::IceGatheringState::
-                        kIceGatheringComplete) {
-        return;
-    }
-
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
-            return;
-        }
-
-        struct Params {
-            PeerConnectionObserver* self;
-            webrtc::PeerConnectionInterface::IceGatheringState newState;
+            libwebrtc::RTCIceGatheringState newState;
         };
 
         Params* p = new Params{ this, newState };
@@ -517,9 +441,9 @@ void PeerConnectionObserver::OnIceGatheringChange(
                         return;
                     }
 
-                    p->self->OnIceGatheringChange(p->newState);
+                    p->self->OnIceGatheringState(p->newState);
                     WEBRTC_LOGI(
-                        "</PeerConnectionObserver::OnIceGatheringChange "
+                        "</PeerConnectionObserver::OnIceGatheringState "
                         "self=%p>",
                         (void*)p->self);
                     delete p;
@@ -537,7 +461,7 @@ void PeerConnectionObserver::OnIceGatheringChange(
 }
 
 void PeerConnectionObserver::OnIceCandidate(
-    const webrtc::IceCandidateInterface* candidate)
+    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate)
 {
     WEBRTC_LOGI("<PeerConnectionObserver::%s self=%p pc=%p>", __func__,
                 (void*)this, (void*)m_peerConnection);
@@ -551,17 +475,16 @@ void PeerConnectionObserver::OnIceCandidate(
         std::string sdpMid;
         int sdpMlineIndex;
         std::string sdp;
-        webrtc::IceCandidateInterface* candidate;
     };
 
-    std::string sdp;
-    candidate->ToString(&sdp);
+    libwebrtc::string sdp;
+    candidate->ToString(sdp);
 
     Params* p = new Params();
     p->self = this;
-    p->sdpMid = candidate->sdp_mid();
+    p->sdpMid = candidate->sdp_mid().std_string();
     p->sdpMlineIndex = candidate->sdp_mline_index();
-    p->sdp = std::move(sdp);
+    p->sdp = sdp.std_string();
 
     executionContext()
         ->webBase()
@@ -576,10 +499,6 @@ void PeerConnectionObserver::OnIceCandidate(
                     self->m_peerConnection->isClosed()) {
                     return;
                 }
-
-                webrtc::IceCandidateInterface* candidate =
-                    webrtc::CreateIceCandidate(p->sdpMid, p->sdpMlineIndex,
-                                               p->sdp, nullptr);
 
                 RTCIceCandidateInit cinit(p->sdp, p->sdpMid, p->sdpMlineIndex);
                 RTCIceCandidate* cand =
@@ -603,8 +522,8 @@ void PeerConnectionObserver::OnIceCandidate(
             p);
 }
 
-void CreateOfferAnswerObserver::OnSuccess(
-    webrtc::SessionDescriptionInterface* desc)
+void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
+                                          const libwebrtc::string type)
 {
     WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p", __func__, (void*)this);
 
@@ -616,12 +535,11 @@ void CreateOfferAnswerObserver::OnSuccess(
     // The following lines must be executed in the main thread.
     struct Params {
         CreateOfferAnswerObserver* self;
-        std::unique_ptr<webrtc::SessionDescriptionInterface> desc;
+        std::string sdp;
+        std::string type;
     };
 
-    Params* p = new Params{
-        this, std::unique_ptr<webrtc::SessionDescriptionInterface>(desc)
-    };
+    Params* p = new Params{ this, sdp.std_string(), type.std_string() };
 
     m_peerConnection->executionContext()
         ->webBase()
@@ -631,18 +549,14 @@ void CreateOfferAnswerObserver::OnSuccess(
             [](size_t, void* data) {
                 Params* p = (Params*)data;
                 CreateOfferAnswerObserver* self = p->self;
-                webrtc::SessionDescriptionInterface* desc = p->desc.get();
-
-                RTCSdpType type =
-                    self->m_peerConnection->toRtcSdpType(desc->GetType())
-                        .value();
-                std::string sdpString;
-                desc->ToString(&sdpString);
+                std::string sdpString = p->sdp;
+                std::string typeString = p->type;
 
                 ObjectRef* sd =
                     self->m_peerConnection->createSessionDescriptionInitObject(
-                        type, String::createASCIIString(sdpString.c_str(),
-                                                        sdpString.size()));
+                        self->m_peerConnection->toRtcSdpType(typeString),
+                        String::createASCIIString(sdpString.c_str(),
+                                                  sdpString.size()));
                 Promise* promise = nullptr;
                 if (self->isCreateOffer()) {
                     promise = self->m_peerConnection->m_createOfferObserver
@@ -671,7 +585,7 @@ void CreateOfferAnswerObserver::OnSuccess(
     WEBRTC_LOGI("<CreateOfferAnswerObserver::/%s>: %p", __func__, (void*)this);
 }
 
-void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
+void CreateOfferAnswerObserver::OnFailure(const char* error)
 {
     WEBRTC_LOGI("<CreateOfferAnswerObserver::%s>: %p", __func__, (void*)this);
 
@@ -679,7 +593,7 @@ void CreateOfferAnswerObserver::OnFailure(webrtc::RTCError error)
     // The following lines must be executed in the main thread.
     struct Params {
         CreateOfferAnswerObserver* self;
-        webrtc::RTCError error;
+        std::string error;
     };
 
     Params* p = new Params{ this, std::move(error) };
@@ -769,7 +683,7 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
                 (void*)this);
 }
 
-void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
+void SetLocalRemoteDescriptionObserver::OnFailure(const char* error)
 {
     WEBRTC_LOGI("<SetLocalRemoteDescriptionObserver::%s>: %p", __func__,
                 (void*)this);
@@ -778,7 +692,7 @@ void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
     // The following lines must be executed in the main thread.
     struct Params {
         SetLocalRemoteDescriptionObserver* self;
-        webrtc::RTCError error;
+        std::string error;
     };
 
     Params* p = new Params();
@@ -799,7 +713,7 @@ void SetLocalRemoteDescriptionObserver::OnFailure(webrtc::RTCError error)
                 }
 
                 DOMException* exception =
-                    self->m_peerConnection->toDomException(std::move(p->error));
+                    self->m_peerConnection->toDomException(p->error.c_str());
                 STARFISH_ASSERT(exception);
 
                 Promise* promise = nullptr;
@@ -882,22 +796,28 @@ bool RTCPeerConnection::initializePeerConnection(
     RTCConfiguration& configuration)
 {
     m_peerConnectionObserver = new PeerConnectionObserver(this);
-    STARFISH_ASSERT(m_webRtcManager->createPeerConnectionFactory());
+    STARFISH_ASSERT(m_webRtcManager->peerConnectionFactory());
 
-    webrtc::PeerConnectionInterface::RTCConfiguration config =
-        configuration.genBackend();
-    config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
+    libwebrtc::RTCConfiguration config = configuration.genBackend();
+    config.sdp_semantics = libwebrtc::SdpSemantics::kUnifiedPlan;
 
-    webrtc::PeerConnectionDependencies dependencies{ m_peerConnectionObserver };
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
+        libwebrtc::RTCMediaConstraints::Create();
+    ;
     m_backend =
-        m_webRtcManager->createPeerConnection(config, std::move(dependencies));
+        m_webRtcManager->peerConnectionFactory()->Create(config, constraints);
+    m_backend->RegisterRTCPeerConnectionObserver(m_peerConnectionObserver);
 
-    m_createOfferObserver = new PcObserver<CreateOfferObserver>(this);
-    m_createAnswerObserver = new PcObserver<CreateAnswerObserver>(this);
+    m_createOfferObserver = libwebrtc::scoped_refptr<CreateOfferObserver>(
+        new CreateOfferObserver(this));
+    m_createAnswerObserver = libwebrtc::scoped_refptr<CreateAnswerObserver>(
+        new CreateAnswerObserver(this));
     m_setLocalDescriptionObserver =
-        new PcObserver<SetLocalDescriptionObserver>(this);
+        libwebrtc::scoped_refptr<SetLocalDescriptionObserver>(
+            new SetLocalDescriptionObserver(this));
     m_setRemoteDescriptionObserver =
-        new PcObserver<SetRemoteDescriptionObserver>(this);
+        libwebrtc::scoped_refptr<SetRemoteDescriptionObserver>(
+            new SetRemoteDescriptionObserver(this));
 
     return m_backend != nullptr;
 }
@@ -979,11 +899,15 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
     Promise* promise = new Promise(scriptBindingInstance());
     m_createOfferObserver->setPromise(promise);
 
-    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions opt(
-        options.m_offerToReceiveVideo, options.m_offerToReceiveAudio,
-        options.m_voiceActivityDetection, options.m_iceRestart, true);
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
+        libwebrtc::RTCMediaConstraints::Create();
 
-    m_backend->CreateOffer(m_createOfferObserver->m_observer, opt);
+    m_backend->CreateOffer(
+        [this](const libwebrtc::string sdp, const libwebrtc::string type) {
+            m_createOfferObserver->OnSuccess(sdp, type);
+        },
+        [this](const char* error) { m_createOfferObserver->OnFailure(error); },
+        constraints);
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
@@ -1016,14 +940,17 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
     Promise* promise = new Promise(scriptBindingInstance());
     m_createAnswerObserver->setPromise(promise);
 
-    webrtc::PeerConnectionInterface::RTCOfferAnswerOptions opt(
-        webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
-            kOfferToReceiveMediaTrue,
-        webrtc::PeerConnectionInterface::RTCOfferAnswerOptions::
-            kOfferToReceiveMediaTrue,
-        options.m_voiceActivityDetection, false, true);
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
+        libwebrtc::RTCMediaConstraints::Create();
 
-    m_backend->CreateAnswer(m_createAnswerObserver->m_observer, opt);
+    m_backend->CreateAnswer(
+        [this](const libwebrtc::string sdp, const libwebrtc::string type) {
+            m_createAnswerObserver->OnSuccess(sdp, type);
+        },
+        [this](const std::string& error) {
+            m_createAnswerObserver->OnFailure(error.c_str());
+        },
+        constraints);
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
@@ -1031,7 +958,7 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 
 void RTCPeerConnection::syncTransceivers()
 {
-    GCUnorderedMap<webrtc::RtpTransceiverInterface*, RTCRtpTransceiver*>
+    GCUnorderedMap<libwebrtc::RTCRtpTransceiver*, RTCRtpTransceiver*>
         curTransceivers;
     for (auto transceiver : m_transceivers) {
         curTransceivers.insert(
@@ -1039,8 +966,8 @@ void RTCPeerConnection::syncTransceivers()
     }
     m_transceivers.clear();
 
-    std::vector<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-        backendTransceivers = m_backend->GetTransceivers();
+    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>>
+        backendTransceivers = m_backend->transceivers().std_vector();
     for (auto transceiver : backendTransceivers) {
         auto itr = curTransceivers.find(transceiver.get());
         if (itr != curTransceivers.end()) {
@@ -1054,13 +981,13 @@ void RTCPeerConnection::syncTransceivers()
 }
 
 RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backendTransceiver)
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backendTransceiver)
 {
     for (auto transceiver : m_transceivers) {
-        if (backendTransceiver.get() ==
-            static_cast<webrtc::RtpTransceiverProxyWithInternal<
-                webrtc::RtpTransceiver>*>(transceiver->backend().get())
-                ->internal()) {
+        if (backendTransceiver->sender()->id().std_string() ==
+                transceiver->backend()->sender()->id().std_string() &&
+            backendTransceiver->receiver()->id().std_string() ==
+                transceiver->backend()->receiver()->id().std_string()) {
             return transceiver;
         }
     }
@@ -1118,7 +1045,8 @@ Promise* RTCPeerConnection::setLocalDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setLocalDescriptionObserver->setPromise(promise);
 
-    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
+    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+        toSdpType(description.m_type);
     if (!type.hasValue()) {
         STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
         auto exception =
@@ -1180,11 +1108,11 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
     if (isRemote) {
         if ((description.m_type == RTCSdpType::Answer)) {
             if (!((m_backend->signaling_state() ==
-                   webrtc::PeerConnectionInterface::SignalingState::
-                       kHaveLocalOffer) ||
+                   libwebrtc::RTCSignalingState::
+                       RTCSignalingStateHaveLocalOffer) ||
                   (m_backend->signaling_state() ==
-                   webrtc::PeerConnectionInterface::SignalingState::
-                       kHaveRemotePrAnswer))) {
+                   libwebrtc::RTCSignalingState::
+                       RTCSignalingStateHaveRemoteOffer))) {
                 auto exception = new DOMException(
                     executionContext(), DOMException::INVALID_STATE_ERR,
                     "InvalidStateError");
@@ -1196,11 +1124,11 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
         if ((description.m_type == RTCSdpType::Answer) ||
             (description.m_type == RTCSdpType::Pranswer)) {
             if (!((m_backend->signaling_state() ==
-                   webrtc::PeerConnectionInterface::SignalingState::
-                       kHaveRemoteOffer) ||
+                   libwebrtc::RTCSignalingState::
+                       RTCSignalingStateHaveRemoteOffer) ||
                   (m_backend->signaling_state() ==
-                   webrtc::PeerConnectionInterface::SignalingState::
-                       kHaveLocalPrAnswer))) {
+                   libwebrtc::RTCSignalingState::
+                       RTCSignalingStateHaveRemotePrAnswer))) {
                 auto exception = new DOMException(
                     executionContext(), DOMException::INVALID_STATE_ERR,
                     "InvalidStateError");
@@ -1216,13 +1144,17 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
         m_lastCreatedAnswer = "";
     }
 
-    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
+    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+        toSdpType(description.m_type);
+    std::string typeString = description.type()->toUTF8NonGCString();
     std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
+    libwebrtc::SdpParseError error;
 
-    std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-        webrtc::CreateSessionDescription(type.value(), sdpString);
+    libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> des =
+        libwebrtc::RTCSessionDescription::Create(typeString.c_str(),
+                                                 sdpString.c_str(), &error);
 
-    if (!desc) {
+    if (!des.get()) {
         STARFISH_LOG_WARN("%s: desc = nullptr", __func__);
         return promise;
     }
@@ -1230,48 +1162,56 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
     if (isRemote) {
         // SetRemoteDescription takes the ownership of desc
         m_backend->SetRemoteDescription(
-            m_setRemoteDescriptionObserver->m_observer, desc.release());
+            des->sdp(), des->type(),
+            [this]() { m_setRemoteDescriptionObserver->OnSuccess(); },
+            [this](const char* error) {
+                m_setRemoteDescriptionObserver->OnFailure(error);
+            });
     } else {
         // SetLocalDescription takes the ownership of desc
         m_backend->SetLocalDescription(
-            m_setLocalDescriptionObserver->m_observer, desc.release());
+            des->sdp(), des->type(),
+            [this]() { m_setLocalDescriptionObserver->OnSuccess(); },
+            [this](const char* error) {
+                m_setLocalDescriptionObserver->OnFailure(error);
+            });
     }
-
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return promise;
 }
 
 RTCSessionDescription* RTCPeerConnection::localDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->local_description();
-    if (!desc) {
-        return nullptr;
-    }
+    libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
+    libwebrtc::SdpParseError error;
+    char* sdp_ptr = nullptr;
+    char* type_ptr = nullptr;
 
-    return new RTCSessionDescription(executionContext(), desc);
+    m_backend->GetLocalDescription(
+        [&sdp_ptr, &type_ptr](const char* sdp, const char* type) {
+            sdp_ptr = const_cast<char*>(sdp);
+            type_ptr = const_cast<char*>(type);
+        },
+        [](const std::string& error) {});
+
+    if (sdp_ptr && type_ptr) {
+        description =
+            libwebrtc::RTCSessionDescription::Create(type_ptr, sdp_ptr, &error);
+        return new RTCSessionDescription(executionContext(), description);
+    }
+    return nullptr;
 }
 
 RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->current_local_description();
-    if (!desc) {
-        return nullptr;
-    }
-
-    return new RTCSessionDescription(executionContext(), desc);
+    // TODO:FIX ME!!
+    return localDescription();
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->pending_local_description();
-    if (!desc) {
-        return nullptr;
-    }
-
-    return new RTCSessionDescription(executionContext(), desc);
+    // TODO:FIX ME!!
+    return localDescription();
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
@@ -1299,7 +1239,8 @@ Promise* RTCPeerConnection::setRemoteDescription(
     Promise* promise = new Promise(scriptBindingInstance());
     m_setRemoteDescriptionObserver->setPromise(promise);
 
-    Nullable<webrtc::SdpType> type = toSdpType(description.m_type);
+    Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
+        toSdpType(description.m_type);
     if (!type.hasValue()) {
         STARFISH_LOG_ERROR("%s: rollback is not supported", __func__);
         auto exception =
@@ -1333,17 +1274,14 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
     // https://w3c.github.io/webrtc-pc/#set-remote-description
     // 3.3
-    webrtc::SdpParseError error;
-    std::unique_ptr<webrtc::SessionDescriptionInterface> desc =
-        webrtc::CreateSessionDescription(type.value(), sdpString, &error);
 
-    if (error.line == "Invalid SDP") {
-        RTCErrorInit init;
-        init.m_errorDetail = RTCErrorDetailType::SdpSyntaxError;
-        auto exception = new RTCError(executionContext(), init);
-        promise->reject(exception->scriptValue());
-        return promise;
-    }
+    // if (error.line == "Invalid SDP") {
+    //     RTCErrorInit init;
+    //     init.m_errorDetail = RTCErrorDetailType::SdpSyntaxError;
+    //     auto exception = new RTCError(executionContext(), init);
+    //     promise->reject(exception->scriptValue());
+    //     return promise;
+    // }
 
     WEBRTC_LOGI("</RTCPeerConnection::%s>: %p", __func__, (void*)this);
     return setRtcSessionDescription({ type, sdpString }, promise, true);
@@ -1351,35 +1289,36 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
 RTCSessionDescription* RTCPeerConnection::remoteDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->remote_description();
-    if (!desc) {
-        return nullptr;
-    }
+    libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
+    libwebrtc::SdpParseError error;
+    char* sdp_ptr = nullptr;
+    char* type_ptr = nullptr;
 
-    return new RTCSessionDescription(executionContext(), desc);
+    m_backend->GetRemoteDescription(
+        [&sdp_ptr, &type_ptr](const char* sdp, const char* type) {
+            sdp_ptr = const_cast<char*>(sdp);
+            type_ptr = const_cast<char*>(type);
+        },
+        [](const std::string& error) {});
+
+    if (sdp_ptr && type_ptr) {
+        description =
+            libwebrtc::RTCSessionDescription::Create(type_ptr, sdp_ptr, &error);
+        return new RTCSessionDescription(executionContext(), description);
+    }
+    return nullptr;
 }
 
 RTCSessionDescription* RTCPeerConnection::currentRemoteDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->current_remote_description();
-    if (!desc) {
-        return nullptr;
-    }
-
-    return new RTCSessionDescription(executionContext(), desc);
+    // TODO:FIX ME!!
+    return remoteDescription();
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingRemoteDescription()
 {
-    const webrtc::SessionDescriptionInterface* desc =
-        m_backend->pending_remote_description();
-    if (!desc) {
-        return nullptr;
-    }
-
-    return new RTCSessionDescription(executionContext(), desc);
+    // TODO:FIX ME!!
+    return remoteDescription();
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-peerconnection-addicecandidate
@@ -1397,15 +1336,15 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
     }
 
     // 4.1
-    const webrtc::SessionDescriptionInterface* remoteDescription =
-        backend()->remote_description();
-    if (!remoteDescription) {
-        auto exception = new DOMException(executionContext(),
-                                          DOMException::INVALID_STATE_ERR,
-                                          "InvalidStateError");
-        promise->reject(exception->scriptValue());
-        return promise;
-    }
+    backend()->GetRemoteDescription([](const char* sdp, const char* type) {},
+                                    [](const std::string& error) {
+                                        // auto exception = new
+                                        // DOMException(executionContext(),
+                                        //                                   DOMException::INVALID_STATE_ERR,
+                                        //                                   "InvalidStateError");
+                                        // promise->reject(exception->scriptValue());
+                                        // return promise;
+                                    });
 
     if (init.m_candidate->equals(String::emptyString) &&
         !init.m_sdpMid.hasValue() && !init.m_sdpMLineIndex.hasValue()) {
@@ -1425,39 +1364,10 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
         sdpMLineIndex = init.m_sdpMLineIndex.getValue();
     }
 
-    bool hasValidSdpMid = false;
-    if (init.m_sdpMid.hasValue()) {
-        size_t lineIndex = 0;
-        size_t mediaSectionSize = remoteDescription->number_of_mediasections();
-        for (size_t i = 0; i < mediaSectionSize; i++) {
-            const webrtc::IceCandidateCollection* candidateCollection =
-                remoteDescription->candidates(i);
-
-            for (size_t j = 0; j < candidateCollection->count(); j++) {
-                const webrtc::IceCandidateInterface* candidate =
-                    candidateCollection->at(j);
-                if (candidate->sdp_mid() == sdpMid) {
-                    hasValidSdpMid = true;
-                    lineIndex = i;
-                    break;
-                }
-            }
-        }
-
-        if (hasValidSdpMid && (sdpMLineIndex >= mediaSectionSize)) {
-            sdpMLineIndex = lineIndex;
-        }
-    } else if (init.m_sdpMLineIndex.hasValue()) {
-        const webrtc::IceCandidateCollection* candidateCollection =
-            remoteDescription->candidates(sdpMLineIndex);
-
-        if (!candidateCollection) {
-            auto exception = new DOMException(
-                executionContext(), String::createASCIIString("OperationError"),
-                String::createASCIIString("OperationError"));
-            promise->reject(exception->scriptValue());
-            return promise;
-        }
+    libwebrtc::SdpParseError error;
+    std::string candidate;
+    if (init.m_candidate) {
+        candidate = init.m_candidate->toUTF8NonGCString();
     }
 
     if (init.m_candidate->equals(String::emptyString)) {
@@ -1469,14 +1379,11 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
         return promise;
     }
 
-    std::string sdp(init.m_candidate->toUTF8NonGCString());
+    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> rtc_candidate =
+        libwebrtc::RTCIceCandidate::Create(candidate.c_str(), sdpMid.c_str(),
+                                           sdpMLineIndex, &error);
 
-    webrtc::SdpParseError error;
-    std::unique_ptr<webrtc::IceCandidateInterface> candidate =
-        std::unique_ptr<webrtc::IceCandidateInterface>(
-            webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
-
-    if (!candidate) {
+    if (rtc_candidate.get() == nullptr) {
         auto exception = new DOMException(
             executionContext(), String::createASCIIString("OperationError"),
             String::createASCIIString("OperationError"));
@@ -1485,15 +1392,9 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
         return promise;
     }
 
-    bool r = backend()->AddIceCandidate(candidate.get());
-    if (!r) {
-        auto exception = new DOMException(
-            executionContext(), String::createASCIIString("OperationError"),
-            String::createASCIIString("OperationError"));
-        promise->reject(exception->scriptValue());
-        return promise;
-    }
-
+    backend()->AddCandidate(rtc_candidate->sdp_mid(),
+                            rtc_candidate->sdp_mline_index(),
+                            rtc_candidate->candidate());
     promise->fulfill(scriptUndefined());
     return promise;
 }
@@ -1505,17 +1406,17 @@ String* RTCPeerConnection::signalingState()
     }
 
     switch (m_backend->signaling_state()) {
-    case webrtc::PeerConnectionInterface::SignalingState::kStable:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateStable:
         return String::createASCIIString("stable");
-    case webrtc::PeerConnectionInterface::SignalingState::kHaveLocalOffer:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalOffer:
         return String::createASCIIString("have-local-offer");
-    case webrtc::PeerConnectionInterface::SignalingState::kHaveRemoteOffer:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemoteOffer:
         return String::createASCIIString("have-remote-offer");
-    case webrtc::PeerConnectionInterface::SignalingState::kHaveLocalPrAnswer:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalPrAnswer:
         return String::createASCIIString("have-local-pranswer");
-    case webrtc::PeerConnectionInterface::SignalingState::kHaveRemotePrAnswer:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemotePrAnswer:
         return String::createASCIIString("have-remote-pranswer");
-    case webrtc::PeerConnectionInterface::SignalingState::kClosed:
+    case libwebrtc::RTCSignalingState::RTCSignalingStateClosed:
         return String::createASCIIString("closed");
     default:
         return String::emptyString;
@@ -1525,13 +1426,11 @@ String* RTCPeerConnection::signalingState()
 String* RTCPeerConnection::iceGatheringState()
 {
     switch (m_backend->ice_gathering_state()) {
-    case webrtc::PeerConnectionInterface::IceGatheringState::kIceGatheringNew:
+    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateNew:
         return String::createASCIIString("new");
-    case webrtc::PeerConnectionInterface::IceGatheringState::
-        kIceGatheringGathering:
+    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateGathering:
         return String::createASCIIString("gathering");
-    case webrtc::PeerConnectionInterface::IceGatheringState::
-        kIceGatheringComplete:
+    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete:
         return String::createASCIIString("complete");
     default:
         return String::emptyString;
@@ -1541,25 +1440,19 @@ String* RTCPeerConnection::iceGatheringState()
 String* RTCPeerConnection::iceConnectionState()
 {
     switch (m_backend->ice_connection_state()) {
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionClosed:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed:
         return String::createASCIIString("closed");
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionFailed:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateFailed:
         return String::createASCIIString("failed");
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionDisconnected:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateDisconnected:
         return String::createASCIIString("disconnected");
-    case webrtc::PeerConnectionInterface::IceConnectionState::kIceConnectionNew:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateNew:
         return String::createASCIIString("new");
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionChecking:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateChecking:
         return String::createASCIIString("checking");
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionCompleted:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateCompleted:
         return String::createASCIIString("completed");
-    case webrtc::PeerConnectionInterface::IceConnectionState::
-        kIceConnectionConnected:
+    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateConnected:
         return String::createASCIIString("connected");
     default:
         return String::emptyString;
@@ -1569,17 +1462,17 @@ String* RTCPeerConnection::iceConnectionState()
 String* RTCPeerConnection::connectionState()
 {
     switch (m_backend->peer_connection_state()) {
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kClosed:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateClosed:
         return String::createASCIIString("closed");
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kFailed:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateFailed:
         return String::createASCIIString("failed");
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kDisconnected:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateDisconnected:
         return String::createASCIIString("disconnected");
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kNew:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateNew:
         return String::createASCIIString("new");
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kConnecting:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateConnecting:
         return String::createASCIIString("connecting");
-    case webrtc::PeerConnectionInterface::PeerConnectionState::kConnected:
+    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateConnected:
         return String::createASCIIString("connected");
     default:
         return String::emptyString;
@@ -1765,18 +1658,9 @@ DEFINE_EVENT_LISTENER(RTCPeerConnection, track);
 
 RTCSctpTransport* RTCPeerConnection::sctp()
 {
-    if (!m_backend) {
-        return nullptr;
-    }
-
-    rtc::scoped_refptr<webrtc::SctpTransportInterface> sctp =
-        m_backend->GetSctpTransport();
-
-    if (sctp.get() == nullptr) {
-        return nullptr;
-    }
-
-    return new RTCSctpTransport(executionContext(), sctp);
+    return nullptr;
+    // TODO:FIX ME!
+    // return new RTCSctpTransport(executionContext(), sctp);
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-peerconnection-createdatachannel
@@ -1805,7 +1689,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
                                "protocol.length() > 65535");
     }
 
-    webrtc::DataChannelInit init;
+    libwebrtc::RTCDataChannelInit init;
     if (dataChannelDict.hasMaxPacketLifeTime()) {
         init.maxRetransmitTime = dataChannelDict.maxPacketLifeTime();
     }
@@ -1839,7 +1723,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
                                DOMException::SCRIPT_TYPE_ERR, "id >= 65535");
     }
 
-    rtc::scoped_refptr<webrtc::DataChannelInterface> dataChannel =
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> dataChannel =
         m_backend->CreateDataChannel(
             std::string(label->toUTF8NonGCString().data()), &init);
 
@@ -1859,6 +1743,7 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
 GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
 {
     GCVector<RTCRtpSender*> senders;
+
     if (!m_backend) {
         return std::move(senders);
     }
@@ -1867,8 +1752,8 @@ GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
         senders.push_back(transceiver->sender());
     }
 
-    std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> backendSenders =
-        backend()->GetSenders();
+    libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender>>
+        backendSenders = backend()->senders();
     STARFISH_ASSERT(senders.size() == backendSenders.size());
 
     return std::move(senders);
@@ -1877,6 +1762,7 @@ GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
 GCVector<RTCRtpReceiver*> RTCPeerConnection::getReceivers()
 {
     GCVector<RTCRtpReceiver*> receivers;
+
     if (!m_backend) {
         return std::move(receivers);
     }
@@ -1885,8 +1771,8 @@ GCVector<RTCRtpReceiver*> RTCPeerConnection::getReceivers()
         receivers.push_back(transceiver->receiver());
     }
 
-    std::vector<rtc::scoped_refptr<webrtc::RtpReceiverInterface>>
-        backendReceivers = m_backend->GetReceivers();
+    libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver>>
+        backendReceivers = m_backend->receivers();
     STARFISH_ASSERT(receivers.size() == backendReceivers.size());
 
     return std::move(receivers);
@@ -1914,15 +1800,15 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
     // 1-4
     std::vector<std::string> streamIds;
     for (auto stream : streams) {
-        streamIds.push_back(stream->backend()->id());
+        streamIds.push_back(stream->backend()->id().std_string());
     }
 
     // 6
     std::string id = "";
     if (track->isAudioStreamTrack()) {
-        id = track->asAudioStreamTrack()->backend()->id();
+        id = track->asAudioStreamTrack()->backend()->id().std_string();
     } else if (track->isVideoStreamTrack()) {
-        id = track->asVideoStreamTrack()->backend()->id();
+        id = track->asVideoStreamTrack()->backend()->id().std_string();
     }
 
     // 7
@@ -1974,21 +1860,27 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
             }
         }
     } else { // 9
-        webrtc::RtpTransceiverInit init;
-        init.stream_ids = streamIds;
+        std::vector<libwebrtc::string> stream_ids;
+        for (auto id : streamIds) {
+            stream_ids.push_back(id.c_str());
+        }
+        // std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>>
+        // encodings; libwebrtc::RTCRtpTransceiverDirection dir =
+        // libwebrtc::RTCRtpTransceiverDirection::kInactive;
+        // libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit> init =
+        // libwebrtc::RTCRtpTransceiverInit::Create(dir, stream_ids, encodings);
 
-        webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>> r;
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> r;
         if (track->isAudioStreamTrack()) {
             r = backend()->AddTrack(track->asAudioStreamTrack()->backend(),
-                                    streamIds);
+                                    stream_ids);
         } else if (track->isVideoStreamTrack()) {
             r = backend()->AddTrack(track->asVideoStreamTrack()->backend(),
-                                    streamIds);
+                                    stream_ids);
         }
 
-        if (!r.ok()) {
-            STARFISH_LOG_ERROR("Failed to add an audio/video track: %s",
-                               r.error().message());
+        if (!r.get()) {
+            STARFISH_LOG_ERROR("Failed to add an audio/video track: %s", "");
             throw new DOMException(executionContext(),
                                    DOMException::INVALID_ACCESS_ERR,
                                    "InvalidAccessErr");
@@ -1997,7 +1889,8 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
         syncTransceivers();
 
         for (auto transceiver : m_transceivers) {
-            if (transceiver->sender()->backend() == r.value()) {
+            if (transceiver->sender()->backend()->id().std_string() ==
+                r->id().std_string()) {
                 senderToReturn = transceiver->sender();
                 senderToReturn->setTrack(track);
                 break;
@@ -2053,7 +1946,7 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
         return;
     }
 
-    m_backend->RemoveTrackNew(sender->backend());
+    m_backend->RemoveTrack(sender->backend());
     aliveSender->setTrack(nullptr);
 
     if (!existingTransceiver) {
@@ -2092,25 +1985,25 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
         track = trackOrKind.getMediaStreamTrackValue();
     }
 
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>> r;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> r;
     if ((kind && kind->equals("audio")) ||
         (track && track->kind() == MediaStreamTrack::Kind::Audio)) {
-        r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO,
+        r = m_backend->AddTransceiver(track->asAudioStreamTrack()->backend(),
                                       init.toRtpTransceiverInit());
     } else if ((kind && kind->equals("video")) ||
                (track && track->kind() == MediaStreamTrack::Kind::Video)) {
-        r = m_backend->AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO,
+        r = m_backend->AddTransceiver(track->asVideoStreamTrack()->backend(),
                                       init.toRtpTransceiverInit());
     }
 
-    if (!r.ok()) {
+    if (!r.get()) {
         STARFISH_LOG_ERROR("%s: internal error", __func__);
         throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                                "addTransceiver: internal error");
     }
 
     syncTransceivers();
-    RTCRtpTransceiver* transceiver = getTransceiver(r.value());
+    RTCRtpTransceiver* transceiver = getTransceiver(r);
 
     if (track) {
         transceiver->sender()->setTrack(track);
@@ -2150,7 +2043,8 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
 }
 #endif
 
-rtc::scoped_refptr<webrtc::PeerConnectionInterface> RTCPeerConnection::backend()
+libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection>
+RTCPeerConnection::backend()
 {
     return m_backend;
 }
@@ -2166,86 +2060,54 @@ bool RTCPeerConnection::isClosed()
     }
 
     if (m_backend->peer_connection_state() ==
-        webrtc::PeerConnectionInterface::PeerConnectionState::kClosed) {
+        libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateClosed) {
         return true;
     }
     return false;
 }
 
-Nullable<RTCSdpType> RTCPeerConnection::toRtcSdpType(webrtc::SdpType type)
+RTCSdpType RTCPeerConnection::toRtcSdpType(std::string type)
 {
-    RTCSessionDescriptionInit init(type, std::string(""));
-    return init.m_type;
+    RTCSdpType result;
+    if (type.compare("offer") == 0) {
+        result = RTCSdpType::Offer;
+    } else if (type.compare("pranswer") == 0) {
+        result = RTCSdpType::Pranswer;
+    } else if (type.compare("answer") == 0) {
+        result = RTCSdpType::Answer;
+    } else if (type.compare("rollback") == 0) {
+        result = RTCSdpType::Rollback;
+    }
+    return result;
 }
 
-Nullable<webrtc::SdpType> RTCPeerConnection::toSdpType(
-    Nullable<RTCSdpType> type)
+Nullable<libwebrtc::RTCSessionDescription::SdpType>
+RTCPeerConnection::toSdpType(Nullable<RTCSdpType> type)
 {
     RTCSessionDescriptionInit init(type, String::emptyString);
     return init.toSdpType();
 }
 
-DOMException* RTCPeerConnection::toDomException(webrtc::RTCError error)
+DOMException* RTCPeerConnection::toDomException(std::string error)
 {
-    DOMException* exception = nullptr;
-    switch (error.type()) {
-    case webrtc::RTCErrorType::UNSUPPORTED_OPERATION:
-    case webrtc::RTCErrorType::UNSUPPORTED_PARAMETER:
-    case webrtc::RTCErrorType::RESOURCE_EXHAUSTED:
-        exception = new DOMException(
-            m_executionContext, DOMException::DOM_EXCEPTION, "OperationError");
-        break;
-    case webrtc::RTCErrorType::INVALID_PARAMETER:
-        exception = new DOMException(m_executionContext,
-                                     DOMException::INVALID_ACCESS_ERR,
-                                     "InvalidAccessErr");
-        break;
-    case webrtc::RTCErrorType::INVALID_RANGE:
-        exception = new DOMException(
-            m_executionContext, DOMException::SCRIPT_RANGE_ERR, "RangeError");
-        break;
-    case webrtc::RTCErrorType::SYNTAX_ERROR:
-        exception = new DOMException(m_executionContext,
-                                     DOMException::SYNTAX_ERR, "SyntaxError");
-        break;
-    case webrtc::RTCErrorType::INVALID_STATE:
-        exception = new DOMException(m_executionContext,
-                                     DOMException::INVALID_STATE_ERR,
-                                     "InvalidStateError");
-        break;
-    case webrtc::RTCErrorType::INVALID_MODIFICATION:
-    case webrtc::RTCErrorType::INTERNAL_ERROR:
-        exception = new DOMException(m_executionContext,
-                                     DOMException::INVALID_MODIFICATION_ERR,
-                                     "InvalidModificationError");
-        break;
-    case webrtc::RTCErrorType::NETWORK_ERROR:
-        exception = new DOMException(m_executionContext,
-                                     DOMException::NETWORK_ERR, "NetworkError");
-        break;
-    default:
-        break;
-    }
-
-    return exception;
+    return new DOMException(m_executionContext, DOMException::DOM_EXCEPTION,
+                            error.c_str());
 }
 
 bool RTCPeerConnection::isValidRemoteState(RTCSdpType type)
 {
-    webrtc::PeerConnectionInterface::SignalingState state =
-        m_backend->signaling_state();
+    libwebrtc::RTCSignalingState state = m_backend->signaling_state();
     if (type == RTCSdpType::Offer) {
-        if ((state ==
-             webrtc::PeerConnectionInterface::SignalingState::kStable) ||
-            (state == webrtc::PeerConnectionInterface::SignalingState::
-                          kHaveRemoteOffer)) {
+        if ((state == libwebrtc::RTCSignalingState::RTCSignalingStateStable) ||
+            (state ==
+             libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemoteOffer)) {
             return true;
         }
     } else if ((type == RTCSdpType::Pranswer) || (type == RTCSdpType::Answer)) {
-        if ((state == webrtc::PeerConnectionInterface::SignalingState::
-                          kHaveLocalOffer) ||
-            (state == webrtc::PeerConnectionInterface::SignalingState::
-                          kHaveRemotePrAnswer)) {
+        if ((state ==
+             libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalOffer) ||
+            (state == libwebrtc::RTCSignalingState::
+                          RTCSignalingStateHaveRemotePrAnswer)) {
             return true;
         }
     }

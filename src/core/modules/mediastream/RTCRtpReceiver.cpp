@@ -34,10 +34,9 @@
 #include "core/page/Window.h"
 
 namespace Starfish {
-
 RTCRtpReceiver::RTCRtpReceiver(
     ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
-    rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver)
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> rtpReceiver)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
     , m_transceiver(transceiver)
@@ -94,20 +93,20 @@ MediaStreamTrack* RTCRtpReceiver::track()
         return m_track;
     }
 
-    rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> mediaTrack =
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaTrack> mediaTrack =
         m_backend->track();
 
-    if (!mediaTrack) {
+    if (!mediaTrack.get()) {
         return nullptr;
     }
 
-    if (mediaTrack->kind() == "audio") {
-        rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack(
-            (webrtc::AudioTrackInterface*)(mediaTrack.get()));
+    if (mediaTrack->kind().std_string() == "audio") {
+        libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> audioTrack(
+            (libwebrtc::RTCAudioTrack*)(mediaTrack.get()));
         m_track = new AudioStreamTrack(m_executionContext, audioTrack);
-    } else if (mediaTrack->kind() == "video") {
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack(
-            (webrtc::VideoTrackInterface*)(mediaTrack.get()));
+    } else if (mediaTrack->kind().std_string() == "video") {
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> videoTrack(
+            (libwebrtc::RTCVideoTrack*)(mediaTrack.get()));
         m_track = new VideoStreamTrack(m_executionContext, videoTrack);
     }
 
@@ -116,14 +115,14 @@ MediaStreamTrack* RTCRtpReceiver::track()
 
 void RTCRtpReceiver::syncStreams()
 {
-    GCUnorderedMap<webrtc::MediaStreamInterface*, MediaStream*> curStreams;
+    GCUnorderedMap<libwebrtc::RTCMediaStream*, MediaStream*> curStreams;
     for (auto stream : m_streams) {
         curStreams.insert(std::make_pair(stream->backend().get(), stream));
     }
     m_streams.clear();
 
-    std::vector<rtc::scoped_refptr<webrtc::MediaStreamInterface>>
-        backendStreams = m_backend->streams();
+    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream>>
+        backendStreams = m_backend->streams().std_vector();
     for (auto stream : backendStreams) {
         auto itr = curStreams.find(stream.get());
         if (itr != curStreams.end()) {
