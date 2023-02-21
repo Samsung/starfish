@@ -26,15 +26,13 @@
 #include "binding/ScriptWrappable.h"
 
 #include "core/modules/mediastream/RTCIceServer.h"
-#include "api/peer_connection_interface.h"
+
+#include "rtc_types.h"
 
 namespace Starfish {
 class RTCCertificate;
 
-enum class RTCIceTransportPolicy {
-    Relay,
-    All,
-};
+enum class RTCIceTransportPolicy { Relay, All, NoHost, None };
 
 enum class RTCBundlePolicy {
     Balanced,
@@ -76,7 +74,7 @@ public:
 
     bool isValid();
 
-    webrtc::PeerConnectionInterface::RTCConfiguration genBackend();
+    libwebrtc::RTCConfiguration genBackend();
 
 private:
     GCVector<RTCIceServer> m_iceServers;

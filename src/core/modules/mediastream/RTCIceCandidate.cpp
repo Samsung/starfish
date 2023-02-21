@@ -70,7 +70,8 @@ ScriptBindingInstance* RTCIceCandidate::scriptBindingInstance()
     return m_executionContext->scriptBindingInstance();
 }
 
-std::unique_ptr<webrtc::IceCandidateInterface> RTCIceCandidate::genBackend()
+libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate>
+RTCIceCandidate::genBackend()
 {
     std::string sdpMid;
     if (m_sdpMid.hasValue()) {
@@ -84,17 +85,15 @@ std::unique_ptr<webrtc::IceCandidateInterface> RTCIceCandidate::genBackend()
         sdpMLineIndex = m_sdpMLineIndex.getValue();
     }
 
-    webrtc::SdpParseError error;
-    std::unique_ptr<webrtc::IceCandidateInterface> candidate =
-        std::unique_ptr<webrtc::IceCandidateInterface>(
-            webrtc::CreateIceCandidate(sdpMid, sdpMLineIndex, sdp, &error));
-
+    libwebrtc::SdpParseError error;
+    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate =
+        libwebrtc::RTCIceCandidate::Create(sdp, sdpMid, sdpMLineIndex, &error);
     if (!candidate) {
         STARFISH_LOG_WARN("IceCandidate was not created");
     }
-
-    return std::move(candidate);
+    return candidate;
 }
+
 } // namespace Starfish
 
 #endif

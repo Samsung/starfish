@@ -25,9 +25,10 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/media_stream_interface.h"
-#include "pc/video_track_source.h"
-#include "platform/webrtc/VideoCapturer.h"
+#include "rtc_video_renderer.h"
+#include "rtc_video_track.h"
+#include "rtc_video_source.h"
+#include "rtc_audio_track.h"
 
 namespace Starfish {
 class ExecutionContext;
@@ -99,14 +100,16 @@ protected:
 class AudioStreamTrack : public MediaStreamTrack {
 public:
     AudioStreamTrack(ExecutionContext* executionContext);
-    AudioStreamTrack(ExecutionContext* executionContext,
-                     rtc::scoped_refptr<webrtc::AudioTrackInterface> backend);
+    AudioStreamTrack(
+        ExecutionContext* executionContext,
+        libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> backend);
     virtual ~AudioStreamTrack();
     void dispose() override;
 
     std::string id() override
     {
-        return m_backend->id();
+        // return m_backend->id();
+        return std::string();
     }
 
     virtual bool isAudioStreamTrack()
@@ -114,39 +117,44 @@ public:
         return true;
     }
 
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> backend()
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> backend()
     {
         return m_backend;
     }
 
 private:
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> m_backend;
 };
 
 class VideoStreamTrack : public MediaStreamTrack {
 public:
     class VideoStreamTrackObserver
         : public gc,
-          public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+          public libwebrtc::RTCVideoRenderer<
+              libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame>> {
     public:
-        VideoStreamTrackObserver(webrtc::VideoTrackInterface* trackToRender);
+        VideoStreamTrackObserver(libwebrtc::RTCVideoTrack* trackToRender);
         // VideoSinkInterface implementation
-        void OnFrame(const webrtc::VideoFrame& frame) override;
+        void OnFrame(
+            libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame) override;
 
     private:
-        rtc::scoped_refptr<webrtc::VideoTrackInterface> m_back;
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> m_back;
     };
 
     VideoStreamTrack(ExecutionContext* executionContext);
-    VideoStreamTrack(ExecutionContext* executionContext,
-                     rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
+    VideoStreamTrack(
+        ExecutionContext* executionContext,
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend);
 
     virtual ~VideoStreamTrack();
     void dispose() override;
 
     std::string id() override
     {
-        return m_backend->id();
+        // TODO:FIXME!
+        // return m_backend->id();
+        return std::string();
     }
 
     virtual bool isVideoStreamTrack() override
@@ -154,7 +162,7 @@ public:
         return true;
     }
 
-    virtual rtc::scoped_refptr<webrtc::VideoTrackInterface> backend()
+    virtual libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend()
     {
         return m_backend;
     }
@@ -162,32 +170,17 @@ public:
     void play();
 
 protected:
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> m_backend;
     VideoStreamTrackObserver* m_source{ nullptr };
 };
 
 class WebCamStreamTrack : public VideoStreamTrack {
 public:
-    class WebCamStreamTrackCapturer : public webrtc::VideoTrackSource {
-    public:
-        static rtc::scoped_refptr<WebCamStreamTrackCapturer> create(
-            size_t width, size_t height, size_t fps);
-        void destroy();
-        void resetVideoCapturer();
-
-    protected:
-        explicit WebCamStreamTrackCapturer(
-            std::unique_ptr<VideoCapturer> capturer);
-
-    private:
-        rtc::VideoSourceInterface<webrtc::VideoFrame>* source();
-        std::unique_ptr<VideoCapturer> m_videoCapturer;
-    };
-
     WebCamStreamTrack(ExecutionContext* executionContext, size_t width,
                       size_t height, size_t fps);
-    WebCamStreamTrack(ExecutionContext* executionContext,
-                      rtc::scoped_refptr<webrtc::VideoTrackInterface> backend);
+    WebCamStreamTrack(
+        ExecutionContext* executionContext,
+        libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend);
     virtual ~WebCamStreamTrack();
     void dispose() override;
 

@@ -25,7 +25,7 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
+#include "rtc_rtp_receiver.h"
 
 namespace Starfish {
 class RTCRtpTransceiver;
@@ -34,7 +34,7 @@ class RTCRtpReceiver : public ScriptWrappable {
 public:
     RTCRtpReceiver(
         ExecutionContext* executionContext, RTCRtpTransceiver* transceiver,
-        rtc::scoped_refptr<webrtc::RtpReceiverInterface> rtpReceiver);
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> rtpReceiver);
     virtual ~RTCRtpReceiver();
     void dispose();
 
@@ -42,7 +42,7 @@ public:
 
     MediaStreamTrack* track();
 
-    rtc::scoped_refptr<webrtc::RtpReceiverInterface> backend()
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> backend()
     {
         return m_backend;
     }
@@ -57,7 +57,7 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     RTCRtpTransceiver* m_transceiver{ nullptr };
-    rtc::scoped_refptr<webrtc::RtpReceiverInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> m_backend;
 
     MediaStreamTrack* m_track{ nullptr };
     GCVector<MediaStream*> m_streams;

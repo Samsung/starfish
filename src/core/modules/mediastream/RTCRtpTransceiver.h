@@ -25,8 +25,8 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
-#include "api/peer_connection_interface.h"
-#include "api/rtp_transceiver_interface.h"
+#include "rtc_peerconnection.h"
+#include "rtc_rtp_transceiver.h"
 
 namespace Starfish {
 
@@ -40,7 +40,8 @@ enum RTCRtpTransceiverDirection {
 
 struct RTCRtpTransceiverInit {
     DEFINE_GETTER_SETTER(String*, direction, Direction);
-    webrtc::RtpTransceiverInit toRtpTransceiverInit();
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit>
+    toRtpTransceiverInit();
 
     String* m_direction{ String::createASCIIString("sendrecv") };
 };
@@ -51,7 +52,7 @@ class RTCRtpTransceiver : public ScriptWrappable {
 public:
     RTCRtpTransceiver(
         ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
-        rtc::scoped_refptr<webrtc::RtpTransceiverInterface> rptTransceiver);
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> rptTransceiver);
     virtual ~RTCRtpTransceiver();
     void dispose();
 
@@ -78,7 +79,7 @@ public:
 
     bool canSend();
 
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> backend()
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backend()
     {
         return m_backend;
     }
@@ -86,7 +87,7 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     RTCPeerConnection* m_peerConnection{ nullptr };
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> m_backend;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> m_backend;
 
     RTCRtpSender* m_sender{ nullptr };
     RTCRtpReceiver* m_receiver{ nullptr };

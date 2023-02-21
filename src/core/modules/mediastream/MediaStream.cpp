@@ -35,15 +35,6 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Locker.h"
 
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_factory.h"
-
-#include "api/video/i420_buffer.h"
-#include "api/video/video_frame_buffer.h"
-#include "api/video/video_rotation.h"
-#include "api/video/video_source_interface.h"
-#include "third_party/libyuv/include/libyuv/convert_from.h"
-
 #include "platform/multimedia/MediaPlayerWebRtc.h"
 
 #include "core/page/GlobalScope.h"
@@ -51,14 +42,14 @@
 namespace Starfish {
 
 MediaStream::AudioTrackObserver::AudioTrackObserver(
-    MediaStream* mediaStream, webrtc::AudioTrackInterface* audioTrack)
+    MediaStream* mediaStream, libwebrtc::RTCAudioTrack* audioTrack)
     : m_mediaStream(mediaStream)
     , m_audioTrack(audioTrack)
     , m_audioLock(new Mutex())
 {
-    if (m_audioTrack) {
-        m_audioTrack->AddSink(this);
-    }
+    // if (m_audioTrack) {
+    //     m_audioTrack->AddSink(this);
+    // }
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -77,41 +68,37 @@ MediaStream::AudioTrackObserver::~AudioTrackObserver()
 
 void MediaStream::AudioTrackObserver::setSize(int size)
 {
-    if (m_numberOfFrames == size) {
-        return;
-    }
+    // if (m_numberOfFrames == size) {
+    //     return;
+    // }
 
-    m_audioData.reset(new int16_t[size]);
+    // m_audioData.reset(new int16_t[size]);
 }
 
-// AudioAudioTrackSinkInterface implementation
-void MediaStream::AudioTrackObserver::OnData(const void* audioData,
-                                             int bitsPerSample, int sampleRate,
-                                             size_t numberOfChannels,
-                                             size_t numberOfFrames)
+void MediaStream::AudioTrackObserver::UpdateFrame(int id, uint32_t timestamp,
+                                                  const int16_t* data,
+                                                  size_t samples_per_channel,
+                                                  int sample_rate_hz,
+                                                  size_t num_channels)
 {
-    {
-        setSize(numberOfFrames);
+    // ?? setSize(numberOfFrames);
 
-        // TODO: Need to fix code below because memory overflow happens.
-        // memcpy(m_audioData.get(), audioData, numberOfFrames);
-
-        m_bitsPerSample = bitsPerSample;
-        m_sampleRate = sampleRate;
-        m_numberOfChannels = numberOfChannels;
-        m_numberOfFrames = numberOfFrames;
-    }
+    m_id = id;
+    m_timestamp = timestamp;
+    m_samples_per_channel = samples_per_channel;
+    m_sample_rate_hz = sample_rate_hz;
+    m_num_channels = num_channels;
 
     if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
-        m_mediaStream->m_mediaPlayer->onData(this);
+        // m_mediaStream->m_mediaPlayer->onData(this);
     }
 }
 
 void MediaStream::AudioTrackObserver::stop()
 {
-    if (m_audioTrack) {
-        m_audioTrack->RemoveSink(this);
-    }
+    // if (m_audioTrack) {
+    //     m_audioTrack->RemoveSink(this);
+    // }
 
     if (m_mediaStream &&
         !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
@@ -122,13 +109,14 @@ void MediaStream::AudioTrackObserver::stop()
 }
 
 MediaStream::VideoFrameObserver::VideoFrameObserver(
-    MediaStream* mediaStream, webrtc::VideoTrackInterface* videoTrack)
+    MediaStream* mediaStream, libwebrtc::RTCVideoTrack* videoTrack)
     : m_mediaStream(mediaStream)
     , m_videoTrack(videoTrack)
     , m_imageLock(new Mutex())
 {
     if (m_videoTrack) {
-        m_videoTrack->AddOrUpdateSink(this, rtc::VideoSinkWants());
+        // m_videoTrack->RemoveRenderer(this);
+        m_videoTrack->AddRenderer(this);
     }
 
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -151,33 +139,20 @@ void MediaStream::VideoFrameObserver::setSize(int width, int height)
     if (m_width == width && m_height == height) {
         return;
     }
+
     m_width = width;
     m_height = height;
     m_image.reset(new uint8_t[width * height * pixelStride()]);
 }
 
 void MediaStream::VideoFrameObserver::OnFrame(
-    const webrtc::VideoFrame& videoFrame)
+    libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame)
 {
-    // TODO: Consider having a thread after measuring the performance
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
-        videoFrame.video_frame_buffer()->ToI420());
-    if (videoFrame.rotation() != webrtc::kVideoRotation_0) {
-        buffer = webrtc::I420Buffer::Rotate(*buffer, videoFrame.rotation());
-    }
-
-    // Due to a bug (https://bugs.webrtc.org/6857), libyuv::I420ToRGBA()
-    // generates a red video output.
-    // I420ToABGR generates [(r,g,b,a)]
-    // I420ToARGB generates [(b,g,r,a)]
     {
         Locker<Mutex> lock(*imageLock());
-        setSize(buffer->width(), buffer->height());
-        libyuv::I420ToARGB(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
-                           buffer->StrideU(), buffer->DataV(),
-                           buffer->StrideV(), m_image.get(),
-                           m_width * MediaStream::PIXEL_STRIDE, buffer->width(),
-                           buffer->height());
+        setSize(frame->width(), frame->height());
+        frame->ConvertToARGB(libwebrtc::RTCVideoFrame::Type::kARGB,
+                             m_image.get(), 0, (int)m_width, (int)m_height);
     }
 
     if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
@@ -188,7 +163,7 @@ void MediaStream::VideoFrameObserver::OnFrame(
 void MediaStream::VideoFrameObserver::stop()
 {
     if (m_videoTrack) {
-        m_videoTrack->RemoveSink(this);
+        m_videoTrack->RemoveRenderer(this);
         m_image.reset();
     }
 
@@ -231,19 +206,19 @@ void MediaStream::VideoFrameObserver::writeImageToFile(std::string& filename)
 MediaStream::MediaStream(ExecutionContext* executionContext)
     : MediaStream(executionContext, nullptr)
 {
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-        peerConnectionFactory = m_webRtcManager->createPeerConnectionFactory();
+    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory>
+        peerConnectionFactory = m_webRtcManager->peerConnectionFactory();
     STARFISH_ASSERT(peerConnectionFactory);
 
     char streamId[100];
     snprintf(streamId, sizeof(streamId), "%s:%p", m_mediaStreamLabel.c_str(),
              (void*)this);
-    m_backend = peerConnectionFactory->CreateLocalMediaStream(streamId);
+    m_backend = peerConnectionFactory->CreateStream(streamId);
 }
 
 MediaStream::MediaStream(
     ExecutionContext* executionContext,
-    rtc::scoped_refptr<webrtc::MediaStreamInterface> backend)
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> backend)
     : EventTarget()
     , m_executionContext(executionContext)
     , m_backend(backend)
@@ -332,7 +307,7 @@ ExecutionContext* MediaStream::executionContext() const
 
 String* MediaStream::id()
 {
-    std::string id = m_backend->id();
+    std::string id = m_backend->id().std_string();
     return String::createASCIIString(id.data(), id.length());
 }
 
@@ -465,7 +440,7 @@ void MediaStream::stopVideoTrack()
 void MediaStream::syncTracks()
 {
     {
-        GCUnorderedMap<webrtc::AudioTrackInterface*, AudioStreamTrack*>
+        GCUnorderedMap<libwebrtc::RTCAudioTrack*, AudioStreamTrack*>
             curAudioTracks;
         for (auto audioTrack : m_audioTracks) {
             curAudioTracks.insert(
@@ -476,8 +451,8 @@ void MediaStream::syncTracks()
         }
         m_audioTracks.clear();
 
-        std::vector<rtc::scoped_refptr<webrtc::AudioTrackInterface>>
-            backendAudioTracks = m_backend->GetAudioTracks();
+        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack>>
+            backendAudioTracks = m_backend->audio_tracks().std_vector();
         for (auto audioTrack : backendAudioTracks) {
             auto itr = curAudioTracks.find(audioTrack.get());
             if (itr != curAudioTracks.end()) {
@@ -491,7 +466,7 @@ void MediaStream::syncTracks()
     }
 
     {
-        GCUnorderedMap<webrtc::VideoTrackInterface*, VideoStreamTrack*>
+        GCUnorderedMap<libwebrtc::RTCVideoTrack*, VideoStreamTrack*>
             curVideoTracks;
         for (auto videoTrack : m_videoTracks) {
             curVideoTracks.insert(
@@ -502,8 +477,8 @@ void MediaStream::syncTracks()
         }
         m_videoTracks.clear();
 
-        std::vector<rtc::scoped_refptr<webrtc::VideoTrackInterface>>
-            backendVideoTracks = m_backend->GetVideoTracks();
+        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack>>
+            backendVideoTracks = m_backend->video_tracks().std_vector();
         for (auto videoTrack : backendVideoTracks) {
             auto itr = curVideoTracks.find(videoTrack.get());
             if (itr != curVideoTracks.end()) {

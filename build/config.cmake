@@ -607,12 +607,7 @@ SET (STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS
 
 IF (${WEBRTC} STREQUAL "1")
     SET (STARFISH_WEBRTC_ADDITIONAL_INCLUDE_DIRS
-        ${THIRD_PARTY_ROOT}/webrtc/src
-        ${THIRD_PARTY_ROOT}/webrtc/src/base/files
-        ${THIRD_PARTY_ROOT}/webrtc/src/third_party/abseil-cpp
-        ${THIRD_PARTY_ROOT}/webrtc/src/third_party/jsoncpp/source/include
-        ${THIRD_PARTY_ROOT}/webrtc/src/third_party/libyuv/include
-        ${STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS}
+        ${THIRD_PARTY_ROOT}/webrtc/src/libwebrtc/include
     )
 ENDIF()
 
