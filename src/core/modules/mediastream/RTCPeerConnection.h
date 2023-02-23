@@ -156,7 +156,7 @@ public:
         libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> stream) override{};
 
     virtual void OnDataChannel(
-        libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> data_channel)
+        libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> dataChannel)
         override;
 
     virtual void OnRenegotiationNeeded() override;
@@ -189,9 +189,9 @@ public:
     {
     }
 
-    virtual void OnSuccess(const libwebrtc::string sdp,
-                           const libwebrtc::string type);
-    virtual void OnFailure(const char* error);
+    void OnSuccess(const libwebrtc::string sdp, const libwebrtc::string type);
+
+    void OnFailure(const char* error);
 
     virtual bool isCreateOffer()
     {
@@ -260,8 +260,9 @@ public:
     {
     }
 
-    virtual void OnSuccess();
-    virtual void OnFailure(const char* error);
+    void OnSuccess();
+
+    void OnFailure(const char* error);
 
     virtual bool isLocalDescription()
     {

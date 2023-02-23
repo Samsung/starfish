@@ -110,45 +110,45 @@ public:
         virtual void Release() override{};
 
         virtual void UpdateFrame(int id, uint32_t timestamp,
-                                 const int16_t* data,
-                                 size_t samples_per_channel, int sample_rate_hz,
-                                 size_t num_channels = 1) override;
+                                 const int16_t* data, size_t samplesPerChannel,
+                                 int sampleRateHz,
+                                 size_t numChannels = 1) override;
 
-        virtual void CopyFrom(const AudioFrame& src) override{};
+        virtual void CopyFrom(const AudioFrame& src) override;
 
-        virtual void Add(const AudioFrame& frame_to_add) override{};
+        virtual void Add(const AudioFrame& frameToAdd) override;
 
-        virtual void Mute() override{};
+        virtual void Mute() override;
 
         virtual const int16_t* data() override
         {
             return m_audioData.get();
-        };
+        }
 
         virtual size_t samples_per_channel() override
         {
-            return m_samples_per_channel;
-        };
+            return m_samplesPerChannel;
+        }
 
         virtual int sample_rate_hz() override
         {
-            return m_sample_rate_hz;
-        };
+            return m_sampleRateHz;
+        }
 
         virtual size_t num_channels() override
         {
-            return m_num_channels;
-        };
+            return m_numChannels;
+        }
 
         virtual uint32_t timestamp() override
         {
             return m_timestamp;
-        };
+        }
 
         virtual int id() override
         {
             return m_id;
-        };
+        }
 
         void setSize(int size);
         void stop();
@@ -165,9 +165,9 @@ public:
         std::unique_ptr<int16_t[]> m_audioData;
         Mutex* m_audioLock{ nullptr };
 
-        int m_samples_per_channel{ 0 };
-        int m_sample_rate_hz{ 0 };
-        int m_num_channels{ 0 };
+        int m_samplesPerChannel{ 0 };
+        int m_sampleRateHz{ 0 };
+        int m_numChannels{ 0 };
         int m_id{ 0 };
         uint32_t m_timestamp{ 0 };
     };

@@ -139,10 +139,10 @@ bool RTCConfiguration::isValid()
 libwebrtc::RTCConfiguration RTCConfiguration::genBackend()
 {
     libwebrtc::RTCConfiguration config;
-    libwebrtc::IceServer* ice_servers = config.ice_servers;
+    libwebrtc::IceServer* iceServers = config.ice_servers;
     int i = 0;
     for (auto& iceServer : m_iceServers) {
-        libwebrtc::IceServer& server = ice_servers[i];
+        libwebrtc::IceServer& server = iceServers[i];
         if (iceServer.hasUsername()) {
             server.username = libwebrtc::string(
                 iceServer.username()->toUTF8NonGCString().data());
