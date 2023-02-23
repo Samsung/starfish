@@ -68,6 +68,7 @@ MediaStream::AudioTrackObserver::~AudioTrackObserver()
 
 void MediaStream::AudioTrackObserver::setSize(int size)
 {
+    STARFISH_UNIMPLEMENTED();
     // if (m_numberOfFrames == size) {
     //     return;
     // }
@@ -85,13 +86,28 @@ void MediaStream::AudioTrackObserver::UpdateFrame(int id, uint32_t timestamp,
 
     m_id = id;
     m_timestamp = timestamp;
-    m_samples_per_channel = samples_per_channel;
-    m_sample_rate_hz = sample_rate_hz;
-    m_num_channels = num_channels;
+    m_samplesPerChannel = samples_per_channel;
+    m_sampleRateHz = sample_rate_hz;
+    m_numChannels = num_channels;
 
     if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
         // m_mediaStream->m_mediaPlayer->onData(this);
     }
+}
+
+void MediaStream::AudioTrackObserver::CopyFrom(const AudioFrame& src)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void MediaStream::AudioTrackObserver::Add(const AudioFrame& frameToAdd)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void MediaStream::AudioTrackObserver::Mute()
+{
+    STARFISH_UNIMPLEMENTED();
 }
 
 void MediaStream::AudioTrackObserver::stop()
@@ -152,7 +168,7 @@ void MediaStream::VideoFrameObserver::OnFrame(
         Locker<Mutex> lock(*imageLock());
         setSize(frame->width(), frame->height());
         frame->ConvertToARGB(libwebrtc::RTCVideoFrame::Type::kARGB,
-                             m_image.get(), 0, (int)m_width, (int)m_height);
+                             m_image.get(), 0, m_width, m_height);
     }
 
     if (m_mediaStream && m_mediaStream->m_mediaPlayer) {
@@ -223,7 +239,7 @@ MediaStream::MediaStream(
     , m_executionContext(executionContext)
     , m_backend(backend)
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
 
     if (backend) {
         syncTracks();
@@ -239,7 +255,7 @@ MediaStream::MediaStream(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
 
-    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("</MediaStream self=%p>", (void*)this);
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,
@@ -256,14 +272,14 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
     dispose();
-    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("</MediaStream self=%p>", this);
 }
 
 void MediaStream::dispose()
 {
-    WEBRTC_LOGI("<MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
 
     stopAudioTrack();
     stopVideoTrack();
@@ -292,7 +308,7 @@ void MediaStream::dispose()
         videoTrack->dispose();
     }
     m_videoTracks.clear();
-    WEBRTC_LOGI("</MediaStream::%s self=%p>", __func__, (void*)this);
+    STARFISH_LOG_INFO("</MediaStream self=%p>", this);
 }
 
 ScriptBindingInstance* MediaStream::scriptBindingInstance()
@@ -403,7 +419,7 @@ void MediaStream::playAudioTrack(MediaStreamTrack* track)
             m_audioTrackObserver =
                 new AudioTrackObserver(this, audioTrack->backend());
         } else {
-            STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
+            STARFISH_LOG_WARN("backend() == nullptr");
         }
     }
 }
@@ -418,7 +434,7 @@ void MediaStream::playVideoTrack(MediaStreamTrack* track)
             m_videoFrameObserver =
                 new VideoFrameObserver(this, videoTrack->backend());
         } else {
-            STARFISH_LOG_WARN("%s: backend() == nullptr", __func__);
+            STARFISH_LOG_WARN("backend() == nullptr");
         }
     }
 }

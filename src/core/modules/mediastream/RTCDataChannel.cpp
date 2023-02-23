@@ -57,29 +57,25 @@ static const char* DataStateString(libwebrtc::RTCDataChannelState state)
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
-                (void*)this, (void*)m_dataChannel);
+    STARFISH_LOG_DEBUG("<self=%p channel=%p>", this, m_dataChannel);
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
             ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
         },
         NULL, NULL, NULL);
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
-                (void*)this, (void*)m_dataChannel);
+    STARFISH_LOG_DEBUG("</self=%p channel=%p>", this, m_dataChannel);
 }
 
 RTCDataChannelObserver::~RTCDataChannelObserver()
 {
-    WEBRTC_LOGI("  <RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
-                (void*)this, (void*)m_dataChannel);
+    STARFISH_LOG_DEBUG("self=%p channel=%p>", this, m_dataChannel);
     if (m_dataChannel) {
         m_dataChannel->dispose();
     }
     m_dataChannel = nullptr;
 
-    WEBRTC_LOGI("  </RTCDataChannelObserver::%s self=%p channel=%p>", __func__,
-                (void*)this, (void*)m_dataChannel);
+    STARFISH_LOG_DEBUG("</self=%p channel=%p>", this, m_dataChannel);
 }
 
 void RTCDataChannelObserver::OnStateChange(libwebrtc::RTCDataChannelState state)
@@ -173,8 +169,7 @@ RTCDataChannel::RTCDataChannel(
     , m_peerConnection(peerConnection)
     , m_backend(dataChannel)
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
-                (void*)m_peerConnection);
+    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
     m_protocol = init.m_protocol;
     m_observer = new RTCDataChannelObserver(this);
     m_backend->RegisterObserver(m_observer);
@@ -187,19 +182,16 @@ RTCDataChannel::RTCDataChannel(
         [](void* obj, void* cd) { ((RTCDataChannel*)obj)->~RTCDataChannel(); },
         NULL, NULL, NULL);
 
-    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
-                (void*)m_peerConnection);
+    STARFISH_LOG_DEBUG("</self=%p pc=%p>", this, m_peerConnection);
 }
 
 RTCDataChannel::~RTCDataChannel()
 {
-    WEBRTC_LOGI("<RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
-                (void*)m_peerConnection);
+    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
     if (m_observer) {
         dispose();
     }
-    WEBRTC_LOGI("</RTCDataChannel::%s self=%p pc=%p>", __func__, (void*)this,
-                (void*)m_peerConnection);
+    STARFISH_LOG_DEBUG("</self=%p pc=%p>", this, m_peerConnection);
 }
 
 void RTCDataChannel::dispose()
@@ -317,7 +309,8 @@ void RTCDataChannel::send(String* data)
     }
     // TODO:FIXME!!
     std::string dataStr = data->toUTF8NonGCString();
-    m_backend->Send((uint8_t*)dataStr.data(), dataStr.length());
+    m_backend->Send(reinterpret_cast<const uint8_t*>(dataStr.data()),
+                    dataStr.length());
 }
 
 } // namespace Starfish
