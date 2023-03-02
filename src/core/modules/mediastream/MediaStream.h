@@ -202,8 +202,6 @@ public:
     void stopAudioTrack();
     void stopVideoTrack();
 
-    void syncTracks();
-
     libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> backend()
     {
         return m_backend;

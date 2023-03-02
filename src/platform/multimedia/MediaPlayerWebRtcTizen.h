@@ -57,7 +57,6 @@ public:
     void onData(MediaStream::AudioTrackObserver* observer) override;
 
 private:
-    player_h m_player{ nullptr };
     media_format_h m_audioFormat{ nullptr };
 
     tbm_surface_h m_surface{ nullptr };

@@ -180,7 +180,7 @@ private:
     WebRtcManager* m_webRtcManager{ nullptr };
 };
 
-class CreateOfferAnswerObserver {
+class CreateOfferAnswerObserver : public gc {
     friend class RTCPeerConnection;
 
 public:
@@ -211,13 +211,6 @@ public:
     void setPromise(Promise* promise)
     {
         m_promise = promise;
-    }
-
-    void AddRef()
-    {
-    }
-    void Release()
-    {
     }
 
 protected:
@@ -251,7 +244,7 @@ public:
     }
 };
 
-class SetLocalRemoteDescriptionObserver {
+class SetLocalRemoteDescriptionObserver : public gc {
     friend class RTCPeerConnection;
 
 public:
@@ -282,13 +275,6 @@ public:
     void setPromise(Promise* promise)
     {
         m_promise = promise;
-    }
-
-    void AddRef()
-    {
-    }
-    void Release()
-    {
     }
 
 protected:
@@ -421,12 +407,10 @@ private:
     PeerConnectionObserver* m_peerConnectionObserver{ nullptr };
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> m_backend;
 
-    libwebrtc::scoped_refptr<CreateOfferObserver> m_createOfferObserver;
-    libwebrtc::scoped_refptr<CreateAnswerObserver> m_createAnswerObserver;
-    libwebrtc::scoped_refptr<SetLocalDescriptionObserver>
-        m_setLocalDescriptionObserver;
-    libwebrtc::scoped_refptr<SetRemoteDescriptionObserver>
-        m_setRemoteDescriptionObserver;
+    CreateOfferObserver* m_createOfferObserver{ nullptr };
+    CreateAnswerObserver* m_createAnswerObserver{ nullptr };
+    SetLocalDescriptionObserver* m_setLocalDescriptionObserver{ nullptr };
+    SetRemoteDescriptionObserver* m_setRemoteDescriptionObserver{ nullptr };
 
     std::string m_lastCreatedOffer;
     std::string m_lastCreatedAnswer;
@@ -448,10 +432,12 @@ private:
     bool isValidRemoteState(RTCSdpType type);
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,
                                       Promise* promise, bool isRemote);
-    void syncTransceivers();
     RTCRtpTransceiver* getTransceiver(
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>
             backendTransceiver);
+    RTCRtpSender* getSender(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> sender);
+    void syncTransceivers();
 };
 } // namespace Starfish
 
