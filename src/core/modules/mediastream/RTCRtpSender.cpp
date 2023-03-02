@@ -60,15 +60,7 @@ RTCRtpSender::~RTCRtpSender()
 
 void RTCRtpSender::dispose()
 {
-    WebRtcManager* webRtcManager = this->m_executionContext->document()
-                                       ->window()
-                                       ->navigator()
-                                       ->webRtcManager();
-    if (webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
-    }
+    m_backend = nullptr;
     m_track = nullptr;
     m_transceiver = nullptr;
 }

@@ -64,8 +64,6 @@ PeerConnectionObserver::PeerConnectionObserver(
     RTCPeerConnection* peerConnection)
     : m_peerConnection(peerConnection)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p", this, m_peerConnection);
-
     m_webRtcManager =
         executionContext()->document()->window()->navigator()->webRtcManager();
 
@@ -79,20 +77,15 @@ PeerConnectionObserver::PeerConnectionObserver(
 
 PeerConnectionObserver::~PeerConnectionObserver()
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (m_peerConnection) {
         m_peerConnection->dispose();
     }
     m_peerConnection = nullptr;
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void PeerConnectionObserver::OnSignalingState(
     libwebrtc::RTCSignalingState newState)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (newState == libwebrtc::RTCSignalingState::RTCSignalingStateClosed) {
         return;
     }
@@ -119,7 +112,6 @@ void PeerConnectionObserver::OnSignalingState(
 
                 if (!self->m_peerConnection ||
                     self->m_peerConnection->isClosed()) {
-                    STARFISH_LOG_DEBUG("</self=%p>", p->self);
                     delete p;
                     return;
                 }
@@ -130,7 +122,6 @@ void PeerConnectionObserver::OnSignalingState(
                                         ->m_signalingstatechange.localName();
                 Event* e = new Event(self->executionContext(), eventType);
                 self->m_peerConnection->dispatchEventByUA(e);
-                STARFISH_LOG_DEBUG("</self=%p>", p->self);
                 delete p;
             },
             p);
@@ -157,8 +148,6 @@ public:
 void PeerConnectionObserver::OnTrack(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
             return;
@@ -185,7 +174,6 @@ void PeerConnectionObserver::OnTrack(
                     }
 
                     p->self->OnTrack(p->transceiver);
-                    STARFISH_LOG_DEBUG("</self=%p>", (void*)p->self);
                     delete p;
                 },
                 p);
@@ -197,19 +185,16 @@ void PeerConnectionObserver::OnTrack(
         m_peerConnection->getTransceiver(transceiver);
     if (!rtpTransceiver) {
         STARFISH_LOG_DEBUG("Transceiver is null");
-        STARFISH_LOG_DEBUG("</self=%p>", this);
         return;
     }
     RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
     if (!rtpReceiver) {
         STARFISH_LOG_DEBUG("Receiver is null");
-        STARFISH_LOG_DEBUG("</self=%p>", this);
         return;
     }
     MediaStreamTrack* track = rtpReceiver->track();
     if (!track) {
         STARFISH_LOG_DEBUG("MediaTrack is null");
-        STARFISH_LOG_DEBUG("</self=%p>", this);
         return;
     }
     GCVector<MediaStream*> rtpStreams;
@@ -229,8 +214,6 @@ void PeerConnectionObserver::OnTrack(
 void PeerConnectionObserver::OnDataChannel(
     libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
             return;
@@ -258,9 +241,6 @@ void PeerConnectionObserver::OnDataChannel(
                     }
 
                     p->self->OnDataChannel(p->channel);
-                    STARFISH_LOG_DEBUG(
-                        "</PeerConnectionObserver::OnDataChannel self=%p>",
-                        (void*)p->self);
                     delete p;
                 },
                 p);
@@ -284,12 +264,9 @@ void PeerConnectionObserver::OnDataChannel(
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
 void PeerConnectionObserver::OnRenegotiationNeeded()
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isDisposed() ||
             m_peerConnection->isClosed()) {
-            STARFISH_LOG_DEBUG("</self=%p pc=%p>", this, m_peerConnection);
             return;
         }
 
@@ -305,7 +282,6 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                     if (!self->m_peerConnection ||
                         self->m_peerConnection->isDisposed() ||
                         self->m_peerConnection->isClosed()) {
-                        STARFISH_LOG_DEBUG("<pc=%p>", self->m_peerConnection);
                         return;
                     }
                     self->OnRenegotiationNeeded();
@@ -320,26 +296,21 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
                             ->m_negotiationneeded.localName();
     Event* e = new Event(executionContext(), eventType);
     m_peerConnection->dispatchEventByUA(e);
-    STARFISH_LOG_DEBUG("</self=%p pc:%p>", this, m_peerConnection);
     return;
 }
 
 void PeerConnectionObserver::OnIceConnectionState(
     libwebrtc::RTCIceConnectionState newState)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (newState ==
             libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed ||
         newState == libwebrtc::RTCIceConnectionState::
                         RTCIceConnectionStateDisconnected) {
-        STARFISH_LOG_DEBUG("</self=%p>", this);
         return;
     }
 
     if (!isMainThread()) {
         if (!m_peerConnection || m_peerConnection->isClosed()) {
-            STARFISH_LOG_DEBUG("</self=%p>", this);
             return;
         }
 
@@ -360,13 +331,11 @@ void PeerConnectionObserver::OnIceConnectionState(
 
                     if (!p->self->m_peerConnection ||
                         p->self->m_peerConnection->isClosed()) {
-                        STARFISH_LOG_DEBUG("</self=%p>", (void*)p->self);
                         delete p;
                         return;
                     }
 
                     p->self->OnIceConnectionState(p->newState);
-                    STARFISH_LOG_DEBUG("</self=%p>", (void*)p->self);
                     delete p;
                 },
                 p);
@@ -384,8 +353,6 @@ void PeerConnectionObserver::OnIceConnectionState(
 void PeerConnectionObserver::OnIceGatheringState(
     libwebrtc::RTCIceGatheringState newState)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (newState ==
         libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete) {
         return;
@@ -418,7 +385,6 @@ void PeerConnectionObserver::OnIceGatheringState(
                     }
 
                     p->self->OnIceGatheringState(p->newState);
-                    STARFISH_LOG_DEBUG("</self = %p>", p->self);
                     delete p;
                 },
                 p);
@@ -436,8 +402,6 @@ void PeerConnectionObserver::OnIceGatheringState(
 void PeerConnectionObserver::OnIceCandidate(
     libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
-
     if (!m_peerConnection || m_peerConnection->isClosed()) {
         return;
     }
@@ -487,8 +451,6 @@ void PeerConnectionObserver::OnIceCandidate(
                 RTCPeerConnectionIceEvent* e = new RTCPeerConnectionIceEvent(
                     self->executionContext(), eventType, init);
                 self->m_peerConnection->dispatchEventByUA(e);
-
-                STARFISH_LOG_DEBUG("</self=%p>", p->self);
                 delete p;
             },
             p);
@@ -497,8 +459,6 @@ void PeerConnectionObserver::OnIceCandidate(
 void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
                                           const libwebrtc::string type)
 {
-    STARFISH_LOG_DEBUG("<%p>", this);
-
     if (!m_peerConnection) {
         return;
     }
@@ -536,7 +496,6 @@ void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
                     self->m_peerConnection->m_createOfferObserver->setPromise(
                         nullptr);
                     self->m_peerConnection->m_lastCreatedOffer = sdpString;
-                    self->m_peerConnection->syncTransceivers();
                 } else if (self->isCreateAnswer()) {
                     promise = self->m_peerConnection->m_createAnswerObserver
                                   ->promise();
@@ -553,14 +512,10 @@ void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
                 delete p;
             },
             p);
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void CreateOfferAnswerObserver::OnFailure(const char* error)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
     struct Params {
@@ -609,14 +564,10 @@ void CreateOfferAnswerObserver::OnFailure(const char* error)
                 delete p;
             },
             p);
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void SetLocalRemoteDescriptionObserver::OnSuccess()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (!isMainThread()) {
         m_peerConnection->executionContext()
             ->webBase()
@@ -650,13 +601,10 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
     } else {
         STARFISH_LOG_ERROR("Unknown promise type");
     }
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void SetLocalRemoteDescriptionObserver::OnFailure(const char* error)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     // This callback is called from another thread
     // The following lines must be executed in the main thread.
     struct Params {
@@ -707,8 +655,6 @@ void SetLocalRemoteDescriptionObserver::OnFailure(const char* error)
                 delete p;
             },
             p);
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 // https://w3c.github.io/webrtc-pc/#constructor
@@ -718,8 +664,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
     , m_executionContext(executionContext)
     , m_disposeLock(new Mutex())
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (!configuration.certificates().empty()) {
         // TODO
         STARFISH_UNIMPLEMENTED();
@@ -740,7 +684,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
         m_webRtcManager->deletePeerConnection(nullptr);
         m_backend = nullptr;
         STARFISH_LOG_ERROR("PeerConnection: failed");
-        STARFISH_LOG_DEBUG("</self=%p>", this);
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
                                "Invalid Configuration");
     }
@@ -753,8 +696,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
             ((RTCPeerConnection*)obj)->~RTCPeerConnection();
         },
         NULL, NULL, NULL);
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 bool RTCPeerConnection::initializePeerConnection()
@@ -778,41 +719,26 @@ bool RTCPeerConnection::initializePeerConnection(
         m_webRtcManager->peerConnectionFactory()->Create(config, constraints);
     m_backend->RegisterRTCPeerConnectionObserver(m_peerConnectionObserver);
 
-    m_createOfferObserver = libwebrtc::scoped_refptr<CreateOfferObserver>(
-        new CreateOfferObserver(this));
-    m_createAnswerObserver = libwebrtc::scoped_refptr<CreateAnswerObserver>(
-        new CreateAnswerObserver(this));
-    m_setLocalDescriptionObserver =
-        libwebrtc::scoped_refptr<SetLocalDescriptionObserver>(
-            new SetLocalDescriptionObserver(this));
-    m_setRemoteDescriptionObserver =
-        libwebrtc::scoped_refptr<SetRemoteDescriptionObserver>(
-            new SetRemoteDescriptionObserver(this));
+    m_createOfferObserver = new CreateOfferObserver(this);
+    m_createAnswerObserver = new CreateAnswerObserver(this);
+    m_setLocalDescriptionObserver = new SetLocalDescriptionObserver(this);
+    m_setRemoteDescriptionObserver = new SetRemoteDescriptionObserver(this);
 
     return m_backend != nullptr;
 }
 
 RTCPeerConnection::~RTCPeerConnection()
 {
-    STARFISH_LOG_DEBUG("<self=%p pc_obs=%p>", this, m_peerConnectionObserver);
     dispose();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void RTCPeerConnection::dispose()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (isDisposed()) {
         return;
     }
 
-    if (!m_webRtcManager->peerConnectionFactory()) {
-        STARFISH_LOG_DEBUG(
-            "    factory: %p",
-            (void*)m_webRtcManager->peerConnectionFactory().get());
-        m_backend.release();
-        STARFISH_LOG_DEBUG("</self=%p>", this);
+    if (!m_backend.get()) {
         return;
     }
 
@@ -828,7 +754,6 @@ void RTCPeerConnection::dispose()
 
     m_backend = nullptr;
     m_webRtcManager->deletePeerConnection(this);
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -844,8 +769,6 @@ ExecutionContext* RTCPeerConnection::executionContext() const
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createoffer
 Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     // 1-2
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
@@ -879,15 +802,12 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
         [this](const char* error) { m_createOfferObserver->OnFailure(error); },
         constraints);
 
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     return promise;
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-createanswer
 Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
         auto exception = new DOMException(executionContext(),
@@ -921,25 +841,23 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
             m_createAnswerObserver->OnFailure(error.c_str());
         },
         constraints);
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     return promise;
 }
 
 void RTCPeerConnection::syncTransceivers()
 {
-    GCUnorderedMap<libwebrtc::RTCRtpTransceiver*, RTCRtpTransceiver*>
-        curTransceivers;
+    GCUnorderedMap<std::string, RTCRtpTransceiver*> curTransceivers;
     for (auto transceiver : m_transceivers) {
-        curTransceivers.insert(
-            std::make_pair(transceiver->backend().get(), transceiver));
+        curTransceivers.insert(std::make_pair(
+            transceiver->backend()->receiver()->id().c_string(), transceiver));
     }
     m_transceivers.clear();
 
     std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>>
         backendTransceivers = m_backend->transceivers().std_vector();
     for (auto transceiver : backendTransceivers) {
-        auto itr = curTransceivers.find(transceiver.get());
+        auto itr =
+            curTransceivers.find(transceiver->receiver()->id().std_string());
         if (itr != curTransceivers.end()) {
             m_transceivers.push_back(itr->second);
         } else {
@@ -953,6 +871,7 @@ void RTCPeerConnection::syncTransceivers()
 RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backendTransceiver)
 {
+    syncTransceivers();
     for (auto transceiver : m_transceivers) {
         if (backendTransceiver->sender()->id().std_string() ==
                 transceiver->backend()->sender()->id().std_string() &&
@@ -962,6 +881,21 @@ RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
         }
     }
     return nullptr;
+}
+
+RTCRtpSender* RTCPeerConnection::getSender(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> backendSender)
+{
+    RTCRtpSender* result = nullptr;
+    syncTransceivers();
+    for (auto transceiver : m_transceivers) {
+        if (transceiver->sender()->backend()->id().std_string() ==
+            backendSender->id().std_string()) {
+            result = transceiver->sender();
+            break;
+        }
+    }
+    return result;
 }
 
 ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
@@ -994,8 +928,6 @@ ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
 Promise* RTCPeerConnection::setLocalDescription(
     RTCSessionDescriptionInit& description)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
         promise->fulfill(scriptUndefined());
@@ -1063,7 +995,6 @@ Promise* RTCPeerConnection::setLocalDescription(
         sdpString = m_lastCreatedAnswer;
     }
 
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     // 4.6
     return setRtcSessionDescription({ type, sdpString }, promise, false);
 }
@@ -1072,8 +1003,6 @@ Promise* RTCPeerConnection::setLocalDescription(
 Promise* RTCPeerConnection::setRtcSessionDescription(
     RTCSessionDescriptionInit description, Promise* promise, bool isRemote)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     // 3.1.2
     if (isRemote) {
         if ((description.m_type == RTCSdpType::Answer)) {
@@ -1146,7 +1075,6 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
                 m_setLocalDescriptionObserver->OnFailure(error);
             });
     }
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     return promise;
 }
 
@@ -1188,8 +1116,6 @@ RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
 Promise* RTCPeerConnection::setRemoteDescription(
     RTCSessionDescriptionInit& description)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
         promise->fulfill(scriptUndefined());
@@ -1253,7 +1179,6 @@ Promise* RTCPeerConnection::setRemoteDescription(
     //     return promise;
     // }
 
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     return setRtcSessionDescription({ type, sdpString }, promise, true);
 }
 
@@ -1604,18 +1529,14 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration,
 
 void RTCPeerConnection::close()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
     if (isClosed()) {
         return;
     }
 
     m_closed = true;
-    STARFISH_LOG_DEBUG("<m_backend->close()>");
     if (m_backend) {
         m_backend->Close();
     }
-    STARFISH_LOG_DEBUG("</m_backend->close()>");
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 DEFINE_EVENT_LISTENER(RTCPeerConnection, negotiationneeded);
@@ -1758,8 +1679,6 @@ GCVector<RTCRtpTransceiver*> RTCPeerConnection::getTransceivers()
 RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                           GCVector<MediaStream*>& streams)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-
     // 5
     if (isClosed()) {
         STARFISH_LOG_ERROR("InvalidStateError");
@@ -1835,11 +1754,6 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
         for (auto id : streamIds) {
             stream_ids.push_back(id.c_str());
         }
-        // std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>>
-        // encodings; libwebrtc::RTCRtpTransceiverDirection dir =
-        // libwebrtc::RTCRtpTransceiverDirection::kInactive;
-        // libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit> init =
-        // libwebrtc::RTCRtpTransceiverInit::Create(dir, stream_ids, encodings);
 
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> r;
         if (track->isAudioStreamTrack()) {
@@ -1857,21 +1771,10 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                    "InvalidAccessErr");
         }
 
-        syncTransceivers();
-
-        for (auto transceiver : m_transceivers) {
-            if (transceiver->sender()->backend()->id().std_string() ==
-                r->id().std_string()) {
-                senderToReturn = transceiver->sender();
-                senderToReturn->setTrack(track);
-                break;
-            }
-        }
-
+        senderToReturn = getSender(r);
+        senderToReturn->setTrack(track);
         STARFISH_ASSERT(senderToReturn);
     }
-
-    STARFISH_LOG_DEBUG("</self=%p>", this);
     return senderToReturn;
 }
 
@@ -1973,7 +1876,6 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
                                "addTransceiver: internal error");
     }
 
-    syncTransceivers();
     RTCRtpTransceiver* transceiver = getTransceiver(r);
 
     if (track) {

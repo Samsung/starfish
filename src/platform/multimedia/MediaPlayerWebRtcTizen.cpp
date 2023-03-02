@@ -77,23 +77,6 @@ void MediaPlayerWebRtcTizen::destroy()
     STARFISH_RELEASE_ASSERT(isMainThread());
     PLAYER_LOGI("MediaPlayerWebRtcTizen::%s", __func__);
 
-    if (m_player) {
-        player_state_e state;
-        player_get_state(m_player, &state);
-        if (state == PLAYER_STATE_PLAYING) {
-            player_stop(m_player);
-        }
-        checkStatusPlayer(player_unprepare(m_player), "playerUnprepare");
-        player_unset_media_stream_buffer_status_cb(m_player,
-                                                   PLAYER_STREAM_TYPE_AUDIO);
-        player_unset_buffering_cb(m_player);
-        checkStatusPlayer(player_destroy(m_player), "playerDestroy");
-        m_player = nullptr;
-
-        checkStatusMediaFormat(media_format_unref(m_audioFormat),
-                               "mediaFormatUnref");
-    }
-
     m_alive = false;
     pause();
     if (m_mediaProvider) {
@@ -130,10 +113,6 @@ void MediaPlayerWebRtcTizen::play()
     GCVector<MediaStreamTrack*> audioTracks = m_mediaProvider->getAudioTracks();
     if (!audioTracks.empty()) {
         STARFISH_ASSERT(m_mediaProvider);
-
-        STARFISH_LOG_INFO("%s: <playerStart>", __func__);
-        checkStatusPlayer(player_start(m_player), "playerStart");
-        STARFISH_LOG_INFO("%s: </playerStart>", __func__);
         m_mediaProvider->playAudioTrack(audioTracks[0]);
     }
 }
@@ -148,21 +127,6 @@ void MediaPlayerWebRtcTizen::pause()
     }
 }
 
-static void bufferingCb(int percent, void* data)
-{
-    STARFISH_LOG_INFO("buffering: %d", percent);
-}
-
-static void mediaStreamBufferStatusCb(
-    player_media_stream_buffer_status_e status, void* data)
-{
-    if (status == PLAYER_MEDIA_STREAM_BUFFER_UNDERRUN) {
-        STARFISH_LOG_WARN("MediaStreamBufferUnderrun");
-    } else if (status == PLAYER_MEDIA_STREAM_BUFFER_OVERFLOW) {
-        STARFISH_LOG_WARN("MediaStreamBufferOverflow");
-    }
-}
-
 void MediaPlayerWebRtcTizen::prepare(MediaProvider* mediaProvider)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
@@ -171,45 +135,6 @@ void MediaPlayerWebRtcTizen::prepare(MediaProvider* mediaProvider)
     STARFISH_ASSERT(mediaProvider);
     m_mediaProvider = mediaProvider;
     m_mediaProvider->setMediaPlayer(this);
-
-    if (!mediaProvider->getAudioTracks().empty()) {
-        if (m_player) {
-            player_state_e state;
-            player_get_state(m_player, &state);
-            if (state == PLAYER_STATE_PLAYING) {
-                player_stop(m_player);
-            }
-            checkStatusPlayer(player_unprepare(m_player), "playerUnprepare");
-            checkStatusPlayer(player_destroy(m_player), "playerDestroy");
-            m_player = nullptr;
-        }
-
-        checkStatusPlayer(player_create(&m_player), "playerCreate");
-
-        checkStatusMediaFormat(media_format_create(&m_audioFormat),
-                               "mediaFormatCreate");
-        checkStatusMediaFormat(
-            media_format_set_audio_mime(m_audioFormat, MEDIA_FORMAT_PCM_S16LE),
-            "");
-        checkStatusMediaFormat(
-            media_format_set_audio_channel(m_audioFormat, AUDIO_CHANNELS), "");
-        checkStatusMediaFormat(
-            media_format_set_audio_samplerate(m_audioFormat, AUDIO_SAMPLE_RATE),
-            "");
-        checkStatusPlayer(player_set_media_stream_info(m_player,
-                                                       PLAYER_STREAM_TYPE_AUDIO,
-                                                       m_audioFormat),
-                          "");
-        checkStatusPlayer(
-            player_set_buffering_cb(m_player, bufferingCb, nullptr),
-            "setBufferingCb");
-        checkStatusPlayer(player_set_media_stream_buffer_status_cb(
-                              m_player, PLAYER_STREAM_TYPE_AUDIO,
-                              mediaStreamBufferStatusCb, nullptr),
-                          "setMediaStreamBufferStatusCb");
-
-        checkStatusPlayer(player_prepare(m_player), "playerPrepare");
-    }
 
     MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(
@@ -223,71 +148,6 @@ void MediaPlayerWebRtcTizen::prepare(MediaProvider* mediaProvider)
                 HTMLMediaElement::HAVE_ENOUGH_DATA);
         },
         this);
-}
-
-bool MediaPlayerWebRtcTizen::checkStatusPlayer(int err, std::string msg)
-{
-    if (err == PLAYER_ERROR_NONE) {
-        return true;
-    }
-
-    if (err == PLAYER_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid params: %s", msg.data());
-    } else if (err == PLAYER_ERROR_INVALID_STATE) {
-        STARFISH_LOG_ERROR("Invalid state: %s", msg.data());
-    } else if (err == PLAYER_ERROR_NOT_SUPPORTED_FILE) {
-        STARFISH_LOG_ERROR("Not supported file: %s", msg.data());
-    } else if (err == PLAYER_ERROR_BUFFER_SPACE) {
-        STARFISH_LOG_ERROR("Buffer space: %s", msg.data());
-    } else if (err == PLAYER_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
-    } else if (err == PLAYER_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
-    } else if (err == PLAYER_ERROR_RESOURCE_LIMIT) {
-        STARFISH_LOG_ERROR("Resource limited: %s", msg.data());
-    } else {
-        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
-    }
-
-    return false;
-}
-
-bool MediaPlayerWebRtcTizen::checkStatusMediaFormat(int err, std::string msg)
-{
-    if (err == MEDIA_FORMAT_ERROR_NONE) {
-        return true;
-    }
-
-    if (err == MEDIA_FORMAT_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid Params: %s", msg.data());
-    } else if (err == MEDIA_FORMAT_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    } else if (err == MEDIA_FORMAT_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
-    } else {
-        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
-    }
-
-    return false;
-}
-bool MediaPlayerWebRtcTizen::checkStatusMediaPacket(int err, std::string msg)
-{
-    if (err == MEDIA_PACKET_ERROR_NONE) {
-        return true;
-    }
-
-    if (err == MEDIA_PACKET_ERROR_INVALID_PARAMETER) {
-        STARFISH_LOG_ERROR("Invalid Params: %s", msg.data());
-    } else if (err == MEDIA_PACKET_ERROR_OUT_OF_MEMORY) {
-        STARFISH_LOG_ERROR("Out of memory: %s", msg.data());
-    } else if (err == MEDIA_PACKET_ERROR_INVALID_OPERATION) {
-        STARFISH_LOG_ERROR("Invalid operation: %s", msg.data());
-    } else {
-        STARFISH_LOG_ERROR("Unknown error: %s", msg.data());
-    }
-
-    return false;
 }
 
 void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
@@ -358,53 +218,6 @@ void MediaPlayerWebRtcTizen::onFrame(MediaStream::VideoFrameObserver* observer)
 
 void MediaPlayerWebRtcTizen::onData(MediaStream::AudioTrackObserver* observer)
 {
-    // TODO : Disable this part now. It will be replaced by another
-    // implementation soon.
-    /*
-    if (!isMainThread()) {
-        struct Params {
-            MediaPlayerWebRtcTizen* self;
-            MediaStream::AudioTrackObserver* observer;
-        };
-
-        Params* p = new Params{ this, observer };
-
-        container()
-            ->webView()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                container()->window(),
-                [](size_t, void* data) {
-                    if (data) {
-                        Params* p = (Params*)data;
-                        if (p->self && p->observer) {
-                            p->self->onData(p->observer);
-                        }
-                        delete p;
-                    }
-                },
-                p);
-        return;
-    }
-
-    if (observer && observer->audioData()) {
-        media_packet_h mediaPacket;
-
-        {
-            Locker<Mutex> lock(*observer->audioLock());
-            checkStatusMediaPacket(media_packet_create_from_external_memory(
-                                       m_audioFormat, observer->audioData(),
-                                       observer->numberOfFrames(), nullptr,
-                                       nullptr, &mediaPacket),
-                                   "onData::createFromExternalMemory");
-        }
-
-        checkStatusPlayer(player_push_media_stream(m_player, mediaPacket),
-                          "onData::pushMediaStream");
-        checkStatusMediaPacket(media_packet_destroy(mediaPacket),
-                               "onData::destroy");
-    }
-    */
 }
 
 } // namespace Starfish

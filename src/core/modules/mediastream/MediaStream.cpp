@@ -116,10 +116,7 @@ void MediaStream::AudioTrackObserver::stop()
     //     m_audioTrack->RemoveSink(this);
     // }
 
-    if (m_mediaStream &&
-        !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
-        m_audioTrack.release();
-    } else {
+    if (m_mediaStream && m_audioTrack.get()) {
         m_audioTrack = nullptr;
     }
 }
@@ -178,15 +175,12 @@ void MediaStream::VideoFrameObserver::OnFrame(
 
 void MediaStream::VideoFrameObserver::stop()
 {
-    if (m_videoTrack) {
+    if (m_videoTrack.get()) {
         m_videoTrack->RemoveRenderer(this);
         m_image.reset();
     }
 
-    if (m_mediaStream &&
-        !m_mediaStream->m_webRtcManager->peerConnectionFactory()) {
-        m_videoTrack.release();
-    } else {
+    if (m_mediaStream && m_videoTrack.get()) {
         m_videoTrack = nullptr;
     }
 }
@@ -239,10 +233,22 @@ MediaStream::MediaStream(
     , m_executionContext(executionContext)
     , m_backend(backend)
 {
-    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
+    if (backend.get()) {
+        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack>>
+            backendAudioTracks = m_backend->audio_tracks().std_vector();
+        for (auto audioTrack : backendAudioTracks) {
+            AudioStreamTrack* newAudioTrack =
+                new AudioStreamTrack(this->executionContext(), audioTrack);
+            addTrack(newAudioTrack);
+        }
 
-    if (backend) {
-        syncTracks();
+        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack>>
+            backendVideoTracks = m_backend->video_tracks().std_vector();
+        for (auto videoTrack : backendVideoTracks) {
+            VideoStreamTrack* newVideoTrack =
+                new VideoStreamTrack(this->executionContext(), videoTrack);
+            addTrack(newVideoTrack);
+        }
     }
 
     m_webRtcManager = this->executionContext()
@@ -254,8 +260,6 @@ MediaStream::MediaStream(
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
         NULL, NULL, NULL);
-
-    STARFISH_LOG_INFO("</MediaStream self=%p>", (void*)this);
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,
@@ -272,31 +276,22 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
     dispose();
-    STARFISH_LOG_INFO("</MediaStream self=%p>", this);
 }
 
 void MediaStream::dispose()
 {
-    STARFISH_LOG_INFO("<MediaStream self=%p>", this);
-
     stopAudioTrack();
     stopVideoTrack();
+
     if (m_audioTrackObserver) {
         m_audioTrackObserver->m_mediaStream = nullptr;
         m_audioTrackObserver = nullptr;
     }
+
     if (m_videoFrameObserver) {
         m_videoFrameObserver->m_mediaStream = nullptr;
         m_videoFrameObserver = nullptr;
-    }
-    m_mediaPlayer = nullptr;
-
-    if (m_webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
     }
 
     for (auto audioTrack : m_audioTracks) {
@@ -308,7 +303,9 @@ void MediaStream::dispose()
         videoTrack->dispose();
     }
     m_videoTracks.clear();
-    STARFISH_LOG_INFO("</MediaStream self=%p>", this);
+
+    m_mediaPlayer = nullptr;
+    m_backend = nullptr;
 }
 
 ScriptBindingInstance* MediaStream::scriptBindingInstance()
@@ -450,61 +447,6 @@ void MediaStream::stopVideoTrack()
 {
     if (m_videoFrameObserver) {
         m_videoFrameObserver->stop();
-    }
-}
-
-void MediaStream::syncTracks()
-{
-    {
-        GCUnorderedMap<libwebrtc::RTCAudioTrack*, AudioStreamTrack*>
-            curAudioTracks;
-        for (auto audioTrack : m_audioTracks) {
-            curAudioTracks.insert(
-                std::make_pair(audioTrack->backend().get(), audioTrack));
-        }
-        for (auto track : m_audioTracks) {
-            track->dispose();
-        }
-        m_audioTracks.clear();
-
-        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack>>
-            backendAudioTracks = m_backend->audio_tracks().std_vector();
-        for (auto audioTrack : backendAudioTracks) {
-            auto itr = curAudioTracks.find(audioTrack.get());
-            if (itr != curAudioTracks.end()) {
-                m_audioTracks.insert(itr->second);
-            } else {
-                AudioStreamTrack* newAudioTrack =
-                    new AudioStreamTrack(executionContext(), audioTrack);
-                addTrack(newAudioTrack);
-            }
-        }
-    }
-
-    {
-        GCUnorderedMap<libwebrtc::RTCVideoTrack*, VideoStreamTrack*>
-            curVideoTracks;
-        for (auto videoTrack : m_videoTracks) {
-            curVideoTracks.insert(
-                std::make_pair(videoTrack->backend().get(), videoTrack));
-        }
-        for (auto track : m_videoTracks) {
-            track->dispose();
-        }
-        m_videoTracks.clear();
-
-        std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack>>
-            backendVideoTracks = m_backend->video_tracks().std_vector();
-        for (auto videoTrack : backendVideoTracks) {
-            auto itr = curVideoTracks.find(videoTrack.get());
-            if (itr != curVideoTracks.end()) {
-                m_videoTracks.insert(itr->second);
-            } else {
-                VideoStreamTrack* newVideoTrack =
-                    new VideoStreamTrack(executionContext(), videoTrack);
-                addTrack(newVideoTrack);
-            }
-        }
     }
 }
 } // namespace Starfish

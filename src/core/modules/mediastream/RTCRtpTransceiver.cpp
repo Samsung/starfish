@@ -82,26 +82,15 @@ RTCRtpTransceiver::~RTCRtpTransceiver()
 
 void RTCRtpTransceiver::dispose()
 {
-    WebRtcManager* webRtcManager = this->m_executionContext->document()
-                                       ->window()
-                                       ->navigator()
-                                       ->webRtcManager();
     if (m_sender) {
         m_sender->dispose();
     }
-    m_sender = nullptr;
-
     if (m_receiver) {
         m_receiver->dispose();
     }
+    m_sender = nullptr;
     m_receiver = nullptr;
-
-    if (webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
-    }
-
+    m_backend = nullptr;
     m_peerConnection = nullptr;
 }
 
@@ -121,21 +110,19 @@ String* RTCRtpTransceiver::mid()
 
 RTCRtpSender* RTCRtpTransceiver::sender()
 {
-    if (m_sender) {
-        return m_sender;
+    if (!m_sender) {
+        m_sender =
+            new RTCRtpSender(m_executionContext, this, m_backend->sender());
     }
-
-    m_sender = new RTCRtpSender(m_executionContext, this, m_backend->sender());
     return m_sender;
 }
 
 RTCRtpReceiver* RTCRtpTransceiver::receiver()
 {
-    if (m_receiver) {
-        return m_receiver;
+    if (!m_receiver) {
+        m_receiver =
+            new RTCRtpReceiver(m_executionContext, this, m_backend->receiver());
     }
-    m_receiver =
-        new RTCRtpReceiver(m_executionContext, this, m_backend->receiver());
     return m_receiver;
 }
 

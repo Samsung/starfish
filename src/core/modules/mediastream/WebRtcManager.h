@@ -66,7 +66,6 @@ public:
     }
 
 private:
-    void initPeerConnectionFactory();
     void deletePeerConnectionFactory(bool force = false);
 
     GCUnorderedSet<RTCPeerConnection*> m_peerConnections;

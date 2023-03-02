@@ -57,19 +57,11 @@ RTCRtpReceiver::~RTCRtpReceiver()
 
 void RTCRtpReceiver::dispose()
 {
-    WebRtcManager* webRtcManager = this->m_executionContext->document()
-                                       ->window()
-                                       ->navigator()
-                                       ->webRtcManager();
-    if (webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
-    }
     for (auto stream : m_streams) {
         stream->dispose();
     }
     m_streams.clear();
+    m_backend = nullptr;
 }
 
 ScriptBindingInstance* RTCRtpReceiver::scriptBindingInstance()
