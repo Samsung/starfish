@@ -294,12 +294,18 @@ void MediaStream::dispose()
         m_videoFrameObserver = nullptr;
     }
 
-    for (auto audioTrack : m_audioTracks) {
+    GCVector<AudioStreamTrack*> audioTracks;
+    audioTracks.insert(audioTracks.end(), m_audioTracks.begin(),
+                       m_audioTracks.end());
+    for (auto* audioTrack : audioTracks) {
         audioTrack->dispose();
     }
     m_audioTracks.clear();
 
-    for (auto videoTrack : m_videoTracks) {
+    GCVector<VideoStreamTrack*> videoTracks;
+    videoTracks.insert(videoTracks.end(), m_videoTracks.begin(),
+                       m_videoTracks.end());
+    for (auto videoTrack : videoTracks) {
         videoTrack->dispose();
     }
     m_videoTracks.clear();
