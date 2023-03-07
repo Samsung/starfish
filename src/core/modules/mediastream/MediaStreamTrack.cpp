@@ -116,21 +116,19 @@ AudioStreamTrack::AudioStreamTrack(
 
 AudioStreamTrack::~AudioStreamTrack()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
     dispose();
-    STARFISH_LOG_DEBUG("<self=%p>", this);
 }
 
 void AudioStreamTrack::dispose()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-    if (m_webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
+    for (auto* mediaStream : m_attachedMediaStreams) {
+        mediaStream->removeAudioTrack(this);
     }
     m_attachedMediaStreams.clear();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
+
+    if (m_backend.get()) {
+        m_backend = nullptr;
+    }
 }
 
 VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
@@ -154,21 +152,19 @@ VideoStreamTrack::VideoStreamTrack(
 
 VideoStreamTrack::~VideoStreamTrack()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
     dispose();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void VideoStreamTrack::dispose()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-    if (m_webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
+    for (auto* mediaStream : m_attachedMediaStreams) {
+        mediaStream->removeVideoTrack(this);
     }
     m_attachedMediaStreams.clear();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
+
+    if (m_backend.get()) {
+        m_backend = nullptr;
+    }
 }
 
 void VideoStreamTrack::play()
@@ -253,28 +249,23 @@ WebCamStreamTrack::WebCamStreamTrack(
     libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> backend)
     : VideoStreamTrack(executionContext, backend)
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 WebCamStreamTrack::~WebCamStreamTrack()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
     dispose();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
 }
 
 void WebCamStreamTrack::dispose()
 {
-    STARFISH_LOG_DEBUG("<self=%p>", this);
-    if (m_webRtcManager->peerConnectionFactory()) {
-        m_backend = nullptr;
-    } else {
-        m_backend.release();
+    for (auto* mediaStream : m_attachedMediaStreams) {
+        mediaStream->removeVideoTrack(this);
     }
-    // m_source = nullptr;
     m_attachedMediaStreams.clear();
-    STARFISH_LOG_DEBUG("</self=%p>", this);
+
+    if (m_backend.get()) {
+        m_backend = nullptr;
+    }
 }
 
 } // namespace Starfish
