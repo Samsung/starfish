@@ -1837,6 +1837,7 @@ void RTCPeerConnection::removeTrack(RTCRtpSender* sender)
     }
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtransceiver
 RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     DOMStringOrMediaStreamTrack trackOrKind, RTCRtpTransceiverInit init)
 {
@@ -1848,6 +1849,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
 
     String* kind = nullptr;
     MediaStreamTrack* track = nullptr;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> r;
     if (trackOrKind.isDOMStringValue()) {
         kind = trackOrKind.getDOMStringValue();
         if (!kind->equals("audio") && !kind->equals("video")) {
@@ -1855,19 +1857,25 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
                                    DOMException::SCRIPT_TYPE_ERR,
                                    "ScriptTypeError");
         }
+        if (kind->equals("audio")) {
+            r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::AUDIO,
+                                          init.toRtpTransceiverInit());
+
+        } else if (kind->equals("video")) {
+            r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::VIDEO,
+                                          init.toRtpTransceiverInit());
+        }
     } else if (trackOrKind.isMediaStreamTrackValue()) {
         track = trackOrKind.getMediaStreamTrackValue();
-    }
-
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> r;
-    if ((kind && kind->equals("audio")) ||
-        (track && track->kind() == MediaStreamTrack::Kind::Audio)) {
-        r = m_backend->AddTransceiver(track->asAudioStreamTrack()->backend(),
-                                      init.toRtpTransceiverInit());
-    } else if ((kind && kind->equals("video")) ||
-               (track && track->kind() == MediaStreamTrack::Kind::Video)) {
-        r = m_backend->AddTransceiver(track->asVideoStreamTrack()->backend(),
-                                      init.toRtpTransceiverInit());
+        if (track && track->kind() == MediaStreamTrack::Kind::Audio) {
+            r = m_backend->AddTransceiver(
+                track->asAudioStreamTrack()->backend(),
+                init.toRtpTransceiverInit());
+        } else if (track && track->kind() == MediaStreamTrack::Kind::Video) {
+            r = m_backend->AddTransceiver(
+                track->asVideoStreamTrack()->backend(),
+                init.toRtpTransceiverInit());
+        }
     }
 
     if (!r.get()) {
