@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 #include <EscargotPublic.h>
 #include "core/modules/networking/WebSocket.h"
 #include "core/dom/ExecutionContext.h"
@@ -200,6 +201,7 @@ SocketLWS::SocketLWS(WebSocket* socket)
     const char* prot;
     m_url = parent()->url()->toUTF8NonGCString();
     m_protocol = parent()->protocol()->toUTF8NonGCString();
+    m_origin = parent()->urlObject()->origin()->toUTF8NonGCString();
     char* param = (char*)m_url.c_str();
     if (lws_parse_uri(param, &prot, &m_lwsClientConnectInfo.address,
                       &m_lwsClientConnectInfo.port,
@@ -248,17 +250,21 @@ SocketLWS::SocketLWS(WebSocket* socket)
         m_lwsContextCreationInfo->client_ssl_ca_filepath =
             SocketLWSDefaultCertPath;
     }
+    if (webBase->getWebSecurityMode() == LWE::WebSecurityMode::Disable) {
+        useSSL = useSSL | LCCSCF_ALLOW_SELFSIGNED | LCCSCF_ALLOW_INSECURE |
+                 LCCSCF_PIPELINE;
+    }
 
     m_lwsContext = lws_create_context(m_lwsContextCreationInfo);
 
     m_lwsClientConnectInfo.context = m_lwsContext;
     m_lwsClientConnectInfo.host = m_lwsClientConnectInfo.address;
+    m_lwsClientConnectInfo.origin = m_origin.c_str();
 
-    // TODO Should handle origin property
-    // m_lwsClientConnectInfo.origin = m_lwsClientConnectInfo.address;
     if (m_protocol.size() != 0) {
         m_lwsClientConnectInfo.protocol = m_protocol.data();
     }
+
     m_lwsClientConnectInfo.ssl_connection = useSSL;
     m_lwsClientConnectInfo.userdata = this;
     m_lwsClientConnectInfo.pwsi = &m_lwsClient;
@@ -270,15 +276,16 @@ SocketLWS::SocketLWS(WebSocket* socket)
     parent()->executionContext()->webBase()->starfish()->addPointerInRootSet(
         this);
 
-    STARFISH_LOG_ERROR("%p SocketLWS::SocketLWS called", this);
+    STARFISH_LOG_INFO("%p SocketLWS::SocketLWS called", this);
 }
+
 SocketLWS::~SocketLWS()
 {
     waitForWorkerEnd();
     delete[] m_lwsProtocols;
     delete m_lwsContextCreationInfo;
 
-    STARFISH_LOG_ERROR("%p SocketLWS::~SocketLWS called", this);
+    STARFISH_LOG_INFO("%p SocketLWS::~SocketLWS called", this);
 }
 
 void SocketLWS::deref()

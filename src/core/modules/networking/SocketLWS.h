@@ -141,9 +141,10 @@ private:
     IThread* m_thread{ nullptr };
     LWSRunnable* m_runnable{ nullptr };
     WebSocket* m_parent;
-    UTF8StringDataNonGCStd m_url;
-    UTF8StringDataNonGCStd m_urlPath;
-    UTF8StringDataNonGCStd m_protocol;
+    std::string m_url;
+    std::string m_urlPath;
+    std::string m_protocol;
+    std::string m_origin;
 
     lws_client_connect_info m_lwsClientConnectInfo;
     lws_context* m_lwsContext;

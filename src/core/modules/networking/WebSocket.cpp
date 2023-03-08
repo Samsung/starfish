@@ -198,6 +198,11 @@ String* WebSocket::url()
     return m_url->serialize();
 }
 
+ResourceURL* WebSocket::urlObject()
+{
+    return m_url;
+}
+
 uint64_t WebSocket::bufferedAmount()
 {
     if (m_socketLWS) {
