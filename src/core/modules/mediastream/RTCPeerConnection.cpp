@@ -1003,15 +1003,16 @@ Promise* RTCPeerConnection::setLocalDescription(
 Promise* RTCPeerConnection::setRtcSessionDescription(
     RTCSessionDescriptionInit description, Promise* promise, bool isRemote)
 {
+    libwebrtc::RTCSignalingState signalingState = m_backend->signaling_state();
+
     // 3.1.2
     if (isRemote) {
         if ((description.m_type == RTCSdpType::Answer)) {
-            if (!((m_backend->signaling_state() ==
+            if (!((signalingState == libwebrtc::RTCSignalingState::
+                                         RTCSignalingStateHaveLocalOffer) ||
+                  (signalingState ==
                    libwebrtc::RTCSignalingState::
-                       RTCSignalingStateHaveLocalOffer) ||
-                  (m_backend->signaling_state() ==
-                   libwebrtc::RTCSignalingState::
-                       RTCSignalingStateHaveRemoteOffer))) {
+                       RTCSignalingStateHaveRemotePrAnswer))) {
                 auto exception = new DOMException(
                     executionContext(), DOMException::INVALID_STATE_ERR,
                     "InvalidStateError");
@@ -1022,12 +1023,10 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
     } else {
         if ((description.m_type == RTCSdpType::Answer) ||
             (description.m_type == RTCSdpType::Pranswer)) {
-            if (!((m_backend->signaling_state() ==
-                   libwebrtc::RTCSignalingState::
-                       RTCSignalingStateHaveRemoteOffer) ||
-                  (m_backend->signaling_state() ==
-                   libwebrtc::RTCSignalingState::
-                       RTCSignalingStateHaveRemotePrAnswer))) {
+            if (!((signalingState == libwebrtc::RTCSignalingState::
+                                         RTCSignalingStateHaveRemoteOffer) ||
+                  (signalingState == libwebrtc::RTCSignalingState::
+                                         RTCSignalingStateHaveLocalPrAnswer))) {
                 auto exception = new DOMException(
                     executionContext(), DOMException::INVALID_STATE_ERR,
                     "InvalidStateError");
@@ -1082,19 +1081,19 @@ RTCSessionDescription* RTCPeerConnection::localDescription()
 {
     libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
     libwebrtc::SdpParseError error;
-    char* sdp_ptr = nullptr;
-    char* type_ptr = nullptr;
+    std::string sdpString;
+    std::string typeString;
 
     m_backend->GetLocalDescription(
-        [&sdp_ptr, &type_ptr](const char* sdp, const char* type) {
-            sdp_ptr = const_cast<char*>(sdp);
-            type_ptr = const_cast<char*>(type);
+        [&sdpString, &typeString](const char* sdp, const char* type) {
+            sdpString = std::string(sdp);
+            typeString = std::string(type);
         },
         [](const std::string& error) {});
 
-    if (sdp_ptr && type_ptr) {
-        description =
-            libwebrtc::RTCSessionDescription::Create(type_ptr, sdp_ptr, &error);
+    if (sdpString.length() && typeString.length()) {
+        description = libwebrtc::RTCSessionDescription::Create(
+            typeString, sdpString, &error);
         return new RTCSessionDescription(executionContext(), description);
     }
     return nullptr;
@@ -1186,19 +1185,19 @@ RTCSessionDescription* RTCPeerConnection::remoteDescription()
 {
     libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
     libwebrtc::SdpParseError error;
-    char* sdp_ptr = nullptr;
-    char* type_ptr = nullptr;
+    std::string sdpString;
+    std::string typeString;
 
     m_backend->GetRemoteDescription(
-        [&sdp_ptr, &type_ptr](const char* sdp, const char* type) {
-            sdp_ptr = const_cast<char*>(sdp);
-            type_ptr = const_cast<char*>(type);
+        [&sdpString, &typeString](const char* sdp, const char* type) {
+            sdpString = std::string(sdp);
+            typeString = std::string(type);
         },
         [](const std::string& error) {});
 
-    if (sdp_ptr && type_ptr) {
-        description =
-            libwebrtc::RTCSessionDescription::Create(type_ptr, sdp_ptr, &error);
+    if (sdpString.length() && typeString.length()) {
+        description = libwebrtc::RTCSessionDescription::Create(
+            typeString, sdpString, &error);
         return new RTCSessionDescription(executionContext(), description);
     }
     return nullptr;
@@ -1298,8 +1297,10 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
 
 String* RTCPeerConnection::signalingState()
 {
+    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
+    // closing it. Remove this block when the bug is resolved.
     if (isClosed()) {
-        return String::emptyString;
+        return String::createASCIIString("closed");
     }
 
     switch (m_backend->signaling_state()) {
@@ -1336,6 +1337,11 @@ String* RTCPeerConnection::iceGatheringState()
 
 String* RTCPeerConnection::iceConnectionState()
 {
+    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
+    // closing it. Remove this block when the bug is resolved.
+    if (isClosed()) {
+        return String::createASCIIString("closed");
+    }
     switch (m_backend->ice_connection_state()) {
     case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed:
         return String::createASCIIString("closed");
@@ -1358,6 +1364,11 @@ String* RTCPeerConnection::iceConnectionState()
 
 String* RTCPeerConnection::connectionState()
 {
+    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
+    // closing it. Remove this block when the bug is resolved.
+    if (isClosed()) {
+        return String::createASCIIString("closed");
+    }
     switch (m_backend->peer_connection_state()) {
     case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateClosed:
         return String::createASCIIString("closed");
