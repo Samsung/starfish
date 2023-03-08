@@ -56,6 +56,7 @@ public:
     WebSocket(ExecutionContext* executionContext, String* url,
               String* protocols);
     String* url();
+    ResourceURL* urlObject();
 
     // ready state
     uint16_t readyState()

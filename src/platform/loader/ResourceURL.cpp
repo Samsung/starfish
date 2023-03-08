@@ -895,6 +895,12 @@ String* ResourceURL::origin()
         } else {
             return String::createASCIIString("null");
         }
+    } else if (m_protocol >= WS_PROTOCOL && m_protocol <= WSS_PROTOCOL) {
+        if (!hostname()->isEmpty()) {
+            return host();
+        } else {
+            return String::createASCIIString("null");
+        }
     } else if (m_protocol == UNKNOWN) {
         if (!protocol()->isEmpty()) {
             return protocol()->concat("//");
