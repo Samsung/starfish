@@ -66,18 +66,6 @@ PeerConnectionObserver::PeerConnectionObserver(
 {
     m_webRtcManager =
         executionContext()->document()->window()->navigator()->webRtcManager();
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((PeerConnectionObserver*)obj)->~PeerConnectionObserver();
-        },
-        NULL, NULL, NULL);
-}
-
-PeerConnectionObserver::~PeerConnectionObserver()
-{
-    m_peerConnection = nullptr;
 }
 
 void PeerConnectionObserver::OnSignalingState(

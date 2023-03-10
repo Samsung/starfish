@@ -31,10 +31,6 @@ RTCCertificate::RTCCertificate(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) { ((RTCCertificate*)obj)->~RTCCertificate(); },
-        NULL, NULL, NULL);
 }
 
 ScriptBindingInstance* RTCCertificate::scriptBindingInstance()

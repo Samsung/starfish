@@ -32,12 +32,6 @@ RTCSctpTransport::RTCSctpTransport(ExecutionContext* executionContext)
     : EventTarget()
     , m_executionContext(executionContext)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((RTCSctpTransport*)obj)->~RTCSctpTransport();
-        },
-        NULL, NULL, NULL);
 }
 
 // RTCSctpTransport::RTCSctpTransport(

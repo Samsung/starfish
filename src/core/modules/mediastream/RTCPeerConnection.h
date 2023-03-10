@@ -128,10 +128,7 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 class PeerConnectionObserver : public gc,
                                public libwebrtc::RTCPeerConnectionObserver {
 public:
-    const std::string m_stun = "stun:stun.l.google.com:19302";
-
     PeerConnectionObserver(RTCPeerConnection* peerConnection);
-    virtual ~PeerConnectionObserver();
 
     virtual void OnSignalingState(libwebrtc::RTCSignalingState state) override;
 
@@ -173,8 +170,9 @@ public:
         override{};
 
 private:
-    RTCPeerConnection* m_peerConnection{ nullptr };
     ExecutionContext* executionContext() const;
+
+    RTCPeerConnection* m_peerConnection{ nullptr };
     WebRtcManager* m_webRtcManager{ nullptr };
 };
 
@@ -312,8 +310,6 @@ class RTCPeerConnection : public EventTarget {
     friend class SetLocalRemoteDescriptionObserver;
 
 public:
-    const std::string m_stun = "stun:stun.l.google.com:19302";
-
     RTCPeerConnection(ExecutionContext* executionContext,
                       RTCConfiguration configuration = RTCConfiguration());
     virtual ~RTCPeerConnection();

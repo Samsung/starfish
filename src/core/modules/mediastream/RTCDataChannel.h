@@ -56,7 +56,6 @@ class RTCDataChannelObserver : public gc,
                                public libwebrtc::RTCDataChannelObserver {
 public:
     RTCDataChannelObserver(RTCDataChannel* dataChannel);
-    virtual ~RTCDataChannelObserver();
     void OnStateChange(libwebrtc::RTCDataChannelState state) override;
     void OnMessage(const char* buffer, int length, bool binary) override;
 

@@ -56,17 +56,6 @@ static const char* DataStateString(libwebrtc::RTCDataChannelState state)
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
-        },
-        NULL, NULL, NULL);
-}
-
-RTCDataChannelObserver::~RTCDataChannelObserver()
-{
-    m_dataChannel = nullptr;
 }
 
 void RTCDataChannelObserver::OnStateChange(libwebrtc::RTCDataChannelState state)
@@ -173,9 +162,7 @@ RTCDataChannel::RTCDataChannel(
 
 RTCDataChannel::~RTCDataChannel()
 {
-    if (m_observer) {
-        dispose();
-    }
+    dispose();
 }
 
 void RTCDataChannel::dispose()

@@ -32,7 +32,6 @@ class ExecutionContext;
 class RTCCertificate : public ScriptWrappable, public Serializable {
 public:
     RTCCertificate(ExecutionContext* executionContext);
-    virtual ~RTCCertificate(){};
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCCertificate)
     virtual bool isSerializable() const override;
