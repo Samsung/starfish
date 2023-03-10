@@ -127,8 +127,6 @@ struct RTCAnswerOptions : public RTCOfferAnswerOptions {
 
 class PeerConnectionObserver : public gc,
                                public libwebrtc::RTCPeerConnectionObserver {
-    friend class RTCPeerConnection;
-
 public:
     const std::string m_stun = "stun:stun.l.google.com:19302";
 
@@ -427,7 +425,7 @@ private:
 
     bool isDisposed()
     {
-        return m_peerConnectionObserver == nullptr;
+        return m_backend.get() == nullptr;
     }
 
     bool isValidRemoteState(RTCSdpType type);

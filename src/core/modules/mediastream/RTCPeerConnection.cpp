@@ -77,9 +77,6 @@ PeerConnectionObserver::PeerConnectionObserver(
 
 PeerConnectionObserver::~PeerConnectionObserver()
 {
-    if (m_peerConnection) {
-        m_peerConnection->dispose();
-    }
     m_peerConnection = nullptr;
 }
 
@@ -248,8 +245,8 @@ void PeerConnectionObserver::OnDataChannel(
     }
 
     RTCDataChannelInit channelInit;
-    RTCDataChannel* rtcChannel = new RTCDataChannel(
-        executionContext(), m_peerConnection, channelInit, channel);
+    RTCDataChannel* rtcChannel =
+        new RTCDataChannel(executionContext(), channelInit, channel);
 
     String* eventType = executionContext()
                             ->starfish()
@@ -679,7 +676,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                           ->webRtcManager();
 
     if (!initializePeerConnection(configuration)) {
-        m_peerConnectionObserver->m_peerConnection = nullptr;
         m_peerConnectionObserver = nullptr;
         m_webRtcManager->deletePeerConnection(nullptr);
         m_backend = nullptr;
@@ -729,16 +725,15 @@ bool RTCPeerConnection::initializePeerConnection(
 
 RTCPeerConnection::~RTCPeerConnection()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void RTCPeerConnection::dispose()
 {
     if (isDisposed()) {
-        return;
-    }
-
-    if (!m_backend.get()) {
+        STARFISH_LOG_WARN("RTCPeerConnection[%p] is already disposed.", this);
         return;
     }
 
@@ -752,8 +747,12 @@ void RTCPeerConnection::dispose()
     }
     m_transceivers.clear();
 
-    m_backend = nullptr;
     m_webRtcManager->deletePeerConnection(this);
+    m_webRtcManager = nullptr;
+
+    m_backend->DeRegisterRTCPeerConnectionObserver();
+    m_backend = nullptr;
+    m_peerConnectionObserver = nullptr;
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -1081,6 +1080,11 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
 
 RTCSessionDescription* RTCPeerConnection::localDescription()
 {
+    if (isClosed()) {
+        STARFISH_LOG_WARN("RTCPeerConnection[%p] is already closed.", this);
+        return nullptr;
+    }
+
     libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
     libwebrtc::SdpParseError error;
     std::string sdpString;
@@ -1185,6 +1189,11 @@ Promise* RTCPeerConnection::setRemoteDescription(
 
 RTCSessionDescription* RTCPeerConnection::remoteDescription()
 {
+    if (isClosed()) {
+        STARFISH_LOG_WARN("RTCPeerConnection[%p] is already closed.", this);
+        return nullptr;
+    }
+
     libwebrtc::scoped_refptr<libwebrtc::RTCSessionDescription> description;
     libwebrtc::SdpParseError error;
     std::string sdpString;
@@ -1638,8 +1647,8 @@ RTCDataChannel* RTCPeerConnection::createDataChannel(
                                "Invalid configuration");
     }
 
-    RTCDataChannel* rtcDataChannel = new RTCDataChannel(
-        executionContext(), this, dataChannelDict, dataChannel);
+    RTCDataChannel* rtcDataChannel =
+        new RTCDataChannel(executionContext(), dataChannelDict, dataChannel);
     m_dataChannels.push_back(rtcDataChannel);
 
     return rtcDataChannel;

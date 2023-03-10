@@ -28,7 +28,6 @@
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/MessageEvent.h"
-#include "core/modules/mediastream/RTCPeerConnection.h"
 #include "core/modules/mediastream/WebRtcManager.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
@@ -57,25 +56,17 @@ static const char* DataStateString(libwebrtc::RTCDataChannelState state)
 RTCDataChannelObserver::RTCDataChannelObserver(RTCDataChannel* dataChannel)
     : m_dataChannel(dataChannel)
 {
-    STARFISH_LOG_DEBUG("<self=%p channel=%p>", this, m_dataChannel);
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
             ((RTCDataChannelObserver*)obj)->~RTCDataChannelObserver();
         },
         NULL, NULL, NULL);
-    STARFISH_LOG_DEBUG("</self=%p channel=%p>", this, m_dataChannel);
 }
 
 RTCDataChannelObserver::~RTCDataChannelObserver()
 {
-    STARFISH_LOG_DEBUG("self=%p channel=%p>", this, m_dataChannel);
-    if (m_dataChannel) {
-        m_dataChannel->dispose();
-    }
     m_dataChannel = nullptr;
-
-    STARFISH_LOG_DEBUG("</self=%p channel=%p>", this, m_dataChannel);
 }
 
 void RTCDataChannelObserver::OnStateChange(libwebrtc::RTCDataChannelState state)
@@ -161,15 +152,12 @@ void RTCDataChannelObserver::OnMessage(const char* buffer, int length,
 }
 
 RTCDataChannel::RTCDataChannel(
-    ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
-    RTCDataChannelInit init,
+    ExecutionContext* executionContext, RTCDataChannelInit init,
     libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> dataChannel)
     : EventTarget()
     , m_executionContext(executionContext)
-    , m_peerConnection(peerConnection)
     , m_backend(dataChannel)
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
     m_protocol = init.m_protocol;
     m_observer = new RTCDataChannelObserver(this);
     m_backend->RegisterObserver(m_observer);
@@ -181,43 +169,25 @@ RTCDataChannel::RTCDataChannel(
         this,
         [](void* obj, void* cd) { ((RTCDataChannel*)obj)->~RTCDataChannel(); },
         NULL, NULL, NULL);
-
-    STARFISH_LOG_DEBUG("</self=%p pc=%p>", this, m_peerConnection);
 }
 
 RTCDataChannel::~RTCDataChannel()
 {
-    STARFISH_LOG_DEBUG("<self=%p pc=%p>", this, m_peerConnection);
     if (m_observer) {
         dispose();
     }
-    STARFISH_LOG_DEBUG("</self=%p pc=%p>", this, m_peerConnection);
 }
 
 void RTCDataChannel::dispose()
 {
-    if (!m_webRtcManager->peerConnectionFactory()) {
-        m_backend.release();
-        m_observer = nullptr;
+    if (!m_backend.get()) {
+        STARFISH_LOG_WARN("RTCDataChannel[%p] is already diposed.", this);
         return;
     }
 
-    if (!m_peerConnection) {
-        return;
-    }
-
-    if (m_backend && m_observer) {
-        m_backend->UnregisterObserver();
-    }
-
-    if (m_observer) {
-        m_observer->m_dataChannel = nullptr;
-        m_observer = nullptr;
-    }
-
-    m_peerConnection->dispose();
-    m_peerConnection = nullptr;
+    m_backend->UnregisterObserver();
     m_backend = nullptr;
+    m_observer = nullptr;
 }
 
 ExecutionContext* RTCDataChannel::executionContext() const
@@ -232,19 +202,12 @@ ScriptBindingInstance* RTCDataChannel::scriptBindingInstance()
 
 String* RTCDataChannel::label()
 {
-    if (!m_peerConnection) {
-        return String::emptyString;
-    }
-
     std::string label = m_backend->label().std_string();
     return String::createASCIIString(label.data(), label.length());
 }
 
 bool RTCDataChannel::ordered()
 {
-    if (!m_peerConnection) {
-        return false;
-    }
     STARFISH_UNIMPLEMENTED();
     return false;
 }
@@ -304,9 +267,6 @@ void RTCDataChannel::setBinaryType(String* binaryType)
 
 void RTCDataChannel::send(String* data)
 {
-    if (!m_peerConnection) {
-        return;
-    }
     // TODO:FIXME!!
     std::string dataStr = data->toUTF8NonGCString();
     m_backend->Send(reinterpret_cast<const uint8_t*>(dataStr.data()),

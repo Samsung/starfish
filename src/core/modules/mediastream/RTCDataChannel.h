@@ -54,9 +54,6 @@ struct RTCDataChannelInit {
 
 class RTCDataChannelObserver : public gc,
                                public libwebrtc::RTCDataChannelObserver {
-    friend class RTCDataChannel;
-    friend class RTCPeerConnection;
-
 public:
     RTCDataChannelObserver(RTCDataChannel* dataChannel);
     virtual ~RTCDataChannelObserver();
@@ -68,13 +65,9 @@ private:
 };
 
 class RTCDataChannel : public EventTarget {
-    friend class RTCDataChannelObserver;
-    friend class RTCPeerConnection;
-
 public:
     RTCDataChannel(
-        ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
-        RTCDataChannelInit init,
+        ExecutionContext* executionContext, RTCDataChannelInit init,
         libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> rpcSctpTransport);
     virtual ~RTCDataChannel();
     void dispose();
@@ -116,7 +109,6 @@ public:
 private:
     ExecutionContext* m_executionContext{ nullptr };
     WebRtcManager* m_webRtcManager{ nullptr };
-    RTCPeerConnection* m_peerConnection{ nullptr };
     RTCDataChannelObserver* m_observer{ nullptr };
 
     String* m_protocol{ String::emptyString };
