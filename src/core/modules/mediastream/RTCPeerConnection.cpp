@@ -481,14 +481,14 @@ void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
             [](size_t, void* data) {
                 Params* p = (Params*)data;
                 CreateOfferAnswerObserver* self = p->self;
-                std::string sdpString = p->sdp;
+                String* sdpString =
+                    String::createASCIIString(p->sdp.c_str(), p->sdp.size());
                 std::string typeString = p->type;
 
                 ObjectRef* sd =
                     self->m_peerConnection->createSessionDescriptionInitObject(
                         self->m_peerConnection->toRtcSdpType(typeString),
-                        String::createASCIIString(sdpString.c_str(),
-                                                  sdpString.size()));
+                        sdpString);
                 Promise* promise = nullptr;
                 if (self->isCreateOffer()) {
                     promise = self->m_peerConnection->m_createOfferObserver
@@ -958,11 +958,12 @@ Promise* RTCPeerConnection::setLocalDescription(
         return promise;
     }
 
-    std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
+    String* sdpString = description.m_sdp;
 
     // 4.2
     if ((description.m_type == RTCSdpType::Offer) &&
-        !description.m_sdp->equals("") && (m_lastCreatedOffer != sdpString)) {
+        !description.m_sdp->isEmpty() &&
+        (!m_lastCreatedOffer->equals(sdpString))) {
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_MODIFICATION_ERR,
             "setLocalDescription");
@@ -973,8 +974,8 @@ Promise* RTCPeerConnection::setLocalDescription(
     // 4.3
     if ((description.m_type == RTCSdpType::Answer ||
          description.m_type == RTCSdpType::Pranswer) &&
-        !description.m_sdp->equals("") && (m_lastCreatedAnswer != "") &&
-        (m_lastCreatedAnswer != sdpString)) {
+        !description.m_sdp->equals("") && (!m_lastCreatedAnswer->isEmpty()) &&
+        (!m_lastCreatedAnswer->equals(sdpString))) {
         auto exception = new DOMException(
             executionContext(), DOMException::INVALID_MODIFICATION_ERR,
             "setLocalDescription");
@@ -996,7 +997,8 @@ Promise* RTCPeerConnection::setLocalDescription(
     }
 
     // 4.6
-    return setRtcSessionDescription({ type, sdpString }, promise, false);
+    return setRtcSessionDescription({ type, sdpString->toUTF8NonGCString() },
+                                    promise, false);
 }
 
 // https://w3c.github.io/webrtc-pc/#set-the-rtcsessiondescription
@@ -1038,8 +1040,8 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
 
     // 3.2.2 and 3.2.3
     if (description.m_type == RTCSdpType::Answer) {
-        m_lastCreatedOffer = "";
-        m_lastCreatedAnswer = "";
+        m_lastCreatedOffer = String::emptyString;
+        m_lastCreatedAnswer = String::emptyString;
     }
 
     Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
@@ -1145,7 +1147,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
         return promise;
     }
 
-    std::string sdpString = std::string(description.m_sdp->toUTF8NonGCString());
+    std::string sdpString = description.m_sdp->toUTF8NonGCString();
 
     // https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
     // 3
@@ -1904,8 +1906,6 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     return transceiver;
 }
 
-// https://w3c.github.io/webrtc-pc/#widl-RTCPeerConnection-getStats-Promise-RTCStatsReport--MediaStreamTrack-selector
-#if 0 // Chrome specific?
 Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
 {
     Promise* promise = new Promise(scriptBindingInstance());
@@ -1933,7 +1933,6 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
     promise->fulfill(scriptUndefined());
     return promise;
 }
-#endif
 
 libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection>
 RTCPeerConnection::backend()
@@ -2006,6 +2005,16 @@ bool RTCPeerConnection::isValidRemoteState(RTCSdpType type)
 
     return false;
 }
+
+void RTCPeerConnection::addStream(MediaStream* stream)
+{
+    GCVector<MediaStream*> streams;
+    streams.push_back(stream);
+    for (const auto& track : stream->getTracks()) {
+        addTrack(track, streams);
+    }
+}
+
 } // namespace Starfish
 
 #endif
