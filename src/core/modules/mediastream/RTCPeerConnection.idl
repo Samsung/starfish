@@ -148,6 +148,18 @@ partial interface RTCPeerConnection {
 
 [STARFISH_ENABLE_WEBRTC]
 partial interface RTCPeerConnection {
-//  Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
+ Promise<RTCStatsReport> getStats(optional MediaStreamTrack? selector = null);
 //  attribute EventHandler onstatsended;
+};
+
+// Non-standard or removed from the spec:
+partial interface RTCPeerConnection {
+// [Measure] sequence<MediaStream> getLocalStreams();
+// [Measure] sequence<MediaStream> getRemoteStreams();
+// [Measure, RaisesException] void addStream(MediaStream? stream, optional Dictionary mediaConstraints);
+[RaisesException] void addStream(MediaStream? stream);
+// [Measure, RaisesException] void removeStream(MediaStream? stream);
+// [Measure, RaisesException] RTCDTMFSender createDTMFSender(MediaStreamTrack track);
+// attribute EventHandler onaddstream;
+// attribute EventHandler onremovestream;
 };
