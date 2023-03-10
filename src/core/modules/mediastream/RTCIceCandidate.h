@@ -71,7 +71,6 @@ class RTCIceCandidate : public ScriptWrappable {
 public:
     RTCIceCandidate(ExecutionContext* executionContext,
                     RTCIceCandidateInit init = RTCIceCandidateInit());
-    virtual ~RTCIceCandidate();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCIceCandidate)
 

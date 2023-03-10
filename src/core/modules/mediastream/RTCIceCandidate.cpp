@@ -52,17 +52,6 @@ RTCIceCandidate::RTCIceCandidate(ExecutionContext* executionContext,
         throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
                                "TypeError");
     }
-
-    GC_REGISTER_FINALIZER_NO_ORDER(
-        this,
-        [](void* obj, void* cd) {
-            ((RTCIceCandidate*)obj)->~RTCIceCandidate();
-        },
-        NULL, NULL, NULL);
-}
-
-RTCIceCandidate::~RTCIceCandidate()
-{
 }
 
 ScriptBindingInstance* RTCIceCandidate::scriptBindingInstance()
