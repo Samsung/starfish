@@ -948,15 +948,16 @@ Promise* RTCPeerConnection::setLocalDescription(
     String* sdpString = description.m_sdp;
 
     // 4.2
-    if ((description.m_type == RTCSdpType::Offer) &&
-        !description.m_sdp->isEmpty() &&
-        (!m_lastCreatedOffer->equals(sdpString))) {
-        auto exception = new DOMException(
-            executionContext(), DOMException::INVALID_MODIFICATION_ERR,
-            "setLocalDescription");
-        promise->reject(exception->scriptValue());
-        return promise;
-    }
+    // TODO:FIX ME!!
+    // if ((description.m_type == RTCSdpType::Offer) &&
+    //     !description.m_sdp->isEmpty() &&
+    //     (!m_lastCreatedOffer->equals(sdpString))) {
+    //     auto exception = new DOMException(
+    //         executionContext(), DOMException::INVALID_MODIFICATION_ERR,
+    //         "setLocalDescription");
+    //     promise->reject(exception->scriptValue());
+    //     return promise;
+    // }
 
     // 4.3
     if ((description.m_type == RTCSdpType::Answer ||
@@ -2010,6 +2011,14 @@ void RTCPeerConnection::addStream(MediaStream* stream)
     for (const auto& track : stream->getTracks()) {
         addTrack(track, streams);
     }
+}
+
+GCVector<MediaStream*> RTCPeerConnection::getRemoteStreams()
+{
+    GCVector<MediaStream*> streams;
+    // TODO:FIX ME!!
+    STARFISH_UNIMPLEMENTED();
+    return streams;
 }
 
 } // namespace Starfish

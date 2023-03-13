@@ -393,6 +393,7 @@ public:
 
     bool isClosed();
     void addStream(MediaStream* stream);
+    GCVector<MediaStream*> getRemoteStreams();
 
 private:
     ExecutionContext* m_executionContext;
