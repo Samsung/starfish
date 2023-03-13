@@ -155,7 +155,7 @@ partial interface RTCPeerConnection {
 // Non-standard or removed from the spec:
 partial interface RTCPeerConnection {
 // [Measure] sequence<MediaStream> getLocalStreams();
-// [Measure] sequence<MediaStream> getRemoteStreams();
+sequence<MediaStream> getRemoteStreams();
 // [Measure, RaisesException] void addStream(MediaStream? stream, optional Dictionary mediaConstraints);
 [RaisesException] void addStream(MediaStream? stream);
 // [Measure, RaisesException] void removeStream(MediaStream? stream);
