@@ -55,6 +55,7 @@ public:
     Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
              ResponseInit& init);
 
+    virtual ~Response();
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Response)
 
     static bool isValidReasonPhrase(String* text);

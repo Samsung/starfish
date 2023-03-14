@@ -35,6 +35,15 @@ Response::Response(ExecutionContext* executionContext)
     , m_responseData(new ResponseData())
 {
     m_headers.setGuard(Guard::Response);
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            Response* self = static_cast<Response*>(obj);
+            self->~Response();
+        },
+        nullptr, nullptr, nullptr);
+#endif
 }
 
 Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
@@ -47,12 +56,28 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
     m_headers.setGuard(Guard::Response);
     handleBodyInit(body);
     setStatusText(String::createASCIIString("OK"));
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            Response* self = static_cast<Response*>(obj);
+            self->~Response();
+        },
+        nullptr, nullptr, nullptr);
+#endif
 }
 
 Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
                    ResponseInit& init)
-    : Response(executionContext, body)
+    : ScriptWrappable(this)
+    , Body(executionContext, body)
+    , m_executionContext(executionContext)
+    , m_headers(Headers(executionContext))
+    , m_responseData(new ResponseData())
 {
+    m_headers.setGuard(Guard::Response);
+
     if (init.status() < 200 || init.status() > 599) {
         throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_RANGE_ERR);
@@ -73,6 +98,22 @@ Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
     handleBodyInit(body);
 
     setMimeType(m_headers.extractMIMEType());
+
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            Response* self = static_cast<Response*>(obj);
+            self->~Response();
+        },
+        nullptr, nullptr, nullptr);
+#endif
+}
+
+Response::~Response()
+{
+    //  Destructors should be called for members that allocate memory
+    //  internally, such as std::string, but are not gc targets.
 }
 
 ScriptBindingInstance* Response::scriptBindingInstance()

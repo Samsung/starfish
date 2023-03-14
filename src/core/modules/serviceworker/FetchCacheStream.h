@@ -43,6 +43,7 @@ struct FetchCacheStreamResponseData : public gc {
 class FetchCacheStream : public gc {
 public:
     FetchCacheStream(const std::string& rootPath, bool useComplexKey = false);
+    virtual ~FetchCacheStream();
 
     bool open(size_t originHashValue, const std::string& cacheName);
     bool open(const std::string& dirName);

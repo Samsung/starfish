@@ -28,19 +28,21 @@ Mutex::Mutex(const char* name)
     m_name = name;
 #endif
 
-    m_mutex = new pthread_mutex_t;
-    pthread_mutex_init(m_mutex, NULL);
+    pthread_mutex_init(&m_mutex, nullptr);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
-            // STARFISH_LOG_INFO("Mutex::~Mutex");
-            pthread_mutex_t* m = (pthread_mutex_t*)cd;
-            auto check = pthread_mutex_destroy(m);
-            delete m;
-            STARFISH_ASSERT(check == 0);
+            Mutex* self = static_cast<Mutex*>(obj);
+            self->~Mutex();
         },
-        m_mutex, NULL, NULL);
+        nullptr, nullptr, nullptr);
+}
+
+Mutex::~Mutex()
+{
+    auto check = pthread_mutex_destroy(&m_mutex);
+    STARFISH_ASSERT(check == 0);
 }
 
 void Mutex::lock()
@@ -50,7 +52,7 @@ void Mutex::lock()
         STARFISH_LOG_WARN("Lock: %s", m_name.c_str());
     }
 #endif
-    pthread_mutex_lock(m_mutex);
+    pthread_mutex_lock(&m_mutex);
 }
 
 void Mutex::unlock()
@@ -60,6 +62,6 @@ void Mutex::unlock()
         STARFISH_LOG_WARN("Unlock: %s", m_name.c_str());
     }
 #endif
-    pthread_mutex_unlock(m_mutex);
+    pthread_mutex_unlock(&m_mutex);
 }
 } // namespace Starfish

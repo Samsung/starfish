@@ -66,6 +66,19 @@ FetchCacheStream::FetchCacheStream(const std::string& rootPath,
     : m_cacheDirPath(rootPath)
     , m_useComplexKey(useComplexKey)
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(
+        this,
+        [](void* obj, void* cd) {
+            FetchCacheStream* self = static_cast<FetchCacheStream*>(obj);
+            self->~FetchCacheStream();
+        },
+        nullptr, nullptr, nullptr);
+}
+
+FetchCacheStream::~FetchCacheStream()
+{
+    //  Destructors should be called for members that allocate memory
+    //  internally, such as std::string, but are not gc targets.
 }
 
 bool FetchCacheStream::open(size_t originHashValue,

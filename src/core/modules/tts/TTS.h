@@ -45,6 +45,13 @@ public:
         , m_currentUtterId(0)
     {
         initialize();
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                TTS* self = static_cast<TTS*>(obj);
+                self->~TTS();
+            },
+            nullptr, nullptr, nullptr);
     }
 
     ~TTS()
