@@ -36,6 +36,16 @@ public:
         , m_path(nullptr)
         , m_shape(Shape::Rect)
     {
+        GC_REGISTER_FINALIZER_NO_ORDER(
+            this,
+            [](void* obj, void* cd) {
+                HTMLAreaElement* self = static_cast<HTMLAreaElement*>(obj);
+                self->~HTMLAreaElement();
+            },
+            nullptr, nullptr, nullptr);
+    }
+    virtual ~HTMLAreaElement()
+    {
     }
 
     void* operator new(size_t size);

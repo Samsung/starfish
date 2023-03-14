@@ -8697,14 +8697,14 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                 ComputedStyle* useStyle = svgUseElement->style();
 
                 StyleResolveContext ctx2(child->document());
-                std::vector<Element*> m_ancestorSelectorList;
+                std::vector<Element*> ancestorSelectorList;
                 Element* pe = svgUseTargetElement;
                 while (pe) {
-                    m_ancestorSelectorList.push_back(pe->asElement());
+                    ancestorSelectorList.push_back(pe->asElement());
                     pe = pe->parentElement();
                 }
-                for (auto iter = m_ancestorSelectorList.rbegin();
-                     iter != m_ancestorSelectorList.rend(); ++iter) {
+                for (auto iter = ancestorSelectorList.rbegin();
+                     iter != ancestorSelectorList.rend(); ++iter) {
                     ctx2.m_ancestorSelectorFilter->pushNode(*iter);
                 }
                 shadowFirstChild = sr->firstChild();

@@ -25,14 +25,12 @@ namespace Starfish {
 class Mutex : public gc {
 public:
     Mutex(const char* name = "");
-    ~Mutex()
-    {
-    }
+    ~Mutex();
     void lock();
     void unlock();
 
 protected:
-    pthread_mutex_t* m_mutex;
+    pthread_mutex_t m_mutex;
 #ifndef NDEBUG
     std::string m_name;
 #endif
