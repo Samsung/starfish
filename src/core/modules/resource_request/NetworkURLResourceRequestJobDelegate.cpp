@@ -291,6 +291,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         default:
             errorType = RequestErrorType::UnknownError;
         }
+        nwd->request->m_responseData->m_status = 0;
         nwd->request->handleError(ProgressState::InError, errorType);
     }
 
