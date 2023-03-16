@@ -109,7 +109,7 @@ enum class RTCIceConnectionState {
 struct RTCOfferAnswerOptions {
     DEFINE_GETTER_SETTER(bool, voiceActivityDetection, VoiceActivityDetection)
 
-    bool m_voiceActivityDetection{ true };
+    bool m_voiceActivityDetection = true;
 };
 
 struct RTCOfferOptions : public RTCOfferAnswerOptions {
@@ -117,9 +117,9 @@ struct RTCOfferOptions : public RTCOfferAnswerOptions {
     DEFINE_GETTER_SETTER(bool, offerToReceiveAudio, OfferToReceiveAudio)
     DEFINE_GETTER_SETTER(bool, offerToReceiveVideo, OfferToReceiveVideo)
 
-    bool m_iceRestart{ false };
-    bool m_offerToReceiveAudio{ false };
-    bool m_offerToReceiveVideo{ false };
+    bool m_iceRestart = false;
+    bool m_offerToReceiveAudio = false;
+    bool m_offerToReceiveVideo = false;
 };
 
 struct RTCAnswerOptions : public RTCOfferAnswerOptions {
@@ -172,8 +172,8 @@ public:
 private:
     ExecutionContext* executionContext() const;
 
-    RTCPeerConnection* m_peerConnection{ nullptr };
-    WebRtcManager* m_webRtcManager{ nullptr };
+    RTCPeerConnection* m_peerConnection = nullptr;
+    WebRtcManager* m_webRtcManager = nullptr;
 };
 
 class CreateOfferAnswerObserver : public gc {
@@ -210,8 +210,8 @@ public:
     }
 
 protected:
-    RTCPeerConnection* m_peerConnection{ nullptr };
-    Promise* m_promise{ nullptr };
+    RTCPeerConnection* m_peerConnection = nullptr;
+    Promise* m_promise = nullptr;
 };
 
 class CreateOfferObserver : public CreateOfferAnswerObserver {
@@ -302,6 +302,48 @@ public:
     {
         return true;
     }
+};
+
+class GetStatsObserver : public gc {
+    friend class RTCPeerConnection;
+
+public:
+    GetStatsObserver(RTCPeerConnection* peerConnection)
+        : m_peerConnection(peerConnection)
+    {
+    }
+
+    void OnSuccess(const libwebrtc::vector<
+                   libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+                       reports);
+
+    void OnFailure(const char* error);
+
+    virtual bool isLocalDescription()
+    {
+        return false;
+    }
+
+    virtual bool isRemoteDescription()
+    {
+        return false;
+    }
+
+    Promise* promise()
+    {
+        return m_promise;
+    }
+
+    void setPromise(Promise* promise)
+    {
+        m_promise = promise;
+    }
+
+protected:
+    void PostTask(std::function<void()> task);
+
+    RTCPeerConnection* m_peerConnection = nullptr;
+    Promise* m_promise = nullptr;
 };
 
 class RTCPeerConnection : public EventTarget {
@@ -396,17 +438,18 @@ public:
     GCVector<MediaStream*> getRemoteStreams();
 
 private:
-    ExecutionContext* m_executionContext;
-    WebRtcManager* m_webRtcManager{ nullptr };
+    ExecutionContext* m_executionContext = nullptr;
+    WebRtcManager* m_webRtcManager = nullptr;
 
     RTCConfiguration m_configuration;
-    PeerConnectionObserver* m_peerConnectionObserver{ nullptr };
+    PeerConnectionObserver* m_peerConnectionObserver = nullptr;
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> m_backend;
 
-    CreateOfferObserver* m_createOfferObserver{ nullptr };
-    CreateAnswerObserver* m_createAnswerObserver{ nullptr };
-    SetLocalDescriptionObserver* m_setLocalDescriptionObserver{ nullptr };
-    SetRemoteDescriptionObserver* m_setRemoteDescriptionObserver{ nullptr };
+    CreateOfferObserver* m_createOfferObserver = nullptr;
+    CreateAnswerObserver* m_createAnswerObserver = nullptr;
+    SetLocalDescriptionObserver* m_setLocalDescriptionObserver = nullptr;
+    SetRemoteDescriptionObserver* m_setRemoteDescriptionObserver = nullptr;
+    GetStatsObserver* m_getStatsObserver = nullptr;
 
     String* m_lastCreatedOffer;
     String* m_lastCreatedAnswer;
@@ -414,11 +457,11 @@ private:
     GCVector<RTCRtpTransceiver*> m_transceivers;
     GCVector<RTCDataChannel*> m_dataChannels;
 
-    Mutex* m_disposeLock{ nullptr };
+    Mutex* m_disposeLock = nullptr;
 
-    bool m_closed{ false };
+    bool m_closed = false;
 
-    bool m_wait{ false };
+    bool m_wait = false;
 
     bool isDisposed()
     {

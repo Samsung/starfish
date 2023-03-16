@@ -21,16 +21,44 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-
 #include "core/modules/mediastream/RTCStatsReport.h"
-
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
-/*
-// Binding generator cannot genereate code for an empty interface
+
+class RTCStatsReportIterationSource final
+    : public IterationSource<Nullable<String*>, Nullable<ScriptValue>> {
+public:
+    RTCStatsReportIterationSource(
+        GCVector<std::pair<String*, ScriptValue>>& data)
+        : m_data(data)
+    {
+        m_iterator = m_data.begin();
+    }
+
+    virtual bool next(Escargot::ExecutionStateRef* state,
+                      Nullable<String*>& key,
+                      Nullable<ScriptValue>& value) override
+    {
+        if (m_iterator == m_data.end()) {
+            return false;
+        }
+        key = m_iterator->first;
+        value = m_iterator->second;
+
+        m_iterator++;
+        return true;
+    }
+
+private:
+    GCVector<std::pair<String*, ScriptValue>> m_data;
+    GCVector<std::pair<String*, ScriptValue>>::iterator m_iterator;
+};
+
 RTCStatsReport::RTCStatsReport(ExecutionContext* executionContext)
     : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+
 {
 }
 
@@ -38,11 +66,37 @@ RTCStatsReport::~RTCStatsReport()
 {
 }
 
-ExecutionContext* RTCStatsReport::executionContext() const
+ScriptBindingInstance* RTCStatsReport::scriptBindingInstance()
 {
-    return m_executionContext;
+    return m_executionContext->scriptBindingInstance();
 }
-*/
+
+IterationSource<Nullable<String*>, Nullable<ScriptValue>>*
+RTCStatsReport::startIteration(Escargot::ExecutionStateRef* state)
+{
+    return new RTCStatsReportIterationSource(m_data);
+}
+
+Nullable<ScriptValue> RTCStatsReport::get(String* key)
+{
+    for (auto pair : m_data) {
+        if (key->equals(pair.first)) {
+            return pair.second;
+        }
+    }
+    return nullptr;
+}
+
+bool RTCStatsReport::has(String* key)
+{
+    for (auto pair : m_data) {
+        if (key->equals(pair.first)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace Starfish
 
 #endif
