@@ -24,22 +24,47 @@
 
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/Maplike.h"
+#include <EscargotPublic.h>
 
 namespace Starfish {
-/*
-// Binding generator cannot genereate code for an empty interface
-class RTCStatsReport : public ScriptWrappable {
+
+class RTCStatsReport : public ScriptWrappable,
+                       public Maplike<String*, ScriptValue> {
 public:
     RTCStatsReport(ExecutionContext* executionContext);
     virtual ~RTCStatsReport();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCStatsReport)
-    virtual ExecutionContext* executionContext() const;
+
+    IterationSource<Nullable<String*>, Nullable<ScriptValue>>* startIteration(
+        Escargot::ExecutionStateRef* state) override;
+
+    virtual Nullable<ScriptValue> get(String* key) override;
+
+    virtual void set(String* key, ScriptValue value)
+    {
+        // readonly
+    }
+
+    virtual bool has(String* key) override;
+
+    virtual bool deleteItem(String* key)
+    {
+        // readonly
+        return false;
+    }
+
+    virtual void clear() override
+    {
+        // readonly
+    }
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
+    ExecutionContext* m_executionContext = nullptr;
+    GCVector<std::pair<String*, ScriptValue>> m_data;
 };
-*/
-}
+
+} // namespace Starfish
 #endif
 #endif

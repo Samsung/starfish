@@ -50,6 +50,7 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
+#include "core/modules/mediastream/RTCStatsReport.h"
 
 #include "rtc_rtp_sender.h"
 
@@ -642,6 +643,60 @@ void SetLocalRemoteDescriptionObserver::OnFailure(const char* error)
             p);
 }
 
+void GetStatsObserver::OnSuccess(
+    const libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+        reports)
+{
+    if (!isMainThread()) {
+        PostTask([this, reports] { OnSuccess(reports); });
+        return;
+    }
+
+    RTCStatsReport* rtcStatsReport =
+        new RTCStatsReport(m_peerConnection->executionContext());
+
+    // TODO: Convert libwebrtc::MediaRTCStats to RTCStatsReport
+    // RTCStats and derived stats that inherit from it must be added first.
+    STARFISH_UNIMPLEMENTED();
+    m_promise->fulfill(rtcStatsReport->scriptValue());
+}
+
+void GetStatsObserver::OnFailure(const char* error)
+{
+    if (!isMainThread()) {
+        PostTask([this, error] { OnFailure(error); });
+        return;
+    }
+
+    auto exception = new DOMException(m_peerConnection->executionContext(),
+                                      DOMException::INVALID_ACCESS_ERR, error);
+    m_promise->reject(exception->scriptValue());
+}
+
+void GetStatsObserver::PostTask(std::function<void()> task)
+{
+    struct Params {
+        std::function<void()> task;
+    };
+    Params* p = new Params();
+    p->task = task;
+
+    if (!isMainThread()) {
+        m_peerConnection->executionContext()
+            ->webBase()
+            ->messageLoop()
+            ->addIdlerWithNoGCRootingInOtherThread(
+                m_peerConnection->executionContext()->globalScope(),
+                [](size_t, void* data) {
+                    Params* p = static_cast<Params*>(data);
+                    p->task();
+                    delete p;
+                },
+                p);
+        return;
+    }
+}
+
 // https://w3c.github.io/webrtc-pc/#constructor
 RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
                                      RTCConfiguration configuration)
@@ -707,6 +762,7 @@ bool RTCPeerConnection::initializePeerConnection(
     m_createAnswerObserver = new CreateAnswerObserver(this);
     m_setLocalDescriptionObserver = new SetLocalDescriptionObserver(this);
     m_setRemoteDescriptionObserver = new SetRemoteDescriptionObserver(this);
+    m_getStatsObserver = new GetStatsObserver(this);
 
     return m_backend != nullptr;
 }
@@ -1871,7 +1927,6 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
         if (kind->equals("audio")) {
             r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::AUDIO,
                                           init.toRtpTransceiverInit());
-
         } else if (kind->equals("video")) {
             r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::VIDEO,
                                           init.toRtpTransceiverInit());
@@ -1904,31 +1959,68 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
     return transceiver;
 }
 
+// https://w3c.github.io/webrtc-pc/#widl-RTCPeerConnection-getStats-Promise-RTCStatsReport--MediaStreamTrack-selector
 Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
 {
     Promise* promise = new Promise(scriptBindingInstance());
+    m_getStatsObserver->setPromise(promise);
 
     if (selector) {
         int count = 0;
+        RTCRtpSender* sender = nullptr;
+        RTCRtpReceiver* receiver = nullptr;
         for (auto transceiver : m_transceivers) {
             if (transceiver->sender()->track() == selector) {
                 count++;
-            } else if (transceiver->receiver()->track() == selector) {
+                if (!sender) {
+                    sender = transceiver->sender();
+                }
+            }
+            if (transceiver->receiver()->track() == selector) {
                 count++;
+                if (!receiver) {
+                    receiver = transceiver->receiver();
+                }
             }
         }
-
-        if (count != 1) {
-            STARFISH_LOG_ERROR("%s: The track does not exist in this pc",
-                               __func__);
-            auto exception = new DOMException(
-                executionContext(), DOMException::INVALID_ACCESS_ERR,
-                "The track does not exist in the pc");
-            promise->reject(exception->scriptValue());
-            return promise;
+        if (count == 0) {
+            m_getStatsObserver->OnFailure("No fit sender or receiver exists.");
+        } else if (count != 1) {
+            m_getStatsObserver->OnFailure(
+                "More than one fit sender or receiver exists.");
         }
+
+        STARFISH_ASSERT(!(sender && receiver));
+        if (sender) {
+            m_backend->GetStats(
+                sender->backend(),
+                [this](const libwebrtc::vector<
+                       libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+                           reports) { m_getStatsObserver->OnSuccess(reports); },
+                [this](const char* error) {
+                    m_getStatsObserver->OnFailure(error);
+                });
+        } else if (receiver) {
+            m_backend->GetStats(
+                receiver->backend(),
+                [this](const libwebrtc::vector<
+                       libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+                           reports) { m_getStatsObserver->OnSuccess(reports); },
+                [this](const char* error) {
+                    m_getStatsObserver->OnFailure(error);
+                });
+        }
+
+    } else {
+        m_backend->GetStats(
+            [this](const libwebrtc::vector<
+                   libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+                       reports) { m_getStatsObserver->OnSuccess(reports); },
+            [this](const char* error) {
+                m_getStatsObserver->OnFailure(error);
+            });
     }
-    promise->fulfill(scriptUndefined());
+
     return promise;
 }
 
