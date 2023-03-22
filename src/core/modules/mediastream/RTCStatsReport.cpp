@@ -87,6 +87,25 @@ Nullable<ScriptValue> RTCStatsReport::get(String* key)
     return nullptr;
 }
 
+void RTCStatsReport::set(String* key, ScriptValue value)
+{
+    if (has(key)) {
+        deleteItem(key);
+    }
+    m_data.emplace_back(std::make_pair(key, value));
+}
+
+bool RTCStatsReport::deleteItem(String* key)
+{
+    for (auto iter = m_data.begin(); iter < m_data.end(); iter++) {
+        if (key->equals(iter->first)) {
+            m_data.erase(iter);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RTCStatsReport::has(String* key)
 {
     for (auto pair : m_data) {

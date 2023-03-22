@@ -42,18 +42,11 @@ public:
 
     virtual Nullable<ScriptValue> get(String* key) override;
 
-    virtual void set(String* key, ScriptValue value)
-    {
-        // readonly
-    }
+    virtual void set(String* key, ScriptValue value) override;
 
     virtual bool has(String* key) override;
 
-    virtual bool deleteItem(String* key)
-    {
-        // readonly
-        return false;
-    }
+    virtual bool deleteItem(String* key) override;
 
     virtual void clear() override
     {
