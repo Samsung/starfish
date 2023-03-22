@@ -51,6 +51,7 @@
 #include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 #include "core/modules/mediastream/RTCStatsReport.h"
+#include "core/modules/mediastream/RTCStats.h"
 
 #include "rtc_rtp_sender.h"
 
@@ -655,9 +656,14 @@ void GetStatsObserver::OnSuccess(
     RTCStatsReport* rtcStatsReport =
         new RTCStatsReport(m_peerConnection->executionContext());
 
-    // TODO: Convert libwebrtc::MediaRTCStats to RTCStatsReport
-    // RTCStats and derived stats that inherit from it must be added first.
-    STARFISH_UNIMPLEMENTED();
+    for (auto mediaRTCStats : reports.std_vector()) {
+        auto id = mediaRTCStats->id().std_string();
+        ScriptValue rtcStats = RTCStats::createScriptValueFromMediaRTCStats(
+            m_peerConnection->scriptBindingInstance()->scriptContext(),
+            mediaRTCStats);
+        rtcStatsReport->set(String::createASCIIString(id.c_str(), id.length()),
+                            rtcStats);
+    }
     m_promise->fulfill(rtcStatsReport->scriptValue());
 }
 
