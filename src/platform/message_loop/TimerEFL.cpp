@@ -78,6 +78,9 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
+                if (ecore_timer_freeze_get(td->m_timerID)) {
+                    return ECORE_CALLBACK_DONE;
+                }
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
                 td->m_timer->m_webBase->messageLoop()
                     ->invokeMicroTasksIfExist();
@@ -93,6 +96,9 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                 TimeoutData* td = (TimeoutData*)data;
                 Timer* timer = td->m_timer;
                 int32_t id = td->m_id;
+                if (ecore_timer_freeze_get(td->m_timerID)) {
+                    return ECORE_CALLBACK_DONE;
+                }
                 td->m_timer->m_webBase->messageLoop()
                     ->invokeMicroTasksIfExist();
                 td->m_handler(td->m_data);
