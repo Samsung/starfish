@@ -40,6 +40,11 @@ public:
 
     void dispose();
 
+    bool isDisposed()
+    {
+        return m_peerConnectionFactory == nullptr;
+    }
+
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory>
     peerConnectionFactory();
 

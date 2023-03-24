@@ -46,7 +46,9 @@ WebRtcManager::WebRtcManager()
 
 WebRtcManager::~WebRtcManager()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void WebRtcManager::deletePeerConnectionFactory(bool force)
@@ -187,6 +189,10 @@ void WebRtcManager::addVideoStreamTrack(VideoStreamTrack* videoStreamTrack)
 
 void WebRtcManager::dispose()
 {
+    if (isDisposed()) {
+        STARFISH_LOG_WARN("WebRtcManager[%p] is already disposed.", this);
+        return;
+    }
     deletePeerConnectionFactory(true);
 }
 } // namespace Starfish

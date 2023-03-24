@@ -256,6 +256,7 @@ MediaStream::MediaStream(
                           ->window()
                           ->navigator()
                           ->webRtcManager();
+    m_webRtcManager->addMediaStream(this);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this, [](void* obj, void* cd) { ((MediaStream*)obj)->~MediaStream(); },
@@ -276,11 +277,18 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
 
 MediaStream::~MediaStream()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void MediaStream::dispose()
 {
+    if (isDisposed()) {
+        STARFISH_LOG_WARN("MediaStream[%p] is already disposed.", this);
+        return;
+    }
+
     stopAudioTrack();
     stopVideoTrack();
 
@@ -361,16 +369,18 @@ void MediaStream::addTrack(MediaStreamTrack* track)
     if (track->kind() == MediaStreamTrack::Kind::Audio) {
         auto audioTrack = track->asAudioStreamTrack();
         if (audioTrack->backend()) {
-            m_backend->AddTrack(audioTrack->backend());
-            m_audioTracks.insert(audioTrack);
-            audioTrack->attachTo(this);
+            if (m_backend->AddTrack(audioTrack->backend())) {
+                m_audioTracks.insert(audioTrack);
+                audioTrack->attachTo(this);
+            }
         }
     } else if (track->kind() == MediaStreamTrack::Kind::Video) {
         auto videoTrack = track->asVideoStreamTrack();
         if (videoTrack->backend()) {
-            m_backend->AddTrack(videoTrack->backend());
-            m_videoTracks.insert(videoTrack);
-            videoTrack->attachTo(this);
+            if (m_backend->AddTrack(videoTrack->backend())) {
+                m_videoTracks.insert(videoTrack);
+                videoTrack->attachTo(this);
+            }
         }
     }
 }
