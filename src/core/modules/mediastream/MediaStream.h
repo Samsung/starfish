@@ -212,6 +212,11 @@ public:
         m_mediaPlayer = mediaPlayer;
     }
 
+    bool isDisposed()
+    {
+        return m_backend == nullptr;
+    }
+
 private:
     ExecutionContext* m_executionContext{ nullptr };
     WebRtcManager* m_webRtcManager{ nullptr };

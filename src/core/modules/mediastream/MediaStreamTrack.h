@@ -122,6 +122,11 @@ public:
         return m_backend;
     }
 
+    bool isDisposed()
+    {
+        return m_backend == nullptr;
+    }
+
 private:
     libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> m_backend;
 };
@@ -168,6 +173,11 @@ public:
     }
 
     void play();
+
+    bool isDisposed()
+    {
+        return m_backend == nullptr;
+    }
 
 protected:
     libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> m_backend;

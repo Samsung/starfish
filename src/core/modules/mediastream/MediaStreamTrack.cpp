@@ -112,15 +112,22 @@ AudioStreamTrack::AudioStreamTrack(
                           ->window()
                           ->navigator()
                           ->webRtcManager();
+    m_webRtcManager->addAudioStreamTrack(this);
 }
 
 AudioStreamTrack::~AudioStreamTrack()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void AudioStreamTrack::dispose()
 {
+    if (isDisposed()) {
+        STARFISH_LOG_WARN("AudioStreamTrack[%p] is already disposed.", this);
+        return;
+    }
     for (auto* mediaStream : m_attachedMediaStreams) {
         mediaStream->removeAudioTrack(this);
     }
@@ -148,15 +155,23 @@ VideoStreamTrack::VideoStreamTrack(
                           ->window()
                           ->navigator()
                           ->webRtcManager();
+    m_webRtcManager->addVideoStreamTrack(this);
 }
 
 VideoStreamTrack::~VideoStreamTrack()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void VideoStreamTrack::dispose()
 {
+    if (isDisposed()) {
+        STARFISH_LOG_WARN("VideoStreamTrack[%p] is already disposed.", this);
+        return;
+    }
+
     for (auto* mediaStream : m_attachedMediaStreams) {
         mediaStream->removeVideoTrack(this);
     }
@@ -253,11 +268,18 @@ WebCamStreamTrack::WebCamStreamTrack(
 
 WebCamStreamTrack::~WebCamStreamTrack()
 {
-    dispose();
+    if (!isDisposed()) {
+        dispose();
+    }
 }
 
 void WebCamStreamTrack::dispose()
 {
+    if (isDisposed()) {
+        STARFISH_LOG_WARN("WebCamStreamTrack[%p] is already disposed.", this);
+        return;
+    }
+
     for (auto* mediaStream : m_attachedMediaStreams) {
         mediaStream->removeVideoTrack(this);
     }
