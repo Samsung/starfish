@@ -29,8 +29,9 @@
 
 namespace Starfish {
 
-RTCIceCandidateInit::RTCIceCandidateInit(std::string& candidate,
-                                         std::string& sdpMid, int sdpMLineIndex)
+RTCIceCandidateInit::RTCIceCandidateInit(const std::string& candidate,
+                                         const std::string& sdpMid,
+                                         int sdpMLineIndex)
 {
     m_candidate =
         String::createASCIIString(candidate.c_str(), candidate.length());

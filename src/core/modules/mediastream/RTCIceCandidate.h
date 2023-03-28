@@ -43,7 +43,7 @@ struct RTCIceCandidateInit : public gc {
     {
     }
 
-    RTCIceCandidateInit(std::string& candidate, std::string& sdpMid,
+    RTCIceCandidateInit(const std::string& candidate, const std::string& sdpMid,
                         int sdpMLineIndex);
 
     DEFINE_GETTER_SETTER(String*, candidate, Candidate)

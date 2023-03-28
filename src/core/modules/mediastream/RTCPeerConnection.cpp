@@ -57,63 +57,6 @@
 
 namespace Starfish {
 
-ExecutionContext* PeerConnectionObserver::executionContext() const
-{
-    return m_peerConnection->executionContext();
-}
-
-PeerConnectionObserver::PeerConnectionObserver(
-    RTCPeerConnection* peerConnection)
-    : m_peerConnection(peerConnection)
-{
-    m_webRtcManager =
-        executionContext()->document()->window()->navigator()->webRtcManager();
-}
-
-void PeerConnectionObserver::OnSignalingState(
-    libwebrtc::RTCSignalingState newState)
-{
-    if (newState == libwebrtc::RTCSignalingState::RTCSignalingStateClosed) {
-        return;
-    }
-
-    if (!m_peerConnection || m_peerConnection->isClosed()) {
-        return;
-    }
-
-    struct Params {
-        PeerConnectionObserver* self;
-        libwebrtc::RTCSignalingState newState;
-    };
-
-    Params* p = new Params{ this, newState };
-
-    executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                PeerConnectionObserver* self = p->self;
-
-                if (!self->m_peerConnection ||
-                    self->m_peerConnection->isClosed()) {
-                    delete p;
-                    return;
-                }
-
-                String* eventType = self->executionContext()
-                                        ->starfish()
-                                        ->staticStrings()
-                                        ->m_signalingstatechange.localName();
-                Event* e = new Event(self->executionContext(), eventType);
-                self->m_peerConnection->dispatchEventByUA(e);
-                delete p;
-            },
-            p);
-}
-
 #if defined(STARFISH_WEBRTC_DEBUG)
 class AudioTrackObserver : public b2bua::AudioFrame {
     virtual void UpdateFrame(int id, uint32_t timestamp, const int16_t* data,
@@ -132,575 +75,506 @@ public:
 };
 #endif
 
-void PeerConnectionObserver::OnTrack(
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver)
+ExecutionContext* ObserverBase::executionContext()
 {
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
-            return;
-        }
-
-        struct Params {
-            PeerConnectionObserver* self;
-            libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver;
-        };
-
-        Params* p = new Params{ this, transceiver };
-
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-
-                    if (!p->self->m_peerConnection ||
-                        p->self->m_peerConnection->isClosed()) {
-                        return;
-                    }
-
-                    p->self->OnTrack(p->transceiver);
-                    delete p;
-                },
-                p);
-        return;
-    }
-
-    m_peerConnection->syncTransceivers();
-    RTCRtpTransceiver* rtpTransceiver =
-        m_peerConnection->getTransceiver(transceiver);
-    if (!rtpTransceiver) {
-        STARFISH_LOG_DEBUG("Transceiver is null");
-        return;
-    }
-    RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
-    if (!rtpReceiver) {
-        STARFISH_LOG_DEBUG("Receiver is null");
-        return;
-    }
-    MediaStreamTrack* track = rtpReceiver->track();
-    if (!track) {
-        STARFISH_LOG_DEBUG("MediaTrack is null");
-        return;
-    }
-    GCVector<MediaStream*> rtpStreams;
-    for (auto stream : rtpReceiver->streams()) {
-        stream->addTrack(track);
-        rtpStreams.push_back(stream);
-    }
-
-    String* eventType =
-        executionContext()->starfish()->staticStrings()->m_track.localName();
-    RTCTrackEventInit init(rtpReceiver, track, rtpStreams, rtpTransceiver);
-    RTCTrackEvent* e = new RTCTrackEvent(executionContext(), eventType, init);
-    m_peerConnection->dispatchEventByUA(e);
+    return m_peerConnection->executionContext();
 }
 
-// https://w3c.github.io/webrtc-pc/#event-datachannel
-void PeerConnectionObserver::OnDataChannel(
-    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel)
+void ObserverBase::PostTask(std::function<void()> task)
 {
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
-            return;
-        }
-
-        struct Params {
-            PeerConnectionObserver* self;
-            libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel;
-        };
-
-        Params* p = new Params{ this, channel };
-
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-
-                    if (!p->self->m_peerConnection ||
-                        p->self->m_peerConnection->isClosed()) {
-                        delete p;
-                        return;
-                    }
-
-                    p->self->OnDataChannel(p->channel);
-                    delete p;
-                },
-                p);
-        return;
-    }
-
-    RTCDataChannelInit channelInit;
-    RTCDataChannel* rtcChannel =
-        new RTCDataChannel(executionContext(), channelInit, channel);
-
-    String* eventType = executionContext()
-                            ->starfish()
-                            ->staticStrings()
-                            ->m_datachannel.localName();
-    RTCDataChannelEventInit eventInit;
-    RTCDataChannelEvent* e = new RTCDataChannelEvent(
-        executionContext(), eventType, eventInit, rtcChannel);
-    m_peerConnection->dispatchEventByUA(e);
-}
-
-// https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
-void PeerConnectionObserver::OnRenegotiationNeeded()
-{
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isDisposed() ||
-            m_peerConnection->isClosed()) {
-            return;
-        }
-
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    PeerConnectionObserver* self =
-                        (PeerConnectionObserver*)data;
-
-                    if (!self->m_peerConnection ||
-                        self->m_peerConnection->isDisposed() ||
-                        self->m_peerConnection->isClosed()) {
-                        return;
-                    }
-                    self->OnRenegotiationNeeded();
-                },
-                this);
-        return;
-    }
-
-    String* eventType = executionContext()
-                            ->starfish()
-                            ->staticStrings()
-                            ->m_negotiationneeded.localName();
-    Event* e = new Event(executionContext(), eventType);
-    m_peerConnection->dispatchEventByUA(e);
-    return;
-}
-
-void PeerConnectionObserver::OnIceConnectionState(
-    libwebrtc::RTCIceConnectionState newState)
-{
-    if (newState ==
-            libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed ||
-        newState == libwebrtc::RTCIceConnectionState::
-                        RTCIceConnectionStateDisconnected) {
-        return;
-    }
-
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
-            return;
-        }
-
-        struct Params {
-            PeerConnectionObserver* self;
-            libwebrtc::RTCIceConnectionState newState;
-        };
-
-        Params* p = new Params{ this, newState };
-
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-
-                    if (!p->self->m_peerConnection ||
-                        p->self->m_peerConnection->isClosed()) {
-                        delete p;
-                        return;
-                    }
-
-                    p->self->OnIceConnectionState(p->newState);
-                    delete p;
-                },
-                p);
-        return;
-    }
-
-    String* eventType = executionContext()
-                            ->starfish()
-                            ->staticStrings()
-                            ->m_iceconnectionstatechange.localName();
-    Event* e = new Event(executionContext(), eventType);
-    m_peerConnection->dispatchEventByUA(e);
-}
-
-void PeerConnectionObserver::OnIceGatheringState(
-    libwebrtc::RTCIceGatheringState newState)
-{
-    if (newState ==
-        libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete) {
-        return;
-    }
-
-    if (!isMainThread()) {
-        if (!m_peerConnection || m_peerConnection->isClosed()) {
-            return;
-        }
-
-        struct Params {
-            PeerConnectionObserver* self;
-            libwebrtc::RTCIceGatheringState newState;
-        };
-
-        Params* p = new Params{ this, newState };
-
-        executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-
-                    if (!p->self->m_peerConnection ||
-                        p->self->m_peerConnection->isClosed()) {
-                        delete p;
-                        return;
-                    }
-
-                    p->self->OnIceGatheringState(p->newState);
-                    delete p;
-                },
-                p);
-        return;
-    }
-
-    String* eventType = executionContext()
-                            ->starfish()
-                            ->staticStrings()
-                            ->m_icegatheringstatechange.localName();
-    Event* e = new Event(executionContext(), eventType);
-    m_peerConnection->dispatchEventByUA(e);
-}
-
-void PeerConnectionObserver::OnIceCandidate(
-    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate)
-{
-    if (!m_peerConnection || m_peerConnection->isClosed()) {
-        return;
-    }
-
-    struct Params {
-        PeerConnectionObserver* self;
-        std::string sdpMid;
-        int sdpMlineIndex;
-        std::string sdp;
-    };
-
-    libwebrtc::string sdp;
-    candidate->ToString(sdp);
-
-    Params* p = new Params();
-    p->self = this;
-    p->sdpMid = candidate->sdp_mid().std_string();
-    p->sdpMlineIndex = candidate->sdp_mline_index();
-    p->sdp = sdp.std_string();
-
-    executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                PeerConnectionObserver* self = p->self;
-
-                if (!self->m_peerConnection ||
-                    self->m_peerConnection->isClosed()) {
-                    delete p;
-                    return;
-                }
-
-                RTCIceCandidateInit cinit(p->sdp, p->sdpMid, p->sdpMlineIndex);
-                RTCIceCandidate* cand =
-                    new RTCIceCandidate(self->executionContext(), cinit);
-
-                RTCPeerConnectionIceEventInit init;
-                init.m_candidate = cand;
-
-                String* eventType = self->executionContext()
-                                        ->starfish()
-                                        ->staticStrings()
-                                        ->m_icecandidate.localName();
-                RTCPeerConnectionIceEvent* e = new RTCPeerConnectionIceEvent(
-                    self->executionContext(), eventType, init);
-                self->m_peerConnection->dispatchEventByUA(e);
-                delete p;
-            },
-            p);
-}
-
-void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
-                                          const libwebrtc::string type)
-{
-    if (!m_peerConnection) {
-        return;
-    }
-
-    // This callback is called from another thread
-    // The following lines must be executed in the main thread.
-    struct Params {
-        CreateOfferAnswerObserver* self;
-        std::string sdp;
-        std::string type;
-    };
-
-    Params* p = new Params{ this, sdp.std_string(), type.std_string() };
-
-    m_peerConnection->executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            m_peerConnection->executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                CreateOfferAnswerObserver* self = p->self;
-                String* sdpString =
-                    String::createASCIIString(p->sdp.c_str(), p->sdp.size());
-                std::string typeString = p->type;
-
-                ObjectRef* sd =
-                    self->m_peerConnection->createSessionDescriptionInitObject(
-                        self->m_peerConnection->toRtcSdpType(typeString),
-                        sdpString);
-                Promise* promise = nullptr;
-                if (self->isCreateOffer()) {
-                    promise = self->m_peerConnection->m_createOfferObserver
-                                  ->promise();
-                    self->m_peerConnection->m_createOfferObserver->setPromise(
-                        nullptr);
-                    self->m_peerConnection->m_lastCreatedOffer = sdpString;
-                } else if (self->isCreateAnswer()) {
-                    promise = self->m_peerConnection->m_createAnswerObserver
-                                  ->promise();
-                    self->m_peerConnection->m_createAnswerObserver->setPromise(
-                        nullptr);
-                    self->m_peerConnection->m_lastCreatedAnswer = sdpString;
-                }
-
-                if (promise) {
-                    promise->fulfill(createScriptValue(sd));
-                } else {
-                    STARFISH_LOG_ERROR("Unknown promise type");
-                }
-                delete p;
-            },
-            p);
-}
-
-void CreateOfferAnswerObserver::OnFailure(const char* error)
-{
-    // This callback is called from another thread
-    // The following lines must be executed in the main thread.
-    struct Params {
-        CreateOfferAnswerObserver* self;
-        std::string error;
-    };
-
-    Params* p = new Params{ this, std::move(error) };
-
-    m_peerConnection->executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            m_peerConnection->executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                CreateOfferAnswerObserver* self = p->self;
-
-                if (!self->m_peerConnection) {
-                    return;
-                }
-
-                DOMException* exception =
-                    self->m_peerConnection->toDomException(std::move(p->error));
-                STARFISH_ASSERT(exception);
-
-                Promise* promise = nullptr;
-                if (self->isCreateOffer()) {
-                    promise = self->m_peerConnection->m_createOfferObserver
-                                  ->promise();
-                    self->m_peerConnection->m_createOfferObserver->setPromise(
-                        nullptr);
-                } else if (self->isCreateAnswer()) {
-                    promise = self->m_peerConnection->m_createAnswerObserver
-                                  ->promise();
-                    self->m_peerConnection->m_createAnswerObserver->setPromise(
-                        nullptr);
-                }
-
-                if (promise) {
-                    promise->reject(exception->scriptValue());
-                } else {
-                    STARFISH_LOG_ERROR("Unknown promise type");
-                }
-
-                delete p;
-            },
-            p);
-}
-
-void SetLocalRemoteDescriptionObserver::OnSuccess()
-{
-    if (!isMainThread()) {
-        m_peerConnection->executionContext()
-            ->webBase()
-            ->messageLoop()
-            ->addIdlerWithNoGCRootingInOtherThread(
-                m_peerConnection->executionContext()->globalScope(),
-                [](size_t, void* data) {
-                    SetLocalRemoteDescriptionObserver* self =
-                        (SetLocalRemoteDescriptionObserver*)data;
-                    if (!self->m_peerConnection) {
-                        return;
-                    }
-
-                    self->OnSuccess();
-                },
-                this);
-        return;
-    }
-
-    Promise* promise = nullptr;
-    if (isLocalDescription()) {
-        promise = m_peerConnection->m_setLocalDescriptionObserver->promise();
-        m_peerConnection->m_setLocalDescriptionObserver->setPromise(nullptr);
-    } else if (isRemoteDescription()) {
-        promise = m_peerConnection->m_setRemoteDescriptionObserver->promise();
-        m_peerConnection->m_setRemoteDescriptionObserver->setPromise(nullptr);
-    }
-
-    if (promise) {
-        promise->fulfill(scriptUndefined());
+    if (isMainThread()) {
+        task();
     } else {
-        STARFISH_LOG_ERROR("Unknown promise type");
-    }
-}
-
-void SetLocalRemoteDescriptionObserver::OnFailure(const char* error)
-{
-    // This callback is called from another thread
-    // The following lines must be executed in the main thread.
-    struct Params {
-        SetLocalRemoteDescriptionObserver* self;
-        std::string error;
-    };
-
-    Params* p = new Params();
-    p->self = this;
-    p->error = std::move(error);
-
-    m_peerConnection->executionContext()
-        ->webBase()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            m_peerConnection->executionContext()->globalScope(),
-            [](size_t, void* data) {
-                Params* p = (Params*)data;
-                SetLocalRemoteDescriptionObserver* self = p->self;
-
-                if (!self->m_peerConnection) {
-                    delete p;
-                    return;
-                }
-
-                DOMException* exception =
-                    self->m_peerConnection->toDomException(p->error.c_str());
-                STARFISH_ASSERT(exception);
-
-                Promise* promise = nullptr;
-                if (self->isLocalDescription()) {
-                    promise = self->m_peerConnection
-                                  ->m_setLocalDescriptionObserver->promise();
-                    self->m_peerConnection->m_setLocalDescriptionObserver
-                        ->setPromise(nullptr);
-                } else if (self->isRemoteDescription()) {
-                    promise = self->m_peerConnection
-                                  ->m_setRemoteDescriptionObserver->promise();
-                    self->m_peerConnection->m_setRemoteDescriptionObserver
-                        ->setPromise(nullptr);
-                }
-
-                if (promise) {
-                    promise->reject(exception->scriptValue());
-                } else {
-                    STARFISH_LOG_DEBUG("Unknown promise type");
-                }
-                delete p;
-            },
-            p);
-}
-
-void GetStatsObserver::OnSuccess(
-    const libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
-        reports)
-{
-    if (!isMainThread()) {
-        PostTask([this, reports] { OnSuccess(reports); });
-        return;
-    }
-
-    RTCStatsReport* rtcStatsReport =
-        new RTCStatsReport(m_peerConnection->executionContext());
-
-    for (auto mediaRTCStats : reports.std_vector()) {
-        auto id = mediaRTCStats->id().std_string();
-        ScriptValue rtcStats = RTCStats::createScriptValueFromMediaRTCStats(
-            m_peerConnection->scriptBindingInstance()->scriptContext(),
-            mediaRTCStats);
-        rtcStatsReport->set(String::createASCIIString(id.c_str(), id.length()),
-                            rtcStats);
-    }
-    m_promise->fulfill(rtcStatsReport->scriptValue());
-}
-
-void GetStatsObserver::OnFailure(const char* error)
-{
-    if (!isMainThread()) {
-        PostTask([this, error] { OnFailure(error); });
-        return;
-    }
-
-    auto exception = new DOMException(m_peerConnection->executionContext(),
-                                      DOMException::INVALID_ACCESS_ERR, error);
-    m_promise->reject(exception->scriptValue());
-}
-
-void GetStatsObserver::PostTask(std::function<void()> task)
-{
-    struct Params {
-        std::function<void()> task;
-    };
-    Params* p = new Params();
-    p->task = task;
-
-    if (!isMainThread()) {
-        m_peerConnection->executionContext()
+        struct Params {
+            std::function<void()> task;
+        };
+        Params* p = new Params();
+        p->task = task;
+        executionContext()
             ->webBase()
             ->messageLoop()
             ->addIdlerWithNoGCRootingInOtherThread(
-                m_peerConnection->executionContext()->globalScope(),
+                executionContext()->globalScope(),
                 [](size_t, void* data) {
                     Params* p = static_cast<Params*>(data);
                     p->task();
                     delete p;
                 },
                 p);
-        return;
     }
+
+    return;
+}
+
+PeerConnectionObserver::PeerConnectionObserver(
+    RTCPeerConnection* peerConnection)
+    : ObserverBase(peerConnection)
+{
+}
+
+void PeerConnectionObserver::OnSignalingState(
+    libwebrtc::RTCSignalingState state)
+{
+    PostTask([this, state] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+        switch (state) {
+        case libwebrtc::RTCSignalingState::RTCSignalingStateStable:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("stable");
+            break;
+        case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalOffer:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("have-local-offer");
+            break;
+        case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemoteOffer:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("have-remote-offer");
+            break;
+        case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalPrAnswer:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("have-local-pranswer");
+            break;
+        case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemotePrAnswer:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("have-remote-pranswer");
+            break;
+        case libwebrtc::RTCSignalingState::RTCSignalingStateClosed:
+            m_peerConnection->m_signalingState =
+                String::createASCIIString("closed");
+            break;
+        default:
+            m_peerConnection->m_signalingState = String::emptyString;
+            break;
+        }
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_signalingstatechange.localName();
+        Event* e = new Event(executionContext(), eventType);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnPeerConnectionState(
+    libwebrtc::RTCPeerConnectionState state)
+{
+    PostTask([this, state] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        switch (state) {
+        case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateClosed:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("closed");
+            break;
+        case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateFailed:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("failed");
+            break;
+        case libwebrtc::RTCPeerConnectionState::
+            RTCPeerConnectionStateDisconnected:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("disconnected");
+            break;
+        case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateNew:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("new");
+            break;
+        case libwebrtc::RTCPeerConnectionState::
+            RTCPeerConnectionStateConnecting:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("connecting");
+            break;
+        case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateConnected:
+            m_peerConnection->m_connectionState =
+                String::createASCIIString("connected");
+            break;
+        default:
+            m_peerConnection->m_connectionState = String::emptyString;
+            break;
+        }
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_connectionstatechange.localName();
+        Event* e = new Event(executionContext(), eventType);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnTrack(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver)
+{
+    PostTask([this, transceiver] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        m_peerConnection->syncTransceivers();
+        RTCRtpTransceiver* rtpTransceiver =
+            m_peerConnection->getTransceiver(transceiver);
+        if (!rtpTransceiver) {
+            STARFISH_LOG_DEBUG("Transceiver is null");
+            return;
+        }
+        RTCRtpReceiver* rtpReceiver = rtpTransceiver->receiver();
+        if (!rtpReceiver) {
+            STARFISH_LOG_DEBUG("Receiver is null");
+            return;
+        }
+        MediaStreamTrack* track = rtpReceiver->track();
+        if (!track) {
+            STARFISH_LOG_DEBUG("MediaTrack is null");
+            return;
+        }
+        GCVector<MediaStream*> rtpStreams;
+        for (auto stream : rtpReceiver->streams()) {
+            stream->addTrack(track);
+            rtpStreams.push_back(stream);
+        }
+
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_track.localName();
+        RTCTrackEventInit init(rtpReceiver, track, rtpStreams, rtpTransceiver);
+        RTCTrackEvent* e =
+            new RTCTrackEvent(executionContext(), eventType, init);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+// https://w3c.github.io/webrtc-pc/#event-datachannel
+void PeerConnectionObserver::OnDataChannel(
+    libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel)
+{
+    PostTask([this, channel] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        RTCDataChannelInit channelInit;
+        RTCDataChannel* rtcChannel =
+            new RTCDataChannel(executionContext(), channelInit, channel);
+
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_datachannel.localName();
+        RTCDataChannelEventInit eventInit;
+        RTCDataChannelEvent* e = new RTCDataChannelEvent(
+            executionContext(), eventType, eventInit, rtcChannel);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+// https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
+void PeerConnectionObserver::OnRenegotiationNeeded()
+{
+    PostTask([this] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_negotiationneeded.localName();
+        Event* e = new Event(executionContext(), eventType);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnIceConnectionState(
+    libwebrtc::RTCIceConnectionState state)
+{
+    PostTask([this, state] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        switch (state) {
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("closed");
+            break;
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateFailed:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("failed");
+            break;
+        case libwebrtc::RTCIceConnectionState::
+            RTCIceConnectionStateDisconnected:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("disconnected");
+            break;
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateNew:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("new");
+            break;
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateChecking:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("checking");
+            break;
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateCompleted:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("completed");
+            break;
+        case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateConnected:
+            m_peerConnection->m_iceConnectionState =
+                String::createASCIIString("connected");
+            break;
+        default:
+            m_peerConnection->m_iceConnectionState = String::emptyString;
+            break;
+        }
+
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_iceconnectionstatechange.localName();
+        Event* e = new Event(executionContext(), eventType);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnIceGatheringState(
+    libwebrtc::RTCIceGatheringState state)
+{
+    PostTask([this, state] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        switch (state) {
+        case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateNew:
+            m_peerConnection->m_iceGatheringState =
+                String::createASCIIString("new");
+            break;
+        case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateGathering:
+            m_peerConnection->m_iceGatheringState =
+                String::createASCIIString("gathering");
+            break;
+        case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete:
+            m_peerConnection->m_iceGatheringState =
+                String::createASCIIString("complete");
+            break;
+        default:
+            m_peerConnection->m_iceGatheringState = String::emptyString;
+            break;
+        }
+
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_icegatheringstatechange.localName();
+        Event* e = new Event(executionContext(), eventType);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnIceCandidate(
+    libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate)
+{
+    PostTask([this, candidate] {
+        if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        std::string sdpMid = candidate->sdp_mid().std_string();
+        int sdpMlineIndex = candidate->sdp_mline_index();
+        libwebrtc::string sdp;
+        candidate->ToString(sdp);
+
+        RTCIceCandidateInit cinit(sdp.c_string(), sdpMid, sdpMlineIndex);
+        RTCIceCandidate* cand = new RTCIceCandidate(executionContext(), cinit);
+
+        RTCPeerConnectionIceEventInit init;
+        init.m_candidate = cand;
+
+        String* eventType = executionContext()
+                                ->starfish()
+                                ->staticStrings()
+                                ->m_icecandidate.localName();
+        RTCPeerConnectionIceEvent* e =
+            new RTCPeerConnectionIceEvent(executionContext(), eventType, init);
+        m_peerConnection->dispatchEventByUA(e);
+    });
+}
+
+void PeerConnectionObserver::OnAddStream(
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> stream)
+{
+    STARFISH_UNIMPLEMENTED();
+};
+
+void PeerConnectionObserver::OnRemoveStream(
+    libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream> stream)
+{
+    STARFISH_UNIMPLEMENTED();
+};
+
+CreateOfferAnswerObserver::CreateOfferAnswerObserver(
+    RTCPeerConnection* peerConnection)
+    : ObserverBase(peerConnection)
+{
+}
+
+void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
+                                          const libwebrtc::string type)
+{
+    PostTask([this, sdp, type] {
+        if (m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        std::string sdpStdString = sdp.std_string();
+        String* sdpString = String::createASCIIString(sdpStdString.c_str(),
+                                                      sdpStdString.size());
+
+        ObjectRef* sd = m_peerConnection->createSessionDescriptionInitObject(
+            m_peerConnection->toRtcSdpType(type.std_string()), sdpString);
+        Promise* promise = nullptr;
+        if (isCreateOffer()) {
+            promise = m_peerConnection->m_createOfferObserver->promise();
+            m_peerConnection->m_createOfferObserver->setPromise(nullptr);
+            m_peerConnection->m_lastCreatedOffer = sdpString;
+        } else if (isCreateAnswer()) {
+            promise = m_peerConnection->m_createAnswerObserver->promise();
+            m_peerConnection->m_createAnswerObserver->setPromise(nullptr);
+            m_peerConnection->m_lastCreatedAnswer = sdpString;
+        }
+
+        if (promise) {
+            promise->fulfill(createScriptValue(sd));
+        } else {
+            STARFISH_LOG_ERROR("Unknown promise type");
+        }
+    });
+}
+
+void CreateOfferAnswerObserver::OnFailure(const std::string& error)
+{
+    PostTask([this, error] {
+        if (m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        DOMException* exception = m_peerConnection->toDomException(error);
+        STARFISH_ASSERT(exception);
+
+        Promise* promise = nullptr;
+        if (isCreateOffer()) {
+            promise = m_peerConnection->m_createOfferObserver->promise();
+            m_peerConnection->m_createOfferObserver->setPromise(nullptr);
+        } else if (isCreateAnswer()) {
+            promise = m_peerConnection->m_createAnswerObserver->promise();
+            m_peerConnection->m_createAnswerObserver->setPromise(nullptr);
+        }
+
+        if (promise) {
+            promise->reject(exception->scriptValue());
+        } else {
+            STARFISH_LOG_ERROR("Unknown promise type");
+        }
+    });
+}
+
+SetLocalRemoteDescriptionObserver::SetLocalRemoteDescriptionObserver(
+    RTCPeerConnection* peerConnection)
+    : ObserverBase(peerConnection)
+{
+}
+
+void SetLocalRemoteDescriptionObserver::OnSuccess()
+{
+    PostTask([this] {
+        Promise* promise = nullptr;
+        if (isLocalDescription()) {
+            promise =
+                m_peerConnection->m_setLocalDescriptionObserver->promise();
+            m_peerConnection->m_setLocalDescriptionObserver->setPromise(
+                nullptr);
+        } else if (isRemoteDescription()) {
+            promise =
+                m_peerConnection->m_setRemoteDescriptionObserver->promise();
+            m_peerConnection->m_setRemoteDescriptionObserver->setPromise(
+                nullptr);
+        }
+
+        if (promise) {
+            promise->fulfill(scriptUndefined());
+        } else {
+            STARFISH_LOG_ERROR("Unknown promise type");
+        }
+    });
+}
+
+void SetLocalRemoteDescriptionObserver::OnFailure(const std::string& error)
+{
+    PostTask([this, error] {
+        if (m_peerConnection->isDisposed()) {
+            return;
+        }
+
+        DOMException* exception = m_peerConnection->toDomException(error);
+        STARFISH_ASSERT(exception);
+
+        Promise* promise = nullptr;
+        if (isLocalDescription()) {
+            promise =
+                m_peerConnection->m_setLocalDescriptionObserver->promise();
+            m_peerConnection->m_setLocalDescriptionObserver->setPromise(
+                nullptr);
+        } else if (isRemoteDescription()) {
+            promise =
+                m_peerConnection->m_setRemoteDescriptionObserver->promise();
+            m_peerConnection->m_setRemoteDescriptionObserver->setPromise(
+                nullptr);
+        }
+
+        if (promise) {
+            promise->reject(exception->scriptValue());
+        } else {
+            STARFISH_LOG_DEBUG("Unknown promise type");
+        }
+    });
+}
+
+GetStatsObserver::GetStatsObserver(RTCPeerConnection* peerConnection)
+    : ObserverBase(peerConnection)
+{
+}
+
+void GetStatsObserver::OnSuccess(
+    const libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+        reports)
+{
+    PostTask([this, reports] {
+        RTCStatsReport* rtcStatsReport =
+            new RTCStatsReport(m_peerConnection->executionContext());
+
+        for (auto mediaRTCStats : reports.std_vector()) {
+            auto id = mediaRTCStats->id().std_string();
+            ScriptValue rtcStats = RTCStats::createScriptValueFromMediaRTCStats(
+                m_peerConnection->scriptBindingInstance()->scriptContext(),
+                mediaRTCStats);
+            rtcStatsReport->set(
+                String::createASCIIString(id.c_str(), id.length()), rtcStats);
+        }
+        m_promise->fulfill(rtcStatsReport->scriptValue());
+    });
+}
+
+void GetStatsObserver::OnFailure(const std::string& error)
+{
+    PostTask([this, error] {
+        auto exception =
+            new DOMException(m_peerConnection->executionContext(),
+                             DOMException::INVALID_ACCESS_ERR, error.c_str());
+        m_promise->reject(exception->scriptValue());
+    });
 }
 
 // https://w3c.github.io/webrtc-pc/#constructor
@@ -770,6 +644,10 @@ bool RTCPeerConnection::initializePeerConnection(
     m_setRemoteDescriptionObserver = new SetRemoteDescriptionObserver(this);
     m_getStatsObserver = new GetStatsObserver(this);
 
+    m_connectionState = String::createASCIIString("new");
+    m_signalingState = String::createASCIIString("stable");
+    m_iceGatheringState = String::createASCIIString("new");
+    m_iceConnectionState = String::createASCIIString("new");
     return m_backend != nullptr;
 }
 
@@ -1359,94 +1237,31 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
 
 String* RTCPeerConnection::signalingState()
 {
-    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
-    // closing it. Remove this block when the bug is resolved.
     if (isClosed()) {
-        return String::createASCIIString("closed");
+        m_signalingState = String::createASCIIString("closed");
     }
-
-    switch (m_backend->signaling_state()) {
-    case libwebrtc::RTCSignalingState::RTCSignalingStateStable:
-        return String::createASCIIString("stable");
-    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalOffer:
-        return String::createASCIIString("have-local-offer");
-    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemoteOffer:
-        return String::createASCIIString("have-remote-offer");
-    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveLocalPrAnswer:
-        return String::createASCIIString("have-local-pranswer");
-    case libwebrtc::RTCSignalingState::RTCSignalingStateHaveRemotePrAnswer:
-        return String::createASCIIString("have-remote-pranswer");
-    case libwebrtc::RTCSignalingState::RTCSignalingStateClosed:
-        return String::createASCIIString("closed");
-    default:
-        return String::emptyString;
-    }
+    return m_signalingState;
 }
 
 String* RTCPeerConnection::iceGatheringState()
 {
-    switch (m_backend->ice_gathering_state()) {
-    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateNew:
-        return String::createASCIIString("new");
-    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateGathering:
-        return String::createASCIIString("gathering");
-    case libwebrtc::RTCIceGatheringState::RTCIceGatheringStateComplete:
-        return String::createASCIIString("complete");
-    default:
-        return String::emptyString;
-    }
+    return m_iceGatheringState;
 }
 
 String* RTCPeerConnection::iceConnectionState()
 {
-    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
-    // closing it. Remove this block when the bug is resolved.
     if (isClosed()) {
-        return String::createASCIIString("closed");
+        m_iceConnectionState = String::createASCIIString("closed");
     }
-    switch (m_backend->ice_connection_state()) {
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateClosed:
-        return String::createASCIIString("closed");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateFailed:
-        return String::createASCIIString("failed");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateDisconnected:
-        return String::createASCIIString("disconnected");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateNew:
-        return String::createASCIIString("new");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateChecking:
-        return String::createASCIIString("checking");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateCompleted:
-        return String::createASCIIString("completed");
-    case libwebrtc::RTCIceConnectionState::RTCIceConnectionStateConnected:
-        return String::createASCIIString("connected");
-    default:
-        return String::emptyString;
-    }
+    return m_iceConnectionState;
 }
 
 String* RTCPeerConnection::connectionState()
 {
-    // FIXME: A bug in libwebtc causes a crash if you try to get a status after
-    // closing it. Remove this block when the bug is resolved.
     if (isClosed()) {
-        return String::createASCIIString("closed");
+        m_connectionState = String::createASCIIString("closed");
     }
-    switch (m_backend->peer_connection_state()) {
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateClosed:
-        return String::createASCIIString("closed");
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateFailed:
-        return String::createASCIIString("failed");
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateDisconnected:
-        return String::createASCIIString("disconnected");
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateNew:
-        return String::createASCIIString("new");
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateConnecting:
-        return String::createASCIIString("connecting");
-    case libwebrtc::RTCPeerConnectionState::RTCPeerConnectionStateConnected:
-        return String::createASCIIString("connected");
-    default:
-        return String::emptyString;
-    }
+    return m_connectionState;
 }
 
 GCVector<RTCIceServer> RTCPeerConnection::getDefaultIceServers()
@@ -1608,6 +1423,7 @@ void RTCPeerConnection::close()
 
     m_closed = true;
     if (m_backend) {
+        // Note: Closing backend does not call the callback for the close state.
         m_backend->Close();
     }
 }
