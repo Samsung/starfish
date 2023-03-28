@@ -1959,17 +1959,21 @@ void CanvasRenderingContext2DMixIn::clip(Path* path, String* fillRule)
     }
 }
 
-void CanvasRenderingContext2DMixIn::getPointsUnaffectedByCurrentTransformation(
+bool CanvasRenderingContext2DMixIn::getPointsUnaffectedByCurrentTransformation(
     const float& x, const float& y, float& ux, float& uy)
 {
     SkMatrix matrix;
-    m_canvas->currentTransformMatrix().invert(&matrix);
+    if (!m_canvas->currentTransformMatrix().invert(&matrix)) {
+        STARFISH_LOG_WARN("Failed to invert current transform matrix");
+        return false;
+    }
 
     SkPoint src;
     src.set(SkFloatToScalar(x), SkFloatToScalar(y));
     matrix.mapPoints(&src, 1);
     ux = SkScalarToFloat(src.x());
     uy = SkScalarToFloat(src.y());
+    return true;
 }
 
 bool CanvasRenderingContext2DMixIn::isPointInPath(Path* path, float x, float y,
@@ -1985,7 +1989,9 @@ bool CanvasRenderingContext2DMixIn::isPointInPath(Path* path, float x, float y,
     }
 
     float xx, yy;
-    getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
+    if (!getPointsUnaffectedByCurrentTransformation(x, y, xx, yy)) {
+        return false;
+    }
     return (path->isPointInPath(xx, yy, rule) == true);
 }
 
@@ -1997,7 +2003,9 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     }
 
     float xx, yy;
-    getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
+    if (!getPointsUnaffectedByCurrentTransformation(x, y, xx, yy)) {
+        return false;
+    }
     path->applyPathDrawingStyles(m_canvas);
     return (path->isPointInStroke(xx, yy) == true);
 }

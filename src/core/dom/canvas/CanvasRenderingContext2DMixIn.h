@@ -256,7 +256,7 @@ private:
     void clip(Path* path, String* fillRule);
     bool isPointInPath(Path* path, float x, float y, String* fillRule);
     bool isPointInStroke(Path* path, float x, float y);
-    void getPointsUnaffectedByCurrentTransformation(const float& x,
+    bool getPointsUnaffectedByCurrentTransformation(const float& x,
                                                     const float& y, float& ux,
                                                     float& uy);
     void setLineCap(CanvasLineCap lineCap);
