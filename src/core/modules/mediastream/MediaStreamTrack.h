@@ -31,6 +31,7 @@
 #include "rtc_audio_track.h"
 
 namespace Starfish {
+
 class ExecutionContext;
 class AudioStreamTrack;
 class VideoStreamTrack;
@@ -46,10 +47,13 @@ public:
     enum class Kind { Audio, Video, None };
 
     MediaStreamTrack(ExecutionContext* executionContext);
+
     virtual ~MediaStreamTrack();
+
     virtual void dispose() = 0;
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaStreamTrack)
+
     virtual ExecutionContext* executionContext() const override;
 
     virtual std::string id() = 0;
@@ -87,8 +91,14 @@ public:
     }
 
     AudioStreamTrack* asAudioStreamTrack();
+
     VideoStreamTrack* asVideoStreamTrack();
+
     WebCamStreamTrack* asWebCamStreamTrack();
+
+    virtual String* readyState() = 0;
+
+    void stop();
 
 protected:
     ExecutionContext* m_executionContext{ nullptr };
@@ -108,7 +118,7 @@ public:
 
     std::string id() override
     {
-        // return m_backend->id();
+        STARFISH_UNIMPLEMENTED();
         return std::string();
     }
 
@@ -126,6 +136,8 @@ public:
     {
         return m_backend == nullptr;
     }
+
+    String* readyState() override;
 
 private:
     libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> m_backend;
@@ -157,8 +169,7 @@ public:
 
     std::string id() override
     {
-        // TODO:FIXME!
-        // return m_backend->id();
+        STARFISH_UNIMPLEMENTED();
         return std::string();
     }
 
@@ -178,6 +189,8 @@ public:
     {
         return m_backend == nullptr;
     }
+
+    String* readyState() override;
 
 protected:
     libwebrtc::scoped_refptr<libwebrtc::RTCVideoTrack> m_backend;
