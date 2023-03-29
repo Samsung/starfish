@@ -74,12 +74,12 @@ MediaStreamTrack* RTCRtpReceiver::track()
     if (m_track) {
         if (m_track->isAudioStreamTrack()) {
             STARFISH_RELEASE_ASSERT(
-                m_track->asAudioStreamTrack()->backend().get() ==
-                m_backend->track().get());
+                m_track->asAudioStreamTrack()->backend()->id().std_string() ==
+                m_backend->track()->id().std_string());
         } else {
             STARFISH_RELEASE_ASSERT(
-                m_track->asVideoStreamTrack()->backend().get() ==
-                m_backend->track().get());
+                m_track->asVideoStreamTrack()->backend()->id().std_string() ==
+                m_backend->track()->id().std_string());
         }
 
         return m_track;
