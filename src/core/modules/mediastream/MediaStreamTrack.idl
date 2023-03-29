@@ -17,6 +17,12 @@
  *  USA
  */
 
+[ STARFISH_ENABLE_WEBRTC ]
+enum MediaStreamTrackState {
+  "live",
+  "ended"
+};
+
 [ STARFISH_ENABLE_WEBRTC,
   Exposed=Window,
   ConstructorCallWith=ExecutionContext ]
@@ -28,10 +34,10 @@ interface MediaStreamTrack : EventTarget {
   //readonly attribute boolean muted;
   //attribute EventHandler onmute;
   //attribute EventHandler onunmute;
-  //readonly attribute MediaStreamTrackState readyState;
+  readonly attribute MediaStreamTrackState readyState;
   //attribute EventHandler onended;
   //MediaStreamTrack clone();
-  //void stop();
+  void stop();
   //MediaTrackCapabilities getCapabilities();
   //MediaTrackConstraints getConstraints();
   //MediaTrackSettings getSettings();

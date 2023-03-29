@@ -90,6 +90,11 @@ WebCamStreamTrack* MediaStreamTrack::asWebCamStreamTrack()
     return static_cast<WebCamStreamTrack*>(this);
 }
 
+void MediaStreamTrack::stop()
+{
+    dispose();
+}
+
 AudioStreamTrack::AudioStreamTrack(ExecutionContext* executionContext)
     : AudioStreamTrack(executionContext, nullptr)
 {
@@ -138,6 +143,22 @@ void AudioStreamTrack::dispose()
     }
 }
 
+String* AudioStreamTrack::readyState()
+{
+    if (isDisposed()) {
+        return String::createASCIIString("ended");
+    }
+
+    switch (m_backend->state()) {
+    case libwebrtc::RTCMediaTrack::RTCTrackState::kLive:
+        return String::createASCIIString("live");
+    case libwebrtc::RTCMediaTrack::RTCTrackState::kEnded:
+        return String::createASCIIString("ended");
+    default:
+        return String::emptyString;
+    }
+}
+
 VideoStreamTrack::VideoStreamTrack(ExecutionContext* executionContext)
     : VideoStreamTrack(executionContext, nullptr)
 {
@@ -182,6 +203,22 @@ void VideoStreamTrack::dispose()
     }
 }
 
+String* VideoStreamTrack::readyState()
+{
+    if (isDisposed()) {
+        return String::createASCIIString("ended");
+    }
+
+    switch (m_backend->state()) {
+    case libwebrtc::RTCMediaTrack::RTCTrackState::kLive:
+        return String::createASCIIString("live");
+    case libwebrtc::RTCMediaTrack::RTCTrackState::kEnded:
+        return String::createASCIIString("ended");
+    default:
+        return String::emptyString;
+    }
+}
+
 void VideoStreamTrack::play()
 {
     m_source = new VideoStreamTrackObserver(m_backend);
@@ -196,6 +233,7 @@ VideoStreamTrack::VideoStreamTrackObserver::VideoStreamTrackObserver(
 void VideoStreamTrack::VideoStreamTrackObserver::OnFrame(
     libwebrtc::scoped_refptr<libwebrtc::RTCVideoFrame> frame)
 {
+    STARFISH_UNIMPLEMENTED();
 }
 
 WebCamStreamTrack::WebCamStreamTrack(ExecutionContext* executionContext,
