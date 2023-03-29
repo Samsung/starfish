@@ -1807,9 +1807,11 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
         }
         if (count == 0) {
             m_getStatsObserver->OnFailure("No fit sender or receiver exists.");
+            return promise;
         } else if (count != 1) {
             m_getStatsObserver->OnFailure(
                 "More than one fit sender or receiver exists.");
+            return promise;
         }
 
         STARFISH_ASSERT(!(sender && receiver));
