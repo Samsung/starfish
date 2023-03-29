@@ -369,18 +369,18 @@ void MediaStream::addTrack(MediaStreamTrack* track)
     if (track->kind() == MediaStreamTrack::Kind::Audio) {
         auto audioTrack = track->asAudioStreamTrack();
         if (audioTrack->backend()) {
-            if (m_backend->AddTrack(audioTrack->backend())) {
-                m_audioTracks.insert(audioTrack);
-                audioTrack->attachTo(this);
-            }
+            // TODO : FIXME
+            m_backend->AddTrack(audioTrack->backend());
+            m_audioTracks.insert(audioTrack);
+            audioTrack->attachTo(this);
         }
     } else if (track->kind() == MediaStreamTrack::Kind::Video) {
         auto videoTrack = track->asVideoStreamTrack();
         if (videoTrack->backend()) {
-            if (m_backend->AddTrack(videoTrack->backend())) {
-                m_videoTracks.insert(videoTrack);
-                videoTrack->attachTo(this);
-            }
+            // TODO : FIXME
+            m_backend->AddTrack(videoTrack->backend());
+            m_videoTracks.insert(videoTrack);
+            videoTrack->attachTo(this);
         }
     }
 }
