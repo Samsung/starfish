@@ -78,7 +78,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                if (ecore_timer_freeze_get(td->m_timerID)) {
+                if (ecore_timer_freeze_get(td->m_timerID) || (!td->m_timer)) {
                     return ECORE_CALLBACK_DONE;
                 }
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
@@ -96,7 +96,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                 TimeoutData* td = (TimeoutData*)data;
                 Timer* timer = td->m_timer;
                 int32_t id = td->m_id;
-                if (ecore_timer_freeze_get(td->m_timerID)) {
+                if (ecore_timer_freeze_get(td->m_timerID) || (!timer)) {
                     return ECORE_CALLBACK_DONE;
                 }
                 td->m_timer->m_webBase->messageLoop()
@@ -124,6 +124,7 @@ void Timer::removeTimer(size_t reqID)
         TimeoutData* td = (TimeoutData*)handlerData->second;
         ecore_timer_freeze(td->m_timerID);
         ecore_timer_del(td->m_timerID);
+        td->m_timer = nullptr;
         GC_FREE(td);
         m_timeoutHandler.erase(handlerData);
     }
@@ -200,6 +201,7 @@ void Timer::clear(GlobalScope* globalScope)
             globalScope == nullptr) {
             ecore_timer_freeze(td->m_timerID);
             ecore_timer_del(td->m_timerID);
+            td->m_timer = nullptr;
             GC_FREE(td);
             timerIter = m_timeoutHandler.erase(timerIter);
         } else {
@@ -247,6 +249,7 @@ void Timer::destroy()
         TimeoutData* td = (TimeoutData*)timerIter->second;
         ecore_timer_freeze(td->m_timerID);
         ecore_timer_del(td->m_timerID);
+        td->m_timer = nullptr;
         GC_FREE(td);
         timerIter++;
     }
