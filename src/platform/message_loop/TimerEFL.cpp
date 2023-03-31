@@ -118,7 +118,8 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
 
 void Timer::removeTimer(size_t reqID)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_RELEASE_ASSERT(isMainThread());
+
     auto handlerData = m_timeoutHandler.find(reqID);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
@@ -194,6 +195,8 @@ void Timer::removeGenericAnimator(size_t reqID)
 
 void Timer::clear(GlobalScope* globalScope)
 {
+    STARFISH_RELEASE_ASSERT(isMainThread());
+
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
@@ -243,6 +246,8 @@ void Timer::clear(GlobalScope* globalScope)
 
 void Timer::destroy()
 {
+    STARFISH_RELEASE_ASSERT(isMainThread());
+
     STARFISH_LOG_INFO("TimerEFL::destroy");
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
