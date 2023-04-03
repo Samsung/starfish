@@ -20,7 +20,7 @@
 // https://w3c.github.io/webrtc-pc/#dom-rtcdatachanneleventinit
 [STARFISH_ENABLE_WEBRTC]
 dictionary RTCDataChannelEventInit : EventInit {
-//  required RTCDataChannel channel;
+  required RTCDataChannel channel;
 };
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcdatachannelevent

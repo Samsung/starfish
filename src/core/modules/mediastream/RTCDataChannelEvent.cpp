@@ -32,16 +32,8 @@ namespace Starfish {
 RTCDataChannelEvent::RTCDataChannelEvent(ExecutionContext* executionContext,
                                          String* type,
                                          RTCDataChannelEventInit eventInitDict)
-    : RTCDataChannelEvent(executionContext, type, eventInitDict, nullptr)
-{
-}
-
-RTCDataChannelEvent::RTCDataChannelEvent(ExecutionContext* executionContext,
-                                         String* type,
-                                         RTCDataChannelEventInit eventInitDict,
-                                         RTCDataChannel* channel)
     : Event(executionContext, type)
-    , m_channel(channel)
+    , m_channel(eventInitDict.channel())
 {
 }
 

@@ -31,15 +31,16 @@ class ExecutionContext;
 class RTCDataChannel;
 
 struct RTCDataChannelEventInit : public EventInit {
+    DEFINE_GETTER_SETTER(RTCDataChannel*, channel, Channel)
+
+    RTCDataChannel* m_channel;
 };
 
 class RTCDataChannelEvent : public Event {
 public:
     RTCDataChannelEvent(ExecutionContext* executionContext, String* type,
                         RTCDataChannelEventInit eventInitDict);
-    RTCDataChannelEvent(ExecutionContext* executionContext, String* type,
-                        RTCDataChannelEventInit eventInitDict,
-                        RTCDataChannel* channel);
+
     virtual ~RTCDataChannelEvent(){};
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCDataChannelEvent)
