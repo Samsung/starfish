@@ -31,7 +31,6 @@ dictionary RTCIceCandidateInit {
   DOMString? sdpMid = null;
   unsigned short? sdpMLineIndex = null;
   DOMString? usernameFragment = null;
-  DOMString? ufrag = null; // alias to usernameFragment
 };
 
 // https://w3c.github.io/webrtc-pc/#rtcicecandidate-interface
