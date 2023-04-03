@@ -265,8 +265,9 @@ void PeerConnectionObserver::OnDataChannel(
                                 ->staticStrings()
                                 ->m_datachannel.localName();
         RTCDataChannelEventInit eventInit;
-        RTCDataChannelEvent* e = new RTCDataChannelEvent(
-            executionContext(), eventType, eventInit, rtcChannel);
+        eventInit.setChannel(rtcChannel);
+        RTCDataChannelEvent* e =
+            new RTCDataChannelEvent(executionContext(), eventType, eventInit);
         m_peerConnection->dispatchEventByUA(e);
     });
 }
