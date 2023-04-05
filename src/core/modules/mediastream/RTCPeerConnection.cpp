@@ -213,9 +213,8 @@ void PeerConnectionObserver::OnTrack(
             return;
         }
 
-        m_peerConnection->syncTransceivers();
         RTCRtpTransceiver* rtpTransceiver =
-            m_peerConnection->getTransceiver(transceiver);
+            m_peerConnection->getOrCreateRTCRtpTransceiver(transceiver);
         if (!rtpTransceiver) {
             STARFISH_LOG_DEBUG("Transceiver is null");
             return;
@@ -245,6 +244,20 @@ void PeerConnectionObserver::OnTrack(
             new RTCTrackEvent(executionContext(), eventType, init);
         m_peerConnection->dispatchEventByUA(e);
     });
+}
+
+void PeerConnectionObserver::OnAddTrack(
+    libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream>>
+        streams,
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void PeerConnectionObserver::OnRemoveTrack(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
+{
+    STARFISH_UNIMPLEMENTED();
 }
 
 // https://w3c.github.io/webrtc-pc/#event-datachannel
@@ -504,6 +517,21 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
                 nullptr);
         }
 
+        for (auto transceiver : m_peerConnection->getTransceivers()) {
+            auto currentDirection = transceiver->currentDirection();
+            if (currentDirection.hasValue()) {
+                auto currentDirectionStr = currentDirection.value();
+                // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtrack
+                if (currentDirectionStr->equals("sendrecv") ||
+                    currentDirectionStr->equals("sendonly")) {
+                    // The sender has never been used to send. More precisely,
+                    // the [[CurrentDirection]] slot of the RTCRtpTransceiver
+                    // associated with the sender has never had a value of
+                    // "sendrecv" or "sendonly".
+                    transceiver->MarkSentBefore();
+                }
+            }
+        }
         if (promise) {
             promise->fulfill(scriptUndefined());
         } else {
@@ -796,10 +824,10 @@ void RTCPeerConnection::syncTransceivers()
     }
 }
 
-RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
+RTCRtpTransceiver* RTCPeerConnection::getOrCreateRTCRtpTransceiver(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backendTransceiver)
 {
-    syncTransceivers();
+    // Try to search a transceiver from current set.
     for (auto transceiver : m_transceivers) {
         if (backendTransceiver->sender()->id().std_string() ==
                 transceiver->backend()->sender()->id().std_string() &&
@@ -808,22 +836,52 @@ RTCRtpTransceiver* RTCPeerConnection::getTransceiver(
             return transceiver;
         }
     }
+
+    // Try to create a new transceiver from corresponding backend.
+    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>>
+        backendTransceivers = m_backend->transceivers().std_vector();
+    for (const auto& transceiver : backendTransceivers) {
+        if (backendTransceiver->sender()->id().std_string() ==
+                transceiver->sender()->id().std_string() &&
+            backendTransceiver->receiver()->id().std_string() ==
+                transceiver->receiver()->id().std_string()) {
+            RTCRtpTransceiver* newTransceiver =
+                new RTCRtpTransceiver(executionContext(), this, transceiver);
+            // Add a new transceiver to current set.
+            m_transceivers.push_back(newTransceiver);
+            return newTransceiver;
+        }
+    }
+
     return nullptr;
 }
 
-RTCRtpSender* RTCPeerConnection::getSender(
+RTCRtpSender* RTCPeerConnection::getOrCreateRTCRtpSender(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> backendSender)
 {
-    RTCRtpSender* result = nullptr;
-    syncTransceivers();
+    // Try to search a sencder from current set.
     for (auto transceiver : m_transceivers) {
         if (transceiver->sender()->backend()->id().std_string() ==
             backendSender->id().std_string()) {
-            result = transceiver->sender();
-            break;
+            return transceiver->sender();
         }
     }
-    return result;
+
+    // Try to create a new sencder from corresponding backend.
+    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>>
+        backendTransceivers = m_backend->transceivers().std_vector();
+    for (auto transceiver : backendTransceivers) {
+        if (backendSender->id().std_string() ==
+            transceiver->sender()->id().std_string()) {
+            RTCRtpTransceiver* newTransceiver =
+                new RTCRtpTransceiver(executionContext(), this, transceiver);
+            // Add a new transceiver to current set.
+            m_transceivers.push_back(newTransceiver);
+            return newTransceiver->sender();
+        }
+    }
+
+    return nullptr;
 }
 
 ScriptObject RTCPeerConnection::createSessionDescriptionInitObject(
@@ -1639,7 +1697,15 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                     RTCRtpTransceiverDirection::Sendonly);
             }
         }
-    } else { // 9
+    } else {
+        // 9 If sender is null, run the following steps:
+        //  1 .Create an RTCRtpSender with track, kind and streams, and let
+        //  sender 2.be the result. Create an RTCRtpReceiver with kind, and let
+        //  receiver
+        // 3. be the result. Create an RTCRtpTransceiver with sender, receiver
+        // and an RTCRtpTransceiverDirection value of "sendrecv", and let
+        // transceiver be the result.
+        // 4. Add transceiver to connection's set of transceivers.
         std::vector<libwebrtc::string> stream_ids;
         for (auto id : streamIds) {
             stream_ids.push_back(id.c_str());
@@ -1661,9 +1727,9 @@ RTCRtpSender* RTCPeerConnection::addTrack(MediaStreamTrack* track,
                                    "InvalidAccessErr");
         }
 
-        senderToReturn = getSender(r);
-        senderToReturn->setTrack(track);
+        senderToReturn = getOrCreateRTCRtpSender(r);
         STARFISH_ASSERT(senderToReturn);
+        senderToReturn->setTrack(track);
     }
     return senderToReturn;
 }
@@ -1773,7 +1839,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
                                "addTransceiver: internal error");
     }
 
-    RTCRtpTransceiver* transceiver = getTransceiver(r);
+    RTCRtpTransceiver* transceiver = getOrCreateRTCRtpTransceiver(r);
 
     if (track) {
         transceiver->sender()->setTrack(track);

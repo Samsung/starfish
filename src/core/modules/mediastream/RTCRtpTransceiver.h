@@ -70,7 +70,13 @@ public:
     Nullable<String*> currentDirection();
 
     bool stopped();
+
     bool sentBefore();
+
+    void MarkSentBefore()
+    {
+        m_sentBefore = true;
+    }
 
     RTCPeerConnection* peerConnection()
     {
