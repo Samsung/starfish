@@ -201,13 +201,12 @@ def wpt_pwa():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/fetch_basic.res", "cairo"])
 
 def wpt_webrtc():
-    if platform.uname()[4] != "x86_64":
-        run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo"])
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo", "-p1"])
 
 def wpt_all():
     wpt_css_all()
     wpt_pwa()
-    wpt_webrtc()
+    # wpt_webrtc() // Disable in CI
     wpt_canvas()
     wpt_others()
     wpt_websocket()

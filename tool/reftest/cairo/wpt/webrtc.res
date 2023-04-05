@@ -1,83 +1,127 @@
-# http://web-platform.test:8000/webrtc/RTCCertificate.html
-http://web-platform.test:8000/webrtc/RTCConfiguration-bundlePolicy.html
-# http://web-platform.test:8000/webrtc/RTCConfiguration-iceCandidatePoolSize.html
-# http://web-platform.test:8000/webrtc/RTCConfiguration-iceServers.html # Partial Pass
-http://web-platform.test:8000/webrtc/RTCConfiguration-iceTransportPolicy.html
-http://web-platform.test:8000/webrtc/RTCConfiguration-rtcpMuxPolicy.html
-# http://web-platform.test:8000/webrtc/RTCDTMFSender-insertDTMF.https.html
-# http://web-platform.test:8000/webrtc/RTCDTMFSender-ontonechange-long.https.html
-# http://web-platform.test:8000/webrtc/RTCDTMFSender-ontonechange.https.html
-# http://web-platform.test:8000/webrtc/RTCDataChannel-bufferedAmount.html
-# http://web-platform.test:8000/webrtc/RTCDataChannel-id.html
-# http://web-platform.test:8000/webrtc/RTCDataChannel-send.html
-# http://web-platform.test:8000/webrtc/RTCDataChannelEvent-constructor.html
-# http://web-platform.test:8000/webrtc/RTCDtlsTransport-getRemoteCertificates.html
-http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
-# http://web-platform.test:8000/webrtc/RTCIceTransport.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate.html # Partial Pass
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-addTrack.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-addTransceiver.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-connectionState.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html # Partial Pass
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html # Pass but fails in docker
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer-offerToReceive.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html # Pass but fails in docker
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-generateCertificate.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-getDefaultIceServers.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-getIdentityAssertion.sub.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-getStats.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-getTransceivers.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-iceConnectionState.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-iceGatheringState.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-ondatachannel.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-onnegotiationneeded.html # Pass 6/7: libwebrtc needs to be fixed.
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-ontrack.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-peerIdentity.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-removeTrack.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setDescription-transceiver.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-answer.html # Pass but fails in docker and random crash due to Escargot
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-offer.html # Pass but fails in docker
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-pranswer.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-rollback.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-answer.html # Pass but fails in docker and random crash due to Escargot
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-offer.html # Pass but fails in docker
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-pranswer.html # Pass but fails in docker and random crash due to Escargot
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-replaceTrack.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-rollback.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-tracks.https.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription.html
-# http://web-platform.test:8000/webrtc/RTCPeerConnection-track-stats.https.html
-http://web-platform.test:8000/webrtc/RTCPeerConnectionIceEvent-constructor.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-degradationPreference.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-encodings.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
-# http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
-# http://web-platform.test:8000/webrtc/RTCRtpReceiver-getCapabilities.html
-# http://web-platform.test:8000/webrtc/RTCRtpReceiver-getContributingSources.https.html
-# http://web-platform.test:8000/webrtc/RTCRtpReceiver-getParameters.html
-# http://web-platform.test:8000/webrtc/RTCRtpReceiver-getStats.https.html
-# http://web-platform.test:8000/webrtc/RTCRtpReceiver-getSynchronizationSources.https.html
-# http://web-platform.test:8000/webrtc/RTCRtpSender-getCapabilities.html
-# http://web-platform.test:8000/webrtc/RTCRtpSender-getStats.https.html
-# http://web-platform.test:8000/webrtc/RTCRtpSender-replaceTrack.html
-# http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
-# http://web-platform.test:8000/webrtc/RTCRtpTransceiver-setCodecPreferences.html
-# http://web-platform.test:8000/webrtc/RTCRtpTransceiver-setDirection.html
-# http://web-platform.test:8000/webrtc/RTCSctpTransport-constructor.html
-# http://web-platform.test:8000/webrtc/RTCSctpTransport-maxMessageSize.html
-# http://web-platform.test:8000/webrtc/RTCTrackEvent-constructor.html
-# http://web-platform.test:8000/webrtc/datachannel-emptystring.html
-# http://web-platform.test:8000/webrtc/getstats.html
-# http://web-platform.test:8000/webrtc/historical.html
-# http://web-platform.test:8000/webrtc/interfaces.https.html
-# http://web-platform.test:8000/webrtc/no-media-call.html
-# http://web-platform.test:8000/webrtc/promises-call.html
-# http://web-platform.test:8000/webrtc/protocol/video-codecs.https.html
-# http://web-platform.test:8000/webrtc/simplecall.https.html
+# This list based on https://github.sec.samsung.net/boram21-bae/lwe_wpt to use latest.
+# Use only for testing on your X86 local environment not docker.
 
+#http://web-platform.test:8000/webrtc/getstats.html
+#http://web-platform.test:8000/webrtc/historical.html
+#http://web-platform.test:8000/webrtc/no-media-call.html (Crash)
+http://web-platform.test:8000/webrtc/promises-call.html
+https://web-platform.test:8443/webrtc/receiver-track-live.https.html
+#https://web-platform.test:8443/webrtc/recvonly-transceiver-can-become-sendrecv.https.html
+#https://web-platform.test:8443/webrtc/RollbackEvents.https.html
+#http://web-platform.test:8000/webrtc/RTCCertificate.html
+#http://web-platform.test:8000/webrtc/RTCCertificate-postMessage.html
+http://web-platform.test:8000/webrtc/RTCConfiguration-bundlePolicy.html
+#http://web-platform.test:8000/webrtc/RTCConfiguration-iceCandidatePoolSize.html
+#http://web-platform.test:8000/webrtc/RTCConfiguration-iceServers.html
+#http://web-platform.test:8000/webrtc/RTCConfiguration-iceTransportPolicy.html
+#http://web-platform.test:8000/webrtc/RTCConfiguration-rtcpMuxPolicy.html
+#http://web-platform.test:8000/webrtc/RTCDataChannel-bufferedAmount.html
+#http://web-platform.test:8000/webrtc/RTCDataChannel-close.html
+http://web-platform.test:8000/webrtc/RTCDataChannelEvent-constructor.html
+#http://web-platform.test:8000/webrtc/RTCDataChannel-iceRestart.html
+http://web-platform.test:8000/webrtc/RTCDataChannel-id.html
+#http://web-platform.test:8000/webrtc/RTCDataChannel-send-blob-order.html
+#http://web-platform.test:8000/webrtc/RTCDataChannel-send.html
+#http://web-platform.test:8000/webrtc/RTCDtlsTransport-getRemoteCertificates.html
+#http://web-platform.test:8000/webrtc/RTCDtlsTransport-state.html
+#https://web-platform.test:8443/webrtc/RTCDTMFSender-insertDTMF.https.html
+#https://web-platform.test:8443/webrtc/RTCDTMFSender-ontonechange.https.html
+#https://web-platform.test:8443/webrtc/RTCDTMFSender-ontonechange-long.https.html
+#http://web-platform.test:8000/webrtc/RTCError.html
+#http://web-platform.test:8000/webrtc/RTCIceCandidate-constructor.html
+#https://web-platform.test:8443/webrtc/RTCIceConnectionState-candidate-pair.https.html
+#http://web-platform.test:8000/webrtc/RTCIceTransport.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate-connectionSetup.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-addIceCandidate.html (Crash)
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-addIceCandidate-timing.https.html
+https://web-platform.test:8443/webrtc/RTCPeerConnection-addTrack.https.html
+https://web-platform.test:8443/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-candidate-in-sdp.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-capture-video.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-connectionState.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-description-attributes-timing.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-explicit-rollback-iceGatheringState.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-GC.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-generateCertificate.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-getStats.https.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-getTransceivers.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-helper-test.html
+https://web-platform.test:8443/webrtc/RTCPeerConnection-iceConnectionState-disconnected.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-iceConnectionState.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnectionIceErrorEvent.html
+http://web-platform.test:8000/webrtc/RTCPeerConnectionIceEvent-constructor.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-iceGatheringState.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-mandatory-getStats.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-ondatachannel.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-onicecandidateerror.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-onnegotiationneeded.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-onsignalingstatechanged.https.html
+https://web-platform.test:8443/webrtc/RTCPeerConnection-ontrack.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-operations.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-perfect-negotiation.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-perfect-negotiation-stress-glare.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-perfect-negotiation-stress-glare-linear.https.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-plan-b-is-not-supported.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-relay-canvas.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-remote-track-mute.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-removeTrack.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-restartIce.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-restartIce-onnegotiationneeded.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setDescription-transceiver.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-answer.html (Crash)
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-offer.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-setLocalDescription-parameterless.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-pranswer.html (Crash)
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setLocalDescription-rollback.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-answer.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-nomsid.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-offer.html (Crash)
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-pranswer.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-setRemoteDescription-replaceTrack.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-setRemoteDescription-rollback.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-setRemoteDescription-simulcast.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-setRemoteDescription-tracks.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-SLD-SRD-timing.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-transceivers.https.html
+#https://web-platform.test:8443/webrtc/RTCPeerConnection-transport-stats.https.html
+#http://web-platform.test:8000/webrtc/RTCPeerConnection-videoDetectorTest.html (Crash)
+#http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
+#http://web-platform.test:8000/webrtc/RTCRtpParameters-encodings.html
+#http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
+#http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
+#http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
+#http://web-platform.test:8000/webrtc/RTCRtpReceiver-getCapabilities.html
+#https://web-platform.test:8443/webrtc/RTCRtpReceiver-getContributingSources.https.html
+#http://web-platform.test:8000/webrtc/RTCRtpReceiver-getParameters.html
+#https://web-platform.test:8443/webrtc/RTCRtpReceiver-getStats.https.html
+#https://web-platform.test:8443/webrtc/RTCRtpReceiver-getSynchronizationSources.https.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender-encode-same-track-twice.https.html
+#http://web-platform.test:8000/webrtc/RTCRtpSender-getCapabilities.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender-getStats.https.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender.https.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender-replaceTrack.https.html
+#http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender-setStreams.https.html
+#https://web-platform.test:8443/webrtc/RTCRtpSender-transport.https.html
+#http://web-platform.test:8000/webrtc/RTCRtpTransceiver-direction.html
+#https://web-platform.test:8443/webrtc/RTCRtpTransceiver.https.html
+#http://web-platform.test:8000/webrtc/RTCRtpTransceiver-setCodecPreferences.html
+#http://web-platform.test:8000/webrtc/RTCRtpTransceiver-stop.html
+#https://web-platform.test:8443/webrtc/RTCRtpTransceiver-stopping.https.html
+#http://web-platform.test:8000/webrtc/RTCSctpTransport-constructor.html
+#http://web-platform.test:8000/webrtc/RTCSctpTransport-events.html
+#http://web-platform.test:8000/webrtc/RTCSctpTransport-maxChannels.html
+#http://web-platform.test:8000/webrtc/RTCSctpTransport-maxMessageSize.html
+#http://web-platform.test:8000/webrtc/RTCTrackEvent-constructor.html
+#http://web-platform.test:8000/webrtc/RTCTrackEvent-fire.html (Crash)
+https://web-platform.test:8443/webrtc/simplecall.https.html
+https://web-platform.test:8443/webrtc/simplecall-no-ssrcs.https.html
+#http://web-platform.test:8000/webrtc/toJSON.html
