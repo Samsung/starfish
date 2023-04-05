@@ -188,12 +188,10 @@ public:
     virtual void OnAddTrack(
         libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCMediaStream>>
             streams,
-        libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
-        override{};
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver) override;
 
     virtual void OnRemoveTrack(
-        libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver)
-        override{};
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver> receiver) override;
 };
 
 class CreateOfferAnswerObserver : public ObserverBase {
@@ -434,11 +432,11 @@ private:
 
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,
                                       Promise* promise, bool isRemote);
-    RTCRtpTransceiver* getTransceiver(
+    RTCRtpTransceiver* getOrCreateRTCRtpTransceiver(
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>
             backendTransceiver);
 
-    RTCRtpSender* getSender(
+    RTCRtpSender* getOrCreateRTCRtpSender(
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> sender);
 
     void syncTransceivers();

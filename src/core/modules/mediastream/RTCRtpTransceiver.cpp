@@ -105,6 +105,11 @@ String* RTCRtpTransceiver::mid()
         return nullptr;
     }
     std::string mid = m_backend->mid().std_string();
+    if (mid == "") {
+        // NOTE: mid() returns "" even if it doesn't have any value internally.
+        // currently, we can't determine if it has no value or if it has "".
+        return nullptr;
+    }
     return String::createASCIIString(mid.c_str(), mid.length());
 }
 
