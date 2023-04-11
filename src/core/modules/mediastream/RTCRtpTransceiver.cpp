@@ -34,31 +34,6 @@
 
 namespace Starfish {
 
-libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit>
-RTCRtpTransceiverInit::toRtpTransceiverInit()
-{
-    std::vector<libwebrtc::string> stream_ids;
-    libwebrtc::RTCRtpTransceiverDirection dir =
-        libwebrtc::RTCRtpTransceiverDirection::kInactive;
-    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>>
-        encodings;
-
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit> init =
-        libwebrtc::RTCRtpTransceiverInit::Create(dir, stream_ids, encodings);
-
-    if (m_direction->equals("sendrecv")) {
-        init->set_direction(libwebrtc::RTCRtpTransceiverDirection::kSendRecv);
-    } else if (m_direction->equals("sendonly")) {
-        init->set_direction(libwebrtc::RTCRtpTransceiverDirection::kSendOnly);
-    } else if (m_direction->equals("recvonly")) {
-        init->set_direction(libwebrtc::RTCRtpTransceiverDirection::kRecvOnly);
-    } else if (m_direction->equals("inactive")) {
-        init->set_direction(libwebrtc::RTCRtpTransceiverDirection::kInactive);
-    }
-
-    return init;
-}
-
 RTCRtpTransceiver::RTCRtpTransceiver(
     ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> rtpTransceiver)
@@ -104,12 +79,14 @@ String* RTCRtpTransceiver::mid()
     if (!m_backend) {
         return nullptr;
     }
+
     std::string mid = m_backend->mid().std_string();
     if (mid == "") {
         // NOTE: mid() returns "" even if it doesn't have any value internally.
         // currently, we can't determine if it has no value or if it has "".
         return nullptr;
     }
+
     return String::createASCIIString(mid.c_str(), mid.length());
 }
 
@@ -136,6 +113,7 @@ RTCRtpTransceiverDirection RTCRtpTransceiver::direction()
     if (stopped()) {
         return RTCRtpTransceiverDirection::Stopped;
     }
+
     switch (m_backend->direction()) {
     case libwebrtc::RTCRtpTransceiverDirection::kSendRecv:
         return RTCRtpTransceiverDirection::Sendrecv;
@@ -177,6 +155,7 @@ String* RTCRtpTransceiver::directionStr()
     if (!m_backend) {
         return String::createASCIIString("stopped");
     }
+
     switch (m_backend->direction()) {
     case libwebrtc::RTCRtpTransceiverDirection::kSendRecv:
         return String::createASCIIString("sendrecv");
@@ -212,9 +191,8 @@ void RTCRtpTransceiver::setDirectionStr(String* direction)
 
 Nullable<String*> RTCRtpTransceiver::currentDirection()
 {
-    Nullable<String*> r;
     if (!m_backend) {
-        return r;
+        return nullptr;
     }
 
     libwebrtc::RTCRtpTransceiverDirection curDirection =
@@ -222,19 +200,23 @@ Nullable<String*> RTCRtpTransceiver::currentDirection()
 
     switch (curDirection) {
     case libwebrtc::RTCRtpTransceiverDirection::kSendRecv:
-        r = String::createASCIIString("sendrecv");
-        break;
+        return String::createASCIIString("sendrecv");
     case libwebrtc::RTCRtpTransceiverDirection::kSendOnly:
-        r = String::createASCIIString("sendonly");
-        break;
+        return String::createASCIIString("sendonly");
     case libwebrtc::RTCRtpTransceiverDirection::kRecvOnly:
-        r = String::createASCIIString("recvonly");
-        break;
-    case libwebrtc::RTCRtpTransceiverDirection::kInactive:
-        r = String::createASCIIString("inactive");
-        break;
+        return String::createASCIIString("recvonly");
+    case libwebrtc::RTCRtpTransceiverDirection::kInactive: {
+        // NOTE: current_direction() never return null.
+        // This is workaround to return null.
+        if (!stopped() && !sentBefore()) {
+            return nullptr;
+        }
+
+        return String::createASCIIString("inactive");
     }
-    return r;
+    }
+
+    return nullptr;
 }
 
 bool RTCRtpTransceiver::stopped()
@@ -242,6 +224,7 @@ bool RTCRtpTransceiver::stopped()
     if (!m_backend) {
         return true;
     }
+
     return m_backend->Stopped();
 }
 
@@ -259,8 +242,10 @@ bool RTCRtpTransceiver::canSend()
     default:
         return false;
     }
+
     return false;
 }
+
 } // namespace Starfish
 
 #endif

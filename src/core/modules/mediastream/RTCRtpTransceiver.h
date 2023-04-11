@@ -22,51 +22,42 @@
 #ifndef __StarfishRTCRtpTransceiver__
 #define __StarfishRTCRtpTransceiver__
 
-#include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
+#include "core/modules/mediastream/RTCRtpTransceiverInit.h"
 
-#include "rtc_peerconnection.h"
 #include "rtc_rtp_transceiver.h"
 
 namespace Starfish {
 
-enum RTCRtpTransceiverDirection {
-    Sendrecv,
-    Sendonly,
-    Recvonly,
-    Inactive,
-    Stopped
-};
-
-struct RTCRtpTransceiverInit {
-    DEFINE_GETTER_SETTER(String*, direction, Direction);
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit>
-    toRtpTransceiverInit();
-
-    String* m_direction{ String::createASCIIString("sendrecv") };
-};
-
 class RTCRtpSender;
 class RTCRtpReceiver;
+
 class RTCRtpTransceiver : public ScriptWrappable {
 public:
     RTCRtpTransceiver(
         ExecutionContext* executionContext, RTCPeerConnection* peerConnection,
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> rptTransceiver);
+
     virtual ~RTCRtpTransceiver();
+
     void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpTransceiver)
 
     String* mid();
+
     RTCRtpSender* sender();
+
     RTCRtpReceiver* receiver();
 
     RTCRtpTransceiverDirection direction();
+
     void setDirection(RTCRtpTransceiverDirection direction);
 
     String* directionStr();
+
     void setDirectionStr(String* direction);
+
     Nullable<String*> currentDirection();
 
     bool stopped();
@@ -91,14 +82,16 @@ public:
     }
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
-    RTCPeerConnection* m_peerConnection{ nullptr };
+    ExecutionContext* m_executionContext = nullptr;
+    RTCPeerConnection* m_peerConnection = nullptr;
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> m_backend;
 
-    RTCRtpSender* m_sender{ nullptr };
-    RTCRtpReceiver* m_receiver{ nullptr };
-    bool m_sentBefore{ false };
+    RTCRtpSender* m_sender = nullptr;
+    RTCRtpReceiver* m_receiver = nullptr;
+    bool m_sentBefore = false;
 };
+
 } // namespace Starfish
+
 #endif
 #endif

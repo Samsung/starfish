@@ -546,6 +546,10 @@ const char* getWindowsTempDir();
     DEFINE_SETTER_WITH_HASFLAG(Type, MemberName, FaceName)            \
     DEFINE_HASFLAG_GETTER(FaceName)
 
+#define DEFINE_MEMBER_WITH_HASFLAG(Type, MemberName, FaceName) \
+    Type m_##MemberName;                                       \
+    bool m_has##FaceName = false;
+
 #define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \
     inline void* operator new(size_t size, void* p) = delete;
