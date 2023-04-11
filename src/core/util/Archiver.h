@@ -96,7 +96,7 @@ public:
     virtual Archiver& EndArray() = 0;
     virtual Archiver& operator&(bool& b) = 0;
     virtual Archiver& operator&(unsigned& u) = 0;
-    virtual Archiver& operator&(size_t& u) = 0;
+    virtual Archiver& operator&(uint64_t& u) = 0;
     virtual Archiver& operator&(int& i) = 0;
     virtual Archiver& operator&(double& d) = 0;
     virtual Archiver& operator&(std::string& s) = 0;
@@ -170,7 +170,7 @@ public:
     JsonReader& EndArray() override;
     JsonReader& operator&(bool& b)override;
     JsonReader& operator&(unsigned& u)override;
-    JsonReader& operator&(size_t& u)override;
+    JsonReader& operator&(uint64_t& u)override;
     JsonReader& operator&(int& i)override;
     JsonReader& operator&(double& d)override;
     JsonReader& operator&(std::string& s)override;
@@ -220,7 +220,7 @@ public:
     JsonWriter& EndArray() override;
     JsonWriter& operator&(bool& b)override;
     JsonWriter& operator&(unsigned& u)override;
-    JsonWriter& operator&(size_t& u)override;
+    JsonWriter& operator&(uint64_t& u)override;
     JsonWriter& operator&(int& i)override;
     JsonWriter& operator&(double& d)override;
     JsonWriter& operator&(std::string& s)override;
