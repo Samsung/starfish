@@ -18,8 +18,6 @@ jobs:
         backend: [glfw_cairo_gl]
         target: [executable, webworker]
         exclude:
-          - mode: release
-            target: webworker
           - mode: debug
             target: executable
     timeout-minutes: 30

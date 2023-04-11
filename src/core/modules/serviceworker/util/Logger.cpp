@@ -17,8 +17,6 @@
  *  USA
  */
 
-#if !defined(NDEBUG)
-
 #include "core/modules/serviceworker/util/Logger.h"
 
 #include <map>
@@ -223,5 +221,3 @@ std::string IndentCounter::getString(std::string id)
 
     return oss.str();
 }
-
-#endif

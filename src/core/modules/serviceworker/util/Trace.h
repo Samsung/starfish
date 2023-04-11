@@ -32,6 +32,8 @@ public:
 
 #define TRACE(id, ...)
 #define TRACE0(id, ...)
+#define TRACEF(id, ...)
+#define TRACEF0(id, ...)
 #define TRACE_SCOPE(id, ...)
 
 #else
