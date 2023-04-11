@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,24 @@
  *  USA
  */
 
-// https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver
-[ STARFISH_ENABLE_WEBRTC,
-  ConstructorCallWith=ExecutionContext,
-  Exposed=Window ]
-interface RTCRtpTransceiver {
-  readonly attribute DOMString? mid;
-  readonly attribute boolean stopped;  // legacy but it is already deprecated.
-  [SameObject] readonly attribute RTCRtpSender sender;
-  [SameObject] readonly attribute RTCRtpReceiver receiver;
-  [Rename=directionStr] attribute RTCRtpTransceiverDirection direction;
-  readonly attribute RTCRtpTransceiverDirection? currentDirection;
-//  void stop();
-//  void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
+#if defined(STARFISH_ENABLE_WEBRTC)
+
+#ifndef __StarfishRTCRtpCodingParameters__
+#define __StarfishRTCRtpCodingParameters__
+
+namespace Starfish {
+
+struct RTCRtpCodingParameters {
+    RTCRtpCodingParameters();
+
+    // Define getter/setters
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, rid, Rid);
+
+    // Define memebers
+    DEFINE_MEMBER_WITH_HASFLAG(String*, rid, Rid);
 };
+
+} // namespace Starfish
+
+#endif
+#endif

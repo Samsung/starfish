@@ -439,8 +439,6 @@ private:
     RTCRtpSender* getOrCreateRTCRtpSender(
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> sender);
 
-    void syncTransceivers();
-
     ExecutionContext* m_executionContext = nullptr;
     WebRtcManager* m_webRtcManager = nullptr;
     RTCConfiguration m_configuration;

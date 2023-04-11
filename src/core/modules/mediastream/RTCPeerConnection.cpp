@@ -119,6 +119,7 @@ void PeerConnectionObserver::OnSignalingState(
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
+
         switch (state) {
         case libwebrtc::RTCSignalingState::RTCSignalingStateStable:
             m_peerConnection->m_signalingState =
@@ -148,6 +149,7 @@ void PeerConnectionObserver::OnSignalingState(
             m_peerConnection->m_signalingState = String::emptyString;
             break;
         }
+
         String* eventType = executionContext()
                                 ->starfish()
                                 ->staticStrings()
@@ -196,6 +198,7 @@ void PeerConnectionObserver::OnPeerConnectionState(
             m_peerConnection->m_connectionState = String::emptyString;
             break;
         }
+
         String* eventType = executionContext()
                                 ->starfish()
                                 ->staticStrings()
@@ -292,6 +295,7 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
+
         String* eventType = executionContext()
                                 ->starfish()
                                 ->staticStrings()
@@ -532,6 +536,7 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
                 }
             }
         }
+
         if (promise) {
             promise->fulfill(scriptUndefined());
         } else {
@@ -547,9 +552,6 @@ void SetLocalRemoteDescriptionObserver::OnFailure(const std::string& error)
             return;
         }
 
-        DOMException* exception = m_peerConnection->toDomException(error);
-        STARFISH_ASSERT(exception);
-
         Promise* promise = nullptr;
         if (isLocalDescription()) {
             promise =
@@ -564,6 +566,7 @@ void SetLocalRemoteDescriptionObserver::OnFailure(const std::string& error)
         }
 
         if (promise) {
+            DOMException* exception = m_peerConnection->toDomException(error);
             promise->reject(exception->scriptValue());
         } else {
             STARFISH_LOG_DEBUG("Unknown promise type");
@@ -592,6 +595,7 @@ void GetStatsObserver::OnSuccess(
             rtcStatsReport->set(
                 String::createASCIIString(id.c_str(), id.length()), rtcStats);
         }
+
         m_promise->fulfill(rtcStatsReport->scriptValue());
     });
 }
@@ -677,6 +681,7 @@ bool RTCPeerConnection::initializePeerConnection(
     m_signalingState = String::createASCIIString("stable");
     m_iceGatheringState = String::createASCIIString("new");
     m_iceConnectionState = String::createASCIIString("new");
+
     return m_backend != nullptr;
 }
 
@@ -797,31 +802,8 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
             m_createAnswerObserver->OnFailure(error.c_str());
         },
         constraints);
+
     return promise;
-}
-
-void RTCPeerConnection::syncTransceivers()
-{
-    GCUnorderedMap<std::string, RTCRtpTransceiver*> curTransceivers;
-    for (auto transceiver : m_transceivers) {
-        curTransceivers.insert(std::make_pair(
-            transceiver->backend()->receiver()->id().c_string(), transceiver));
-    }
-    m_transceivers.clear();
-
-    std::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver>>
-        backendTransceivers = m_backend->transceivers().std_vector();
-    for (auto transceiver : backendTransceivers) {
-        auto itr =
-            curTransceivers.find(transceiver->receiver()->id().std_string());
-        if (itr != curTransceivers.end()) {
-            m_transceivers.push_back(itr->second);
-        } else {
-            RTCRtpTransceiver* newTransceiver =
-                new RTCRtpTransceiver(executionContext(), this, transceiver);
-            m_transceivers.push_back(newTransceiver);
-        }
-    }
 }
 
 RTCRtpTransceiver* RTCPeerConnection::getOrCreateRTCRtpTransceiver(
@@ -1042,7 +1024,7 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
                                                  sdpString.c_str(), &error);
 
     if (!des.get()) {
-        STARFISH_LOG_WARN("%s: desc = nullptr", __func__);
+        STARFISH_LOG_WARN("Failed to create libwebrtc::RTCSessionDescription.");
         return promise;
     }
 
@@ -1063,6 +1045,7 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
                 m_setLocalDescriptionObserver->OnFailure(error);
             });
     }
+
     return promise;
 }
 
@@ -1090,6 +1073,7 @@ RTCSessionDescription* RTCPeerConnection::localDescription()
             typeString, sdpString, &error);
         return new RTCSessionDescription(executionContext(), description);
     }
+
     return nullptr;
 }
 
@@ -1805,7 +1789,10 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
 
     String* kind = nullptr;
     MediaStreamTrack* track = nullptr;
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> r;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit>
+        backendTransceiverInit =
+            init.toLibwebrtcRtpTransceiverInit(executionContext());
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backend;
     if (trackOrKind.isDOMStringValue()) {
         kind = trackOrKind.getDOMStringValue();
         if (!kind->equals("audio") && !kind->equals("video")) {
@@ -1814,32 +1801,29 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
                                    "ScriptTypeError");
         }
         if (kind->equals("audio")) {
-            r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::AUDIO,
-                                          init.toRtpTransceiverInit());
+            backend = m_backend->AddTransceiver(libwebrtc::RTCMediaType::AUDIO,
+                                                backendTransceiverInit);
         } else if (kind->equals("video")) {
-            r = m_backend->AddTransceiver(libwebrtc::RTCMediaType::VIDEO,
-                                          init.toRtpTransceiverInit());
+            backend = m_backend->AddTransceiver(libwebrtc::RTCMediaType::VIDEO,
+                                                backendTransceiverInit);
         }
     } else if (trackOrKind.isMediaStreamTrackValue()) {
         track = trackOrKind.getMediaStreamTrackValue();
         if (track && track->kind() == MediaStreamTrack::Kind::Audio) {
-            r = m_backend->AddTransceiver(
-                track->asAudioStreamTrack()->backend(),
-                init.toRtpTransceiverInit());
+            backend = m_backend->AddTransceiver(
+                track->asAudioStreamTrack()->backend(), backendTransceiverInit);
         } else if (track && track->kind() == MediaStreamTrack::Kind::Video) {
-            r = m_backend->AddTransceiver(
-                track->asVideoStreamTrack()->backend(),
-                init.toRtpTransceiverInit());
+            backend = m_backend->AddTransceiver(
+                track->asVideoStreamTrack()->backend(), backendTransceiverInit);
         }
     }
 
-    if (!r.get()) {
-        STARFISH_LOG_ERROR("%s: internal error", __func__);
+    if (!backend) {
         throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
                                "addTransceiver: internal error");
     }
 
-    RTCRtpTransceiver* transceiver = getOrCreateRTCRtpTransceiver(r);
+    RTCRtpTransceiver* transceiver = getOrCreateRTCRtpTransceiver(backend);
 
     if (track) {
         transceiver->sender()->setTrack(track);

@@ -36,7 +36,8 @@ http://web-platform.test:8000/webrtc/RTCDataChannel-id.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-addIceCandidate-timing.https.html
 https://web-platform.test:8443/webrtc/RTCPeerConnection-addTrack.https.html
 https://web-platform.test:8443/webrtc/RTCPeerConnection-add-track-no-deadlock.https.html
-#https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.html
+# Note: Disable MediaStreamTrack's muted related tests before run in RTCPeerConnection-addTransceiver.https.html, it is not supported by libwebrtc
+https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-candidate-in-sdp.https.html
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-capture-video.https.html
