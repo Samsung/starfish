@@ -33,7 +33,7 @@ class ServiceWorkerJob;
 class ServiceWorkerData;
 class JobQueue;
 class ServiceWorkerRegistrationData;
-class ErrorData;
+class ExceptionData;
 class ServiceWorkerServerInterface;
 class ContextRequestData;
 class FetchEventRequestData;
@@ -83,7 +83,7 @@ public:
     void clearRegistration(ServiceWorkerRegistrationData* registration);
     void terminateServiceWorker(ServiceWorkerData* serviceWorker);
 
-    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+    void rejectJobPromise(ServiceWorkerJob* job, ExceptionData* errorData);
 
     NULLABLE ServiceWorkerRegistrationData* getRegistration(String* scope);
     NULLABLE ServiceWorkerRegistrationData* getRegistration(

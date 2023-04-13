@@ -38,7 +38,7 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
@@ -162,7 +162,7 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data,
         auto jobData = reinterpret_cast<ServiceWorkerJobData*>(msg.param(0));
         auto job = new ServiceWorkerJob(jobData);
 
-        auto errorData = reinterpret_cast<ErrorData*>(msg.param(1));
+        auto errorData = reinterpret_cast<ExceptionData*>(msg.param(1));
         rejectJobPromise(job, errorData);
 
     } else if (msgName == "resolveRequest") {
@@ -225,7 +225,7 @@ void ServiceWorkerClientConnection::resolveJobPromise(
 }
 
 void ServiceWorkerClientConnection::rejectJobPromise(ServiceWorkerJob* job,
-                                                     ErrorData* errorData)
+                                                     ExceptionData* errorData)
 {
     TRACE_SCOPE(CLIENT);
     STARFISH_ASSERT(job != nullptr);

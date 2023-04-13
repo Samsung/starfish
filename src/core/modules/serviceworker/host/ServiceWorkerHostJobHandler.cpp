@@ -38,7 +38,7 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
-#include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/JobQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
@@ -468,9 +468,10 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
     // 2. If registration is null or registration’s uninstalling flag is set,
     if (registration == nullptr) {
         //  2.1 Invoke Reject Job Promise with job and TypeError.
-        rejectJobPromise(job, new ErrorData(ExceptionCode::SCRIPT_TYPE_ERR,
-                                            "Cannot update a null/nonexistent "
-                                            "service worker registration"));
+        rejectJobPromise(job,
+                         new ExceptionData(ExceptionCode::SCRIPT_TYPE_ERR,
+                                           "Cannot update a null/nonexistent "
+                                           "service worker registration"));
 
         //  2.2 Invoke  Finish Job with job and abort these steps.
         finishJob(job);
@@ -488,7 +489,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
         (newestWorker->scriptURL->equals(job->data()->scriptURL) == false)) {
         // 4.1 Invoke Reject Job Promise with job and TypeError.
         rejectJobPromise(
-            job, new ErrorData(
+            job, new ExceptionData(
                      ExceptionCode::SCRIPT_TYPE_ERR,
                      "Cannot update a service worker with a requested script "
                      "URL whose newest worker has a different script URL"));
@@ -1018,7 +1019,7 @@ void ServiceWorkerHostJobHandler::terminateServiceWorker(
 }
 
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,
-                                                   ErrorData* errorData)
+                                                   ExceptionData* errorData)
 {
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);
@@ -1153,9 +1154,10 @@ void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
     if (clientOrigin->equals(scopeURL->origin()) == false) {
         // 1.1 Invoke Reject Job Promise with job and "SecurityError"
         // DOMException.
-        rejectJobPromise(job, new ErrorData(ExceptionCode::SECURITY_ERR,
-                                            "Script origin does not match the "
-                                            "registering client's origin"));
+        rejectJobPromise(job,
+                         new ExceptionData(ExceptionCode::SECURITY_ERR,
+                                           "Script origin does not match the "
+                                           "registering client's origin"));
 
         // 1.2 Invoke Finish Job with job and abort these steps.
         return finishJob(job);

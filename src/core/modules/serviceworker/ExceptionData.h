@@ -17,38 +17,26 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
-
-#include "core/util/Id.h"
-#include "core/util/Archiver.h"
-#include "core/util/Archivable.h"
-#include "core/dom/DOMException.h"
-
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ErrorData.h"
-
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishErrorData__)
+#define __StarfishErrorData__
 
 namespace Starfish {
 
-ErrorData::ErrorData(ExceptionCode exceptionCode, const char* rawMessage)
-    : code(exceptionCode)
-    , message(String::fromUTF8(rawMessage, strlen(rawMessage)))
-{
-    STARFISH_ASSERT(rawMessage != nullptr);
-}
+using ExceptionCode = DOMException::Code;
 
-const char* ErrorData::archiveId() const
-{
-    return "ErrorData";
-}
+class ExceptionData : public Archivable {
+public:
+    ExceptionCode code{ ExceptionCode::DOM_EXCEPTION };
+    String* message{ String::emptyString };
 
-void ErrorData::archive(Archiver& ar)
-{
-    ar.MemberEnum("code", code);
-    ar.Member("message") & message;
-}
+    ExceptionData() = default;
+    ExceptionData(ExceptionCode code, const char* rawMessage);
+
+    // serialize/deserialize
+    const char* archiveId() const override;
+    void archive(Archiver& ar) override;
+};
 
 } // namespace Starfish
 
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif

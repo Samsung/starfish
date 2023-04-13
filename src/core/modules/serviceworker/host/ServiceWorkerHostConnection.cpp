@@ -37,7 +37,7 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/FetchEventData.h"
@@ -77,7 +77,7 @@ void ServiceWorkerHostConnection::resolveJobPromise(
 }
 
 void ServiceWorkerHostConnection::rejectJobPromise(ServiceWorkerJob* job,
-                                                   ErrorData* errorData)
+                                                   ExceptionData* errorData)
 {
     TRACE_SCOPE(HOST);
     STARFISH_ASSERT(job != nullptr);

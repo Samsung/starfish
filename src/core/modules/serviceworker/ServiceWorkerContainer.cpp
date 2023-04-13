@@ -558,7 +558,7 @@ void ServiceWorkerContainer::resolveJobPromise(
 }
 
 void ServiceWorkerContainer::rejectJobPromise(ServiceWorkerJob* job,
-                                              ErrorData* errorData)
+                                              ExceptionData* errorData)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(job != nullptr);
@@ -578,7 +578,7 @@ void ServiceWorkerContainer::rejectJobPromise(ServiceWorkerJob* job,
                 ServiceWorkerJob* job = castTo<ServiceWorkerJob*>(data);
                 ServiceWorkerContainer* container =
                     castTo<ServiceWorkerContainer*>(data1);
-                ErrorData* errorData = castTo<ErrorData*>(data2);
+                ExceptionData* errorData = castTo<ExceptionData*>(data2);
 
                 // TODO: consider generating an error message here.
                 auto exception =
