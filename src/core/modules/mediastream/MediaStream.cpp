@@ -267,6 +267,7 @@ MediaStream::MediaStream(ExecutionContext* executionContext,
                          MediaStream& mediaStream)
     : MediaStream(executionContext)
 {
+    STARFISH_UNIMPLEMENTED();
 }
 
 MediaStream::MediaStream(ExecutionContext* executionContext,

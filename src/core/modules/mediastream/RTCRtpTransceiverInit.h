@@ -28,6 +28,8 @@
 
 namespace Starfish {
 
+class MediaStream;
+
 enum RTCRtpTransceiverDirection {
     Sendrecv,
     Sendonly,
@@ -41,6 +43,7 @@ struct RTCRtpTransceiverInit {
 
     // Define getter/setters
     DEFINE_GETTER_SETTER(String*, direction, Direction);
+    DEFINE_GETTER_SETTER(GCVector<MediaStream*>, streams, Streams);
     DEFINE_GETTER_SETTER(GCVector<RTCRtpEncodingParameters>, sendEncodings,
                          SendEncodings);
 
@@ -52,9 +55,12 @@ struct RTCRtpTransceiverInit {
     libwebrtc::vector<
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>>
     toLibwebrtcSendEncondings(ExecutionContext* executionContext);
+    libwebrtc::vector<libwebrtc::string> toLibwebrtcStreamIds(
+        ExecutionContext* executionContext);
 
     // Define memebers
     String* m_direction = nullptr;
+    GCVector<MediaStream*> m_streams;
     GCVector<RTCRtpEncodingParameters> m_sendEncodings;
 };
 

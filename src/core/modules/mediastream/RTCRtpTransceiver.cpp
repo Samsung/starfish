@@ -205,6 +205,8 @@ Nullable<String*> RTCRtpTransceiver::currentDirection()
         return String::createASCIIString("sendonly");
     case libwebrtc::RTCRtpTransceiverDirection::kRecvOnly:
         return String::createASCIIString("recvonly");
+    case libwebrtc::RTCRtpTransceiverDirection::kStopped:
+        return String::createASCIIString("stopped");
     case libwebrtc::RTCRtpTransceiverDirection::kInactive: {
         // NOTE: current_direction() never return null.
         // This is workaround to return null.
@@ -244,6 +246,15 @@ bool RTCRtpTransceiver::canSend()
     }
 
     return false;
+}
+
+void RTCRtpTransceiver::stop()
+{
+    if (!m_backend) {
+        return;
+    }
+
+    m_backend->StopInternal();
 }
 
 } // namespace Starfish

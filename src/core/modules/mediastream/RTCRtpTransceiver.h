@@ -76,6 +76,8 @@ public:
 
     bool canSend();
 
+    void stop();
+
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> backend()
     {
         return m_backend;

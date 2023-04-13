@@ -20,9 +20,10 @@
 // https://w3c.github.io/mediacapture-main/#mediastream
 [ STARFISH_ENABLE_WEBRTC,
   Exposed=Window,
-  Constructor,
-  Constructor (MediaStream stream),
-  Constructor (sequence<MediaStreamTrack> tracks),
+  // Constructor,
+  // Constructor (MediaStream stream),
+  // Constructor (sequence<MediaStreamTrack> tracks),
+  CustomConstructor,
   ConstructorCallWith=ExecutionContext ]
 interface MediaStream : EventTarget {
   readonly attribute DOMString id;
