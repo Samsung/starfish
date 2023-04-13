@@ -26,7 +26,7 @@
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
 #include "core/modules/serviceworker/Task.h"
-#include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/ExceptionData.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
@@ -75,7 +75,7 @@ public:
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
-    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+    void rejectJobPromise(ServiceWorkerJob* job, ExceptionData* errorData);
 
     void matchRegistration(ServiceWorkerRequest* request,
                            ResourceURL* clientURL);

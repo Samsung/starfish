@@ -32,7 +32,7 @@ class ServiceWorkerRegistrationData;
 class ServiceWorkerRequest;
 class FetchEventResponseData;
 class String;
-class ErrorData;
+class ExceptionData;
 class Socket;
 
 class ServiceWorkerHostConnection final
@@ -46,7 +46,8 @@ public:
         ServiceWorkerJob* job,
         ServiceWorkerRegistrationData* registration) override;
 
-    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData) override;
+    void rejectJobPromise(ServiceWorkerJob* job,
+                          ExceptionData* errorData) override;
 
     void resolveRequest(ServiceWorkerRequest* request,
                         NULLABLE Archivable* archivable) override;

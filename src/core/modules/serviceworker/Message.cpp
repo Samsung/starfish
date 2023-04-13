@@ -30,14 +30,13 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ErrorData.h"
+#include "core/modules/serviceworker/ExceptionData.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
-#include "core/modules/serviceworker/ErrorData.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/util/Trace.h"
@@ -195,7 +194,7 @@ void Message::archive(Archiver& ar, Archivable** archivable_)
     ARCHIVE(ServiceWorkerJobData);
     ARCHIVE(ServiceWorkerRegistrationData);
     ARCHIVE(ServiceWorkerData);
-    ARCHIVE(ErrorData);
+    ARCHIVE(ExceptionData);
     ARCHIVE(UpdateRegistrationState);
     ARCHIVE(UpdateWorkerStateData);
     ARCHIVE(ContextRequestData);

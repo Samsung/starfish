@@ -30,7 +30,7 @@ class ServiceWorkerJob;
 class ServiceWorkerRequest;
 class ServiceWorkerRegistrationData;
 class Archivable;
-class ErrorData;
+class ExceptionData;
 class ContextRequestData;
 class FetchEventRequestData;
 class FetchEventResponseData;
@@ -66,7 +66,7 @@ public:
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
 
     virtual void rejectJobPromise(ServiceWorkerJob* job,
-                                  ErrorData* errorData) = 0;
+                                  ExceptionData* errorData) = 0;
 
     virtual void resolveRequest(ServiceWorkerRequest* request,
                                 NULLABLE Archivable* registration) = 0;

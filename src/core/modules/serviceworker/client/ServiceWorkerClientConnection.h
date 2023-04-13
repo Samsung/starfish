@@ -56,7 +56,7 @@ public:
     void resolveJobPromise(
         ServiceWorkerJob* job,
         NULLABLE ServiceWorkerRegistrationData* registration);
-    void rejectJobPromise(ServiceWorkerJob* job, ErrorData* errorData);
+    void rejectJobPromise(ServiceWorkerJob* job, ExceptionData* errorData);
     void updateRegistrationState(ServiceWorkerRegistrationData* registration,
                                  ServiceWorkerRegistrationState target,
                                  ServiceWorkerData* source);
