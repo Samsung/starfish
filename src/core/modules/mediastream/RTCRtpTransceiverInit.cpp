@@ -23,6 +23,7 @@
 
 #include "core/modules/mediastream/RTCRtpTransceiverInit.h"
 
+#include "core/modules/mediastream/MediaStream.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -41,8 +42,8 @@ RTCRtpTransceiverInit::toLibwebrtcRtpTransceiverInit(
     libwebrtc::vector<
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>>
         encodings = toLibwebrtcSendEncondings(executionContext);
-    libwebrtc::vector<libwebrtc::string>
-        streamIds; // TODO: sequence<MediaStream> streams
+    libwebrtc::vector<libwebrtc::string> streamIds =
+        toLibwebrtcStreamIds(executionContext);
 
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiverInit> init =
         libwebrtc::RTCRtpTransceiverInit::Create(direction, streamIds,
@@ -123,6 +124,16 @@ RTCRtpTransceiverInit::toLibwebrtcSendEncondings(
         encodings.push_back(rtpEncodingParameter);
     }
     return encodings;
+}
+
+libwebrtc::vector<libwebrtc::string>
+RTCRtpTransceiverInit::toLibwebrtcStreamIds(ExecutionContext* executionContext)
+{
+    std::vector<std::string> streamIds;
+    for (auto stream : m_streams) {
+        streamIds.push_back(stream->backend()->id().std_string());
+    }
+    return streamIds;
 }
 
 } // namespace Starfish

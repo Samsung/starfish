@@ -1458,6 +1458,7 @@ void RTCPeerConnection::setConfiguration(RTCConfiguration& configuration,
     m_configuration = configuration;
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
 void RTCPeerConnection::close()
 {
     if (isClosed()) {
@@ -1468,6 +1469,10 @@ void RTCPeerConnection::close()
     if (m_backend) {
         // Note: Closing backend does not call the callback for the close state.
         m_backend->Close();
+    }
+
+    for (auto* transceiver : m_transceivers) {
+        transceiver->stop();
     }
 }
 

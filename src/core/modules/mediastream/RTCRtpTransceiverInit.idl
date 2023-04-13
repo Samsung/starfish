@@ -31,6 +31,6 @@ enum RTCRtpTransceiverDirection {
 [ STARFISH_ENABLE_WEBRTC ]
 dictionary RTCRtpTransceiverInit {
   RTCRtpTransceiverDirection direction = "sendrecv";
-//  sequence<MediaStream> streams = [];
+  sequence<MediaStream> streams = [];
   sequence<RTCRtpEncodingParameters> sendEncodings = [];
 };
