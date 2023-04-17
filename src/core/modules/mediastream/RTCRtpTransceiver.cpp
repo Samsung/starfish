@@ -172,21 +172,19 @@ String* RTCRtpTransceiver::directionStr()
 
 void RTCRtpTransceiver::setDirectionStr(String* direction)
 {
-#if 0 // Disable function in progress
     if (!m_backend) {
         return;
     }
 
     if (direction->equals("sendrecv")) {
-        setDirection(libwebrtc::RTCRtpTransceiverDirection::Sendrecv);
+        setDirection(RTCRtpTransceiverDirection::Sendrecv);
     } else if (direction->equals("sendonly")) {
-        setDirection(libwebrtc::RTCRtpTransceiverDirection::Sendonly);
+        setDirection(RTCRtpTransceiverDirection::Sendonly);
     } else if (direction->equals("recvonly")) {
-        setDirection(libwebrtc::RTCRtpTransceiverDirection::Recvonly);
+        setDirection(RTCRtpTransceiverDirection::Recvonly);
     } else if (direction->equals("inactive")) {
-        setDirection(libwebrtc::RTCRtpTransceiverDirection::Inactive);
+        setDirection(RTCRtpTransceiverDirection::Inactive);
     }
-#endif
 }
 
 Nullable<String*> RTCRtpTransceiver::currentDirection()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,18 @@
  *  USA
  */
 
-[ STARFISH_ENABLE_WEBRTC,
-  ConstructorCallWith=ExecutionContext,
-  Exposed=Window ]
-interface RTCRtpSender {
-  readonly attribute MediaStreamTrack? track;
-  //readonly attribute RTCDtlsTransport? transport;
-  //readonly attribute RTCDtlsTransport? rtcpTransport; // Not supported by WebRTC
-  //static RTCRtpCapabilities? getCapabilities(DOMString kind); // Not supported by WebRTC
-  //Promise<void> setParameters(RTCRtpSendParameters parameters);
-  RTCRtpSendParameters getParameters();
-  [RaisesException] Promise<void> replaceTrack(MediaStreamTrack? withTrack);
-  //void setStreams(MediaStream... streams);
-  //Promise<RTCStatsReport> getStats(); // Not supported by WebRTC
-};
+#if defined(STARFISH_ENABLE_WEBRTC)
+
+#include "StarfishConfig.h"
+
+#include "core/modules/mediastream/RTCRtpParameters.h"
+
+namespace Starfish {
+
+RTCRtpParameters::RTCRtpParameters()
+{
+}
+
+} // namespace Starfish
+
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,17 +17,28 @@
  *  USA
  */
 
-[ STARFISH_ENABLE_WEBRTC,
-  ConstructorCallWith=ExecutionContext,
-  Exposed=Window ]
-interface RTCRtpSender {
-  readonly attribute MediaStreamTrack? track;
-  //readonly attribute RTCDtlsTransport? transport;
-  //readonly attribute RTCDtlsTransport? rtcpTransport; // Not supported by WebRTC
-  //static RTCRtpCapabilities? getCapabilities(DOMString kind); // Not supported by WebRTC
-  //Promise<void> setParameters(RTCRtpSendParameters parameters);
-  RTCRtpSendParameters getParameters();
-  [RaisesException] Promise<void> replaceTrack(MediaStreamTrack? withTrack);
-  //void setStreams(MediaStream... streams);
-  //Promise<RTCStatsReport> getStats(); // Not supported by WebRTC
+#if defined(STARFISH_ENABLE_WEBRTC)
+
+#ifndef __StarfishRTCRtpHeaderExtensionParameters__
+#define __StarfishRTCRtpHeaderExtensionParameters__
+
+namespace Starfish {
+
+struct RTCRtpHeaderExtensionParameters {
+    RTCRtpHeaderExtensionParameters();
+
+    // Define getter/setters
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, uri, Uri);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, id, Id);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, encrypted, Encrypted);
+
+    // Define memebers
+    DEFINE_MEMBER_WITH_HASFLAG(String*, uri, Uri);
+    DEFINE_MEMBER_WITH_HASFLAG(uint32_t, id, Id);
+    DEFINE_MEMBER_WITH_HASFLAG(bool, encrypted, Encrypted);
 };
+
+} // namespace Starfish
+
+#endif
+#endif
