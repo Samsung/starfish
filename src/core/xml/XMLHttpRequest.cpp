@@ -184,6 +184,23 @@ public:
                                 .shrink_to_fit();
                         }
                     } else if (m_xhr->m_responseType ==
+                                   XMLHttpRequestResponseType::Json ||
+                               mimeType.subtype()->contains("json")) {
+                        m_xhr->m_responseType =
+                            XMLHttpRequestResponseType::Json;
+
+                        TextConverter cvt(
+                            mimeString, String::fromUTF8("UTF-8"),
+                            m_xhr->m_resourceRequest->response().data(),
+                            m_xhr->m_resourceRequest->response().size());
+                        String* text = cvt.convert(
+                            m_xhr->m_resourceRequest->response().data(),
+                            m_xhr->m_resourceRequest->response().size(), true);
+
+                        m_xhr->m_responseJsonObject =
+                            parseJSON(m_xhr->scriptBindingInstance(), text);
+
+                    } else if (m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Empty ||
                                m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Text) {
@@ -199,17 +216,6 @@ public:
                             m_xhr->m_resourceRequest->response()
                                 .shrink_to_fit();
                         }
-                    } else if (m_xhr->m_responseType ==
-                               XMLHttpRequestResponseType::Json) {
-                        TextConverter cvt(
-                            mimeString, String::fromUTF8("UTF-8"),
-                            m_xhr->m_resourceRequest->response().data(),
-                            m_xhr->m_resourceRequest->response().size());
-                        String* text = cvt.convert(
-                            m_xhr->m_resourceRequest->response().data(),
-                            m_xhr->m_resourceRequest->response().size(), true);
-                        m_xhr->m_responseJsonObject =
-                            parseJSON(m_xhr->scriptBindingInstance(), text);
                     } else if (m_xhr->m_responseType ==
                                XMLHttpRequestResponseType::Blob) {
                         void* buffer =
