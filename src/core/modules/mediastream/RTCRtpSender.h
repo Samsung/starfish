@@ -25,45 +25,46 @@
 #include "core/dom/EventTarget.h"
 #include "binding/ScriptWrappable.h"
 
+#include "core/modules/mediastream/RTCRtpSendParameters.h"
+
 #include "rtc_peerconnection.h"
 
 namespace Starfish {
 class RTCRtpTransceiver;
-
-struct RTCRtpParameters {
-};
-
-struct RTCRtpSendParameters : public RTCRtpParameters {
-    DEFINE_GETTER_SETTER(String*, transactionId, TransactionId);
-
-    String* m_transactionId{ String::emptyString };
-};
 
 class RTCRtpSender : public ScriptWrappable {
 public:
     RTCRtpSender(ExecutionContext* executionContext,
                  RTCRtpTransceiver* transceiver,
                  libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> rtpSender);
+
     virtual ~RTCRtpSender();
+
     void dispose();
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(RTCRtpSender)
 
     MediaStreamTrack* track();
+
     bool setTrack(MediaStreamTrack* track);
+
     RTCDtlsTransport* transport();
+
     Promise* setParameters(RTCRtpSendParameters parameters);
+
     RTCRtpSendParameters getParameters();
+
     Promise* replaceTrack(MediaStreamTrack* withTrack);
+
     void setStreams(GCVector<MediaStream*>& streams);
 
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> backend();
 
 private:
-    ExecutionContext* m_executionContext{ nullptr };
-    RTCRtpTransceiver* m_transceiver{ nullptr };
+    ExecutionContext* m_executionContext = nullptr;
+    RTCRtpTransceiver* m_transceiver = nullptr;
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> m_backend;
-    MediaStreamTrack* m_track{ nullptr };
+    MediaStreamTrack* m_track = nullptr;
 };
 } // namespace Starfish
 #endif
