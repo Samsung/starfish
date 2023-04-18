@@ -1,0 +1,28 @@
+// https://dom.spec.whatwg.org/#mutationobserver
+
+callback MutationCallback = undefined (sequence<MutationRecord> mutations, MutationObserver observer);
+
+[Exposed=Window,Constructor(MutationCallback callback),ConstructorCallWith=ExecutionContext]
+interface MutationObserver {
+  // constructor(MutationCallback callback);
+
+  // Currently, our binding generator does not support 'undefined' keyword. I'll change 'undefined' to 'void', since It's not purpose of this PR.
+  [Unimplemented] void observe(Node target);
+  // undefined observe(Node target, optional MutationObserverInit options = {});
+
+  [Unimplemented] void disconnect();
+  // undefined disconnect();
+
+  [Unimplemented] sequence<MutationRecord> takeRecords();
+};
+
+
+dictionary MutationObserverInit {
+  [Unimplemented] boolean childList = false;
+  [Unimplemented] boolean attributes;
+  [Unimplemented] boolean characterData;
+  [Unimplemented] boolean subtree = false;
+  [Unimplemented] boolean attributeOldValue;
+  [Unimplemented] boolean characterDataOldValue;
+  [Unimplemented] sequence<DOMString> attributeFilter;
+};
