@@ -195,6 +195,7 @@ Nullable<String*> RTCRtpTransceiver::currentDirection()
 
     libwebrtc::RTCRtpTransceiverDirection curDirection =
         m_backend->current_direction();
+    auto a = m_backend->direction();
 
     switch (curDirection) {
     case libwebrtc::RTCRtpTransceiverDirection::kSendRecv:
@@ -208,10 +209,11 @@ Nullable<String*> RTCRtpTransceiver::currentDirection()
     case libwebrtc::RTCRtpTransceiverDirection::kInactive: {
         // NOTE: current_direction() never return null.
         // This is workaround to return null.
-        if (!stopped() && !sentBefore()) {
+        if (!stopped() && !sentBefore() &&
+            !(m_representedInLocalDescription &&
+              m_representedInRemoteDescription)) {
             return nullptr;
         }
-
         return String::createASCIIString("inactive");
     }
     }

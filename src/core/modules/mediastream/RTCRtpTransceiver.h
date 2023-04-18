@@ -69,6 +69,16 @@ public:
         m_sentBefore = true;
     }
 
+    void MarkRepresentedInRemoteDescription()
+    {
+        m_representedInLocalDescription = true;
+    }
+
+    void MarkRepresentedInLocalDescription()
+    {
+        m_representedInRemoteDescription = true;
+    }
+
     RTCPeerConnection* peerConnection()
     {
         return m_peerConnection;
@@ -91,6 +101,8 @@ private:
     RTCRtpSender* m_sender = nullptr;
     RTCRtpReceiver* m_receiver = nullptr;
     bool m_sentBefore = false;
+    bool m_representedInLocalDescription = false;
+    bool m_representedInRemoteDescription = false;
 };
 
 } // namespace Starfish

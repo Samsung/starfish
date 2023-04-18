@@ -509,7 +509,8 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
 {
     PostTask([this] {
         Promise* promise = nullptr;
-        if (isLocalDescription()) {
+        bool isLocal = isLocalDescription();
+        if (isLocal) {
             promise =
                 m_peerConnection->m_setLocalDescriptionObserver->promise();
             m_peerConnection->m_setLocalDescriptionObserver->setPromise(
@@ -534,6 +535,12 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
                     // "sendrecv" or "sendonly".
                     transceiver->MarkSentBefore();
                 }
+            }
+
+            if (isLocal) {
+                transceiver->MarkRepresentedInLocalDescription();
+            } else {
+                transceiver->MarkRepresentedInRemoteDescription();
             }
         }
 
