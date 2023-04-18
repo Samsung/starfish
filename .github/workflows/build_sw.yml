@@ -35,6 +35,7 @@ jobs:
         run: |
           cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
-            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }}
+            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
+            -DENABLE_SERVICE_WORKER=1
       - name: Build
         run: ninja starfish.${{ matrix.target }}
