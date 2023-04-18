@@ -117,7 +117,7 @@ https://web-platform.test:8443/webrtc/RTCPeerConnection-transceivers.https.html
 #http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender-setStreams.https.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender-transport.https.html
-#http://web-platform.test:8000/webrtc/RTCRtpTransceiver-direction.html
+http://web-platform.test:8000/webrtc/RTCRtpTransceiver-direction.html
 #https://web-platform.test:8443/webrtc/RTCRtpTransceiver.https.html
 #http://web-platform.test:8000/webrtc/RTCRtpTransceiver-setCodecPreferences.html
 #http://web-platform.test:8000/webrtc/RTCRtpTransceiver-stop.html
