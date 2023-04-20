@@ -19,33 +19,34 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#include "StarfishConfig.h"
+#ifndef __StarfishRTCRtpCodec__
+#define __StarfishRTCRtpCodec__
 
-#include "core/modules/mediastream/RTCRtcpParameters.h"
+#include "rtc_rtp_parameters.h"
 
 namespace Starfish {
 
-RTCRtcpParameters RTCRtcpParameters::toRTCRtcpParameters(
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtcpParameters>
-        libwebrtcRTCRtcpParameters)
-{
-    RTCRtcpParameters rtcpParameters;
-    libwebrtc::string libwebrtcCname = libwebrtcRTCRtcpParameters->cname();
-    if (libwebrtcCname.size()) {
-        rtcpParameters.setCname(String::createASCIIString(
-            libwebrtcCname.c_string(), libwebrtcCname.size()));
-    }
-    rtcpParameters.setReducedSize(libwebrtcRTCRtcpParameters->reduced_size());
+struct RTCRtpCodec {
+    static RTCRtpCodec toRTCRtpCodec(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpCodecParameters>
+            libwebrtcRTCRtpCodecParameters);
 
-    return rtcpParameters;
-}
+    RTCRtpCodec();
 
-RTCRtcpParameters::RTCRtcpParameters()
-    : m_cname(String::emptyString)
-    , m_reducedSize(false)
-{
-}
+    // Define getter/setters
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, mimeType, MimeType);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, clockRate, ClockRate);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint16_t, channels, Channels);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, sdpFmtpLine, SdpFmtpLine);
+
+    // Define memebers
+    DEFINE_MEMBER_WITH_HASFLAG(String*, mimeType, MimeType);
+    DEFINE_MEMBER_WITH_HASFLAG(uint32_t, clockRate, ClockRate);
+    DEFINE_MEMBER_WITH_HASFLAG(uint16_t, channels, Channels);
+    DEFINE_MEMBER_WITH_HASFLAG(String*, sdpFmtpLine, SdpFmtpLine);
+};
 
 } // namespace Starfish
 
+#endif
 #endif

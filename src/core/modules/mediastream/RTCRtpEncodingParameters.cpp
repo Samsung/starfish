@@ -25,6 +25,21 @@
 
 namespace Starfish {
 
+RTCRtpEncodingParameters RTCRtpEncodingParameters::toRTCRtpEncodingParameters(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpEncodingParameters>
+        libwebrtcRTCRtpEncodingParameters)
+{
+    RTCRtpEncodingParameters encoding;
+    encoding.setActive(libwebrtcRTCRtpEncodingParameters->active());
+    encoding.setMaxBitrate(
+        libwebrtcRTCRtpEncodingParameters->max_bitrate_bps());
+    encoding.setMaxFramerate(
+        libwebrtcRTCRtpEncodingParameters->max_framerate());
+    encoding.setScaleResolutionDownBy(
+        libwebrtcRTCRtpEncodingParameters->scale_resolution_down_by());
+    return encoding;
+}
+
 RTCRtpEncodingParameters::RTCRtpEncodingParameters()
     : m_active(true)
     , m_maxBitrate(0)

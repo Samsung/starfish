@@ -19,33 +19,30 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#include "StarfishConfig.h"
+#ifndef __StarfishRTCRtpCodecParameters__
+#define __StarfishRTCRtpCodecParameters__
 
-#include "core/modules/mediastream/RTCRtcpParameters.h"
+#include "core/modules/mediastream/RTCRtpCodec.h"
+
+#include "rtc_rtp_parameters.h"
 
 namespace Starfish {
 
-RTCRtcpParameters RTCRtcpParameters::toRTCRtcpParameters(
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtcpParameters>
-        libwebrtcRTCRtcpParameters)
-{
-    RTCRtcpParameters rtcpParameters;
-    libwebrtc::string libwebrtcCname = libwebrtcRTCRtcpParameters->cname();
-    if (libwebrtcCname.size()) {
-        rtcpParameters.setCname(String::createASCIIString(
-            libwebrtcCname.c_string(), libwebrtcCname.size()));
-    }
-    rtcpParameters.setReducedSize(libwebrtcRTCRtcpParameters->reduced_size());
+struct RTCRtpCodecParameters : public RTCRtpCodec {
+    static RTCRtpCodecParameters toRTCRtpCodecParameters(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpCodecParameters>
+            libwebrtcRTCRtpCodecParameters);
 
-    return rtcpParameters;
-}
+    RTCRtpCodecParameters();
 
-RTCRtcpParameters::RTCRtcpParameters()
-    : m_cname(String::emptyString)
-    , m_reducedSize(false)
-{
-}
+    // Define getter/setters
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(uint8_t, payloadType, PayloadType);
+
+    // Define memebers
+    DEFINE_MEMBER_WITH_HASFLAG(uint8_t, payloadType, PayloadType);
+};
 
 } // namespace Starfish
 
+#endif
 #endif

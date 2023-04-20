@@ -109,59 +109,12 @@ Promise* RTCRtpSender::setParameters(RTCRtpSendParameters parameters)
 
 RTCRtpSendParameters RTCRtpSender::getParameters()
 {
-    RTCRtpSendParameters sendParameters;
     if (!m_backend) {
-        return sendParameters;
+        return RTCRtpSendParameters();
     }
 
-    libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters> libwebrtcParameters =
-        m_backend->parameters();
-
-    std::string transactionId =
-        libwebrtcParameters->transaction_id().std_string();
-    if (transactionId.length()) {
-        sendParameters.setTransactionId(String::createASCIIString(
-            transactionId.c_str(), transactionId.length()));
-    }
-
-    GCVector<RTCRtpHeaderExtensionParameters> headerExtensions;
-    for (auto& libwebrtcHeaderExtension :
-         libwebrtcParameters->header_extensions().std_vector()) {
-        std::string uri = libwebrtcHeaderExtension->uri().std_string();
-
-        bool encrypted = libwebrtcHeaderExtension->encrypt();
-        RTCRtpHeaderExtensionParameters headerExtension;
-        headerExtension.setUri(
-            String::createASCIIString(uri.c_str(), uri.length()));
-        headerExtension.setId(libwebrtcHeaderExtension->id());
-        headerExtension.setEncrypted(libwebrtcHeaderExtension->encrypt());
-
-        headerExtensions.push_back(headerExtension);
-    }
-
-    if (headerExtensions.size()) {
-        sendParameters.setHeaderExtensions(headerExtensions);
-    }
-
-    GCVector<RTCRtpEncodingParameters> encodings;
-    for (auto& libwebrtcEncoding :
-         libwebrtcParameters->encodings().std_vector()) {
-        RTCRtpEncodingParameters encoding;
-
-        encoding.setActive(libwebrtcEncoding->active());
-        encoding.setMaxBitrate(libwebrtcEncoding->max_bitrate_bps());
-        encoding.setMaxFramerate(libwebrtcEncoding->max_framerate());
-        encoding.setScaleResolutionDownBy(
-            libwebrtcEncoding->scale_resolution_down_by());
-
-        encodings.push_back(encoding);
-    }
-
-    if (encodings.size()) {
-        sendParameters.setEncodings(encodings);
-    }
-
-    return sendParameters;
+    return RTCRtpSendParameters::toRTCRtpSendParameters(
+        m_backend->parameters());
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-replacetrack

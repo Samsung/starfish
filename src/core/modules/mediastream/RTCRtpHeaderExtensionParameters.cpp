@@ -25,6 +25,23 @@
 
 namespace Starfish {
 
+RTCRtpHeaderExtensionParameters
+RTCRtpHeaderExtensionParameters::toRTCRtpHeaderExtensionParameters(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpExtension>
+        libwebrtcRTCRtpExtension)
+{
+    RTCRtpHeaderExtensionParameters headerExtension;
+    headerExtension.setId(libwebrtcRTCRtpExtension->id());
+    headerExtension.setEncrypted(libwebrtcRTCRtpExtension->encrypt());
+
+    libwebrtc::string libwebrtcUri = libwebrtcRTCRtpExtension->uri();
+    if (libwebrtcUri.size()) {
+        headerExtension.setUri(String::createASCIIString(
+            libwebrtcUri.c_string(), libwebrtcUri.size()));
+    }
+    return headerExtension;
+}
+
 RTCRtpHeaderExtensionParameters::RTCRtpHeaderExtensionParameters()
 {
 }

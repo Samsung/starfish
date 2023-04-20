@@ -25,9 +25,15 @@
 #include "core/modules/mediastream/RTCRtpParameters.h"
 #include "core/modules/mediastream/RTCRtpEncodingParameters.h"
 
+#include "rtc_rtp_parameters.h"
+
 namespace Starfish {
 
 struct RTCRtpSendParameters : public RTCRtpParameters {
+    static RTCRtpSendParameters toRTCRtpSendParameters(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters>
+            libwebrtcRTCRtpParameters);
+
     RTCRtpSendParameters();
 
     // Define getter/setters
