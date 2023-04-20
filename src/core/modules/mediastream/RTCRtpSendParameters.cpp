@@ -25,6 +25,54 @@
 
 namespace Starfish {
 
+RTCRtpSendParameters RTCRtpSendParameters::toRTCRtpSendParameters(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters>
+        libwebrtcRTCRtpParameters)
+{
+    RTCRtpSendParameters rtcRtpSendParameters;
+
+    // RTCRtpParameters
+    RTCRtpParameters rtcRtpParameters =
+        RTCRtpParameters::toRTCRtpParameters(libwebrtcRTCRtpParameters);
+
+    if (rtcRtpParameters.hasHeaderExtensions()) {
+        rtcRtpSendParameters.setHeaderExtensions(
+            rtcRtpParameters.headerExtensions());
+    }
+
+    if (rtcRtpParameters.hasRtcp()) {
+        rtcRtpSendParameters.setCodecs(rtcRtpParameters.codecs());
+    }
+
+    if (rtcRtpParameters.hasCodecs()) {
+        rtcRtpSendParameters.setCodecs(rtcRtpParameters.codecs());
+    }
+
+    // transactionId
+    libwebrtc::string libwebrtcTransactionId =
+        libwebrtcRTCRtpParameters->transaction_id();
+    if (libwebrtcTransactionId.size()) {
+        rtcRtpSendParameters.setTransactionId(String::createASCIIString(
+            libwebrtcTransactionId.c_string(), libwebrtcTransactionId.size()));
+    }
+
+    // encodings
+    GCVector<RTCRtpEncodingParameters> encodings;
+    for (auto& libwebrtcEncoding :
+         libwebrtcRTCRtpParameters->encodings().std_vector()) {
+        RTCRtpEncodingParameters encoding =
+            RTCRtpEncodingParameters::toRTCRtpEncodingParameters(
+                libwebrtcEncoding);
+        encodings.push_back(encoding);
+    }
+
+    if (encodings.size()) {
+        rtcRtpSendParameters.setEncodings(encodings);
+    }
+
+    return rtcRtpSendParameters;
+}
+
 RTCRtpSendParameters::RTCRtpSendParameters()
 {
 }

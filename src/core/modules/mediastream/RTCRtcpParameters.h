@@ -19,12 +19,18 @@
 
 #if defined(STARFISH_ENABLE_WEBRTC)
 
-#ifndef __StarfishRTCRtpParameters__
-#define __StarfishRTCRtpParameters__
+#ifndef __StarfishRTCRtcpParameters__
+#define __StarfishRTCRtcpParameters__
+
+#include "rtc_rtp_parameters.h"
 
 namespace Starfish {
 
 struct RTCRtcpParameters {
+    static RTCRtcpParameters toRTCRtcpParameters(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtcpParameters>
+            libwebrtcRTCRtcpParameters);
+
     RTCRtcpParameters();
 
     // Define getter/setters

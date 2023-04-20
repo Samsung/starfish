@@ -23,19 +23,32 @@
 #define __StarfishRTCRtpParameters__
 
 #include "core/modules/mediastream/RTCRtpHeaderExtensionParameters.h"
+#include "core/modules/mediastream/RTCRtcpParameters.h"
+#include "core/modules/mediastream/RTCRtpCodecParameters.h"
+
+#include "rtc_rtp_parameters.h"
 
 namespace Starfish {
 
 struct RTCRtpParameters {
+    static RTCRtpParameters toRTCRtpParameters(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters>
+            libwebrtcRTCRtpParameters);
+
     RTCRtpParameters();
 
     // Define getter/setters
     DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCRtpHeaderExtensionParameters>,
                                       headerExtensions, HeaderExtensions);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(RTCRtcpParameters, rtcp, Rtcp);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCRtpCodecParameters>, codecs,
+                                      Codecs);
 
     // Define memebers
     DEFINE_MEMBER_WITH_HASFLAG(GCVector<RTCRtpHeaderExtensionParameters>,
                                headerExtensions, HeaderExtensions);
+    DEFINE_MEMBER_WITH_HASFLAG(RTCRtcpParameters, rtcp, Rtcp);
+    DEFINE_MEMBER_WITH_HASFLAG(GCVector<RTCRtpCodecParameters>, codecs, Codecs);
 };
 
 } // namespace Starfish

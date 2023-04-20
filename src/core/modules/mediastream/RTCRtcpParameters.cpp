@@ -25,7 +25,24 @@
 
 namespace Starfish {
 
+RTCRtcpParameters RTCRtcpParameters::toRTCRtcpParameters(
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtcpParameters>
+        libwebrtcRTCRtcpParameters)
+{
+    RTCRtcpParameters rtcpParameters;
+    libwebrtc::string libwebrtcCname = libwebrtcRTCRtcpParameters->cname();
+    if (libwebrtcCname.size()) {
+        rtcpParameters.setCname(String::createASCIIString(
+            libwebrtcCname.c_string(), libwebrtcCname.size()));
+    }
+    rtcpParameters.setReducedSize(libwebrtcRTCRtcpParameters->reduced_size());
+
+    return rtcpParameters;
+}
+
 RTCRtcpParameters::RTCRtcpParameters()
+    : m_cname(String::emptyString)
+    , m_reducedSize(false)
 {
 }
 

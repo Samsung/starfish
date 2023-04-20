@@ -27,7 +27,7 @@
 
 #include "core/modules/mediastream/RTCRtpSendParameters.h"
 
-#include "rtc_peerconnection.h"
+#include "rtc_rtp_sender.h"
 
 namespace Starfish {
 class RTCRtpTransceiver;

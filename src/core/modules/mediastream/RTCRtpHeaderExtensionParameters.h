@@ -22,9 +22,15 @@
 #ifndef __StarfishRTCRtpHeaderExtensionParameters__
 #define __StarfishRTCRtpHeaderExtensionParameters__
 
+#include "rtc_rtp_parameters.h"
+
 namespace Starfish {
 
 struct RTCRtpHeaderExtensionParameters {
+    static RTCRtpHeaderExtensionParameters toRTCRtpHeaderExtensionParameters(
+        libwebrtc::scoped_refptr<libwebrtc::RTCRtpExtension>
+            libwebrtcRTCRtpExtension);
+
     RTCRtpHeaderExtensionParameters();
 
     // Define getter/setters
