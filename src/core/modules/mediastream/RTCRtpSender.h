@@ -65,6 +65,8 @@ private:
     RTCRtpTransceiver* m_transceiver = nullptr;
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> m_backend;
     MediaStreamTrack* m_track = nullptr;
+    libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters>
+        m_lastReturnedLibwebrtcRTCRtpParameters;
 };
 } // namespace Starfish
 #endif

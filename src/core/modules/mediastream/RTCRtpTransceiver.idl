@@ -28,6 +28,6 @@ interface RTCRtpTransceiver {
   [SameObject] readonly attribute RTCRtpReceiver receiver;
   [Rename=directionStr] attribute RTCRtpTransceiverDirection direction;
   readonly attribute RTCRtpTransceiverDirection? currentDirection;
-//  void stop();
+  void stop();
 //  void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
 };

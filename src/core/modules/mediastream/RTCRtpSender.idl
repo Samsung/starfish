@@ -25,7 +25,7 @@ interface RTCRtpSender {
   //readonly attribute RTCDtlsTransport? transport;
   //readonly attribute RTCDtlsTransport? rtcpTransport; // Not supported by WebRTC
   //static RTCRtpCapabilities? getCapabilities(DOMString kind); // Not supported by WebRTC
-  //Promise<void> setParameters(RTCRtpSendParameters parameters);
+  Promise<void> setParameters(RTCRtpSendParameters parameters);
   RTCRtpSendParameters getParameters();
   [RaisesException] Promise<void> replaceTrack(MediaStreamTrack? withTrack);
   //void setStreams(MediaStream... streams);

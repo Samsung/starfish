@@ -34,6 +34,10 @@ struct RTCRtpSendParameters : public RTCRtpParameters {
         libwebrtc::scoped_refptr<libwebrtc::RTCRtpParameters>
             libwebrtcRTCRtpParameters);
 
+    static bool validRTCRtpSendParameters(
+        const RTCRtpSendParameters& oldRTCRtpSendParameters,
+        const RTCRtpSendParameters& newRTCRtpSendParameters);
+
     RTCRtpSendParameters();
 
     // Define getter/setters

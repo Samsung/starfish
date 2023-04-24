@@ -230,6 +230,15 @@ bool RTCRtpTransceiver::stopped()
     return m_backend->Stopped();
 }
 
+bool RTCRtpTransceiver::stopping()
+{
+    if (!m_backend) {
+        return true;
+    }
+
+    return m_backend->Stopping();
+}
+
 bool RTCRtpTransceiver::sentBefore()
 {
     return m_sentBefore;

@@ -532,7 +532,7 @@ const char* getWindowsTempDir();
     }
 
 #define DEFINE_HASFLAG_GETTER(FaceName) \
-    bool has##FaceName()                \
+    bool has##FaceName() const          \
     {                                   \
         return m_has##FaceName;         \
     }
