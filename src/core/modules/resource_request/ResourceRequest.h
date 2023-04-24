@@ -380,6 +380,11 @@ public:
         m_abortRequestState = type;
     }
 
+    AbortRequestType abortErrorType()
+    {
+        return m_abortRequestState;
+    }
+
     RequestData* requestData()
     {
         return m_requestData;
