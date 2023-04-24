@@ -48,6 +48,8 @@ public:
             request->executionContext()->addActiveResourceRequests(request);
         } else if (request->progressState() == ProgressState::LoadEnd) {
             request->executionContext()->removeActiveResourceRequests(request);
+        } else if (request->progressState() == ProgressState::Abort) {
+            m_isAbort = true;
         }
     }
 
@@ -62,9 +64,24 @@ public:
             Param* p = new Param;
             p->errorCode = request->errorType();
             p->url = request->url()->urlString();
-            request->webBase()->callPublicWebViewHandler(OnReceivedError, p);
+            bool needCallErrorCB = false;
+            if (m_isAbort) {
+                if (request->abortErrorType() ==
+                    AbortRequestType::AbortWithError) {
+                    needCallErrorCB = true;
+                }
+            } else {
+                needCallErrorCB = true;
+            }
+            if (needCallErrorCB) {
+                request->webBase()->callPublicWebViewHandler(OnReceivedError,
+                                                             p);
+            }
         }
     }
+
+private:
+    bool m_isAbort = false;
 };
 
 ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
