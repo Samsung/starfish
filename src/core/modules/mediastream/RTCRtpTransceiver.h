@@ -62,6 +62,8 @@ public:
 
     bool stopped();
 
+    bool stopping();
+
     bool sentBefore();
 
     void MarkSentBefore()

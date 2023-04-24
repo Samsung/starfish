@@ -99,10 +99,10 @@ https://web-platform.test:8443/webrtc/RTCPeerConnection-transceivers.https.html
 
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-transport-stats.https.html
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-videoDetectorTest.html (Crash)
-#http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
+http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
 #http://web-platform.test:8000/webrtc/RTCRtpParameters-encodings.html
-#http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
-#http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
+http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
+http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
 #http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
 #http://web-platform.test:8000/webrtc/RTCRtpReceiver-getCapabilities.html
 #https://web-platform.test:8443/webrtc/RTCRtpReceiver-getContributingSources.https.html
@@ -114,7 +114,10 @@ https://web-platform.test:8443/webrtc/RTCPeerConnection-transceivers.https.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender-getStats.https.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender.https.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender-replaceTrack.https.html
-#http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
+
+# Note: Disable `setParameters() with already used parameters should work if the event loop has not been relinquished` test. (It also fails in Chrome)
+http://web-platform.test:8000/webrtc/RTCRtpSender-setParameters.html
+
 #https://web-platform.test:8443/webrtc/RTCRtpSender-setStreams.https.html
 #https://web-platform.test:8443/webrtc/RTCRtpSender-transport.https.html
 http://web-platform.test:8000/webrtc/RTCRtpTransceiver-direction.html

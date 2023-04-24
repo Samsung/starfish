@@ -99,22 +99,100 @@ RTCDtlsTransport* RTCRtpSender::transport()
     STARFISH_UNIMPLEMENTED();
     return nullptr;
 }
+#endif
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-setparameters
 Promise* RTCRtpSender::setParameters(RTCRtpSendParameters parameters)
 {
-    STARFISH_UNIMPLEMENTED();
-    return nullptr;
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    // 4. If transceiver.[[Stopping]] is true, return a promise rejected with a
+    // newly created InvalidStateError.
+    if (m_transceiver->stopping()) {
+        auto exception = new DOMException(
+            m_executionContext, DOMException::INVALID_STATE_ERR,
+            "Associated transceiver is stopping.");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 5. If sender.[[LastReturnedParameters]] is null, return a promise
+    // rejected with a newly created InvalidStateError.
+    if (!m_lastReturnedLibwebrtcRTCRtpParameters) {
+        auto exception = new DOMException(m_executionContext,
+                                          DOMException::INVALID_STATE_ERR,
+                                          "Last returned parameters is null");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 6.
+    if (!RTCRtpSendParameters::validRTCRtpSendParameters(
+            RTCRtpSendParameters::toRTCRtpSendParameters(
+                m_lastReturnedLibwebrtcRTCRtpParameters),
+            parameters)) {
+        auto exception = new DOMException(
+            m_executionContext, DOMException::INVALID_MODIFICATION_ERR,
+            "RTCRtpSendParameters is not valid");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // Update properties
+    const auto& newEncodings = parameters.encodings();
+    auto& libwebrtcEncodings =
+        m_lastReturnedLibwebrtcRTCRtpParameters->encodings();
+    for (size_t i = 0; i < newEncodings.size(); i++) {
+        libwebrtcEncodings[i]->set_active(newEncodings[i].active());
+
+        if (newEncodings[i].hasMaxBitrate()) {
+            libwebrtcEncodings[i]->set_max_bitrate_bps(
+                newEncodings[i].maxBitrate());
+        }
+
+        if (newEncodings[i].hasMaxFramerate()) {
+            libwebrtcEncodings[i]->set_max_framerate(
+                newEncodings[i].maxFramerate());
+        }
+
+        if (newEncodings[i].hasScaleResolutionDownBy()) {
+            libwebrtcEncodings[i]->set_scale_resolution_down_by(
+                newEncodings[i].scaleResolutionDownBy());
+        }
+    }
+    m_lastReturnedLibwebrtcRTCRtpParameters->set_encodings(libwebrtcEncodings);
+
+    if (!m_backend->set_parameters(m_lastReturnedLibwebrtcRTCRtpParameters)) {
+        auto exception = new DOMException(
+            m_executionContext, String::createASCIIString("OperationError"),
+            String::createASCIIString("OperationError"));
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    m_lastReturnedLibwebrtcRTCRtpParameters = nullptr;
+
+    m_executionContext->webBase()->messageLoop()->addIdler(
+        m_executionContext->document()->window(),
+        [](size_t handle, void* data) {
+            Promise* promise = static_cast<Promise*>(data);
+            promise->fulfill(scriptUndefined());
+        },
+        promise);
+
+    return promise;
 }
-#endif
 
 RTCRtpSendParameters RTCRtpSender::getParameters()
 {
     if (!m_backend) {
+        m_lastReturnedLibwebrtcRTCRtpParameters = nullptr;
         return RTCRtpSendParameters();
     }
 
+    m_lastReturnedLibwebrtcRTCRtpParameters = m_backend->parameters();
     return RTCRtpSendParameters::toRTCRtpSendParameters(
-        m_backend->parameters());
+        m_lastReturnedLibwebrtcRTCRtpParameters);
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-replacetrack
@@ -226,6 +304,7 @@ libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender> RTCRtpSender::backend()
 {
     return m_backend;
 }
+
 } // namespace Starfish
 
 #endif
