@@ -80,7 +80,8 @@ bool RTCRtpSendParameters::validRTCRtpSendParameters(
 {
     // RTCRtpSendParameters
     // transactionId is read only.
-    if (!oldRTCRtpSendParameters.transactionId()->equals(
+    if (!newRTCRtpSendParameters.hasTransactionId() ||
+        !oldRTCRtpSendParameters.transactionId()->equals(
             newRTCRtpSendParameters.transactionId())) {
         return false;
     }

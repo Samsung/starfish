@@ -44,7 +44,10 @@ https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.htm
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-canTrickleIceCandidates.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-capture-video.https.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-connectionState.https.html
-#http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
+
+# Note: Disable 'canTrickleIceCandidates' test (not supported in libwebrtc).
+http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
+
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
@@ -103,7 +106,12 @@ http://web-platform.test:8000/webrtc/RTCRtpParameters-codecs.html
 #http://web-platform.test:8000/webrtc/RTCRtpParameters-encodings.html
 http://web-platform.test:8000/webrtc/RTCRtpParameters-headerExtensions.html
 http://web-platform.test:8000/webrtc/RTCRtpParameters-rtcp.html
-#http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
+
+# Note:
+# Disable tests comparing transactionId. (Failed in chrome too)
+# Disable 'setParameters() when the event loop has been relinquished since the last getParameters() should reject with InvalidStateError' (Failed in chrome too)
+http://web-platform.test:8000/webrtc/RTCRtpParameters-transactionId.html
+
 #http://web-platform.test:8000/webrtc/RTCRtpReceiver-getCapabilities.html
 #https://web-platform.test:8443/webrtc/RTCRtpReceiver-getContributingSources.https.html
 #http://web-platform.test:8000/webrtc/RTCRtpReceiver-getParameters.html
