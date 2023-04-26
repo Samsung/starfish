@@ -126,6 +126,14 @@ Promise* RTCRtpSender::setParameters(RTCRtpSendParameters parameters)
         return promise;
     }
 
+    if (!parameters.hasTransactionId()) {
+        auto exception =
+            new DOMException(m_executionContext, DOMException::SCRIPT_TYPE_ERR,
+                             "The transactionId is not provided.");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
     // 6.
     if (!RTCRtpSendParameters::validRTCRtpSendParameters(
             RTCRtpSendParameters::toRTCRtpSendParameters(
