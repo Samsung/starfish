@@ -101,7 +101,7 @@ void CharacterData::setData(String* data)
         frame()->asFrameText()->transformText(m_data);
     }
 
-    setNeedsLayout();
+    setNeedsFrameTreeBuild();
 
     notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
         parent->didCharacterDataModified(oldData, data);
