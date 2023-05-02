@@ -644,8 +644,8 @@ ScriptValue createScriptFunction(
         [](ExecutionStateRef* state, AtomicStringRef* name,
            Escargot::ScriptNativeFunctionPointer nativeFunction, size_t argc,
            bool isStrict, bool isConstructor) -> ValueRef* {
-            FunctionObjectRef::NativeFunctionInfo info(name, nativeFunction,
-                                                       argc, isStrict, isConstructor);
+            FunctionObjectRef::NativeFunctionInfo info(
+                name, nativeFunction, argc, isStrict, isConstructor);
             return FunctionObjectRef::create(state, info);
         },
         nameString, nativeFunction, argc, isStrict, isConstructor);
@@ -922,7 +922,8 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     }
 
     auto scriptRef = ctx->scriptParser()->initializeScript(
-        source, toJSString(String::fromUTF8(fileNameForDebugger.data(), fileNameForDebugger.length())));
+        source, toJSString(String::fromUTF8(fileNameForDebugger.data(),
+                                            fileNameForDebugger.length())));
 #else
     auto scriptRef =
         ctx->scriptParser()->initializeScript(source, toJSString(fileName));
@@ -1380,12 +1381,14 @@ Promise::Promise(ScriptBindingInstance* instance)
         Evaluator::execute(ctx, [](ExecutionStateRef* state) -> ValueRef* {
             return ValueRef::create(PromiseObjectRef::create(state));
         }).result;
+    m_scriptValue->asObject()->setExtraData(this);
 }
 
 Promise::Promise(ScriptBindingInstance* instance, ScriptValue scriptValue)
     : m_scriptValue(scriptValue)
     , m_instance(instance)
 {
+    m_scriptValue->asObject()->setExtraData(this);
 }
 
 void Promise::fulfill(ScriptValue v)
@@ -1456,12 +1459,15 @@ ScriptValue Promise::then(ScriptValue onFulfilled, ScriptValue onRejected)
     return result.result;
 }
 
-ScriptValue Promise::promiseResult() {
+ScriptValue Promise::promiseResult()
+{
     ContextRef* ctx = m_instance->scriptContext();
     auto result = Evaluator::execute(
         ctx,
         [](ExecutionStateRef* state, Promise* self) -> ValueRef* {
-            return self->m_scriptValue->asObject()->asPromiseObject()->promiseResult();
+            return self->m_scriptValue->asObject()
+                ->asPromiseObject()
+                ->promiseResult();
         },
         this);
 

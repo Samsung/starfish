@@ -68,7 +68,7 @@ private:
     ServiceWorkerGlobalScope* m_workerGlobalScope{ nullptr };
     ScriptEngineInstance* m_scriptEngineInstance{ nullptr };
 
-    void createScriptEngineInstance();
+    void ensureScriptEngineInstance();
     void removeScriptEngineInstance();
 };
 

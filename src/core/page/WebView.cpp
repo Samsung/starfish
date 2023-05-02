@@ -583,17 +583,40 @@ void WebView::destroy()
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }
 
-void WebView::createScriptEngineInstance()
+void WebView::ensureScriptEngineInstance()
 {
     if (!m_scriptEngineInstance) {
         m_scriptEngineInstance = new ScriptEngineInstance(
             locale().data(), timezoneID()->toUTF8NonGCString().data());
+
+        // Add a global promise hook to call on settled.
+        m_scriptEngineInstance->engineInstance()->registerPromiseHook(
+            [](ExecutionStateRef* state, VMInstanceRef::PromiseHookType type,
+               PromiseObjectRef* promise, ValueRef* parent) {
+                // Only promises created in starfish have an extraData.
+                if (promise && promise->extraData()) {
+                    Promise* p = static_cast<Promise*>(promise->extraData());
+                    switch (type) {
+                    case VMInstanceRef::PromiseHookType::Resolve:
+                        p->onSettled();
+                    case VMInstanceRef::PromiseHookType::Init:
+                    case VMInstanceRef::PromiseHookType::Before:
+                    case VMInstanceRef::PromiseHookType::After:
+                        // Note: Implement if you need.
+                        break;
+                    default:
+                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                        break;
+                    }
+                }
+            });
     }
 }
 
 void WebView::removeScriptEngineInstance()
 {
     if (m_scriptEngineInstance) {
+        m_scriptEngineInstance->engineInstance()->unregisterPromiseHook();
         m_scriptEngineInstance->dispose();
 
         delete m_scriptEngineInstance;
@@ -698,7 +721,7 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     initRenderingFlags();
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
-    createScriptEngineInstance();
+    ensureScriptEngineInstance();
 
     m_topLevelBrowsingContext->open(url, type, referrerURL);
     applyJavaScriptNativeInterface(

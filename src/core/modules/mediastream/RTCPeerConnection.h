@@ -132,23 +132,22 @@ public:
     {
     }
 
-    Promise* promise()
+    void addPromise(Promise* promise)
     {
-        return m_promise;
+        m_promises.push_back(promise);
     }
 
-    void setPromise(Promise* promise)
-    {
-        m_promise = promise;
-    }
+    Promise* popPromise();
+
+    void removePromise(Promise* promise);
 
     ExecutionContext* executionContext();
 
 protected:
-    void PostTask(std::function<void()> task);
+    void postCallback(std::function<void()> callback);
 
     RTCPeerConnection* m_peerConnection = nullptr;
-    Promise* m_promise = nullptr;
+    GCVector<Promise*> m_promises;
 };
 
 class PeerConnectionObserver : public ObserverBase,
@@ -213,16 +212,6 @@ public:
     {
         return false;
     }
-
-    Promise* promise()
-    {
-        return m_promise;
-    }
-
-    void setPromise(Promise* promise)
-    {
-        m_promise = promise;
-    }
 };
 
 class CreateOfferObserver : public CreateOfferAnswerObserver {
@@ -269,16 +258,6 @@ public:
     virtual bool isRemoteDescription()
     {
         return false;
-    }
-
-    Promise* promise()
-    {
-        return m_promise;
-    }
-
-    void setPromise(Promise* promise)
-    {
-        m_promise = promise;
     }
 };
 
@@ -329,6 +308,26 @@ public:
     {
         return false;
     }
+};
+
+// ChainedPromiseManager guarantees that the operaoins are executed one by one
+// in the order in which they were added.
+class ChainedPromiseManager : public gc {
+public:
+    using ChainedOperation =
+        std::pair<Promise*, std::pair<ObserverBase*, std::function<void()>>>;
+
+    ChainedPromiseManager(RTCPeerConnection* peerConnection)
+        : m_peerConnection(peerConnection)
+    {
+    }
+
+    void AddChain(ChainedOperation chainedOperation);
+
+private:
+    RTCPeerConnection* m_peerConnection = nullptr;
+    GCVector<ChainedOperation> m_chainedOperations;
+    Promise* m_lastExecutedPromise = nullptr;
 };
 
 class RTCPeerConnection : public EventTarget {
@@ -461,6 +460,8 @@ private:
     String* m_iceGatheringState = String::emptyString;
     String* m_iceConnectionState = String::emptyString;
     String* m_connectionState = String::emptyString;
+
+    ChainedPromiseManager* m_chainedPromiseManager = nullptr;
 };
 } // namespace Starfish
 
