@@ -91,7 +91,7 @@ void WebWorker::destroy()
     this->~WebWorker();
 }
 
-void WebWorker::createScriptEngineInstance()
+void WebWorker::ensureScriptEngineInstance()
 {
     STARFISH_ASSERT(isMainThread() == true);
 
@@ -127,7 +127,7 @@ ServiceWorkerGlobalScope* WebWorker::createGlobalScope(ResourceURL* scriptURL)
     }
 
     removeScriptEngineInstance();
-    createScriptEngineInstance();
+    ensureScriptEngineInstance();
     m_workerGlobalScope = new ServiceWorkerGlobalScope(
         this, scriptURL, String::createASCIIString("UTF-8"));
 

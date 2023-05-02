@@ -22,7 +22,7 @@
 
 #include "binding/generated/Interfaces.h"
 #include "StarfishBase.h" // ASSERT, UNLIKELY, RELEASE_ASSERT_SHOULD_NOT_BE_HERE
-#include <GCUtil.h> // gc
+#include <GCUtil.h>       // gc
 
 namespace Escargot {
 class VMInstanceRef;
@@ -247,11 +247,11 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
 
-#define THROW_EXCEPTION(MSG)                                           \
-    state->throwException(                                             \
-        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create(   \
-            state, Escargot::ErrorObjectRef::TypeError,                \
-            toJSString(String::createASCIIString(MSG, strlen(MSG))))));\
+#define THROW_EXCEPTION(MSG)                                            \
+    state->throwException(                                              \
+        Escargot::ValueRef::create(Escargot::ErrorObjectRef::create(    \
+            state, Escargot::ErrorObjectRef::TypeError,                 \
+            toJSString(String::createASCIIString(MSG, strlen(MSG)))))); \
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define _CHECK_TYPEOF(v, type)                        \
@@ -430,9 +430,29 @@ public:
         return m_scriptValue;
     }
 
+    void onSettled()
+    {
+        m_isSettled = true;
+        if (m_onSettled) {
+            m_onSettled();
+        }
+    }
+
+    void setOnSettled(const std::function<void()>& onSettled)
+    {
+        m_onSettled = onSettled;
+    }
+
+    bool isSettled()
+    {
+        return m_isSettled;
+    }
+
 protected:
-    ScriptValue m_scriptValue;
-    ScriptBindingInstance* m_instance;
+    ScriptValue m_scriptValue = nullptr;
+    ScriptBindingInstance* m_instance = nullptr;
+    std::function<void()> m_onSettled;
+    bool m_isSettled = false;
 };
 
 Promise* toPromise(ScriptBindingInstance* instance, ScriptValue scriptValue);

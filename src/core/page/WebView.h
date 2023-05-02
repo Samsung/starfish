@@ -149,7 +149,7 @@ public:
         return m_scriptEngineInstance;
     }
 
-    void createScriptEngineInstance();
+    void ensureScriptEngineInstance();
     void removeScriptEngineInstance();
 
     void addJavaScriptNativeInterface(

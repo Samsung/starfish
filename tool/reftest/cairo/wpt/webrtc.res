@@ -48,9 +48,11 @@ https://web-platform.test:8443/webrtc/RTCPeerConnection-addTransceiver.https.htm
 # Note: Disable 'canTrickleIceCandidates' test (not supported in libwebrtc).
 http://web-platform.test:8000/webrtc/RTCPeerConnection-constructor.html
 
-#http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
+# Note: Custom tests are added.
+http://web-platform.test:8000/webrtc/RTCPeerConnection-createAnswer.html
+
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-createDataChannel.html
-#http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
+http://web-platform.test:8000/webrtc/RTCPeerConnection-createOffer.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-description-attributes-timing.https.html
 #http://web-platform.test:8000/webrtc/RTCPeerConnection-explicit-rollback-iceGatheringState.html
 #https://web-platform.test:8443/webrtc/RTCPeerConnection-GC.https.html

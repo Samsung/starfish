@@ -80,16 +80,47 @@ ExecutionContext* ObserverBase::executionContext()
     return m_peerConnection->executionContext();
 }
 
-void ObserverBase::PostTask(std::function<void()> task)
+Promise* ObserverBase::popPromise()
 {
+    if (!m_promises.size()) {
+        return nullptr;
+    }
+
+    Promise* ret = m_promises.front();
+    m_promises.erase(m_promises.begin());
+
+    return ret;
+}
+
+void ObserverBase::removePromise(Promise* promise)
+{
+    auto iter = m_promises.begin();
+    while (iter != m_promises.end()) {
+        if (*iter == promise) {
+            m_promises.erase(iter);
+            break;
+        }
+        iter++;
+    }
+}
+
+void ObserverBase::postCallback(std::function<void()> callback)
+{
+    // the callback is the observer's callback implementaions.
+    // These callbacks might be called asynchronously by libwebrtc on child
+    // threads. So, if this callback is called from a child thread, we should
+    // post it to the main thread to allocate gc memory safety.
     if (isMainThread()) {
-        task();
+        callback();   // Execute callback
+        popPromise(); // pop and drop.
     } else {
         struct Params {
-            std::function<void()> task;
+            ObserverBase* self;
+            std::function<void()> callback;
         };
         Params* p = new Params();
-        p->task = task;
+        p->self = this;
+        p->callback = callback;
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -97,7 +128,8 @@ void ObserverBase::PostTask(std::function<void()> task)
                 executionContext()->globalScope(),
                 [](size_t, void* data) {
                     Params* p = static_cast<Params*>(data);
-                    p->task();
+                    p->callback();         // Execute callback safety.
+                    p->self->popPromise(); // Pop and drop.
                     delete p;
                 },
                 p);
@@ -115,7 +147,7 @@ PeerConnectionObserver::PeerConnectionObserver(
 void PeerConnectionObserver::OnSignalingState(
     libwebrtc::RTCSignalingState state)
 {
-    PostTask([this, state] {
+    postCallback([this, state] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -162,7 +194,7 @@ void PeerConnectionObserver::OnSignalingState(
 void PeerConnectionObserver::OnPeerConnectionState(
     libwebrtc::RTCPeerConnectionState state)
 {
-    PostTask([this, state] {
+    postCallback([this, state] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -211,7 +243,7 @@ void PeerConnectionObserver::OnPeerConnectionState(
 void PeerConnectionObserver::OnTrack(
     libwebrtc::scoped_refptr<libwebrtc::RTCRtpTransceiver> transceiver)
 {
-    PostTask([this, transceiver] {
+    postCallback([this, transceiver] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -267,7 +299,7 @@ void PeerConnectionObserver::OnRemoveTrack(
 void PeerConnectionObserver::OnDataChannel(
     libwebrtc::scoped_refptr<libwebrtc::RTCDataChannel> channel)
 {
-    PostTask([this, channel] {
+    postCallback([this, channel] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -291,7 +323,7 @@ void PeerConnectionObserver::OnDataChannel(
 // https://w3c.github.io/webrtc-pc/#dfn-update-the-negotiation-needed-flag
 void PeerConnectionObserver::OnRenegotiationNeeded()
 {
-    PostTask([this] {
+    postCallback([this] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -308,7 +340,7 @@ void PeerConnectionObserver::OnRenegotiationNeeded()
 void PeerConnectionObserver::OnIceConnectionState(
     libwebrtc::RTCIceConnectionState state)
 {
-    PostTask([this, state] {
+    postCallback([this, state] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -360,7 +392,7 @@ void PeerConnectionObserver::OnIceConnectionState(
 void PeerConnectionObserver::OnIceGatheringState(
     libwebrtc::RTCIceGatheringState state)
 {
-    PostTask([this, state] {
+    postCallback([this, state] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -395,7 +427,7 @@ void PeerConnectionObserver::OnIceGatheringState(
 void PeerConnectionObserver::OnIceCandidate(
     libwebrtc::scoped_refptr<libwebrtc::RTCIceCandidate> candidate)
 {
-    PostTask([this, candidate] {
+    postCallback([this, candidate] {
         if (m_peerConnection->isClosed() || m_peerConnection->isDisposed()) {
             return;
         }
@@ -442,7 +474,7 @@ CreateOfferAnswerObserver::CreateOfferAnswerObserver(
 void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
                                           const libwebrtc::string type)
 {
-    PostTask([this, sdp, type] {
+    postCallback([this, sdp, type] {
         if (m_peerConnection->isDisposed()) {
             return;
         }
@@ -453,28 +485,19 @@ void CreateOfferAnswerObserver::OnSuccess(const libwebrtc::string sdp,
 
         ObjectRef* sd = m_peerConnection->createSessionDescriptionInitObject(
             m_peerConnection->toRtcSdpType(type.std_string()), sdpString);
-        Promise* promise = nullptr;
         if (isCreateOffer()) {
-            promise = m_peerConnection->m_createOfferObserver->promise();
-            m_peerConnection->m_createOfferObserver->setPromise(nullptr);
             m_peerConnection->m_lastCreatedOffer = sdpString;
         } else if (isCreateAnswer()) {
-            promise = m_peerConnection->m_createAnswerObserver->promise();
-            m_peerConnection->m_createAnswerObserver->setPromise(nullptr);
             m_peerConnection->m_lastCreatedAnswer = sdpString;
         }
 
-        if (promise) {
-            promise->fulfill(createScriptValue(sd));
-        } else {
-            STARFISH_LOG_ERROR("Unknown promise type");
-        }
+        m_promises.front()->fulfill(createScriptValue(sd));
     });
 }
 
 void CreateOfferAnswerObserver::OnFailure(const std::string& error)
 {
-    PostTask([this, error] {
+    postCallback([this, error] {
         if (m_peerConnection->isDisposed()) {
             return;
         }
@@ -482,20 +505,7 @@ void CreateOfferAnswerObserver::OnFailure(const std::string& error)
         DOMException* exception = m_peerConnection->toDomException(error);
         STARFISH_ASSERT(exception);
 
-        Promise* promise = nullptr;
-        if (isCreateOffer()) {
-            promise = m_peerConnection->m_createOfferObserver->promise();
-            m_peerConnection->m_createOfferObserver->setPromise(nullptr);
-        } else if (isCreateAnswer()) {
-            promise = m_peerConnection->m_createAnswerObserver->promise();
-            m_peerConnection->m_createAnswerObserver->setPromise(nullptr);
-        }
-
-        if (promise) {
-            promise->reject(exception->scriptValue());
-        } else {
-            STARFISH_LOG_ERROR("Unknown promise type");
-        }
+        m_promises.front()->reject(exception->scriptValue());
     });
 }
 
@@ -507,21 +517,7 @@ SetLocalRemoteDescriptionObserver::SetLocalRemoteDescriptionObserver(
 
 void SetLocalRemoteDescriptionObserver::OnSuccess()
 {
-    PostTask([this] {
-        Promise* promise = nullptr;
-        bool isLocal = isLocalDescription();
-        if (isLocal) {
-            promise =
-                m_peerConnection->m_setLocalDescriptionObserver->promise();
-            m_peerConnection->m_setLocalDescriptionObserver->setPromise(
-                nullptr);
-        } else if (isRemoteDescription()) {
-            promise =
-                m_peerConnection->m_setRemoteDescriptionObserver->promise();
-            m_peerConnection->m_setRemoteDescriptionObserver->setPromise(
-                nullptr);
-        }
-
+    postCallback([this] {
         for (auto transceiver : m_peerConnection->getTransceivers()) {
             auto currentDirection = transceiver->currentDirection();
             if (currentDirection.hasValue()) {
@@ -537,47 +533,26 @@ void SetLocalRemoteDescriptionObserver::OnSuccess()
                 }
             }
 
-            if (isLocal) {
+            if (isLocalDescription()) {
                 transceiver->MarkRepresentedInLocalDescription();
             } else {
                 transceiver->MarkRepresentedInRemoteDescription();
             }
         }
-
-        if (promise) {
-            promise->fulfill(scriptUndefined());
-        } else {
-            STARFISH_LOG_ERROR("Unknown promise type");
-        }
+        m_promises.front()->fulfill(scriptUndefined());
     });
 }
 
 void SetLocalRemoteDescriptionObserver::OnFailure(const std::string& error)
 {
-    PostTask([this, error] {
+    postCallback([this, error] {
         if (m_peerConnection->isDisposed()) {
             return;
         }
 
         Promise* promise = nullptr;
-        if (isLocalDescription()) {
-            promise =
-                m_peerConnection->m_setLocalDescriptionObserver->promise();
-            m_peerConnection->m_setLocalDescriptionObserver->setPromise(
-                nullptr);
-        } else if (isRemoteDescription()) {
-            promise =
-                m_peerConnection->m_setRemoteDescriptionObserver->promise();
-            m_peerConnection->m_setRemoteDescriptionObserver->setPromise(
-                nullptr);
-        }
-
-        if (promise) {
-            DOMException* exception = m_peerConnection->toDomException(error);
-            promise->reject(exception->scriptValue());
-        } else {
-            STARFISH_LOG_DEBUG("Unknown promise type");
-        }
+        DOMException* exception = m_peerConnection->toDomException(error);
+        m_promises.front()->reject(exception->scriptValue());
     });
 }
 
@@ -590,7 +565,7 @@ void GetStatsObserver::OnSuccess(
     const libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
         reports)
 {
-    PostTask([this, reports] {
+    postCallback([this, reports] {
         RTCStatsReport* rtcStatsReport =
             new RTCStatsReport(m_peerConnection->executionContext());
 
@@ -603,18 +578,86 @@ void GetStatsObserver::OnSuccess(
                 String::createASCIIString(id.c_str(), id.length()), rtcStats);
         }
 
-        m_promise->fulfill(rtcStatsReport->scriptValue());
+        m_promises.front()->fulfill(rtcStatsReport->scriptValue());
     });
 }
 
 void GetStatsObserver::OnFailure(const std::string& error)
 {
-    PostTask([this, error] {
+    postCallback([this, error] {
         auto exception =
             new DOMException(m_peerConnection->executionContext(),
                              DOMException::INVALID_ACCESS_ERR, error.c_str());
-        m_promise->reject(exception->scriptValue());
+        m_promises.front()->reject(exception->scriptValue());
     });
+}
+
+void ChainedPromiseManager::AddChain(ChainedOperation chainedOperation)
+{
+    STARFISH_ASSERT(isMainThread());
+    // Set onSettled to execute next chained operation.
+    chainedOperation.first->setOnSettled([this] {
+        // Abort all chained operations if connection is closed.
+        if (m_peerConnection->isClosed()) {
+            for (const auto& chainedOperation : m_chainedOperations) {
+                if (!chainedOperation.first->isSettled()) {
+                    auto exception =
+                        new DOMException(m_peerConnection->executionContext(),
+                                         DOMException::INVALID_STATE_ERR,
+                                         "The peer connection is closed.");
+                    // Reject promise.
+                    chainedOperation.first->reject(exception->scriptValue());
+
+                    // Remove the promise from the observer it registered with.
+                    chainedOperation.second.first->removePromise(
+                        chainedOperation.first);
+                }
+            }
+            m_chainedOperations.clear();
+            return;
+        }
+
+        // Remove last executed operaton.
+        STARFISH_ASSERT(m_lastExecutedPromise ==
+                        m_chainedOperations.front().first);
+        STARFISH_ASSERT(m_lastExecutedPromise->isSettled());
+        m_chainedOperations.erase(m_chainedOperations.begin());
+
+        m_lastExecutedPromise = nullptr;
+        if (!m_chainedOperations.size()) {
+            // End of chaining operations call.
+            return;
+        }
+
+        // Execute next chained operatoin.
+        const auto& nextChain = m_chainedOperations.front();
+        STARFISH_ASSERT(!nextChain.first->isSettled());
+        // the operation will call async method of libwebrtc.
+        // this asnyc method ends, it will call call a callback method of
+        // observers. and the promise will settled in that callback.
+        m_lastExecutedPromise = nextChain.first;
+        nextChain.second.second();
+    });
+
+    // Add operation to chain.
+    m_chainedOperations.push_back(chainedOperation);
+
+    // Execute a seed operation of chain.
+    if (m_chainedOperations.size() == 1) {
+        // Make it parallel.
+        ExecutionContext* executionContext =
+            m_peerConnection->executionContext();
+        executionContext->webBase()->messageLoop()->addIdler(
+            executionContext->globalScope(),
+            [](size_t handle, void* data) {
+                ChainedPromiseManager* self =
+                    static_cast<ChainedPromiseManager*>(data);
+                auto seedChain = self->m_chainedOperations.front();
+                self->m_lastExecutedPromise = seedChain.first;
+                seedChain.second.second();
+            },
+            this);
+    }
 }
 
 // https://w3c.github.io/webrtc-pc/#constructor
@@ -689,6 +732,8 @@ bool RTCPeerConnection::initializePeerConnection(
     m_iceGatheringState = String::createASCIIString("new");
     m_iceConnectionState = String::createASCIIString("new");
 
+    m_chainedPromiseManager = new ChainedPromiseManager(this);
+
     return m_backend != nullptr;
 }
 
@@ -758,17 +803,36 @@ Promise* RTCPeerConnection::createOffer(RTCOfferOptions options)
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-    m_createOfferObserver->setPromise(promise);
+    m_createOfferObserver->addPromise(promise);
 
-    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
-        libwebrtc::RTCMediaConstraints::Create();
+    m_chainedPromiseManager->AddChain(
+        { promise, { m_createOfferObserver, [this]() {
+                        String* state = signalingState();
+                        if (!state->equals("stable") &&
+                            !state->equals("have-local-offer")) {
+                            auto exception = new DOMException(
+                                executionContext(),
+                                DOMException::INVALID_STATE_ERR,
+                                "SignalingState is neither \"stable\" nor "
+                                "\"have-local-offer\".");
+                            m_createOfferObserver->m_promises.front()->reject(
+                                exception->scriptValue());
+                            return;
+                        }
 
-    m_backend->CreateOffer(
-        [this](const libwebrtc::string sdp, const libwebrtc::string type) {
-            m_createOfferObserver->OnSuccess(sdp, type);
-        },
-        [this](const char* error) { m_createOfferObserver->OnFailure(error); },
-        constraints);
+                        libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints>
+                            constraints =
+                                libwebrtc::RTCMediaConstraints::Create();
+                        m_backend->CreateOffer(
+                            [this](const libwebrtc::string sdp,
+                                   const libwebrtc::string type) {
+                                m_createOfferObserver->OnSuccess(sdp, type);
+                            },
+                            [this](const char* error) {
+                                m_createOfferObserver->OnFailure(error);
+                            },
+                            constraints);
+                    } } });
 
     return promise;
 }
@@ -796,19 +860,35 @@ Promise* RTCPeerConnection::createAnswer(RTCAnswerOptions options)
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-    m_createAnswerObserver->setPromise(promise);
+    m_createAnswerObserver->addPromise(promise);
 
-    libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
-        libwebrtc::RTCMediaConstraints::Create();
+    m_chainedPromiseManager->AddChain(
+        { promise,
+          { m_createAnswerObserver, [this] {
+               String* state = signalingState();
+               if (!state->equals("have-remote-offer") &&
+                   !state->equals("have-local-pranswer")) {
+                   auto exception = new DOMException(
+                       executionContext(), DOMException::INVALID_STATE_ERR,
+                       "SignalingState is neither \"have-remote-offer\" nor "
+                       "\"have-local-pranswer\".");
+                   m_createAnswerObserver->m_promises.front()->reject(
+                       exception->scriptValue());
+                   return;
+               }
 
-    m_backend->CreateAnswer(
-        [this](const libwebrtc::string sdp, const libwebrtc::string type) {
-            m_createAnswerObserver->OnSuccess(sdp, type);
-        },
-        [this](const std::string& error) {
-            m_createAnswerObserver->OnFailure(error.c_str());
-        },
-        constraints);
+               libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints>
+                   constraints = libwebrtc::RTCMediaConstraints::Create();
+               m_backend->CreateAnswer(
+                   [this](const libwebrtc::string sdp,
+                          const libwebrtc::string type) {
+                       m_createAnswerObserver->OnSuccess(sdp, type);
+                   },
+                   [this](const std::string& error) {
+                       m_createAnswerObserver->OnFailure(error.c_str());
+                   },
+                   constraints);
+           } } });
 
     return promise;
 }
@@ -920,7 +1000,7 @@ Promise* RTCPeerConnection::setLocalDescription(
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-    m_setLocalDescriptionObserver->setPromise(promise);
+    m_setLocalDescriptionObserver->addPromise(promise);
 
     Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
         toSdpType(description.m_type);
@@ -1037,20 +1117,31 @@ Promise* RTCPeerConnection::setRtcSessionDescription(
 
     if (isRemote) {
         // SetRemoteDescription takes the ownership of desc
-        m_backend->SetRemoteDescription(
-            des->sdp(), des->type(),
-            [this]() { m_setRemoteDescriptionObserver->OnSuccess(); },
-            [this](const char* error) {
-                m_setRemoteDescriptionObserver->OnFailure(error);
-            });
+        m_chainedPromiseManager->AddChain(
+            { promise, { m_setRemoteDescriptionObserver, [this, des]() {
+                            m_backend->SetRemoteDescription(
+                                des->sdp(), des->type(),
+                                [this]() {
+                                    m_setRemoteDescriptionObserver->OnSuccess();
+                                },
+                                [this](const char* error) {
+                                    m_setRemoteDescriptionObserver->OnFailure(
+                                        error);
+                                });
+                        } } });
+
     } else {
         // SetLocalDescription takes the ownership of desc
-        m_backend->SetLocalDescription(
-            des->sdp(), des->type(),
-            [this]() { m_setLocalDescriptionObserver->OnSuccess(); },
-            [this](const char* error) {
-                m_setLocalDescriptionObserver->OnFailure(error);
-            });
+        m_chainedPromiseManager->AddChain(
+            { promise,
+              { m_setLocalDescriptionObserver, [this, des]() {
+                   m_backend->SetLocalDescription(
+                       des->sdp(), des->type(),
+                       [this]() { m_setLocalDescriptionObserver->OnSuccess(); },
+                       [this](const char* error) {
+                           m_setLocalDescriptionObserver->OnFailure(error);
+                       });
+               } } });
     }
 
     return promise;
@@ -1087,7 +1178,8 @@ RTCSessionDescription* RTCPeerConnection::localDescription()
 RTCSessionDescription* RTCPeerConnection::currentLocalDescription()
 {
     // TODO:FIX ME!!
-    return localDescription();
+    STARFISH_UNIMPLEMENTED();
+    return nullptr;
 }
 
 RTCSessionDescription* RTCPeerConnection::pendingLocalDescription()
@@ -1117,7 +1209,7 @@ Promise* RTCPeerConnection::setRemoteDescription(
     }
 
     Promise* promise = new Promise(scriptBindingInstance());
-    m_setRemoteDescriptionObserver->setPromise(promise);
+    m_setRemoteDescriptionObserver->addPromise(promise);
 
     Nullable<libwebrtc::RTCSessionDescription::SdpType> type =
         toSdpType(description.m_type);
@@ -1848,7 +1940,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
 Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
 {
     Promise* promise = new Promise(scriptBindingInstance());
-    m_getStatsObserver->setPromise(promise);
+    m_getStatsObserver->addPromise(promise);
 
     if (selector) {
         int count = 0;
