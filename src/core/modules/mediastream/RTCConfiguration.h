@@ -70,7 +70,7 @@ public:
     DEFINE_GETTER_SETTER(String*, peerIdentity, PeerIdentity);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCCertificate*>, certificates,
                                       Certificates);
-    DEFINE_GETTER_SETTER(int, iceCandidatePoolSize, IceCandidatePoolSize);
+    DEFINE_GETTER_SETTER(uint8_t, iceCandidatePoolSize, IceCandidatePoolSize);
 
     bool isValid();
 
@@ -83,7 +83,7 @@ private:
     RTCRtcpMuxPolicy m_rtcpMuxPolicy{ RTCRtcpMuxPolicy::Require };
     String* m_peerIdentity{ String::emptyString };
     GCVector<RTCCertificate*> m_certificates;
-    int m_iceCandidatePoolSize{ 0 };
+    uint8_t m_iceCandidatePoolSize{ 0 };
 
     bool m_hasIceServers{ true };
     bool m_hasIceTransportPolicy{ false };
