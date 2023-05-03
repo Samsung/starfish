@@ -1800,8 +1800,8 @@ http://web-platform.test:8000/html/browsers/history/the-location-interface/locat
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/location-protocol-setter.html
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/location-pathname-setter-question-mark.html
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/location_search.html
-#http://web-platform.test:8000/html/browsers/history/the-location-interface/location_replace.html
-#http://web-platform.test:8000/html/browsers/history/the-location-interface/location_reload.html
+http://web-platform.test:8000/html/browsers/history/the-location-interface/location_replace.html
+http://web-platform.test:8000/html/browsers/history/the-location-interface/location_reload.html
 http://web-platform.test:8000/html/browsers/history/the-location-interface/location_protocol.html
 http://web-platform.test:8000/html/browsers/history/the-location-interface/location_port.html
 http://web-platform.test:8000/html/browsers/history/the-location-interface/location_pathname.html

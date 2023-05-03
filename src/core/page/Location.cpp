@@ -353,7 +353,9 @@ void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force)
 
 void Location::replace(String* url)
 {
-    if (ResourceURL::isValidURL(url)) {
+    if (url->startsWith("#")) {
+        setHash(url);
+    } else if (ResourceURL::isValidURL(url)) {
         navigateImpl(document()->browsingContext(), new ResourceURL(url),
                      new ReferrerURL(document()->documentURI()),
                      HistoryManagerAction::Replace);
