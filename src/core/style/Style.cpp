@@ -6960,6 +6960,21 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
             }
             iter++;
         }
+
+        if (pseudoElementType == PseudoElementNone &&
+            element->inlineStyleWithoutCreation()) {
+            auto propertiesList =
+                element->inlineStyleWithoutCreation()->cssCustomValues();
+            if (propertiesList) {
+                const auto& properties = propertiesList->values();
+                auto list =
+                    ret->rareComputedStyleData()->ensureCustomProperty();
+                for (size_t i = 0; i < properties.size(); ++i) {
+                    list->setProperty(properties[i].name(),
+                                      properties[i].value());
+                }
+            }
+        }
     }
 
     Nullable<const MutablePropertyValueList*> cssCustomValues;
