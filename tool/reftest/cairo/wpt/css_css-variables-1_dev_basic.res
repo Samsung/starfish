@@ -25,7 +25,7 @@
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-reference-refresh.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-reference-shorthands-cssom.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-reference-shorthands.htm
-#http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-reference-variable.htm
+http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-reference-variable.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-background-properties.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-basic.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-filters.htm
