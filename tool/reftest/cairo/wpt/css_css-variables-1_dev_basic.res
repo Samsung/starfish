@@ -30,8 +30,8 @@ http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-referen
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-basic.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-filters.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-plus-box-shadow.htm
-#http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-replaced-size.htm
-#http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-shadow-properties.htm
+http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-replaced-size.htm
+http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-shadow-properties.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-shorthands.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-substitution-variable-declaration.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-transitions-from-no-value.htm
@@ -40,4 +40,4 @@ http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-referen
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-transitions-transition-property-variable-before-value.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-transitions-value-before-transition-property-all.htm
 #http://web-platform.test:8000/css/dist/css-variables-1_dev/html/variable-transitions-value-before-transition-property-variable.htm
-#http://web-platform.test:8000/css/dist/css-variables-1_dev/html/vars-border-shorthand-serialize.htm
+http://web-platform.test:8000/css/dist/css-variables-1_dev/html/vars-border-shorthand-serialize.htm
