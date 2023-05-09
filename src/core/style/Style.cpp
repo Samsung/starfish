@@ -523,17 +523,46 @@ String* CSSStyleValuePair::keyName() const
     }
 }
 
+static bool needsToFindVarFunction(const CSSTokenValue& token, int startPos,
+                                   int* varFunctionStartPos,
+                                   int* varFunctionEndPos)
+{
+    int start = 0, end = 0;
+    start = token.find("var(", startPos);
+    end = token.find(")", start);
+    if (start >= 0 && end > 0) {
+        *varFunctionStartPos = start;
+        *varFunctionEndPos = end;
+        return true;
+    }
+    return false;
+}
+
 static bool hasValidVarFunction(const CSSTokenValue& token)
 {
     // we can give pass nullptr into CSSVariableSyntaxTreeBuilder
     // because, we don't need variables of this builder
     // we just want to know that the syntax is correct
+
+    bool result = false;
+    int start = 0, end = 0;
     CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder(nullptr);
-    variablesSyntaxBuilder.build(token.data(), token.size());
-    if (variablesSyntaxBuilder.isValid()) {
-        return true;
+    while (needsToFindVarFunction(token, start, &start, &end)) {
+        if (start == 0) {
+            variablesSyntaxBuilder.build(token.data(), token.size());
+        } else {
+            const CSSTokenValue& nextToken =
+                token.substring(start, end - start + 1);
+            variablesSyntaxBuilder.build(nextToken.data(), nextToken.size());
+        }
+        if (!variablesSyntaxBuilder.isValid()) {
+            return false;
+        } else {
+            result = true;
+        }
+        start = end + 1;
     }
-    return false;
+    return result;
 }
 
 bool CSSStyleValuePair::updateValueVarReferences(const CSSTokenVector& tokens)
@@ -556,6 +585,7 @@ bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
         return false;
     }
     const char* value = tokens[0].data();
+
     if (VALUE_IS_INHERIT()) {
         m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
     } else if (VALUE_IS_INITIAL()) {
@@ -3083,10 +3113,56 @@ std::string StyleResolver::resolveVarReferencedValue(
                 newCssValue.append(" ");
             }
         } else {
-            newCssValue.append(cssValueTokens[i].data(),
-                               cssValueTokens[i].data() +
-                                   cssValueTokens[i].size());
-            newCssValue.append(" ");
+            bool isSuccess = false;
+            std::string newCssValueCandidate;
+            {
+                int start = 0, end = 0;
+                CSSTokenValue currentToken(cssValueTokens[i].data(),
+                                           cssValueTokens[i].size());
+                while (
+                    needsToFindVarFunction(currentToken, start, &start, &end)) {
+                    if (newCssValueCandidate.length() == 0) {
+                        newCssValueCandidate.append(
+                            currentToken.substring(0, start));
+                    }
+                    const CSSTokenValue& nextToken =
+                        currentToken.substring(start, end - start + 1);
+                    // printf("[MONG] nextToken : %s \n",nextToken.c_str());
+                    variablesSyntaxBuilder.reset();
+                    variablesSyntaxBuilder.build(nextToken.data(),
+                                                 nextToken.size());
+                    if (variablesSyntaxBuilder.isValid()) {
+                        auto styleValue = variablesSyntaxBuilder.generateStyle(
+                            element, cssCustomValues);
+                        TokenVector tempCssValueTokens;
+                        tokenize(tempCssValueTokens, styleValue.data(),
+                                 styleValue.length());
+
+                        for (size_t j = 0; j < tempCssValueTokens.size(); ++j) {
+                            newCssValueCandidate.append(
+                                tempCssValueTokens[j].data(),
+                                tempCssValueTokens[j].data() +
+                                    tempCssValueTokens[j].size());
+                            newCssValueCandidate.append(" ");
+                        }
+                        isSuccess = true;
+                    } else {
+                        isSuccess = false;
+                        break;
+                    }
+                    start = end + 1;
+                }
+                newCssValueCandidate.append(currentToken.substring(
+                    start, currentToken.length() - start + 1));
+            }
+            if (isSuccess) {
+                newCssValue = newCssValueCandidate;
+            } else {
+                newCssValue.append(cssValueTokens[i].data(),
+                                   cssValueTokens[i].data() +
+                                       cssValueTokens[i].size());
+                newCssValue.append(" ");
+            }
         }
     }
 
@@ -8953,7 +9029,6 @@ bool CSSStyleValuePair::updateValueColor(Document* document,
     if (tokens.size() != 1) {
         return false;
     }
-
     return updateValueUnitColor(tokens[0]);
 }
 

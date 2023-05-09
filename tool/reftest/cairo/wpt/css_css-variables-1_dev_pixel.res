@@ -17,8 +17,8 @@ test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-
 test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-15.htm
 test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-16.htm
 test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-17.htm
-#test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-18.htm
-#test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-19.htm
+test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-18.htm
+test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-19.htm
 test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-20.htm
 #test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-21.htm
 test/cairo/reftest/web_platform_test/css/dist/css-variables-1_dev/html/variable-declaration-22.htm
