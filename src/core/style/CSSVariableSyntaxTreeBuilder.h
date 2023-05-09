@@ -128,6 +128,11 @@ public:
         return m_valid;
     }
 
+    void reset()
+    {
+        m_valid = true;
+    }
+
 private:
     bool m_valid;
     Nullable<Starfish*> m_starfish; // if this value is null, there is no actual
