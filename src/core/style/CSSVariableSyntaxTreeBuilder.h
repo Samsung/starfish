@@ -131,6 +131,7 @@ public:
     void reset()
     {
         m_valid = true;
+        m_variableContainers.clear();
     }
 
 private:

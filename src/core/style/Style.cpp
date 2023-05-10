@@ -553,6 +553,7 @@ static bool hasValidVarFunction(const CSSTokenValue& token)
         } else {
             const CSSTokenValue& nextToken =
                 token.substring(start, end - start + 1);
+            variablesSyntaxBuilder.reset();
             variablesSyntaxBuilder.build(nextToken.data(), nextToken.size());
         }
         if (!variablesSyntaxBuilder.isValid()) {
