@@ -135,4 +135,45 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
 
     return false;
 }
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#can-have-its-url-rewritten
+bool WebOrigin::canRewritten(const WebOrigin* targetWebOrigin) const
+{
+    if (!targetWebOrigin->m_originalURL.hasValue()) {
+        return false;
+    }
+
+    if (!isSameOrigin(targetWebOrigin)) {
+        return false;
+    }
+
+    ResourceURL* targetURL = targetWebOrigin->m_originalURL.value();
+    if ((m_originalURL->protocolKind() != targetURL->protocolKind()) ||
+        !m_originalURL->username()->equals(targetURL->username()) ||
+        !m_originalURL->password()->equals(targetURL->password()) ||
+        !m_originalURL->host()->equals(targetURL->host()) ||
+        !m_originalURL->port()->equals(targetURL->port())) {
+        return false;
+    }
+
+    if (targetURL->isHTTPFamilyURL()) {
+        return true;
+    }
+
+    if (targetURL->isFileURL()) {
+        if (!m_originalURL->pathname()->equals(targetURL->pathname())) {
+            return false;
+        }
+    }
+
+    if (!m_originalURL->pathname()->equals(targetURL->pathname()) ||
+        !m_originalURL->search()->equals(targetURL->search())) {
+        if (!targetURL->isFileURL()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 } // namespace Starfish

@@ -27,6 +27,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Serializer.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -113,8 +114,9 @@ bool HistoryManager::checkHistoryEntry(int delta, bool changeCurrentEntry)
         return false;
     }
 
-    if (changeCurrentEntry)
+    if (changeCurrentEntry) {
         m_curEntry = itr;
+    }
 
     return true;
 }
@@ -173,37 +175,64 @@ ScriptValue HistoryManager::state(Document* document)
 void HistoryManager::pushState(Document* document, ScriptValue state,
                                String* title, Nullable<String*> url)
 {
-    auto serializedState =
-        Serializer::serialize(document->executionContext(), state);
-    ResourceURL* newURL = nullptr;
-    if (url.hasValue()) {
-        newURL =
-            new ResourceURL(url.getValue(), document->baseURL()->baseURI());
-    } else {
-        newURL = new ResourceURL(*(currentEntry()->url()));
-    }
-
-    m_historyEntries.erase(std::next(m_curEntry, 1), m_historyEntries.end());
-    addHistoryEntry(new HistoryEntry(serializedState, title, newURL));
+    pushReplaceStateInternal(document, state, title, url, OperationType::kPush);
 }
 
 void HistoryManager::replaceState(Document* document, ScriptValue state,
                                   String* title, Nullable<String*> url)
 {
+    pushReplaceStateInternal(document, state, title, url,
+                             OperationType::kReplace);
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#shared-history-push/replace-state-steps
+void HistoryManager::pushReplaceStateInternal(Document* document,
+                                              ScriptValue state, String* title,
+                                              Nullable<String*> url,
+                                              OperationType type)
+{
+    ResourceURL* newURL = resolveURL(document, url);
+
+    if (!document->webOrigin()->canRewritten(
+            WebOrigin::createDocumentOrigin(newURL))) {
+        throw new DOMException(document->executionContext(),
+                               DOMException::Code::SECURITY_ERR, "Invalid URL");
+        return;
+    }
+
     auto serializedState =
         Serializer::serialize(document->executionContext(), state);
-
-    ResourceURL* newURL;
-    if (url.hasValue()) {
-        newURL =
-            new ResourceURL(url.getValue(), document->baseURL()->baseURI());
+    if (type == OperationType::kPush) {
+        m_historyEntries.erase(std::next(m_curEntry, 1),
+                               m_historyEntries.end());
+        addHistoryEntry(new HistoryEntry(serializedState, title, newURL));
     } else {
-        newURL = new ResourceURL(*(currentEntry()->url()));
+        if (currentEntry()) {
+            currentEntry()->init(serializedState, title, newURL);
+        }
     }
+}
 
-    if (currentEntry()) {
-        currentEntry()->init(serializedState, title, newURL);
+ResourceURL* HistoryManager::resolveURL(Document* document,
+                                        Nullable<String*> url)
+{
+    ResourceURL* resolvedURL = nullptr;
+    if (url.hasValue()) {
+        String* maybeRelativURL = url.value();
+        if (maybeRelativURL->startsWith("#")) {
+            // Change only hash.
+            resolvedURL = document->documentURI()->setHash(maybeRelativURL);
+        } else if (maybeRelativURL->startsWith("?")) {
+            // Change only search params.
+            resolvedURL = document->documentURI()->setSearch(maybeRelativURL);
+        } else {
+            resolvedURL = new ResourceURL(maybeRelativURL,
+                                          document->baseURL()->baseURI());
+        }
+    } else {
+        resolvedURL = new ResourceURL(*(currentEntry()->url()));
     }
+    return resolvedURL;
 }
 
 HistoryManager::HistoryEntry* HistoryManager::currentEntry()
@@ -229,4 +258,5 @@ void HistoryManager::addHistoryEntry(HistoryEntry* entry)
         ++m_curEntry;
     }
 }
+
 } // namespace Starfish
