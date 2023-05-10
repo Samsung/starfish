@@ -520,6 +520,12 @@ private:
 
     void initStorage();
 
+    void navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
+                               ReferrerURL* referrerURL);
+
+    void navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
+                              ReferrerURL* referrerURL);
+
     PlatformWindow* m_platformWindow;
     BrowsingContext* m_topLevelBrowsingContext;
 

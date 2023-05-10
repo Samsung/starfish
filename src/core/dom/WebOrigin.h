@@ -45,6 +45,8 @@ public:
     bool isSameOrigin(const WebOrigin* otherWebOrigin) const;
     bool isSameOriginDomain(const WebOrigin* otherWebOrigin) const;
 
+    bool canRewritten(const WebOrigin* targetWebOrigin) const;
+
 protected:
     Nullable<ResourceURL*> m_originalURL;
     bool m_isOpaque;

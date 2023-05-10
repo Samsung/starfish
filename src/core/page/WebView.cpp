@@ -68,6 +68,7 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Scrolling.h"
+#include "core/page/PopStateEvent.h"
 
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
@@ -673,6 +674,17 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(referrerURL != nullptr);
 
+    if (type == HistoryManagerAction::Intact &&
+        url->getUrlPathString()->equals(referrerURL->getUrlPathString())) {
+        navigateSameDocument(url, type, referrerURL);
+    } else {
+        navigateCrossDocument(url, type, referrerURL);
+    }
+}
+
+void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
+                                    ReferrerURL* referrerURL)
+{
     clearBlobURLStore();
     clearMediaSourceBlobURLStore();
     clearActiveImageURLsInRenderingSet();
@@ -732,6 +744,54 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     Param* p = new Param;
     p->url = url->urlString();
     callPublicWebViewHandler(OnPageStarted, p);
+}
+
+void WebView::navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
+                                   ReferrerURL* referrerURL)
+{
+    Document* document = m_topLevelBrowsingContext->window()->document();
+    bool isHashChanged = !referrerURL->hash()->equals(url->hash());
+
+    // Change documentURI.
+    document->setDocumentURI(url);
+
+    // Scroll to target.
+    String* str = url->hash();
+    if (str->length() > 1) {
+        Element* e =
+            document->getElementById(str->substring(1, str->length() - 1));
+        if (e) {
+            e->scrollIntoView();
+        }
+    }
+
+    // Dispatch popstate event.
+    if (historyManager()->currentEntry()) {
+        auto* serializedState = historyManager()->currentEntry()->state();
+        auto* deserializedState = Serializer::deserialize(
+            document->executionContext(), serializedState);
+        PopStateEventInit init;
+        init.setState(deserializedState);
+        PopStateEvent* event = new PopStateEvent(
+            document->executionContext(),
+            starfish()->staticStrings()->m_popstate.localName(), init);
+
+        struct Params {
+            Window* window;
+            PopStateEvent* event;
+        };
+        Params* params = new Params();
+        params->window = document->window();
+        params->event = event;
+        messageLoop()->addIdler(
+            document->window(),
+            [](size_t handle, void* data) {
+                Params* params = static_cast<Params*>(data);
+                params->window->dispatchEventByUA(params->event);
+                delete params;
+            },
+            params);
+    }
 }
 
 String* WebView::evaluateJavaScript(String* s)

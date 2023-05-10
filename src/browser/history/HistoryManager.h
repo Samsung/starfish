@@ -95,10 +95,19 @@ public:
     HistoryEntry* currentEntry();
 
 private:
+    enum class OperationType {
+        kPush,
+        kReplace,
+    };
+
     HistoryManager(WebView* webView);
     HistoryManager(HTMLIFrameElement* iframe);
     void addHistoryEntry(HistoryEntry* entry);
     bool checkHistoryEntry(int delta, bool changeCurrentEntry);
+    void pushReplaceStateInternal(Document* document, ScriptValue state,
+                                  String* title, Nullable<String*> url,
+                                  OperationType type);
+    ResourceURL* resolveURL(Document* document, Nullable<String*> url);
 
     enum HistoryManagerOwner {
         OwnerIsWebView,

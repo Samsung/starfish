@@ -1,0 +1,16 @@
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#popstateevent
+[
+ Constructor(DOMString type, optional PopStateEventInit eventInitDict),
+ ConstructorCallWith=ExecutionContext,
+ Exposed=(Window)
+] interface PopStateEvent : Event {
+  // Use starfish's ExtendedAttributes 'Constructor' instead of 'constructor' in idl.
+  // Also the binding generator can't handle 'optional PopStateEventInit eventInitDict = {}'
+  // constructor(DOMString type, optional PopStateEventInit eventInitDict = {});
+
+  readonly attribute any state;
+};
+
+dictionary PopStateEventInit : EventInit {
+  any state = null;
+};

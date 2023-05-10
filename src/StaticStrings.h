@@ -567,6 +567,7 @@ public:
     QualifiedName m_onttsstart;
     QualifiedName m_ttsend;
     QualifiedName m_onttsend;
+    QualifiedName m_popstate;
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
     QualifiedName m_statechange;
