@@ -3117,7 +3117,7 @@ std::string StyleResolver::resolveVarReferencedValue(
             bool isSuccess = false;
             std::string newCssValueCandidate;
             {
-                int start = 0, end = 0;
+                int start = 0, end = 0, previous_end = 0;
                 CSSTokenValue currentToken(cssValueTokens[i].data(),
                                            cssValueTokens[i].size());
                 while (
@@ -3125,10 +3125,12 @@ std::string StyleResolver::resolveVarReferencedValue(
                     if (newCssValueCandidate.length() == 0) {
                         newCssValueCandidate.append(
                             currentToken.substring(0, start));
+                    } else if (start != 0 && previous_end + 1 != start) {
+                        newCssValueCandidate.append(currentToken.substring(
+                            previous_end + 1, start - previous_end - 1));
                     }
                     const CSSTokenValue& nextToken =
                         currentToken.substring(start, end - start + 1);
-                    // printf("[MONG] nextToken : %s \n",nextToken.c_str());
                     variablesSyntaxBuilder.reset();
                     variablesSyntaxBuilder.build(nextToken.data(),
                                                  nextToken.size());
@@ -3152,6 +3154,7 @@ std::string StyleResolver::resolveVarReferencedValue(
                         break;
                     }
                     start = end + 1;
+                    previous_end = end;
                 }
                 newCssValueCandidate.append(currentToken.substring(
                     start, currentToken.length() - start + 1));
@@ -3166,7 +3169,6 @@ std::string StyleResolver::resolveVarReferencedValue(
             }
         }
     }
-
     return newCssValue;
 }
 
