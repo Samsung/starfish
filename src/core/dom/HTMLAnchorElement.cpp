@@ -109,6 +109,8 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
                     window()->location()->setHash(hrefStr);
+                } else if (hrefStr->startsWith("?")) {
+                    window()->location()->setSearch(hrefStr);
                 } else if (hrefStr->startsWith("javascript:", false)) {
                     String* ret2 = toBrowserString(
                         window()->scriptBindingInstance(),

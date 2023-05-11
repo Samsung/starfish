@@ -139,8 +139,7 @@ void Location::setPathname(String* newPath, bool needRemovingDots)
 
 void Location::setSearch(String* search)
 {
-    ResourceURL* newUrl = new ResourceURL(*url());
-    newUrl->setSearch(search);
+    ResourceURL* newUrl = url()->setSearch(search);
     assign(newUrl);
 }
 
