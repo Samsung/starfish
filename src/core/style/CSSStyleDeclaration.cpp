@@ -1797,6 +1797,10 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
 
     String* val = String::emptyString;
     switch (kind) {
+    case CSSStyleValuePair::KeyKind::CustomProperty: {
+        val = customProperty(name);
+        break;
+    }
 #define MATCH_KEY(Name, ...)               \
     case CSSStyleValuePair::KeyKind::Name: \
         val = Name();                      \
@@ -1804,7 +1808,6 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
 #undef MATCH_KEY
     default:
-        val = customProperty(name);
         break;
     }
     return val;
@@ -1854,13 +1857,6 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
     if (!prior->equals("undefined") && prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
-        } else {
-            if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
-                setCustomProperty(
-                    AtomicString::createAtomicString(m_node->starfish(), name),
-                    value);
-            }
-            return;
         }
     }
 
@@ -1868,10 +1864,16 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
         CSSStyleDeclaration* self;
         CSSStyleValuePair::KeyKind kind;
         bool isImportant;
+        AtomicString propertyName;
     } sender2;
     sender2.self = this;
     sender2.kind = kind;
     sender2.isImportant = isImportant;
+    if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
+        sender2.propertyName =
+            AtomicString::createAtomicString(m_node->starfish(), name);
+    }
+
     value->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
             CSSStyleValuePair::KeyKind kind = ((Sender2*)data)->kind;
@@ -1880,7 +1882,11 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
             if (kind == CSSStyleValuePair::KeyKind::Unknown) {
             } else {
                 switch (kind) {
-
+                case CSSStyleValuePair::KeyKind::CustomProperty: {
+                    self->setCustomProperty(
+                        ((Sender2*)data)->propertyName,
+                        String::createASCIIString(buf, len));
+                } break;
 #define SET_ATTR_SET_PROPERTY(name, nameLower, nameCSSCase) \
     case CSSStyleValuePair::KeyKind::name: {                \
         self->set##name(buf, len, isImportant);             \
