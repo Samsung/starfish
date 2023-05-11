@@ -561,7 +561,7 @@ http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/asyn
 #http://web-platform.test:8000/html/semantics/rellist-feature-detection.html
 #http://web-platform.test:8000/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_noopener.html
 http://web-platform.test:8000/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_getter.html
-#http://web-platform.test:8000/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_attribute-getter-setter.html
+http://web-platform.test:8000/html/semantics/links/links-created-by-a-and-area-elements/htmlanchorelement_attribute-getter-setter.html
 #http://web-platform.test:8000/html/semantics/interfaces.html
 #http://web-platform.test:8000/html/semantics/interactive-elements/the-summary-element/activation-behavior.html
 #http://web-platform.test:8000/html/semantics/interactive-elements/the-dialog-element/show-modal-focusing-steps.html

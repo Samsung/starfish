@@ -931,9 +931,11 @@ ResourceURL* ResourceURL::setProtocol(String* newProtocol)
 {
     STARFISH_ASSERT(newProtocol != nullptr);
     STARFISH_ASSERT(newProtocol->length());
-
-    return new ResourceURL(newProtocol->concat(m_urlString->substring(
-        m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1)));
+    size_t start = (*newProtocol)[newProtocol->length() - 1] == ':'
+                       ? m_protocolEnd
+                       : m_protocolEnd - 1;
+    return new ResourceURL(newProtocol->concat(
+        m_urlString->substring(start, m_urlString->length() - start)));
 }
 
 String* ResourceURL::username()
@@ -1020,10 +1022,10 @@ ResourceURL* ResourceURL::setHost(String* newHost)
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, start));
     builder.appendString(newHost);
-    if (newHost->find(":") == SIZE_MAX) {
-        builder.appendString(m_urlString->substring(
-            m_portEnd, m_urlString->length() - m_portEnd));
-    }
+    size_t restPartStart =
+        newHost->find(":") == SIZE_MAX ? m_hostEnd : m_portEnd;
+    builder.appendString(m_urlString->substring(
+        restPartStart, m_urlString->length() - restPartStart));
     return new ResourceURL(builder.finalize());
 }
 
@@ -1059,7 +1061,7 @@ ResourceURL* ResourceURL::setHostname(String* newHostname)
 {
     STARFISH_ASSERT(newHostname != nullptr);
 
-    if (newHostname->isEmpty()) {
+    if (newHostname->isEmpty() || newHostname->find(":") != SIZE_MAX) {
         return this;
     }
 
@@ -1068,11 +1070,9 @@ ResourceURL* ResourceURL::setHostname(String* newHostname)
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, start));
     builder.appendString(newHostname);
-    if (m_hostEnd != m_portEnd) {
-        builder.appendChar(':');
-        builder.appendString(m_urlString->substring(
-            m_hostEnd + 1, m_urlString->length() - m_portEnd));
-    }
+    size_t restPartStart = m_hostEnd != m_portEnd ? m_hostEnd : m_portEnd;
+    builder.appendString(m_urlString->substring(
+        restPartStart, m_urlString->length() - restPartStart));
     return new ResourceURL(builder.finalize());
 }
 
