@@ -5716,6 +5716,16 @@ void StyleResolver::applyProperty(
             Length length =
                 Length(Length::Percent, newCssValue.percentageValue());
             style->setFlexBasis(FlexBasisData(false, length));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Nullable<Length> maybeLength = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (maybeLength) {
+                style->setFlexBasis(FlexBasisData(false, maybeLength.value()));
+            } else {
+                style->setFlexBasis(
+                    FlexBasisData(false, Length(Length::Fixed, 0)));
+            }
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
