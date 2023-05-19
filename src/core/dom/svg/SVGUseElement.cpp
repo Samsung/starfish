@@ -72,8 +72,12 @@ void SVGUseElement::didAttributeChanged(QualifiedName name, String* old,
                 m_targetElementURL =
                     new ResourceURL(value, document()->referrer());
             } else {
-                m_targetElementURL =
-                    new ResourceURL(value, document()->baseURI());
+                if (value->startsWith("#")) {
+                    m_targetElementURL = document()->baseURL()->setHash(value);
+                } else {
+                    m_targetElementURL =
+                        new ResourceURL(value, document()->baseURI());
+                }
             }
         }
     } else if (ss->m_rx == name) {
