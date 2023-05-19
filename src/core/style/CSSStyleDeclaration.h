@@ -27,12 +27,13 @@ namespace Starfish {
 
 class CSSRule;
 
+CSSStyleValuePair::KeyKind lookupName(const char* buf, size_t len);
+
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
     friend class StyleRuleCSSStyleDeclaration;
 
 public:
-    enum Stage { resolveStyle, frameTreeBuild, layout };
     static CSSStyleValuePair lengthToCSSStyleValue(Length len);
 
     CSSStyleDeclaration(Element* element);
@@ -49,7 +50,6 @@ public:
     virtual bool isCSSStyleDeclaration() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    String* cssTextAffectedByAllProperty(const size_t& pos) const;
     String* generateCSSText() const;
 
     void notifyNeedsStyleRecalc();
@@ -60,112 +60,12 @@ public:
                                  bool isCaseSensitive = false,
                                  bool preserveContentWS = false);
 
-    String* Border();
-    String* BorderTop();
-    String* BorderRight();
-    String* BorderBottom();
-    String* BorderLeft();
-    String* BorderRadius();
-    String* BorderImage();
-    String* Background();
-    String* BackgroundRepeat();
-    String* BackgroundPosition();
-    String* Font();
-    String* TextDecoration();
-    String* Transition();
-    String* Animation();
-    String* Overflow();
-    String* FlexFlow();
-    String* Flex();
-    String* Outline();
-    String* ListStyle();
-    String* Mask();
-    String* customProperty(String* key);
-#define DECLARE_ATTRIBUTE_GETTER(name, ...) String* name();
-    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_GETTER)
-    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_GETTER)
-#undef DECLARE_ATTRIBUTE_GETTER
-
     void addCSSValuePair(CSSStyleValuePair::KeyKind name,
                          const CSSStyleValuePair& ret);
 
     void removeCSSValuePair(CSSStyleValuePair::KeyKind name);
     bool hasCSSValuePair(CSSStyleValuePair::KeyKind name);
     CSSStyleValuePair getCSSValuePair(CSSStyleValuePair::KeyKind name);
-
-    void setBorder(const char* value, size_t len, bool isImportant);
-    void setBorderTop(const char* value, size_t len, bool isImportant);
-    void setBorderRight(const char* value, size_t len, bool isImportant);
-    void setBorderBottom(const char* value, size_t len, bool isImportant);
-    void setBorderLeft(const char* value, size_t len, bool isImportant);
-    void setBorderRadius(const char* value, size_t len, bool isImportant);
-    void setBackground(const char* value, size_t len, bool isImportant);
-    void setBackgroundRepeat(const char* value, size_t len, bool isImportant);
-    void setBackgroundPosition(const char* value, size_t len, bool isImportant);
-    void setMargin(const char* value, size_t len, bool isImportant);
-    void setPadding(const char* value, size_t len, bool isImportant);
-    void setBorderWidth(const char* value, size_t len, bool isImportant);
-    void setBorderStyle(const char* value, size_t len, bool isImportant);
-    void setBorderColor(const char* value, size_t len, bool isImportant);
-    void setBorderImage(const char* value, size_t len, bool isImportant);
-    void setFont(const char* value, size_t len, bool isImportant);
-    void setTextDecoration(const char* value, size_t len, bool isImportant);
-    void setTransition(const char* value, size_t len, bool isImportant);
-    void setAnimation(const char* value, size_t len, bool isImportant);
-    void setOverflow(const char* value, size_t len, bool isImportant);
-    void setFlexFlow(const char* value, size_t len, bool isImportant);
-    void setFlex(const char* value, size_t len, bool isImportant);
-    void setOutline(const char* value, size_t len, bool isImportant);
-    void setListStyle(const char* value, size_t len, bool isImportant);
-    void setMask(const char* value, size_t len, bool isImportant);
-    void setCustomProperty(AtomicString key, String* value);
-
-#define DECLARE_ATTRIBUTE_SETTER(name, ...) \
-    void set##name(const char* value, size_t len, bool isImportant);
-    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_SETTER)
-    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_SETTER)
-#undef DECLARE_ATTRIBUTE_SETTER
-
-    void removeBorder();
-    void removeBorderTop();
-    void removeBorderRight();
-    void removeBorderBottom();
-    void removeBorderLeft();
-    void removeBorderRadius();
-    void removeBackground();
-    void removeBackgroundRepeat();
-    void removeBackgroundPosition();
-    void removeMargin();
-    void removePadding();
-    void removeBorderWidth();
-    void removeBorderStyle();
-    void removeBorderColor();
-    void removeBorderImage();
-    void removeFont();
-    void removeTextDecoration();
-    void removeTransition();
-    void removeAnimation();
-    void removeOverflow();
-    void removeFlexFlow();
-    void removeFlex();
-    void removeOutline();
-    void removeListStyle();
-    void removeMask();
-    void removeCustomProperty(String* key);
-#define DECLARE_ATTRIBUTE_REMOVER(name, ...) void remove##name();
-    FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_REMOVER)
-    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_REMOVER)
-#undef DECLARE_ATTRIBUTE_REMOVER
-
-#define DECLARE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
-    String* PRE##__VA_ARGS__(bool* isCombined = nullptr);
-
-    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Margin);
-    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Padding);
-    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Width);
-    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Style);
-    DECLARE_ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
-#undef DECLARE_ATTRIBUTE_GETTER_FOURSIDE
 
     static String* combineBoxString(String* t, String* r, String* b, String* l,
                                     bool* isCombined = nullptr);
@@ -188,6 +88,70 @@ public:
     Nullable<String*> defaultNamedGetter(String* name);
     bool defaultNamedSetter(String* name, Nullable<String*> value);
     void defaultNamedEnumerator(GCVector<String*>& enums);
+
+    template <typename T>
+    void setProperty(T name, T value, bool isImportant, bool allowSrcProperty)
+    {
+        struct Params {
+            CSSStyleDeclaration* self;
+            std::pair<CSSStyleValuePair::KeyKind, AtomicString> result;
+            bool isImportant;
+        } params;
+        params.self = this;
+        params.isImportant = isImportant;
+
+        // Resolve name type and custom proerty name if needed.
+        name->peekUTF8Buffer(
+            [](const char* buf, size_t len, void* data) -> size_t {
+                Params* params = reinterpret_cast<Params*>(data);
+                params->result.first = lookupName(buf, len);
+
+                if (params->result.first ==
+                    CSSStyleValuePair::KeyKind::CustomProperty) {
+                    params->result.second = AtomicString::createAtomicString(
+                        ((DocumentHoldable*)params->self->m_node)->starfish(),
+                        buf, len);
+                }
+#ifndef NDEBUG
+                if (params->result.first ==
+                    CSSStyleValuePair::KeyKind::Unknown) {
+                    STARFISH_LOG_ERROR("Unsupported property: %s", buf);
+                }
+#endif
+                return 0;
+            },
+            &params);
+
+        if (params.result.first == CSSStyleValuePair::KeyKind::Src &&
+            !allowSrcProperty) {
+            return;
+        }
+
+        value->peekUTF8Buffer(
+            [](const char* buf, size_t len, void* data) -> size_t {
+                Params* params = reinterpret_cast<Params*>(data);
+                CSSStyleDeclaration* self = params->self;
+                CSSStyleValuePair::KeyKind kind = params->result.first;
+
+                if (kind == CSSStyleValuePair::KeyKind::Unknown) {
+                } else {
+                    if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
+                        self->setCustomProperty(
+                            params->result.second,
+                            String::createASCIIString(buf, len));
+                    } else {
+                        self->setPropertyInternal(kind, buf, len,
+                                                  params->isImportant);
+                    }
+                }
+                return 0;
+            },
+            &params);
+    }
+
+    bool setPropertyInternal(CSSStyleValuePair::KeyKind keyKind,
+                             const char* value, size_t valueLength,
+                             bool isImportant);
 
     const GCAtomicVector<CSSStyleValuePair>& cssValues()
     {
@@ -225,25 +189,9 @@ public:
         return false;
     }
 
-    virtual void layoutIfNeeds()
-    {
-    }
-
-    virtual void resolveStyleIfNeeds()
-    {
-    }
-
-    virtual void buildFrameTreeIfNeeds()
-    {
-    }
-
     virtual void updateValue(CSSStyleValuePair::KeyKind keyKind)
     {
-    }
-
-    virtual Stage requiredStage(CSSStyleValuePair::KeyKind keyKind)
-    {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        // Do nothing.
     }
 
     static bool parseBackgroundPositionShorthand(const CSSTokenVector& tokens,
@@ -251,17 +199,177 @@ public:
                                                  CSSStyleValuePair* rety,
                                                  bool allowComma = true);
     static bool parseFontShorthand(const CSSTokenVector& tokens,
-                                   CSSStyleValuePair* _Style,
-                                   // UNSUPPORTED CSSStyleValuePair* _Variant,
-                                   CSSStyleValuePair* _Weight,
-                                   // UNSUPPORTED CSSStyleValuePair* _Stretch,
-                                   CSSStyleValuePair* _Size,
-                                   CSSStyleValuePair* _LineHeight,
-                                   CSSStyleValuePair* _Family);
+                                   CSSStyleValuePair* style,
+                                   // UNSUPPORTED CSSStyleValuePair* variant,
+                                   CSSStyleValuePair* weight,
+                                   // UNSUPPORTED CSSStyleValuePair* stretch,
+                                   CSSStyleValuePair* size,
+                                   CSSStyleValuePair* lineHeight,
+                                   CSSStyleValuePair* family);
 
 protected:
     void rootPointerValueIfExists(const CSSStyleValuePair& v);
     void removeRootPointerValue(const CSSStyleValuePair& v);
+
+    bool isShorthandProperty(CSSStyleValuePair::KeyKind keyKind);
+    bool isStickyProperty(CSSStyleValuePair::KeyKind keyKind);
+
+    enum class PropertyType {
+        kLonghand,
+        kShorthand,
+        kSticky, // This term is not used in the web standard.
+    };
+
+    String* getPropertyValueInternal(CSSStyleValuePair::KeyKind keyKind);
+
+    template <PropertyType type>
+    String* getPropertyValueInternalFor(CSSStyleValuePair::KeyKind keyKind);
+
+    template <PropertyType type>
+    bool setPropertyInternalFor(CSSStyleValuePair::KeyKind keyKind,
+                                const char* value, size_t valueLength,
+                                bool isImportant);
+
+    String* removePropertyInternal(CSSStyleValuePair::KeyKind keyKind);
+
+    // Named property getter/remover for shorthand properties.
+    // These are typically implemented as a combination of long-handed
+    // properties.
+    String* Border();
+    void setBorder(const char* value, size_t len, bool isImportant);
+    void removeBorder();
+
+    String* BorderTop();
+    void setBorderTop(const char* value, size_t len, bool isImportant);
+    void removeBorderTop();
+
+    String* BorderRight();
+    void setBorderRight(const char* value, size_t len, bool isImportant);
+    void removeBorderRight();
+
+    String* BorderBottom();
+    void setBorderBottom(const char* value, size_t len, bool isImportant);
+    void removeBorderBottom();
+
+    String* BorderLeft();
+    void setBorderLeft(const char* value, size_t len, bool isImportant);
+    void removeBorderLeft();
+
+    String* BorderImage();
+    void setBorderImage(const char* value, size_t len, bool isImportant);
+    void removeBorderImage();
+
+    String* BorderStyle(bool* isCombined = nullptr);
+    void setBorderStyle(const char* value, size_t len, bool isImportant);
+    void removeBorderStyle();
+
+    String* BorderWidth(bool* isCombined = nullptr);
+    void setBorderWidth(const char* value, size_t len, bool isImportant);
+    void removeBorderWidth();
+
+    String* BorderColor(bool* isCombined = nullptr);
+    void setBorderColor(const char* value, size_t len, bool isImportant);
+    void removeBorderColor();
+
+    String* BorderRadius();
+    void setBorderRadius(const char* value, size_t len, bool isImportant);
+    void removeBorderRadius();
+
+    String* Background();
+    void setBackground(const char* value, size_t len, bool isImportant);
+    void removeBackground();
+
+    String* BackgroundRepeat();
+    void setBackgroundRepeat(const char* value, size_t len, bool isImportant);
+    void removeBackgroundRepeat();
+
+    String* BackgroundPosition();
+    void setBackgroundPosition(const char* value, size_t len, bool isImportant);
+    void removeBackgroundPosition();
+
+    String* TextDecoration();
+    void setTextDecoration(const char* value, size_t len, bool isImportant);
+    void removeTextDecoration();
+
+    String* Margin(bool* isCombined = nullptr);
+    void setMargin(const char* value, size_t len, bool isImportant);
+    void removeMargin();
+
+    String* Padding(bool* isCombined = nullptr);
+    void setPadding(const char* value, size_t len, bool isImportant);
+    void removePadding();
+
+    String* Font();
+    void setFont(const char* value, size_t len, bool isImportant);
+    void removeFont();
+
+    String* Outline();
+    void setOutline(const char* value, size_t len, bool isImportant);
+    void removeOutline();
+
+    String* Overflow();
+    void setOverflow(const char* value, size_t len, bool isImportant);
+    void removeOverflow();
+
+    String* Transition();
+    void setTransition(const char* value, size_t len, bool isImportant);
+    void removeTransition();
+
+    String* Animation();
+    void setAnimation(const char* value, size_t len, bool isImportant);
+    void removeAnimation();
+
+    String* FlexFlow();
+    void setFlexFlow(const char* value, size_t len, bool isImportant);
+    void removeFlexFlow();
+
+    String* Flex();
+    void setFlex(const char* value, size_t len, bool isImportant);
+    void removeFlex();
+
+    String* ListStyle();
+    void setListStyle(const char* value, size_t len, bool isImportant);
+    void removeListStyle();
+
+    String* Mask();
+    void setMask(const char* value, size_t len, bool isImportant);
+    void removeMask();
+
+    // Named property getter/remover for shorthand properties.
+    String* customProperty(String* key);
+    void removeCustomProperty(String* key);
+    void setCustomProperty(AtomicString key, String* value);
+
+    // Named property setter for sticky longhand properties.
+    // These implementations are not common.
+    void setD(const char* value, size_t len, bool isImportant);
+    void setFontFamily(const char* value, size_t len, bool isImportant);
+    void setSrc(const char* value, size_t len, bool isImportant);
+    void setTransitionDelay(const char* value, size_t len, bool isImportant);
+    void setTransitionDuration(const char* value, size_t len, bool isImportant);
+    void setTransitionProperty(const char* value, size_t len, bool isImportant);
+    void setTransitionTimingFunction(const char* value, size_t len,
+                                     bool isImportant);
+    void setAnimationName(const char* value, size_t len, bool isImportant);
+    void setAnimationDuration(const char* value, size_t len, bool isImportant);
+    void setAnimationTimingFunction(const char* value, size_t len,
+                                    bool isImportant);
+    void setAnimationDelay(const char* value, size_t len, bool isImportant);
+    void setAnimationIterationCount(const char* value, size_t len,
+                                    bool isImportant);
+    void setAnimationDirection(const char* value, size_t len, bool isImportant);
+    void setAnimationPlayState(const char* value, size_t len, bool isImportant);
+    void setAnimationFillMode(const char* value, size_t len, bool isImportant);
+
+    void setFourSidedShorthandProperty(
+        CSSStyleValuePair::KeyKind fourSidedShorthand,
+        const CSSStyleValuePair::KeyKind sides[4], const char* value,
+        size_t length, bool isImportant);
+
+    void appendCSSText(StringBuilder& txtBuilder, const size_t pos,
+                       const char* cssName, String* value,
+                       bool isImportant) const;
+    String* cssTextAffectedByAllProperty(const size_t& pos) const;
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     Nullable<MutablePropertyValueList*> m_cssCustomValues;
@@ -316,12 +424,22 @@ public:
         return true;
     }
 
-    void layoutIfNeeds() override;
-    void resolveStyleIfNeeds() override;
-    void buildFrameTreeIfNeeds() override;
+    void layoutIfNeeds();
+    void resolveStyleIfNeeds();
+    void buildFrameTreeIfNeeds();
 
     void updateValue(CSSStyleValuePair::KeyKind keyKind) override;
-    Stage requiredStage(CSSStyleValuePair::KeyKind keyKind) override;
+
+private:
+    enum class RequreidStyleResolveStage {
+        kStayleResolution,
+        kFrameTreeBuild,
+        kLayout,
+    };
+
+    void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
+
+    RequreidStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind);
 };
 } // namespace Starfish
 

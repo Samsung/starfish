@@ -105,7 +105,8 @@ void SVGTextElement::styleForPresentationAttribute(
         if (attr->length()) {
             CSSStyleDeclaration decl(this);
             auto str = attr->toUTF8NonGCString();
-            decl.setFontFamily(str.data(), str.length(), false);
+            decl.setPropertyInternal(CSSStyleValuePair::KeyKind::FontFamily,
+                                     str.data(), str.length(), false);
             if (decl.cssValues().size()) {
                 cssValues.push_back(decl.cssValues()[0]);
             }

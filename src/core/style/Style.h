@@ -2422,6 +2422,9 @@ public:
         m_value.m_transforms = transforms;
     }
 
+    bool updateValueForAttributeBasic(Document* document,
+                                      CSSStyleValuePair::KeyKind keyKind,
+                                      const CSSTokenVector& tokens);
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
@@ -2533,6 +2536,9 @@ public:
     bool updateValueUnitAnimationFillMode(const CSSTokenValue& value);
 
     bool updateValueMaskImage(const CSSTokenVector& tokens, bool allowComma);
+
+    bool updateValueUnitFourSidedShorthandProperty(
+        CSSStyleValuePair::KeyKind keyKind, const CSSTokenValue& token);
 
 protected:
     KeyKind m_keyKind : 8;

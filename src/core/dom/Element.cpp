@@ -2075,26 +2075,16 @@ void Element::makeKeyframesFromObject(
                 auto key = values->at(i);
                 if (key->isString() && object->hasOwnProperty(state, key)) {
                     ScriptValue scirptValue = object->get(state, key);
-
                     String* name = toBrowserString(state, key->toString(state));
-                    CSSStyleValuePair::KeyKind kind = lookupCSSStyleCamelCase(
-                        name->toUTF8NonGCString().data(), name->length());
-
+                    // TODO: Need to check if camel case is really needed.
+                    CSSStyleValuePair::KeyKind keykind =
+                        lookupCSSStyleCamelCase(
+                            name->toUTF8NonGCString().data(), name->length());
                     String* value =
                         toBrowserString(state, scirptValue->toString(state));
                     size_t len = value->length();
-                    bool priority = false;
-
-                    switch (kind) {
-#define SET_ATTR(name, nameLower, nameCSSCase)                          \
-    case CSSStyleValuePair::KeyKind::name: {                            \
-        declarations->set##name(value->toUTF8NonGCString().data(), len, \
-                                priority);                              \
-    } break;
-                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                    default:
-                        break;
-                    }
+                    declarations->setPropertyInternal(
+                        keykind, value->toUTF8NonGCString().data(), len, false);
                 }
             }
 

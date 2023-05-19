@@ -566,6 +566,24 @@ static bool hasValidVarFunction(const CSSTokenValue& token)
     return result;
 }
 
+bool CSSStyleValuePair::updateValueForAttributeBasic(
+    Document* document, CSSStyleValuePair::KeyKind keyKind,
+    const CSSTokenVector& tokens)
+{
+    // Use macros to prevent missing attribute basic.
+    switch (keyKind) {
+#define UPDATE_VALUE(name, ...)            \
+    case CSSStyleValuePair::KeyKind::name: \
+        return updateValue##name(document, tokens);
+        FOR_EACH_STYLE_ATTRIBUTE_BASIC(UPDATE_VALUE)
+#undef UPDATE_VALUE
+    default:
+        STARFISH_LOG_WARN("keykind is not attribute basic.");
+        return false;
+    }
+    return false;
+}
+
 bool CSSStyleValuePair::updateValueVarReferences(const CSSTokenVector& tokens)
 {
     for (unsigned int i = 0; i < tokens.size(); i++) {
@@ -3202,18 +3220,8 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     }
 
     CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
-    switch (keyKind) {
-#define SET_ATTR(name, ...)                                             \
-    case CSSStyleValuePair::KeyKind::name: {                            \
-        declaration->set##name(newCssValue.c_str(), newCssValue.size(), \
-                               isImportant);                            \
-        break;                                                          \
-    }
-        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-#undef SET_ATTR
-    default:
-        break;
-    }
+    declaration->setPropertyInternal(keyKind, newCssValue.c_str(),
+                                     newCssValue.size(), isImportant);
 
     return declaration;
 }
@@ -14392,6 +14400,27 @@ bool CSSStyleValuePair::updateValueMaskImage(const CSSTokenVector& tokens,
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
     return shouldBeComma;
+}
+
+bool CSSStyleValuePair::updateValueUnitFourSidedShorthandProperty(
+    CSSStyleValuePair::KeyKind keyKind, const CSSTokenValue& token)
+{
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::BorderColor:
+        return updateValueUnitBorderColor(token);
+    case CSSStyleValuePair::KeyKind::BorderStyle:
+        return updateValueUnitBorderStyle(token);
+    case CSSStyleValuePair::KeyKind::BorderWidth:
+        return updateValueUnitBorderWidth(token);
+    case CSSStyleValuePair::KeyKind::Margin:
+        return updateValueUnitMargin(token);
+    case CSSStyleValuePair::KeyKind::Padding:
+        return updateValueUnitPadding(token);
+    default:
+        STARFISH_LOG_ERROR("keyKind is wrong.");
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return false;
+    }
 }
 
 bool CSSStyleValuePair::updateValueMaskSize(Document* document,
