@@ -1666,86 +1666,8 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                     STARFISH_LOG_ERROR("CSSParser: Unsupported property: %s",
                                        s.data());
                 } else {
-                    struct Sender {
-                        bool priority;
-                        bool allowSrcProperty;
-                        CSSStyleValuePair::KeyKind kind;
-                        AtomicString key;
-                        CSSTokenString* value;
-                        CSSStyleDeclaration* declaration;
-                        Starfish* starfish;
-                    } sender;
-                    sender.value = &value;
-                    sender.allowSrcProperty = allowSrcProperty;
-                    sender.priority = priority;
-                    sender.declaration = declaration;
-                    sender.starfish = document()->starfish();
-                    aToken->value()->peekASCIIBuffer(
-                        [](const char* buf, size_t len, void* data) -> size_t {
-                            Sender* sd = reinterpret_cast<Sender*>(data);
-                            if (len > 2 && buf[0] == '-' && buf[1] == '-') {
-                                sd->kind =
-                                    CSSStyleValuePair::KeyKind::CustomProperty;
-                                sd->key = AtomicString::createAtomicString(
-                                    sd->starfish, buf, len);
-                            } else {
-                                // We can modify content of `buf`.
-                                // peekASCIIBuffer function allocates new buffer
-                                // for this function.
-                                char* name = (char*)buf;
-                                for (size_t i = 0; i < len; i++) {
-                                    name[i] = tolower(name[i]);
-                                }
-
-                                sd->kind = lookupCSSStyle(name, len);
-                            }
-#ifndef NDEBUG
-                            // ignore vendor prefix & CSS Custom Variables
-                            if (sd->kind ==
-                                    CSSStyleValuePair::KeyKind::Unknown &&
-                                len && buf[0] != '-') {
-                                STARFISH_LOG_ERROR(
-                                    "CSSParser: Unsupported property: %s", buf);
-                            }
-#endif
-                            if (sd->kind == CSSStyleValuePair::KeyKind::Src &&
-                                !sd->allowSrcProperty) {
-                                return 0;
-                            }
-
-                            sd->value->peekUTF8Buffer(
-                                [](const char* value, size_t len,
-                                   void* data) -> size_t {
-                                    Sender* sd =
-                                        reinterpret_cast<Sender*>(data);
-                                    bool priority = sd->priority;
-                                    CSSStyleDeclaration* declaration =
-                                        sd->declaration;
-                                    CSSStyleValuePair::KeyKind kind = sd->kind;
-
-                                    switch (kind) {
-                                    case CSSStyleValuePair::KeyKind::
-                                        CustomProperty: {
-                                        // https://www.w3.org/TR/css-variables-1/
-                                        AtomicString key = sd->key;
-                                        declaration->setCustomProperty(
-                                            key, sd->value->toString());
-                                    } break;
-#define SET_ATTR(name, nameLower, nameCSSCase)        \
-    case CSSStyleValuePair::KeyKind::name: {          \
-        declaration->set##name(value, len, priority); \
-    } break;
-                                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-                                    default:
-                                        break;
-                                    }
-
-                                    return 0;
-                                },
-                                data);
-                            return 0;
-                        },
-                        &sender);
+                    declaration->setProperty(aToken->value(), &value, priority,
+                                             allowSrcProperty);
                 }
                 forgetState();
                 return ParseResult::Consumed;

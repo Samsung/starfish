@@ -74,31 +74,53 @@ void ComputedStyleCSSStyleDeclaration::setCssText(String* text)
         "These styles are computed, and therefore read-only.");
 }
 
-ComputedStyleCSSStyleDeclaration::Stage
+void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    BrowsingContext* browsingContext = m_node->window()->browsingContext();
+
+    // Perform the minimum action required to resolve the style about |keykind|.
+    switch (requiredStage(keyKind)) {
+    case RequreidStyleResolveStage::kStayleResolution:
+        browsingContext->resolveStyleIfNeeds();
+        break;
+    case RequreidStyleResolveStage::kFrameTreeBuild:
+        browsingContext->buildFrameTreeIfNeeds();
+        break;
+    case RequreidStyleResolveStage::kLayout:
+        browsingContext->layoutIfNeeded();
+        break;
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+        break;
+    }
+}
+
+ComputedStyleCSSStyleDeclaration::RequreidStyleResolveStage
 ComputedStyleCSSStyleDeclaration::requiredStage(
     CSSStyleValuePair::KeyKind keyKind)
 {
-    ComputedStyleCSSStyleDeclaration::Stage result =
-        ComputedStyleCSSStyleDeclaration::Stage::resolveStyle;
+    RequreidStyleResolveStage result =
+        RequreidStyleResolveStage::kStayleResolution;
 
     if (keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
         keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+        result = RequreidStyleResolveStage::kLayout;
     } else if (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
                keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+        result = RequreidStyleResolveStage::kLayout;
     } else if (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
                keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+        result = RequreidStyleResolveStage::kLayout;
     } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
                keyKind <= CSSStyleValuePair::KeyKind::Left) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+        result = RequreidStyleResolveStage::kLayout;
     } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
                keyKind <= CSSStyleValuePair::KeyKind::Height) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::layout;
+        result = RequreidStyleResolveStage::kLayout;
     } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth ||
                keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
-        result = ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild;
+        result = RequreidStyleResolveStage::kFrameTreeBuild;
     }
 
     return result;
@@ -120,10 +142,15 @@ static CSSStyleValuePair stylePaintDataToCSSStyleValue(
 void ComputedStyleCSSStyleDeclaration::updateValue(
     CSSStyleValuePair::KeyKind keyKind)
 {
+    triggerResolveComputedStyleIfNeeds(keyKind);
+
     if (m_node->isDocument() || m_node->style() == nullptr) {
         return;
     }
 
+    // Create CSSStyleValuePair and set the resolved style value to
+    // CSSStyleValuePair. And add CSSStyleValuePair to m_cssValues.
+    // Util perform this at least once, m_cssValues has no items.
     Frame* frame = m_node->frame();
     ComputedStyle* style = m_node->style();
 

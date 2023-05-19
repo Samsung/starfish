@@ -49,7 +49,8 @@ void SVGPathElement::styleForPresentationAttribute(
         starfish()->staticStrings()->m_d, cssCustomValues);
     CSSStyleDeclaration decl(this);
     auto buf = d->toUTF8NonGCString();
-    decl.setD(buf.data(), buf.length(), false);
+    decl.setPropertyInternal(CSSStyleValuePair::KeyKind::D, buf.data(),
+                             buf.length(), false);
     if (decl.hasCSSValuePair(CSSStyleValuePair::KeyKind::D)) {
         cssValues.push_back(decl.cssValues()[0]);
     } else if (d->length()) {
