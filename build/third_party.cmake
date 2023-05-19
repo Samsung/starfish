@@ -81,8 +81,8 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 # NANOMSG
 #######################################################
-# Nanomsg is not used for tizen
-IF (NOT ${HOST} STREQUAL "tizen")
+# Nanomsg is used for ServiceWorker and Inspector
+IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
     SET (NANOMSG_CFLAGS_COMMON "-g3 -fPIC")
     IF (${CUSTOM} STREQUAL "unified_wearable")
         SET (NANOMSG_CFLAGS_CUSTOM "-Os")
@@ -183,7 +183,7 @@ ENDIF()
 # LIBTUV
 #######################################################
 IF (${ARCH} STREQUAL "x64" AND ((${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
-        OR (LWE_DEFINES_MODE MATCHES STARFISH_ENABLE_SERVICE_WORKER)))
+        OR ${ENABLE_SERVICE_WORKER} STREQUAL "1"))
     SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
     SET (TUV_TARGET ${TUV_DIR}/build/x86_64-linux/${MODE}/lib/libtuv.a)
 
@@ -198,7 +198,7 @@ IF (${ARCH} STREQUAL "x64" AND ((${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQU
                        DEPENDS ${TUV_TARGET}
                        COMMAND echo "TUV TARGET"
     )
-ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter"))
+ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1"))
     SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
     SET (TUV_LOCAL_TARGET ${TUV_DIR}/build/noarch-tizen/${MODE}/lib/libtuv.so)
     SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
@@ -412,7 +412,7 @@ IF (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${SKIA_TARGET})
 ENDIF()
 
-IF (NOT ${HOST} STREQUAL "tizen")
+IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${NANOMSG_TARGET})
 ENDIF()
 

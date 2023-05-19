@@ -20,14 +20,13 @@
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
 using Starfish::MessageLoop;
 using Starfish::PerProcess;
-using Starfish::ServiceWorkerAgent;
 
 void IdleTask::start()
 {
@@ -46,6 +45,10 @@ void IdleTask::queue(IdleTask* task)
             },
             task);
 }
+
+#if defined(STARFISH_WEBWORKER_HOST)
+
+using Starfish::ServiceWorkerAgent;
 
 void ParallelTask::start()
 {
@@ -92,4 +95,6 @@ void ParallelTask::queue(ParallelTask* task)
         },
         param);
 }
+#endif
+
 #endif

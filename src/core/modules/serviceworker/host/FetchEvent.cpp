@@ -24,9 +24,9 @@
 #include "core/dom/DOMException.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/util/Trace.h"
-#include "core/modules/serviceworker/FetchEvent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
+#include "core/modules/serviceworker/host/FetchEvent.h"
 
 namespace Starfish {
 

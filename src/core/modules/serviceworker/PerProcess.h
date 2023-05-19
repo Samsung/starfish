@@ -28,6 +28,7 @@ class IThread;
 class ThreadPool;
 class IORunnable;
 class MessageLoop;
+class ServiceWorkerOption;
 
 class PerProcess : public gc {
 public:
@@ -38,7 +39,7 @@ public:
     DEFINE_GETTER(ThreadPool *, threadPool);
     DEFINE_GETTER(MessageLoop *, messageLoop);
 
-    void initialize(size_t threadPoolSize);
+    void initialize(size_t threadPoolSize, ServiceWorkerOption *option);
     void destroy();
 
 private:

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+#if defined(STARFISH_WEBWORKER_HOST) && \
     !defined(__StarfishServiceWorkerServerInterface__)
 #define __StarfishServiceWorkerServerInterface__
 

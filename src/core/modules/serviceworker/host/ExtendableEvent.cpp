@@ -22,20 +22,20 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
+#include "core/page/WebBase.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/ExtendableEvent.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
-
-#include "core/page/WebBase.h"
+#include "core/modules/serviceworker/host/ExtendableEvent.h"
 
 namespace Starfish {
 

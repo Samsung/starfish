@@ -46,9 +46,10 @@
 #include "core/storage/StorageInternal.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #endif
 

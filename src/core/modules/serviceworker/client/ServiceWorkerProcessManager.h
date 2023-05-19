@@ -76,6 +76,11 @@ public:
         return m_pushServiceAgent;
     }
 
+    RegistrationManager* registrationManager()
+    {
+        return m_registrationManager;
+    }
+
     Nullable<FetchEventHandler*> findFetchEventHandler(Id<GlobalScope> id);
 
 private:

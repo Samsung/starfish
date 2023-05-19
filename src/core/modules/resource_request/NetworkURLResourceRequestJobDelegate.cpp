@@ -52,7 +52,7 @@
 #endif
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
-#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/client/ServiceWorkerFetchTask.h"
 #endif
 
 namespace Starfish {

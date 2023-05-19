@@ -27,25 +27,50 @@
 
 namespace Starfish {
 
-ServiceWorkerOption::ServiceWorkerOption()
+std::string ServiceWorkerOption::getDefaultDataDirectoryPath()
 {
-    initLocalStorageRootDir();
+    std::string dataDirectoryPath;
+
+    const char *homeDirectoryPath = getenv("HOME");
+    if (!homeDirectoryPath || strlen(homeDirectoryPath) == 0) {
+        dataDirectoryPath = "/tmp";
+    } else {
+        dataDirectoryPath = homeDirectoryPath;
+    }
+    dataDirectoryPath += "/starfish-sw-data";
+
+    TRACE(SVCWORKER, dataDirectoryPath.data());
+
+    return dataDirectoryPath;
 }
 
-void ServiceWorkerOption::initLocalStorageRootDir()
+ServiceWorkerOption::ServiceWorkerOption(const std::string &dataDirectoryPath)
+    : m_dataDirectoryPath(dataDirectoryPath)
 {
-    if (GlobalOptions::instance().has("SW_STORAGE")) {
-        m_localStorageRootDir = GlobalOptions::instance().get("SW_STORAGE");
-    } else {
-        const char* homeDirPath = getenv("HOME");
-        if (!homeDirPath || strlen(homeDirPath) == 0) {
-            m_localStorageRootDir = "/tmp";
-        } else {
-            m_localStorageRootDir = homeDirPath;
-        }
-        m_localStorageRootDir += "/Starfish-sw-cache";
+    if (m_dataDirectoryPath.empty()) {
+        m_dataDirectoryPath = getDefaultDataDirectoryPath();
     }
-    TRACE(SVCWORKER, m_localStorageRootDir.data());
+}
+
+void ServiceWorkerOption::setDataDirectoryPath(const std::string &path)
+{
+    if (m_dataDirectoryPath == path) {
+        return;
+    }
+
+    TRACEF(SVCWORKER, "Change service worker working dir: %s -> %s",
+           m_dataDirectoryPath.data(), path.data());
+    m_dataDirectoryPath = path;
+
+    for (auto cb : m_onChangeDataDirectoryPathCallbacks) {
+        cb(m_dataDirectoryPath);
+    }
+}
+
+void ServiceWorkerOption::addOnChangeDataDirectoryPathCallback(
+    OnChangeDataDirectoryPathCallback callback)
+{
+    m_onChangeDataDirectoryPathCallbacks.push_back(callback);
 }
 
 } // namespace Starfish

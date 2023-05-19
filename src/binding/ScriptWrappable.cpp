@@ -271,6 +271,13 @@ ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
     return fetchExecutionContext(ctx)->scriptBindingInstance();
 }
 
+#if !defined(STARFISH_WEBWORKER_HOST)
+WebView* fetchWebView(ContextRef* ctx)
+{
+    Window* window = (Window*)ctx->globalObject()->extraData();
+    return window->webView();
+}
+
 Window* fetchWindow(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
@@ -290,16 +297,12 @@ Document* fetchResponsibleDocument(ExecutionStateRef* state)
     return window->document();
 }
 
-WebView* fetchWebView(ContextRef* ctx)
-{
-    Window* window = (Window*)ctx->globalObject()->extraData();
-    return window->webView();
-}
-
 StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
+
+#endif // !defined(STARFISH_WEBWORKER_HOST)
 
 class EscargotStringView : public String {
 public:

@@ -25,6 +25,7 @@
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
+#include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/client/RegistrationManager.h"
@@ -33,8 +34,20 @@ namespace Starfish {
 
 RegistrationManager::RegistrationManager(ServiceWorkerOption* option)
     : m_registrationStore(
-          new RegistrationStoreLocalStorage(option->localStorageRootDir()))
+          new RegistrationStoreLocalStorage(option->dataDirectoryPath()))
 {
+    refreshRegistrationList();
+
+    option->addOnChangeDataDirectoryPathCallback(
+        [this](const std::string& path) { refreshRegistrationList(path); });
+}
+
+void RegistrationManager::refreshRegistrationList(const std::string path)
+{
+    if (!path.empty()) {
+        LocalStorageHelper::File::mkdirIfNotExists(path);
+        m_registrationStore->setWorkingPath(path);
+    }
     m_registrationStore->loadRegistrationList();
 }
 

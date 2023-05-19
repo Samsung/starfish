@@ -23,7 +23,7 @@
 #include "StarfishConfig.h"
 #include "LWEWebView.h"
 #include "Starfish.h"
-#include "core/modules/serviceworker/host/ServiceWorkerExecutor.h"
+#include "LWEServiceWorker.h"
 #include <functional>
 #include <cstdio>
 #include <signal.h>
@@ -58,7 +58,8 @@ int main(int argc, char* argv[])
     STARFISH_ASSERT(argv != nullptr);
     STARFISH_LOG_INFO("WORKER STARTS");
 
-    std::string scriptURL = "";
+    std::string scriptURL;
+    std::string dataDir;
 
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
@@ -67,28 +68,19 @@ int main(int argc, char* argv[])
             scriptURL = arg.substr(strlen("--run-script="));
         } else if (startsWith(arg, std::string("--debug-cast="))) {
             setenv("DEBUG_CAST", argv[i] + strlen("--debug-cast="), 1);
+        } else if (startsWith(arg, std::string("--data-dir="))) {
+            dataDir = arg.substr(strlen("--data-dir="));
         }
     }
 
-    LWE::LWE::Initialize("/tmp/Starfish_WebWorkerlocalStorage.txt",
-                         "/tmp/Starfish_WebWorkerCookies.txt", "/tmp/sfw");
+    LWE::ServiceWorker::Initialize(dataDir);
 
-    Starfish::ServiceWorkerExecutor::initialize(LWE::g_starfishInstance);
-
-    Starfish::ServiceWorkerExecutor::registerOnStatusChangedHandler(
-        [](Starfish::ServiceWorkerAgentState state) {
-            if (state == Starfish::ServiceWorkerAgentState::Terminated) {
+    LWE::ServiceWorker::RegisterOnStatusChangedHandler(
+        [](LWE::ServiceWorker::State state) {
+            if (state == LWE::ServiceWorker::State::Terminated) {
                 g_workerDoneFlag = 1;
             }
         });
-
-    if (scriptURL.empty() == false) {
-        // TODO: make it with scope url
-        auto url =
-            new Starfish::ResourceURL(Starfish::String::createASCIIString(
-                scriptURL.data(), scriptURL.length()));
-        Starfish::ServiceWorkerExecutor::runServiceWorker(url);
-    }
 
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
@@ -104,9 +96,7 @@ int main(int argc, char* argv[])
         usleep(100);
     }
 
-    Starfish::ServiceWorkerExecutor::finalize();
-
-    LWE::LWE::Finalize();
+    LWE::ServiceWorker::Finalize();
 
     STARFISH_LOG_INFO("WORKER ENDS");
     return 0;

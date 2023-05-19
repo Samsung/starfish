@@ -45,9 +45,9 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
+#include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
@@ -206,7 +206,7 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
     : m_messageLoop(messageLoop)
     , m_SWServer(swserver)
     , m_registrationStore(new RegistrationStoreLocalStorage(
-          starfish->serviceWorkerOption()->localStorageRootDir()))
+          starfish->serviceWorkerOption()->dataDirectoryPath()))
 {
     STARFISH_ASSERT(messageLoop != nullptr);
     STARFISH_ASSERT(swserver != nullptr);

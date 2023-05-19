@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION
 
 #include "StarfishConfig.h"
 
@@ -50,4 +50,4 @@ bool NotificationService::replaceNotification(
     return false;
 }
 } // namespace Starfish
-#endif /* STARFISH_ENABLE_SERVICE_WORKER */
+#endif /* STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION */

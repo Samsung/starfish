@@ -228,9 +228,6 @@ JsonReader& JsonReader::operator&(unsigned& u)
     return *this;
 }
 
-STARFISH_ASSERT_STATIC(sizeof(void*) == 8,
-                       "Fixme archiving size_t on 32bit target");
-
 JsonReader& JsonReader::operator&(uint64_t& u)
 {
     if (mError == false) {

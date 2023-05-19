@@ -40,5 +40,6 @@ IF (${BACKEND} STREQUAL "glfw_cairo_gl" OR ${ENABLE_TEST} STREQUAL "1")
 ENDIF()
 
 IF (${ENABLE_SERVICE_WORKER} STREQUAL "1")
-    INCLUDE (build/webworker.cmake)
+    INCLUDE (build/serviceworker.cmake)
+    CONFIGURE_FILE(lightweight-web-engine-serviceworker.pc.in lightweight-web-engine-serviceworker.pc @ONLY)
 ENDIF()

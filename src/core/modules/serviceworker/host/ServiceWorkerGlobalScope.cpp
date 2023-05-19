@@ -31,9 +31,9 @@
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "binding/ScriptWrappable.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-#include "core/modules/serviceworker/ExtendableEvent.h"
+#include "core/modules/serviceworker/host/ExtendableEvent.h"
 
 #include "Starfish.h"
 #include "core/storage/StorageNamespace.h"

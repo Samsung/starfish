@@ -125,6 +125,11 @@ Requires(postun): /sbin/ldconfig
 %define enable_webrtc 0
 %endif
 
+%if 0%{?enable_serviceworker:1}
+%else
+%define enable_serviceworker 0
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -428,9 +433,13 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}'  -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.tv -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
+%if "%{?enable_serviceworker}" == "1"
+ninja starfish.serviceworker.executable
+ninja starfish.serviceworker.shared_library
+%endif
 %endif
 
 %if "%{rpm}" == "prod_tv" || "%{rpm}" == "flutter"
@@ -496,17 +505,21 @@ ninja starfish.shared_library
 rm -f CMakeCache.txt
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_wayland2_backend"
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
 %else
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -G Ninja
 %endif # "%{build_option}" == "ecore_wayland2_backend"
 %else # 0%{?build_option:1}
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DUSE_EMBEDDED_IMAGE_DECODER='%{use_embedded_image_decoder}' -DENABLE_WASM='%{enable_wasm}' -DENABLE_CODECACHE='%{enable_codecache}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_TEST='%{enable_test}' -DTARGETNAME=lightweight-web-engine.prod.tv -DWEBRTC='%{enable_webrtc}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -G Ninja
 %endif
 ninja starfish.shared_library
 ninja starfish.executable
 %if "%{?enable_test}" == "1"
 ninja install_pixel_test_dep
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ninja starfish.serviceworker.executable
+ninja starfish.serviceworker.shared_library
 %endif
 %endif # "%{rpm}" == "prod_tv"
 
@@ -523,9 +536,14 @@ rm -f CMakeCache.txt
 #CFLAGS+=' -marm '
 #CXXFLAGS+=' -marm '
 
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.headless -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=headless -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.headless -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
+
+%if "%{?enable_serviceworker}" == "1"
+ninja starfish.serviceworker.executable
+ninja starfish.serviceworker.shared_library
+%endif
 %endif
 
 
@@ -539,9 +557,13 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.mobile -DWEBRTC='%{enable_webrtc}' -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.mobile -DWEBRTC='%{enable_webrtc}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
+%if "%{?enable_serviceworker}" == "1"
+ninja starfish.serviceworker.executable
+ninja starfish.serviceworker.shared_library
+%endif
 %endif
 
 
@@ -558,9 +580,13 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
-cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DTARGETNAME=lightweight-web-engine.wearable -G Ninja
+cmake CMakeLists.txt -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} -DTIZEN_MAJOR_VERSION='%{tizen_version_major}' -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DFP_MODE='%{fp_mode}' -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DLTO='%{using_lto}' -DENABLE_DEBUGGER='%{enable_debugger}' -DENABLE_SERVICE_WORKER=%{enable_serviceworker} -DTARGETNAME=lightweight-web-engine.wearable -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
+%if "%{?enable_serviceworker}" == "1"
+ninja starfish.serviceworker.executable
+ninja starfish.serviceworker.shared_library
+%endif
 %endif
 
 %if "%{rpm}" == "flutter"
@@ -641,13 +667,15 @@ cp -fr out_tizen/flutter/release/lightweight-web-engine.flutter %{buildroot}%{_b
 
 # for devel files
 mkdir -p %{buildroot}%{_includedir}/%{name}
-cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
-cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
+cp inc/*.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %if "%{?skip_dali_build}" == "0"
 cp lightweight-web-engine-dali-plugin.pc %{buildroot}%{_libdir}/pkgconfig/
+%endif
+%if "%{?enable_serviceworker}" == "1"
+cp lightweight-web-engine-serviceworker.pc %{buildroot}%{_libdir}/pkgconfig/
 %endif
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp lightweight-web-engine.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
@@ -659,12 +687,18 @@ ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
 %if "%{?skip_dali_build}" == "0"
 ln -s liblightweight-web-engine-dali-plugin.so.1 liblightweight-web-engine-dali-plugin.so
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s liblightweight-web-engine-serviceworker.so.1 liblightweight-web-engine-serviceworker.so
+%endif
 popd
 
 pushd %{buildroot}%{_libdir}
 ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
 %if "%{?skip_dali_build}" == "0"
 ln -s lwe/liblightweight-web-engine-dali-plugin.so liblightweight-web-engine-dali-plugin.so
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s lwe/liblightweight-web-engine-serviceworker.so liblightweight-web-engine-serviceworker.so
 %endif
 popd
 
@@ -687,21 +721,30 @@ ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
 %if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s tv/liblightweight-web-engine.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
+%endif # "%{rpm}" == "tv"
 %if "%{rpm}" == "prod_tv"
 ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
 %if "%{?skip_dali_build}" == "0"
 ln -sf tv/liblightweight-web-engine.prod.dali.tv.so liblightweight-web-engine-dali-plugin.so.1
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s tv/liblightweight-web-engine.prod.tv-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
+%endif # "%{rpm}" == "prod_tv"
 popd
 %endif
 %if "%{rpm}" == "tv"
 pushd %{_bindir}
 ln -sf lightweight-web-engine.tv %{bin}
+%if "%{?enable_serviceworker}" == "1"
+ln -sf lightweight-web-engine.tv-serviceworker %{bin}
+%endif
 popd
 exit 0
-%endif
+%endif # "%{rpm}" == "tv"
 %if "%{rpm}" == "prod_tv"
 pushd %{_bindir}
 ln -sf lightweight-web-engine.prod.tv %{bin}
@@ -711,7 +754,7 @@ ln -sf imgdiff %{bin}
 popd
 /sbin/ldconfig
 exit 0
-%endif
+%endif # "%{rpm}" == "prod_tv"
 
 #############################################
 %if "%{rpm}" == "headless"
@@ -721,6 +764,9 @@ for FILE in `ls headless/*.so* | grep -v 'headless.so'`; do
    ln -sf "$FILE" .
 done
 ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
+%if "%{?enable_serviceworker}" == "1"
+ln -s headless/liblightweight-web-engine.headless-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+%endif
 popd
 %endif
 %if "%{rpm}" == "headless"
@@ -742,6 +788,9 @@ ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
 %if "%{?skip_dali_build}" == "0"
 ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so.1
 %endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s mobile/liblightweight-web-engine.mobile-serviceworker.so liblightweight-web-engine-serviceworker.so.1
+%endif
 popd
 %endif
 %if "%{rpm}" == "mobile"
@@ -762,6 +811,9 @@ done
 ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
 %if "%{?skip_dali_build}" == "0"
 ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so.1
+%endif
+%if "%{?enable_serviceworker}" == "1"
+ln -s wearable/liblightweight-web-engine.wearable-serviceworker.so liblightweight-web-engine-serviceworker.so.1
 %endif
 popd
 %endif

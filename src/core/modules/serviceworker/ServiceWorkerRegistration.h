@@ -48,16 +48,17 @@ public:
 
     virtual ExecutionContext* executionContext() const override;
 
-    String* scope() const;                    // binding interface
-    String* updateViaCache() const;           // binding interface
-    ServiceWorker* installing() const;        // binding interface
-    ServiceWorker* waiting() const;           // binding interface
-    ServiceWorker* active() const;            // binding interface
-    Promise* unregister();                    // binding interface
+    String* scope() const;             // binding interface
+    String* updateViaCache() const;    // binding interface
+    ServiceWorker* installing() const; // binding interface
+    ServiceWorker* waiting() const;    // binding interface
+    ServiceWorker* active() const;     // binding interface
+    Promise* unregister();             // binding interface
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     Promise* showNotification(String* title); // binding interface
     Promise* showNotification(
         String* title, NotificationOptions& options); // binding interface
-
+#endif
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorker* serviceWorker);
 
@@ -79,8 +80,9 @@ private:
     ServiceWorkerRegistrationData* m_data;
     ServiceWorkerJobClientInterface* m_jobClient;
     PushManager* m_pushManager;
-
+#if !defined(STARFISH_WEBWORKER_HOST)
     void handleTaskSource(String* scopeURL);
+#endif
 };
 } // namespace Starfish
 

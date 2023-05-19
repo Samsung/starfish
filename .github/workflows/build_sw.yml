@@ -4,7 +4,7 @@ on: [pull_request_target]
 
 jobs:
   build_x64_serivce_worker:
-    runs-on: [code-2xlarge]
+    runs-on: [ self-hosted, code-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
@@ -16,14 +16,14 @@ jobs:
       matrix:
         mode: [release, debug]
         backend: [glfw_cairo_gl]
-        target: [executable, webworker]
+        target: [executable, serviceworker.executable]
         exclude:
           - mode: debug
             target: executable
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: CODE-Actions/checkout@v3
+        uses: CODE-Actions/checkout@v2
         with:
           submodules: true
           ref: ${{ github.event.pull_request.head.sha }}
