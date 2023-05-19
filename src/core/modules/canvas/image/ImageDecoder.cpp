@@ -48,7 +48,7 @@ extern "C" {
 #if !defined(STARFISH_TIZEN_VERSION_5_0) &&          \
     !defined(STARFISH_TIZEN_VERSION_5_5) &&          \
     !defined(STARFISH_USE_EMBEDDED_IMAGE_DECODER) && \
-    !defined(STARFISH_WINDOWS)
+    !defined(STARFISH_WINDOWS) && !defined(STARFISH_ANDROID)
 #include <webp/decode.h>
 #define STARFISH_ENABLE_WEBP
 #endif
@@ -273,7 +273,9 @@ static void decodeJPG(jpeg_decompress_struct* dHandle,
         dHandle->mem->max_memory_to_use = 100 * 1024 * 1024;
         dHandle->two_pass_quantize = FALSE;
         dHandle->do_fancy_upsampling = FALSE;
+#if JPEG_LIB_VERSION >= 80
         dHandle->block_size = 16;
+#endif
         dHandle->dct_method = JDCT_IFAST;
         STARFISH_LOG_INFO(
             "Try to downscale large size image(width: %u, height: %u, "
