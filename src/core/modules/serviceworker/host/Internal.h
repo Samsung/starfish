@@ -17,6 +17,7 @@
  *  USA
  */
 
+#if defined(STARFISH_WEBWORKER_HOST)
 #pragma once
 
 #include "binding/ScriptWrappable.h"
@@ -73,3 +74,5 @@ private:
 };
 
 } // namespace Starfish
+
+#endif

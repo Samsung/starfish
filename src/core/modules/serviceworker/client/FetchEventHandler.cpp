@@ -23,10 +23,10 @@
 
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+#include "core/modules/serviceworker/client/ServiceWorkerFetchTask.h"
+#include "core/modules/serviceworker/client/FetchEventHandler.h"
 #include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/serviceworker/FetchEventData.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
-#include "core/modules/serviceworker/FetchEventHandler.h"
 
 namespace Starfish {
 

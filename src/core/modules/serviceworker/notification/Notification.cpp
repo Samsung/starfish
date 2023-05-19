@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
@@ -65,4 +65,4 @@ String* Notification::tag()
     return m_job->options().tag();
 }
 } // namespace Starfish
-#endif /* STARFISH_ENABLE_SERVICE_WORKER */
+#endif /* STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION */

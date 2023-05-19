@@ -17,11 +17,10 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_WEBWORKER_HOST)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "WorkerConfig.h"
 
 #include "platform/file/PlatformDirectory.h"
 
@@ -38,7 +37,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
 #include "core/modules/cast/CastServer.h"
@@ -73,7 +72,9 @@ ServiceWorkerAgent::ServiceWorkerAgent(Starfish* starfish,
                                        PerProcess* perProcess)
     : m_starfish(starfish)
     , m_perProcess(perProcess)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     , m_notificationService(new NotificationService())
+#endif
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(perProcess);
@@ -261,7 +262,7 @@ void ServiceWorkerAgent::abortServiceWorkerScript(
 void ServiceWorkerAgent::createLocalStorageRootDir()
 {
     LocalStorageHelper::File::mkdirIfNotExists(
-        m_starfish->serviceWorkerOption()->localStorageRootDir());
+        m_starfish->serviceWorkerOption()->dataDirectoryPath());
 }
 
 } // namespace Starfish

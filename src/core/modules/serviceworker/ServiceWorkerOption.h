@@ -25,17 +25,39 @@ namespace Starfish {
 
 class ServiceWorkerOption : public gc {
 public:
-    ServiceWorkerOption();
+    using ProcessExecutorCallback = std::function<bool()>;
+    using OnChangeDataDirectoryPathCallback =
+        std::function<void(const std::string&)>;
 
-    const std::string& localStorageRootDir()
+    static std::string getDefaultDataDirectoryPath();
+
+    ServiceWorkerOption(const std::string& dataDirectoryPath);
+
+    void setDataDirectoryPath(const std::string& path);
+    const std::string dataDirectoryPath()
     {
-        return m_localStorageRootDir;
+        return m_dataDirectoryPath;
     }
 
-private:
-    std::string m_localStorageRootDir;
+    void setServiceWorkerProcessExecutor(
+        const ProcessExecutorCallback& swExecutor)
+    {
+        m_swExecutor = swExecutor;
+    }
+    ProcessExecutorCallback serviceWorkerProcessExecutor()
+    {
+        return m_swExecutor;
+    }
 
-    void initLocalStorageRootDir();
+    void addOnChangeDataDirectoryPathCallback(
+        OnChangeDataDirectoryPathCallback callback);
+
+private:
+    std::string m_dataDirectoryPath;
+    ProcessExecutorCallback m_swExecutor{ nullptr };
+
+    std::vector<OnChangeDataDirectoryPathCallback>
+        m_onChangeDataDirectoryPathCallbacks;
 };
 
 } // namespace Starfish

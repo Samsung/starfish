@@ -21,7 +21,7 @@
     !defined(__StarfishServiceWorkerJobData__)
 #define __StarfishServiceWorkerJobData__
 
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/worker/WorkerType.h"
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
 
 namespace Starfish {

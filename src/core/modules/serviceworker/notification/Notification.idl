@@ -1,7 +1,7 @@
 // https://notifications.spec.whatwg.org/#api
 
 [
-  STARFISH_ENABLE_SERVICE_WORKER,
+  STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION,
   Constructor(DOMString title, optional NotificationOptions options),
   ConstructorCallWith=ExecutionContext,
   RaisesException=Constructor,

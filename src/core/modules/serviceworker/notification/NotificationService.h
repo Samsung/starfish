@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
 #ifndef __StarfishNotificationService__
 #define __StarfishNotificationService__
 
@@ -36,4 +36,4 @@ private:
 } // namespace Starfish
 
 #endif
-#endif /* STARFISH_ENABLE_SERVICE_WORKER */
+#endif /* STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION */

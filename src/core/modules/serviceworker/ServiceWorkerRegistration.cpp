@@ -28,9 +28,9 @@
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
-#include "core/modules/serviceworker/FetchEventHandler.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/client/FetchEventHandler.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 namespace Starfish {
@@ -90,7 +90,9 @@ void ServiceWorkerRegistration::updateRegistrationState(
     case ServiceWorkerRegistrationState::Active:
         m_activeWorker = serviceWorker;
         //  Start fetch event task
+#if !defined(STARFISH_WEBWORKER_HOST)
         handleTaskSource(m_data->scope);
+#endif
         break;
     default:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -148,6 +150,7 @@ Promise* ServiceWorkerRegistration::unregister()
     return promise;
 }
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
 Promise* ServiceWorkerRegistration::showNotification(String* title)
 {
     STARFISH_ASSERT(title != nullptr);
@@ -172,6 +175,9 @@ Promise* ServiceWorkerRegistration::showNotification(
     return promise;
 }
 
+#endif // defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
+
+#if !defined(STARFISH_WEBWORKER_HOST)
 void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
 {
     auto swProcessManager = ServiceWorkerProcessManager::instance();
@@ -185,6 +191,7 @@ void ServiceWorkerRegistration::handleTaskSource(String* scopeURL)
     }
 }
 
+#endif // #if !defined(STARFISH_WEBWORKER_HOST)
 } // namespace Starfish
 
-#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif

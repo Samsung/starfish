@@ -32,8 +32,7 @@
 #include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/util/ParallelTask.h"
-#include "core/modules/serviceworker/ExtendableEvent.h"
+#include "core/modules/serviceworker/host/ExtendableEvent.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 

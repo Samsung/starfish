@@ -19,6 +19,8 @@
 
 #pragma once
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+
 #include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -31,6 +33,8 @@ public:
     void start();
 };
 
+#if defined(STARFISH_WEBWORKER_HOST)
+
 class ParallelTask : public gc {
 public:
     static void queue(ParallelTask* task);
@@ -39,3 +43,7 @@ public:
     virtual void end(){};
     void start();
 };
+
+#endif
+
+#endif

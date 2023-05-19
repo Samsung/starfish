@@ -30,6 +30,8 @@ class RegistrationManager : public gc {
 public:
     RegistrationManager(ServiceWorkerOption* option);
 
+    void refreshRegistrationList(const std::string path = "");
+
     bool isActivatedRegistration(String* scope);
     void startRegisteredServiceWorkerContext(
         ServiceWorkerClientConnection* connection, Id<GlobalScope> id,

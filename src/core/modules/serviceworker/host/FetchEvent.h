@@ -20,7 +20,7 @@
 #if defined(STARFISH_WEBWORKER_HOST) && !defined(__FetchEvent__)
 #define __FetchEvent__
 
-#include "core/modules/serviceworker/ExtendableEvent.h"
+#include "core/modules/serviceworker/host/ExtendableEvent.h"
 
 namespace Starfish {
 

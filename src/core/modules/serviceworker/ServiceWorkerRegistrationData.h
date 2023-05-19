@@ -21,7 +21,8 @@
     !defined(__StarfishServiceWorkerRegistrationData__)
 #define __StarfishServiceWorkerRegistrationData__
 
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerUpdateViaCache.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include <string>

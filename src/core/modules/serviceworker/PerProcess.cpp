@@ -28,6 +28,8 @@
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/serviceworker/util/LocalStorageHelper.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
 
 #include "core/util/String.h"
 #include "platform/file/PlatformDirectory.h"
@@ -39,32 +41,17 @@ namespace Starfish {
 
 class ProcessResource {
 public:
-    static void acquire()
+    static void acquire(const std::string& rootPath)
     {
-        std::string path;
-        const char* homePath = getenv("HOME");
-        if (!homePath || strlen(homePath) == 0) {
-            path = PATH_TMP_DIR;
-        } else {
-            path = homePath;
-        }
-        path += PATH_IPC_DIR;
+        // TODO: consider making parent directories as needed.
+        LocalStorageHelper::File::mkdirIfNotExists(rootPath);
+        std::string path = rootPath;
 
+        path += PATH_IPC_DIR;
         // create a directory for ipc handles
         auto dir = PlatformDirectory::create();
         // TODO: Replace creating a GC-allocated string with `std::string`.
-        if (!dir->open(
-                String::createASCIIString(path.c_str(), path.length()))) {
-            if (!dir->mkDir()) {
-                STARFISH_LOG_ERROR("FAIL: Create a directory for ipc handles.");
-                STARFISH_RELEASE_ASSERT(false);
-            }
-            TRACE(IPC, "New", path);
-        } else {
-            TRACE(IPC, "Exist", path);
-        }
-        dir->close();
-
+        LocalStorageHelper::File::mkdirIfNotExists(path);
         // set the above directory path
         Connection::Config::setHandleDir(path);
     }
@@ -74,15 +61,11 @@ public:
         TRACE_SCOPE(CONFIG);
         // release the directory for ipc handles
         auto path = Connection::Config::getHandleDir();
-        auto dir = PlatformDirectory::create();
         // TODO: Replace creating a GC-allocated string with `std::string`.
-        if (dir->open(String::createASCIIString(path.c_str(), path.length()))) {
-            if (!GlobalOptions::instance().has("--leave-ipc-handle")) {
-                dir->removeDir();
-                TRACE(IPC, "Remove", path);
-            }
+        if (!GlobalOptions::instance().has("--leave-ipc-handle")) {
+            LocalStorageHelper::File::remove(path);
+            TRACE(IPC, "Remove", path);
         }
-        dir->close();
     }
 };
 
@@ -101,11 +84,15 @@ PerProcess::PerProcess()
     isOnceCreated = true;
 }
 
-void PerProcess::initialize(size_t threadPoolSize)
+void PerProcess::initialize(size_t threadPoolSize, ServiceWorkerOption* option)
 {
     TRACE_SCOPE(PERPROC);
 
-    ProcessResource::acquire();
+    ProcessResource::acquire(option->dataDirectoryPath());
+    option->addOnChangeDataDirectoryPathCallback([](const std::string& path) {
+        ProcessResource::release();
+        ProcessResource::acquire(path);
+    });
 
     m_messageLoop = new MessageLoop();
 

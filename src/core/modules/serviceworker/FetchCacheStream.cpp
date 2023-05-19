@@ -24,7 +24,7 @@
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 #include "core/fetch/Response.h"
 #include "core/fetch/ResponseData.h"

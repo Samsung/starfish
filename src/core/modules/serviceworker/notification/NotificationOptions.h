@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
 #ifndef __StarfishNotificationOptions__
 #define __StarfishNotificationOptions__
 

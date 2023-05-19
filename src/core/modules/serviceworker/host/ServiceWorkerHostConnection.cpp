@@ -16,6 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
+#ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
 
@@ -32,8 +33,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
-#include "core/modules/serviceworker/ServiceWorkerFetchTask.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
@@ -49,8 +49,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
-
-#ifdef STARFISH_WEBWORKER_HOST
 
 namespace Starfish {
 

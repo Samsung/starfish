@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/util/Id.h"
 #include "core/util/Archivable.h"
@@ -42,8 +43,7 @@
 #include "core/modules/serviceworker/ConnectionInterface.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
-
-#include "core/modules/serviceworker/FetchEventHandler.h"
+#include "core/modules/serviceworker/client/FetchEventHandler.h"
 
 #include "core/modules/serviceworker/PerProcess.h"
 
@@ -63,7 +63,9 @@ extern Starfish::Starfish* g_starfishInstance;
 #include <EscargotPublic.h>
 
 #include "core/modules/serviceworker/util/MessageQueue/MessageQueue.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
+
 #include <sys/stat.h>
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
@@ -198,21 +200,29 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 #if !defined(SERVICE_WORKER_USE_SEPARATE_PROCESS)
         startWorkerOnThread("");
 #else
-        // TODO: extract process creation
-        // TODO: check if instance exists
-        // create an arguments
-        std::vector<std::string> args;
+        auto swProcessExecutor = m_option->serviceWorkerProcessExecutor();
+        if (swProcessExecutor) {
+            if (!swProcessExecutor()) {
+                STARFISH_LOG_ERROR("Fail to launch Service Worker process");
+            }
+        } else {
+            // TODO: extract process creation
+            // TODO: check if instance exists
+            // create an arguments
+            std::vector<std::string> args;
 
-        // TODO: use a constant executable name
-        args.push_back("./StarfishWebWorker");
-        args.push_back("--debug-worker=" +
-                       GlobalOptions::instance().get("DEBUG_WORKER"));
+            // TODO: use a constant executable name
+            args.push_back("./Starfish-serviceworker");
+            args.push_back("--debug-worker=" +
+                           GlobalOptions::instance().get("DEBUG_WORKER"));
 
-        if (!processExist(encodedOrigin)) {
-            if (ProcessUtil::launchProcess(args, &processData->pid) == true) {
-                TRACE(SVCWORKER, "launchProcess: success");
-            } else {
-                TRACE(SVCWORKER, "launchProcess: fail");
+            if (!processExist(encodedOrigin)) {
+                if (ProcessUtil::launchProcess(args, &processData->pid) ==
+                    true) {
+                    TRACE(SVCWORKER, "launchProcess: success");
+                } else {
+                    TRACE(SVCWORKER, "launchProcess: fail");
+                }
             }
         }
 

@@ -1,12 +1,13 @@
 // https://notifications.spec.whatwg.org/#service-worker-api
 
-[STARFISH_ENABLE_SERVICE_WORKER, Unimplemented]
+[STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION, Unimplemented]
 dictionary GetNotificationOptions {
   DOMString tag = "";
 };
 
+[STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION]
 partial interface ServiceWorkerRegistration {
-  Promise<void> showNotification(DOMString title, optional NotificationOptions options);
+  [STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION] Promise<void> showNotification(DOMString title, optional NotificationOptions options);
   [Unimplemented] Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };
 

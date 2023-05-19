@@ -50,6 +50,7 @@ public:
     virtual Nullable<ServiceWorkerRegistrationData*> get(
         const std::string& path) = 0;
     virtual void remove(ServiceWorkerRegistrationData* data) = 0;
+    virtual void setWorkingPath(const std::string& path) = 0;
     virtual void loadRegistrationList() = 0;
     virtual void saveWorkerScripts(String* scope, String* urlString,
                                    String* scriptText) = 0;
@@ -72,6 +73,7 @@ public:
     Nullable<ServiceWorkerRegistrationData*> get(
         const std::string& path) override;
     void remove(ServiceWorkerRegistrationData* data) override;
+    void setWorkingPath(const std::string& path) override;
     void loadRegistrationList() override;
     void saveWorkerScripts(String* scope, String* urlString,
                            String* scriptText) override;
@@ -91,6 +93,7 @@ private:
     std::string getInstalledSWDirPath(size_t scopeHash);
     void saveRegistrationList();
     RegistrationStoreData* getRegistraionStoreData(size_t scopeHash);
+    void updateListPath();
 };
 
 } // namespace Starfish

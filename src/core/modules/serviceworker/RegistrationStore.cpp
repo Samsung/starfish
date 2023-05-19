@@ -74,8 +74,7 @@ RegistrationStoreLocalStorage::RegistrationStoreLocalStorage(
     const std::string& rootPath)
     : m_rootPath(rootPath)
 {
-    m_listPath = m_rootPath + "/registrationList";
-    LocalStorageHelper::File::mkdirIfNotExists(m_rootPath);
+    updateListPath();
 }
 
 void RegistrationStoreLocalStorage::loadRegistrationList()
@@ -83,6 +82,8 @@ void RegistrationStoreLocalStorage::loadRegistrationList()
     TRACE(SVCWORKER);
 
     if (!LocalStorageHelper::File::exists(m_listPath)) {
+        TRACEF(SVCWORKER, "The registration file(%s) doesn't exist",
+               m_listPath.c_str());
         return;
     }
 
@@ -91,7 +92,8 @@ void RegistrationStoreLocalStorage::loadRegistrationList()
     {
         LocalStorageHelper::Reader reader(m_listPath);
         if (!reader.readAll(rawJsonString)) {
-            STARFISH_LOG_WARN("Cannot read registration list file");
+            STARFISH_LOG_WARN("Cannot read registration list file(%s)",
+                              m_listPath.c_str());
             return;
         }
     }
@@ -100,6 +102,10 @@ void RegistrationStoreLocalStorage::loadRegistrationList()
 
     size_t size = 0;
     jsonReader.StartArray(&size);
+
+    if (!m_registrationSW.empty()) {
+        m_registrationSW.clear();
+    }
 
     for (size_t i = 0; i < size; i++) {
         auto data = new RegistrationStoreData;
@@ -223,6 +229,12 @@ void RegistrationStoreLocalStorage::remove(ServiceWorkerRegistrationData* data)
     }
 }
 
+void RegistrationStoreLocalStorage::setWorkingPath(const std::string& path)
+{
+    m_rootPath = path;
+    updateListPath();
+}
+
 void RegistrationStoreLocalStorage::saveWorkerScripts(String* scope,
                                                       String* urlString,
                                                       String* scriptText)
@@ -306,6 +318,11 @@ RegistrationStoreLocalStorage::findRegistraionStoreData(size_t scopeHash)
         return nullptr;
     }
     return itr->second;
+}
+
+void RegistrationStoreLocalStorage::updateListPath()
+{
+    m_listPath = m_rootPath + "/registrationList";
 }
 
 } // namespace Starfish

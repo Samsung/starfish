@@ -19,7 +19,7 @@ dictionary NotificationAction {
   USVString icon;
 };
 
-[STARFISH_ENABLE_SERVICE_WORKER]
+[STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION]
 dictionary NotificationOptions {
   [Unimplemented] NotificationDirection dir = "auto";
   [Unimplemented] DOMString lang = "";

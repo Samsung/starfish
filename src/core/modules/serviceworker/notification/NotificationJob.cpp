@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#ifdef STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/notification/NotificationService.h"
 #include "core/modules/serviceworker/notification/NotificationJob.h"
 
@@ -79,4 +79,4 @@ void NotificationJob::showNotification(Promise* promise)
     promise->fulfill(scriptUndefined());
 }
 } // namespace Starfish
-#endif /* STARFISH_ENABLE_SERVICE_WORKER */
+#endif /* STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION */

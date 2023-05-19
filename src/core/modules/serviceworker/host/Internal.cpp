@@ -113,7 +113,7 @@ Internal::Internal(ScriptBindingInstance* scriptBindingInstance)
         fetchWebBase(scriptBindingInstance->scriptContext())->starfish();
 
     m_fetchCacheStream = new FetchCacheStream(
-        starfish->serviceWorkerOption()->localStorageRootDir());
+        starfish->serviceWorkerOption()->dataDirectoryPath());
 }
 
 Promise* Internal::open(String* cacheName)
@@ -156,7 +156,7 @@ Promise* Internal::open(String* cacheName)
     task->m_cacheName = cacheName;
     task->m_context = context;
     task->m_localStorageRootDir =
-        starfish->serviceWorkerOption()->localStorageRootDir();
+        starfish->serviceWorkerOption()->dataDirectoryPath();
     task->start();
 
     return promise;

@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=@LIBDIR@/lwe
+includedir=@INCLUDEDIR@/lightweight-web-engine
+
+Name: lightweight-web-engine-serviceworker
+Description: lightweight web engine service worker
+Version: 0.0.1
+Cflags: -I${includedir}
+Libs: -L${libdir} -llightweight-web-engine-serviceworker
+

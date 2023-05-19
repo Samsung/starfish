@@ -151,10 +151,8 @@ Starfish::Starfish(const char* localStorageFilePath,
 #endif
 
     m_perProcess = new PerProcess;
-    m_perProcess->initialize(threadPoolSize);
-
-    m_serviceWorkerOption = new ServiceWorkerOption();
-
+    m_serviceWorkerOption = new ServiceWorkerOption("");
+    m_perProcess->initialize(threadPoolSize, m_serviceWorkerOption);
 #if !defined(STARFISH_WEBWORKER_HOST)
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::instance();
     m_serviceWorkerProcessManager->init(m_perProcess, m_serviceWorkerOption);
@@ -268,7 +266,8 @@ void Starfish::printEveryReachableGCObjects()
             STARFISH_ASSERT(size == bytes);
             void* ptr = GC_USR_PTR_FROM_BASE(obj);
             STARFISH_LOG_ERROR("@@@ kind %d pointer %p", (int)kind, ptr);
-#if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID))
+#if !defined(NDEBUG) && (!defined(OS_WINDOWS) && !defined(STARFISH_ANDROID) && \
+                         !defined(STARFISH_WEBWORKER_HOST))
             GC_print_backtrace(ptr);
 #endif
         },

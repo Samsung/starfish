@@ -31,14 +31,14 @@
 #include "core/fetch/stream/ReadableStreamBuffer.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/serviceworker/ServiceWorkerOption.h"
+#include "core/modules/serviceworker/FetchEventData.h"
+#include "core/modules/serviceworker/FetchCacheStream.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
-#include "core/modules/serviceworker/ServiceWorkerAgent.h"
-#include "core/modules/serviceworker/ServiceWorkerOption.h"
-#include "core/modules/serviceworker/FetchCacheStream.h"
-#include "core/modules/serviceworker/FetchEventData.h"
-#include "core/modules/serviceworker/FetchEvent.h"
-#include "core/modules/serviceworker/ServiceWorkerFetchJob.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/FetchEvent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
 
 namespace Starfish {
 
@@ -203,7 +203,7 @@ void ServiceWorkerFetchJob::successJob()
         auto stream = new FetchCacheStream(ServiceWorkerAgent::instance()
                                                ->starfish()
                                                ->serviceWorkerOption()
-                                               ->localStorageRootDir(),
+                                               ->dataDirectoryPath(),
                                            true);
         stream->open("temp");
         stream->writeResponse(data->url->hashValue(), m_response);

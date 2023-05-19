@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER)
+#if defined(STARFISH_WEBWORKER_HOST)
 #ifndef __StarfishServiceWorkerAgent__
 #define __StarfishServiceWorkerAgent__
 
@@ -34,10 +34,12 @@ class CastServer;
 class ServiceWorkerGlobalScope;
 
 enum class ServiceWorkerAgentState {
+    None,
     Terminated,
 };
 
-using ServiceWorkerAgentStateHandler = void (*)(ServiceWorkerAgentState);
+using ServiceWorkerAgentStateHandler =
+    std::function<void(ServiceWorkerAgentState)>;
 
 class ServiceWorkerAgent : public gc {
 public:
@@ -56,10 +58,12 @@ public:
     void runServiceWorker(ResourceURL* scriptURL);
     void abortServiceWorkerScript(ServiceWorkerData* serviceWorker);
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     NotificationService* notificationService()
     {
         return m_notificationService;
     }
+#endif
 
 #if defined(STARFISH_ENABLE_CAST_SERVICE)
     CastServer* castServer()
@@ -100,7 +104,9 @@ private:
     PerProcess* m_perProcess;
     ServiceWorkerServer* m_SWServer;
     NULLABLE ServiceWorkerAgentStateHandler m_clientFunc{ nullptr };
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_NOTIFICATION)
     NotificationService* m_notificationService;
+#endif
     GCVector<WebWorker*> m_webWorkerList;
     GCUnorderedMap<ServiceWorkerContextId, ServiceWorkerGlobalScope*, IdHash>
         m_globalScopeMap;
