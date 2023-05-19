@@ -126,7 +126,15 @@ CalcValueType CalcTerm::type() const
                 return CalcValueType::Invalid;
             }
         } else {
-            if (!(rType.isNumber() && (*it).numberValue() != 0)) {
+            if (rType.isNumber()) {
+                if (((*it).type().isCalcData() &&
+                     (*it).calcDataValue()->numberValue() == 0)) {
+                    return CalcValueType::Invalid;
+                } else if ((*it).type().isNumber() &&
+                           (*it).numberValue() == 0) {
+                    return CalcValueType::Invalid;
+                }
+            } else {
                 return CalcValueType::Invalid;
             }
         }
@@ -167,12 +175,12 @@ LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
-    float num = 1;
-    LayoutUnit l = 1;
+    LayoutUnit result = 1;
+
     if (lType.isNumber()) {
-        num = (*it).numberValue();
+        result = (*it).numberValue();
     } else {
-        l = (*it).specifiedValue(parentContentLength, n);
+        result = (*it).specifiedValue(parentContentLength, n);
     }
     it++;
     auto it2 = m_operators.begin();
@@ -182,19 +190,17 @@ LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
 
         if (operand == MUL) {
             if (rType.isNumber()) {
-                num *= (*it).numberValue();
+                result *= (*it).numberValue();
             } else {
-                l = (*it).specifiedValue(parentContentLength, n);
-                l *= num;
-                num = 1;
+                result *=
+                    (*it).specifiedValue(parentContentLength, n).toFloat();
             }
         } else {
             if (rType.isNumber()) {
-                num /= (*it).numberValue();
+                result /= (*it).numberValue();
             } else {
-                l = (*it).specifiedValue(parentContentLength, n);
-                l /= num;
-                num = 1;
+                result /=
+                    (*it).specifiedValue(parentContentLength, n).toFloat();
             }
         }
 
@@ -202,7 +208,7 @@ LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
         it2++;
     }
 
-    return num * l;
+    return result;
 }
 
 LayoutUnit CalcTerm::specifiedFontValue(Node* n) const
@@ -210,12 +216,12 @@ LayoutUnit CalcTerm::specifiedFontValue(Node* n) const
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
-    float num = 1;
-    LayoutUnit l;
+    LayoutUnit result = 1;
+
     if (lType.isNumber()) {
-        num = (*it).numberValue();
+        result = (*it).numberValue();
     } else {
-        l = (*it).specifiedFontValue(n);
+        result = (*it).specifiedFontValue(n);
     }
     it++;
     auto it2 = m_operators.begin();
@@ -225,19 +231,15 @@ LayoutUnit CalcTerm::specifiedFontValue(Node* n) const
 
         if (operand == MUL) {
             if (rType.isNumber()) {
-                num *= (*it).numberValue();
+                result *= (*it).numberValue();
             } else {
-                l = (*it).specifiedFontValue(n);
-                l *= num;
-                num = 1;
+                result *= (*it).specifiedFontValue(n).toFloat();
             }
         } else {
             if (rType.isNumber()) {
-                num /= (*it).numberValue();
+                result /= (*it).numberValue();
             } else {
-                l = (*it).specifiedFontValue(n);
-                l /= num;
-                num = 1;
+                result /= (*it).specifiedFontValue(n).toFloat();
             }
         }
 
@@ -245,7 +247,7 @@ LayoutUnit CalcTerm::specifiedFontValue(Node* n) const
         it2++;
     }
 
-    return num * l;
+    return result;
 }
 
 CSSAngle CalcTerm::angleValue() const
@@ -253,12 +255,11 @@ CSSAngle CalcTerm::angleValue() const
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
-    float num = 1;
-    CSSAngle a;
+    CSSAngle result;
     if (lType.isNumber()) {
-        num = (*it).numberValue();
+        result = (*it).numberValue();
     } else {
-        a = (*it).angleValue();
+        result = (*it).angleValue().toDegreeValue();
     }
     it++;
     auto it2 = m_operators.begin();
@@ -268,27 +269,22 @@ CSSAngle CalcTerm::angleValue() const
 
         if (operand == MUL) {
             if (lType.isNumber()) {
-                num *= (*it).numberValue();
+                result *= (*it).numberValue();
             } else {
-                a = (*it).angleValue();
-                a *= num;
-                num = 1;
+                result *= (*it).angleValue().toDegreeValue();
             }
         } else {
             if (lType.isNumber()) {
-                num /= (*it).numberValue();
+                result /= (*it).numberValue();
             } else {
-                a = (*it).angleValue();
-                a /= num;
-                num = 1;
+                result /= (*it).angleValue().toDegreeValue();
             }
         }
 
         it++;
         it2++;
     }
-
-    return num * a;
+    return result;
 }
 
 CSSTime CalcTerm::timeValue() const
@@ -296,12 +292,11 @@ CSSTime CalcTerm::timeValue() const
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
-    float num = 1;
-    CSSTime t;
+    CSSTime result;
     if (lType.isNumber()) {
-        num = (*it).numberValue();
+        result = (*it).numberValue();
     } else {
-        t = (*it).timeValue();
+        result = (*it).timeValue().toTimeValue();
     }
     it++;
     auto it2 = m_operators.begin();
@@ -311,19 +306,15 @@ CSSTime CalcTerm::timeValue() const
 
         if (operand == MUL) {
             if (lType.isNumber()) {
-                num *= (*it).numberValue();
+                result *= (*it).numberValue();
             } else {
-                t = (*it).timeValue();
-                t *= num;
-                num = 1;
+                result *= (*it).timeValue().toTimeValue();
             }
         } else {
             if (lType.isNumber()) {
-                num /= (*it).numberValue();
+                result /= (*it).numberValue();
             } else {
-                t = (*it).timeValue();
-                t /= num;
-                num = 1;
+                result /= (*it).timeValue().toTimeValue();
             }
         }
 
@@ -331,7 +322,7 @@ CSSTime CalcTerm::timeValue() const
         it2++;
     }
 
-    return num * t;
+    return result;
 }
 
 String* CalcTerm::toString()

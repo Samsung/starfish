@@ -3160,7 +3160,7 @@ std::string StyleResolver::resolveVarReferencedValue(
                     start, currentToken.length() - start + 1));
             }
             if (isSuccess) {
-                newCssValue = newCssValueCandidate;
+                newCssValue.append(newCssValueCandidate);
             } else {
                 newCssValue.append(cssValueTokens[i].data(),
                                    cssValueTokens[i].data() +
@@ -10417,6 +10417,8 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
         CalcTerm* term = new CalcTerm();
         bool isMul = false;
         bool unitParsed = false;
+        // TODO : The type checking of unit needs to be reconsidered.
+        // https://www.w3.org/TR/css-values-3/#calc-type-checking
         while (!parser.isEnd()) {
             parser.consumeWhitespaces();
 
@@ -10430,15 +10432,11 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             auto str = parser.parsedString();
             CalcValue val;
             if (parser.consumeIfNext('(')) {
-                if (unitParsed) {
-                    return false;
-                }
                 CalcData* newData = new CalcData();
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
                               isTimeParser, isLineheightParser, parserOption)) {
                     val.setType(CalcValueType::CalcDataValue);
                     val.setValue(newData);
-                    unitParsed = true;
                 } else {
                     return false;
                 }
@@ -10567,11 +10565,6 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             } else if (parser.consumeIfNext('/')) {
                 isMul = false;
             } else {
-                if (!isLineheightParser) {
-                    if (!unitParsed) {
-                        return false;
-                    }
-                }
                 break;
             }
         }
