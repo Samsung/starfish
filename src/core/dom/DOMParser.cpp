@@ -101,8 +101,8 @@ static void buildDocumentFromXML(
                 parent->document(), QualifiedName(namespaceURI, localName));
         } else if (namespaceURI ==
                    starfish->staticStrings()->m_svgNamespaceURI) {
-            newNode =
-                SVGDocument::createSVGElement(parent->document(), localName);
+            newNode = SVGDocument::createSVGElement(
+                parent->document(), QualifiedName(namespaceURI, localName));
         } else {
             newNode = new NamedElement(parent->document(),
                                        QualifiedName(namespaceURI, localName));
