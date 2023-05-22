@@ -1500,6 +1500,29 @@ void Element::scrollTo(double x, double y)
     }
 }
 
+void Element::scroll(ScrollToOptions options)
+{
+    scroll(options.hasLeft() ? options.left() : scrollLeftProperty(),
+           options.hasTop() ? options.top() : scrollTopProperty());
+}
+
+void Element::scrollTo(ScrollToOptions options)
+{
+    scrollTo(options.hasLeft() ? options.left() : scrollLeftProperty(),
+             options.hasTop() ? options.top() : scrollTopProperty());
+}
+
+void Element::scrollBy(double x, double y)
+{
+    scrollTo(scrollLeftProperty() + x, scrollTopProperty() + y);
+}
+
+void Element::scrollBy(ScrollToOptions options)
+{
+    scrollBy(options.hasLeft() ? options.left() : 0,
+             options.hasTop() ? options.top() : 0);
+}
+
 void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {

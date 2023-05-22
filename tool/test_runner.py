@@ -135,6 +135,7 @@ def wpt_css_flexbox():
 
 
 def wpt_cssom_view():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom_view.res", "cairo"])
     run_test(["multi_basic", "tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res", "cairo"])
 
 
