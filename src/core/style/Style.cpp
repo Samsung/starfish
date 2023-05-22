@@ -10072,7 +10072,6 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             }
 
             cs->setColor(color);
-
             uint32_t option = CSSPropertyParser::AllowNegative |
                               CSSPropertyParser::AllowPercent |
                               CSSPropertyParser::AllowDot;
@@ -10080,9 +10079,19 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
                 parser.consumeString(option);
                 ps = parser.parsedStringToGCString();
-                value = CSSTokenValue(ps->toUTF8NonGCString().data());
-                if (!length.updateValueUnitLength(value, option)) {
-                    return false;
+                if (ps->equals("calc")) {
+                    String* calcStr = String::createASCIIString("calc(");
+                    parser.consumeParenthesisBlock();
+                    value =
+                        CSSTokenValue("calc(" + parser.parsedString() + ")");
+                    if (!length.updateValueUnitLengthOrCalc(value, option)) {
+                        return false;
+                    }
+                } else {
+                    value = CSSTokenValue(ps->toUTF8NonGCString().data());
+                    if (!length.updateValueUnitLength(value, option)) {
+                        return false;
+                    }
                 }
                 cs->setOffset(length);
             }
