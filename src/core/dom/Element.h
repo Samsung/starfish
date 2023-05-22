@@ -318,6 +318,10 @@ public:
 
     void scroll(double x, double y);
     void scrollTo(double x, double y);
+    void scroll(ScrollToOptions options = {});
+    void scrollTo(ScrollToOptions options = {});
+    void scrollBy(double x, double y);
+    void scrollBy(ScrollToOptions options = {});
 
     // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
     DOMRectList* getClientRects();

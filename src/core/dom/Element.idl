@@ -77,10 +77,10 @@ interface Element : Node {
   void scrollIntoView(ScrollIntoViewOptions options);
   void scroll(unrestricted double x, unrestricted double y);
   void scrollTo(unrestricted double x, unrestricted double y);
-  [Unimplemented] void scroll(optional ScrollToOptions options);
-  [Unimplemented] void scrollTo(optional ScrollToOptions options);
-  [Unimplemented] void scrollBy(optional ScrollToOptions options);
-  [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
+  void scroll(optional ScrollToOptions options);
+  void scrollTo(optional ScrollToOptions options);
+  void scrollBy(optional ScrollToOptions options);
+  void scrollBy(unrestricted double x, unrestricted double y);
   [Rename=scrollTopProperty] attribute unrestricted double scrollTop;
   [Rename=scrollLeftProperty] attribute unrestricted double scrollLeft;
   readonly attribute long scrollWidth;
