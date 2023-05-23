@@ -34,7 +34,8 @@ FileReader::FileReader(ExecutionContext* executionContext)
     , m_executionContext(executionContext)
     , m_readyState(ReadyState::Empty)
     , m_blob(nullptr)
-    , m_result(nullptr)
+    , m_resultInText(nullptr)
+    , m_resultInArrayBuffer(nullptr)
     , m_requstedIdler(MessageLoopInvalidID)
 {
 }
@@ -58,7 +59,7 @@ ScriptBindingInstance* FileReader::scriptBindingInstance()
 
 void FileReader::readAsArrayBuffer(Blob* blob)
 {
-    STARFISH_UNIMPLEMENTED();
+    readArrayBuffer(blob);
 }
 
 void FileReader::readAsBinaryString(Blob* blob)
@@ -68,12 +69,12 @@ void FileReader::readAsBinaryString(Blob* blob)
 
 void FileReader::readAsText(Blob* blob)
 {
-    read(blob);
+    readText(blob);
 }
 
 void FileReader::readAsText(Blob* blob, String* encoding)
 {
-    read(blob, encoding);
+    readText(blob, encoding);
 }
 
 void FileReader::readAsDataURL(Blob* blob)
@@ -83,7 +84,8 @@ void FileReader::readAsDataURL(Blob* blob)
 
 void FileReader::abort()
 {
-    m_result = nullptr;
+    m_resultInText = nullptr;
+    m_resultInArrayBuffer = nullptr;
 
     if (m_readyState == ReadyState::Empty) {
         return;
@@ -108,12 +110,12 @@ uint8_t FileReader::readyState() const
     return static_cast<uint8_t>(m_readyState);
 }
 
-void FileReader::read(Blob* blob)
+void FileReader::readText(Blob* blob)
 {
-    read(blob, nullptr);
+    readText(blob, nullptr);
 }
 
-void FileReader::read(Blob* blob, String* encoding)
+void FileReader::readText(Blob* blob, String* encoding)
 {
     // If fr’s state is "loading", throw an InvalidStateError DOMException.
     if (m_readyState == ReadyState::Loading) {
@@ -124,26 +126,91 @@ void FileReader::read(Blob* blob, String* encoding)
 
     m_blob = blob;
     // Set fr’s state to "loading".
-    dispatchProgressEvent(ProgressState::LoadStart);
     m_readyState = ReadyState::Loading;
+    dispatchProgressEvent(ProgressState::LoadStart);
 
     // Set fr’s result to null.
-    m_result = nullptr;
+    m_resultInText = nullptr;
+    m_resultInArrayBuffer = nullptr;
 
-    // Implement UTF8 text only
+    if (encoding && encoding->equals("UTF-16")) {
+        // UTF-16 encoding
+        m_requstedIdler =
+            executionContext()->webBase()->messageLoop()->addIdler(
+                executionContext()->globalScope(),
+                [](size_t handle, void* data) {
+                    FileReader* fr = (FileReader*)data;
+                    Blob* blob = fr->m_blob;
+                    fr->m_resultInText = String::fromUTF16(
+                        (const char16_t*)blob->data(), (blob->size() / 2));
+                    fr->m_readyState = ReadyState::Done;
+
+                    if (fr->m_resultInText) {
+                        fr->dispatchProgressEvent(ProgressState::Load);
+                    } else {
+                        fr->dispatchProgressEvent(ProgressState::InError);
+                    }
+                    fr->dispatchProgressEvent(ProgressState::LoadEnd);
+                },
+                this);
+    } else {
+        // UTF-8 encoding
+        m_requstedIdler =
+            executionContext()->webBase()->messageLoop()->addIdler(
+                executionContext()->globalScope(),
+                [](size_t handle, void* data) {
+                    FileReader* fr = (FileReader*)data;
+                    Blob* blob = fr->m_blob;
+                    fr->m_resultInText = String::fromUTF8(
+                        (const char*)blob->data(), blob->size());
+                    fr->m_readyState = ReadyState::Done;
+
+                    if (fr->m_resultInText) {
+                        fr->dispatchProgressEvent(ProgressState::Load);
+                    } else {
+                        fr->dispatchProgressEvent(ProgressState::InError);
+                    }
+                    fr->dispatchProgressEvent(ProgressState::LoadEnd);
+                },
+                this);
+    }
+}
+
+void FileReader::readArrayBuffer(Blob* blob)
+{
+    // If fr’s state is "loading", throw an InvalidStateError DOMException.
+    if (m_readyState == ReadyState::Loading) {
+        throw new DOMException(executionContext(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+
+    m_blob = blob;
+    // Set fr’s state to "loading".
+    m_readyState = ReadyState::Loading;
+    dispatchProgressEvent(ProgressState::LoadStart);
+
+    // Set fr’s result to null.
+    m_resultInText = nullptr;
+    m_resultInArrayBuffer = nullptr;
+
     m_requstedIdler = executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data) {
             FileReader* fr = (FileReader*)data;
             Blob* blob = fr->m_blob;
-            fr->m_result =
-                String::fromUTF8((const char*)blob->data(), blob->size());
-            if (fr->m_result) {
+            void* buffer = malloc(blob->size());
+            memcpy(buffer, blob->data(), blob->size());
+            fr->m_resultInArrayBuffer = createScriptArrayBuffer(
+                fr->executionContext()->scriptBindingInstance(), buffer,
+                blob->size());
+            fr->m_readyState = ReadyState::Done;
+
+            if (fr->m_resultInArrayBuffer) {
                 fr->dispatchProgressEvent(ProgressState::Load);
             } else {
                 fr->dispatchProgressEvent(ProgressState::InError);
             }
-            fr->m_readyState = ReadyState::Done;
             fr->dispatchProgressEvent(ProgressState::LoadEnd);
         },
         this);
@@ -190,9 +257,12 @@ void FileReader::dispatchProgressEvent(ProgressState progState)
 
 Nullable<DOMStringOrArrayBuffer> FileReader::result() const
 {
-    // Support text only for now.
-    if (m_result) {
-        return DOMStringOrArrayBuffer::createDOMString(m_result);
+    if (m_resultInText) {
+        // read as text
+        return DOMStringOrArrayBuffer::createDOMString(m_resultInText);
+    } else if (m_resultInArrayBuffer) {
+        // read as ArrayBuffer
+        return DOMStringOrArrayBuffer::createArrayBuffer(m_resultInArrayBuffer);
     }
     return DOMStringOrArrayBuffer::createDOMString(String::emptyString);
 }

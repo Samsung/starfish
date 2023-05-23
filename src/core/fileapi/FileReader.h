@@ -74,14 +74,18 @@ public:
 #undef OVERRIDE
 
 private:
-    void read(Blob* blob, String* encoding);
-    void read(Blob* blob);
+    void readText(Blob* blob, String* encoding);
+    void readText(Blob* blob);
+    void readArrayBuffer(Blob* blob);
     void dispatchProgressEvent(ProgressState progState);
 
     ExecutionContext* m_executionContext;
     ReadyState m_readyState;
     Blob* m_blob;
-    String* m_result;
+
+    String* m_resultInText;
+    ScriptArrayBuffer m_resultInArrayBuffer;
+
     size_t m_requstedIdler;
 };
 
