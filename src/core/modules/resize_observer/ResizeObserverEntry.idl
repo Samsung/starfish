@@ -1,0 +1,9 @@
+// https://drafts.csswg.org/resize-observer/#ref-for-resizeobserverentry 
+[Exposed=Window]
+interface ResizeObserverEntry {
+    [Unimplemented] readonly attribute Element target;
+    [Unimplemented] readonly attribute DOMRectReadOnly contentRect;
+    // [Unimplemented] readonly attribute FrozenArray<ResizeObserverSize> borderBoxSize;
+    // [Unimplemented] readonly attribute FrozenArray<ResizeObserverSize> contentBoxSize;
+    // [Unimplemented] readonly attribute FrozenArray<ResizeObserverSize> devicePixelContentBoxSize;
+};

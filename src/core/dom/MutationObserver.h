@@ -70,6 +70,11 @@ public:
         STARFISH_UNIMPLEMENTED();
     }
 
+    void observe(Node* node, MutationObserverInit options)
+    {
+        STARFISH_UNIMPLEMENTED();
+    }
+
     void disconnect()
     {
         STARFISH_UNIMPLEMENTED();

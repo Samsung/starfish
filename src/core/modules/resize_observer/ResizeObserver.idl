@@ -1,0 +1,12 @@
+// https://drafts.csswg.org/resize-observer/#callbackdef-resizeobservercallback
+callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
+
+// https://drafts.csswg.org/resize-observer/#resize-observer-interface
+[ Exposed=Window,Constructor(ResizeObserverCallback callback), ConstructorCallWith=ExecutionContext] 
+interface ResizeObserver {
+    // constructor(ResizeObserverCallback callback);
+    void observe(Element target, optional ResizeObserverOptions options);
+    // [Unimplemented] undefined observe(Element target, optional ResizeObserverOptions options = {});
+    [Unimplemented] undefined unobserve(Element target);
+    [Unimplemented] undefined disconnect();
+};
