@@ -571,10 +571,10 @@ void HTMLSelectElement::showDropdownMenu()
         builder.appendString(
             String::fromUTF8("px;display: flex;align-items: center;}'\n"));
 
-        const char pickerJs[] =
+        constexpr char pickerJs[] =
 #include "core/dom/picker.js"
             ;
-        String* picker = String::createASCIIString(pickerJs);
+        String* picker = String::createASCIIStringWithNoCopy(pickerJs);
         builder.appendString(picker);
 
         String* script = builder.finalize();

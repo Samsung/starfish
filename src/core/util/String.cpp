@@ -739,6 +739,11 @@ String* String::createASCIIStringWithNoGC(const char* str, size_t len)
     return new StringDataNonGCASCII(str, len);
 }
 
+String* String::createASCIIStringWithNoCopy(const char* src, size_t len)
+{
+    return new StringDataNonCopyASCII(src, len);
+}
+
 String* String::createUTF32String(const UTF32StringDataNonGCStd& src)
 {
     return new StringDataUTF32(src.data(), src.length());
@@ -2140,6 +2145,12 @@ void* StringView::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* StringDataNonCopyASCII::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(StringDataNonCopyASCII));
+    return GC_MALLOC_ATOMIC(size);
 }
 
 void StringBuilder::appendPiece(String* str, size_t s, size_t e)
