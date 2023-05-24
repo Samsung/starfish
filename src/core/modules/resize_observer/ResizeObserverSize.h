@@ -17,42 +17,18 @@
  *  USA
  */
 
-#ifndef __StarfishMutationObserver__
-#define __StarfishMutationObserver__
+#ifndef __StarfishResizeObserverSize__
+#define __StarfishResizeObserverSize__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-struct MutationObserverInit {
-};
-
-class MutationCallback {
+class ResizeObserverSize : public ScriptWrappable {
 public:
-    static MutationCallback* toMutationCallback(ScriptValue fn)
-    {
-        if (!isCallableScriptValue(fn)) {
-            return nullptr;
-        }
-        return new MutationCallback(fn);
-    }
-
-private:
-    MutationCallback(ScriptValue fn)
-        : m_callback(fn)
-    {
-    }
-
-    ScriptValue m_callback;
-};
-
-class MutationObserver final : public ScriptWrappable {
-public:
-    MutationObserver(ExecutionContext* executionContext,
-                     MutationCallback* callBack)
+    ResizeObserverSize()
         : ScriptWrappable(this)
-        , m_scriptBindingInstance(executionContext->scriptBindingInstance())
     {
     }
 
@@ -63,22 +39,7 @@ public:
 
     void init(ScriptBindingInstance*, void*) override;
 
-    bool isMutationObserver() const override;
-
-    void observe(Node* node)
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
-
-    void observe(Node* node, MutationObserverInit options)
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
-
-    void disconnect()
-    {
-        STARFISH_UNIMPLEMENTED();
-    }
+    bool isResizeObserverSize() const override;
 
 private:
     ScriptBindingInstance* m_scriptBindingInstance;
