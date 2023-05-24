@@ -89,6 +89,7 @@ public:
     bool UseHttp2() const;
     uint32_t NeedsDownScaleImageResourceLargerThan() const;
     bool UseExternalPopup() const;
+    bool UseSpatialNavigation() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -107,6 +108,7 @@ public:
     void SetNeedsDownScaleImageResourceLargerThan(
         uint32_t demention); // Experimental
     void SetUseExternalPopup(bool useExternalPopup);
+    void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
     std::string m_defaultUserAgent;
