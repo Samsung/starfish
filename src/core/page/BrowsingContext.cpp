@@ -164,6 +164,14 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
             m_sourceElement->document()->contentSecurityPolicy());
     }
 
+    if (webView()->useSpatialNavigation()) {
+        constexpr char spatialNavagationJS[] =
+#include "core/page/spatial-navigation-polyfill.js"
+            ;
+        webView()->evaluateJavaScript(
+            String::createASCIIString(spatialNavagationJS));
+    }
+
     m_window->document()->init(referrerURL);
     m_window->performance()->timing()->m_requestStart = timestamp();
 

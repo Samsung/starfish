@@ -331,6 +331,7 @@ int main(int argc, char* argv[])
     uint32_t needsDownScaleImageResourceLargerThan = 0;
     bool scrollbarVisible = true;
     bool useExternalPopup = false;
+    bool useSpatialNavigation = false;
     bool useHTTP2 = false;
     std::string language;
     int timeout = 0;
@@ -417,6 +418,8 @@ int main(int argc, char* argv[])
             scrollbarVisible = false;
         } else if (strstr(argv[i], "--use-external-popup")) {
             useExternalPopup = true;
+        } else if (strstr(argv[i], "--use-spatial-navigation")) {
+            useSpatialNavigation = true;
         } else if (strcmp(argv[i], "--use-http2") == 0) {
             useHTTP2 = true;
         } else if (strstr(argv[i], "--tts-language=") == argv[i]) {
@@ -597,6 +600,7 @@ int main(int argc, char* argv[])
         if (useExternalPopup) {
             settings.SetUseExternalPopup(useExternalPopup);
         }
+        settings.SetUseSpatialNavigation(useSpatialNavigation);
         settings.SetTTSMode(ttsMode);
         settings.SetTTSLanguage(language);
         settings.SetUseHttp2(useHTTP2);

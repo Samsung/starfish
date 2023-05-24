@@ -88,6 +88,7 @@ public:
     uint32_t NeedsDownScaleImageResourceLargerThan() const;
     bool ScrollbarVisible() const;
     bool UseExternalPopup() const;
+    bool UseSpatialNavigation() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
@@ -107,6 +108,7 @@ public:
         uint32_t demention); // Experimental
     void SetScrollbarVisible(bool visible);
     void SetUseExternalPopup(bool useExternalPopup);
+    void SetUseSpatialNavigation(bool useSpatialNavigation);
 
 private:
     std::string m_defaultUserAgent;
@@ -126,6 +128,7 @@ private:
     uint32_t m_needsDownScaleImageResourceLargerThan;
     bool m_scrollbarVisible;
     bool m_useExternalPopup;
+    bool m_useSpatialNavigation;
 };
 
 class LWE_EXPORT ResourceError {

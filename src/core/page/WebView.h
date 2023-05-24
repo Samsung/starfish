@@ -436,6 +436,16 @@ public:
         return m_useExternalPopup;
     }
 
+    void setUseSpatialNavigation(bool useSpatialNavigation)
+    {
+        m_useSpatialNavigation = useSpatialNavigation;
+    }
+
+    bool useSpatialNavigation()
+    {
+        return m_useSpatialNavigation;
+    }
+
     void setBaseForegroundColor(Unit::Color color)
     {
         m_baseForegroundColor = color;
@@ -630,6 +640,7 @@ private:
     uint32_t m_needsDownScaleImageResourceLargerThan;
     bool m_scrollbarVisible;
     bool m_useExternalPopup;
+    bool m_useSpatialNavigation;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };

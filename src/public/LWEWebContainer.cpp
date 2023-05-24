@@ -129,6 +129,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_scrollbarVisible(true)
 #endif
     , m_useExternalPopup(false)
+    , m_useSpatialNavigation(false)
 {
 }
 
@@ -182,6 +183,11 @@ bool Settings::ScrollbarVisible() const
 bool Settings::UseExternalPopup() const
 {
     return m_useExternalPopup;
+}
+
+bool Settings::UseSpatialNavigation() const
+{
+    return m_useSpatialNavigation;
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
@@ -304,6 +310,11 @@ void Settings::SetScrollbarVisible(bool visible)
 void Settings::SetUseExternalPopup(bool useExternalPopup)
 {
     m_useExternalPopup = useExternalPopup;
+}
+
+void Settings::SetUseSpatialNavigation(bool useSpatialNavigation)
+{
+    m_useSpatialNavigation = useSpatialNavigation;
 }
 
 ResourceError::ResourceError(int code, const std::string& description,
@@ -926,6 +937,7 @@ Settings WebContainer::GetSettings()
     result.SetScrollbarVisible(TO_WEBVIEW(m_impl)->scrollbarVisible());
 #endif
     result.SetUseExternalPopup(TO_WEBVIEW(m_impl)->useExternalPopup());
+    result.SetUseSpatialNavigation(TO_WEBVIEW(m_impl)->useSpatialNavigation());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -1181,6 +1193,8 @@ void WebContainer::SetSettings(const Settings& settings)
     TO_WEBVIEW(m_impl)->setScrollbarVisible(settings.ScrollbarVisible());
 #endif
     TO_WEBVIEW(m_impl)->setUseExternalPopup(settings.UseExternalPopup());
+    TO_WEBVIEW(m_impl)->setUseSpatialNavigation(
+        settings.UseSpatialNavigation());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
