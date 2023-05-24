@@ -169,7 +169,7 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
 #include "core/page/spatial-navigation-polyfill.js"
             ;
         webView()->evaluateJavaScript(
-            String::createASCIIString(spatialNavagationJS));
+            String::createASCIIStringWithNoCopy(spatialNavagationJS));
     }
 
     m_window->document()->init(referrerURL);

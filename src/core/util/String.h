@@ -581,8 +581,8 @@ struct NullableUTF8String : public gc {
         m_buffer = buffer;
         m_bufferSize = bufferSize;
     }
-    const char* m_buffer;
-    size_t m_bufferSize;
+    const char* m_buffer = nullptr;
+    size_t m_bufferSize = 0;
 };
 
 enum CharDirection ENSURE_ENUM_UNSIGNED {
@@ -726,6 +726,13 @@ public:
         return createASCIIStringWithNoGC(str, N - 1);
     }
     static String* createASCIIStringWithNoGC(const char* src, size_t len);
+    template <size_t N>
+    static String* createASCIIStringWithNoCopy(const char (&str)[N])
+    {
+        STARFISH_ASSERT(strnlen(str, N) == N - 1);
+        return createASCIIStringWithNoCopy(str, N - 1);
+    }
+    static String* createASCIIStringWithNoCopy(const char* src, size_t len);
     static String* createUTF32String(const UTF32String& src);
     static String* createUTF32String(const UTF32StringDataNonGCStd& src);
     static String* createUTF32String(char32_t c);
@@ -1033,7 +1040,7 @@ protected:
     bool isASCIIStringData(const char* str);
 
 private:
-    mutable size_t m_hashValue;
+    mutable size_t m_hashValue = 0;
 };
 
 template <typename T>
@@ -1082,8 +1089,8 @@ private:
         m_buffer[length] = 0;
         m_length = length;
     }
-    T* m_buffer;
-    size_t m_length;
+    T* m_buffer = nullptr;
+    size_t m_length = 0;
 };
 
 class StringDataASCII : public String {
@@ -1163,8 +1170,44 @@ public:
     }
 
 protected:
-    const char* m_data;
-    size_t m_length;
+    const char* m_data = nullptr;
+    size_t m_length = 0;
+};
+
+class StringDataNonCopyASCII : public String {
+public:
+    StringDataNonCopyASCII(const char* str, size_t length)
+        : m_data(str)
+        , m_length(length)
+    {
+    }
+
+    virtual size_t length() const override
+    {
+        return m_length;
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data[idx];
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        StringBufferAccessData ret;
+        ret.bufferDataKind = StringBufferAccessData::ASCIIData;
+        ret.isNullTerminated = true;
+        ret.buffer = m_data;
+        ret.length = m_length;
+        return ret;
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    const char* m_data = nullptr;
+    size_t m_length = 0;
 };
 
 class StringDataNonGCASCII : public String {
@@ -1347,8 +1390,8 @@ public:
     }
 
 protected:
-    const char32_t* m_data;
-    size_t m_length;
+    const char32_t* m_data = nullptr;
+    size_t m_length = 0;
 };
 
 // WARNING: this class does not copy buffer
@@ -1383,8 +1426,8 @@ public:
     }
 
 protected:
-    const char16_t* m_data;
-    size_t m_length;
+    const char16_t* m_data = nullptr;
+    size_t m_length = 0;
 };
 
 class StringView : public String {
@@ -1504,8 +1547,9 @@ public:
     }
 
 protected:
-    String* m_string;
-    size_t m_start, m_end;
+    String* m_string = String::emptyString;
+    size_t m_start = 0;
+    size_t m_end = 0;
 };
 
 class StringUtils {
@@ -1662,9 +1706,10 @@ public:
     }
 
 protected:
-    StringBufferAccessData::BufferDataKind m_resultBufferKind;
-    size_t m_piecesInlineStorageUsage;
-    size_t m_contentLength;
+    StringBufferAccessData::BufferDataKind m_resultBufferKind =
+        StringBufferAccessData::BufferDataKind::ASCIIData;
+    size_t m_piecesInlineStorageUsage = 0;
+    size_t m_contentLength = 0;
     StringBuilderPiece m_piecesInlineStorage[STRING_BUILDER_INLINE_STORAGE_MAX];
     GCVector<StringBuilderPiece> m_pieces;
 };
@@ -1781,10 +1826,10 @@ public:
     int m_length;
 
 private:
-    size_t m_cursor;
+    size_t m_cursor = 0;
     StringBufferAccessData m_accessData;
-    bool m_doNotExcludeLineNumbers;
-    String* m_string;
+    bool m_doNotExcludeLineNumbers = false;
+    String* m_string = String::emptyString;
 };
 
 // An abstract number of element in a sequence. The sequence has a first
@@ -2162,19 +2207,19 @@ private:
         return !(m_substrings.size() == 0);
     }
 
-    char32_t m_pushedChar1;
-    char32_t m_pushedChar2;
+    char32_t m_pushedChar1 = 0;
+    char32_t m_pushedChar2 = 0;
     SegmentedSubstring m_currentString;
-    char32_t m_currentChar;
-    int m_numberOfCharactersConsumedPriorToCurrentString;
-    int m_numberOfCharactersConsumedPriorToCurrentLine;
-    int m_currentLine;
+    char32_t m_currentChar = 0;
+    int m_numberOfCharactersConsumedPriorToCurrentString = 0;
+    int m_numberOfCharactersConsumedPriorToCurrentLine = 0;
+    int m_currentLine = 0;
     GCDeque<SegmentedSubstring> m_substrings;
-    bool m_closed;
-    bool m_empty;
-    unsigned char m_fastPathFlags;
-    void (SegmentedString::*m_advanceFunc)();
-    void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
+    bool m_closed = false;
+    bool m_empty = false;
+    unsigned char m_fastPathFlags = NoFastPath;
+    void (SegmentedString::*m_advanceFunc)() = nullptr;
+    void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)() = nullptr;
 };
 
 struct TextRun {

@@ -201,7 +201,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     // we assume that there is no important rule in ua-sheet
     STARFISH_ASSERT(strstr(ua, "important") == 0);
     CSSStyleSheet* userAgentStyleSheet =
-        new CSSStyleSheet(this, String::createASCIIString(ua));
+        new CSSStyleSheet(this, String::createASCIIStringWithNoCopy(ua));
     userAgentStyleSheet->parseSheetIfneeds();
     std::vector<std::pair<CSSStyleDeclaration*, ResourceURL*>> webFonts;
     userAgentStyleSheet->collectStyleRules(userAgentStyleSheet->childRules(),
