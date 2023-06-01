@@ -115,16 +115,15 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
             bool shouldComputeWithNormalBlockWidthRule =
                 isNormalFlow() && !isAtomicInlineLevel();
             if (isFlexItem()) {
-                STARFISH_ASSERT(cb->isFrameFlexibleBox());
-                shouldComputeWithNormalBlockWidthRule =
-                    (cb->style()->flexDirection() ==
-                         FlexDirectionValue::ColumnFlexDirectionValue ||
-                     cb->style()->flexDirection() ==
-                         FlexDirectionValue::ColumnReverseFlexDirectionValue) &&
+                bool isColumnFlexDirection =
+                    cb->asFrameFlexibleBox()->isColumnDirection();
+                bool needToStrechWidth =
                     cb->style()->flexWrap() ==
                         FlexWrapValue::NoWrapFlexWrapValue &&
-                    (cb->style()->alignItems() == StretchAlignItemValue ||
-                     cb->style()->alignItems() == CenterAlignItemValue);
+                    cb->style()->alignItems() == StretchAlignItemValue;
+
+                shouldComputeWithNormalBlockWidthRule =
+                    isColumnFlexDirection && needToStrechWidth;
             }
 
             if (isAbsolutePositioned() && left.isSpecified() &&

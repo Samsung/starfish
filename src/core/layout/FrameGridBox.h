@@ -503,6 +503,7 @@ public:
 
     void layoutGrid(LayoutContext& ctx);
     void computePreferredWidth(PreferredWidthContext& ctx) override;
+    bool canStratchItem();
 
     LengthData insets();
 

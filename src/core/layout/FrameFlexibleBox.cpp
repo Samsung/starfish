@@ -1419,6 +1419,13 @@ bool FrameFlexibleBox::isTtbDirection()
     }
 }
 
+bool FrameFlexibleBox::isColumnDirection()
+{
+    FlexDirectionValue diretion = style()->flexDirection();
+    return diretion == FlexDirectionValue::ColumnFlexDirectionValue ||
+           diretion == FlexDirectionValue::ColumnReverseFlexDirectionValue;
+}
+
 uint32_t FrameFlexibleBox::lineClamp()
 {
     if (style()->flexDirection() == ColumnFlexDirectionValue) {

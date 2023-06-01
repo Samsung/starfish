@@ -140,6 +140,7 @@ public:
     bool isSingleLine();
     bool isLtrDirection();
     bool isTtbDirection();
+    bool isColumnDirection();
 
     uint32_t lineClamp();
     bool shouldApplyLineClamp(FrameBox* flexItem);
