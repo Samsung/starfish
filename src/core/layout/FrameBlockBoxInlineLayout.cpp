@@ -4802,8 +4802,13 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.updatePreferredMinWidth(gridPreferredMinWidth);
         ctx.updatePreferredWidth(gridPreferredWidth);
     } else {
+        LayoutUnit availableWidth = 0;
+        if (!canStratchItem()) {
+            availableWidth = ctx.remainingWidth();
+        }
+
         GridFormattingContext gridFormattingContext(ctx.layoutContext(), this,
-                                                    0);
+                                                    availableWidth);
 
         gridFormattingContext.computeColumnsAndRows();
         gridPreferredWidth = gridFormattingContext.preferredWidth();

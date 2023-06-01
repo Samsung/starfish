@@ -26,6 +26,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
+#include "core/layout/FrameFlexibleBox.h"
 
 namespace Starfish {
 
@@ -1347,6 +1348,10 @@ void GridFormattingContext::stretchAutoColumnTracks()
         return;
     }
 
+    if (!m_container->canStratchItem()) {
+        return;
+    }
+
     LayoutUnit sumOfAllNonAutoWidths;
     int numOfAutoTracks = 0;
     for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
@@ -1955,6 +1960,21 @@ void FrameGridBox::layoutGrid(LayoutContext& ctx)
 {
     GridFormattingContext gridFormattingContext(ctx, this, contentWidth());
     gridFormattingContext.computeColumnsAndRows();
+}
+
+bool FrameGridBox::canStratchItem()
+{
+    if (isFlexItem()) {
+        auto cb = containingBlock(this);
+        if (cb->isFrameFlexibleBox()) {
+            if (cb->asFrameFlexibleBox()->isColumnDirection()) {
+                return cb->style()->flexWrap() ==
+                           FlexWrapValue::NoWrapFlexWrapValue &&
+                       cb->style()->alignItems() == StretchAlignItemValue;
+            }
+        }
+    }
+    return true;
 }
 
 // https://www.w3.org/TR/css-position-3/#inset-properties
