@@ -1359,6 +1359,7 @@ void CSSStyleDeclaration::setCustomProperty(AtomicString key, String* value)
     }
 
     m_cssCustomValues->setProperty(key, value);
+    notifyNeedsStyleRecalc();
 }
 
 void CSSStyleDeclaration::removeCustomProperty(String* key)
@@ -1367,6 +1368,7 @@ void CSSStyleDeclaration::removeCustomProperty(String* key)
         AtomicString::createAtomicString(m_node->starfish(), key);
     if (m_cssCustomValues) {
         m_cssCustomValues->removeProperty(atomicKey);
+        notifyNeedsStyleRecalc();
     }
 }
 
