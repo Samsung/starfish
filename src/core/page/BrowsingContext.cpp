@@ -1000,6 +1000,10 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
         return;
     }
 
+    if (!e->isFocusable()) {
+        return;
+    }
+
     {
         BrowsingContext* topBC = this;
         if (!isTopLevelBrowsingContext()) {
