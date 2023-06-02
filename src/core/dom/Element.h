@@ -383,6 +383,7 @@ public:
 
     virtual bool supportsFocus();
     virtual bool isFocusable();
+    bool hasFocusableStyle();
     virtual bool isDisabledFormControl()
     {
         return false;

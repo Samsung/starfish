@@ -2058,7 +2058,22 @@ bool Element::isFocusable()
     if (!supportsFocus()) {
         return false;
     }
+
+    if (!hasFocusableStyle()) {
+        return false;
+    }
+
     return true;
+}
+
+bool Element::hasFocusableStyle()
+{
+    window()->webView()->layoutIfNeeded(false);
+
+    ComputedStyle* computedStyle = style();
+    return computedStyle &&
+           computedStyle->display() != DisplayValue::NoneDisplayValue &&
+           computedStyle->visibility() == VisibleVisibilityValue;
 }
 
 int Element::tabIndex()
