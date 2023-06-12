@@ -46,6 +46,7 @@
 #include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
 #include "core/modules/canvas/NativeGradient.h"
+#include "platform/loader/ImageResource.h"
 
 namespace Starfish {
 
@@ -3388,29 +3389,49 @@ void StackingContext::applyMask(Canvas* canvas,
         }
 
         auto type = style->maskImage(i)->type();
-        if (!type.isGradient()) {
-            STARFISH_UNIMPLEMENTED();
-            continue;
-        }
 
-        ImageValue* imageValue = style->maskImage(i);
-        auto gradientValue = imageValue->gradientValue();
-        Unit::Rect rect =
-            m_owner->makeRect(BoxValue::BorderBoxBoxValue).snapSizeToPixel();
-        bool cacheable =
-            gradientValue->isCacheable(rect.width(), rect.height(), false);
-        auto info =
-            imageValue->gradientValue()->makeGradientDrawingInfo(rect, m_owner);
-        NativeImageData* gradientNativeImageData = nullptr;
-        if (cacheable) {
-            std::shared_ptr<NativeGradient> gradient =
-                document->findInNativeGradientCache(info);
+        if (type.isGradient()) {
+            ImageValue* imageValue = style->maskImage(i);
+            auto gradientValue = imageValue->gradientValue();
+            Unit::Rect rect = m_owner->makeRect(BoxValue::BorderBoxBoxValue)
+                                  .snapSizeToPixel();
+            bool cacheable =
+                gradientValue->isCacheable(rect.width(), rect.height(), false);
+            auto info = imageValue->gradientValue()->makeGradientDrawingInfo(
+                rect, m_owner);
+            NativeImageData* gradientNativeImageData = nullptr;
+            if (cacheable) {
+                std::shared_ptr<NativeGradient> gradient =
+                    document->findInNativeGradientCache(info);
 
-            if (gradient.get() == nullptr) {
-                gradient = NativeGradient::create(info);
-            }
+                if (gradient.get() == nullptr) {
+                    gradient = NativeGradient::create(info);
+                }
 
-            if (gradient->gradientImageDataCached() == nullptr) {
+                if (gradient->gradientImageDataCached() == nullptr) {
+                    auto imageData = BufferedNativeImageData::create(
+                        rect.width(), rect.height());
+                    Canvas* gradientCanvas =
+                        Canvas::create(m_owner->node()->webView(), imageData);
+                    gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+                    if (imageValue->gradientValue()->type() ==
+                        GradientType::LinearGradient) {
+                        gradientCanvas->drawLinearGradient(rect, info,
+                                                           gradient.get());
+                    } else if (imageValue->gradientValue()->type() ==
+                               GradientType::RadialGradient) {
+                        gradientCanvas->drawRadialGradient(rect, info,
+                                                           gradient.get());
+                    }
+                    gradientCanvas->fill();
+                    delete gradientCanvas;
+                    gradient->setGradientImageDataCached(imageData);
+                    document->cacheNativeGradient(info, gradient);
+                }
+                gradientNativeImageData = gradient->gradientImageDataCached();
+                canvas->maskNativeImage(gradientNativeImageData, rect, false);
+            } else {
+                auto gradient = NativeGradient::create(info);
                 auto imageData = BufferedNativeImageData::create(rect.width(),
                                                                  rect.height());
                 Canvas* gradientCanvas =
@@ -3427,29 +3448,59 @@ void StackingContext::applyMask(Canvas* canvas,
                 }
                 gradientCanvas->fill();
                 delete gradientCanvas;
-                gradient->setGradientImageDataCached(imageData);
-                document->cacheNativeGradient(info, gradient);
+                gradientNativeImageData = imageData;
+                canvas->maskNativeImage(gradientNativeImageData, rect);
             }
-            gradientNativeImageData = gradient->gradientImageDataCached();
-            canvas->maskNativeImage(gradientNativeImageData, rect, false);
-        } else {
-            auto gradient = NativeGradient::create(info);
+
+        } else if (type.isURL()) {
+            ImageValue* imageValue = style->maskImage(i);
+            Unit::Rect rect = m_owner->makeRect(BoxValue::BorderBoxBoxValue)
+                                  .snapSizeToPixel();
+            auto maskNativeImage = style->rareComputedStyleData()
+                                       ->positionedMask()
+                                       ->imageResource(i)
+                                       ->imageData();
+            if (!maskNativeImage) {
+                m_owner->markNeedsPainting();
+                continue;
+            }
+            int width = maskNativeImage->width();
+            int height = maskNativeImage->height();
             auto imageData =
                 BufferedNativeImageData::create(rect.width(), rect.height());
-            Canvas* gradientCanvas =
+
+            // TODO : These are the parameters that need to be determined to be
+            // applied as a mask and will be implemented when mask-position and
+            // mask-size are implemented.
+            float scaleFactor = 1;
+            float positionFactor = 0;
+            float scaleX = scaleFactor;
+            float scaleY = scaleFactor;
+            float translateX = -(width - rect.width()) * positionFactor * 0.01;
+            float translateY =
+                -(height - rect.height()) * positionFactor * 0.01;
+            float maskBufferX = 0;
+            float maskBufferY = 0;
+            float maskBufferWidth = rect.width();
+            float maskBufferHeight = rect.height();
+
+            Unit::Rect destRect(maskBufferX, maskBufferY, maskBufferWidth,
+                                maskBufferHeight);
+            Canvas* maskCanvas =
                 Canvas::create(m_owner->node()->webView(), imageData);
-            gradientCanvas->clearColor(Unit::Color(0, 0, 0, 0));
-            if (imageValue->gradientValue()->type() ==
-                GradientType::LinearGradient) {
-                gradientCanvas->drawLinearGradient(rect, info, gradient.get());
-            } else if (imageValue->gradientValue()->type() ==
-                       GradientType::RadialGradient) {
-                gradientCanvas->drawRadialGradient(rect, info, gradient.get());
-            }
-            gradientCanvas->fill();
-            delete gradientCanvas;
-            gradientNativeImageData = imageData;
-            canvas->maskNativeImage(gradientNativeImageData, rect);
+            maskCanvas->clearColor(Unit::Color(0, 0, 0, 0));
+            maskCanvas->save();
+            maskCanvas->translate(translateX, translateY);
+            maskCanvas->scale(scaleX, scaleY);
+            maskCanvas->drawRepeatImage(maskNativeImage, destRect, width,
+                                        height, true, true);
+            maskCanvas->fill();
+            maskCanvas->restore();
+            delete maskCanvas;
+
+            canvas->maskNativeImage(imageData, rect);
+        } else {
+            STARFISH_UNIMPLEMENTED();
         }
     }
 }
