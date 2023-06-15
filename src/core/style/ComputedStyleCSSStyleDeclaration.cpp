@@ -121,6 +121,9 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
     } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth ||
                keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
         result = RequreidStyleResolveStage::kFrameTreeBuild;
+    } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingInlineEnd ||
+               keyKind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+        result = RequreidStyleResolveStage::kLayout;
     }
 
     return result;
@@ -1947,6 +1950,54 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             filter->toCSSStyleValue(p);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::PaddingInlineEnd: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
+        if (frame && frame->isFrameBox()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            p.setValue(
+                CSSLength(frame->asFrameBox()->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineEnd)));
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p.setValue(CSSLength(inb->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineEnd)));
+                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::PaddingInlineStart: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineStart);
+        if (frame && frame->isFrameBox()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            p.setValue(
+                CSSLength(frame->asFrameBox()->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineStart)));
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p.setValue(CSSLength(inb->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::PaddingInlineStart)));
+                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
         }
         addValuePair(p);
     } break;

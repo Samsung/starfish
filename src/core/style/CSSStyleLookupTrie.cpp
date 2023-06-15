@@ -724,6 +724,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // letter-spacing
         // Grid-Row-Start
         // Animation-name
+        // Padding-inline
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -750,6 +751,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'p':
             if (memcmp(data, "padding-bottom", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::PaddingBottom;
+            }
+            if (memcmp(data, "padding-inline", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingInline;
             }
             if (memcmp(data, "pointer-events", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::PointerEvents;
@@ -953,6 +957,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Right-Color
         // Grid-Template-Rows
         // Animation-Duration
+        // Padding-inline-end
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -981,6 +986,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-template-rows", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "padding-inline-end", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingInlineEnd;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||       \
@@ -1102,6 +1112,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
     case 20:
         // animation-play-state
         // box-decoration-break
+        // padding-inline-start
         // text-decoration-line
         switch (data[0]) {
         case 'a':
@@ -1114,6 +1125,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "box-decoration-break", 20) == 0) {
                 return CSSStyleValuePair::KeyKind::BoxDecorationBreak;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "padding-inline-start", 20) == 0) {
+                return CSSStyleValuePair::KeyKind::PaddingInlineStart;
             }
             break;
         case 't':

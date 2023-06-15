@@ -1486,6 +1486,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    if (newStyle->paddingInlineEnd() != oldStyle->paddingInlineEnd()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineEnd] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->paddingInlineStart() != oldStyle->paddingInlineStart()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::PaddingInlineStart] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     {
         auto oldOffset = oldStyle->rareComputedStyleData()->offset();
         auto newOffset = newStyle->rareComputedStyleData()->offset();

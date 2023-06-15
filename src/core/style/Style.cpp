@@ -5295,6 +5295,48 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_PADDING(Bottom, bottom)
         ADD_RESOLVE_STYLE_PADDING(Left, left)
 #undef ADD_RESOLVE_STYLE_PADDING
+    case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setPaddingInlineEnd(parentStyle->paddingInlineEnd());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setPaddingInlineEnd(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setPaddingInlineEnd(length.getValue());
+            } else {
+                style->setPaddingInlineEnd(Length(Length::Fixed, 0));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::PaddingInlineStart:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setPaddingInlineStart(parentStyle->paddingInlineStart());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setPaddingInlineStart(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setPaddingInlineStart(length.getValue());
+            } else {
+                style->setPaddingInlineStart(Length(Length::Fixed, 0));
+            }
+        }
+        break;
     case CSSStyleValuePair::KeyKind::Opacity:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -11242,6 +11284,18 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
     }
 GEN_FOURSIDE(UPDATE_VALUE_PADDING)
 #undef UPDATE_VALUE_PADDING
+
+bool CSSStyleValuePair::updateValuePaddingInlineEnd(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValuePaddingInlineStart(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
 
 #define UPDATE_VALUE_SIDE(POS, ...)                                            \
     bool CSSStyleValuePair::updateValue##POS(Document* document,               \

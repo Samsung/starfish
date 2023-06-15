@@ -135,11 +135,70 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(
     return l;
 }
 
+void FrameBox::applyDirectionAwareProperty()
+{
+    // TODO: If 'writing-mode' is supported, the padding/margin value must be
+    // updated using this property as well as 'direction' property.
+
+    ComputedStyle* comptuedStyle = style();
+    DirectionValue direction = comptuedStyle->direction();
+
+    if (direction == DirectionValue::LtrDirectionValue) {
+        // padding-inline,
+        if (comptuedStyle->paddingInlineEnd().isSpecified()) {
+            comptuedStyle->setPaddingRight(comptuedStyle->paddingInlineEnd());
+        }
+
+        if (comptuedStyle->paddingInlineStart().isSpecified()) {
+            comptuedStyle->setPaddingLeft(comptuedStyle->paddingInlineStart());
+        }
+        // TODO: padding-block, margin-block, margin-inline
+    } else {
+        if (comptuedStyle->paddingInlineEnd().isSpecified()) {
+            comptuedStyle->setPaddingLeft(comptuedStyle->paddingInlineEnd());
+        }
+
+        if (comptuedStyle->paddingInlineStart().isSpecified()) {
+            comptuedStyle->setPaddingRight(comptuedStyle->paddingInlineStart());
+        }
+        // TODO: padding-block, margin-block, margin-inline
+    }
+}
+
+LayoutUnit FrameBox::resolveDirectionAwareProperty(
+    CSSStyleValuePair::KeyKind keykind)
+{
+    // TODO: If 'writing-mode' is supported, the resolved value must be selected
+    // using this property as well as 'direction' property.
+
+    DirectionValue direction = style()->direction();
+
+    if (direction == DirectionValue::LtrDirectionValue) {
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+            return paddingRight();
+        } else if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+            return paddingLeft();
+        }
+        // TODO: padding-block, margin-block, margin-inline.
+    } else {
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
+            return paddingLeft();
+        } else if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+            return paddingRight();
+        }
+        // TODO: padding-block, margin-block, margin-inline.
+    }
+
+    return LayoutUnit();
+}
+
 void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
                                           LayoutUnit parentContentWidth)
 {
     LayoutUnit oldPaddingWidth = paddingWidth();
     LayoutUnit oldPaddingHeight = paddingHeight();
+
+    applyDirectionAwareProperty();
 
     Node* node = nearstNotAnonymousNode();
     auto mbp = style()->marginBorderPadding();

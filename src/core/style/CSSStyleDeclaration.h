@@ -232,7 +232,7 @@ protected:
 
     String* removePropertyInternal(CSSStyleValuePair::KeyKind keyKind);
 
-    // Named property getter/remover for shorthand properties.
+    // Named property getter/setter/remover for shorthand properties.
     // These are typically implemented as a combination of long-handed
     // properties.
     String* Border();
@@ -299,6 +299,10 @@ protected:
     void setPadding(const char* value, size_t len, bool isImportant);
     void removePadding();
 
+    String* PaddingInline();
+    void setPaddingInline(const char* value, size_t len, bool isImportant);
+    void removePaddingInline();
+
     String* Font();
     void setFont(const char* value, size_t len, bool isImportant);
     void removeFont();
@@ -335,7 +339,7 @@ protected:
     void setMask(const char* value, size_t len, bool isImportant);
     void removeMask();
 
-    // Named property getter/remover for shorthand properties.
+    // Named property getter/setter/remover for custom properties.
     String* customProperty(String* key);
     void removeCustomProperty(String* key);
     void setCustomProperty(AtomicString key, String* value);
