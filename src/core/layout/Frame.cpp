@@ -1504,7 +1504,7 @@ Node* Frame::nodeSlowCase() const
     return m_node;
 }
 
-Frame* Frame::enclosingFirstLineStyle()
+Frame* Frame::firstLinePseudoComputedStyleOwnerFrame()
 {
     STARFISH_ASSERT(isFrameBlockBox());
     Frame* firstLineFrame = this;
@@ -1551,11 +1551,14 @@ Frame* Frame::enclosingFirstLineStyle()
     return firstLineFrame;
 }
 
-ComputedStyle* Frame::pseudoStyleForFirstLine(PseudoElementType pseudoId,
-                                              ComputedStyle* parentStyle)
+ComputedStyle* Frame::createFirstLinePseudoComputedStyle(
+    PseudoElementType pseudoId, ComputedStyle* parentStyle)
 {
     STARFISH_ASSERT(node());
     STARFISH_ASSERT(node()->isElement());
+    STARFISH_ASSERT(
+        (pseudoId == PseudoElementType::PseudoElementFirstLine) ||
+        (pseudoId == PseudoElementType::PseudoElementFirstLineInherited));
 
     if (!node()->style()->seenPseudoElement(pseudoId)) {
         return nullptr;
@@ -1621,7 +1624,8 @@ ComputedStyle* Frame::cachedPseudoStyle(PseudoElementType pseudo,
             pseudo == PseudoElementType::PseudoElementFirstLineInherited) {
             auto c = style()->cachedPseudoStyle(pseudo);
             if (c == nullptr) {
-                auto s = pseudoStyleForFirstLine(pseudo, parentStyle);
+                auto s =
+                    createFirstLinePseudoComputedStyle(pseudo, parentStyle);
                 style()->addCachedPseudoStyle(s);
                 return s;
             } else {
@@ -1638,7 +1642,8 @@ static ComputedStyle* firstLineStyleFromCache(Frame* frame,
 {
     Frame* f = frame;
     if (f->canHaveFirstLineOrFirstLetterStyle()) {
-        if (Frame* firstLineFrame = f->enclosingFirstLineStyle()) {
+        if (Frame* firstLineFrame =
+                f->firstLinePseudoComputedStyleOwnerFrame()) {
             return firstLineFrame->cachedPseudoStyle(
                 PseudoElementType::PseudoElementFirstLine, style);
         }

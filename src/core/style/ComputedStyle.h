@@ -3620,33 +3620,24 @@ public:
         ComputedStyle* stickyInheritFrom = nullptr,
         ComputedStyle* oldPseudoStyleIfHas = nullptr,
         Nullable<StyleResolveContext*> ctx = Nullable<StyleResolveContext*>());
+
     bool seenPseudoElement(PseudoElementType pseudoId)
     {
         if (pseudoId == PseudoElementType::PseudoElementBefore) {
-            if (seenPseudoElementBefore()) {
-                return true;
-            }
+            return seenPseudoElementBefore();
         } else if (pseudoId == PseudoElementType::PseudoElementAfter) {
-            if (seenPseudoElementAfter()) {
-                return true;
-            }
+            return seenPseudoElementAfter();
         } else if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
-            if (seenPseudoElementFirstLetter()) {
-                return true;
-            }
+            return seenPseudoElementFirstLetter();
         } else if (pseudoId == PseudoElementType::PseudoElementFirstLine) {
-            if (seenPseudoElementFirstLine()) {
-                return true;
-            }
+            return seenPseudoElementFirstLine();
         } else if (pseudoId ==
                    PseudoElementType::PseudoElementFirstLineInherited) {
-            if (seenPseudoElementFirstLine()) {
-                return true;
-            }
+            return seenPseudoElementFirstLine();
         } else {
             STARFISH_ASSERT_NOT_REACHED();
+            return false;
         }
-        return false;
     }
 
     bool hasRareComputeStyleData() const

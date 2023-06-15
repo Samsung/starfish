@@ -1544,9 +1544,9 @@ public:
         return true;
     }
 
-    Frame* enclosingFirstLineStyle();
-    ComputedStyle* pseudoStyleForFirstLine(PseudoElementType pseudoId,
-                                           ComputedStyle* parentStyle);
+    Frame* firstLinePseudoComputedStyleOwnerFrame();
+    ComputedStyle* createFirstLinePseudoComputedStyle(
+        PseudoElementType pseudoId, ComputedStyle* parentStyle);
     ComputedStyle* cachedPseudoStyle(PseudoElementType pseudo,
                                      ComputedStyle* parentStyle);
     ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
