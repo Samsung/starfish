@@ -91,6 +91,8 @@ public:
         Width,
         Height,
         Padding,
+        PaddingInlineEnd,
+        PaddingInlineStart,
         Margin,
         Offset,
         MinWidth,
@@ -549,6 +551,8 @@ public:
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
+    GETTER_VALUE(Length, length, paddingInlineEnd, PaddingInlineEnd, 0);
+    GETTER_VALUE(Length, length, paddingInlineStart, PaddingInlineStart, 0);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -898,6 +902,16 @@ public:
     void setClipPath(String* url)
     {
         *m_rareComputedStyleData.ensureClipPath() = url;
+    }
+
+    void setPaddingInlineEnd(Length length)
+    {
+        *m_rareComputedStyleData.ensurePaddingInlineEnd() = length;
+    }
+
+    void setPaddingInlineStart(Length length)
+    {
+        *m_rareComputedStyleData.ensurePaddingInlineStart() = length;
     }
 
     void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
@@ -3212,6 +3226,34 @@ public:
             return clipPathValue.getValue();
         }
         return String::emptyString;
+    }
+
+    Length paddingInlineEnd()
+    {
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.paddingInlineEnd();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
+    }
+
+    Length paddingInlineStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.paddingInlineStart();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
     }
 
     PositionedMaskData* mask()

@@ -792,6 +792,9 @@ public:
                                  DirectionValue parentDirection);
     void computeVerticalMargin(LayoutUnit parentContentHeight);
 
+    LayoutUnit resolveDirectionAwareProperty(
+        CSSStyleValuePair::KeyKind keykind);
+
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
         return nullptr;
@@ -1016,6 +1019,8 @@ protected:
         STARFISH_ASSERT(hasRareData());
         return (FrameBoxRareData*)m_layoutParent;
     }
+
+    void applyDirectionAwareProperty();
 
     Frame* m_layoutParent;
 

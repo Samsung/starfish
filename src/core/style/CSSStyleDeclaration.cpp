@@ -3700,6 +3700,65 @@ void CSSStyleDeclaration::removePadding()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingLeft);
 }
 
+String* CSSStyleDeclaration::PaddingInline()
+{
+    String* start = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::PaddingInlineStart);
+    String* end = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::PaddingInlineEnd);
+
+    if (start->equals(end)) {
+        return start;
+    } else {
+        return start->concat(" ")->concat(end);
+    }
+    return String::emptyString;
+}
+
+void CSSStyleDeclaration::setPaddingInline(const char* value, size_t len,
+                                           bool isImportant)
+{
+    if (len == 0) {
+        removePaddingInline();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInline, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, v);
+    } else if (tokens.size() == 1 &&
+               v.updateValuePaddingInlineStart(m_node->document(), tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, v);
+    } else if (tokens.size() == 2) {
+        CSSStyleValuePair start, end;
+        start.setFlagImportant(isImportant);
+        end.setFlagImportant(isImportant);
+        if (start.updateValueUnitPadding(tokens[0]) &&
+            end.updateValueUnitPadding(tokens[1])) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart,
+                            start);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd, end);
+        }
+    }
+}
+
+void CSSStyleDeclaration::removePaddingInline()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PaddingInlineStart);
+}
+
 void CSSStyleDeclaration::setSrc(const char* value, size_t len,
                                  bool isImportant)
 {
