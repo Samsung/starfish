@@ -30,6 +30,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLHtmlElement.h"
+#include "core/dom/PseudoElement.h"
 #include "core/page/BrowsingContext.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
@@ -275,6 +276,26 @@ public:
                 m_node->document()->rootElement()->setNeedsPainting();
             } else {
                 m_node->document()->setNeedsPainting();
+            }
+        }
+
+        // If there are any pseudo-elements derived from |m_node|, mark them
+        // as needing painting.
+        // This is because |m_node| from which the pseudo-element is
+        // derived(not the pseudo-element itself) is registered as a consumer of
+        // resource client.
+        if (m_node->isElement() && m_node->asElement()->hasRareMembers()) {
+            Element* element = m_node->asElement();
+            if (element->rareMembers()->m_pseudoElementMap) {
+                PseudoElementMap* pseudoElementMap =
+                    element->rareMembers()->m_pseudoElementMap;
+                for (int i = PseudoElementType::PseudoElementGeneralTypeStart;
+                     i <= PseudoElementType::PseudoElementGeneralTypeEnd; i++) {
+                    PseudoElementType type = static_cast<PseudoElementType>(i);
+                    PseudoElement* pseudoElement =
+                        pseudoElementMap->pseudoElement(type);
+                    pseudoElement->setNeedsPainting();
+                }
             }
         }
     }

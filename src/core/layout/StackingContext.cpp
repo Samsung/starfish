@@ -3460,10 +3460,12 @@ void StackingContext::applyMask(Canvas* canvas,
                                        ->positionedMask()
                                        ->imageResource(i)
                                        ->imageData();
+
             if (!maskNativeImage) {
-                m_owner->markNeedsPainting();
+                // Resource fetching may not be finished.
                 continue;
             }
+
             int width = maskNativeImage->width();
             int height = maskNativeImage->height();
             auto imageData =
