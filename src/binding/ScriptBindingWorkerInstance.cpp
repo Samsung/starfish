@@ -118,19 +118,10 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
 #if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
 #define BINDING_WORKER_MOCKUP_INTERFACE(F) \
     F(CSS)                                 \
-    F(CSSKeywordValue)                     \
-    F(CSSNumericValue)                     \
-    F(CSSStyleValue)                       \
-    F(CSSUnitValue)                        \
-    F(DOMStringList)                       \
     F(EventSource)                         \
     F(FormData)                            \
     F(Option)                              \
-    F(Image)                               \
-    F(ImageBitmap)                         \
-    F(XMLHttpRequest)                      \
-    F(XMLHttpRequestEventTarget)           \
-    F(XMLHttpRequestUpload)
+    F(Image)
 
 #define FOR_EACH_BINDING_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \

@@ -25,8 +25,6 @@
 
 namespace Starfish {
 
-class Document;
-
 class CSSUnitValue : public CSSNumericValue {
 public:
     virtual void init(ScriptBindingInstance* instance,
@@ -36,8 +34,8 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    CSSUnitValue(Document* document, double value, String* unit)
-        : CSSNumericValue(document)
+    CSSUnitValue(ExecutionContext* executionContext, double value, String* unit)
+        : CSSNumericValue(executionContext)
         , m_value(value)
         , m_unit(unit)
     {

@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 
 #include "core/style/CSSNumericValue.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -144,11 +144,11 @@ void* CSSNumericValue::operator new(size_t size)
 
 ScriptBindingInstance* CSSNumericValue::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
-CSSNumericValue::CSSNumericValue(Document* document)
-    : CSSStyleValue(document)
+CSSNumericValue::CSSNumericValue(ExecutionContext* executionContext)
+    : CSSStyleValue(executionContext)
 {
 }
 

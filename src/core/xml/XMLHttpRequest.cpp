@@ -19,27 +19,31 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/DOMParser.h"
 #include "core/dom/ProgressEvent.h"
 #include "core/fileapi/Blob.h"
 #include "core/extra/MimeType.h"
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/WebOrigin.h"
-#include "core/page/Window.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/FetchUtils.h"
 #include "core/fetch/Headers.h"
 #include "core/fetch/Response.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
-#include "core/dom/xml/XMLSerializer.h"
 #include "platform/network/http/HTTPStatus.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/modules/worker/WorkerDummyClass.h"
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/dom/Document.h"
+#include "core/dom/DOMParser.h"
+#include "core/dom/xml/XMLSerializer.h"
+#endif
 
 namespace Starfish {
 
@@ -53,7 +57,7 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 
 ExecutionContext* XMLHttpRequestEventTarget::executionContext() const
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 
 class XMLHttpRequestResourceRequestClient : public ResourceRequestClient {
@@ -144,13 +148,21 @@ public:
                     if (mimeType.subtype()->contains("xml") ||
                         m_xhr->m_responseType ==
                             XMLHttpRequestResponseType::Document) {
+                        if (m_xhr->executionContext()->hasWorkerGlobalScope()) {
+                            m_xhr->m_responseXML = nullptr;
+                            STARFISH_LOG_WARN(
+                                "The document type only supports Window "
+                                "object.");
+                            return;
+                        }
                         void* buffer =
                             malloc(m_xhr->m_resourceRequest->response().size());
                         STARFISH_RELEASE_ASSERT(buffer != nullptr);
                         memcpy(buffer,
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
-                        DOMParser* parser = new DOMParser(m_xhr->document());
+                        DOMParser* parser = new DOMParser(
+                            m_xhr->executionContext()->document());
                         String* mimeTypeString =
                             mimeType.stringWithoutParameter();
                         try {
@@ -269,14 +281,17 @@ public:
     bool checkContentSecurityPolicy(ResourceRequest* request)
     {
         if (request->isRedirected()) {
-            auto csp = request->executionContext()
-                           ->document()
-                           ->contentSecurityPolicy();
+            auto csp = request->executionContext()->contentSecurityPolicy();
             auto resourceURL = new ResourceURL(request->lastLocation().data(),
                                                request->lastLocation().size());
             auto f = [](SecurityPolicyViolationEvent* event,
                         ExecutionContext* executionContext) {
-                executionContext->document()->dispatchEventByUA(event);
+                if (executionContext->hasDocument()) {
+                    executionContext->document()->dispatchEventByUA(event);
+                } else {
+                    executionContext->workerGlobalScope()->dispatchEventByUA(
+                        event);
+                }
             };
 
             if (!csp->allowSource(CSPDirectives::ConnectSrc, resourceURL, f)) {
@@ -294,11 +309,11 @@ bool XMLHttpRequestUpload::hasEventListeners() const
     return m_eventListeners.size() > 0 ? true : false;
 }
 
-XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
-    : XMLHttpRequestEventTarget(document)
-    , m_resourceRequest(new ResourceRequest(document->executionContext()))
+XMLHttpRequest::XMLHttpRequest(ExecutionContext* executionContext)
+    : XMLHttpRequestEventTarget(executionContext)
+    , m_resourceRequest(new ResourceRequest(executionContext))
     , m_withCredentials(false)
-    , m_upload(new XMLHttpRequestUpload(document))
+    , m_upload(new XMLHttpRequestUpload(executionContext))
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -351,11 +366,13 @@ void XMLHttpRequest::send(String* body)
         body = String::emptyString;
     }
 
-    if (!document()->contentSecurityPolicy()->allowSource(
+    if (!executionContext()->contentSecurityPolicy()->allowSource(
             CSPDirectives::ConnectSrc, m_resourceRequest->url())) {
         ProgressEvent* pe =
-            new ProgressEvent(executionContext(),
-                              starfish()->staticStrings()->m_error.localName());
+            new ProgressEvent(executionContext(), executionContext()
+                                                      ->starfish()
+                                                      ->staticStrings()
+                                                      ->m_error.localName());
         dispatchEventIdleTimeByUA(pe);
         return;
     }
@@ -407,10 +424,18 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
     // in the send method.
     RequestData* reqData = new RequestData();
     reqData->m_method = nomalizedMethod;
-    reqData->m_url = new ResourceURL(url, document()->baseURL()->baseURI());
+    reqData->m_url =
+        new ResourceURL(url, executionContext()->baseURL()->baseURI());
     reqData->m_unsafeRequestFlag = true;
-    reqData->m_referrer = new ReferrerURL(document()->documentURI(),
-                                          document()->referrerPolicy());
+    if (executionContext()->hasDocument()) {
+        reqData->m_referrer =
+            new ReferrerURL(executionContext()->documentURI(),
+                            executionContext()->document()->referrerPolicy());
+    } else {
+        reqData->m_referrer =
+            new ReferrerURL(executionContext()->documentURI());
+    }
+
     reqData->m_destination = RequestDestination::Empty;
     reqData->m_mode = RequestMode::CORS;
     reqData->m_useCorsPreflightFlag = m_upload->hasEventListeners();
@@ -582,7 +607,7 @@ String* XMLHttpRequest::responseText() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Text)) {
         throw new DOMException(
-            document()->executionContext(), DOMException::INVALID_STATE_ERR,
+            executionContext(), DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseText' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
             "or 'text'");
@@ -599,7 +624,7 @@ Document* XMLHttpRequest::responseXML() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Document)) {
         throw new DOMException(
-            document()->executionContext(), DOMException::INVALID_STATE_ERR,
+            executionContext(), DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseXML' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
             "or 'document'");

@@ -19,8 +19,8 @@
 
 #include "StarfishConfig.h"
 
+#include "core/dom/ExecutionContext.h"
 #include "core/style/CSSKeywordValue.h"
-#include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -41,11 +41,12 @@ void* CSSKeywordValue::operator new(size_t size)
 
 ScriptBindingInstance* CSSKeywordValue::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
-CSSKeywordValue::CSSKeywordValue(Document* document, String* value)
-    : CSSStyleValue(document)
+CSSKeywordValue::CSSKeywordValue(ExecutionContext* executionContext,
+                                 String* value)
+    : CSSStyleValue(executionContext)
 {
     setValue(value);
 }
@@ -59,7 +60,7 @@ void CSSKeywordValue::setValue(String* value)
 {
     STARFISH_ASSERT(value);
     if (value->equals(String::emptyString)) {
-        throw new DOMException(document()->executionContext(),
+        throw new DOMException(executionContext(),
                                DOMException::SCRIPT_TYPE_ERR, "TypeError");
     }
 

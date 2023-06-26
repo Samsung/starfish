@@ -27,7 +27,7 @@ enum XMLHttpRequestResponseType {
 };
 
 [Constructor,
- ConstructorCallWith=Document,
+ ConstructorCallWith=ExecutionContext,
  Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
@@ -64,5 +64,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   attribute XMLHttpRequestResponseType responseType;
   readonly attribute any response;
   [RaisesException] readonly attribute DOMString responseText;
+  // TODO: Expose only to window
   [Exposed=Window] readonly attribute Document? responseXML;
 };

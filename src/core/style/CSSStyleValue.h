@@ -21,13 +21,12 @@
 #define __StarfishCSSStyleValue__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 
-class CSSStyleValue : public ScriptWrappable, public DocumentHoldable {
+class CSSStyleValue : public ScriptWrappable {
 public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -36,9 +35,14 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    CSSStyleValue(Document* document);
+    CSSStyleValue(ExecutionContext* executionContext);
     static CSSStyleValue* parse(String* property, String* cssText);
     static GCVector<CSSStyleValue*> parseAll(String* property, String* cssText);
+
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
 
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
@@ -46,11 +50,7 @@ protected:
     }
 
 private:
-    CSSStyleValue()
-        : ScriptWrappable(this)
-        , DocumentHoldable(nullptr)
-    {
-    }
+    ExecutionContext* m_executionContext;
 };
 } // namespace Starfish
 

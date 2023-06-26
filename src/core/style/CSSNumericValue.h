@@ -48,7 +48,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    CSSNumericValue(Document* document);
+    CSSNumericValue(ExecutionContext* executionContext);
     static CSSNumericValue* parse(String* cssText);
 
 protected:

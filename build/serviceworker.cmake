@@ -8,7 +8,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 # STARFISH_ENABLE_CAST_SERVICE : enable app cast service
 # STARFISH_SERVICEWORKER_HOST: code blocks in this scope are only for sw host.
 
-SET(STARFISH_SERVICEWORKER_DEFINITIONS
+SET (STARFISH_SERVICEWORKER_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
     ${LWE_DEFINES_ICU}
     ${SERVICE_WORKER_CXXFLAGS}
@@ -53,18 +53,18 @@ FILE (GLOB_RECURSE STARFISH_IDL ${STARFISH_ROOT}/src/*.idl)
 SET (STARFISH_SERVICEWORKER_EXPOSED_INTERFACE_SRC)
 # TODO: include this interface or completely exclude in Worker.
 SET (EXCLUDE_INTERFACE_NAME
-    "Navigator" "EventSource" "DOMStringList" "FormData"  "CSS" "ImageBitmap")
+    "Navigator" "EventSource" "FormData"  "CSS")
 FOREACH (IDL_FILE ${STARFISH_IDL})
     FILE (READ ${IDL_FILE} IDL_STRING)
-    STRING (REGEX MATCH "[[].*Exposed=(Worker|.*,Worker)" MATCHED_IDL_FILE ${IDL_STRING})
-    if (MATCHED_IDL_FILE)
+    STRING (REGEX MATCH "[[].*Exposed=(.*Worker|.*,.*Worker)" MATCHED_IDL_FILE ${IDL_STRING})
+    IF (MATCHED_IDL_FILE)
         STRING (REGEX MATCH "[a-zA-Z0-9]+[.]idl" MATCHED_INTERFACE_NAME ${IDL_FILE})
         IF (MATCHED_INTERFACE_NAME)
-            STRING(REPLACE ".idl" "" MATCHED_INTERFACE_NAME ${MATCHED_INTERFACE_NAME})
+            STRING (REPLACE ".idl" "" MATCHED_INTERFACE_NAME ${MATCHED_INTERFACE_NAME})
             LIST (FIND EXCLUDE_INTERFACE_NAME ${MATCHED_INTERFACE_NAME} MATCH_IDX)
             IF (${MATCH_IDX} LESS 0)
                 # Add binding source file
-                STRING(REPLACE ".idl" ".cpp" SOURCE_FILE ${IDL_FILE})
+                STRING (REPLACE ".idl" ".cpp" SOURCE_FILE ${IDL_FILE})
                 IF (EXISTS ${SOURCE_FILE})
                     LIST (APPEND STARFISH_SERVICEWORKER_EXPOSED_INTERFACE_SRC ${SOURCE_FILE})
                 ENDIF()
@@ -162,6 +162,8 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/generated/TextDecodeOptionsBinding.cpp
     ${STARFISH_ROOT}/src/binding/generated/CustomStorageBinding.cpp
     ${STARFISH_ROOT}/src/binding/generated/InternalBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/XMLHttpRequestEventTargetBinding.cpp
+    ${STARFISH_ROOT}/src/binding/generated/XMLHttpRequestUploadBinding.cpp
 )
 
 FILE (GLOB STARFISH_SERVICEWORKER_PUBLIC_SRC
@@ -199,15 +201,15 @@ SET (STARFISH_SERVICEWORKER_LINK_LIBRARIES
 #######################################################
 # CUSTOM TARGET JS2C
 #######################################################
-macro(add_js2c_target name output source license fname)
-    add_custom_command(OUTPUT ${output}
+MACRO (add_js2c_target name output source license fname)
+    ADD_CUSTOM_COMMAND (OUTPUT ${output}
                        COMMENT "Js2c (${name})"
                        COMMAND tool/js2c.py -s${source} -l${license} -o${fname}
                        DEPENDS ${source}
     )
-    add_custom_target(${name} DEPENDS ${output})
-    set(JS2C_DEPENDENCIES ${JS2C_DEPENDENCIES} ${name})
-endmacro()
+    ADD_CUSTOM_TARGET (${name} DEPENDS ${output})
+    SET (JS2C_DEPENDENCIES ${JS2C_DEPENDENCIES} ${name})
+ENDMACRO()
 
 add_js2c_target(CacheStorage
     "${CMAKE_SOURCE_DIR}/src/binding/generated/Js2c_CacheStorage.h"
@@ -238,15 +240,15 @@ ADD_CUSTOM_COMMAND (TARGET starfish.serviceworker.executable POST_BUILD
 ADD_LIBRARY (starfish.serviceworker.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_SERVICEWORKER_OBJECT_LIBRARY}>)
 ADD_LIBRARY (starfish.serviceworker.static_library STATIC $<TARGET_OBJECTS:${STARFISH_SERVICEWORKER_OBJECT_LIBRARY}>)
 
-set(SERVICEWORKER_CXXFLAGS ${LWE_CXXFLAGS})
-set(SERVICEWORKER_LDFLAGS ${LWE_LDFLAGS})
+SET (SERVICEWORKER_CXXFLAGS ${LWE_CXXFLAGS})
+SET (SERVICEWORKER_LDFLAGS ${LWE_LDFLAGS})
 
-message (STATUS "WebWorker")
-message (STATUS "FLAGS: " ${SERVICEWORKER_CXXFLAGS})
-message (STATUS "LIBRARIES: " ${STARFISH_SERVICEWORKER_LINK_LIBRARIES})
-message (STATUS "DEFINITIONS: " ${STARFISH_SERVICEWORKER_DEFINITIONS})
-message (STATUS "LDFLAGS: " ${SERVICEWORKER_LDFLAGS})
-message (STATUS "INCLUDE_DIRS: " ${STARFISH_SERVICEWORKER_INCLUDE_DIRS})
+MESSAGE (STATUS "WebWorker")
+MESSAGE (STATUS "FLAGS: " ${SERVICEWORKER_CXXFLAGS})
+MESSAGE (STATUS "LIBRARIES: " ${STARFISH_SERVICEWORKER_LINK_LIBRARIES})
+MESSAGE (STATUS "DEFINITIONS: " ${STARFISH_SERVICEWORKER_DEFINITIONS})
+MESSAGE (STATUS "LDFLAGS: " ${SERVICEWORKER_LDFLAGS})
+MESSAGE (STATUS "INCLUDE_DIRS: " ${STARFISH_SERVICEWORKER_INCLUDE_DIRS})
 
 TARGET_INCLUDE_DIRECTORIES (${STARFISH_SERVICEWORKER_OBJECT_LIBRARY} PUBLIC ${STARFISH_SERVICEWORKER_INCLUDE_DIRS})
 TARGET_COMPILE_DEFINITIONS (${STARFISH_SERVICEWORKER_OBJECT_LIBRARY} PUBLIC ${STARFISH_SERVICEWORKER_DEFINITIONS})

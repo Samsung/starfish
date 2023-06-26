@@ -19,13 +19,13 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/DOMStringList.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-DOMStringList::DOMStringList(Document* document)
+DOMStringList::DOMStringList(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
 {
 }
 } // namespace Starfish

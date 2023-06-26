@@ -29,11 +29,11 @@ enum class MethodType;
 class ResourceRequest;
 using XMLHttpRequestResponseType = BodyType;
 
-class XMLHttpRequestEventTarget : public EventTarget, public DocumentHoldable {
+class XMLHttpRequestEventTarget : public EventTarget {
 public:
-    XMLHttpRequestEventTarget(Document* document)
+    XMLHttpRequestEventTarget(ExecutionContext* executionContext)
         : EventTarget()
-        , DocumentHoldable(document)
+        , m_executionContext(executionContext)
     {
     }
 
@@ -54,12 +54,15 @@ public:
     DECLARE_EVENT_LISTENER(loadend);
 #undef VIRTUAL
 #undef OVERRIDE
+
+protected:
+    ExecutionContext* m_executionContext;
 };
 
 class XMLHttpRequestUpload : public XMLHttpRequestEventTarget {
 public:
-    XMLHttpRequestUpload(Document* document)
-        : XMLHttpRequestEventTarget(document)
+    XMLHttpRequestUpload(ExecutionContext* executionContext)
+        : XMLHttpRequestEventTarget(executionContext)
     {
     }
 
@@ -74,7 +77,7 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
     friend class XMLHttpRequestResourceRequestClient;
 
 public:
-    XMLHttpRequest(::Starfish::Document* document);
+    XMLHttpRequest(ExecutionContext* executionContext);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
