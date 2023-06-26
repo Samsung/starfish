@@ -21,8 +21,7 @@
 
 #include "core/style/CSSUnitValue.h"
 
-#include "core/dom/Document.h"
-#include "binding/DocumentHoldable.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -43,6 +42,6 @@ void* CSSUnitValue::operator new(size_t size)
 
 ScriptBindingInstance* CSSUnitValue::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 } // namespace Starfish

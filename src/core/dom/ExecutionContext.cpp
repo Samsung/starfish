@@ -76,6 +76,12 @@ Document* ExecutionContext::document()
     return static_cast<Document*>(m_documentOrWorkerGlobalScope);
 }
 
+WorkerGlobalScope* ExecutionContext::workerGlobalScope()
+{
+    STARFISH_ASSERT(!hasDocument());
+    return static_cast<WorkerGlobalScope*>(m_documentOrWorkerGlobalScope);
+}
+
 Starfish* ExecutionContext::starfish() const
 {
     return m_globalScope->webBase()->starfish();

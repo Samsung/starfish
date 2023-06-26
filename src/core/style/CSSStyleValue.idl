@@ -1,6 +1,6 @@
 // Spec: https://drafts.css-houdini.org/css-typed-om/#stylevalue-objects
 [
-  ConstructorCallWith=Document,
+  ConstructorCallWith=ExecutionContext,
   Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)
 ] interface CSSStyleValue {
   //stringifier;

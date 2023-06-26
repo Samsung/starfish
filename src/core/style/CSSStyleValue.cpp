@@ -19,14 +19,14 @@
 
 #include "StarfishConfig.h"
 
+#include "core/dom/ExecutionContext.h"
 #include "core/style/CSSStyleValue.h"
-#include "core/dom/Document.h"
 
 namespace Starfish {
 
-CSSStyleValue::CSSStyleValue(Document* document)
+CSSStyleValue::CSSStyleValue(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , DocumentHoldable(document)
+    , m_executionContext(executionContext)
 {
 }
 
@@ -46,7 +46,7 @@ void* CSSStyleValue::operator new(size_t size)
 
 ScriptBindingInstance* CSSStyleValue::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return m_executionContext->scriptBindingInstance();
 }
 
 // https://drafts.css-houdini.org/css-typed-om/#stylevalue-objects

@@ -34,6 +34,7 @@ class ResourceRequest;
 class ContentSecurityPolicy;
 class Event;
 class WebSocket;
+class WorkerGlobalScope;
 
 class ExecutionContext : public gc {
 public:
@@ -54,6 +55,8 @@ public:
     }
 
     Document* document();
+
+    WorkerGlobalScope* workerGlobalScope();
 
     GlobalScope* globalScope() const
     {

@@ -26,7 +26,7 @@
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 
 class CSSKeywordValue : public CSSStyleValue {
 public:
@@ -37,7 +37,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    CSSKeywordValue(Document* document, String* value);
+    CSSKeywordValue(ExecutionContext* executionContext, String* value);
 
     String* value();
     void setValue(String* value);

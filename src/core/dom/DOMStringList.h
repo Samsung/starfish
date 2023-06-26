@@ -24,10 +24,10 @@
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 class DOMStringList : public ScriptWrappable, public GCVector<String*> {
 public:
-    DOMStringList(Document* document);
+    DOMStringList(ExecutionContext* executionContext);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
