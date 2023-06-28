@@ -23,6 +23,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/Scrolling.h"
+#include "core/dom/svg/SVGSVGElement.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/layout/FrameBlockBox.h"
@@ -32,6 +33,7 @@
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameGridBox.h"
+#include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/CanvasShadowData.h"
@@ -4482,8 +4484,11 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
         w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(), w, unused,
                                            true);
     } else {
-        w = intrinsicWidth;
-        h = intrinsicHeight;
+        LayoutSize size = contentSizeConsiderContainingBlockWidth(
+            intrinsicWidth, intrinsicHeight, parentContentWidth,
+            cb->isFlexItem());
+        w = size.width();
+        h = size.height();
 
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
