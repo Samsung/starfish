@@ -190,6 +190,9 @@ protected:
 
     FrameTreeItemModel m_treeItemModel;
     void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
+    LayoutSize contentSizeConsiderContainingBlockWidth(
+        LayoutUnit intrinsicWidth, LayoutUnit intrinsicHeight,
+        LayoutUnit containingBlockWidth, bool isContainingBlockFlexItem);
 };
 } // namespace Starfish
 

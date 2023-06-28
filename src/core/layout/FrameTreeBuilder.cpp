@@ -988,31 +988,30 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                         break;
                     }
                     auto iter = ctx.frameInlineItem().find(nd);
-                    STARFISH_ASSERT(iter != ctx.frameInlineItem().end());
-                    FrameInline* in = new FrameInline(nd);
-                    if (in->style()->boxDecorationBreak() ==
-                        SliceBoxDecorationBreakValue) {
-                        if (iter->second->isLeftMBPCleared()) {
-                            in->setLeftMBPCleared(true);
-                        }
-                        if (iter->second->isRightMBPCleared()) {
-                            in->setRightMBPCleared(true);
+                    if (iter != ctx.frameInlineItem().end()) {
+                        FrameInline* in = new FrameInline(nd);
+                        if (in->style()->boxDecorationBreak() ==
+                            SliceBoxDecorationBreakValue) {
+                            if (iter->second->isLeftMBPCleared()) {
+                                in->setLeftMBPCleared(true);
+                            }
+                            if (iter->second->isRightMBPCleared()) {
+                                in->setRightMBPCleared(true);
+                            }
+
+                            if (in->style()->direction() ==
+                                DirectionValue::LtrDirectionValue) {
+                                in->setLeftMBPCleared(true);
+                                iter->second->setRightMBPCleared(true);
+                            } else {
+                                iter->second->setLeftMBPCleared(true);
+                                in->setRightMBPCleared(true);
+                            }
                         }
 
-                        if (in->style()->direction() ==
-                            DirectionValue::LtrDirectionValue) {
-                            in->setLeftMBPCleared(true);
-                            iter->second->setRightMBPCleared(true);
-                        } else {
-                            iter->second->setLeftMBPCleared(true);
-                            in->setRightMBPCleared(true);
-                        }
+                        stackedFrameInline.push_back(in);
+                        iter->second = in;
                     }
-
-                    stackedFrameInline.push_back(in);
-                    iter->second = in;
-                    STARFISH_ASSERT(ctx.frameInlineItem().find(nd)->second ==
-                                    in);
                     nd = nd->parentNode();
                 }
 

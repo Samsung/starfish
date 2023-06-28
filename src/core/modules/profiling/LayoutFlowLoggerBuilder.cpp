@@ -22,6 +22,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
 #include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
 
 namespace Starfish {
 
@@ -29,32 +30,47 @@ int LayoutFlowLoggerBuilder::INDENT_COUNTER = 0;
 
 static void logLayoutInformation(UserData* data)
 {
+    if (!data) {
+        return;
+    }
+
     if (data->m_frame) {
-        printf("[%p] ", data->m_frame);
+        printf(" [%p]", data->m_frame);
         if (data->m_frame->node()) {
             auto n = data->m_frame->node();
-            printf("[%s] ", CSTR(n->localName()));
+            printf(" [%s]", CSTR(n->localName()));
             if (n->isElement()) {
-                printf("[%s][%s] ", CSTR(n->asElement()->id()),
+                printf(" Id[%s] Class[%s]", CSTR(n->asElement()->id()),
                        CSTR(n->asElement()->className()));
             }
         }
     }
+
     if (data->infoMessage) {
-        printf("%s ", data->infoMessage);
+        printf(" %s", data->infoMessage);
     }
+
     switch (data->resolveWhat) {
     case Frame::LayoutWantToResolve::ResolveWidth:
-        printf("ResolveWidth");
+        printf(" [ResolveWidth]");
         break;
     case Frame::LayoutWantToResolve::ResolveHeight:
-        printf("ResolveHeight");
+        printf("[ResolveHeight]");
         break;
     case Frame::LayoutWantToResolve::ResolveAll:
-        printf("ResolveAll");
+        printf("[ResolveAll]");
     default:
         break;
     }
+
+    if (data->m_frame && data->m_frame->isFrameBox()) {
+        printf(" FrameRect[%d %d %d %d]",
+               data->m_frame->asFrameBox()->x().toInt(),
+               data->m_frame->asFrameBox()->y().toInt(),
+               data->m_frame->asFrameBox()->width().toInt(),
+               data->m_frame->asFrameBox()->height().toInt());
+    }
+
     printf("\n");
 }
 
@@ -82,7 +98,9 @@ void LayoutFlowLoggerBuilder::buildIncommingMessageWritter()
     m_logger->setIncommingMessageWritter([](void* data) {
         auto ud = (UserData*)data;
         if (ud->incommingMessage) {
-            printf("%s", ud->incommingMessage);
+            printf("[%s]", ud->incommingMessage);
+        } else {
+            printf("[Start]");
         }
         logLayoutInformation(ud);
     });
@@ -94,6 +112,8 @@ void LayoutFlowLoggerBuilder::buildOutgoingMessageWritter()
         auto ud = (UserData*)data;
         if (ud->outgoingMessage) {
             printf("%s", ud->outgoingMessage);
+        } else {
+            printf("[End]");
         }
         logLayoutInformation(ud);
     });

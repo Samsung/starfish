@@ -54,7 +54,12 @@ String* URL::createObjectURL(Blob* blob)
     BlobURLStore store;
     WebBase* webBase = blob->executionContext()->webBase();
     if (webBase->isValidBlobURL(blob)) {
-        store = webBase->findBlobURL(blob);
+        auto maybeBlobURLStore = webBase->findBlobURL(blob);
+        if (maybeBlobURLStore.hasValue()) {
+            store = maybeBlobURLStore.value();
+        } else {
+            return String::emptyString;
+        }
     } else {
         store = webBase->addBlobInBlobURLStore(blob);
     }
@@ -88,7 +93,13 @@ String* URL::createObjectURL(MediaSource* mediaSource)
 {
     BlobURLStore store;
     if (mediaSource->webView()->isValidMediaSourceBlobURL(mediaSource)) {
-        store = mediaSource->webView()->findMediaSourceBlobURL(mediaSource);
+        auto maybeBlobURLStore =
+            mediaSource->webView()->findMediaSourceBlobURL(mediaSource);
+        if (maybeBlobURLStore.hasValue()) {
+            store = maybeBlobURLStore.value();
+        } else {
+            return String::emptyString;
+        }
     } else {
         store =
             mediaSource->webView()->addMediaSourceInBlobURLStore(mediaSource);

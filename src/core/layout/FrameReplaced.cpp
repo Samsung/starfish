@@ -30,6 +30,7 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/style/ComputedStyle.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/dom/svg/SVGSVGElement.h"
 
 namespace Starfish {
 
@@ -336,8 +337,11 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         setContentHeight(0);
         return;
     } else if ((width.isAuto() && height.isAuto()) || isBrokenImageWithAuto) {
-        w = intrinsicWidth;
-        h = intrinsicHeight;
+        LayoutSize size = contentSizeConsiderContainingBlockWidth(
+            intrinsicWidth, intrinsicHeight, parentContentWidth,
+            cb->isFlexItem());
+        w = size.width();
+        h = size.height();
     } else if (height.isAuto()) {
         w = width.specifiedValue(parentContentWidth, this);
         w = contentWidthAfterApplyingBoxSizing(w);
@@ -383,6 +387,27 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     if (isFlexItem()) {
         ctx.registerContentHeight(this, contentHeight());
     }
+}
+
+LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
+    LayoutUnit intrinsicWidth, LayoutUnit intrinsicHeight,
+    LayoutUnit containingBlockWidth, bool isContainingBlockFlexItem)
+{
+    if (isFrameReplacedImage()) {
+        NativeImageData* imageData = nullptr;
+        imageData = node()->asHTMLImageElement()->imageData();
+        if (imageData && imageData->isSVGNativeImageData()) {
+            FrameSVGSVGBox* svg = imageData->asSVGNativeImageData()->frameBox();
+            IntrinsicSize defaultSize = svg->intrinsicSize();
+            if (isContainingBlockFlexItem) {
+                return { 0, 0 };
+            } else if (!defaultSize.m_hasViewport &&
+                       svg->node()->asSVGSVGElement()->hasViewBox()) {
+                return { containingBlockWidth, containingBlockWidth };
+            }
+        }
+    }
+    return { intrinsicWidth, intrinsicHeight };
 }
 
 void FrameReplaced::layout(LayoutContext& ctx,

@@ -900,14 +900,18 @@ bool WebView::isValidMediaSourceBlobURL(MediaSource* ptr)
     return iter != m_urlMediaSourceBlobStore.end();
 }
 
-BlobURLStore WebView::findMediaSourceBlobURL(MediaSource* ptr)
+Nullable<BlobURLStore> WebView::findMediaSourceBlobURL(MediaSource* ptr)
 {
     STARFISH_ASSERT(ptr != nullptr);
 
     BlobURLStore s;
     s.m_blob = ptr;
     auto iter = m_urlMediaSourceBlobStore.find(s);
-    return *iter;
+    if (iter != m_urlMediaSourceBlobStore.end()) {
+        return *iter;
+    } else {
+        return nullptr;
+    }
 }
 
 void WebView::clearMediaSourceBlobURLStore()

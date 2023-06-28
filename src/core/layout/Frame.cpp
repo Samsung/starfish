@@ -651,7 +651,7 @@ Nullable<LayoutUnit> LayoutContext::lineBoxAscender(FrameBlockBox* blockBox)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == blockBox);
-    auto iter = (*c.m_lineBoxAscenders).find(blockBox);
+    auto iter = c.m_lineBoxAscenders->find(blockBox);
     if (iter == c.m_lineBoxAscenders->end()) {
         return Nullable<LayoutUnit>();
     }

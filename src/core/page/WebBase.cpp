@@ -291,12 +291,16 @@ bool WebBase::isValidBlobURL(Blob* ptr)
     return iter != m_urlBlobStore.end();
 }
 
-BlobURLStore WebBase::findBlobURL(Blob* ptr)
+Nullable<BlobURLStore> WebBase::findBlobURL(Blob* ptr)
 {
     BlobURLStore s;
     s.m_blob = ptr;
     auto iter = m_urlBlobStore.find(s);
-    return *iter;
+    if (iter != m_urlBlobStore.end()) {
+        return *iter;
+    } else {
+        return nullptr;
+    }
 }
 
 void WebBase::clearBlobURLStore()

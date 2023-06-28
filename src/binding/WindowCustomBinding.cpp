@@ -608,9 +608,9 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
     if (argv[0]->isString()) {
         bool su = false;
         String* scriptString = toBrowserString(state, argv[0]);
-        ScriptValue result = evaluateString(
-            window->scriptBindingInstance(), scriptString,
-            String::emptyString, &su);
+        ScriptValue result =
+            evaluateString(window->scriptBindingInstance(), scriptString,
+                           String::emptyString, &su);
         if (su && result->toBoolean(state)) {
             return scriptUndefined();
         }
@@ -716,16 +716,6 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
             output += ch;
         }
 
-        STARFISH_LOG_ERROR("%s", "[FAIL]testImgDiff fail");
-
-        puts("error html -->");
-        puts(window->document()
-                 ->body()
-                 ->parentElement()
-                 ->outerHTML()
-                 ->toUTF8NonGCString()
-                 .data());
-        puts("<--- error html");
         exit(-1);
     }
 

@@ -163,7 +163,7 @@ public:
     void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
     bool isValidMediaSourceBlobURL(BlobURLStore ptr);
     bool isValidMediaSourceBlobURL(MediaSource* ptr);
-    BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
+    Nullable<BlobURLStore> findMediaSourceBlobURL(MediaSource* ptr);
     void clearMediaSourceBlobURLStore();
 
     void layoutIfNeeded(bool shouldCareStackingContextNow = true);

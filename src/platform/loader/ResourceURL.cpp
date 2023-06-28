@@ -27,22 +27,17 @@
 
 namespace Starfish {
 
-static bool toHexAndAppend(StringBuilder& builder, char32_t ch)
+static void toHexAndAppend(StringBuilder& builder, char32_t ch)
 {
     unsigned char dig1 = (ch & 0xF0) >> 4;
     unsigned char dig2 = (ch & 0x0F);
 
-    if (dig1 > 15 || dig2 > 15) {
-        return false;
-    }
     char ch1 = (dig1 <= 9) ? dig1 + '0' : dig1 - 10 + 'A';
     char ch2 = (dig2 <= 9) ? dig2 + '0' : dig2 - 10 + 'A';
 
     builder.appendChar('%');
     builder.appendChar(ch1);
     builder.appendChar(ch2);
-
-    return true;
 }
 
 inline static bool isDecimalDigit(char32_t ch)
