@@ -474,6 +474,7 @@ test/cairo/internal-test/css/flex/flex_align_item_center_with_justify_content_fl
 test/cairo/internal-test/css/flex/register-content-height.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
+test/cairo/internal-test/svg/svg_03.html
 test/cairo/internal-test/svg/bixby_logo_search.html
 test/cairo/internal-test/svg/svg_length-setValueAsString.html
 test/cairo/internal-test/svg/svg_animatedTransformList.html

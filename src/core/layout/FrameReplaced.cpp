@@ -398,12 +398,21 @@ LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
         imageData = node()->asHTMLImageElement()->imageData();
         if (imageData && imageData->isSVGNativeImageData()) {
             FrameSVGSVGBox* svg = imageData->asSVGNativeImageData()->frameBox();
-            IntrinsicSize defaultSize = svg->intrinsicSize();
+            IntrinsicSize intrinsicSize = svg->intrinsicSize();
             if (isContainingBlockFlexItem) {
                 return { 0, 0 };
-            } else if (!defaultSize.m_hasViewport &&
+            } else if (!intrinsicSize.m_hasViewport &&
                        svg->node()->asSVGSVGElement()->hasViewBox()) {
-                return { containingBlockWidth, containingBlockWidth };
+                if (intrinsicSize.m_hasAspectRatio) {
+                    // toDouble(), is needed for more precise
+                    // calculations.
+                    return { containingBlockWidth,
+                             containingBlockWidth *
+                                 (intrinsicHeight.toDouble() /
+                                  intrinsicWidth.toDouble()) };
+                } else {
+                    return { containingBlockWidth, containingBlockWidth };
+                }
             }
         }
     }
