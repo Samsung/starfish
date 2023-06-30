@@ -73,16 +73,17 @@ protected:
     virtual void childBrowsingContextLoaded()
     {
         HTMLIFrameElement::childBrowsingContextLoaded();
-        Node* r =
+        Node* svgNode =
             Traverse::findDescendant(contentDocument(), [](Node* n) -> bool {
                 if (n->isSVGSVGElement()) {
                     return true;
                 }
                 return false;
             });
-        if (r) {
+
+        if (svgNode) {
             m_browsingContext->layoutIfNeeded();
-            SVGSVGElement* svg = r->asSVGSVGElement();
+            SVGSVGElement* svg = svgNode->asSVGSVGElement();
             if (!svg->frame()) {
                 m_resource->didLoadFailed();
                 return;

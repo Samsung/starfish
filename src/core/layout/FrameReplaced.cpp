@@ -346,7 +346,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         w = width.specifiedValue(parentContentWidth, this);
         w = contentWidthAfterApplyingBoxSizing(w);
         if (hasAspectRatio) {
-            h = w * (intrinsicHeight / intrinsicWidth);
+            h = w * (intrinsicHeight.toDouble() / intrinsicWidth.toDouble());
         } else {
             h = intrinsicHeight;
         }
@@ -355,7 +355,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightAfterApplyingBoxSizing(h);
             if (hasAspectRatio && intrinsicHeight) {
-                w = h * (intrinsicWidth / intrinsicHeight);
+                w = h *
+                    (intrinsicWidth.toDouble() / intrinsicHeight.toDouble());
             } else {
                 w = intrinsicWidth;
             }
@@ -373,7 +374,8 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             h = contentHeightAfterApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio && intrinsicWidth) {
-                h = w * (intrinsicHeight / intrinsicWidth);
+                h = w *
+                    (intrinsicHeight.toDouble() / intrinsicWidth.toDouble());
             } else {
                 h = intrinsicHeight;
             }
@@ -397,7 +399,8 @@ LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
         NativeImageData* imageData = nullptr;
         imageData = node()->asHTMLImageElement()->imageData();
         if (imageData && imageData->isSVGNativeImageData()) {
-            FrameSVGSVGBox* svg = imageData->asSVGNativeImageData()->frameBox();
+            FrameSVGSVGBox* svg =
+                imageData->asSVGNativeImageData()->frameSVGSVGBox();
             IntrinsicSize intrinsicSize = svg->intrinsicSize();
             if (isContainingBlockFlexItem) {
                 return { 0, 0 };
@@ -563,7 +566,7 @@ void FrameReplaced::computeIntrinsicSize(LayoutContext& ctx,
 
             if (imageData && imageData->isSVGNativeImageData()) {
                 FrameSVGSVGBox* svg =
-                    imageData->asSVGNativeImageData()->frameBox();
+                    imageData->asSVGNativeImageData()->frameSVGSVGBox();
                 IntrinsicSize defaultSize = svg->intrinsicSize();
                 intrinsicWidth = defaultSize.m_intrinsicContentSize.width();
                 intrinsicHeight = defaultSize.m_intrinsicContentSize.height();

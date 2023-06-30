@@ -25,28 +25,32 @@
 namespace Starfish {
 
 class FrameSVGSVGBox;
-
+class FrameBox;
 class SVGNativeImageData : public NativeImageData {
 public:
     static NativeImageData* create(size_t actualDeviceWidth,
                                    size_t actualDeviceHeight,
-                                   FrameSVGSVGBox* box);
+                                   FrameSVGSVGBox* frameSVGSVGBox);
     virtual bool isSVGNativeImageData() const
     {
         return true;
     }
 
-    FrameSVGSVGBox* frameBox()
+    FrameSVGSVGBox* frameSVGSVGBox()
     {
-        return m_frameBox;
+        return m_frameSVGSVGBox;
     }
+
+    virtual bool hasViewport() = 0;
+
+    virtual void updateContentSize(FrameBox* containingBlock) = 0;
 
 protected:
     SVGNativeImageData()
     {
     }
 
-    FrameSVGSVGBox* m_frameBox{ nullptr };
+    FrameSVGSVGBox* m_frameSVGSVGBox = nullptr;
 };
 } // namespace Starfish
 
