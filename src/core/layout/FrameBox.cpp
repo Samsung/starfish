@@ -1781,6 +1781,12 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             if (id == nullptr || id->width() == 0 || id->height() == 0) {
                 return;
             }
+
+            if (id->isSVGNativeImageData() &&
+                !id->asSVGNativeImageData()->hasViewport()) {
+                id->asSVGNativeImageData()->updateContentSize(box);
+            }
+
             width = id->width();
             height = id->height();
         } else if (type.isGradient()) {

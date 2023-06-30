@@ -35,11 +35,11 @@ public:
         return GC_MALLOC(sizeof(SVGNativeImageDataImpl));
     }
 
-    SVGNativeImageDataImpl(size_t w, size_t h, FrameSVGSVGBox* box)
+    SVGNativeImageDataImpl(size_t w, size_t h, FrameSVGSVGBox* frameSVGSVGBox)
     {
         m_width = w;
         m_height = h;
-        m_frameBox = box;
+        m_frameSVGSVGBox = frameSVGSVGBox;
     }
 
     virtual ~SVGNativeImageDataImpl()
@@ -66,6 +66,22 @@ public:
         return 0;
     }
 
+    virtual bool hasViewport()
+    {
+        return m_frameSVGSVGBox->intrinsicSize().m_hasViewport;
+    }
+
+    virtual void updateContentSize(FrameBox* containingBlock)
+    {
+        LayoutContext dummyContext(
+            containingBlock->node()->starfish(),
+            containingBlock->node()->document()->frame()->asFrameDocument());
+        m_frameSVGSVGBox->computeContentWidthAndHeight(dummyContext,
+                                                       containingBlock);
+        m_width = ceil(m_frameSVGSVGBox->width().toFloat());
+        m_height = ceil(m_frameSVGSVGBox->height().toFloat());
+    }
+
     virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
                               ImageRenderingValue imageRenderingMode) override
     {
@@ -73,9 +89,9 @@ public:
         canvas->clip(dst);
         canvas->translate(dst.x(), dst.y());
 
-        m_frameBox->setContainerViewport(dst);
-        m_frameBox->paintReplaced(canvas);
-        m_frameBox->setContainerViewport(Nullable<Unit::Rect>());
+        m_frameSVGSVGBox->setContainerViewport(dst);
+        m_frameSVGSVGBox->paintReplaced(canvas);
+        m_frameSVGSVGBox->setContainerViewport(Nullable<Unit::Rect>());
 
         canvas->restore();
     }
@@ -122,10 +138,10 @@ public:
             BufferedNativeImageData::create(width(), height());
         rasterizedSVGImage->clear();
         Canvas* dummyCanvas = Canvas::create(
-            m_frameBox->document()->browsingContext()->webView(),
+            m_frameSVGSVGBox->document()->browsingContext()->webView(),
             rasterizedSVGImage->data(), rasterizedSVGImage->width(),
             rasterizedSVGImage->height(), rasterizedSVGImage->stride());
-        m_frameBox->paintReplaced(dummyCanvas);
+        m_frameSVGSVGBox->paintReplaced(dummyCanvas);
         delete dummyCanvas;
         return rasterizedSVGImage;
     }
@@ -136,9 +152,9 @@ protected:
 };
 
 NativeImageData* SVGNativeImageData::create(size_t width, size_t height,
-                                            FrameSVGSVGBox* box)
+                                            FrameSVGSVGBox* frameSVGSVGBox)
 {
-    return new SVGNativeImageDataImpl(width, height, box);
+    return new SVGNativeImageDataImpl(width, height, frameSVGSVGBox);
 }
 
 } // namespace Starfish

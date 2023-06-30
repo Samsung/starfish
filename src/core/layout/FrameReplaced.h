@@ -136,6 +136,7 @@ public:
 
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
+    void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
 
     virtual void paintReplaced(Canvas* canvas)
     {
@@ -188,11 +189,11 @@ protected:
         return &m_treeItemModel;
     }
 
-    FrameTreeItemModel m_treeItemModel;
-    void computeContentWidthAndHeight(LayoutContext& ctx, FrameBox* cb);
     LayoutSize contentSizeConsiderContainingBlockWidth(
         LayoutUnit intrinsicWidth, LayoutUnit intrinsicHeight,
         LayoutUnit containingBlockWidth, bool isContainingBlockFlexItem);
+
+    FrameTreeItemModel m_treeItemModel;
 };
 } // namespace Starfish
 

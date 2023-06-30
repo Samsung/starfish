@@ -4495,7 +4495,8 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
             h = contentHeightAfterApplyingBoxSizing(h);
 
             if (hasAspectRatio) {
-                w = h * (intrinsicWidth / intrinsicHeight);
+                w = h *
+                    (intrinsicWidth.toDouble() / intrinsicHeight.toDouble());
             }
         }
 
