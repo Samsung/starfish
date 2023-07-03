@@ -402,13 +402,9 @@ LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
             FrameSVGSVGBox* svg =
                 imageData->asSVGNativeImageData()->frameSVGSVGBox();
             IntrinsicSize intrinsicSize = svg->intrinsicSize();
-            if (isContainingBlockFlexItem) {
-                return { 0, 0 };
-            } else if (!intrinsicSize.m_hasViewport &&
-                       svg->node()->asSVGSVGElement()->hasViewBox()) {
+            if (!intrinsicSize.m_hasViewport &&
+                svg->node()->asSVGSVGElement()->hasViewBox()) {
                 if (intrinsicSize.m_hasAspectRatio) {
-                    // toDouble(), is needed for more precise
-                    // calculations.
                     return { containingBlockWidth,
                              containingBlockWidth *
                                  (intrinsicHeight.toDouble() /
