@@ -23,9 +23,6 @@
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/svg/SVGTransform.h"
 
-#define STARFISH_DEFAULT_SVG_WIDTH 300
-#define STARFISH_DEFAULT_SVG_HEIGHT 150
-
 namespace Starfish {
 
 class SVGSVGElement : public SVGElement {

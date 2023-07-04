@@ -101,7 +101,7 @@ public:
                               const DrawImageInfo& borderinfo,
                               ImageRenderingValue imageRenderingMode) override
     {
-        auto img = rasterizedImage();
+        NativeImageData* img = rasterize();
         canvas->drawImage(img, src, dst, borderinfo, imageRenderingMode);
         delete img;
     }
@@ -111,28 +111,13 @@ public:
         float imageHeight, bool xRepeat, bool yRepeat,
         ImageRenderingValue imageRenderingMode) override
     {
-        canvas->save();
-        canvas->clip(dst);
-        canvas->translate(dst.x(), dst.y());
-
-        Unit::Rect baseRect = Unit::Rect(0, 0, dst.width(), dst.height());
-        Unit::Rect current = Unit::Rect(0, 0, imageWidth, imageHeight);
-
-        while (baseRect.intersects(current)) {
-            paintContent(canvas, current, imageRenderingMode);
-            while (baseRect.intersects(current) && xRepeat) {
-                current.setX(current.x() + imageWidth);
-                paintContent(canvas, current, imageRenderingMode);
-            }
-            if (yRepeat) {
-                current.setY(current.y() + imageHeight);
-            }
-            current.setX(0);
-        }
-        canvas->restore();
+        NativeImageData* img = rasterize();
+        canvas->drawRepeatImage(img, dst, imageWidth, imageHeight, xRepeat,
+                                yRepeat, imageRenderingMode);
+        delete img;
     }
 
-    NativeImageData* rasterizedImage()
+    NativeImageData* rasterize()
     {
         NativeImageData* rasterizedSVGImage =
             BufferedNativeImageData::create(width(), height());
