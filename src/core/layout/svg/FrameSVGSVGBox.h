@@ -27,6 +27,9 @@ namespace Starfish {
 
 class FrameSVGSVGBox final : public FrameReplaced {
 public:
+    static constexpr size_t kDefualtWidth = 300;
+    static constexpr size_t kDefualtHeight = 150;
+
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
         , m_svgScale(1)
