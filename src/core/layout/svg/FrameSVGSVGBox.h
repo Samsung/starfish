@@ -27,14 +27,13 @@ namespace Starfish {
 
 class FrameSVGSVGBox final : public FrameReplaced {
 public:
-    static constexpr size_t kDefualtWidth = 300;
-    static constexpr size_t kDefualtHeight = 150;
-
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
         , m_svgScale(1)
         , m_surface(nullptr)
         , m_isInnerSVG(false)
+        , m_defaultWidth(300)
+        , m_defaultHeight(150)
     {
     }
 
@@ -80,6 +79,16 @@ public:
         m_containerViewport = containerViewport;
     }
 
+    void setDefaultWidth(size_t width)
+    {
+        m_defaultWidth = width;
+    }
+
+    void setDefaultHeight(size_t height)
+    {
+        m_defaultHeight = height;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -91,6 +100,8 @@ protected:
     float m_svgScale;
     NativeImageData* m_surface;
     bool m_isInnerSVG;
+    size_t m_defaultWidth;
+    size_t m_defaultHeight;
     Nullable<Unit::Rect> m_containerViewport;
 };
 } // namespace Starfish

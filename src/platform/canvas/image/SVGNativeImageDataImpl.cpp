@@ -23,8 +23,10 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/Document.h"
 #include "core/dom/svg/SVGSVGElement.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -71,15 +73,36 @@ public:
         return m_frameSVGSVGBox->intrinsicSize().m_hasViewport;
     }
 
+    virtual bool hasViewBox()
+    {
+        return m_frameSVGSVGBox->node()->asSVGSVGElement()->hasViewBox();
+    }
+
     virtual void updateContentSize(FrameBox* containingBlock)
     {
-        LayoutContext dummyContext(
-            containingBlock->node()->starfish(),
-            containingBlock->node()->document()->frame()->asFrameDocument());
-        m_frameSVGSVGBox->computeContentWidthAndHeight(dummyContext,
-                                                       containingBlock);
-        m_width = ceil(m_frameSVGSVGBox->width().toFloat());
-        m_height = ceil(m_frameSVGSVGBox->height().toFloat());
+        FrameDocument* dummyDocument =
+            m_frameSVGSVGBox->document()->frame()->asFrameDocument();
+        LayoutContext dummyContext(dummyDocument->node()->starfish(),
+                                   dummyDocument);
+        if (!hasViewport() && !hasViewBox()) {
+            if (dummyDocument->width() != containingBlock->width() ||
+                dummyDocument->height() != containingBlock->height()) {
+                size_t newWidth = containingBlock->width().toUnsigned();
+                size_t newHeight = containingBlock->height().toUnsigned();
+                m_frameSVGSVGBox->setDefaultWidth(newWidth);
+                m_frameSVGSVGBox->setDefaultHeight(newHeight);
+                dummyDocument->node()->window()->resize(newWidth, newHeight);
+                dummyDocument->layout(dummyContext,
+                                      Frame::LayoutWantToResolve::ResolveAll);
+                m_width = ceil(m_frameSVGSVGBox->width().toFloat());
+                m_height = ceil(m_frameSVGSVGBox->height().toFloat());
+            }
+        } else {
+            m_frameSVGSVGBox->computeContentWidthAndHeight(dummyContext,
+                                                           containingBlock);
+            m_width = ceil(m_frameSVGSVGBox->width().toFloat());
+            m_height = ceil(m_frameSVGSVGBox->height().toFloat());
+        }
     }
 
     virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,

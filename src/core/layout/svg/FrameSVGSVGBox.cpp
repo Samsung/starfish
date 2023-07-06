@@ -48,8 +48,8 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     result.m_hasAspectRatio = false;
     result.m_hasViewport = false;
 
-    LayoutUnit width = kDefualtWidth;
-    LayoutUnit height = kDefualtHeight;
+    LayoutUnit width = m_defaultWidth;
+    LayoutUnit height = m_defaultHeight;
 
     if (style()->width().isFixed() && style()->height().isFixed()) {
         width = style()->width().fixed();
@@ -69,8 +69,8 @@ IntrinsicSize FrameSVGSVGBox::intrinsicSize()
     } else {
         if (node()->asSVGSVGElement()->hasViewBox()) {
             Unit::Rect viewBox = node()->asSVGSVGElement()->viewBox();
-            height = kDefualtHeight;
-            width = kDefualtHeight * viewBox.width() / viewBox.height();
+            height = m_defaultHeight;
+            width = m_defaultHeight * viewBox.width() / viewBox.height();
             result.m_hasAspectRatio = true;
         }
     }

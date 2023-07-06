@@ -73,6 +73,21 @@ protected:
     virtual void childBrowsingContextLoaded()
     {
         HTMLIFrameElement::childBrowsingContextLoaded();
+
+        Node* bodyNode =
+            Traverse::findDescendant(contentDocument(), [](Node* n) -> bool {
+                if (n->isHTMLBodyElement()) {
+                    return true;
+                }
+                return false;
+            });
+
+        // Make sure the body element's margin doesn't affect the svg layout.
+        // The margin come from the user agent style sheet.
+        bodyNode->asElement()->setAttribute(
+            starfish()->staticStrings()->m_style,
+            String::createASCIIString("margin: 0px"));
+
         Node* svgNode =
             Traverse::findDescendant(contentDocument(), [](Node* n) -> bool {
                 if (n->isSVGSVGElement()) {
