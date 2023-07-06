@@ -476,6 +476,8 @@ test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/svg_03.html
 test/cairo/internal-test/svg/svg_04.html
+test/cairo/internal-test/svg/svg_05.html
+test/cairo/internal-test/svg/svg_06.html
 test/cairo/internal-test/svg/bixby_logo_search.html
 test/cairo/internal-test/svg/svg_length-setValueAsString.html
 test/cairo/internal-test/svg/svg_animatedTransformList.html
