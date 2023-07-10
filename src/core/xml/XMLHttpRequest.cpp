@@ -145,9 +145,11 @@ public:
                             m_xhr->m_overrideMimeType);
                         mimeString = m_xhr->m_overrideMimeType;
                     }
-                    if (mimeType.subtype()->contains("xml") ||
-                        m_xhr->m_responseType ==
-                            XMLHttpRequestResponseType::Document) {
+                    if (m_xhr->m_responseType ==
+                            XMLHttpRequestResponseType::Document ||
+                        (mimeType.subtype()->contains("xml") &&
+                         m_xhr->m_responseType ==
+                             XMLHttpRequestResponseType::Empty)) {
                         if (m_xhr->executionContext()->hasWorkerGlobalScope()) {
                             m_xhr->m_responseXML = nullptr;
                             STARFISH_LOG_WARN(
@@ -197,7 +199,9 @@ public:
                         }
                     } else if (m_xhr->m_responseType ==
                                    XMLHttpRequestResponseType::Json ||
-                               mimeType.subtype()->contains("json")) {
+                               (mimeType.subtype()->contains("json") &&
+                                m_xhr->m_responseType ==
+                                    XMLHttpRequestResponseType::Empty)) {
                         m_xhr->m_responseType =
                             XMLHttpRequestResponseType::Json;
 
