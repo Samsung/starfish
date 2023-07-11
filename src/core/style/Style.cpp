@@ -203,24 +203,25 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
     }
 }
 
-static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
-                                                const CSSStyleValuePair& value,
-                                                unsigned int layer = 0)
+static void setComputedStyleUnitPositionX(
+    ComputedStyle* style, const CSSStyleValuePair& value, uint32_t layer,
+    std::function<void(ComputedStyle* style, const Length& length,
+                       uint32_t layer)>
+        setter)
 {
     STARFISH_ASSERT(style != nullptr);
-
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
         value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
-        style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+        setter(style, Length(Length::Percent, 0.0f), layer);
     } else if (value.valueKind() ==
                CSSStyleValuePair::ValueKind::SideValueKind) {
         SideValue side = value.sideValue();
         if (side == SideValue::LeftSideValue) {
-            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+            setter(style, Length(Length::Percent, 0.0f), layer);
         } else if (side == SideValue::RightSideValue) {
-            style->setBackgroundPositionX(Length(Length::Percent, 1.0f), layer);
+            setter(style, Length(Length::Percent, 1.0f), layer);
         } else if (side == SideValue::CenterSideValue) {
-            style->setBackgroundPositionX(Length(Length::Percent, 0.5f), layer);
+            setter(style, Length(Length::Percent, 0.5f), layer);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -228,52 +229,55 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
                CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
         for (unsigned int i = 0; i < list->size(); i++) {
-            setComputedStyleBackgroundPositionX(style, (*list)[i], i);
+            setComputedStyleUnitPositionX(style, (*list)[i], i, setter);
         }
     } else {
         Nullable<Length> len =
             convertValueToLength(value.valueKind(), value.value());
         if (len.hasValue()) {
-            style->setBackgroundPositionX(len.getValue(), layer);
+            setter(style, len.getValue(), layer);
         } else {
-            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+            setter(style, Length(Length::Percent, 0.0f), layer);
         }
     }
 }
 
-static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
-                                                const CSSStyleValuePair& value,
-                                                unsigned int layer = 0)
+static void setComputedStyleUnitPositionY(
+    ComputedStyle* style, const CSSStyleValuePair& value, uint32_t layer,
+    std::function<void(ComputedStyle* style, const Length& length,
+                       uint32_t layer)>
+        setter)
 {
     STARFISH_ASSERT(style != nullptr);
 
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
         value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
-        style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
+        setter(style, Length(Length::Percent, 0.0f), layer);
     } else if (value.valueKind() ==
                CSSStyleValuePair::ValueKind::SideValueKind) {
-        if (value.sideValue() == SideValue::TopSideValue) {
-            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
-        } else if (value.sideValue() == SideValue::BottomSideValue) {
-            style->setBackgroundPositionY(Length(Length::Percent, 1.0f), layer);
-        } else if (value.sideValue() == SideValue::CenterSideValue) {
-            style->setBackgroundPositionY(Length(Length::Percent, 0.5f), layer);
+        SideValue side = value.sideValue();
+        if (side == SideValue::TopSideValue) {
+            setter(style, Length(Length::Percent, 0.0f), layer);
+        } else if (side == SideValue::BottomSideValue) {
+            setter(style, Length(Length::Percent, 1.0f), layer);
+        } else if (side == SideValue::CenterSideValue) {
+            setter(style, Length(Length::Percent, 0.5f), layer);
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (value.valueKind() ==
                CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
-        for (unsigned int i = 0; i < list->size(); i++) {
-            setComputedStyleBackgroundPositionY(style, (*list)[i], i);
+        for (uint32_t i = 0; i < list->size(); i++) {
+            setComputedStyleUnitPositionY(style, (*list)[i], i, setter);
         }
     } else {
         Nullable<Length> len =
             convertValueToLength(value.valueKind(), value.value());
         if (len.hasValue()) {
-            style->setBackgroundPositionY(len.getValue(), layer);
+            setter(style, len.getValue(), layer);
         } else {
-            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
+            setter(style, Length(Length::Percent, 0.0f), layer);
         }
     }
 }
@@ -4186,7 +4190,11 @@ void StyleResolver::applyProperty(
                     parentStyle->backgroundPositionX(i), i);
             }
         } else {
-            setComputedStyleBackgroundPositionX(style, newCssValue);
+            setComputedStyleUnitPositionX(
+                style, newCssValue, 0,
+                [](ComputedStyle* style, const Length& length, uint32_t layer) {
+                    style->setBackgroundPositionX(length, layer);
+                });
         }
         break;
     case CSSStyleValuePair::KeyKind::BackgroundPositionY:
@@ -4199,7 +4207,11 @@ void StyleResolver::applyProperty(
                     parentStyle->backgroundPositionY(i), i);
             }
         } else {
-            setComputedStyleBackgroundPositionY(style, newCssValue);
+            setComputedStyleUnitPositionY(
+                style, newCssValue, 0,
+                [](ComputedStyle* style, const Length& length, uint32_t layer) {
+                    style->setBackgroundPositionY(length, layer);
+                });
         }
         break;
     case CSSStyleValuePair::KeyKind::BackgroundSize:
@@ -4516,6 +4528,38 @@ void StyleResolver::applyProperty(
             }
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskPositionX:
+        style->resetMaskPositionXs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskPositionX(parentStyle->maskPositionX(i), i);
+            }
+        } else {
+            setComputedStyleUnitPositionX(
+                style, newCssValue, 0,
+                [](ComputedStyle* style, const Length& length, uint32_t layer) {
+                    style->setMaskPositionX(length, layer);
+                });
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskPositionY:
+        style->resetMaskPositionYs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskPositionY(parentStyle->maskPositionY(i), i);
+            }
+        } else {
+            setComputedStyleUnitPositionY(
+                style, newCssValue, 0,
+                [](ComputedStyle* style, const Length& length, uint32_t layer) {
+                    style->setMaskPositionY(length, layer);
+                });
         }
         break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:
@@ -10079,8 +10123,9 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
                 radialGradientValue->setSize(size);
             }
             if (inPositionStr) {
-                if (CSSStyleDeclaration::parseBackgroundPositionShorthand(
-                        tokens, &positionX, &positionY, false)) {
+                if (CSSStyleDeclaration::parseUnitPositionShorthand(
+                        tokens, CSSStyleValuePair::BackgroundPosition,
+                        &positionX, &positionY, false)) {
                     radialGradientValue->setPositionX(positionX);
                     radialGradientValue->setPositionY(positionY);
                 } else {
@@ -10874,8 +10919,7 @@ bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(
-    const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitPositionX(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
     if (STRING_VALUE_IS_STRING("left")) {
@@ -10893,8 +10937,7 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
-    const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitPositionY(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
     if (STRING_VALUE_IS_STRING("top")) {
@@ -10920,7 +10963,7 @@ bool CSSStyleValuePair::updateValueBackgroundPositionX(
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundPositionX(tokens[0]);
+    return updateValueUnitPositionX(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionY(
@@ -10931,7 +10974,7 @@ bool CSSStyleValuePair::updateValueBackgroundPositionY(
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundPositionY(tokens[0]);
+    return updateValueUnitPositionY(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitBackgroundAttachment(
@@ -14491,6 +14534,28 @@ bool CSSStyleValuePair::updateValueMaskSize(Document* document,
 {
     STARFISH_UNIMPLEMENTED();
     return false;
+}
+
+bool CSSStyleValuePair::updateValueMaskPositionX(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitPositionX(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueMaskPositionY(Document* document,
+                                                 const CSSTokenVector& tokens)
+{
+    STARFISH_ASSERT(document != nullptr);
+
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitPositionY(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitListStyleType(Document* document,

@@ -717,6 +717,8 @@ class CSSFilterFunction;
     F(Cursor, cursor, "cursor")                                                \
     F(MaskImage, maskImage, "mask-image")                                      \
     F(MaskSize, maskSize, "mask-size")                                         \
+    F(MaskPositionX, maskPositionX, "mask-position-x")                         \
+    F(MaskPositionY, maskPositionY, "mask-position-Y")                         \
     F(FontSize, fontSize, "font-size")                                         \
     F(FontWeight, fontWeight, "font-weight")                                   \
     F(FontStyle, fontStyle, "font-style")                                      \
@@ -803,7 +805,8 @@ class CSSFilterFunction;
     F(FlexFlow, flexFlow, "flex-flow")                               \
     F(Flex, flex, "flex")                                            \
     F(ListStyle, listStyle, "list-style")                            \
-    F(Mask, mask, "mask")
+    F(Mask, mask, "mask")                                            \
+    F(MaskPosition, maskPosition, "mask-position")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F) \
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)     \
@@ -2467,8 +2470,8 @@ public:
     bool updateValueBorderRadius(const CSSTokenVector& tokens);
     bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
-    bool updateValueUnitBackgroundPositionX(const CSSTokenValue& token);
-    bool updateValueUnitBackgroundPositionY(const CSSTokenValue& token);
+    bool updateValueUnitPositionX(const CSSTokenValue& token);
+    bool updateValueUnitPositionY(const CSSTokenValue& token);
     bool updateValueUnitBackgroundAttachment(const CSSTokenValue& token);
     bool updateValueUnitBorderStyle(const CSSTokenValue& token);
     bool updateValueUnitBorderWidth(const CSSTokenValue& token);

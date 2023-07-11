@@ -40,6 +40,23 @@
 
 namespace Starfish {
 
+static bool UnitPositionShorthandToLongHand(
+    const CSSStyleValuePair::KeyKind& shorthand,
+    CSSStyleValuePair::KeyKind& longhandX,
+    CSSStyleValuePair::KeyKind& longhandY)
+{
+    if (shorthand == CSSStyleValuePair::KeyKind::BackgroundPosition) {
+        longhandX = CSSStyleValuePair::KeyKind::BackgroundPositionX;
+        longhandY = CSSStyleValuePair::KeyKind::BackgroundPositionY;
+        return true;
+    } else if (shorthand == CSSStyleValuePair::KeyKind::MaskPosition) {
+        longhandX = CSSStyleValuePair::KeyKind::MaskPositionX;
+        longhandY = CSSStyleValuePair::KeyKind::MaskPositionY;
+        return true;
+    }
+    return false;
+}
+
 static bool seperatorContains(const char* seperator, size_t seperatorCount,
                               char ch)
 {
@@ -215,8 +232,9 @@ static bool parseBackgroundShorthand(
                     continue;
                 }
             } else if (!hasPosition &&
-                       CSSStyleDeclaration::parseBackgroundPositionShorthand(
-                           toks, &tempX, &tempY, false)) {
+                       CSSStyleDeclaration::parseUnitPositionShorthand(
+                           toks, CSSStyleValuePair::KeyKind::BackgroundPosition,
+                           &tempX, &tempY, false)) {
                 hasPositionPrev = true;
                 *positionX = tempX;
                 *positionY = tempY;
@@ -253,8 +271,9 @@ static bool parseBackgroundShorthand(
             hasImage = true;
             continue;
         } else if (!hasPosition &&
-                   CSSStyleDeclaration::parseBackgroundPositionShorthand(
-                       toks, &tempX, &tempY, false)) {
+                   CSSStyleDeclaration::parseUnitPositionShorthand(
+                       toks, CSSStyleValuePair::KeyKind::BackgroundPosition,
+                       &tempX, &tempY, false)) {
             hasPositionPrev = true;
             *positionX = tempX;
             *positionY = tempY;
@@ -2266,9 +2285,9 @@ void CSSStyleDeclaration::removeBackground()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip);
 }
 
-bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
-    const CSSTokenVector& tokens, CSSStyleValuePair* retx,
-    CSSStyleValuePair* rety, bool allowComma)
+bool CSSStyleDeclaration::parseUnitPositionShorthand(
+    const CSSTokenVector& tokens, CSSStyleValuePair::KeyKind keykind,
+    CSSStyleValuePair* retx, CSSStyleValuePair* rety, bool allowComma)
 {
     // [ [ <percentage> | <length> | left | center | right ] [ <percentage> |
     // <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [
@@ -2295,15 +2314,21 @@ bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
 
         CSSStyleValuePair ret;
         CSSStyleValuePair x, y;
-        x.setKeyKind(CSSStyleValuePair::BackgroundPositionX);
-        y.setKeyKind(CSSStyleValuePair::BackgroundPositionY);
+        if (keykind == CSSStyleValuePair::KeyKind::BackgroundPosition) {
+            x.setKeyKind(CSSStyleValuePair::BackgroundPositionX);
+            y.setKeyKind(CSSStyleValuePair::BackgroundPositionY);
+        } else if (keykind == CSSStyleValuePair::KeyKind::MaskPosition) {
+            x.setKeyKind(CSSStyleValuePair::MaskPositionX);
+            y.setKeyKind(CSSStyleValuePair::MaskPositionY);
+        }
+
         if (len == 1) {
             const CSSTokenValue& tok = tokens[i - 1];
-            if (x.updateValueUnitBackgroundPositionX(tok)) {
+            if (x.updateValueUnitPositionX(tok)) {
                 y = CSSStyleValuePair(
                     CSSStyleValuePair::ValueKind::SideValueKind,
                     SideValue::CenterSideValue);
-            } else if (y.updateValueUnitBackgroundPositionY(tok)) {
+            } else if (y.updateValueUnitPositionY(tok)) {
                 x = CSSStyleValuePair(
                     CSSStyleValuePair::ValueKind::SideValueKind,
                     SideValue::CenterSideValue);
@@ -2324,19 +2349,20 @@ bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
             const CSSTokenValue& tok2 = tokens[i - 1];
             CSSStyleValuePair::ValueKind sideKind =
                 CSSStyleValuePair::ValueKind::SideValueKind;
-            checker &= x.updateValueUnitBackgroundPositionX(tok1);
-            checker &= y.updateValueUnitBackgroundPositionY(tok2);
+            checker &= x.updateValueUnitPositionX(tok1);
+            checker &= y.updateValueUnitPositionY(tok2);
 
             if (!checker && x.valueKind() == sideKind &&
                 y.valueKind() == sideKind) {
                 checker = true;
-                checker &= x.updateValueUnitBackgroundPositionX(tok2);
-                checker &= y.updateValueUnitBackgroundPositionY(tok1);
+                checker &= x.updateValueUnitPositionX(tok2);
+                checker &= y.updateValueUnitPositionY(tok1);
             }
             if (!checker) {
                 return false;
             }
         } else {
+            // TODO: 3 value, 4 value case.
             return false;
         }
         retx->multiValue()->push_back(x);
@@ -2349,82 +2375,19 @@ bool CSSStyleDeclaration::parseBackgroundPositionShorthand(
 
 String* CSSStyleDeclaration::BackgroundPosition()
 {
-    String* positionX = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::BackgroundPositionX);
-    String* positionY = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::BackgroundPositionY);
-
-    if (positionX->equals(String::emptyString) ||
-        positionY->equals(String::emptyString)) {
-        return String::emptyString;
-    }
-
-    GCVector<StringView> vPositionX, vPositionY;
-    StringUtils::tokenize(positionX, ",", 1, vPositionX);
-    StringUtils::tokenize(positionY, ",", 1, vPositionY);
-
-    StringBuilder builder;
-    for (size_t i = 0; i < vPositionX.size(); i++) {
-        String* pX = vPositionX[i].trim();
-        String* pY = vPositionY[i].trim();
-        if (pX->equals(String::initialString)) {
-            if (pY->equals(String::initialString)) {
-                builder.appendString(String::initialString);
-            } else {
-                builder.appendString(String::emptyString);
-            }
-        } else if (pX->equals(String::inheritString)) {
-            if (pY->equals(String::inheritString)) {
-                builder.appendString(String::inheritString);
-            } else {
-                builder.appendString(String::emptyString);
-            }
-        } else {
-            builder.appendString(pX);
-            builder.appendString(String::spaceString);
-            builder.appendString(pY);
-        }
-        if (i != vPositionX.size() - 1) {
-            builder.appendChar(',');
-            builder.appendString(String::spaceString);
-        }
-    }
-    return builder.finalize();
+    return UnitPosition(CSSStyleValuePair::KeyKind::BackgroundPosition);
 }
 
 void CSSStyleDeclaration::setBackgroundPosition(const char* value,
                                                 size_t length, bool isImportant)
 {
-    if (value == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
-        return;
-    }
-
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length, ",", 1);
-
-    CSSStyleValuePair c, x, y;
-    if (c.updateValueVarReferences(tokens)) {
-        c.setValue(String::fromUTF8(value, length));
-        c.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, c);
-    } else if (c.updateValueCommon(tokens)) {
-        c.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
-    } else if (parseBackgroundPositionShorthand(tokens, &x, &y)) {
-        x.setFlagImportant(isImportant);
-        y.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, x);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, y);
-    }
+    setUnitPosition(value, length, isImportant,
+                    CSSStyleValuePair::KeyKind::BackgroundPosition);
 }
 
 void CSSStyleDeclaration::removeBackgroundPosition()
 {
-    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
-    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+    removeUnitPosition(CSSStyleValuePair::KeyKind::BackgroundPosition);
 }
 
 String* CSSStyleDeclaration::BackgroundRepeat()
@@ -2452,6 +2415,7 @@ String* CSSStyleDeclaration::BackgroundRepeat()
         } else {
             return builder.finalize();
         }
+
         if (i != size - 1) {
             builder.appendChar(',');
             builder.appendString(String::spaceString);
@@ -4605,6 +4569,122 @@ void CSSStyleDeclaration::setMask(const char* value, size_t length,
 void CSSStyleDeclaration::removeMask()
 {
     // Mask is only supported as SVG attribute.
+}
+
+String* CSSStyleDeclaration::MaskPosition()
+{
+    return UnitPosition(CSSStyleValuePair::KeyKind::MaskPosition);
+}
+
+void CSSStyleDeclaration::setMaskPosition(const char* value, size_t length,
+                                          bool isImportant)
+{
+    setUnitPosition(value, length, isImportant,
+                    CSSStyleValuePair::KeyKind::MaskPosition);
+}
+
+void CSSStyleDeclaration::removeMaskPosition()
+{
+    removeUnitPosition(CSSStyleValuePair::KeyKind::MaskPosition);
+}
+
+String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitPositionShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
+    }
+
+    String* positionX =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(xKind);
+    String* positionY =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(yKind);
+
+    if (positionX->equals(String::emptyString) ||
+        positionY->equals(String::emptyString)) {
+        return String::emptyString;
+    }
+
+    GCVector<StringView> vPositionX, vPositionY;
+    StringUtils::tokenize(positionX, ",", 1, vPositionX);
+    StringUtils::tokenize(positionY, ",", 1, vPositionY);
+
+    StringBuilder builder;
+    for (size_t i = 0; i < vPositionX.size(); i++) {
+        String* pX = vPositionX[i].trim();
+        String* pY = vPositionY[i].trim();
+        if (pX->equals(String::initialString)) {
+            if (pY->equals(String::initialString)) {
+                builder.appendString(String::initialString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else if (pX->equals(String::inheritString)) {
+            if (pY->equals(String::inheritString)) {
+                builder.appendString(String::inheritString);
+            } else {
+                builder.appendString(String::emptyString);
+            }
+        } else {
+            builder.appendString(pX);
+            builder.appendString(String::spaceString);
+            builder.appendString(pY);
+        }
+        if (i != vPositionX.size() - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setUnitPosition(const char* value, size_t length,
+                                          bool isImportant,
+                                          CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitPositionShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
+    if (value == 0) {
+        removeCSSValuePair(xKind);
+        removeCSSValuePair(yKind);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
+
+    CSSStyleValuePair c, x, y;
+    if (c.updateValueVarReferences(tokens)) {
+        c.setValue(String::fromUTF8(value, length));
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(keyKind, c);
+    } else if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(xKind, c);
+        addCSSValuePair(yKind, c);
+    } else if (parseUnitPositionShorthand(tokens, keyKind, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
+        addCSSValuePair(xKind, x);
+        addCSSValuePair(yKind, y);
+    }
+}
+
+void CSSStyleDeclaration::removeUnitPosition(CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitPositionShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
+    removeCSSValuePair(xKind);
+    removeCSSValuePair(yKind);
 }
 
 StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(

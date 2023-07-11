@@ -28,12 +28,7 @@ class ImageResource;
 
 class MaskLayer : public gc {
 public:
-    MaskLayer()
-        : m_image(nullptr)
-        , m_imageResource(nullptr)
-        , m_sizeIsLength(true)
-    {
-    }
+    MaskLayer();
 
     union MaskSize {
         MaskSizeValue m_typeValue;
@@ -75,17 +70,36 @@ public:
         return m_imageResource;
     }
 
-    void setSize(LengthSize size)
+    void setSize(LengthSize size);
+
+    Length positionX() const
     {
-        m_sizeIsLength = true;
-        if (!m_size.m_lengthValue) {
-            if (size == LengthSize()) {
-                return;
-            }
-            m_size.m_lengthValue = new LengthSize(size);
-        } else {
-            *m_size.m_lengthValue = size;
-        }
+        return m_positionX;
+    }
+
+    void setPositionX(Length value)
+    {
+        m_positionX = value;
+    }
+
+    void resetPositionX()
+    {
+        m_positionX = Length(Length::Percent, 0.0f);
+    }
+
+    Length positionY() const
+    {
+        return m_positionY;
+    }
+
+    void setPositionY(Length value)
+    {
+        m_positionY = value;
+    }
+
+    void resetPositionY()
+    {
+        m_positionY = Length(Length::Percent, 0.0f);
     }
 
     void setSize(MaskSizeValue size)
@@ -109,154 +123,61 @@ public:
         return m_size.m_typeValue;
     }
 
-    bool operator==(const MaskLayer& other)
-    {
-        if ((m_image && other.m_image) && !(*m_image == *other.m_image)) {
-            return false;
-        } else if (m_image == nullptr || other.m_image == nullptr) {
-            return false;
-        }
-        // TODO : Add implementations for the rest of the CSS masking properties
-
-        return true;
-    }
+    bool operator==(const MaskLayer& other);
 
     bool operator!=(const MaskLayer& other)
     {
         return !operator==(other);
     }
 
-    ImageValue* m_image;
-    ImageResource* m_imageResource;
+    ImageValue* m_image = nullptr;
+    ImageResource* m_imageResource = nullptr;
 
     // mask-size
-    bool m_sizeIsLength;
+    bool m_sizeIsLength = true;
     MaskSize m_size;
+    Length m_positionX;
+    Length m_positionY;
 };
 
 class PositionedMaskData : public gc {
 public:
-    PositionedMaskData()
-        : m_maxLayerSize(0)
-        , m_maxLayerImage(0)
-    {
-    }
     static bool damaged(const PositionedMaskData* lhs,
-                        const PositionedMaskData* rhs, bool* damagedKeys)
-    {
-        // TODO : Implement the rest of the css masking properties.
-        damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] = false;
+                        const PositionedMaskData* rhs, bool* damagedKeys);
 
-        if (!lhs && !rhs) {
-            return false;
-        }
+    PositionedMaskData();
 
-        PositionedMaskData temp;
-        lhs = lhs ? lhs : &temp;
-        rhs = rhs ? rhs : &temp;
-        uint32_t maxLayer =
-            std::max(lhs->m_maxLayerImage, rhs->m_maxLayerImage);
-        bool hasDamage = false;
-        for (uint32_t i = 0; i < maxLayer; i++) {
-            if (damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] == false) {
-                const ImageValue* lImage = lhs->image(i);
-                const ImageValue* rImage = rhs->image(i);
-                if (lImage != rImage &&
-                    (!lImage || !rImage || *lImage != *rImage)) {
-                    damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] =
-                        hasDamage = true;
-                }
-            }
-        }
-        return hasDamage;
-    }
+    ImageValue* image(uint32_t layer) const;
 
-    ImageValue* image(uint32_t layer) const
-    {
-        if (m_layers.size() <= layer) {
-            return nullptr;
-        }
-        return m_layers[layer].image();
-    }
+    Length positionX(uint32_t layer) const;
 
-    ImageResource* imageResource(uint32_t layer) const
-    {
-        if (m_layers.size() <= layer) {
-            return nullptr;
-        }
-        return m_layers[layer].imageResource();
-    }
+    Length positionY(uint32_t layer) const;
 
-    void setImage(ImageValue* value, uint32_t layer)
-    {
-        // Note: transparent black image layer by default
-        resizeLayerIfNeeded(layer);
-        if (m_maxLayerImage < layer + 1) {
-            m_maxLayerImage = layer + 1;
-        }
-        m_layers[layer].setImage(value);
-    }
+    ImageResource* imageResource(uint32_t layer) const;
 
-    void setImageResource(ImageResource* imageResource, uint32_t layer)
-    {
-        resizeLayerIfNeeded(layer);
-        if (m_maxLayerImage < layer + 1) {
-            m_maxLayerImage = layer + 1;
-        }
-        m_layers[layer].setImageResource(imageResource);
-    }
+    void setImage(ImageValue* value, uint32_t layer);
 
-    void setSize(MaskSizeValue size, uint32_t layer)
-    {
-        resizeLayerIfNeeded(layer);
-        if (m_maxLayerSize < layer + 1) {
-            m_maxLayerSize = layer + 1;
-        }
-        m_layers[layer].setSize(size);
-    }
+    void setImageResource(ImageResource* imageResource, uint32_t layer);
 
-    void setSize(LengthSize size, uint32_t layer)
-    {
-        resizeLayerIfNeeded(layer);
-        if (m_maxLayerSize < layer + 1) {
-            m_maxLayerSize = layer + 1;
-        }
-        m_layers[layer].setSize(size);
-    }
+    void setSize(MaskSizeValue size, uint32_t layer);
 
-    bool maskSizeIsLength(uint32_t layer) const
-    {
-        if (m_layers.size() <= layer) {
-            return true;
-        }
-        return m_layers[layer].m_sizeIsLength;
-    }
+    void setSize(LengthSize size, uint32_t layer);
 
-    LengthSize maskSizeLengthValue(uint32_t layer) const
-    {
-        if (m_layers.size() <= layer) {
-            return LengthSize();
-        }
-        return m_layers[layer].sizeLengthValue();
-    }
+    void setPositionX(Length value, uint32_t layer);
 
-    MaskSizeValue maskSizeTypeValue(uint32_t layer) const
-    {
-        if (m_layers.size() <= layer) {
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-            return MaskSizeValue::ContainMaskSizeValue;
-        }
-        return m_layers[layer].sizeTypeValue();
-    }
+    void setPositionY(Length value, uint32_t layer);
 
-    void shrinkImages(uint32_t size)
-    {
-        STARFISH_ASSERT(m_layers.size() >= m_maxLayerImage);
-        for (uint32_t i = 0; i < m_maxLayerImage; i++) {
-            m_layers[i].setImage(nullptr);
-        }
-        m_maxLayerImage = size;
-    }
+    bool maskSizeIsLength(uint32_t layer) const;
+
+    LengthSize maskSizeLengthValue(uint32_t layer) const;
+
+    MaskSizeValue maskSizeTypeValue(uint32_t layer) const;
+
+    void shrinkImages(uint32_t size);
+
+    void shrinkPositionXs(uint32_t size);
+
+    void shrinkPositionYs(uint32_t size);
 
     size_t size() const
     {
@@ -269,19 +190,7 @@ public:
         return m_maxLayerImage;
     }
 
-    bool operator==(const PositionedMaskData& other)
-    {
-        if (m_layers.size() != other.m_layers.size()) {
-            return false;
-        }
-        for (uint32_t i = 0; i < m_layers.size(); i++) {
-            if (m_layers[i] != other.m_layers[i]) {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    bool operator==(const PositionedMaskData& other);
 
     bool operator!=(const PositionedMaskData& other)
     {
@@ -292,15 +201,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    void resizeLayerIfNeeded(uint32_t layer)
-    {
-        if (m_layers.size() <= layer) {
-            m_layers.resize(layer + 1);
-        }
-    }
+    uint32_t assureLayerIndexAndSize(uint32_t layer, uint32_t& currentMax);
 
-    uint32_t m_maxLayerSize;
-    uint32_t m_maxLayerImage;
+    uint32_t m_maxLayerSize = 0;
+    uint32_t m_maxLayerImage = 0;
+    uint32_t m_maxLayerPositionX = 0;
+    uint32_t m_maxLayerPositionY = 0;
 
     GCVector<MaskLayer> m_layers;
 };

@@ -3810,6 +3810,52 @@ public:
         return 0;
     }
 
+    Length maskPositionX(uint32_t layer = 0)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return Length();
+        }
+        return positionedMaskData->positionX(layer);
+    }
+
+    void setMaskPositionX(Length value, uint32_t layer = 0)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setPositionX(value,
+                                                                      layer);
+    }
+
+    void resetMaskPositionXs()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkPositionXs(0);
+        }
+    }
+
+    Length maskPositionY(uint32_t layer = 0)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return Length();
+        }
+        return positionedMaskData->positionY(layer);
+    }
+
+    void setMaskPositionY(Length value, uint32_t layer = 0)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setPositionY(value,
+                                                                      layer);
+    }
+
+    void resetMaskPositionYs()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkPositionYs(0);
+        }
+    }
+
     void resetMaskImage()
     {
         PositionedMaskData* data = mask();

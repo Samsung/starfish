@@ -657,6 +657,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Outline-Color
         // Overflow-Wrap
         // text-overflow
+        // mask-position
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
@@ -666,6 +667,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin-bottom", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginBottom;
+            }
+            if (memcmp(data, "mask-position", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskPosition;
             }
             break;
         case 'b':
@@ -1773,6 +1777,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'm':
             if (memcmp(data, "marginBottom", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginBottom;
+            }
+            if (memcmp(data, "maskPosition", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskPosition;
             }
             break;
         case 'b':
