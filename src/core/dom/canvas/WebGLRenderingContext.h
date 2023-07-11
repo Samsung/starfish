@@ -22,21 +22,23 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/canvas/WebGLRenderingContextBaseMixIn.h"
 
 namespace Starfish {
 
-class WebGLRenderingContext : public CanvasRenderingContext {
+class WebGLRenderingContext : public WebGLRenderingContextBaseMixIn {
 public:
     WebGLRenderingContext(HTMLCanvasElement* canvasElement);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override
     {
     }
+#ifdef STARFISH_ENABLE_WEBGL
     virtual bool isWebGLRenderingContext() const override
     {
         return true;
     }
+#endif
     virtual void initialize() override
     {
     }
