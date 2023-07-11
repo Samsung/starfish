@@ -1651,6 +1651,44 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setValueKind(CSSStyleValuePair::ValueKind::None);
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::MaskPositionX: {
+        CSSStyleValuePair positionX;
+        positionX.setKeyKind(CSSStyleValuePair::KeyKind::MaskPositionX);
+        if (!style->maskLayerSize()) {
+            positionX.setPercentageValue(0);
+            addValuePair(positionX);
+            return;
+        }
+        positionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* positionXValues = new ValueList(Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item = lengthToCSSStyleValue(style->maskPositionX(i));
+            positionXValues->push_back(item);
+        }
+        positionX.setValueList(positionXValues);
+        addValuePair(positionX);
+    } break;
+    case CSSStyleValuePair::KeyKind::MaskPositionY: {
+        CSSStyleValuePair positionY;
+        positionY.setKeyKind(CSSStyleValuePair::KeyKind::MaskPositionY);
+        if (!style->maskLayerSize()) {
+            positionY.setPercentageValue(0);
+            addValuePair(positionY);
+            return;
+        }
+        positionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+        ValueList* positionYValues = new ValueList(Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item = lengthToCSSStyleValue(style->maskPositionY(i));
+            positionYValues->push_back(item);
+        }
+        positionY.setValueList(positionYValues);
+        addValuePair(positionY);
+    } break;
     case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);

@@ -194,10 +194,11 @@ public:
         // Do nothing.
     }
 
-    static bool parseBackgroundPositionShorthand(const CSSTokenVector& tokens,
-                                                 CSSStyleValuePair* retx,
-                                                 CSSStyleValuePair* rety,
-                                                 bool allowComma = true);
+    static bool parseUnitPositionShorthand(const CSSTokenVector& tokens,
+                                           CSSStyleValuePair::KeyKind keykind,
+                                           CSSStyleValuePair* retx,
+                                           CSSStyleValuePair* rety,
+                                           bool allowComma = true);
     static bool parseFontShorthand(const CSSTokenVector& tokens,
                                    CSSStyleValuePair* style,
                                    // UNSUPPORTED CSSStyleValuePair* variant,
@@ -339,6 +340,10 @@ protected:
     void setMask(const char* value, size_t len, bool isImportant);
     void removeMask();
 
+    String* MaskPosition();
+    void setMaskPosition(const char* value, size_t len, bool isImportant);
+    void removeMaskPosition();
+
     // Named property getter/setter/remover for custom properties.
     String* customProperty(String* key);
     void removeCustomProperty(String* key);
@@ -374,6 +379,11 @@ protected:
                        const char* cssName, String* value,
                        bool isImportant) const;
     String* cssTextAffectedByAllProperty(const size_t& pos) const;
+
+    String* UnitPosition(CSSStyleValuePair::KeyKind keyKind);
+    void setUnitPosition(const char* value, size_t len, bool isImportant,
+                         CSSStyleValuePair::KeyKind keyKind);
+    void removeUnitPosition(CSSStyleValuePair::KeyKind keyKind);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     Nullable<MutablePropertyValueList*> m_cssCustomValues;
