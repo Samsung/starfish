@@ -1,0 +1,48 @@
+// https://www.khronos.org/registry/webgl/specs/latest/1.0/#WebGLRenderingContextOverloads
+// mixin
+[STARFISH_ENABLE_WEBGL,
+PartialInterface,
+NoInterfaceObject]
+interface WebGLRenderingContextOverloads
+{
+    [Unimplemented] undefined bufferData(GLenum target, GLsizeiptr size, GLenum usage);
+    [Unimplemented] undefined bufferData(GLenum target, AllowSharedBufferSource? data, GLenum usage);
+    [Unimplemented] undefined bufferSubData(GLenum target, GLintptr offset, AllowSharedBufferSource data);
+
+    [Unimplemented] undefined compressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                                   GLsizei width, GLsizei height, GLint border,
+                                   [AllowShared] ArrayBufferView data);
+    [Unimplemented] undefined compressedTexSubImage2D(GLenum target, GLint level,
+                                      GLint xoffset, GLint yoffset,
+                                      GLsizei width, GLsizei height, GLenum format,
+                                      [AllowShared] ArrayBufferView data);
+
+    [Unimplemented] undefined readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                         GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
+
+    [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLsizei width, GLsizei height, GLint border, GLenum format,
+                         GLenum type, [AllowShared] ArrayBufferView? pixels);
+    [Unimplemented] undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                         GLenum format, GLenum type, TexImageSource source); // May throw DOMException
+
+    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLsizei width, GLsizei height,
+                            GLenum format, GLenum type, [AllowShared] ArrayBufferView? pixels);
+    [Unimplemented] undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                            GLenum format, GLenum type, TexImageSource source); // May throw DOMException
+
+    [Unimplemented] undefined uniform1fv(WebGLUniformLocation? location, Float32List v);
+    [Unimplemented] undefined uniform2fv(WebGLUniformLocation? location, Float32List v);
+    [Unimplemented] undefined uniform3fv(WebGLUniformLocation? location, Float32List v);
+    [Unimplemented] undefined uniform4fv(WebGLUniformLocation? location, Float32List v);
+
+    [Unimplemented] undefined uniform1iv(WebGLUniformLocation? location, Int32List v);
+    [Unimplemented] undefined uniform2iv(WebGLUniformLocation? location, Int32List v);
+    [Unimplemented] undefined uniform3iv(WebGLUniformLocation? location, Int32List v);
+    [Unimplemented] undefined uniform4iv(WebGLUniformLocation? location, Int32List v);
+
+    [Unimplemented] undefined uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    [Unimplemented] undefined uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+    [Unimplemented] undefined uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, Float32List value);
+};

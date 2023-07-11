@@ -26,7 +26,7 @@
 namespace Starfish {
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext(canvasElement->executionContext())
+    : WebGLRenderingContextBaseMixIn(canvasElement)
 {
 }
 } // namespace Starfish
