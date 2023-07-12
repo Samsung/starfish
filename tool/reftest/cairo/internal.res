@@ -445,6 +445,7 @@ test/cairo/internal-test/css/masking/mask-image-1d.htm
 #test/cairo/internal-test/css/masking/mask-image-5.htm
 #test/cairo/internal-test/css/masking/mask-image-6.htm
 test/cairo/internal-test/css/masking/mask-position-1.html
+test/cairo/internal-test/css/masking/mask-repeat-1.html
 test/cairo/internal-test/css/legacy/body_legacy_attrs.html
 test/cairo/internal-test/css/style/style-content-with-quotes.html
 test/cairo/internal-test/css/display/inlineblock_ascender.html

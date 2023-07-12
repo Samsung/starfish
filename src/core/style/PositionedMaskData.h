@@ -102,6 +102,36 @@ public:
         m_positionY = Length(Length::Percent, 0.0f);
     }
 
+    RepeatStyleValue repeatX() const
+    {
+        return m_repeatX;
+    }
+
+    void setRepeatX(RepeatStyleValue repeat)
+    {
+        m_repeatX = repeat;
+    }
+
+    void resetRepeatX()
+    {
+        m_repeatX = RepeatRepeatValue;
+    }
+
+    RepeatStyleValue repeatY() const
+    {
+        return m_repeatY;
+    }
+
+    void setRepeatY(RepeatStyleValue repeat)
+    {
+        m_repeatY = repeat;
+    }
+
+    void resetRepeatY()
+    {
+        m_repeatY = RepeatRepeatValue;
+    }
+
     void setSize(MaskSizeValue size)
     {
         m_sizeIsLength = false;
@@ -133,6 +163,9 @@ public:
     ImageValue* m_image = nullptr;
     ImageResource* m_imageResource = nullptr;
 
+    RepeatStyleValue m_repeatX;
+    RepeatStyleValue m_repeatY;
+
     // mask-size
     bool m_sizeIsLength = true;
     MaskSize m_size;
@@ -153,6 +186,10 @@ public:
 
     Length positionY(uint32_t layer) const;
 
+    RepeatStyleValue repeatX(uint32_t index) const;
+
+    RepeatStyleValue repeatY(uint32_t index) const;
+
     ImageResource* imageResource(uint32_t layer) const;
 
     void setImage(ImageValue* value, uint32_t layer);
@@ -167,6 +204,10 @@ public:
 
     void setPositionY(Length value, uint32_t layer);
 
+    void setRepeatX(RepeatStyleValue repeat, uint32_t index);
+
+    void setRepeatY(RepeatStyleValue repeat, uint32_t index);
+
     bool maskSizeIsLength(uint32_t layer) const;
 
     LengthSize maskSizeLengthValue(uint32_t layer) const;
@@ -178,6 +219,10 @@ public:
     void shrinkPositionXs(uint32_t size);
 
     void shrinkPositionYs(uint32_t size);
+
+    void shrinkRepeatXs(uint32_t size);
+
+    void shrinkRepeatYs(uint32_t size);
 
     size_t size() const
     {
@@ -207,6 +252,8 @@ private:
     uint32_t m_maxLayerImage = 0;
     uint32_t m_maxLayerPositionX = 0;
     uint32_t m_maxLayerPositionY = 0;
+    uint32_t m_maxLayerRepeatX = 0;
+    uint32_t m_maxLayerRepeatY = 0;
 
     GCVector<MaskLayer> m_layers;
 };

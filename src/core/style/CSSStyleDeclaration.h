@@ -344,6 +344,10 @@ protected:
     void setMaskPosition(const char* value, size_t len, bool isImportant);
     void removeMaskPosition();
 
+    String* MaskRepeat();
+    void setMaskRepeat(const char* value, size_t len, bool isImportant);
+    void removeMaskRepeat();
+
     // Named property getter/setter/remover for custom properties.
     String* customProperty(String* key);
     void removeCustomProperty(String* key);
@@ -384,6 +388,11 @@ protected:
     void setUnitPosition(const char* value, size_t len, bool isImportant,
                          CSSStyleValuePair::KeyKind keyKind);
     void removeUnitPosition(CSSStyleValuePair::KeyKind keyKind);
+
+    String* UnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind);
+    void setUnitRepeatStyle(const char* value, size_t len, bool isImportant,
+                            CSSStyleValuePair::KeyKind keyKind);
+    void removeUnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind);
 
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     Nullable<MutablePropertyValueList*> m_cssCustomValues;

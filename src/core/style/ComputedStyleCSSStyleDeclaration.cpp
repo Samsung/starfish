@@ -699,7 +699,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
         if (!style->backgroundLayerSize()) {
-            bgRepeatX.setBackgroundRepeatValue(style->backgroundRepeatX(0));
+            bgRepeatX.setRepeatStyleValue(style->backgroundRepeatX(0));
             addValuePair(bgRepeatX);
             return;
         }
@@ -712,7 +712,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
 
-            item.setBackgroundRepeatValue(style->backgroundRepeatX(i));
+            item.setRepeatStyleValue(style->backgroundRepeatX(i));
             bgRepeatXValues->push_back(item);
         }
 
@@ -725,7 +725,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
         if (!style->backgroundLayerSize()) {
-            bgRepeatY.setBackgroundRepeatValue(style->backgroundRepeatY(0));
+            bgRepeatY.setRepeatStyleValue(style->backgroundRepeatY(0));
             addValuePair(bgRepeatY);
             return;
         }
@@ -737,7 +737,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
-            item.setBackgroundRepeatValue(style->backgroundRepeatY(i));
+            item.setRepeatStyleValue(style->backgroundRepeatY(i));
             bgRepeatYValues->push_back(item);
         }
 
@@ -1688,6 +1688,48 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         positionY.setValueList(positionYValues);
         addValuePair(positionY);
+    } break;
+    case CSSStyleValuePair::KeyKind::MaskRepeatX: {
+        CSSStyleValuePair repeatX;
+        repeatX.setKeyKind(CSSStyleValuePair::KeyKind::MaskRepeatX);
+        if (!style->maskLayerSize()) {
+            repeatX.setRepeatStyleValue(style->maskRepeatX(0));
+            addValuePair(repeatX);
+            return;
+        }
+
+        repeatX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* maskRepeatXValues;
+        maskRepeatXValues = new ValueList(Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item.setRepeatStyleValue(style->maskRepeatX(i));
+            maskRepeatXValues->push_back(item);
+        }
+
+        repeatX.setValueList(maskRepeatXValues);
+        addValuePair(repeatX);
+    } break;
+    case CSSStyleValuePair::KeyKind::MaskRepeatY: {
+        CSSStyleValuePair repeatY;
+        repeatY.setKeyKind(CSSStyleValuePair::KeyKind::MaskRepeatY);
+        if (!style->maskLayerSize()) {
+            repeatY.setRepeatStyleValue(style->maskRepeatY(0));
+            addValuePair(repeatY);
+            return;
+        }
+
+        repeatY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* maskRepeatYValues;
+        maskRepeatYValues = new ValueList(Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item.setRepeatStyleValue(style->maskRepeatY(i));
+            maskRepeatYValues->push_back(item);
+        }
+
+        repeatY.setValueList(maskRepeatYValues);
+        addValuePair(repeatY);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
         CSSStyleValuePair p;

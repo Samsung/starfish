@@ -27,6 +27,8 @@ namespace Starfish {
 MaskLayer::MaskLayer()
     : m_image(nullptr)
     , m_imageResource(nullptr)
+    , m_repeatX(RepeatStyleValue::RepeatRepeatValue)
+    , m_repeatY(RepeatStyleValue::RepeatRepeatValue)
     , m_sizeIsLength(true)
 {
 }
@@ -75,6 +77,10 @@ bool MaskLayer::operator==(const MaskLayer& other)
         return false;
     }
 
+    if (m_repeatX != other.m_repeatX || m_repeatY != other.m_repeatY) {
+        return false;
+    }
+
     return true;
 }
 
@@ -86,6 +92,8 @@ bool PositionedMaskData::damaged(const PositionedMaskData* lhs,
     damagedKeys[CSSStyleValuePair::KeyKind::MaskImage] = false;
     damagedKeys[CSSStyleValuePair::KeyKind::MaskPositionX] = false;
     damagedKeys[CSSStyleValuePair::KeyKind::MaskPositionY] = false;
+    damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatX] = false;
+    damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatY] = false;
 
     if (!lhs && !rhs) {
         return false;
@@ -128,6 +136,16 @@ bool PositionedMaskData::damaged(const PositionedMaskData* lhs,
                 damagedKeys[CSSStyleValuePair::KeyKind::MaskPositionY] =
                     hasDamage = true;
             }
+
+            if (lhs->repeatX(i) != rhs->repeatX(i)) {
+                damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatX] =
+                    hasDamage = true;
+            }
+
+            if (lhs->repeatY(i) != rhs->repeatY(i)) {
+                damagedKeys[CSSStyleValuePair::KeyKind::MaskRepeatY] =
+                    hasDamage = true;
+            }
         }
     }
     return hasDamage;
@@ -138,6 +156,8 @@ PositionedMaskData::PositionedMaskData()
     , m_maxLayerImage(0)
     , m_maxLayerPositionX(0)
     , m_maxLayerPositionY(0)
+    , m_maxLayerRepeatX(0)
+    , m_maxLayerRepeatY(0)
 {
 }
 
@@ -165,6 +185,24 @@ Length PositionedMaskData::positionY(uint32_t layer) const
         return Length();
     }
     return m_layers[layer].positionY();
+}
+
+RepeatStyleValue PositionedMaskData::repeatX(uint32_t layer) const
+{
+    if (m_layers.size() <= layer) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return RepeatRepeatValue;
+    }
+    return m_layers[layer].repeatX();
+}
+
+RepeatStyleValue PositionedMaskData::repeatY(uint32_t layer) const
+{
+    if (m_layers.size() <= layer) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return RepeatRepeatValue;
+    }
+    return m_layers[layer].repeatY();
 }
 
 ImageResource* PositionedMaskData::imageResource(uint32_t layer) const
@@ -211,6 +249,18 @@ void PositionedMaskData::setPositionY(Length value, uint32_t layer)
 {
     uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerPositionY);
     m_layers[layer].setPositionY(value);
+}
+
+void PositionedMaskData::setRepeatX(RepeatStyleValue repeat, uint32_t layer)
+{
+    uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerRepeatX);
+    m_layers[layer].setRepeatX(repeat);
+}
+
+void PositionedMaskData::setRepeatY(RepeatStyleValue repeat, uint32_t layer)
+{
+    uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerRepeatY);
+    m_layers[layer].setRepeatY(repeat);
 }
 
 bool PositionedMaskData::maskSizeIsLength(uint32_t layer) const
@@ -263,6 +313,24 @@ void PositionedMaskData::shrinkPositionYs(uint32_t size)
         m_layers[i].resetPositionY();
     }
     m_maxLayerPositionY = size;
+}
+
+void PositionedMaskData::shrinkRepeatXs(uint32_t size)
+{
+    STARFISH_ASSERT(m_layers.size() >= m_maxLayerRepeatX);
+    for (uint16_t i = 0; i < m_maxLayerRepeatX; i++) {
+        m_layers[i].resetRepeatX();
+    }
+    m_maxLayerRepeatX = size;
+}
+
+void PositionedMaskData::shrinkRepeatYs(uint32_t size)
+{
+    STARFISH_ASSERT(m_layers.size() >= m_maxLayerRepeatY);
+    for (uint16_t i = 0; i < m_maxLayerRepeatY; i++) {
+        m_layers[i].resetRepeatY();
+    }
+    m_maxLayerRepeatY = size;
 }
 
 bool PositionedMaskData::operator==(const PositionedMaskData& other)

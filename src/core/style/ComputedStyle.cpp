@@ -294,7 +294,9 @@ public:
                     PseudoElementType type = static_cast<PseudoElementType>(i);
                     PseudoElement* pseudoElement =
                         pseudoElementMap->pseudoElement(type);
-                    pseudoElement->setNeedsPainting();
+                    if (pseudoElement) {
+                        pseudoElement->setNeedsPainting();
+                    }
                 }
             }
         }

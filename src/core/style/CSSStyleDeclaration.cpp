@@ -57,6 +57,23 @@ static bool UnitPositionShorthandToLongHand(
     return false;
 }
 
+static bool UnitRepeatStyleShorthandToLongHand(
+    const CSSStyleValuePair::KeyKind& shorthand,
+    CSSStyleValuePair::KeyKind& longhandX,
+    CSSStyleValuePair::KeyKind& longhandY)
+{
+    if (shorthand == CSSStyleValuePair::KeyKind::BackgroundRepeat) {
+        longhandX = CSSStyleValuePair::KeyKind::BackgroundRepeatX;
+        longhandY = CSSStyleValuePair::KeyKind::BackgroundRepeatY;
+        return true;
+    } else if (shorthand == CSSStyleValuePair::KeyKind::MaskRepeat) {
+        longhandX = CSSStyleValuePair::KeyKind::MaskRepeatX;
+        longhandY = CSSStyleValuePair::KeyKind::MaskRepeatY;
+        return true;
+    }
+    return false;
+}
+
 static bool seperatorContains(const char* seperator, size_t seperatorCount,
                               char ch)
 {
@@ -94,26 +111,26 @@ static void addBackgroundCSSValuePairs(
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundClip, clip);
 }
 
-// Parse backgroundRepeat string in case it has single token
-static bool parseBackgroundRepeatShorhand(const CSSTokenValue& tok,
-                                          CSSStyleValuePair* retx,
-                                          CSSStyleValuePair* rety)
+// Parse repeat-style value string in case it has single token
+static bool parseUnitRepeatStyle(const CSSTokenValue& tok,
+                                 CSSStyleValuePair* retx,
+                                 CSSStyleValuePair* rety)
 {
-    if (retx->updateValueUnitBackgroundRepeat(tok)) {
+    if (retx->updateValueUnitRepeatStyle(tok)) {
         *rety = *retx;
     } else if (tok.equals("repeat-x")) {
         *retx = CSSStyleValuePair(
-            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            CSSStyleValuePair::ValueKind::RepeatStyleValueKind,
             RepeatRepeatValue);
         *rety = CSSStyleValuePair(
-            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            CSSStyleValuePair::ValueKind::RepeatStyleValueKind,
             NoRepeatRepeatValue);
     } else if (tok.equals("repeat-y")) {
         *retx = CSSStyleValuePair(
-            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            CSSStyleValuePair::ValueKind::RepeatStyleValueKind,
             NoRepeatRepeatValue);
         *rety = CSSStyleValuePair(
-            CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind,
+            CSSStyleValuePair::ValueKind::RepeatStyleValueKind,
             RepeatRepeatValue);
     } else {
         return false;
@@ -121,10 +138,10 @@ static bool parseBackgroundRepeatShorhand(const CSSTokenValue& tok,
     return true;
 }
 
-static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
-                                          CSSStyleValuePair* retx,
-                                          CSSStyleValuePair* rety,
-                                          bool allowComma = true)
+static bool parseUnitRepeatStyle(const CSSTokenVector& tokens,
+                                 CSSStyleValuePair* retx,
+                                 CSSStyleValuePair* rety,
+                                 bool allowComma = true)
 {
     // <repeat-style> = repeat-x | repeat-y | [repeat | no-repeat]{1,2}
     // <repeat-style> [, <repeat-style>]*
@@ -146,7 +163,7 @@ static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
         }
         if (len == 1) {
             CSSStyleValuePair x, y;
-            if (parseBackgroundRepeatShorhand(tokens[i - 1], &x, &y)) {
+            if (parseUnitRepeatStyle(tokens[i - 1], &x, &y)) {
                 retx->multiValue()->push_back(x);
                 rety->multiValue()->push_back(y);
             } else {
@@ -154,8 +171,8 @@ static bool parseBackgroundRepeatShorhand(const CSSTokenVector& tokens,
             }
         } else if (len == 2) {
             CSSStyleValuePair x, y;
-            if (x.updateValueUnitBackgroundRepeat(tokens[i - 2]) &&
-                y.updateValueUnitBackgroundRepeat(tokens[i - 1])) {
+            if (x.updateValueUnitRepeatStyle(tokens[i - 2]) &&
+                y.updateValueUnitRepeatStyle(tokens[i - 1])) {
                 retx->multiValue()->push_back(x);
                 rety->multiValue()->push_back(y);
             } else {
@@ -241,8 +258,8 @@ static bool parseBackgroundShorthand(
                 hasPosition = true;
                 i++;
                 continue;
-            } else if (!hasRepeat && parseBackgroundRepeatShorhand(
-                                         toks, &tempX, &tempY, false)) {
+            } else if (!hasRepeat &&
+                       parseUnitRepeatStyle(toks, &tempX, &tempY, false)) {
                 *repeatX = tempX;
                 *repeatY = tempY;
                 hasRepeat = true;
@@ -280,7 +297,7 @@ static bool parseBackgroundShorthand(
             hasPosition = true;
             continue;
         } else if (!hasRepeat &&
-                   parseBackgroundRepeatShorhand(toks, &tempX, &tempY, false)) {
+                   parseUnitRepeatStyle(toks, &tempX, &tempY, false)) {
             *repeatX = tempX;
             *repeatY = tempY;
             hasRepeat = true;
@@ -2392,71 +2409,19 @@ void CSSStyleDeclaration::removeBackgroundPosition()
 
 String* CSSStyleDeclaration::BackgroundRepeat()
 {
-    String* repeatX = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::BackgroundRepeatX);
-    String* repeatY = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::BackgroundRepeatY);
-
-    GCVector<StringView> vRepeatX, vRepeatY;
-    StringUtils::tokenize(repeatX, ",", 1, vRepeatX);
-    StringUtils::tokenize(repeatY, ",", 1, vRepeatY);
-
-    StringBuilder builder;
-    size_t size = std::min(vRepeatX.size(), vRepeatY.size());
-    for (size_t i = 0; i < size; i++) {
-        String* rX = vRepeatX[i].trim();
-        String* rY = vRepeatY[i].trim();
-        if (rX->equals(rY)) {
-            builder.appendString(rX);
-        } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
-            builder.appendString("repeat-x");
-        } else if (rX->equals("no-repeat") && rY->equals("repeat")) {
-            builder.appendString("repeat-y");
-        } else {
-            return builder.finalize();
-        }
-
-        if (i != size - 1) {
-            builder.appendChar(',');
-            builder.appendString(String::spaceString);
-        }
-    }
-    return builder.finalize();
+    return UnitRepeatStyle(CSSStyleValuePair::KeyKind::BackgroundRepeat);
 }
 
 void CSSStyleDeclaration::setBackgroundRepeat(const char* value, size_t length,
                                               bool isImportant)
 {
-    if (value == 0) {
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
-        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
-        return;
-    }
-
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, length, ",", 1);
-
-    CSSStyleValuePair c, x, y;
-    if (c.updateValueVarReferences(tokens)) {
-        c.setValue(String::fromUTF8(value, length));
-        c.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeat, c);
-    } else if (c.updateValueCommon(tokens)) {
-        c.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
-    } else if (parseBackgroundRepeatShorhand(tokens, &x, &y)) {
-        x.setFlagImportant(isImportant);
-        y.setFlagImportant(isImportant);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, y);
-    }
+    setUnitRepeatStyle(value, length, isImportant,
+                       CSSStyleValuePair::KeyKind::BackgroundRepeat);
 }
 
 void CSSStyleDeclaration::removeBackgroundRepeat()
 {
-    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
-    removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+    removeUnitRepeatStyle(CSSStyleValuePair::KeyKind::BackgroundRepeat);
 }
 
 String* CSSStyleDeclaration::Border()
@@ -4588,6 +4553,23 @@ void CSSStyleDeclaration::removeMaskPosition()
     removeUnitPosition(CSSStyleValuePair::KeyKind::MaskPosition);
 }
 
+String* CSSStyleDeclaration::MaskRepeat()
+{
+    return UnitRepeatStyle(CSSStyleValuePair::KeyKind::MaskRepeat);
+}
+
+void CSSStyleDeclaration::setMaskRepeat(const char* value, size_t length,
+                                        bool isImportant)
+{
+    setUnitRepeatStyle(value, length, isImportant,
+                       CSSStyleValuePair::KeyKind::MaskRepeat);
+}
+
+void CSSStyleDeclaration::removeMaskRepeat()
+{
+    removeUnitRepeatStyle(CSSStyleValuePair::KeyKind::MaskRepeat);
+}
+
 String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
 {
     CSSStyleValuePair::KeyKind xKind, yKind;
@@ -4679,6 +4661,95 @@ void CSSStyleDeclaration::removeUnitPosition(CSSStyleValuePair::KeyKind keyKind)
 {
     CSSStyleValuePair::KeyKind xKind, yKind;
     if (!UnitPositionShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
+    removeCSSValuePair(xKind);
+    removeCSSValuePair(yKind);
+}
+
+String* CSSStyleDeclaration::UnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitRepeatStyleShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return String::emptyString;
+    }
+
+    String* repeatX =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(xKind);
+    String* repeatY =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(yKind);
+
+    GCVector<StringView> vRepeatX, vRepeatY;
+    StringUtils::tokenize(repeatX, ",", 1, vRepeatX);
+    StringUtils::tokenize(repeatY, ",", 1, vRepeatY);
+
+    StringBuilder builder;
+    size_t size = std::min(vRepeatX.size(), vRepeatY.size());
+    for (size_t i = 0; i < size; i++) {
+        String* rX = vRepeatX[i].trim();
+        String* rY = vRepeatY[i].trim();
+        if (rX->equals(rY)) {
+            builder.appendString(rX);
+        } else if (rX->equals("repeat") && rY->equals("no-repeat")) {
+            builder.appendString("repeat-x");
+        } else if (rX->equals("no-repeat") && rY->equals("repeat")) {
+            builder.appendString("repeat-y");
+        } else {
+            return builder.finalize();
+        }
+
+        if (i != size - 1) {
+            builder.appendChar(',');
+            builder.appendString(String::spaceString);
+        }
+    }
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setUnitRepeatStyle(const char* value, size_t length,
+                                             bool isImportant,
+                                             CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitRepeatStyleShorthandToLongHand(keyKind, xKind, yKind)) {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return;
+    }
+
+    if (value == 0) {
+        removeCSSValuePair(xKind);
+        removeCSSValuePair(yKind);
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, length, ",", 1);
+
+    CSSStyleValuePair c, x, y;
+    if (c.updateValueVarReferences(tokens)) {
+        c.setValue(String::fromUTF8(value, length));
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(keyKind, c);
+    } else if (c.updateValueCommon(tokens)) {
+        c.setFlagImportant(isImportant);
+        addCSSValuePair(xKind, c);
+        addCSSValuePair(yKind, c);
+    } else if (parseUnitRepeatStyle(tokens, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
+        addCSSValuePair(xKind, x);
+        addCSSValuePair(yKind, y);
+    }
+}
+
+void CSSStyleDeclaration::removeUnitRepeatStyle(
+    CSSStyleValuePair::KeyKind keyKind)
+{
+    CSSStyleValuePair::KeyKind xKind, yKind;
+    if (!UnitRepeatStyleShorthandToLongHand(keyKind, xKind, yKind)) {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return;
     }

@@ -1941,8 +1941,8 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
         bool shouldApplyRepeat = type.isGradient() ? hasSpecifiedSize : true;
 
         if (shouldApplyRepeat &&
-            (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
-             repeatY == BackgroundRepeatValue::RepeatRepeatValue)) {
+            (repeatX == RepeatStyleValue::RepeatRepeatValue &&
+             repeatY == RepeatStyleValue::RepeatRepeatValue)) {
             if (type.isURL()) {
                 if (positioningRect.x() == paintingRect.x() &&
                     positioningRect.y() == paintingRect.y() &&
@@ -1960,8 +1960,8 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                               imgH, true, true, imageRenderingValue);
             }
         } else if (shouldApplyRepeat &&
-                   repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
-                   repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                   repeatX == RepeatStyleValue::NoRepeatRepeatValue &&
+                   repeatY == RepeatStyleValue::RepeatRepeatValue) {
             if (type.isURL()) {
                 canvas->drawRepeatImage(id, Unit::Rect(x, y, imgW, paintingH),
                                         imgW, imgH, false, true,
@@ -1973,8 +1973,8 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             }
 
         } else if (shouldApplyRepeat &&
-                   repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
-                   repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
+                   repeatX == RepeatStyleValue::RepeatRepeatValue &&
+                   repeatY == RepeatStyleValue::NoRepeatRepeatValue) {
             if (type.isURL()) {
                 canvas->drawRepeatImage(id, Unit::Rect(x, y, paintingW, imgH),
                                         imgW, imgH, true, false,
