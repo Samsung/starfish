@@ -1137,8 +1137,8 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src)
     case BackgroundSizeValueKind:
         return m_value.m_backgroundSize == src.m_value.m_backgroundSize;
 
-    case BackgroundRepeatValueKind:
-        return m_value.m_backgroundRepeat == src.m_value.m_backgroundRepeat;
+    case RepeatStyleValueKind:
+        return m_value.m_repeatStyle == src.m_value.m_repeatStyle;
 
     case BackgroundAttachmentValueKind:
         return m_value.m_backgroundAttachment ==
@@ -1722,8 +1722,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("contain");
         }
         break;
-    case CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind:
-        switch (backgroundRepeatValue()) {
+    case CSSStyleValuePair::ValueKind::RepeatStyleValueKind:
+        switch (repeatStyleValue()) {
         case RepeatRepeatValue:
             return String::fromUTF8("repeat");
         case NoRepeatRepeatValue:
@@ -4289,11 +4289,10 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
-            style->setBackgroundRepeatX(
-                BackgroundRepeatValue::RepeatRepeatValue, 0);
+            style->setBackgroundRepeatX(RepeatStyleValue::RepeatRepeatValue, 0);
         } else if (newCssValue.valueKind() ==
-                   CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
-            style->setBackgroundRepeatX(newCssValue.backgroundRepeatValue(), 0);
+                   CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+            style->setBackgroundRepeatX(newCssValue.repeatStyleValue(), 0);
         } else {
             STARFISH_ASSERT(newCssValue.valueKind() ==
                             CSSStyleValuePair::ValueKind::ValueListKind);
@@ -4302,11 +4301,10 @@ void StyleResolver::applyProperty(
                 const CSSStyleValuePair& item = (*list)[i];
                 if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatX(
-                        BackgroundRepeatValue::RepeatRepeatValue, i);
-                } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
-                                                   BackgroundRepeatValueKind) {
-                    style->setBackgroundRepeatX(item.backgroundRepeatValue(),
-                                                i);
+                        RepeatStyleValue::RepeatRepeatValue, i);
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+                    style->setBackgroundRepeatX(item.repeatStyleValue(), i);
                 }
             }
         }
@@ -4324,11 +4322,10 @@ void StyleResolver::applyProperty(
                     CSSStyleValuePair::ValueKind::Initial) ||
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
-            style->setBackgroundRepeatY(
-                BackgroundRepeatValue::RepeatRepeatValue, 0);
+            style->setBackgroundRepeatY(RepeatStyleValue::RepeatRepeatValue, 0);
         } else if (newCssValue.valueKind() ==
-                   CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
-            style->setBackgroundRepeatY(newCssValue.backgroundRepeatValue(), 0);
+                   CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+            style->setBackgroundRepeatY(newCssValue.repeatStyleValue(), 0);
         } else {
             STARFISH_ASSERT(newCssValue.valueKind() ==
                             CSSStyleValuePair::ValueKind::ValueListKind);
@@ -4337,11 +4334,10 @@ void StyleResolver::applyProperty(
                 const CSSStyleValuePair& item = (*list)[i];
                 if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatY(
-                        BackgroundRepeatValue::RepeatRepeatValue, i);
-                } else if (item.valueKind() == CSSStyleValuePair::ValueKind::
-                                                   BackgroundRepeatValueKind) {
-                    style->setBackgroundRepeatY(item.backgroundRepeatValue(),
-                                                i);
+                        RepeatStyleValue::RepeatRepeatValue, i);
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+                    style->setBackgroundRepeatY(item.repeatStyleValue(), i);
                 }
             }
         }
@@ -4560,6 +4556,70 @@ void StyleResolver::applyProperty(
                 [](ComputedStyle* style, const Length& length, uint32_t layer) {
                     style->setMaskPositionY(length, layer);
                 });
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskRepeatX:
+        style->resetMaskRepeatXs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskRepeatX(parentStyle->maskRepeatX(i), i);
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaskRepeatX(RepeatStyleValue::RepeatRepeatValue, 0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+            style->setMaskRepeatX(newCssValue.repeatStyleValue(), 0);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setMaskRepeatX(RepeatStyleValue::RepeatRepeatValue,
+                                          i);
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+                    style->setMaskRepeatX(item.repeatStyleValue(), i);
+                }
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MaskRepeatY:
+        style->resetMaskRepeatYs();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                style->setMaskRepeatY(parentStyle->maskRepeatY(i), i);
+            }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaskRepeatY(RepeatStyleValue::RepeatRepeatValue, 0);
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+            style->setMaskRepeatY(newCssValue.repeatStyleValue(), 0);
+        } else {
+            STARFISH_ASSERT(newCssValue.valueKind() ==
+                            CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* list = newCssValue.multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                const CSSStyleValuePair& item = (*list)[i];
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setMaskRepeatY(RepeatStyleValue::RepeatRepeatValue,
+                                          i);
+                } else if (item.valueKind() ==
+                           CSSStyleValuePair::ValueKind::RepeatStyleValueKind) {
+                    style->setMaskRepeatY(item.repeatStyleValue(), i);
+                }
+            }
         }
         break;
     case CSSStyleValuePair::KeyKind::TransitionProperty:
@@ -9901,14 +9961,13 @@ bool CSSStyleValuePair::updateValueUnitFontStyle(const CSSTokenValue& value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(
-    const CSSTokenValue& value)
+bool CSSStyleValuePair::updateValueUnitRepeatStyle(const CSSTokenValue& value)
 {
-    m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
+    m_valueKind = CSSStyleValuePair::ValueKind::RepeatStyleValueKind;
     if (STRING_VALUE_IS_STRING("no-repeat")) {
-        m_value.m_backgroundRepeat = BackgroundRepeatValue::NoRepeatRepeatValue;
+        m_value.m_repeatStyle = RepeatStyleValue::NoRepeatRepeatValue;
     } else if (STRING_VALUE_IS_STRING("repeat")) {
-        m_value.m_backgroundRepeat = BackgroundRepeatValue::RepeatRepeatValue;
+        m_value.m_repeatStyle = RepeatStyleValue::RepeatRepeatValue;
     } else {
         return false;
     }
@@ -9921,7 +9980,7 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatX(
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundRepeat(tokens[0]);
+    return updateValueUnitRepeatStyle(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatY(
@@ -9930,7 +9989,7 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatY(
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBackgroundRepeat(tokens[0]);
+    return updateValueUnitRepeatStyle(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
@@ -14556,6 +14615,24 @@ bool CSSStyleValuePair::updateValueMaskPositionY(Document* document,
         return false;
     }
     return updateValueUnitPositionY(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueMaskRepeatX(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitRepeatStyle(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueMaskRepeatY(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+    return updateValueUnitRepeatStyle(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitListStyleType(Document* document,

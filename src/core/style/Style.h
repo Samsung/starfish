@@ -240,9 +240,11 @@ enum BackgroundSizeValue ENSURE_ENUM_UNSIGNED {
     BackgroundSizeValueEnd = ContainBackgroundSizeValue,
 };
 
-enum BackgroundRepeatValue ENSURE_ENUM_UNSIGNED {
+// https://drafts.csswg.org/css-backgrounds-3/#typedef-repeat-style
+enum RepeatStyleValue ENSURE_ENUM_UNSIGNED {
     RepeatRepeatValue,
     NoRepeatRepeatValue,
+    // TODO: space, round
 };
 
 enum MaskSizeValue ENSURE_ENUM_UNSIGNED {
@@ -719,6 +721,8 @@ class CSSFilterFunction;
     F(MaskSize, maskSize, "mask-size")                                         \
     F(MaskPositionX, maskPositionX, "mask-position-x")                         \
     F(MaskPositionY, maskPositionY, "mask-position-Y")                         \
+    F(MaskRepeatX, maskRepeatX, "mask-repeat-x")                               \
+    F(MaskRepeatY, maskRepeatY, "mask-repeat-Y")                               \
     F(FontSize, fontSize, "font-size")                                         \
     F(FontWeight, fontWeight, "font-weight")                                   \
     F(FontStyle, fontStyle, "font-style")                                      \
@@ -806,7 +810,8 @@ class CSSFilterFunction;
     F(Flex, flex, "flex")                                            \
     F(ListStyle, listStyle, "list-style")                            \
     F(Mask, mask, "mask")                                            \
-    F(MaskPosition, maskPosition, "mask-position")
+    F(MaskPosition, maskPosition, "mask-position")                   \
+    F(MaskRepeat, maskRepeat, "mask-repeat")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F) \
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(F)     \
@@ -1001,7 +1006,7 @@ public:
 
         // Background
         BackgroundSizeValueKind,
-        BackgroundRepeatValueKind,
+        RepeatStyleValueKind,
         BackgroundAttachmentValueKind,
         BoxValueKind,
 
@@ -1428,10 +1433,10 @@ public:
         return m_value.m_backgroundSize;
     }
 
-    BackgroundRepeatValue backgroundRepeatValue() const
+    RepeatStyleValue repeatStyleValue() const
     {
-        STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
-        return m_value.m_backgroundRepeat;
+        STARFISH_ASSERT(m_valueKind == RepeatStyleValueKind);
+        return m_value.m_repeatStyle;
     }
 
     BackgroundAttachmentValue backgroundAttachmentValue() const
@@ -1788,7 +1793,7 @@ public:
         AtomicString m_atomicStringValue;
         BackgroundSizeValue m_backgroundSize;
         BoxValue m_box;
-        BackgroundRepeatValue m_backgroundRepeat;
+        RepeatStyleValue m_repeatStyle;
         BackgroundAttachmentValue m_backgroundAttachment;
         QuoteValue m_quote;
         BorderImageRepeatValue m_borderImageRepeat;
@@ -1935,8 +1940,8 @@ public:
             : m_box(v)
         {
         }
-        ValueData(BackgroundRepeatValue v)
-            : m_backgroundRepeat(v)
+        ValueData(RepeatStyleValue v)
+            : m_repeatStyle(v)
         {
         }
         ValueData(BackgroundAttachmentValue v)
@@ -2282,10 +2287,10 @@ public:
         m_value.m_backgroundSize = val;
     }
 
-    void setBackgroundRepeatValue(BackgroundRepeatValue val)
+    void setRepeatStyleValue(RepeatStyleValue val)
     {
-        m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
-        m_value.m_backgroundRepeat = val;
+        m_valueKind = CSSStyleValuePair::ValueKind::RepeatStyleValueKind;
+        m_value.m_repeatStyle = val;
     }
 
     void setBackgroundAttachmentValue(BackgroundAttachmentValue val)
@@ -2469,7 +2474,7 @@ public:
                                          bool allowComma);
     bool updateValueBorderRadius(const CSSTokenVector& tokens);
     bool updateValueBox(const CSSTokenVector& tokens, bool allowComma);
-    bool updateValueUnitBackgroundRepeat(const CSSTokenValue& token);
+    bool updateValueUnitRepeatStyle(const CSSTokenValue& token);
     bool updateValueUnitPositionX(const CSSTokenValue& token);
     bool updateValueUnitPositionY(const CSSTokenValue& token);
     bool updateValueUnitBackgroundAttachment(const CSSTokenValue& token);

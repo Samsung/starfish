@@ -64,8 +64,8 @@ public:
     BackgroundLayer()
         : m_image(nullptr)
         , m_imageResource(nullptr)
-        , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
-        , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_repeatX(RepeatStyleValue::RepeatRepeatValue)
+        , m_repeatY(RepeatStyleValue::RepeatRepeatValue)
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
         , m_size()
@@ -116,12 +116,12 @@ public:
         m_imageResource = data;
     }
 
-    void setRepeatX(BackgroundRepeatValue repeat)
+    void setRepeatX(RepeatStyleValue repeat)
     {
         m_repeatX = repeat;
     }
 
-    void setRepeatY(BackgroundRepeatValue repeat)
+    void setRepeatY(RepeatStyleValue repeat)
     {
         m_repeatY = repeat;
     }
@@ -209,12 +209,12 @@ public:
         return m_imageResource;
     }
 
-    BackgroundRepeatValue repeatX() const
+    RepeatStyleValue repeatX() const
     {
         return m_repeatX;
     }
 
-    BackgroundRepeatValue repeatY() const
+    RepeatStyleValue repeatY() const
     {
         return m_repeatY;
     }
@@ -299,8 +299,8 @@ private:
     ImageResource* m_imageResource;
 
     // background-repeat
-    BackgroundRepeatValue m_repeatX : 1;
-    BackgroundRepeatValue m_repeatY : 1;
+    RepeatStyleValue m_repeatX : 1;
+    RepeatStyleValue m_repeatY : 1;
 
     // background-position
     Length m_positionX;
@@ -441,13 +441,13 @@ public:
         m_layers[assured].setImageResource(data);
     }
 
-    void setRepeatX(BackgroundRepeatValue repeat, uint32_t index)
+    void setRepeatX(RepeatStyleValue repeat, uint32_t index)
     {
         uint16_t assured = assureLayerIndexAndSize(index, m_maxLayerRepeatX);
         m_layers[assured].setRepeatX(repeat);
     }
 
-    void setRepeatY(BackgroundRepeatValue repeat, uint32_t index)
+    void setRepeatY(RepeatStyleValue repeat, uint32_t index)
     {
         uint16_t assured = assureLayerIndexAndSize(index, m_maxLayerRepeatY);
         m_layers[assured].setRepeatY(repeat);
@@ -520,7 +520,7 @@ public:
     // the UA must calculate its used value by repeating the list of values
     // until there are enough.
 
-    BackgroundRepeatValue repeatX(uint32_t index) const
+    RepeatStyleValue repeatX(uint32_t index) const
     {
         if (m_maxLayerRepeatX == 0) {
             return RepeatRepeatValue;
@@ -529,7 +529,7 @@ public:
         return m_layers[p].repeatX();
     }
 
-    BackgroundRepeatValue repeatY(uint32_t index) const
+    RepeatStyleValue repeatY(uint32_t index) const
     {
         if (m_maxLayerRepeatY == 0) {
             return RepeatRepeatValue;

@@ -472,6 +472,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Caret-Color
         // Will-Change
         // Grid-Column
+        // mask-repeat
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "align-items", 11) == 0) {
@@ -512,6 +513,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin-left", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginLeft;
+            }
+            if (memcmp(data, "mask-repeat", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskRepeat;
             }
             break;
         case 'p':
@@ -1645,6 +1649,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'm':
             if (memcmp(data, "marginLeft", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginLeft;
+            }
+            if (memcmp(data, "maskRepeat", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::MaskRepeat;
             }
             break;
         case 'p':

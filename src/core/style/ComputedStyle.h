@@ -1466,12 +1466,12 @@ public:
                                                                      layer);
     }
 
-    void setBackgroundRepeatX(BackgroundRepeatValue repeat, uint32_t layer)
+    void setBackgroundRepeatX(RepeatStyleValue repeat, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatX(repeat, layer);
     }
 
-    void setBackgroundRepeatY(BackgroundRepeatValue repeat, uint32_t layer)
+    void setBackgroundRepeatY(RepeatStyleValue repeat, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatY(repeat, layer);
     }
@@ -1621,20 +1621,20 @@ public:
         return background->imageData(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatX(uint32_t layer)
+    RepeatStyleValue backgroundRepeatX(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
-            return BackgroundRepeatValue::RepeatRepeatValue;
+            return RepeatStyleValue::RepeatRepeatValue;
         }
         return background->repeatX(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatY(uint32_t layer)
+    RepeatStyleValue backgroundRepeatY(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
-            return BackgroundRepeatValue::RepeatRepeatValue;
+            return RepeatStyleValue::RepeatRepeatValue;
         }
         return background->repeatY(layer);
     }
@@ -3853,6 +3853,52 @@ public:
         PositionedMaskData* positionedMaskData = mask();
         if (positionedMaskData) {
             positionedMaskData->shrinkPositionYs(0);
+        }
+    }
+
+    RepeatStyleValue maskRepeatX(uint32_t layer = 0)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return RepeatRepeatValue;
+        }
+        return positionedMaskData->repeatX(layer);
+    }
+
+    void setMaskRepeatX(RepeatStyleValue value, uint32_t layer = 0)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setRepeatX(value,
+                                                                    layer);
+    }
+
+    void resetMaskRepeatXs()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkRepeatXs(0);
+        }
+    }
+
+    RepeatStyleValue maskRepeatY(uint32_t layer = 0)
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData == nullptr) {
+            return RepeatRepeatValue;
+        }
+        return positionedMaskData->repeatY(layer);
+    }
+
+    void setMaskRepeatY(RepeatStyleValue value, uint32_t layer = 0)
+    {
+        rareComputedStyleData()->ensurePositionedMask()->setRepeatY(value,
+                                                                    layer);
+    }
+
+    void resetMaskRepeatYs()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkRepeatYs(0);
         }
     }
 
