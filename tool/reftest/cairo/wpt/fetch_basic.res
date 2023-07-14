@@ -12,7 +12,7 @@
 #http://web-platform.test:8000/fetch/api/basic/block-mime-as-script.html
 #http://web-platform.test:8000/fetch/api/resources/keepalive-iframe.html
 #http://web-platform.test:8000/fetch/api/resources/basic.html
-#http://web-platform.test:8000/fetch/api/request/request-cache-no-cache.html
+http://web-platform.test:8000/fetch/api/request/request-cache-no-cache.html
 #http://web-platform.test:8000/fetch/api/request/request-cache-force-cache.html
 #http://web-platform.test:8000/fetch/api/request/request-bad-port.html
 #http://web-platform.test:8000/fetch/api/request/request-init-002.html

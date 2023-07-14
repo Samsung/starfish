@@ -67,6 +67,10 @@ public:
 private:
     void initialize(RequestInfo* input, NULLABLE RequestInit* init = nullptr);
 
+    void buildRequestInit(RequestInit* init, String* fallbackMode);
+
+    void checkMethodCanHaveBody();
+
 protected:
     RequestData m_data;
     Headers m_headers;

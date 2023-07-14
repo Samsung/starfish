@@ -83,42 +83,35 @@ Request::Request(ExecutionContext* executionContext, RequestData* data)
 {
 }
 
-static String* computeReferrer(String* referrer,
-                               ExecutionContext* executionContext)
+static ReferrerURL* computeReferrer(String* referrer,
+                                    ExecutionContext* executionContext)
 {
     // TODO: remove checking 'undefined' and 'about:blank'
     if (referrer->equals("about:blank") || referrer->isEmpty() ||
         referrer->equals("undefined")) {
-        return String::emptyString;
+        return new ReferrerURL(String::emptyString, ReferrerPolicy::NoReferrer);
     }
 
     String* contextOrigin = executionContext->baseURL()->origin();
 
-    ResourceURL url(referrer, contextOrigin);
+    ReferrerURL* url =
+        new ReferrerURL(new ResourceURL(referrer, contextOrigin));
 
-    // STARFISH_LOG_INFO("%s %s %s %s"
-    //                 , CSTR(url.urlString())
-    //                 , CSTR(url.origin())
-    //                 , CSTR(referrer)
-    //                 , CSTR(contextOrigin));
-
-    if (url.isValid() == false) {
-        if (url.urlString()->startsWith("/")) {
-            return contextOrigin->concat(referrer);
-        }
-        // TODO: throw an exception
-        return String::createASCIIString("no-referrer");
+    if (url->isValid() == false) {
+        throw new DOMException(executionContext,
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Referrer is not a valid URL.");
     }
 
-    if (url.protocol()->equals("about") && url.pathname()->equals("client")) {
-        return String::createASCIIString("about:client");
+    if (url->protocol()->equals("about") && url->pathname()->equals("client")) {
+        return new ReferrerURL(String::createASCIIString("about:client"));
     }
 
-    if (url.origin()->equals(contextOrigin) == false) {
-        return String::createASCIIString("about:client");
+    if (url->origin()->equals(contextOrigin) == false) {
+        return new ReferrerURL(String::createASCIIString("about:client"));
     }
 
-    return url.urlString();
+    return url;
 }
 
 void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
@@ -126,8 +119,7 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
     // FIXME : Apply the https://fetch.spec.whatwg.org/#dom-request
     STARFISH_ASSERT(input != nullptr);
 
-    String* fallbackMode = nullptr;
-    String* fallbackCredentials = nullptr;
+    String* fallbackMode = String::emptyString;
 
     // check input is string or Request
     if (input->isRequestValue()) {
@@ -147,6 +139,11 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
             m_headers.copyHeaders(&request->m_headers);
         }
 
+        if (bodyDisturbedOrLocked()) {
+            throw new DOMException(executionContext(),
+                                   DOMException::Code::SCRIPT_TYPE_ERR,
+                                   "Request input is disturbed or locked");
+        }
         copyBody(request);
 
     } else {
@@ -155,94 +152,125 @@ void Request::initialize(RequestInfo* input, NULLABLE RequestInit* init)
                 new ResourceURL(input->getUSVStringValue(),
                                 executionContext()->baseURL()->baseURI());
             fallbackMode = String::createASCIIString("cors");
-            fallbackCredentials = String::createASCIIString("same-origin");
         } else {
             return; // ignore or read the result of toString
         }
     }
 
     if (init) {
-        if (init->hasMethod()) {
-            m_data.m_method = init->method();
-        } else {
-            // FIXME : Remove this line after apply a
-            // https://fetch.spec.whatwg.org/#dom-request
-            m_data.m_method = String::createASCIIString("undefined");
-        }
-
-        if (!HeadersData::isValidHTTPToken(m_data.m_method) ||
-            FetchUtils::isForbiddenMethod(m_data.m_method)) {
-            throw new DOMException(executionContext(),
-                                   DOMException::SCRIPT_TYPE_ERR,
-                                   "SCRIPT_TYPE_ERR");
-        }
-
-        m_data.m_method = FetchUtils::normalizeMethod(m_data.m_method);
-
-        String* referrerPolicy = String::emptyString;
-        if (init->hasReferrerPolicy()) {
-            referrerPolicy = init->referrerPolicy();
-        }
-        String* referrer = String::emptyString;
-        if (init->hasReferrer()) {
-            referrer = init->referrer();
-        }
-
-        if (referrer->isEmpty()) {
-            m_data.m_referrer =
-                new ReferrerURL(new ResourceURL(referrer), referrerPolicy);
-        } else {
-            m_data.m_referrer = new ReferrerURL(
-                new ResourceURL(referrer,
-                                executionContext()->baseURL()->baseURI()),
-                referrerPolicy);
-        }
-
-        m_data.m_mode = RequestData::requestModeFromString(init->mode());
-        m_data.m_credentials =
-            RequestData::requestCredentialsFromString(init->credentials());
-        m_data.m_cache = RequestData::requestCacheFromString(init->cache());
-        m_data.m_redirect =
-            RequestData::requestRedirectFromString(init->redirect());
-        m_data.m_integrity = init->integrity();
-        m_data.m_keepalive = init->keepalive();
-
-        // Set header
-        m_headers.fill(init->headers());
-
-        // Set body
-        // NOTE: it's not supported to generate bindings for a composite type
-        // in a dictionary (e.g, BodyInit of RequestInit).So it's given as
-        // ScriptValue type.
-        ScriptValue body = init->body();
-        if (!body->isUndefinedOrNull()) {
-            if (m_data.m_method->equals("GET") ||
-                m_data.m_method->equals("HEAD")) {
-                throw new DOMException(executionContext(),
-                                       DOMException::Code::SCRIPT_TYPE_ERR);
-            }
-
-            this->setBodyInit(toBodyInitFromValueRef(
-                this->scriptBindingInstance()->scriptContext(), body));
-            if (this->contentType() != nullptr) {
-                if (!m_headers.noCheckValidHas("content-type")) {
-                    m_headers.noCheckValidSet("content-type",
-                                              CSTR(this->contentType()));
-                }
-            }
-        } else {
-            this->setBodyInit(nullptr);
-        }
+        buildRequestInit(init, fallbackMode);
     } else {
         if (input->isUSVStringValue()) {
-            STARFISH_ASSERT(fallbackMode);
-            STARFISH_ASSERT(fallbackCredentials);
             fallbackMode = String::createASCIIString("cors");
-            fallbackCredentials = String::createASCIIString("same-origin");
             m_data.m_mode = RequestData::requestModeFromString(fallbackMode);
-            m_data.m_credentials =
-                RequestData::requestCredentialsFromString(fallbackCredentials);
         }
+    }
+}
+
+void Request::buildRequestInit(RequestInit* init, String* fallbackMode)
+{
+    if (m_data.m_mode == RequestMode::Navigate) {
+        m_data.m_mode = RequestMode::SameOrigin;
+    }
+
+    // TODO: Unset reload-navigation and history-navigation flag
+
+    if (init->hasReferrer()) {
+        m_data.m_referrer =
+            computeReferrer(init->referrer(), executionContext());
+    }
+
+    if (init->hasReferrerPolicy()) {
+        if (ReferrerURL::isValidPolicy(init->referrerPolicy())) {
+            m_data.m_referrer->SetPolicy(
+                ReferrerURL::policyFromString(init->referrerPolicy()));
+        }
+    }
+
+    if (!HeadersData::isValidHTTPToken(m_data.m_method) ||
+        FetchUtils::isForbiddenMethod(m_data.m_method)) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "SCRIPT_TYPE_ERR");
+    }
+
+    String* mode = fallbackMode;
+    if (init->hasMode()) {
+        mode = init->mode();
+    }
+
+    if (mode->equals("navigate")) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "SCRIPT_TYPE_ERR");
+    }
+
+    if (!mode->isEmpty()) {
+        m_data.m_mode = RequestData::requestModeFromString(mode);
+    }
+
+    if (init->hasCredentials()) {
+        m_data.m_credentials =
+            RequestData::requestCredentialsFromString(init->credentials());
+    }
+
+    if (init->hasCache()) {
+        m_data.m_cache = RequestData::requestCacheFromString(init->cache());
+    }
+
+    if (m_data.m_cache == RequestCache::OnlyIfCached &&
+        m_data.m_mode != RequestMode::SameOrigin) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR);
+    }
+
+    if (init->hasRedirect()) {
+        m_data.m_redirect =
+            RequestData::requestRedirectFromString(init->redirect());
+    }
+
+    if (init->hasIntegrity()) {
+        m_data.m_integrity = init->integrity();
+    }
+
+    if (init->hasKeepalive()) {
+        m_data.m_keepalive = init->keepalive();
+    }
+
+    if (init->hasMethod()) {
+        if (!HeadersData::isValidHTTPToken(init->method()) ||
+            FetchUtils::isForbiddenMethod(init->method())) {
+            throw new DOMException(executionContext(),
+                                   DOMException::SCRIPT_TYPE_ERR);
+        }
+        m_data.m_method = FetchUtils::normalizeMethod(init->method());
+    }
+
+    if (init->hasHeaders()) {
+        m_headers.fill(init->headers());
+    }
+
+    // Set body
+    if (init->hasBody() && init->body().hasValue()) {
+        checkMethodCanHaveBody();
+
+        setBodyInit(init->body().value());
+    } else {
+        setBodyInit(nullptr);
+    }
+
+    if (!m_contentType->isEmpty() &&
+        !m_headers.noCheckValidHas("content-type")) {
+        m_headers.noCheckValidSet("content-type", CSTR(m_contentType));
+    }
+}
+
+void Request::checkMethodCanHaveBody()
+{
+    if (m_data.m_method->equals("GET") || m_data.m_method->equals("HEAD")) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR,
+                               "Request cannot have a body");
     }
 }
 
@@ -279,7 +307,15 @@ String* Request::destination()
 
 String* Request::referrer()
 {
-    return computeReferrer(m_data.m_referrer->urlString(), executionContext());
+    auto referrerString = m_data.m_referrer->urlString();
+    if (referrerString->equals("no-referrer") ||
+        referrerString->equals("about:blank")) {
+        return String::emptyString;
+    } else if (referrerString->equals("about:client")) {
+        return referrerString;
+    }
+
+    return m_data.m_referrer->serialize();
 }
 
 String* Request::referrerPolicy()

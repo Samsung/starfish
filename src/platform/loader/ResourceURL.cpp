@@ -1394,6 +1394,11 @@ ReferrerPolicy ReferrerURL::policy()
     return m_policy;
 }
 
+void ReferrerURL::SetPolicy(ReferrerPolicy policy)
+{
+    m_policy = policy;
+}
+
 bool ReferrerURL::isValidPolicy(NULLABLE String* policy)
 {
     if (policy->equalsIgnoreCase("no-referrer") ||

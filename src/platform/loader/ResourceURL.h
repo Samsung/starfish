@@ -310,6 +310,7 @@ public:
     String* referrerString(ResourceURL* url);
     String* referrerPolicyString();
     ReferrerPolicy policy();
+    void SetPolicy(ReferrerPolicy policy);
     static bool isValidPolicy(NULLABLE String* policy);
     static ReferrerPolicy policyFromString(String* policy);
 

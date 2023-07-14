@@ -1,15 +1,10 @@
 // https://fetch.spec.whatwg.org/#requestinit
 
-// typedef (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString) BodyInit;
-// typedef (Blob or BufferSource or USVString) BodyInit;
-// typedef any BodyInit;
-
 dictionary RequestInit {
-   ByteString method;
+    ByteString method;
     HeadersInit headers;
     
-    // BodyInit? body;
-    any body;
+    BodyInit? body;
     USVString referrer;
     ReferrerPolicy referrerPolicy;
     RequestMode mode;
@@ -20,5 +15,7 @@ dictionary RequestInit {
     boolean keepalive;
 
     // AbortSignal? signal;
+    // RequestDuplex duplex;
+    // RequestPriority priority;
     // any window; // can only be set to null
 };

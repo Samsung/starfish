@@ -42,7 +42,7 @@ struct RequestInit : public gc {
     DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, redirect, Redirect);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(String*, integrity, Integrity);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(bool, keepalive, Keepalive);
-    DEFINE_GETTER_SETTER_WITH_HASFLAG(ScriptValue, body, Body);
+    DEFINE_GETTER_SETTER_WITH_HASFLAG(Nullable<BodyInit>, body, Body);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(HeadersInit, headers, Headers);
 
 private:
@@ -68,7 +68,7 @@ private:
     String* m_integrity{ String::emptyString };
     bool m_keepalive{ false };
     HeadersInit m_headers{ scriptUndefined() };
-    ScriptValue m_body{ scriptUndefined() };
+    Nullable<BodyInit> m_body{ nullptr };
 };
 } // namespace Starfish
 #endif

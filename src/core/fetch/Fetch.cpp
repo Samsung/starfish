@@ -92,6 +92,8 @@ void Fetch::start()
         // Currently, it is possible only in case of text because resource
         // request supports only string type.
         m_resourceRequest->send(m_request->extract());
+    } else {
+        STARFISH_UNIMPLEMENTED();
     }
 }
 
