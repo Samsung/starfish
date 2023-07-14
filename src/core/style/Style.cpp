@@ -1147,9 +1147,6 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src)
     case BoxValueKind:
         return m_value.m_box == src.m_value.m_box;
 
-    case MaskSizeValueKind:
-        return m_value.m_maskSize == src.m_value.m_maskSize;
-
     case FontSizeValueKind:
         return m_value.m_fontSize == src.m_value.m_fontSize;
 
@@ -2203,16 +2200,6 @@ String* CSSStyleValuePair::toString() const
         break;
     case CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind:
         return fontFaceSrcDataValue()->toString();
-    case CSSStyleValuePair::ValueKind::MaskSizeValueKind:
-        switch (MaskSizeValue()) {
-        case CoverMaskSizeValue:
-            return String::fromUTF8("cover");
-        case ContainMaskSizeValue:
-            return String::fromUTF8("contain");
-        default:
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-        break;
     case CSSStyleValuePair::ValueKind::ListStylePositionValueKind:
         switch (listStylePositionValue()) {
         case ListStylePositionOutside:
@@ -4470,21 +4457,22 @@ void StyleResolver::applyProperty(
         }
         break;
     case CSSStyleValuePair::KeyKind::MaskSize:
-        if ((newCssValue.valueKind() ==
-             CSSStyleValuePair::ValueKind::Initial) ||
-            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
-            style->setMaskSize(LengthSize());
-        } else if (newCssValue.valueKind() ==
-                   CSSStyleValuePair::ValueKind::Inherit) {
+        style->resetMaskSizes();
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            size_t size = parentStyle->maskSizeLayerLength();
-            for (size_t i = 0; i < size; i++) {
-                if (style->maskSizeIsLength(i)) {
+            uint32_t size = parentStyle->maskLayerSize();
+            for (uint32_t i = 0; i < size; i++) {
+                if (parentStyle->maskSizeIsLength(i)) {
                     style->setMaskSize(parentStyle->maskSizeLengthValue(i), i);
                 } else {
                     style->setMaskSize(parentStyle->maskSizeTypeValue(i), i);
                 }
             }
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMaskSize(LengthSize(), 0);
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::ValueListKind) {
             ValueList* layers = newCssValue.multiValue();
@@ -4493,9 +4481,9 @@ void StyleResolver::applyProperty(
                 if (layer.valueKind() ==
                     CSSStyleValuePair::ValueKind::Initial) {
                     style->setMaskSize(LengthSize(), l);
-                } else if (layer.valueKind() ==
-                           CSSStyleValuePair::ValueKind::MaskSizeValueKind) {
-                    style->setMaskSize(layer.maskSizeValue(), l);
+                } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::
+                                                    BackgroundSizeValueKind) {
+                    style->setMaskSize(layer.backgroundSizeValue(), l);
                 } else if (layer.valueKind() ==
                            CSSStyleValuePair::ValueKind::Auto) {
                     style->setMaskSize(LengthSize(), l);
@@ -11175,8 +11163,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(Document* document,
 bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
                                                   bool allowComma)
 {
-    // [length | percentage | auto]{1, 2} | cover | contain // initial value ->
-    // auto
+    // [<bg-size> = [ <length-percentage [0,∞]> | auto ]{1,2} | cover | contain.
     size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     setValueList(new ValueList(Separator::CommaSeparator));
@@ -14591,8 +14578,7 @@ bool CSSStyleValuePair::updateValueUnitFourSidedShorthandProperty(
 bool CSSStyleValuePair::updateValueMaskSize(Document* document,
                                             const CSSTokenVector& tokens)
 {
-    STARFISH_UNIMPLEMENTED();
-    return false;
+    return updateValueBackgroundSize(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueMaskPositionX(Document* document,

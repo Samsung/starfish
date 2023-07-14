@@ -1645,11 +1645,40 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(maskImage);
     } break;
     case CSSStyleValuePair::KeyKind::MaskSize: {
-        STARFISH_UNIMPLEMENTED();
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
-        p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        addValuePair(p);
+        CSSStyleValuePair maskSize;
+        maskSize.setKeyKind(CSSStyleValuePair::KeyKind::MaskSize);
+        if (!style->maskLayerSize()) {
+            maskSize.setValueKind(CSSStyleValuePair::Auto);
+            addValuePair(maskSize);
+            return;
+        }
+
+        maskSize.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* maskSizeValues;
+        maskSizeValues = new ValueList(Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->maskLayerSize(); i++) {
+            CSSStyleValuePair item;
+            if (style->maskSizeIsLength(i)) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* valueList = new ValueList(Separator::SpaceSeparator);
+                LengthSize lengthSize = style->maskSizeLengthValue(i);
+
+                CSSStyleValuePair w = lengthToCSSStyleValue(lengthSize.width());
+                valueList->emplace_back(w.valueKind(), w.value());
+                CSSStyleValuePair h =
+                    lengthToCSSStyleValue(lengthSize.height());
+                valueList->emplace_back(h.valueKind(), h.value());
+                item.setValue(valueList);
+            } else {
+                item.setBackgroundSizeValue(style->maskSizeTypeValue(i));
+                item.setValueKind(
+                    CSSStyleValuePair::ValueKind::BackgroundSizeValueKind);
+            }
+            maskSizeValues->push_back(item);
+        }
+
+        maskSize.setValueList(maskSizeValues);
+        addValuePair(maskSize);
     } break;
     case CSSStyleValuePair::KeyKind::MaskPositionX: {
         CSSStyleValuePair positionX;

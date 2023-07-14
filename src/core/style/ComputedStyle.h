@@ -3745,7 +3745,7 @@ public:
             image, layer);
     }
 
-    void setMaskSize(MaskSizeValue size, unsigned int layer = 0)
+    void setMaskSize(BackgroundSizeValue size, unsigned int layer = 0)
     {
         rareComputedStyleData()->ensurePositionedMask()->setSize(size, layer);
     }
@@ -3753,6 +3753,14 @@ public:
     void setMaskSize(LengthSize size, unsigned int layer = 0)
     {
         rareComputedStyleData()->ensurePositionedMask()->setSize(size, layer);
+    }
+
+    void resetMaskSizes()
+    {
+        PositionedMaskData* positionedMaskData = mask();
+        if (positionedMaskData) {
+            positionedMaskData->shrinkSizes(0);
+        }
     }
 
     bool maskSizeIsLength(unsigned int layer = 0)
@@ -3780,10 +3788,10 @@ public:
         return LengthSize();
     }
 
-    MaskSizeValue maskSizeTypeValue(unsigned int layer = 0)
+    BackgroundSizeValue maskSizeTypeValue(unsigned int layer = 0)
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
-            return MaskSizeValue::ContainMaskSizeValue;
+            return BackgroundSizeValue::ContainBackgroundSizeValue;
         }
 
         PositionedMaskData* positionedMask =
@@ -3792,22 +3800,7 @@ public:
             return positionedMask->maskSizeTypeValue(layer);
         }
 
-        return MaskSizeValue::ContainMaskSizeValue;
-    }
-
-    size_t maskSizeLayerLength()
-    {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return 0;
-        }
-
-        PositionedMaskData* positionedMask =
-            m_rareComputedStyleData.positionedMask();
-        if (positionedMask) {
-            return positionedMask->size();
-        }
-
-        return 0;
+        return BackgroundSizeValue::ContainBackgroundSizeValue;
     }
 
     Length maskPositionX(uint32_t layer = 0)
