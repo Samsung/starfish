@@ -31,7 +31,7 @@ enum ReferrerPolicy {
 
   readonly attribute Headers headers;
   readonly attribute RequestDestination destination;
-  readonly attribute USVString referrer;
+  [RaisesException] readonly attribute USVString referrer;
   readonly attribute ReferrerPolicy referrerPolicy;
 
   readonly attribute RequestMode mode;

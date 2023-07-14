@@ -378,6 +378,8 @@ void Body::setBodyInit(const Nullable<BodyInit>& bodyInitValue)
             m_contentType = String::createASCIIString(kTextPlainContentType);
         } else if (bodyInit.isBlobValue()) {
             m_contentType = bodyInit.getBlobValue()->type();
+        } else {
+            STARFISH_UNIMPLEMENTED();
         }
     }
 }
