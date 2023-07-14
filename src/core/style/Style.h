@@ -234,6 +234,7 @@ enum DirectionValue ENSURE_ENUM_UNSIGNED {
     RtlDirectionValue,
 };
 
+// https://drafts.csswg.org/css-backgrounds-3/#typedef-bg-size
 enum BackgroundSizeValue ENSURE_ENUM_UNSIGNED {
     CoverBackgroundSizeValue = 1,
     ContainBackgroundSizeValue,
@@ -245,11 +246,6 @@ enum RepeatStyleValue ENSURE_ENUM_UNSIGNED {
     RepeatRepeatValue,
     NoRepeatRepeatValue,
     // TODO: space, round
-};
-
-enum MaskSizeValue ENSURE_ENUM_UNSIGNED {
-    CoverMaskSizeValue,
-    ContainMaskSizeValue,
 };
 
 // Because padding-box is not supported in box-sizing property, so we make
@@ -1010,8 +1006,6 @@ public:
         BackgroundAttachmentValueKind,
         BoxValueKind,
 
-        MaskSizeValueKind,
-
         FontSizeValueKind,
         FontStyleValueKind,
         FontWeightValueKind,
@@ -1637,12 +1631,6 @@ public:
         return m_value.m_fontFaceSrcData;
     }
 
-    MaskSizeValue maskSizeValue() const
-    {
-        STARFISH_ASSERT(m_valueKind == MaskSizeValueKind);
-        return m_value.m_maskSize;
-    }
-
     ListStylePositionValue listStylePositionValue() const
     {
         STARFISH_ASSERT(m_valueKind == ListStylePositionValueKind);
@@ -1833,7 +1821,6 @@ public:
         FillRuleValue m_fillRule;
         CalcData* m_calc;
         TextTransformValue m_textTransform;
-        MaskSizeValue m_maskSize;
         ObjectFitValue m_objectFit;
         ListStylePositionValue m_listStylePosition;
         UserSelectValue m_userSelect;
@@ -2098,10 +2085,6 @@ public:
         }
         ValueData(TextTransformValue v)
             : m_textTransform(v)
-        {
-        }
-        ValueData(MaskSizeValue v)
-            : m_maskSize(v)
         {
         }
         ValueData(ObjectFitValue v)

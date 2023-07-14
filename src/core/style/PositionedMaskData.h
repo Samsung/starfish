@@ -31,7 +31,7 @@ public:
     MaskLayer();
 
     union MaskSize {
-        MaskSizeValue m_typeValue;
+        BackgroundSizeValue m_typeValue;
         LengthSize* m_lengthValue;
 
         MaskSize()
@@ -39,7 +39,7 @@ public:
         {
         }
 
-        MaskSize(MaskSizeValue typeValue)
+        MaskSize(BackgroundSizeValue typeValue)
             : m_typeValue(typeValue)
         {
         }
@@ -71,6 +71,33 @@ public:
     }
 
     void setSize(LengthSize size);
+
+    void setSize(BackgroundSizeValue size)
+    {
+        m_sizeIsLength = false;
+        m_size.m_typeValue = size;
+    }
+
+    void resetSize()
+    {
+        m_size.m_lengthValue = nullptr;
+        m_sizeIsLength = true;
+    }
+
+    LengthSize sizeLengthValue() const
+    {
+        STARFISH_ASSERT(m_sizeIsLength);
+        if (m_size.m_lengthValue) {
+            return *m_size.m_lengthValue;
+        }
+        return LengthSize();
+    }
+
+    BackgroundSizeValue sizeTypeValue() const
+    {
+        STARFISH_ASSERT(!m_sizeIsLength);
+        return m_size.m_typeValue;
+    }
 
     Length positionX() const
     {
@@ -132,27 +159,6 @@ public:
         m_repeatY = RepeatRepeatValue;
     }
 
-    void setSize(MaskSizeValue size)
-    {
-        m_sizeIsLength = false;
-        m_size.m_typeValue = size;
-    }
-
-    LengthSize sizeLengthValue() const
-    {
-        STARFISH_ASSERT(m_sizeIsLength);
-        if (m_size.m_lengthValue) {
-            return *m_size.m_lengthValue;
-        }
-        return LengthSize();
-    }
-
-    MaskSizeValue sizeTypeValue() const
-    {
-        STARFISH_ASSERT(!m_sizeIsLength);
-        return m_size.m_typeValue;
-    }
-
     bool operator==(const MaskLayer& other);
 
     bool operator!=(const MaskLayer& other)
@@ -196,7 +202,7 @@ public:
 
     void setImageResource(ImageResource* imageResource, uint32_t layer);
 
-    void setSize(MaskSizeValue size, uint32_t layer);
+    void setSize(BackgroundSizeValue size, uint32_t layer);
 
     void setSize(LengthSize size, uint32_t layer);
 
@@ -212,9 +218,11 @@ public:
 
     LengthSize maskSizeLengthValue(uint32_t layer) const;
 
-    MaskSizeValue maskSizeTypeValue(uint32_t layer) const;
+    BackgroundSizeValue maskSizeTypeValue(uint32_t layer) const;
 
     void shrinkImages(uint32_t size);
+
+    void shrinkSizes(uint32_t size);
 
     void shrinkPositionXs(uint32_t size);
 

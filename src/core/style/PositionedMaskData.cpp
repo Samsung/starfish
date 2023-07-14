@@ -227,7 +227,7 @@ void PositionedMaskData::setImageResource(ImageResource* imageResource,
     m_layers[assured].setImageResource(imageResource);
 }
 
-void PositionedMaskData::setSize(MaskSizeValue size, uint32_t layer)
+void PositionedMaskData::setSize(BackgroundSizeValue size, uint32_t layer)
 {
     uint32_t assured = assureLayerIndexAndSize(layer, m_maxLayerSize);
     m_layers[assured].setSize(size);
@@ -279,11 +279,11 @@ LengthSize PositionedMaskData::maskSizeLengthValue(uint32_t layer) const
     return m_layers[layer].sizeLengthValue();
 }
 
-MaskSizeValue PositionedMaskData::maskSizeTypeValue(uint32_t layer) const
+BackgroundSizeValue PositionedMaskData::maskSizeTypeValue(uint32_t layer) const
 {
     if (m_layers.size() <= layer) {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        return MaskSizeValue::ContainMaskSizeValue;
+        return BackgroundSizeValue::ContainBackgroundSizeValue;
     }
     return m_layers[layer].sizeTypeValue();
 }
@@ -295,6 +295,15 @@ void PositionedMaskData::shrinkImages(uint32_t size)
         m_layers[i].setImage(nullptr);
     }
     m_maxLayerImage = size;
+}
+
+void PositionedMaskData::shrinkSizes(uint32_t size)
+{
+    STARFISH_ASSERT(m_layers.size() >= m_maxLayerSize);
+    for (uint32_t i = 0; i < m_maxLayerSize; i++) {
+        m_layers[i].resetSize();
+    }
+    m_maxLayerSize = size;
 }
 
 void PositionedMaskData::shrinkPositionXs(uint32_t size)
