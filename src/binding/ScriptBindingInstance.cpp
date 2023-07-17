@@ -98,10 +98,9 @@ public:
     {
         auto globalBindingNameData =
             reinterpret_cast<GlobalBindingNameAccessorPropertyData*>(data);
-        globalBindingNameData->m_valueGetter(
-                                    globalBindingNameData->m_instance);
+        globalBindingNameData->m_valueGetter(globalBindingNameData->m_instance);
         globalBindingNameData->m_valueSetter(globalBindingNameData->m_instance,
-                                              setterInputData);
+                                             setterInputData);
         return true;
     }
 
@@ -127,8 +126,8 @@ void ScriptBindingInstance::initBinding()
 }
 
 void ScriptBindingInstance::defineGlobalBindingNameAccessor(
-    ExecutionStateRef* state, ObjectRef* object,
-    StringRef* name, GlobalBindingNameAccessorGetter getter,
+    ExecutionStateRef* state, ObjectRef* object, StringRef* name,
+    GlobalBindingNameAccessorGetter getter,
     GlobalBindingNameAccessorSetter setter)
 {
     object->defineNativeDataAccessorProperty(
@@ -160,12 +159,12 @@ static String* toBrowserStringForConsole(ExecutionStateRef* state,
 }
 
 #if defined(STARFISH_ENABLE_DEBUGGER)
-static void printToDebuggerInConsole(ExecutionStateRef* state, ValueRef* val,
+static void printToDebuggerInConsole(ExecutionStateRef* state, String* message,
                                      const char* head)
 {
     StringBuilder sb;
     sb.appendString(head, strlen(head));
-    sb.appendString(toBrowserStringForConsole(state, val));
+    sb.appendString(message);
     state->context()->printDebugger(toJSString(sb.finalize()));
 }
 #endif
