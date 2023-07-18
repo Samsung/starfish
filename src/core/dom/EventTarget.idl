@@ -4,8 +4,11 @@
 // REF4. https://html.spec.whatwg.org/multipage/webappapis.html#onbeforeunloadeventhandlernonnull
 
 // [REF1]----------------------------------------------------------------
-[Exposed=(Window,Worker)]
+[CustomConstructor,
+ ConstructorCallWith=ExecutionContext,
+ Exposed=(Window,Worker)]
 interface EventTarget {
+  // constructor();
   [ForceDenyStrictMode] void addEventListener(DOMString type, EventListener? callback, optional boolean capture);
   [ForceDenyStrictMode] void removeEventListener(DOMString type, EventListener? callback, optional boolean captures);
   [RaisesException, ForceDenyStrictMode] boolean dispatchEvent(Event event);
