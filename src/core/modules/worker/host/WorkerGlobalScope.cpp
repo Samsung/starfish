@@ -215,6 +215,12 @@ String* WorkerGlobalScope::atob(ExecutionContext* executionContext,
     return WindowOrWorkerGlobalScope::atob(executionContext, data);
 }
 
+void WorkerGlobalScope::queueMicrotask(ExecutionContext* executionContext,
+                                       ScriptObject callback)
+{
+    WindowOrWorkerGlobalScope::queueMicrotask(executionContext, callback);
+}
+
 #ifdef STARFISH_ENABLE_CANVAS
 Promise* WorkerGlobalScope::createImageBitmap(
     ExecutionContext* executionContext, ImageBitmapSource image,

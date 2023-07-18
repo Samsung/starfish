@@ -19,24 +19,24 @@
 
 #include "StarfishConfig.h"
 #include "WindowOrWorkerGlobalScope.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/page/WebBase.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "EscargotPublic.h"
 
 #ifdef STARFISH_ENABLE_CANVAS
-#include "core/dom/ExecutionContext.h"
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMExceptionOr.h"
-#include "core/page/WebBase.h"
 #include "core/page/WebView.h"
 #include "core/modules/canvas/image/BufferedNativeImageData.h"
 #include "core/modules/canvas/image/CompressedNativeImageData.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/CanvasImageSource.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/canvas/image/ImageDecoder.h"
 #include "core/fetch/ResponseData.h"
 #include "core/dom/canvas/ImageData.h"
-#include "EscargotPublic.h"
 #endif
 
 namespace Starfish {
@@ -59,6 +59,31 @@ namespace WindowOrWorkerGlobalScope {
         std::string result = Base64Utils::decodeBase64(orginalStr);
         return String::createASCIIString(result.c_str(), result.length());
     }
+
+    void queueMicrotask(ExecutionContext* executionContext,
+                        ScriptObject callback)
+    {
+        struct Param : public gc {
+            ExecutionContext* executionContext;
+            ScriptObject callback;
+        };
+
+        Param* param = new Param();
+        param->executionContext = executionContext;
+        param->callback = callback;
+
+        executionContext->webBase()->messageLoop()->addMicroTask(
+            executionContext->globalScope(),
+            [](size_t handle, void* data) {
+                Param* param = (Param*)data;
+                callScriptFunction(
+                    param->executionContext->scriptBindingInstance(),
+                    Escargot::ValueRef::create(param->callback), nullptr, 0,
+                    scriptUndefined());
+            },
+            param);
+    }
+
 #ifdef STARFISH_ENABLE_CANVAS
 
     struct ImageBitmapCreateContext {

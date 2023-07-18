@@ -23,6 +23,10 @@ interface WindowOrWorkerGlobalScope {
   [Custom] long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
   void clearInterval(optional long handle = 0);
 
+  // microtask queuing
+  // Original: undefined queueMicrotask(VoidFunction callback);
+  [CallWith=ExecutionContext,RaisesException] void queueMicrotask(Function callback);
+
   // ImageBitmap
   [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
   [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);

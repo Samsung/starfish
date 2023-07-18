@@ -654,6 +654,12 @@ String* Window::atob(ExecutionContext* executionContext, String* data)
     return WindowOrWorkerGlobalScope::atob(executionContext, data);
 }
 
+void Window::queueMicrotask(ExecutionContext* executionContext,
+                            ScriptObject callback)
+{
+    WindowOrWorkerGlobalScope::queueMicrotask(executionContext, callback);
+}
+
 #ifdef STARFISH_ENABLE_CANVAS
 Promise* Window::createImageBitmap(ExecutionContext* executionContext,
                                    ImageBitmapSource image,
