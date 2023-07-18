@@ -20,6 +20,8 @@
 #ifndef __StarfishWindowOrWorkerGlobalScope__
 #define __StarfishWindowOrWorkerGlobalScope__
 
+#include "binding/ScriptWrappable.h"
+
 #ifdef STARFISH_ENABLE_CANVAS
 #include "binding/generated/CanvasImageSourceOrBlobOrImageDataUnion.h"
 #include "core/dom/ImageBitmapOptions.h"
@@ -29,10 +31,16 @@ typedef CanvasImageSourceOrBlobOrImageData ImageBitmapSource;
 #endif
 
 namespace Starfish {
+
 class String;
+
 namespace WindowOrWorkerGlobalScope {
     String* btoa(ExecutionContext* executionContext, String* data);
     String* atob(ExecutionContext* executionContext, String* data);
+
+    void queueMicrotask(ExecutionContext* executionContext,
+                        ScriptObject callback);
+
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(ExecutionContext* executionContext,
                                ImageBitmapSource& image,
@@ -43,5 +51,6 @@ namespace WindowOrWorkerGlobalScope {
                                ImageBitmapOptions& options);
 #endif
 } // namespace WindowOrWorkerGlobalScope
+
 } // namespace Starfish
 #endif

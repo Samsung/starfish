@@ -129,6 +129,10 @@ public:
 
     String* btoa(ExecutionContext* executionContext, String* data);
     String* atob(ExecutionContext* executionContext, String* data);
+
+    void queueMicrotask(ExecutionContext* executionContext,
+                        ScriptObject callback);
+
 #ifdef STARFISH_ENABLE_CANVAS
     Promise* createImageBitmap(
         ExecutionContext* executionContext, ImageBitmapSource image,
