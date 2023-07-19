@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/util/URLSearchParams.h"
 #include <EscargotPublic.h>
@@ -26,9 +27,10 @@ using namespace Escargot;
 namespace Starfish {
 ValueRef* urlsearchparamsConstructor(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
-                                     ValueRef** argv, bool isNewExpression)
+                                     ValueRef** argv,
+                                     OptionalRef<ObjectRef> newTarget)
 {
-    if (!isNewExpression) {
+    if (!newTarget) {
         COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "URLSearchParams");
         THROW_EXCEPTION(msg);
     }
@@ -95,6 +97,18 @@ ValueRef* urlsearchparamsConstructor(ExecutionStateRef* state,
 
     if (result == nullptr) {
         result = new URLSearchParams(callWith);
+    }
+
+    if (newTarget.value() !=
+        fetchScriptBindingInstance(state->context())->fnURLSearchParams()) {
+        ValueRef* proto = ValueRef::createUndefined();
+        if (newTarget->isFunctionObject()) {
+            proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
+        } else {
+            proto =
+                newTarget->get(state, StringRef::createFromASCII("prototype"));
+        }
+        result->scriptObject()->setPrototype(state, proto);
     }
 
     return result->scriptValue();

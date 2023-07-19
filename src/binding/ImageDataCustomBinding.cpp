@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #ifdef STARFISH_ENABLE_CANVAS
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/canvas/ImageData.h"
 #include <EscargotPublic.h>
@@ -27,9 +28,9 @@ using namespace Escargot;
 namespace Starfish {
 ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                                size_t argc, ValueRef** argv,
-                               bool isNewExpression)
+                               OptionalRef<ObjectRef> newTarget)
 {
-    if (!isNewExpression) {
+    if (!newTarget) {
         COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "ImageData");
         THROW_EXCEPTION(msg);
     }
@@ -84,6 +85,19 @@ ValueRef* imagedataConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         state->throwException(e->scriptValue());
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
+
+    if (newTarget.value() !=
+        fetchScriptBindingInstance(state->context())->fnImageData()) {
+        ValueRef* proto = ValueRef::createUndefined();
+        if (newTarget->isFunctionObject()) {
+            proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
+        } else {
+            proto =
+                newTarget->get(state, StringRef::createFromASCII("prototype"));
+        }
+        result->scriptObject()->setPrototype(state, proto);
+    }
+
     return result->scriptValue();
 }
 } // namespace Starfish
