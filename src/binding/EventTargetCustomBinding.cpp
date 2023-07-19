@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/EventTargetWithExecutionContext.h"
 #include <EscargotPublic.h>
@@ -28,9 +29,9 @@ namespace Starfish {
 
 ValueRef* eventtargetConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                                  size_t argc, ValueRef** argv,
-                                 bool isNewExpression)
+                                 OptionalRef<ObjectRef> newTarget)
 {
-    if (!isNewExpression) {
+    if (!newTarget) {
         COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "EventTarget");
         THROW_EXCEPTION(msg);
     }
@@ -41,6 +42,20 @@ ValueRef* eventtargetConstructor(ExecutionStateRef* state, ValueRef* thisValue,
 
     eventTargetWithExecutionContext =
         new EventTargetWithExecutionContext(exeuctionContext);
+
+    if (newTarget.value() !=
+        fetchScriptBindingInstance(state->context())->fnEventTarget()) {
+        ValueRef* proto = ValueRef::createUndefined();
+        if (newTarget->isFunctionObject()) {
+            proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
+        } else {
+            proto =
+                newTarget->get(state, StringRef::createFromASCII("prototype"));
+        }
+        eventTargetWithExecutionContext->scriptObject()->setPrototype(state,
+                                                                      proto);
+    }
+
     return eventTargetWithExecutionContext->scriptValue();
 }
 

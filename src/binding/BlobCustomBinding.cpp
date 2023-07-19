@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/fileapi/Blob.h"
 
 #include <EscargotPublic.h>
@@ -27,7 +28,7 @@ namespace Starfish {
 
 ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                           size_t argCount, ValueRef** argv,
-                          bool isNewExpression)
+                          OptionalRef<ObjectRef> newTarget)
 {
     // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
     if (argCount == 0) {
@@ -116,6 +117,20 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
         fetchExecutionContext(state->context());
     Blob* newBlob =
         new Blob(executionContext, totalByteLength, type, buffer, false, false);
+
+    if (newTarget.hasValue() &&
+        newTarget.value() !=
+            fetchScriptBindingInstance(state->context())->fnBlob()) {
+        ValueRef* proto = ValueRef::createUndefined();
+        if (newTarget->isFunctionObject()) {
+            proto = newTarget->asFunctionObject()->getFunctionPrototype(state);
+        } else {
+            proto =
+                newTarget->get(state, StringRef::createFromASCII("prototype"));
+        }
+        newBlob->scriptObject()->setPrototype(state, proto);
+    }
+
     return newBlob->scriptValue();
 }
 } // namespace Starfish

@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_WEBRTC)
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/mediastream/MediaStream.h"
 #include <EscargotPublic.h>
@@ -28,9 +29,9 @@ using namespace Escargot;
 namespace Starfish {
 ValueRef* mediastreamConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                                  size_t argc, ValueRef** argv,
-                                 bool isNewExpression)
+                                 OptionalRef<ObjectRef> newTarget)
 {
-    if (!isNewExpression) {
+    if (!newTarget) {
         COMPOSE_MESSAGE(msg, CALLED_CONSTRUCTOR_WITHOUT_NEW, "MediaStream");
         THROW_EXCEPTION(msg);
     }
@@ -89,6 +90,22 @@ ValueRef* mediastreamConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                     fetchExecutionContext(state->context());
                 MediaStream* result =
                     new MediaStream(callWith, mediaStreamTracks);
+
+                if (newTarget.value() !=
+                    fetchScriptBindingInstance(state->context())
+                        ->fnMediaStream()) {
+                    ValueRef* proto = ValueRef::createUndefined();
+                    if (newTarget->isFunctionObject()) {
+                        proto =
+                            newTarget->asFunctionObject()->getFunctionPrototype(
+                                state);
+                    } else {
+                        proto = newTarget->get(
+                            state, StringRef::createFromASCII("prototype"));
+                    }
+                    result->scriptObject()->setPrototype(state, proto);
+                }
+
                 return result->scriptValue();
             }
         }
