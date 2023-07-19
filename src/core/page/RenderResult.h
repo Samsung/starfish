@@ -31,6 +31,11 @@ class FrameBox;
 struct RenderInfo {
     void* updatedBufferAddress;
     size_t bufferStride;
+    RenderInfo()
+        : updatedBufferAddress(nullptr)
+        , bufferStride(0)
+    {
+    }
 };
 
 struct RenderResult {
