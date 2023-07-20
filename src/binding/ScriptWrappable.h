@@ -285,13 +285,23 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
         window = (Window*)mayBeWindowObject->extraData();                    \
     }
 
-#define GENERATE_WORKERGLOBALSCOPE()                                         \
+#define GENERATE_WORKER_GLOBALSCOPE()                                        \
     if (!(thisValue->isUndefinedOrNull() == true ||                          \
           thisValue->toObject(state) == state->context()->globalObject())) { \
         THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
     }                                                                        \
     WorkerGlobalScope* originalObj =                                         \
         (WorkerGlobalScope*)state->context()->globalObject()->extraData();
+
+#define GENERATE_DEDICATEDWORKER_GLOBALSCOPE()                               \
+    if (!(thisValue->isUndefinedOrNull() == true ||                          \
+          thisValue->toObject(state) == state->context()->globalObject())) { \
+        THROW_EXCEPTION(ILLEGAL_INVOKE);                                     \
+    }                                                                        \
+    DedicatedWorkerGlobalScope* originalObj =                                \
+        (DedicatedWorkerGlobalScope*)state->context()                        \
+            ->globalObject()                                                 \
+            ->extraData();
 
 class ScriptWrappable : public gc {
 public:

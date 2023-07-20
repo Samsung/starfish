@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,31 +17,27 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_SERVICE_WORKER_HOST
 
 #include "StarfishConfig.h"
-#include "binding/ScriptBindingWorkerInstance.h"
+#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingServiceWorkerInstance.h"
 #include "binding/ScriptWrappable.h"
-#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
-#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/dom/ErrorEvent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include <EscargotPublic.h>
 
 namespace Starfish {
 
 using namespace Escargot;
 
-template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
-template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
-
-template <typename T>
 static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                                        ValueRef* key)
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(key != nullptr);
     String* name = toBrowserString(state, key);
-    auto self = static_cast<T*>(
+    auto self = static_cast<WorkerGlobalScope*>(
         state->context()->globalObject()->extraData());
 
     if (name->equals("self") == true) {
@@ -51,18 +47,15 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
     return OptionalRef<ValueRef>();
 }
 
-template <typename T>
-ScriptBindingWorkerInstance<T>::ScriptBindingWorkerInstance(
-    ScriptEngineInstance* engineInstance, T* workerGlobalScope)
-    : ScriptBindingInstance(engineInstance)
-    , m_ownerWorkerGlobalScope(workerGlobalScope)
+ScriptBindingServiceWorkerInstance::ScriptBindingServiceWorkerInstance(
+    ScriptEngineInstance* engineInstance,
+    ServiceWorkerGlobalScope* serviceWorkerGlobalScope)
+    : ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>(
+          engineInstance, serviceWorkerGlobalScope)
 {
-    STARFISH_ASSERT(engineInstance != nullptr);
-    STARFISH_ASSERT(workerGlobalScope != nullptr);
 }
 
-template <typename T>
-void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
+void ScriptBindingServiceWorkerInstance::initJavaScriptBinding(
     Escargot::ContextRef* context, Escargot::ExecutionStateRef* state)
 {
     STARFISH_ASSERT(context != nullptr);
@@ -75,44 +68,40 @@ void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
         state, globalObject, StringRef::createFromASCII(#exportName), \
         std::mem_fn(&ScriptBindingInstance::value##exportName),       \
         std::mem_fn(&ScriptBindingInstance::setValue##exportName));
-    STARFISH_ENUM_GLOBAL_BINDING_WORKER_NAMES(DECLARE_NAME_FOR_BINDING)
+    STARFISH_ENUM_GLOBAL_BINDING_SERVICEWORKER_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
 
     fnEventTarget();
     fnWorkerGlobalScope();
-    fnDedicatedWorkerGlobalScope();
+    fnServiceWorkerGlobalScope();
 
     m_ownerWorkerGlobalScope->init(this, m_ownerWorkerGlobalScope);
 
-    context->setVirtualIdentifierCallback(virtualIdentifierCallback<T>);
+    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
 }
 
-template <typename T>
-void ScriptBindingWorkerInstance<T>::destroy()
-{
-    ScriptBindingInstance::destroy();
-}
+// TODO: Remove mockup function
+#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
+    defined(STARFISH_WEBWORKER_HOST)
+#define BINDING_WORKER_MOCKUP_INTERFACE(F) \
+    F(CSS)                                 \
+    F(EventSource)                         \
+    F(FormData)                            \
+    F(Option)                              \
+    F(Image)
 
-template <typename T>
-Window* ScriptBindingWorkerInstance<T>::ownerWindow()
-{
-    STARFISH_ASSERT_NOT_REACHED();
-    return nullptr;
-}
+#define FOR_EACH_BINDING_FN(exportName)               \
+    Escargot::FunctionObjectRef* binding##exportName( \
+        ScriptBindingInstance* scriptBindingInstance) \
+    {                                                 \
+        STARFISH_ASSERT_NOT_REACHED();                \
+        return nullptr;                               \
+    }
 
-template <typename T>
-Document* ScriptBindingWorkerInstance<T>::ownerDocument()
-{
-    STARFISH_ASSERT_NOT_REACHED();
-    return nullptr;
-}
-
-template <typename T>
-void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
-    ErrorEventInit& errorInfo)
-{
-    m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);
-}
+BINDING_WORKER_MOCKUP_INTERFACE(FOR_EACH_BINDING_FN)
+#undef FOR_EACH_BINDING_FN
+#undef BINDING_WORKER_MOCKUP_INTERFACE
+#endif
 
 } // namespace Starfish
 

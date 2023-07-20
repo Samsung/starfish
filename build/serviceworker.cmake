@@ -6,7 +6,7 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 # DEFINITION Description
 # STARFISH_ENABLE_CAST_SERVICE : enable app cast service
-# STARFISH_SERVICEWORKER_HOST: code blocks in this scope are only for sw host.
+# STARFISH_SERVICE_WORKER_HOST: code blocks in this scope are only for sw host.
 
 SET (STARFISH_SERVICEWORKER_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
@@ -16,6 +16,8 @@ SET (STARFISH_SERVICEWORKER_DEFINITIONS
     -D_GLIBCXX_DEBUG
     -DPORT_EVENTLOOP_BACKEND_LIBUV
     -DSTARFISH_WEBWORKER_HOST
+    -DSTARFISH_SERVICE_WORKER_HOST
+    -DSERVICE_WORKER_USE_SEPARATE_PROCESS
     -DPORT_NEEDS_THREADED_PUBLIC_API
 )
 
@@ -133,6 +135,7 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
     ${STARFISH_ROOT}/src/binding/ScriptBindingWorkerInstance.cpp
+    ${STARFISH_ROOT}/src/binding/ScriptBindingServiceWorkerInstance.cpp
     ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/EventTargetCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp

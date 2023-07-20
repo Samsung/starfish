@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,37 +18,42 @@
  */
 
 #if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishScriptBindingWorkerInstance__)
-#define __StarfishScriptBindingWorkerInstance__
+    !defined(__StarfishDedicatedWorkerGlobalScope__)
+#define __StarfishDedicatedWorkerGlobalScope__
 
-#include "binding/ScriptBindingInstance.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
 
 namespace Starfish {
 
-class WorkerGlobalScope;
-
-template <typename T>
-class ScriptBindingWorkerInstance : public ScriptBindingInstance {
+class DedicatedWorkerGlobalScope : public WorkerGlobalScope {
 public:
-    explicit ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-                                         T* workerGlobalScope);
-    Window* ownerWindow() override;
-    Document* ownerDocument() override;
-    bool isScriptingEnabled() override
+    DedicatedWorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
+                               String* charSet);
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DedicatedWorkerGlobalScope)
+
+    String* name()
     {
-        return true;
+        return m_name;
     }
 
-    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
-    void destroy() override;
+    void postMessage(ScriptValue message, GCVector<ScriptValue>& transfer);
 
-protected:
-    T* m_ownerWorkerGlobalScope;
+    void dispatchMessageEvent(ScriptValue message);
+
+    void close();
+
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(message);
+    DECLARE_EVENT_LISTENER(messageerror);
+#undef VIRTUAL
+#undef OVERRIDE
 
 private:
-    void initJavaScriptBinding(Escargot::ContextRef* context,
-                               Escargot::ExecutionStateRef* state) override;
+    String* m_name{ String::emptyString };
 };
+
 } // namespace Starfish
 
 #endif

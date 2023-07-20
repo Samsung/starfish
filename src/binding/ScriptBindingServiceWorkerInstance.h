@@ -1,6 +1,5 @@
-
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,34 +17,22 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
-    !defined(__StarfishScriptBindingWorkerInstance__)
-#define __StarfishScriptBindingWorkerInstance__
+#if defined(STARFISH_SERVICE_WORKER_HOST) && \
+    !defined(__StarfishScriptBindingServiceWorkerInstance__)
+#define __StarfishScriptBindingServiceWorkerInstance__
 
-#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingWorkerInstance.h"
 
 namespace Starfish {
 
-class WorkerGlobalScope;
+class ServiceWorkerGlobalScope;
 
-template <typename T>
-class ScriptBindingWorkerInstance : public ScriptBindingInstance {
+class ScriptBindingServiceWorkerInstance final
+    : public ScriptBindingWorkerInstance<ServiceWorkerGlobalScope> {
 public:
-    explicit ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
-                                         T* workerGlobalScope);
-    Window* ownerWindow() override;
-    Document* ownerDocument() override;
-    bool isScriptingEnabled() override
-    {
-        return true;
-    }
-
-    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
-    void destroy() override;
-
-protected:
-    T* m_ownerWorkerGlobalScope;
-
+    explicit ScriptBindingServiceWorkerInstance(
+        ScriptEngineInstance* engineInstance,
+        ServiceWorkerGlobalScope* serviceWorkerGlobalScope);
 private:
     void initJavaScriptBinding(Escargot::ContextRef* context,
                                Escargot::ExecutionStateRef* state) override;

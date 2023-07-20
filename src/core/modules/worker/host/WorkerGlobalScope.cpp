@@ -39,8 +39,6 @@
 #include "core/page/WindowOrWorkerGlobalScope.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
-#include "Starfish.h"
-
 namespace Starfish {
 
 static thread_local WorkerGlobalScope* g_currentGlobal;
