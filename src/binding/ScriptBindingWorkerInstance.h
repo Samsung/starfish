@@ -22,13 +22,14 @@
     !defined(__StarfishScriptBindingWorkerInstance__)
 #define __StarfishScriptBindingWorkerInstance__
 
+#include "binding/ScriptBindingInstance.h"
+
 namespace Starfish {
 
 class WorkerGlobalScope;
-class ServiceWorkerGlobalScope;
 
 template <typename T>
-class ScriptBindingWorkerInstance final : public ScriptBindingInstance {
+class ScriptBindingWorkerInstance : public ScriptBindingInstance {
 public:
     explicit ScriptBindingWorkerInstance(ScriptEngineInstance* engineInstance,
                                          T* workerGlobalScope);
@@ -42,9 +43,10 @@ public:
     void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
     void destroy() override;
 
-private:
+protected:
     T* m_ownerWorkerGlobalScope;
 
+private:
     void initJavaScriptBinding(Escargot::ContextRef* context,
                                Escargot::ExecutionStateRef* state) override;
 };

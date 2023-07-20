@@ -1,0 +1,21 @@
+// https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-dedicatedworkerglobalscope-interface
+
+[
+  STARFISH_WEBWORKER_HOST,
+  PrimaryGlobal,
+  Global=(Worker,DedicatedWorker),
+  Exposed=DedicatedWorker,
+  NoInterfaceObject
+]
+interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
+  [Replaceable] readonly attribute DOMString name;
+
+  // NOTE transfer: sequence<object> -> sequence<any>
+  [RaisesException] void postMessage(any message, sequence<any> transfer);
+  [Unimplemented, RaisesException] void postMessage(any message, optional StructuredSerializeOptions options /* = {} */);
+
+  void close();
+
+  attribute EventHandler onmessage;
+  attribute EventHandler onmessageerror;
+};

@@ -20,10 +20,9 @@
 #ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishConfig.h"
-#include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWorkerInstance.h"
 #include "binding/ScriptWrappable.h"
-#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/dom/ErrorEvent.h"
 #include <EscargotPublic.h>
@@ -32,16 +31,17 @@ namespace Starfish {
 
 using namespace Escargot;
 
-template class ScriptBindingWorkerInstance<WorkerGlobalScope>;
+template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
 
+template <typename T>
 static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                                        ValueRef* key)
 {
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(key != nullptr);
     String* name = toBrowserString(state, key);
-    auto self = static_cast<WorkerGlobalScope*>(
+    auto self = static_cast<T*>(
         state->context()->globalObject()->extraData());
 
     if (name->equals("self") == true) {
@@ -80,11 +80,11 @@ void ScriptBindingWorkerInstance<T>::initJavaScriptBinding(
 
     fnEventTarget();
     fnWorkerGlobalScope();
-    fnServiceWorkerGlobalScope();
+    fnDedicatedWorkerGlobalScope();
 
     m_ownerWorkerGlobalScope->init(this, m_ownerWorkerGlobalScope);
 
-    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
+    context->setVirtualIdentifierCallback(virtualIdentifierCallback<T>);
 }
 
 template <typename T>
@@ -114,27 +114,6 @@ void ScriptBindingWorkerInstance<T>::dispatchErrorEventToGlobalScope(
     m_ownerWorkerGlobalScope->dispatchErrorEvent(errorInfo);
 }
 
-// TODO: Remove mockup function
-#if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && defined(STARFISH_WEBWORKER_HOST)
-#define BINDING_WORKER_MOCKUP_INTERFACE(F) \
-    F(CSS)                                 \
-    F(EventSource)                         \
-    F(FormData)                            \
-    F(Option)                              \
-    F(Image)
-
-#define FOR_EACH_BINDING_FN(exportName)               \
-    Escargot::FunctionObjectRef* binding##exportName( \
-        ScriptBindingInstance* scriptBindingInstance) \
-    {                                                 \
-        STARFISH_ASSERT_NOT_REACHED();                \
-        return nullptr;                               \
-    }
-
-BINDING_WORKER_MOCKUP_INTERFACE(FOR_EACH_BINDING_FN)
-#undef FOR_EACH_BINDING_FN
-#undef BINDING_WORKER_MOCKUP_INTERFACE
-#endif
 } // namespace Starfish
 
 #endif /* STARFISH_WEBWORKER_HOST */
