@@ -936,19 +936,12 @@ void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
     INSTALL_PROFILE_TIMER("WebView::layoutIfNeeded");
     bool didLayout = false;
 
-    {
-        didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeded();
-        auto browsingContextsNeedsLayout =
-            std::move(m_browsingContextsNeedsLayout);
-        m_browsingContextsNeedsLayout.clear();
-        for (size_t i = 0; i < browsingContextsNeedsLayout.size(); i++) {
-            didLayout =
-                didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeded();
-        }
-
-        if (didLayout) {
-            m_needsEstablishesStackingContext = true;
-        }
+    didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeded();
+    auto browsingContextsNeedsLayout = std::move(m_browsingContextsNeedsLayout);
+    m_browsingContextsNeedsLayout.clear();
+    for (size_t i = 0; i < browsingContextsNeedsLayout.size(); i++) {
+        didLayout =
+            didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeded();
     }
 
     bool didStackingContextJob = false;
