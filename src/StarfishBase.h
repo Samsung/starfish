@@ -318,6 +318,12 @@ inline void clearStack()
 #elif defined(__aarch64__)
 #define STARFISH_ARM64
 
+#elif defined(__riscv) && defined(__riscv_xlen) && __riscv_xlen == 32
+#define STARFISH_RISCV32
+
+#elif defined(__riscv) && defined(__riscv_xlen) && __riscv_xlen == 64
+#define STARFISH_RISCV64
+
 #else
 #error "Could't find cpu arch."
 #endif

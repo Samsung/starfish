@@ -422,6 +422,9 @@ CXXFLAGS+=' -fno-lto '
 %ifarch x86_64
 %define tizen_arch x86_64
 %endif
+%ifarch riscv64
+%define tizen_arch riscv64
+%endif
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %if "%{?skip_dali_build}" == "0"
@@ -466,9 +469,11 @@ CFLAGS+=" -D_ARCH_ARM_ -mfpu=neon"
     --enable-arm-neon=check \
     %{?ubsan: --enable-arm-neon=no}
 %endif
+
 %if "%{?force_build}" == "1"
 make clean
 %endif
+
 %__make %{?_smp_mflags}
 cd -
 
