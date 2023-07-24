@@ -627,7 +627,9 @@ bool BrowsingContext::layoutIfNeeded()
 
         registerDidLayoutInWebView();
 
+        webView()->setNeedsEstablishesStackingContext();
         webView()->setNeedsComputeStackingContextProperties();
+
         m_needsLayout = false;
         ret = true;
     }
