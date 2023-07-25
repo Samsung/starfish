@@ -83,7 +83,7 @@ void URLSearchParams::parse(String* str)
 
     std::string searchStr = search->toUTF8NonGCString();
     std::vector<std::string> pairs = StringUtils::split(searchStr, '&');
-    for (auto pair : pairs) {
+    for (auto& pair : pairs) {
         std::vector<std::string> keyAndValue = StringUtils::split(pair, '=');
         String* key = ResourceURL::createPercentDecodingString(
             String::fromUTF8(keyAndValue[0].data(), keyAndValue[0].length()),

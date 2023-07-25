@@ -502,7 +502,7 @@ public:
             m_curPos = backup;
             return false;
         }
-        if (*(m_curPos - 1) == '\\') {
+        if ((*(m_curPos - 1) == '\\') && len > 0) {
             len--;
         }
         m_parsedString = CSSTokenValue(start, len);

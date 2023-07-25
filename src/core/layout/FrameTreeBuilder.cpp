@@ -445,7 +445,9 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
 
     if (ctx.isInFrameInlineFlow() && !isNormalFlowBlockChild) {
         auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
-        iter->second->appendChild(currentFrame);
+        if (iter != ctx.frameInlineItem().end()) {
+            iter->second->appendChild(currentFrame);
+        }
         return;
     } else if (ctx.isInFrameFlexFlow()) {
         insertFlexItemChild(blockContainer, currentFrame, currentNode, ctx);
