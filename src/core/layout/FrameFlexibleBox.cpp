@@ -1314,12 +1314,13 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         basisSize = flexItem->contentWidth();
     } else {
         Length maxWidth = restorer.m_maxWidth;
-        LayoutUnit cbWidth;
-        if (maxWidth.isSpecified() &&
-            maxWidth.numberData() < availableCrossSize) {
-            cbWidth = maxWidth.numberData();
-        } else {
-            cbWidth = availableCrossSize;
+        LayoutUnit cbWidth = availableCrossSize;
+        if (maxWidth.isSpecified()) {
+            LayoutUnit specifiedMaxWidth =
+                maxWidth.specifiedValue(availableCrossSize, flexItem);
+            if (specifiedMaxWidth < availableCrossSize) {
+                cbWidth = specifiedMaxWidth;
+            }
         }
 
         Length oldHeight = flexItem->style()->height(), height;
