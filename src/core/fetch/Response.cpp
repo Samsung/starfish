@@ -309,7 +309,7 @@ void Response::setMimeType(String* mimeType)
 
 void Response::setHeadersFromHeaderMap(const HeaderMap& map)
 {
-    for (auto pair : map) {
+    for (auto& pair : map) {
         auto key =
             String::createASCIIString(pair.first.c_str(), pair.first.length());
         auto value = String::createASCIIString(pair.second.c_str(),

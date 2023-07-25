@@ -213,7 +213,7 @@ CacheControl HTTPUtil::parseCacheControl(std::string directives)
     StringUtils::tokenize(str, ",", 1, tokens);
 
     CacheControl cc;
-    for (auto directiveView : tokens) {
+    for (auto& directiveView : tokens) {
         String* directive = directiveView.trim();
 
         size_t pos = directive->find("=");

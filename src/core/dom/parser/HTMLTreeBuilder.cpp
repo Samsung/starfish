@@ -1720,7 +1720,6 @@ void HTMLTreeBuilder::callTheAdoptionAgency(AtomicHTMLToken* token)
             // 9.5
             if (!m_tree.activeFormattingElements()->contains(node->element())) {
                 m_tree.openElements()->remove(node->element());
-                node = 0;
                 continue;
             }
             // 9.6

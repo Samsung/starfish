@@ -114,7 +114,7 @@ void GridFormattingContext::computeColumnsAndRows()
 
 void GridFormattingContext::layoutGridItems()
 {
-    for (auto area : m_orderedGridArea) {
+    for (auto& area : m_orderedGridArea) {
         FrameBox* gridItem = area.box();
 
         LayoutUnit xPosSoFar =

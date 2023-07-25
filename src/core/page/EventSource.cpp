@@ -95,7 +95,7 @@ public:
                 GCVector<StringView> tokens;
                 StringUtils::tokenize(values, ";", 1, tokens);
 
-                for (auto token : tokens) {
+                for (auto& token : tokens) {
                     GCVector<StringView> pair;
                     StringUtils::tokenize(&token, "=", 1, pair);
                     String* key = pair[0].trim();
