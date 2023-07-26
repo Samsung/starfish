@@ -210,11 +210,11 @@ static void setComputedStyleUnitPositionX(
         setter)
 {
     STARFISH_ASSERT(style != nullptr);
-    if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-        value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
+    CSSStyleValuePair::ValueKind valueKind = value.valueKind();
+    if (valueKind == CSSStyleValuePair::ValueKind::Initial ||
+        valueKind == CSSStyleValuePair::ValueKind::Unset) {
         setter(style, Length(Length::Percent, 0.0f), layer);
-    } else if (value.valueKind() ==
-               CSSStyleValuePair::ValueKind::SideValueKind) {
+    } else if (valueKind == CSSStyleValuePair::ValueKind::SideValueKind) {
         SideValue side = value.sideValue();
         if (side == SideValue::LeftSideValue) {
             setter(style, Length(Length::Percent, 0.0f), layer);
@@ -225,8 +225,45 @@ static void setComputedStyleUnitPositionX(
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
-    } else if (value.valueKind() ==
-               CSSStyleValuePair::ValueKind::ValueListKind) {
+    } else if (valueKind == CSSStyleValuePair::ValueKind::ValuePairKind) {
+        ValuePair* pair = value.pairValue();
+        const CSSStyleValuePair& side = pair->first();
+        const CSSStyleValuePair& offset = pair->second();
+        CSSStyleValuePair::ValueKind offsetValueKind = offset.valueKind();
+        STARFISH_ASSERT(side.valueKind() ==
+                        CSSStyleValuePair::ValueKind::SideValueKind);
+        STARFISH_ASSERT(
+            offsetValueKind == CSSStyleValuePair::ValueKind::Length ||
+            offsetValueKind == CSSStyleValuePair::ValueKind::Percentage ||
+            offsetValueKind == CSSStyleValuePair::ValueKind::CalcValueKind);
+        if (side.sideValue() == SideValue::LeftSideValue) {
+            Nullable<Length> maybeLength =
+                convertValueToLength(offsetValueKind, offset.value());
+            if (maybeLength.hasValue()) {
+                setter(style, maybeLength.getValue(), layer);
+            }
+        } else {
+            STARFISH_ASSERT(side.sideValue() == SideValue::RightSideValue);
+            CalcTerm* term1 = new CalcTerm();
+            if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
+                term1->appendValue(CalcValue(offset.cssLengthValue()));
+            } else if (offsetValueKind ==
+                       CSSStyleValuePair::ValueKind::Percentage) {
+                term1->appendValue(CalcValue(offset.percentageValue(), true));
+            } else {
+                term1->appendValue(CalcValue(offset.calcValue()));
+            }
+            term1->appendValue(true, CalcValue(-1.0f, false));
+
+            CalcTerm* term2 = new CalcTerm();
+            term2->appendValue(CalcValue(1.0f, true));
+
+            CalcData* calcData = new CalcData();
+            calcData->appendTerm(term1);
+            calcData->appendTerm(term2);
+            setter(style, Length(calcData), layer);
+        }
+    } else if (valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
         for (unsigned int i = 0; i < list->size(); i++) {
             setComputedStyleUnitPositionX(style, (*list)[i], i, setter);
@@ -249,12 +286,11 @@ static void setComputedStyleUnitPositionY(
         setter)
 {
     STARFISH_ASSERT(style != nullptr);
-
-    if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-        value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
+    CSSStyleValuePair::ValueKind valueKind = value.valueKind();
+    if (valueKind == CSSStyleValuePair::ValueKind::Initial ||
+        valueKind == CSSStyleValuePair::ValueKind::Unset) {
         setter(style, Length(Length::Percent, 0.0f), layer);
-    } else if (value.valueKind() ==
-               CSSStyleValuePair::ValueKind::SideValueKind) {
+    } else if (valueKind == CSSStyleValuePair::ValueKind::SideValueKind) {
         SideValue side = value.sideValue();
         if (side == SideValue::TopSideValue) {
             setter(style, Length(Length::Percent, 0.0f), layer);
@@ -265,8 +301,45 @@ static void setComputedStyleUnitPositionY(
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
-    } else if (value.valueKind() ==
-               CSSStyleValuePair::ValueKind::ValueListKind) {
+    } else if (valueKind == CSSStyleValuePair::ValueKind::ValuePairKind) {
+        ValuePair* pair = value.pairValue();
+        const CSSStyleValuePair& side = pair->first();
+        const CSSStyleValuePair& offset = pair->second();
+        CSSStyleValuePair::ValueKind offsetValueKind = offset.valueKind();
+        STARFISH_ASSERT(side.valueKind() ==
+                        CSSStyleValuePair::ValueKind::SideValueKind);
+        STARFISH_ASSERT(
+            offsetValueKind == CSSStyleValuePair::ValueKind::Length ||
+            offsetValueKind == CSSStyleValuePair::ValueKind::Percentage ||
+            offsetValueKind == CSSStyleValuePair::ValueKind::CalcValueKind);
+        if (side.sideValue() == SideValue::TopSideValue) {
+            Nullable<Length> maybeLength =
+                convertValueToLength(offsetValueKind, offset.value());
+            if (maybeLength.hasValue()) {
+                setter(style, maybeLength.getValue(), layer);
+            }
+        } else {
+            STARFISH_ASSERT(side.sideValue() == SideValue::BottomSideValue);
+            CalcTerm* term1 = new CalcTerm();
+            if (offsetValueKind == CSSStyleValuePair::ValueKind::Length) {
+                term1->appendValue(CalcValue(offset.cssLengthValue()));
+            } else if (offsetValueKind ==
+                       CSSStyleValuePair::ValueKind::Percentage) {
+                term1->appendValue(CalcValue(offset.percentageValue(), true));
+            } else {
+                term1->appendValue(CalcValue(offset.calcValue()));
+            }
+            term1->appendValue(true, CalcValue(-1.0f, false));
+
+            CalcTerm* term2 = new CalcTerm();
+            term2->appendValue(CalcValue(1.0f, true));
+
+            CalcData* calcData = new CalcData();
+            calcData->appendTerm(term1);
+            calcData->appendTerm(term2);
+            setter(style, Length(calcData), layer);
+        }
+    } else if (valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = value.multiValue();
         for (uint32_t i = 0; i < list->size(); i++) {
             setComputedStyleUnitPositionY(style, (*list)[i], i, setter);
