@@ -185,6 +185,12 @@ public:
     {
     }
 
+    CalcValue(CalcData* data)
+        : m_type(CalcValueType::CalcDataValue)
+        , m_data(data)
+    {
+    }
+
     void setType(CalcValueType type)
     {
         m_type = type;

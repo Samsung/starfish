@@ -2378,6 +2378,69 @@ bool CSSStyleDeclaration::parseUnitPositionShorthand(
             if (!checker) {
                 return false;
             }
+        } else if (len == 4) {
+            // The first value and third values one of the keyword values top,
+            // left, bottom, right The second and fourth values are <length> or
+            // <percentage> values.
+            CSSStyleValuePair first, second, third, fourth;
+            const CSSTokenValue& tok1 = tokens[i - 4];
+            const CSSTokenValue& tok2 = tokens[i - 3];
+            const CSSTokenValue& tok3 = tokens[i - 2];
+            const CSSTokenValue& tok4 = tokens[i - 1];
+
+            bool firstIsX = true;
+            // Try to parse X.
+            if (!(first.updateValueUnitPositionX(tok1) &&
+                  first.valueKind() ==
+                      CSSStyleValuePair::ValueKind::SideValueKind &&
+                  first.sideValue() != SideValue::CenterSideValue)) {
+                firstIsX = false;
+                // Try to parse Y.
+                if (!(first.updateValueUnitPositionY(tok1) &&
+                      first.valueKind() ==
+                          CSSStyleValuePair::ValueKind::SideValueKind &&
+                      first.sideValue() != SideValue::CenterSideValue)) {
+                    return false;
+                }
+            }
+
+            bool thirdIsX = true;
+            // Try to parse X.
+            if (!(third.updateValueUnitPositionX(tok3) &&
+                  third.valueKind() ==
+                      CSSStyleValuePair::ValueKind::SideValueKind &&
+                  third.sideValue() != SideValue::CenterSideValue)) {
+                thirdIsX = false;
+                // Try to parse Y.
+                if (!(third.updateValueUnitPositionY(tok3) &&
+                      third.valueKind() ==
+                          CSSStyleValuePair::ValueKind::SideValueKind &&
+                      third.sideValue() != SideValue::CenterSideValue)) {
+                    return false;
+                }
+            }
+
+            if (firstIsX == thirdIsX) {
+                return false;
+            }
+
+            // Parse offset.
+            uint8_t option = CSSPropertyParser::AllowNegative |
+                             CSSPropertyParser::AllowPercent;
+            if (!(second.updateValueUnitLengthOrCalc(tok2, option) &&
+                  fourth.updateValueUnitLengthOrCalc(tok4, option))) {
+                return false;
+            }
+
+            ValuePair* firstPair = new ValuePair(first, second);
+            ValuePair* secondPair = new ValuePair(third, fourth);
+            if (firstIsX) {
+                x.setValuePair(firstPair);
+                y.setValuePair(secondPair);
+            } else {
+                x.setValuePair(secondPair);
+                y.setValuePair(firstPair);
+            }
         } else {
             // TODO: 3 value, 4 value case.
             return false;
