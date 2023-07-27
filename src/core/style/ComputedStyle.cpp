@@ -1521,6 +1521,18 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->marginInlineEnd() != oldStyle->marginInlineEnd()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginInlineEnd] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->marginInlineStart() != oldStyle->marginInlineStart()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::MarginInlineStart] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     {
         auto oldOffset = oldStyle->rareComputedStyleData()->offset();
         auto newOffset = newStyle->rareComputedStyleData()->offset();

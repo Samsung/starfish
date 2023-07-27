@@ -94,6 +94,8 @@ public:
         PaddingInlineEnd,
         PaddingInlineStart,
         Margin,
+        MarginInlineEnd,
+        MarginInlineStart,
         Offset,
         MinWidth,
         MaxWidth,
@@ -553,6 +555,8 @@ public:
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
     GETTER_VALUE(Length, length, paddingInlineEnd, PaddingInlineEnd, 0);
     GETTER_VALUE(Length, length, paddingInlineStart, PaddingInlineStart, 0);
+    GETTER_VALUE(Length, length, marginInlineEnd, MarginInlineEnd, 0);
+    GETTER_VALUE(Length, length, marginInlineStart, MarginInlineStart, 0);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -912,6 +916,16 @@ public:
     void setPaddingInlineStart(Length length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineStart() = length;
+    }
+
+    void setMarginInlineEnd(Length length)
+    {
+        *m_rareComputedStyleData.ensureMarginInlineEnd() = length;
+    }
+
+    void setMarginInlineStart(Length length)
+    {
+        *m_rareComputedStyleData.ensureMarginInlineStart() = length;
     }
 
     void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
@@ -3249,6 +3263,34 @@ public:
         }
 
         Nullable<Length> ret = m_rareComputedStyleData.paddingInlineStart();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
+    }
+
+    Length marginInlineEnd()
+    {
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.marginInlineEnd();
+        if (ret.hasValue()) {
+            return ret.getValue();
+        }
+
+        return Length();
+    }
+
+    Length marginInlineStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return Length();
+        }
+
+        Nullable<Length> ret = m_rareComputedStyleData.marginInlineStart();
         if (ret.hasValue()) {
             return ret.getValue();
         }

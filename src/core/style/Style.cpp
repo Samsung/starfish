@@ -5431,6 +5431,48 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_MARGIN(Bottom, bottom)
         ADD_RESOLVE_STYLE_MARGIN(Left, left)
 #undef ADD_RESOLVE_STYLE_MARGIN
+    case CSSStyleValuePair::KeyKind::MarginInlineEnd:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMarginInlineEnd(parentStyle->marginInlineEnd());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMarginInlineEnd(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMarginInlineEnd(length.getValue());
+            } else {
+                style->setMarginInlineEnd(Length(Length::Fixed, 0));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MarginInlineStart:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMarginInlineStart(parentStyle->marginInlineStart());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMarginInlineStart(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMarginInlineStart(length.getValue());
+            } else {
+                style->setMarginInlineStart(Length(Length::Fixed, 0));
+            }
+        }
+        break;
 #define ADD_RESOLVE_STYLE_PADDING(POS, pos)                       \
     case CSSStyleValuePair::KeyKind::Padding##POS:                \
         if (newCssValue.valueKind() ==                            \
@@ -11480,6 +11522,18 @@ GEN_FOURSIDE(UPDATE_VALUE_SIDE)
     }
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
+
+bool CSSStyleValuePair::updateValueMarginInlineEnd(Document* document,
+                                                   const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueMarginInlineStart(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
 
 bool CSSStyleValuePair::updateValueWidthHeightKeyword(
     const CSSTokenVector& tokens)

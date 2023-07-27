@@ -296,6 +296,10 @@ protected:
     void setMargin(const char* value, size_t len, bool isImportant);
     void removeMargin();
 
+    String* MarginInline();
+    void setMarginInline(const char* value, size_t len, bool isImportant);
+    void removeMarginInline();
+
     String* Padding(bool* isCombined = nullptr);
     void setPadding(const char* value, size_t len, bool isImportant);
     void removePadding();

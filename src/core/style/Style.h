@@ -611,6 +611,8 @@ class CSSFilterFunction;
     F(MarginRight, marginRight, "margin-right")                                \
     F(MarginBottom, marginBottom, "margin-bottom")                             \
     F(MarginLeft, marginLeft, "margin-left")                                   \
+    F(MarginInlineEnd, marginInlineEnd, "margin-inline-end")                   \
+    F(MarginInlineStart, marginInlineStart, "margin-inline-start")             \
     F(Top, top, "top")                                                         \
     F(Bottom, bottom, "bottom")                                                \
     F(Left, left, "left")                                                      \
@@ -795,6 +797,7 @@ class CSSFilterFunction;
     F(BackgroundPosition, backgroundPosition, "background-position") \
     F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
+    F(MarginInline, marginInline, "margin-inline")                   \
     F(Padding, padding, "padding")                                   \
     F(PaddingInline, paddingInline, "padding-inline")                \
     F(Font, font, "font")                                            \

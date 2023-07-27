@@ -144,20 +144,36 @@ void FrameBox::applyDirectionAwareProperty()
     DirectionValue direction = comptuedStyle->direction();
 
     if (direction == DirectionValue::LtrDirectionValue) {
-        // padding-inline,
+        // margin-inline
+        if (comptuedStyle->marginInlineEnd().isSpecified()) {
+            comptuedStyle->setMarginRight(comptuedStyle->marginInlineEnd());
+        }
+        if (comptuedStyle->marginInlineStart().isSpecified()) {
+            comptuedStyle->setMarginLeft(comptuedStyle->marginInlineStart());
+        }
+
+        // padding-inline
         if (comptuedStyle->paddingInlineEnd().isSpecified()) {
             comptuedStyle->setPaddingRight(comptuedStyle->paddingInlineEnd());
         }
-
         if (comptuedStyle->paddingInlineStart().isSpecified()) {
             comptuedStyle->setPaddingLeft(comptuedStyle->paddingInlineStart());
         }
-        // TODO: padding-block, margin-block, margin-inline
+
+        // TODO: padding-block, margin-block.
     } else {
+        // margin-inline
+        if (comptuedStyle->marginInlineEnd().isSpecified()) {
+            comptuedStyle->setMarginLeft(comptuedStyle->marginInlineEnd());
+        }
+        if (comptuedStyle->marginInlineStart().isSpecified()) {
+            comptuedStyle->setMarginRight(comptuedStyle->marginInlineStart());
+        }
+
+        // padding-inline
         if (comptuedStyle->paddingInlineEnd().isSpecified()) {
             comptuedStyle->setPaddingLeft(comptuedStyle->paddingInlineEnd());
         }
-
         if (comptuedStyle->paddingInlineStart().isSpecified()) {
             comptuedStyle->setPaddingRight(comptuedStyle->paddingInlineStart());
         }
@@ -174,19 +190,39 @@ LayoutUnit FrameBox::resolveDirectionAwareProperty(
     DirectionValue direction = style()->direction();
 
     if (direction == DirectionValue::LtrDirectionValue) {
+        // margin-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
+            return marginRight();
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineStart) {
+            return marginLeft();
+        }
+
+        // padding-inline.
         if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
             return paddingRight();
-        } else if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
             return paddingLeft();
         }
-        // TODO: padding-block, margin-block, margin-inline.
+        // TODO: padding-block, margin-block.
     } else {
+        // margin-inline.
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineEnd) {
+            return marginLeft();
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::MarginInlineStart) {
+            return marginRight();
+        }
+
+        // padding-inline
         if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineEnd) {
             return paddingLeft();
-        } else if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
+        }
+        if (keykind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
             return paddingRight();
         }
-        // TODO: padding-block, margin-block, margin-inline.
+        // TODO: padding-block, margin-block.
     }
 
     return LayoutUnit();

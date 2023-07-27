@@ -2062,6 +2062,54 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::MarginInlineEnd: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineEnd);
+        if (frame && frame->isFrameBox()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            p.setValue(
+                CSSLength(frame->asFrameBox()->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineEnd)));
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p.setValue(CSSLength(inb->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineEnd)));
+                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::MarginInlineStart: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::MarginInlineStart);
+        if (frame && frame->isFrameBox()) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            p.setValue(
+                CSSLength(frame->asFrameBox()->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineStart)));
+        } else if (frame && frame->isFrameInline()) {
+            InlineNonReplacedBox* inb =
+                blockContainer(frame)->firstInlineNonReplacedBox(
+                    frame->asFrameInline());
+            if (inb != nullptr) {
+                p.setValue(CSSLength(inb->resolveDirectionAwareProperty(
+                    CSSStyleValuePair::KeyKind::MarginInlineStart)));
+                p.setValueKind(CSSStyleValuePair::ValueKind::Length);
+            } else {
+                p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+            }
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::PaddingInlineEnd: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::PaddingInlineEnd);
