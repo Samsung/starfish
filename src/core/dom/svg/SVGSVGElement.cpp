@@ -163,4 +163,15 @@ SVGTransform* SVGSVGElement::createSVGTransform()
 {
     return new SVGTransform(this, AtomicString::emptyAtomicString());
 }
+
+void SVGSVGElement::pauseAnimations()
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
+void SVGSVGElement::unpauseAnimations()
+{
+    STARFISH_UNIMPLEMENTED();
+}
+
 } // namespace Starfish

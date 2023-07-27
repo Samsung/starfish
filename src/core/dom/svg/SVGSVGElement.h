@@ -97,6 +97,9 @@ public:
     SVGAngle* createSVGAngle();
     SVGTransform* createSVGTransform();
 
+    void pauseAnimations();
+    void unpauseAnimations();
+
 protected:
     bool m_hasViewBox{ false };
     Unit::Rect m_viewBox;

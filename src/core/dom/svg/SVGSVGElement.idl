@@ -22,8 +22,8 @@ interface SVGSVGElement : SVGElement {
   [Unimplemented] void unsuspendRedraw(unsigned long suspendHandleID);
   [Unimplemented] void unsuspendRedrawAll();
   [Unimplemented] void forceRedraw();
-  [Unimplemented] void pauseAnimations();
-  [Unimplemented] void unpauseAnimations();
+  void pauseAnimations();
+  void unpauseAnimations();
   [Unimplemented] boolean animationsPaused();
   [Unimplemented] float getCurrentTime();
   [Unimplemented] void setCurrentTime(float seconds);
