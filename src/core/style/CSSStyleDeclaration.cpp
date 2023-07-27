@@ -3550,6 +3550,64 @@ void CSSStyleDeclaration::removeMargin()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginLeft);
 }
 
+String* CSSStyleDeclaration::MarginInline()
+{
+    String* start = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MarginInlineStart);
+    String* end = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MarginInlineEnd);
+
+    if (start->equals(end)) {
+        return start;
+    }
+
+    return start->concat(" ")->concat(end);
+}
+
+void CSSStyleDeclaration::setMarginInline(const char* value, size_t len,
+                                          bool isImportant)
+{
+    if (len == 0) {
+        removeMarginInline();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInline, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, v);
+    } else if (tokens.size() == 1 &&
+               v.updateValueMarginInlineStart(m_node->document(), tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, v);
+    } else if (tokens.size() == 2) {
+        CSSStyleValuePair start, end;
+        start.setFlagImportant(isImportant);
+        end.setFlagImportant(isImportant);
+        if (start.updateValueUnitMargin(tokens[0]) &&
+            end.updateValueUnitMargin(tokens[1])) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart,
+                            start);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd, end);
+        }
+    }
+}
+
+void CSSStyleDeclaration::removeMarginInline()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineEnd);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginInlineStart);
+}
+
 String* CSSStyleDeclaration::Outline()
 {
     String* width = getPropertyValueInternalFor<PropertyType::kLonghand>(

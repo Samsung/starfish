@@ -653,6 +653,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Radius
         // Padding-Right
         // Margin-Bottom
+        // Margin-Inline
         // Border-Bottom
         // Align-Content
         // Counter-Reset
@@ -671,6 +672,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin-bottom", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginBottom;
+            }
+            if (memcmp(data, "margin-inline", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInline;
             }
             if (memcmp(data, "mask-position", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskPosition;
@@ -933,7 +937,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
-
+        case 'm':
+            if (memcmp(data, "margin-inline-end", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInlineEnd;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
     defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case '-':
@@ -1046,6 +1054,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Background-Position
         // List-Style-Position
         // Grid-Template-Areas
+        // margin-inline-start
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -1089,6 +1098,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "list-style-position", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::ListStylePosition;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "margin-inline-start", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInlineStart;
             }
             break;
         case 't':
@@ -1785,6 +1799,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "marginBottom", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginBottom;
             }
+            if (memcmp(data, "marginInline", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInline;
+            }
             if (memcmp(data, "maskPosition", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::MaskPosition;
             }
@@ -1989,6 +2006,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
+        case 'm':
+            if (memcmp(data, "marginInlineEnd", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInlineEnd;
+            }
+            break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
     defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
         case 'w':
@@ -2100,6 +2122,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderBottomColor;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginInlineStart", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginInlineStart;
             }
             break;
         case 'l':
