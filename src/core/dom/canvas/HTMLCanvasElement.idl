@@ -17,4 +17,6 @@ interface HTMLCanvasElement : HTMLElement
 
     [RaisesException] RenderingContext? getContext(DOMString contextId, any... arguments);
     [Unimplemented, RaisesException] OffscreenCanvas transferControlToOffscreen();
+
+    [STARFISH_ENABLE_TEST] void dump(DOMString path);
 };

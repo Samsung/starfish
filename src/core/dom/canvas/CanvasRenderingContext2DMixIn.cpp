@@ -2178,7 +2178,18 @@ void CanvasRenderingContext2DMixIn::setDirection(String* value)
         m_canvas->setCanvasTextDirection(direction);
     }
 }
+
+#ifdef STARFISH_ENABLE_TEST
+void CanvasRenderingContext2DMixIn::dump(String* path)
+{
+    if (m_canvas) {
+        m_canvas->dump(path->toUTF8NonGCString().c_str());
+    }
+}
+#endif
+
 } // namespace Starfish
+
 #undef NEEDS_UNPREMULTIPLIED
 #undef CRASH
 #endif

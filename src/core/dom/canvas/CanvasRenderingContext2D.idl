@@ -12,7 +12,9 @@ interface CanvasRenderingContext2D {
   readonly attribute HTMLCanvasElement canvas;
 
   [Unimplemented] CanvasRenderingContext2DSettings getContextAttributes();
+  [STARFISH_ENABLE_TEST] void dump(DOMString path);
 };
+
 // includes -> implements
 CanvasRenderingContext2D implements CanvasState;
 CanvasRenderingContext2D implements CanvasTransform;

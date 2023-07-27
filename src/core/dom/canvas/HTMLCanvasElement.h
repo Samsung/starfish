@@ -93,6 +93,10 @@ public:
     }
     void* operator new[](size_t size) = delete;
 
+#ifdef STARFISH_ENABLE_TEST
+    void dump(String* path);
+#endif
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
