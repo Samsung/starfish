@@ -143,6 +143,17 @@ String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
     }
     return String::fromUTF8("data:,");
 }
+
+#ifdef STARFISH_ENABLE_TEST
+void HTMLCanvasElement::dump(String* path)
+{
+    if (m_canvasRenderingContext &&
+        m_canvasRenderingContext->isCanvasRenderingContext2D()) {
+        m_canvasRenderingContext->asCanvasRenderingContext2D()->dump(path);
+    }
+}
+#endif
+
 } // namespace Starfish
 
 #endif
