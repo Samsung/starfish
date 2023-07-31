@@ -3286,7 +3286,6 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
     CSSStyleDeclaration* declaration = new CSSStyleDeclaration(document());
     declaration->setPropertyInternal(keyKind, newCssValue.c_str(),
                                      newCssValue.size(), isImportant);
-
     return declaration;
 }
 
@@ -10730,6 +10729,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                         val.setType(CalcValueType::Length);
                         val.setValue(-1 * ret.cssLengthValue());
                     }
+                    isPlus = true;
                 }
             } else if (isTimeParser && ret.updateValueUnitTime(
                                            CSSTokenValue(str), parserOption)) {
@@ -10742,6 +10742,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     val.setValue(ret.timeValue());
                 } else {
                     val.setValue(-1 * ret.timeValue());
+                    isPlus = true;
                 }
             } else if (isAngleParser && ret.updateValueUnitAngle(
                                             CSSTokenValue(str), parserOption)) {
@@ -10754,6 +10755,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     val.setValue(ret.angleValue());
                 } else {
                     val.setValue(-1 * ret.angleValue());
+                    isPlus = true;
                 }
             } else if (isLineheightParser &&
                        ret.updateValueUnitLineHeight(CSSTokenValue(str))) {
@@ -10766,6 +10768,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                             val.setValue(num);
                         } else {
                             val.setValue(-1 * num);
+                            isPlus = true;
                         }
                     } else {
                         return false;
@@ -10802,6 +10805,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                         val.setValue(-1 * ret.cssLengthValue());
                         unitParsed = true;
                     }
+                    isPlus = true;
                 }
             } else {
                 parser.swap(pos);
@@ -10812,6 +10816,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                         val.setValue(num);
                     } else {
                         val.setValue(-1 * num);
+                        isPlus = true;
                     }
                 } else {
                     return false;
