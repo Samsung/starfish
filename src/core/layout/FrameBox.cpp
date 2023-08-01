@@ -3906,24 +3906,25 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 
     ComputedStyle* cs = style();
     ComputedStyle* parentStyle = nullptr;
+    bool isScrollingPurpose =
+        ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling;
     if (!cs) {
         if (isLineBox()) {
             parentStyle = layoutParent()->style();
         }
-    } else if (cs &&
-               ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
+    } else if (isScrollingPurpose &&
                cs->position() == PositionValue::FixedPositionValue) {
         return false;
     }
 
-    if ((cs && cs->visibility() == HiddenVisibilityValue) ||
-        (parentStyle && parentStyle->visibility() == HiddenVisibilityValue)) {
+    if (!isScrollingPurpose &&
+        ((cs && cs->visibility() == HiddenVisibilityValue) ||
+         (parentStyle && parentStyle->visibility() == HiddenVisibilityValue))) {
         return true;
     }
 
-    if (ctx.isVisibleRectCollapsible &&
-        this != ctx.sourceStackingContext->owner() &&
-        ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling && cs &&
+    if (!isScrollingPurpose && ctx.isVisibleRectCollapsible &&
+        this != ctx.sourceStackingContext->owner() && cs &&
         cs->opacity() == 0) {
         return false;
     }
@@ -3969,7 +3970,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     if (!ctx.isVisibleRectCollapsible || boxHasDrawableContents) {
-        if (ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling) {
+        if (isScrollingPurpose) {
             ctx.uniteRect(frameScrollingRect());
         } else {
             ctx.uniteRect(frameVisibleRect());
@@ -3981,8 +3982,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         ret = true;
     }
 
-    if (ctx.isForSpecialValueForTableCell &&
-        ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
+    if (ctx.isForSpecialValueForTableCell && isScrollingPurpose &&
         isFrameFlexibleBox()) {
         if (cs->height().isDefinite(true)) {
             ret = false;
@@ -4023,9 +4023,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                         shadowsRect.unite(rect);
                     }
                 } else if (ctx.isForSpecialValueForTableCell &&
-                           ctx.purpose ==
-                               Frame::ComputeVisibleRectContext::Scrolling &&
-                           isFrameFlexibleBox()) {
+                           isScrollingPurpose && isFrameFlexibleBox()) {
                     LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
                     shadowsRect.unite(rect);
                     ret = false;

@@ -545,4 +545,6 @@ test/cairo/internal-test/blob/blob_arraybuffer_text_test.html
 test/cairo/internal-test/crash/gif-playback-crash.html
 test/cairo/internal-test/crash/chartjs.html
 test/cairo/internal-test/css/scroll/scroll-into-view-options.html
+test/cairo/internal-test/css/scroll/scrollLeft_setter_and_event.html
+test/cairo/internal-test/css/scroll/scrollTop_setter_and_event.html
 test/cairo/internal-test/dom/text-element-added.html
