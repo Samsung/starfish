@@ -10700,8 +10700,13 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 CalcData* newData = new CalcData();
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
                               isTimeParser, isLineheightParser, parserOption)) {
+                    if (!isPlus) {
+                        newData->setSign(false);
+                        isPlus = true;
+                    }
                     val.setType(CalcValueType::CalcDataValue);
                     val.setValue(newData);
+
                 } else {
                     return false;
                 }
