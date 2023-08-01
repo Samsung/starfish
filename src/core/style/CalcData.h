@@ -352,7 +352,9 @@ public:
             n += (*it)->numberValue();
             it++;
         }
-
+        if (!m_isPositive) {
+            n *= -1;
+        }
         return n;
     }
 
@@ -366,7 +368,9 @@ public:
             l += (*it)->specifiedValue(parentContentLength, n);
             it++;
         }
-
+        if (!m_isPositive) {
+            l *= -1;
+        }
         return l;
     }
 
@@ -412,9 +416,16 @@ public:
     String* toString();
 
     bool equals(CalcData* with) const;
+    void setSign(bool isPositive)
+    {
+        m_isPositive = isPositive;
+    }
 
 private:
     GCVector<CalcTerm*> m_terms;
+
+    // Only supports numeric types
+    bool m_isPositive = true;
 };
 } // namespace Starfish
 
