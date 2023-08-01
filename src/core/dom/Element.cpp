@@ -1244,11 +1244,12 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
         return false;
     }
 
-    auto scrollMax = (frame()->asFrameBlockBox()->width() -
-                      frame()->asFrameBlockBox()->borderWidth())
-                         .toUnsigned();
-    if (s > scrollWidth() - scrollMax) {
-        s = scrollWidth() - scrollMax;
+    uint32_t scrollMax = (frame()->asFrameBlockBox()->width() -
+                          frame()->asFrameBlockBox()->borderWidth())
+                             .toUnsigned();
+    uint32_t elementScrollWidth = scrollWidth();
+    if (s > elementScrollWidth - scrollMax) {
+        s = elementScrollWidth - scrollMax;
     }
 
     if (s < 0 || std::isnan(s)) {
@@ -1384,11 +1385,12 @@ bool Element::setScrollTop(double s, bool layoutIfNeeds)
         return false;
     }
 
-    auto scrollMax = (frame()->asFrameBlockBox()->height() -
-                      frame()->asFrameBlockBox()->borderHeight())
-                         .toUnsigned();
-    if (s > scrollHeight() - scrollMax) {
-        s = scrollHeight() - scrollMax;
+    uint32_t scrollMax = (frame()->asFrameBlockBox()->height() -
+                          frame()->asFrameBlockBox()->borderHeight())
+                             .toUnsigned();
+    uint32_t elementscrollHeight = scrollHeight();
+    if (s > elementscrollHeight - scrollMax) {
+        s = elementscrollHeight - scrollMax;
     }
 
     if (s < 0 || std::isnan(s)) {
