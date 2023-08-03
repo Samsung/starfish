@@ -49,6 +49,11 @@ void FrameSVGClipPathBox::paintContent(PaintingContext& ctx)
     // ‘clipPath’ elements are never rendered directly
 }
 
+void FrameSVGClipPathBox::paintSVG(PaintingContext& ctx)
+{
+    // ‘clipPath’ elements are never rendered directly
+}
+
 Path* FrameSVGClipPathBox::path()
 {
     Path* path = nullptr;

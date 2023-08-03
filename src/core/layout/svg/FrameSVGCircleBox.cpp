@@ -44,27 +44,6 @@ void* FrameSVGCircleBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FrameSVGCircleBox::paintSVG(PaintingContext& ctx)
-{
-    FrameBox* cb = layoutParent()->asFrameBox();
-    Path* newPath = path();
-
-    float opacity = style()->opacity();
-    Unit::Color fillColor = style()->fill()->color();
-    ctx.m_canvas->setFillColor(
-        Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                    fillColor.a() * style()->fillOpacity() * opacity));
-    Unit::Color strokeColor = style()->stroke()->color();
-    ctx.m_canvas->setStrokeColor(
-        Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                    strokeColor.a() * style()->strokeOpacity() * opacity));
-    ctx.m_canvas->setFillRule(style()->fillRule());
-    ctx.m_canvas->fillPath(newPath);
-    ctx.m_canvas->setLineWidth(
-        style()->strokeWidth().specifiedValue(cb->width(), this));
-    ctx.m_canvas->strokePath(newPath);
-}
-
 Path* FrameSVGCircleBox::path()
 {
     Path* path = Path::create();

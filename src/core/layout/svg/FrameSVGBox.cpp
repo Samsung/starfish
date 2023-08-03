@@ -35,6 +35,8 @@
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/dom/svg/SVGLinearGradientElement.h"
 #include "core/dom/svg/SVGRadialGradientElement.h"
+#include "core/dom/svg/SVGAnimatedTransformList.h"
+#include "platform/loader/ResourceURL.h"
 
 namespace Starfish {
 
@@ -390,5 +392,159 @@ std::vector<std::pair<double, double>> FrameSVGBox::parsePointsFromString(
     }
 
     return result;
+}
+
+CanvasFillStrokeSource* FrameSVGBox::makeCanvasFillStrokeSource(String* url)
+{
+    ResourceURL* resourceUrl = new ResourceURL(url);
+    if (!resourceUrl->isValid()) {
+        return nullptr;
+    }
+
+    String* urlString = resourceUrl->string();
+    if (urlString->startsWith("#")) {
+        if (!node()) {
+            return nullptr;
+        }
+
+        String* id = urlString->substring(1, urlString->length() - 1);
+        SVGElement* owner = node()->asSVGElement()->ownerSVGElement();
+        SVGElement* matchingSvg = owner->getSVGElementById(id);
+        if (!matchingSvg) {
+            return nullptr;
+        }
+
+        LayoutRect fRect = frameRect();
+        Unit::Rect rect =
+            Unit::Rect(fRect.x(), fRect.y(), fRect.width(), fRect.height());
+        CanvasGradient* gradient = nullptr;
+        if (matchingSvg->isSVGLinearGradientElement()) {
+            double x1 = 0;
+            auto linearGradient = matchingSvg->asSVGLinearGradientElement();
+            auto gradientTransform =
+                linearGradient->gradientTransform()->baseVal();
+            if (linearGradient->x1()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                x1 = linearGradient->x1()->baseVal()->valueInSpecifiedUnits() *
+                     rect.width() / 100;
+            } else {
+                x1 = linearGradient->x1()->baseVal()->value();
+            }
+            double y1 = 0;
+            if (linearGradient->y1()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                y1 = linearGradient->y1()->baseVal()->valueInSpecifiedUnits() *
+                     rect.height() / 100;
+            } else {
+                y1 = linearGradient->y1()->baseVal()->value();
+            }
+            double x2 = 0;
+            if (linearGradient->x2()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                x2 = linearGradient->x2()->baseVal()->valueInSpecifiedUnits() *
+                     rect.width() / 100;
+            } else {
+                x2 = linearGradient->x2()->baseVal()->value();
+            }
+            double y2 = 0;
+            if (linearGradient->y2()->baseVal()->unitType() ==
+                SVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+                y2 = linearGradient->y2()->baseVal()->valueInSpecifiedUnits() *
+                     rect.height() / 100;
+            } else {
+                y2 = linearGradient->y2()->baseVal()->value();
+            }
+
+            SkMatrix mat = SkMatrix::I();
+            for (size_t i = 0; i < gradientTransform->length(); ++i) {
+                mat = mat * gradientTransform->getItem(i)->matrix()->matrix();
+            }
+
+            double xx1 = x1 * mat[0] + y1 * mat[1] + fRect.width() * mat[2];
+            double yy1 = x1 * mat[3] + y1 * mat[4] + fRect.height() * mat[5];
+            double xx2 = x2 * mat[0] + y2 * mat[1] + fRect.width() * mat[2];
+            double yy2 = x2 * mat[3] + y2 * mat[4] + fRect.height() * mat[5];
+
+            gradient = new CanvasGradient(matchingSvg->executionContext(), xx1,
+                                          yy1, xx2, yy2);
+
+            const auto colorStops =
+                matchingSvg->asSVGLinearGradientElement()->colorStops();
+            size_t size = colorStops.size();
+
+            for (size_t i = 0; i < size; ++i) {
+                const auto& color = colorStops[i]->color().toString();
+                const auto& offset = colorStops[i]->offset().numberData();
+                gradient->addColorStop(offset, color);
+            }
+        } else if (matchingSvg->isSVGRadialGradientElement()) {
+            // RadialGradient implementation required.
+            STARFISH_UNIMPLEMENTED();
+            return nullptr;
+        } else {
+            STARFISH_UNIMPLEMENTED();
+            return nullptr;
+        }
+        auto canvasStyle = CanvasStyle::createCanvasGradient(gradient);
+        return new CanvasFillStrokeSource(canvasStyle);
+    }
+    return nullptr;
+}
+
+void FrameSVGBox::paintSVG(PaintingContext& ctx)
+{
+    FrameBox* cb = layoutParent()->asFrameBox();
+
+    CanvasFillStrokeSource* info = nullptr;
+
+    Path* newPath = path();
+    if (newPath) {
+        if (style()->fill()->hasUrl()) {
+            // TODO: Only support linear gradient
+            info = makeCanvasFillStrokeSource(style()->fill()->url());
+
+            // TODO: Remove ME!
+            // Temporarily use the existing path until implementing radial
+            // gradient at makeCanvasFillStrokeSource.
+            if (!info) {
+                Nullable<GradientDrawingInfo*> radialGradientInfo =
+                    makeGradientDrawingInfo(style()->fill()->url());
+                if (radialGradientInfo.hasValue()) {
+                    ctx.m_canvas->save();
+                    Unit::Rect rect =
+                        newPath->boundingRect(true).snapSizeToPixel();
+                    std::shared_ptr<NativeGradient> gradient =
+                        NativeGradient::create(radialGradientInfo.getValue());
+                    if (radialGradientInfo->type ==
+                        GradientType::RadialGradient) {
+                        ctx.m_canvas->drawRadialGradient(
+                            rect, radialGradientInfo.getValue(),
+                            gradient.get());
+                    }
+                    ctx.m_canvas->restore();
+                }
+            }
+        }
+        ctx.m_canvas->save();
+        float opacity = style()->opacity();
+        if (info != nullptr) {
+            ctx.m_canvas->setFillSource(info);
+        } else {
+            Unit::Color fillColor = style()->fill()->color();
+            ctx.m_canvas->setFillColor(
+                Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
+                            fillColor.a() * style()->fillOpacity() * opacity));
+            ctx.m_canvas->setFillRule(style()->fillRule());
+        }
+        ctx.m_canvas->fillPath(newPath);
+        Unit::Color strokeColor = style()->stroke()->color();
+        ctx.m_canvas->setStrokeColor(
+            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
+                        strokeColor.a() * style()->strokeOpacity() * opacity));
+        ctx.m_canvas->setLineWidth(
+            style()->strokeWidth().specifiedValue(cb->width(), this));
+        ctx.m_canvas->strokePath(newPath);
+        ctx.m_canvas->restore();
+    }
 }
 } // namespace Starfish

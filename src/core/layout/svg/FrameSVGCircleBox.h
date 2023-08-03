@@ -36,7 +36,6 @@ public:
         return "FrameSVGCircleBox";
     }
 
-    virtual void paintSVG(PaintingContext& ctx) override;
     virtual Path* path() override;
 
     void* operator new(size_t size);

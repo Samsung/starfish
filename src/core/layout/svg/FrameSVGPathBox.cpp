@@ -27,7 +27,6 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
-
 #include "core/style/GradientData.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -171,51 +170,6 @@ void paintPathArcCommand(Path* path, double x1, double y1, double rx, double ry,
         paintArgSegment(path, cx, cy, theta1 + i * deltaTheta / segmentsCount,
                         theta1 + (i + 1) * deltaTheta / segmentsCount, rx, ry,
                         xAxisRotation);
-    }
-}
-
-void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
-{
-    FrameBox* cb = layoutParent()->asFrameBox();
-
-    Path* newPath = path();
-
-    ctx.m_canvas->setLineWidth(
-        style()->strokeWidth().specifiedValue(cb->width(), this));
-    float opacity = style()->opacity();
-    Nullable<GradientDrawingInfo*> info = nullptr;
-    Unit::Color fillColor;
-    if (style()->fill()->hasUrl()) {
-        info = makeGradientDrawingInfo(style()->fill()->url());
-    } else {
-        fillColor = style()->fill()->color();
-    }
-
-    if (info.hasValue()) {
-        ctx.m_canvas->save();
-        Unit::Rect rect = newPath->boundingRect(true).snapSizeToPixel();
-        std::shared_ptr<NativeGradient> gradient =
-            NativeGradient::create(info.getValue());
-        info->rect = rect;
-        if (info->type == GradientType::LinearGradient) {
-            ctx.m_canvas->drawLinearGradient(rect, info.getValue(),
-                                             gradient.get());
-        } else {
-            ctx.m_canvas->drawRadialGradient(rect, info.getValue(),
-                                             gradient.get());
-        }
-        ctx.m_canvas->restore();
-    } else {
-        ctx.m_canvas->setFillColor(
-            Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                        fillColor.a() * style()->fillOpacity() * opacity));
-        ctx.m_canvas->setFillRule(style()->fillRule());
-        ctx.m_canvas->fillPath(newPath);
-        Unit::Color strokeColor = style()->stroke()->color();
-        ctx.m_canvas->setStrokeColor(
-            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                        strokeColor.a() * style()->strokeOpacity() * opacity));
-        ctx.m_canvas->strokePath(newPath);
     }
 }
 
