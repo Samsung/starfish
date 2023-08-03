@@ -43,45 +43,6 @@ void* FrameSVGRectBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void FrameSVGRectBox::paintSVG(PaintingContext& ctx)
-{
-    Path* newPath = path();
-    float opacity = style()->opacity();
-    Nullable<GradientDrawingInfo*> info = nullptr;
-    Unit::Color fillColor;
-
-    if (style()->fill()->hasUrl()) {
-        info = makeGradientDrawingInfo(style()->fill()->url());
-    } else {
-        fillColor = style()->fill()->color();
-    }
-
-    if (info.hasValue()) {
-        ctx.m_canvas->save();
-        Unit::Rect rect = newPath->boundingRect(true).snapSizeToPixel();
-        std::shared_ptr<NativeGradient> gradient =
-            NativeGradient::create(info.getValue());
-        if (info->type == GradientType::LinearGradient) {
-            ctx.m_canvas->drawLinearGradient(rect, info.getValue(),
-                                             gradient.get());
-        } else {
-            ctx.m_canvas->drawRadialGradient(rect, info.getValue(),
-                                             gradient.get());
-        }
-        ctx.m_canvas->restore();
-    } else {
-        ctx.m_canvas->setFillColor(
-            Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                        fillColor.a() * style()->fillOpacity() * opacity));
-        Unit::Color strokeColor = style()->stroke()->color();
-        ctx.m_canvas->setStrokeColor(
-            Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                        strokeColor.a() * style()->strokeOpacity() * opacity));
-        ctx.m_canvas->fillPath(newPath);
-        ctx.m_canvas->strokePath(newPath);
-    }
-}
-
 Path* FrameSVGRectBox::path()
 {
     Path* path = Path::create();

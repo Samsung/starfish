@@ -77,6 +77,11 @@ void FrameSVGMaskBox::paintContent(PaintingContext& ctx)
     // ‘mask’ elements are never rendered directly
 }
 
+void FrameSVGMaskBox::paintSVG(PaintingContext& ctx)
+{
+    // ‘mask’ elements are never rendered directly
+}
+
 void FrameSVGMaskBox::applyMask(PaintingContext& ctx, float x, float y)
 {
     FrameBox* svgBox = this;

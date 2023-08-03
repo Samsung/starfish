@@ -36,11 +36,10 @@ public:
         return "FrameSVGPolylineBox";
     }
 
-    virtual void paintSVG(PaintingContext& ctx) override;
+    virtual Path* path() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-    virtual Path* path() override;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)

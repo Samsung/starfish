@@ -53,9 +53,7 @@ public:
     {
     }
     virtual void paintContent(PaintingContext& ctx) override;
-    virtual void paintSVG(PaintingContext& ctx)
-    {
-    }
+    virtual void paintSVG(PaintingContext& ctx);
     virtual Path* path()
     {
         return nullptr;
@@ -72,6 +70,7 @@ public:
     {
         return true;
     }
+    virtual CanvasFillStrokeSource* makeCanvasFillStrokeSource(String* url);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(
         String* str);
