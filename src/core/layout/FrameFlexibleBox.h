@@ -53,6 +53,7 @@ public:
     void computeAvailableSpace(LayoutUnit availableWidth);
 
     LayoutUnit basisSize(FrameBox* flexItem);
+    void clearBasisSizeFromCache(FrameBox* flexItem);
     LayoutUnit sumOfUsedupMainSize(std::vector<FrameBox*>& flexItems,
                                    std::vector<bool> isFrozens);
     void computeMainSize();

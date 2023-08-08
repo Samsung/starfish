@@ -640,13 +640,16 @@ public:
         FrameBox* fb);
 
     Nullable<LayoutUnit> testBasisSizeCache(
-        Frame* flexItem, LayoutUnit availableMainCrossSize,
+        Frame* flexItem, bool isMainAxisInInlineAxis,
+        LayoutUnit availableMainCrossSize,
         bool shouldRespectPercentageWidthOnComputingBasisSize);
     void registerToBasisSizeCache(
         Frame* flexItem, LayoutUnit availableMainCrossSize,
         bool seenPercentageWidth,
         bool shouldRespectPercentageWidthOnComputingBasisSize,
         LayoutUnit basisSize);
+    void unregisterToBasisSizeCache(Frame* flexItem,
+                                    LayoutUnit availableMainCrossSize);
 
     Nullable<LayoutUnit> testGridItemPreferredWidthCache(
         Frame* gridItem, LayoutUnit availableWidth);
