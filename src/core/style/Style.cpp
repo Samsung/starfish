@@ -8551,6 +8551,10 @@ void computeAnimation(StyleResolver& resolver, Element* element,
     AnimationExecutor* executor = element->document()->animationExecutor();
     STARFISH_ASSERT(executor != nullptr);
 
+    StyleAnimationData* oldAnimationData = nullptr;
+    if (fromStyle) {
+        oldAnimationData = fromStyle->animation();
+    }
     StyleAnimationData* animationData = toStyle->animation();
 
     if (animationData != nullptr) {
@@ -8584,6 +8588,11 @@ void computeAnimation(StyleResolver& resolver, Element* element,
             if (animationTasks[i]->targetElement() == element &&
                 animationTasks[i]->type() ==
                     ActiveAnimationTask::ANIMATION_TYPE) {
+                if (oldAnimationData != nullptr && animationData == nullptr) {
+                    animationTasks.erase(i);
+                    i--;
+                    continue;
+                }
                 bool shouldRemove = false;
                 bool isCancel = true;
 
@@ -8899,7 +8908,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
     }
 
     return damage;
-}
+} // namespace Starfish
 
 static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
