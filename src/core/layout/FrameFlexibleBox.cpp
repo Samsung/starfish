@@ -101,7 +101,7 @@ void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
 LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
 {
     auto cache = m_layoutContext.testBasisSizeCache(
-        flexItem,
+        flexItem, m_isMainAxisInInlineAxis,
         m_isMainAxisInInlineAxis ? m_availableMainSize : m_availableCrossSize,
         m_shouldRespectPercentageWidthOnComputingBasisSize);
     if (cache) {
@@ -118,6 +118,13 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
         basisSize.second, m_shouldRespectPercentageWidthOnComputingBasisSize,
         basisSize.first);
     return basisSize.first;
+}
+
+void FlexFormattingContext::clearBasisSizeFromCache(FrameBox* flexItem)
+{
+    m_layoutContext.unregisterToBasisSizeCache(
+        flexItem,
+        m_isMainAxisInInlineAxis ? m_availableMainSize : m_availableCrossSize);
 }
 
 void FlexFormattingContext::computeMainSize()
@@ -345,24 +352,25 @@ void FlexFormattingContext::applyFlexFactor()
                     }
 
                     LayoutUnit targetMainSize, mainSize;
+                    LayoutUnit flexItemBasisSize = basisSize(flexItem);
                     if (usingGrowFactor) {
                         float factor = flexItem->style()->flexGrow();
                         if (factor != 0) {
                             targetMainSize =
-                                basisSize(flexItem) +
+                                flexItemBasisSize +
                                 (factor / sumOfFactor) * remainingFreeSpace;
                         }
                     } else {
                         float factor = flexItem->style()->flexShrink();
                         if (factor != 0) {
                             if (scaledFlexShrinkFactor != 0) {
-                                targetMainSize = basisSize(flexItem) +
-                                                 (factor * basisSize(flexItem) /
+                                targetMainSize = flexItemBasisSize +
+                                                 (factor * flexItemBasisSize /
                                                   scaledFlexShrinkFactor) *
                                                      remainingFreeSpace;
                             } else {
                                 targetMainSize =
-                                    basisSize(flexItem) +
+                                    flexItemBasisSize +
                                     (factor / sumOfFactor) * remainingFreeSpace;
                             }
                         }
@@ -383,6 +391,11 @@ void FlexFormattingContext::applyFlexFactor()
                             m_availableMainSize);
                         mainSize = flexItem->contentHeight();
                     }
+
+                    if (mainSize != flexItemBasisSize) {
+                        clearBasisSizeFromCache(flexItem);
+                    }
+
                     clampedSize += mainSize;
 
                     if (targetMainSize > mainSize) {
@@ -1281,7 +1294,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         containingBlockOfFlexItem->contentWidth();
     bool containingBlockOfFlexItemContentWidthDamaged =
         containingBlockOfFlexItem->contentWidthDamaged();
-    bool seenPercentageWidth = false;
+    bool seenPercentageBasisSize = false;
 
     if (!applyLineClamp && isMainAxisInInlineAxis) {
         containingBlockOfFlexItem->setContentWidth(availableMainSize);
@@ -1291,7 +1304,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         if (flexBasis.isWidth()) {
             if (flexBasis.width().isAuto()) {
                 width = oldWidth;
-                seenPercentageWidth |= width.isPercent();
+                seenPercentageBasisSize |= width.isPercent();
 
                 if (!shouldRespectPercentageWidthOnComputingBasisSize &&
                     width.isPercent()) {
@@ -1327,6 +1340,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         if (flexBasis.isWidth()) {
             if (flexBasis.width().isAuto()) {
                 height = oldHeight;
+                seenPercentageBasisSize |= height.isPercent();
             } else {
                 height = flexBasis.width();
             }
@@ -1372,7 +1386,7 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         containingBlockOfFlexItem->clearContentWidthDamaged();
     }
 
-    return std::make_pair(basisSize, seenPercentageWidth);
+    return std::make_pair(basisSize, seenPercentageBasisSize);
 }
 
 bool FrameFlexibleBox::isMainAxisInInlineAxis()

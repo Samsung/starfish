@@ -972,7 +972,8 @@ void LayoutContext::
 }
 
 Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
-    Frame* flexItem, LayoutUnit availableMainCrossSize,
+    Frame* flexItem, bool isMainAxisInInlineAxis,
+    LayoutUnit availableMainCrossSize,
     bool shouldRespectPercentageWidthOnComputingBasisSize)
 {
     auto iter = m_basisSizeCache.find(flexItem);
@@ -983,10 +984,13 @@ Nullable<LayoutUnit> LayoutContext::testBasisSizeCache(
                 if (!(std::get<1>(v[i]).m_seenPercentageWidth)) {
                     return std::get<2>(v[i]);
                 }
-                if (std::get<1>(v[i])
-                        .m_shouldRespectPercentageWidthOnComputingBasisSize ==
-                    shouldRespectPercentageWidthOnComputingBasisSize) {
-                    return std::get<2>(v[i]);
+
+                if (isMainAxisInInlineAxis) {
+                    if (std::get<1>(v[i])
+                            .m_shouldRespectPercentageWidthOnComputingBasisSize ==
+                        shouldRespectPercentageWidthOnComputingBasisSize) {
+                        return std::get<2>(v[i]);
+                    }
                 }
             }
         }
@@ -1017,6 +1021,23 @@ void LayoutContext::registerToBasisSizeCache(
                 shouldRespectPercentageWidthOnComputingBasisSize),
             basisSize));
         m_basisSizeCache.insert(std::make_pair(flexItem, std::move(v)));
+    }
+}
+
+void LayoutContext::unregisterToBasisSizeCache(
+    Frame* flexItem, LayoutUnit availableMainCrossSize)
+{
+    auto iter = m_basisSizeCache.find(flexItem);
+    if (iter != m_basisSizeCache.end()) {
+        LayoutContext::CachedBasisSizeVector& v = iter->second;
+        auto iter2 = v.begin();
+        while (iter2 != v.end()) {
+            if (std::get<0>(*iter2) == availableMainCrossSize) {
+                iter2 = v.erase(iter2);
+            } else {
+                iter2++;
+            }
+        }
     }
 }
 
