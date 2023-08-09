@@ -56,6 +56,7 @@ public:
         // issue)
         InheritableNumber,
         Calc,
+        FitContent,
     };
 
     STARFISH_MAKE_STACK_ALLOCATED();
@@ -171,6 +172,21 @@ public:
     }
 
     bool isCalcAndLengthOfType() const;
+
+    bool isFitContent() const
+    {
+        return m_type == FitContent;
+    }
+
+    bool isIntrinsic() const
+    {
+        return isFitContent() /* || isMinContent() || isMaxContent() */;
+    }
+
+    bool isIntrinsicOrAuto() const
+    {
+        return isAuto() || isIntrinsic();
+    }
 
     bool isComputed() const
     {

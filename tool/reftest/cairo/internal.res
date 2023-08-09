@@ -278,6 +278,7 @@ test/cairo/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 test/cairo/internal-test/css/length/simple_calc.html
 test/cairo/internal-test/css/length/simple_calc2.html
 test/cairo/internal-test/css/length/simple_calc3.html
+test/cairo/internal-test/css/length/width_fit-content.html
 test/cairo/internal-test/css/length/calc_lineheight.html
 test/cairo/internal-test/css/length/calc_rem.html
 test/cairo/internal-test/css/overflow/absolute-positioned-box-with-overflow.html
