@@ -583,6 +583,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
             Length left = offset.left();
             Length right = offset.right();
             Length width = style()->width();
+            bool isPseudoElementFrame =
+                (node() && node()->isElement() &&
+                 node()->asElement()->isPseudoElement());
 
             if (left.isAuto() && right.isAuto()) {
                 if (width.isAuto()) {
@@ -613,7 +616,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
                 if (width.isAuto()) {
                     if (parent()->isAnonymous() &&
                         parent()->parent()->isFrameFlexibleBox() &&
-                        !parent()->isFlexItem()) {
+                        !parent()->isFlexItem() && !isPseudoElementFrame) {
                         moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
                             this);
                     } else {

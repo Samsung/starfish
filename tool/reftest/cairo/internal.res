@@ -481,6 +481,7 @@ test/cairo/internal-test/css/flex/flex_align_item_center_with_justify_content_fl
 test/cairo/internal-test/css/flex/register-content-height.html
 test/cairo/internal-test/css/flex/flexitem_max-width_has_calc.html
 test/cairo/internal-test/css/flex/flex_column_direction_percent_size.html
+test/cairo/internal-test/css/flex/flex_pseudo_after.html
 test/cairo/internal-test/svg/svg_01.html
 test/cairo/internal-test/svg/svg_02.html
 test/cairo/internal-test/svg/svg_03.html
