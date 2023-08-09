@@ -35,11 +35,15 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
     computeBorderMarginPadding(ctx, parentContentWidth);
     LayoutUnit contentWidth;
     Length width = style()->width();
-    if (width.isAuto()) {
-        PreferredWidthContext p(ctx, nullptr, this, this,
-                                parentContentWidth - mbpWidth());
-        p.computePreferredWidth();
-        contentWidth = p.preferredWidth();
+    if (width.isIntrinsicOrAuto()) {
+        if (width.isAuto() || width.isFitContent()) {
+            PreferredWidthContext p(ctx, nullptr, this, this,
+                                    parentContentWidth - mbpWidth());
+            p.computePreferredWidth();
+            contentWidth = p.preferredWidth();
+        } else {
+            STARFISH_UNIMPLEMENTED();
+        }
     } else {
         contentWidth = width.specifiedValue(parentContentWidth, this);
         contentWidth = contentWidthAfterApplyingBoxSizing(contentWidth);

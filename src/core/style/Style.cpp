@@ -3424,7 +3424,13 @@ void StyleResolver::applyProperty(
             style->setWidth(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_UNIMPLEMENTED();
+            switch (newCssValue.widthHeightKeywordValue()) {
+            case WidthHeightKeywordValue::FitContentValue:
+                style->setWidth(Length(Length::Type::FitContent));
+                break;
+            default:
+                break;
+            }
         } else {
             Nullable<Length> length = convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());

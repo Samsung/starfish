@@ -336,12 +336,17 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         setContentWidth(0);
         setContentHeight(0);
         return;
-    } else if ((width.isAuto() && height.isAuto()) || isBrokenImageWithAuto) {
-        LayoutSize size = contentSizeConsiderContainingBlockWidth(
-            intrinsicWidth, intrinsicHeight, parentContentWidth,
-            cb->isFlexItem());
-        w = size.width();
-        h = size.height();
+    } else if ((width.isIntrinsicOrAuto() && height.isAuto()) ||
+               isBrokenImageWithAuto) {
+        if (width.isAuto() || width.isFitContent() || isBrokenImageWithAuto) {
+            LayoutSize size = contentSizeConsiderContainingBlockWidth(
+                intrinsicWidth, intrinsicHeight, parentContentWidth,
+                cb->isFlexItem());
+            w = size.width();
+            h = size.height();
+        } else {
+            STARFISH_UNIMPLEMENTED();
+        }
     } else if (height.isAuto()) {
         w = width.specifiedValue(parentContentWidth, this);
         w = contentWidthAfterApplyingBoxSizing(w);
@@ -395,26 +400,31 @@ LayoutSize FrameReplaced::contentSizeConsiderContainingBlockWidth(
     LayoutUnit intrinsicWidth, LayoutUnit intrinsicHeight,
     LayoutUnit containingBlockWidth, bool isContainingBlockFlexItem)
 {
-    if (isFrameReplacedImage()) {
+    FrameSVGSVGBox* svg = nullptr;
+    if (isFrameSVGSVGBox()) {
+        svg = asFrameSVGSVGBox();
+    } else if (isFrameReplacedImage()) {
         NativeImageData* imageData = nullptr;
         imageData = node()->asHTMLImageElement()->imageData();
         if (imageData && imageData->isSVGNativeImageData()) {
-            FrameSVGSVGBox* svg =
-                imageData->asSVGNativeImageData()->frameSVGSVGBox();
-            IntrinsicSize intrinsicSize = svg->intrinsicSize();
-            if (!intrinsicSize.m_hasViewport &&
-                svg->node()->asSVGSVGElement()->hasViewBox()) {
-                if (intrinsicSize.m_hasAspectRatio) {
-                    return { containingBlockWidth,
-                             containingBlockWidth *
-                                 (intrinsicHeight.toDouble() /
-                                  intrinsicWidth.toDouble()) };
-                } else {
-                    return { containingBlockWidth, containingBlockWidth };
-                }
+            svg = imageData->asSVGNativeImageData()->frameSVGSVGBox();
+        }
+    }
+
+    if (svg) {
+        IntrinsicSize intrinsicSize = svg->intrinsicSize();
+        if (!intrinsicSize.m_hasViewport &&
+            svg->node()->asSVGSVGElement()->hasViewBox()) {
+            if (intrinsicSize.m_hasAspectRatio) {
+                return { containingBlockWidth,
+                         containingBlockWidth * (intrinsicHeight.toDouble() /
+                                                 intrinsicWidth.toDouble()) };
+            } else {
+                return { containingBlockWidth, containingBlockWidth };
             }
         }
     }
+
     return { intrinsicWidth, intrinsicHeight };
 }
 

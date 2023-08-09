@@ -110,10 +110,11 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         Length width = style()->width();
         LayoutUnit contentWidth;
 
-        if (width.isAuto()) {
+        if (width.isIntrinsicOrAuto()) {
             // TODO: implement width: 'max-content' and 'fit-content'
             bool shouldComputeWithNormalBlockWidthRule =
-                isNormalFlow() && !isAtomicInlineLevel();
+                isNormalFlow() && !isAtomicInlineLevel() &&
+                !width.isIntrinsic();
             if (isFlexItem()) {
                 bool isColumnFlexDirection =
                     cb->asFrameFlexibleBox()->isColumnDirection();
@@ -126,9 +127,14 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                     isColumnFlexDirection && needToStrechWidth;
             }
 
-            if (isAbsolutePositioned() && left.isSpecified() &&
-                right.isSpecified() &&
-                !(node() && node()->isHTMLButtonElement())) {
+            if (width.isFitContent()) {
+                PreferredWidthContext p(ctx, nullptr, this, this,
+                                        containgBlockContentWidth - mbpWidth());
+                p.computePreferredWidth();
+                contentWidth = p.preferredWidth();
+            } else if (isAbsolutePositioned() && width.isAuto() &&
+                       left.isSpecified() && right.isSpecified() &&
+                       !(node() && node()->isHTMLButtonElement())) {
                 LayoutUnit l =
                     left.specifiedValue(containgBlockContentWidth, this);
                 LayoutUnit r =
@@ -565,13 +571,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         LayoutUnit oldContentWidth = contentWidth();
 
         computeBorderMarginPadding(ctx, parentContentWidth);
-
-        if (isDialogInShowModal && style()->width().isAuto()) {
-            PreferredWidthContext p(ctx, nullptr, this, this,
-                                    parentContentWidth - mbpWidth());
-            p.computePreferredWidth();
-            style()->setWidth(Length(Length::Fixed, p.preferredWidth()));
-        }
 
         if (isAbsolutePositioned()) {
             // 10.3.7 Absolutely positioned, non-replaced elements

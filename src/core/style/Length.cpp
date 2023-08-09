@@ -201,10 +201,12 @@ float Length::specifiedFontValue(Element* e)
         return viewportPercentValue(w->innerWidth(), w->innerHeight());
     } else if (isFontPercent()) {
         return fontPercentValue(e, true);
-    } else {
-        STARFISH_ASSERT(isCalc());
+    } else if (isCalc()) {
         return calcData()->specifiedFontValue(e);
     }
+    STARFISH_ASSERT(isIntrinsicOrAuto());
+    STARFISH_ASSERT_NOT_REACHED();
+    return 0.0f;
 }
 
 float Length::fontPercentValue(LayoutUnit curFontSize, LayoutUnit rootFontSize,

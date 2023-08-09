@@ -1865,6 +1865,7 @@ struct LayoutDamager {
         , m_canAutoDamage(false)
         , m_canViewportWidthDamage(false)
         , m_canViewportHeightDamage(false)
+        , m_canIntrinsicDamage(false)
     {
     }
 
@@ -1872,6 +1873,7 @@ struct LayoutDamager {
     bool m_canAutoDamage;
     bool m_canViewportWidthDamage;
     bool m_canViewportHeightDamage;
+    bool m_canIntrinsicDamage;
 };
 
 static bool isLayoutDamaged(LayoutDamager damager, Length l)
@@ -1919,6 +1921,8 @@ static bool isLayoutDamaged(LayoutDamager damager, Length l)
         }
 
         return false;
+    } else if (l.isIntrinsic()) {
+        return damager.m_canIntrinsicDamage;
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return false;
@@ -1944,8 +1948,8 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
     damager.m_canViewportWidthDamage = ctx.viewportWidthDamaged();
     damager.m_canViewportHeightDamage = ctx.viewportHeightDamaged();
     damager.m_canAutoDamage = false;
-
     if (resolveWhat & LayoutWantToResolve::ResolveWidth) {
+        damager.m_canIntrinsicDamage = containerWidthMayBeChanged;
         damager.m_canPercentDamage = containerWidthMayBeChanged;
         if (style->width().isAuto()) {
             if (containerWidthMayBeChanged) {
