@@ -127,6 +127,7 @@ private:
     bool m_useHttp2; // default value is false
     uint32_t m_needsDownScaleImageResourceLargerThan;
     bool m_useExternalPopup;
+    bool m_useSpatialNavigation;
 };
 
 class LWE_EXPORT ResourceError {
