@@ -463,12 +463,15 @@ cd third_party/libpng
 %ifarch %{arm}
 CFLAGS+=" -D_ARCH_ARM_ -mfpu=neon"
 %endif
-%configure LIBDIR=%{_libdir} \
-    --disable-static \
-%ifarch %arm armv7l armv7el aarch64
-    --enable-arm-neon=check \
-    %{?ubsan: --enable-arm-neon=no}
+%cmake . -DPNG_STATIC=OFF \
+         -DSKIP_INSTALL_PROGRAMS=ON \
+         -DSKIP_INSTALL_EXPORT=ON \
+%ifarch %{arm} armv7l armv7el aarch64
+         -DPNG_ARM_NEON=on \
+%else
+         -DPNG_ARM_NEON=off \
 %endif
+         %{?ubsan: -DPNG_ARM_NEON=off}
 
 %if "%{?force_build}" == "1"
 make clean
