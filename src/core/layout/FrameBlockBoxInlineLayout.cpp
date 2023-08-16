@@ -4346,6 +4346,10 @@ LayoutUnit PreferredWidthContext::endingMBPWidth(Frame* f)
 
 LayoutUnit PreferredWidthContext::mbpWidth(Frame* f)
 {
+    if (f->isFrameBox()) {
+        f->asFrameBox()->applyDirectionAwareProperty();
+    }
+
     return leftMBPWidth(f) + rightMBPWidth(f);
 }
 
