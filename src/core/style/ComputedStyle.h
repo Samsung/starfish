@@ -171,6 +171,7 @@ public:
         BorderData* m_borderData;
         BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
+        LengthInlineDirectionAwereData* m_lengthInlineDirectionAwereData;
         FlexBasisData* m_flexBasis;
         StyleTransformDataGroup* m_transforms;
         StyleTransformOrigin* m_transformOrigin;
@@ -241,6 +242,12 @@ public:
 
         RareComputedStyleValue(LengthData* lengthData)
             : m_lengthData(lengthData)
+        {
+        }
+
+        RareComputedStyleValue(
+            LengthInlineDirectionAwereData* lengthInlineDirectionAwereData)
+            : m_lengthInlineDirectionAwereData(lengthInlineDirectionAwereData)
         {
         }
 
@@ -553,10 +560,6 @@ public:
                  boxDecorationBreak, BoxDecorationBreak,
                  SliceBoxDecorationBreakValue);
     GETTER_VALUE(String*, stringValue, clipPath, ClipPath, nullptr);
-    GETTER_VALUE(Length, length, paddingInlineEnd, PaddingInlineEnd, 0);
-    GETTER_VALUE(Length, length, paddingInlineStart, PaddingInlineStart, 0);
-    GETTER_VALUE(Length, length, marginInlineEnd, MarginInlineEnd, 0);
-    GETTER_VALUE(Length, length, marginInlineStart, MarginInlineStart, 0);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -586,7 +589,15 @@ public:
 
     GETTER_PTR(FlexBasisData, flexBasis, flexBasis, FlexBasis);
     GETTER_PTR(LengthData, lengthData, margin, Margin);
+    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+               marginInlineEnd, MarginInlineEnd);
+    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+               marginInlineStart, MarginInlineStart);
     GETTER_PTR(LengthData, lengthData, padding, Padding);
+    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+               paddingInlineEnd, PaddingInlineEnd);
+    GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
+               paddingInlineStart, PaddingInlineStart);
     GETTER_PTR(BorderData, borderData, border, Border);
     GETTER_PTR(StyleTransformDataGroup, transforms, transforms, Transforms);
     GETTER_PTR(StyleTransformOrigin, transformOrigin, transformOrigin,
@@ -908,22 +919,22 @@ public:
         *m_rareComputedStyleData.ensureClipPath() = url;
     }
 
-    void setPaddingInlineEnd(Length length)
+    void setPaddingInlineEnd(LengthInlineDirectionAwereData length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineEnd() = length;
     }
 
-    void setPaddingInlineStart(Length length)
+    void setPaddingInlineStart(LengthInlineDirectionAwereData length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineStart() = length;
     }
 
-    void setMarginInlineEnd(Length length)
+    void setMarginInlineEnd(LengthInlineDirectionAwereData length)
     {
         *m_rareComputedStyleData.ensureMarginInlineEnd() = length;
     }
 
-    void setMarginInlineStart(Length length)
+    void setMarginInlineStart(LengthInlineDirectionAwereData length)
     {
         *m_rareComputedStyleData.ensureMarginInlineStart() = length;
     }
@@ -2553,6 +2564,66 @@ public:
         }
     }
 
+    void setMarginTop(const Length& unit)
+    {
+        m_rareComputedStyleData.ensureMargin()->setTop(unit);
+    }
+
+    void setMarginRight(const Length& unit)
+    {
+        m_rareComputedStyleData.ensureMargin()->setRight(unit);
+
+        m_rareComputedStyleData.ensureMarginInlineStart()
+            ->markCorrespondingRightIsSet();
+        m_rareComputedStyleData.ensureMarginInlineEnd()
+            ->markCorrespondingRightIsSet();
+    }
+
+    void setMarginBottom(const Length& unit)
+    {
+        m_rareComputedStyleData.ensureMargin()->setBottom(unit);
+    }
+
+    void setMarginLeft(const Length& unit)
+    {
+        m_rareComputedStyleData.ensureMargin()->setLeft(unit);
+
+        m_rareComputedStyleData.ensureMarginInlineStart()
+            ->markCorrespondingLeftIsSet();
+        m_rareComputedStyleData.ensureMarginInlineEnd()
+            ->markCorrespondingLeftIsSet();
+    }
+
+    void setPaddingTop(const Length& unit)
+    {
+        m_rareComputedStyleData.ensurePadding()->setTop(unit);
+    }
+
+    void setPaddingRight(const Length& unit)
+    {
+        m_rareComputedStyleData.ensurePadding()->setRight(unit);
+
+        m_rareComputedStyleData.ensurePaddingInlineStart()
+            ->markCorrespondingRightIsSet();
+        m_rareComputedStyleData.ensurePaddingInlineEnd()
+            ->markCorrespondingRightIsSet();
+    }
+
+    void setPaddingBottom(const Length& unit)
+    {
+        m_rareComputedStyleData.ensurePadding()->setBottom(unit);
+    }
+
+    void setPaddingLeft(const Length& unit)
+    {
+        m_rareComputedStyleData.ensurePadding()->setLeft(unit);
+
+        m_rareComputedStyleData.ensurePaddingInlineStart()
+            ->markCorrespondingLeftIsSet();
+        m_rareComputedStyleData.ensurePaddingInlineEnd()
+            ->markCorrespondingLeftIsSet();
+    }
+
 #define SET_SIDE(UPOS, ...)                                      \
     void set##UPOS(const Length& unit)                           \
     {                                                            \
@@ -2560,22 +2631,6 @@ public:
     }
     GEN_FOURSIDE(SET_SIDE)
 #undef SET_SIDE
-
-#define SET_MARGIN(UPOS, ...)                                    \
-    void setMargin##UPOS(const Length& unit)                     \
-    {                                                            \
-        m_rareComputedStyleData.ensureMargin()->set##UPOS(unit); \
-    }
-    GEN_FOURSIDE(SET_MARGIN)
-#undef SET_MARGIN
-
-#define SET_PADDING(UPOS, ...)                                    \
-    void setPadding##UPOS(const Length& unit)                     \
-    {                                                             \
-        m_rareComputedStyleData.ensurePadding()->set##UPOS(unit); \
-    }
-    GEN_FOURSIDE(SET_PADDING)
-#undef SET_PADDING
 
     LengthData offset()
     {
@@ -3242,60 +3297,64 @@ public:
         return String::emptyString;
     }
 
-    Length paddingInlineEnd()
+    LengthInlineDirectionAwereData paddingInlineEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return Length();
+            return LengthInlineDirectionAwereData();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.paddingInlineEnd();
-        if (ret.hasValue()) {
-            return ret.getValue();
+        LengthInlineDirectionAwereData* data =
+            m_rareComputedStyleData.paddingInlineEnd();
+        if (data) {
+            return *data;
         }
 
-        return Length();
+        return LengthInlineDirectionAwereData();
     }
 
-    Length paddingInlineStart()
+    LengthInlineDirectionAwereData paddingInlineStart()
     {
         if (!hasRareComputeStyleData()) {
-            return Length();
+            return LengthInlineDirectionAwereData();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.paddingInlineStart();
-        if (ret.hasValue()) {
-            return ret.getValue();
+        LengthInlineDirectionAwereData* data =
+            m_rareComputedStyleData.paddingInlineStart();
+        if (data) {
+            return *data;
         }
 
-        return Length();
+        return LengthInlineDirectionAwereData();
     }
 
-    Length marginInlineEnd()
+    LengthInlineDirectionAwereData marginInlineEnd()
     {
         if (!hasRareComputeStyleData()) {
-            return Length();
+            return LengthInlineDirectionAwereData();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.marginInlineEnd();
-        if (ret.hasValue()) {
-            return ret.getValue();
+        LengthInlineDirectionAwereData* data =
+            m_rareComputedStyleData.marginInlineEnd();
+        if (data) {
+            return *data;
         }
 
-        return Length();
+        return LengthInlineDirectionAwereData();
     }
 
-    Length marginInlineStart()
+    LengthInlineDirectionAwereData marginInlineStart()
     {
         if (!hasRareComputeStyleData()) {
-            return Length();
+            return LengthInlineDirectionAwereData();
         }
 
-        Nullable<Length> ret = m_rareComputedStyleData.marginInlineStart();
-        if (ret.hasValue()) {
-            return ret.getValue();
+        LengthInlineDirectionAwereData* data =
+            m_rareComputedStyleData.marginInlineStart();
+        if (data) {
+            return *data;
         }
 
-        return Length();
+        return LengthInlineDirectionAwereData();
     }
 
     PositionedMaskData* mask()

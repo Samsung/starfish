@@ -976,6 +976,8 @@ public:
         float& topRightVertical, float& bottomRightVertical,
         float& bottomLeftHorizontal, float& bottomRightHorizontal);
 
+    void applyDirectionAwareProperty();
+
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
@@ -1019,8 +1021,6 @@ protected:
         STARFISH_ASSERT(hasRareData());
         return (FrameBoxRareData*)m_layoutParent;
     }
-
-    void applyDirectionAwareProperty();
 
     Frame* m_layoutParent;
 
