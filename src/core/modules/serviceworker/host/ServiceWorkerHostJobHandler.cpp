@@ -47,12 +47,13 @@
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/host/ServiceWorkerFetchJob.h"
 #include "core/modules/serviceworker/ConnectionInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/FetchEventData.h"
 #include "core/modules/serviceworker/RegistrationStore.h"
+#include "core/modules/serviceworker/host/ExtendableEvent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-
 namespace Starfish {
 
 class FetchClient : public ResourceRequestClient {
@@ -184,7 +185,7 @@ public:
         worker->scriptResource().referrerPolicy = referrerPolicy;
 
         // 16. Invoke Run Service Worker algorithm given worker
-        m_jobHandler->runServiceWorker(worker);
+        ServiceWorkerAgent::instance()->runServiceWorker(worker);
         // TODO: 16.1 If evaluationStatus is an abrupt completion or
         // evaluationStatus.[[Value]] is empty, then:
 
@@ -528,32 +529,6 @@ void ServiceWorkerHostJobHandler::startServiceWorkerContext(
     ServiceWorkerAgent::instance()->runServiceWorker(serviceWorkerData, true);
 }
 
-void ServiceWorkerHostJobHandler::runServiceWorker(
-    ServiceWorkerData* serviceWorker)
-{
-    TRACE_SCOPE(HOST);
-    STARFISH_ASSERT(serviceWorker != nullptr);
-    // https://w3c.github.io/ServiceWorker/#run-service-worker
-    // TODO: 1. Let script be serviceWorker’s script resource.
-
-    // 2. Assert: script is not null.
-
-    // TODO: 3. If serviceWorker is already running, this algorithm must have
-    // been invoked previously. If callbackSteps is provided, run them with the
-    // same value as the previous time, and abort these steps.
-
-    // 4. Create a separate parallel execution environment (i.e. a separate
-    // thread or process or equivalent construct), and run the following
-    // substeps in that context:
-
-    auto startServiceWorker = [](size_t handle, void* data) {
-        ServiceWorkerAgent::instance()->runServiceWorker(
-            castTo<ServiceWorkerData*>(data));
-    };
-
-    m_messageLoop->addIdler(nullptr, startServiceWorker, serviceWorker);
-}
-
 void ServiceWorkerHostJobHandler::install(
     ServiceWorkerJob* job, ServiceWorkerData* worker,
     ServiceWorkerRegistrationData* registration)
@@ -636,8 +611,10 @@ void ServiceWorkerHostJobHandler::install(
         // ExtendableEvent.
         // 11.3.1.2. Initialize e’s type attribute to install.
         // 11.3.1.3. Dispatch e at installingWorker’s global object.
-        SendEventTask::enqueueTask("install");
-
+        auto event = new ExtendableEvent(
+            installingWorker->globalObject()->executionContext(),
+            String::fromUTF8("install"));
+        installingWorker->globalObject()->dispatchEventByUA(event);
         // 11.3.1.4. WaitForAsynchronousExtensions: Run the following substeps
         // in parallel:
         // 11.3.1.4.1. Wait until e is not active.
@@ -831,7 +808,10 @@ void ServiceWorkerHostJobHandler::activate(
         // ExtendableEvent.
         // 11.1.1.2. Initialize e’s type attribute to activate.
         // 11.1.1.3. Dispatch e at activeWorker’s global object.
-        SendEventTask::enqueueTask("activate");
+        auto event = new ExtendableEvent(
+            activeWorker->globalObject()->executionContext(),
+            String::fromUTF8("activate"));
+        activeWorker->globalObject()->dispatchEventByUA(event);
 
         // 11.1.1.4. WaitForAsynchronousExtensions: Wait, in parallel, until e
         // is not active.

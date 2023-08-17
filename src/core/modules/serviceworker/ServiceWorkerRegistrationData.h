@@ -67,20 +67,6 @@ private:
     bool m_isUninstalling{ false };
 };
 
-class SendEventTask : public IdleTask {
-public:
-    SendEventTask(String* eventName)
-        : m_eventName(eventName)
-    {
-    }
-    void run() override;
-
-    static void enqueueTask(std::string eventname);
-
-private:
-    String* m_eventName;
-};
-
 } // namespace Starfish
 
 #endif

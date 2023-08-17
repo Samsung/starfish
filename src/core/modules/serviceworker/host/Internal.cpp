@@ -40,7 +40,8 @@ namespace Starfish {
 class CacheTask : public IdleTask {
 public:
     CacheTask(Internal* i, Promise* p)
-        : m_internal(i)
+        : IdleTask(i->globalScope())
+        , m_internal(i)
         , m_promise(p)
     {
         m_resultValue = ValueRef::createUndefined();
@@ -105,8 +106,10 @@ public:
     }
 };
 
-Internal::Internal(ScriptBindingInstance* scriptBindingInstance)
+Internal::Internal(GlobalScope* globalScope,
+                   ScriptBindingInstance* scriptBindingInstance)
     : ScriptWrappable(this)
+    , m_globalScope(globalScope)
     , m_scriptBindingInstance(scriptBindingInstance)
 {
     auto starfish =

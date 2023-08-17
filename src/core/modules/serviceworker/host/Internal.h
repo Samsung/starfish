@@ -34,6 +34,7 @@ class ResourceURL;
 class Response;
 class String;
 class ExecutionContext;
+class GlobalScope;
 
 class Internal : public ScriptWrappable {
 public:
@@ -45,7 +46,8 @@ public:
     }
     bool isInternal() const;
 
-    Internal(ScriptBindingInstance* scriptBindingInstance);
+    Internal(GlobalScope* globaslScope,
+             ScriptBindingInstance* scriptBindingInstance);
 
     // Cache interfaces
     FetchCacheStream* fetchCacheStream()
@@ -66,10 +68,16 @@ public:
         m_url = url;
     }
 
+    GlobalScope* globalScope()
+    {
+        return m_globalScope;
+    }
+
 private:
     Internal();
     ResourceURL* m_url{ nullptr };
     FetchCacheStream* m_fetchCacheStream{ nullptr };
+    GlobalScope* m_globalScope{ nullptr };
     ScriptBindingInstance* m_scriptBindingInstance{ nullptr };
 };
 

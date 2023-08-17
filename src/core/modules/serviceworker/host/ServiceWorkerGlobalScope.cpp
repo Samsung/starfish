@@ -67,7 +67,7 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
     m_workerScriptController->setRegistrationStore(
         jobHander->registrationStore());
 
-    m_internal = new Internal(m_scriptBindingInstance);
+    m_internal = new Internal(this, m_scriptBindingInstance);
     m_internal->setUrl(url);
 }
 
@@ -137,7 +137,7 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
     class SkipWaitingTask : public IdleTask {
     public:
         SkipWaitingTask(ServiceWorkerGlobalScope* s, Promise* p)
-            : globalScope_(s)
+            : IdleTask(s)
             , promise_(p)
         {
         }
@@ -148,7 +148,8 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
             // TODO: use this serviceWorker
             // auto serviceWorkerRef = globalScope_->serviceWorker();
             ServiceWorkerData* serviceWorker =
-                globalScope_->serviceWorkerData();
+                static_cast<ServiceWorkerGlobalScope*>(globalScope())
+                    ->serviceWorkerData();
 
             STARFISH_ASSERT(serviceWorker != nullptr);
 
@@ -173,7 +174,6 @@ Promise* ServiceWorkerGlobalScope::skipWaiting()
         }
 
     private:
-        ServiceWorkerGlobalScope* globalScope_{ nullptr };
         Promise* promise_{ nullptr };
     };
 

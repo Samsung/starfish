@@ -170,8 +170,6 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
     TRACE(SVCWORKER, "create a global scope",
           serviceWorker->scriptURL->toUTF8NonGCString());
 
-    // Register this global ccope as the current one.
-    WorkerGlobalScope::enter(workerGlobalScope);
     workerGlobalScope->setServiceWorkerData(serviceWorker);
 
     // - Let realmExecutionContext be the created JavaScript execution context.

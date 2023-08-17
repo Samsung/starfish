@@ -41,9 +41,6 @@ class WorkerGlobalScope : public EventTarget, public GlobalScope {
 public:
     WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url, String* charSet);
 
-    static void enter(WorkerGlobalScope* scope);
-    static WorkerGlobalScope* getCurrent();
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWorkerGlobalScope() const override;
