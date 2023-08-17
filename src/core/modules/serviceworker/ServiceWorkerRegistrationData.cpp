@@ -72,33 +72,6 @@ void ServiceWorkerRegistrationData::archive(Archiver& ar)
     ar.MemberEnum("updateViaCache", updateViaCache);
 }
 
-#ifdef STARFISH_WEBWORKER_HOST
-
-void SendEventTask::run()
-{
-    WorkerGlobalScope* global = WorkerGlobalScope::getCurrent();
-    if (global) {
-        TRACE(HOST, "Dispatch an Event", CSTR(m_eventName));
-        global->dispatchEventByUA(
-            new ExtendableEvent(global->executionContext(), m_eventName));
-    } else {
-        TRACE0(HOST, "global is null");
-    }
-}
-
-void SendEventTask::enqueueTask(std::string eventname)
-{
-    TRACE_SCOPE(HOST);
-    (new MessageLoop())
-        ->addIdler(
-            nullptr,
-            [](size_t handle, void* data) { ((IdleTask*)data)->run(); },
-            new SendEventTask(String::createASCIIString(eventname.c_str(),
-                                                        eventname.length())));
-}
-
-#endif
-
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

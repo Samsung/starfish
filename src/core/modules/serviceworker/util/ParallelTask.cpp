@@ -18,6 +18,10 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER)
+
+#include "StarfishConfig.h"
+#include "core/page/WebBase.h"
+#include "core/page/GlobalScope.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
@@ -25,8 +29,12 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/serviceworker/util/Trace.h"
 
-using Starfish::MessageLoop;
-using Starfish::PerProcess;
+namespace Starfish {
+
+IdleTask::IdleTask(GlobalScope* globalScope)
+    : m_globalScope(globalScope)
+{
+}
 
 void IdleTask::start()
 {
@@ -35,20 +43,17 @@ void IdleTask::start()
 
 void IdleTask::queue(IdleTask* task)
 {
-    (new MessageLoop())
-        ->addIdler(
-            nullptr,
-            [](size_t handle, void* data) {
-                IdleTask* task = static_cast<IdleTask*>(data);
-                task->run();
-                task->end();
-            },
-            task);
+    task->globalScope()->webBase()->messageLoop()->addIdler(
+        task->globalScope(),
+        [](size_t handle, void* data) {
+            IdleTask* task = static_cast<IdleTask*>(data);
+            task->run();
+            task->end();
+        },
+        task);
 }
 
 #if defined(STARFISH_WEBWORKER_HOST)
-
-using Starfish::ServiceWorkerAgent;
 
 void ParallelTask::start()
 {
@@ -96,5 +101,6 @@ void ParallelTask::queue(ParallelTask* task)
         param);
 }
 #endif
+} // namespace Starfish
 
 #endif

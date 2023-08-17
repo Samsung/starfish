@@ -41,21 +41,6 @@
 
 namespace Starfish {
 
-static thread_local WorkerGlobalScope* g_currentGlobal;
-
-void WorkerGlobalScope::enter(WorkerGlobalScope* scope)
-{
-    TRACE_SCOPE(HOST);
-    // Currently a single WorkerGlobalScope instance on a process is considered.
-    STARFISH_ASSERT(g_currentGlobal == nullptr);
-    g_currentGlobal = scope;
-}
-
-WorkerGlobalScope* WorkerGlobalScope::getCurrent()
-{
-    return g_currentGlobal;
-}
-
 WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     : EventTarget()
     , GlobalScope(webWorker)
