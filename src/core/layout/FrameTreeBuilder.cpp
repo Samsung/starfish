@@ -824,6 +824,15 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return new FrameOptGroupBox(current, nullptr);
     } else if (current->isHTMLOptionElement()) {
         return FrameOptionBox::buildFrameTree(current, ctx, force);
+    } else if (display == DisplayValue::BoxDisplayValue ||
+               display == DisplayValue::InlineBoxDisplayValue) {
+        // Note: box(-webkit-box) and inline-box(-webkit-inline-box) are that
+        // existed before flex became a spec. Since these was deprecated by
+        // flex, we don't need to fully support it.
+        // However, during commercial support(VD), there are behaviors caused
+        // by these features. So to support these as easily as possible,
+        // we handle them as a flex.
+        return new FrameFlexibleBox(current, nullptr);
     } else if (display == DisplayValue::FlexDisplayValue ||
                display == DisplayValue::InlineFlexDisplayValue) {
         return new FrameFlexibleBox(current, nullptr);

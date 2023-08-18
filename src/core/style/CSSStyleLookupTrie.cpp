@@ -1029,7 +1029,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
             if (memcmp(data, "-webkit-box-orient", 18) == 0) {
-                return CSSStyleValuePair::KeyKind::FlexDirection;
+                return CSSStyleValuePair::KeyKind::BoxOrient;
             }
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_LINE_PREFIX)
@@ -2011,9 +2011,15 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::MarginInlineEnd;
             }
             break;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \
-    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX)
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) ||      \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_TRANSFORM_PREFIX) || \
+    defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
         case 'w':
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
+            if (memcmp(data, "webkitBoxOrient", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::BoxOrient;
+            }
+#endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
             if (memcmp(data, "webkitFlexBasis", 15) == 0) {
                 return CSSStyleValuePair::KeyKind::FlexBasis;

@@ -1467,6 +1467,10 @@ void Frame::computeStyleFlags()
     m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCaptionDisplayValue);
     m_flags.m_needToEstablishBlockFormattingContext |=
+        (style->originalDisplay() == DisplayValue::BoxDisplayValue);
+    m_flags.m_needToEstablishBlockFormattingContext |=
+        (style->originalDisplay() == DisplayValue::InlineBoxDisplayValue);
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::FlexDisplayValue);
     m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineFlexDisplayValue);
