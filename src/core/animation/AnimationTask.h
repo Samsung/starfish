@@ -371,6 +371,11 @@ public:
         }
 
         uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
+
+        if (timeDiff > m_durationMs) {
+            return 0;
+        }
+
         return m_durationMs - timeDiff;
     }
 
