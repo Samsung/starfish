@@ -1391,9 +1391,14 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
 
 bool FrameFlexibleBox::isMainAxisInInlineAxis()
 {
-    FlexDirectionValue flexDirection = style()->flexDirection();
-    return (flexDirection == RowFlexDirectionValue) ||
-           (flexDirection == RowReverseFlexDirectionValue);
+    if (isStandardMode()) {
+        FlexDirectionValue flexDirection = style()->flexDirection();
+        return (flexDirection == RowFlexDirectionValue) ||
+               (flexDirection == RowReverseFlexDirectionValue);
+    } else {
+        BoxOrientValue boxOrient = style()->boxOrient();
+        return boxOrient == BoxOrientValue::HorizontalBoxOrientValue;
+    }
 }
 
 bool FrameFlexibleBox::isSingleLine()
@@ -1405,13 +1410,23 @@ bool FrameFlexibleBox::isSingleLine()
 bool FrameFlexibleBox::isLtrDirection()
 {
     DirectionValue direction = style()->direction();
-    FlexDirectionValue flexDirection = style()->flexDirection();
 
     if (isMainAxisInInlineAxis()) {
-        if (direction == LtrDirectionValue) {
-            return flexDirection == RowFlexDirectionValue;
+        if (isStandardMode()) {
+            FlexDirectionValue flexDirection = style()->flexDirection();
+            if (direction == LtrDirectionValue) {
+                return flexDirection == RowFlexDirectionValue;
+            } else {
+                return flexDirection == RowReverseFlexDirectionValue;
+            }
         } else {
-            return flexDirection == RowReverseFlexDirectionValue;
+            BoxOrientValue boxOrient = style()->boxOrient();
+            if (direction == LtrDirectionValue) {
+                return boxOrient == BoxOrientValue::HorizontalBoxOrientValue;
+            } else {
+                STARFISH_UNIMPLEMENTED();
+                return true;
+            }
         }
     } else {
         FlexWrapValue flexWrap = style()->flexWrap();
@@ -1429,22 +1444,38 @@ bool FrameFlexibleBox::isTtbDirection()
         FlexWrapValue flexWrap = style()->flexWrap();
         return flexWrap != WrapReverseFlexWrapValue;
     } else {
-        FlexDirectionValue flexDirection = style()->flexDirection();
-        return flexDirection == ColumnFlexDirectionValue;
+        if (isStandardMode()) {
+            FlexDirectionValue flexDirection = style()->flexDirection();
+            return flexDirection == ColumnFlexDirectionValue;
+        } else {
+            BoxOrientValue boxOrient = style()->boxOrient();
+            return boxOrient == BoxOrientValue::VerticalBoxOrientValue;
+        }
     }
 }
 
 bool FrameFlexibleBox::isColumnDirection()
 {
-    FlexDirectionValue diretion = style()->flexDirection();
-    return diretion == FlexDirectionValue::ColumnFlexDirectionValue ||
-           diretion == FlexDirectionValue::ColumnReverseFlexDirectionValue;
+    if (isStandardMode()) {
+        FlexDirectionValue direction = style()->flexDirection();
+        return direction == FlexDirectionValue::ColumnFlexDirectionValue ||
+               direction == FlexDirectionValue::ColumnReverseFlexDirectionValue;
+    } else {
+        BoxOrientValue boxOrient = style()->boxOrient();
+        return boxOrient == BoxOrientValue::VerticalBoxOrientValue;
+    }
 }
 
 uint32_t FrameFlexibleBox::lineClamp()
 {
-    if (style()->flexDirection() == ColumnFlexDirectionValue) {
-        return style()->lineClamp();
+    if (isStandardMode()) {
+        if (style()->flexDirection() == ColumnFlexDirectionValue) {
+            return style()->lineClamp();
+        }
+    } else {
+        if (style()->boxOrient() == BoxOrientValue::VerticalBoxOrientValue) {
+            return style()->lineClamp();
+        }
     }
 
     return 0;
@@ -1554,4 +1585,12 @@ void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
         child = child->next();
     }
 }
+
+bool FrameFlexibleBox::isStandardMode()
+{
+    DisplayValue display = style()->display();
+    return display == DisplayValue::FlexDisplayValue ||
+           display == DisplayValue::InlineFlexDisplayValue;
+}
+
 } // namespace Starfish

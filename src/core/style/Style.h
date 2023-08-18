@@ -132,6 +132,8 @@ enum DisplayValue ENSURE_ENUM_UNSIGNED {
     InlineFlexDisplayValue,
     GridDisplayValue,
     InlineGridDisplayValue,
+    BoxDisplayValue,       // Only for -webkit-box
+    InlineBoxDisplayValue, // Only for -webkit-inline-box
     NoneDisplayValue,
 };
 
@@ -153,6 +155,12 @@ enum ClearValue ENSURE_ENUM_UNSIGNED {
     LeftClearValue = 1,
     RightClearValue = 1 << 1,
     BothClearValue = 1 | (1 << 1),
+};
+
+// Only for -webkit-box
+enum BoxOrientValue ENSURE_ENUM_UNSIGNED {
+    HorizontalBoxOrientValue,
+    VerticalBoxOrientValue,
 };
 
 // flex
@@ -653,6 +661,7 @@ class CSSFilterFunction;
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")                   \
     F(BorderCollapse, borderCollapse, "border-collapse")                       \
     F(BorderSpacing, borderSpacing, "border-spacing")                          \
+    F(BoxOrient, boxOrient, "box-orient")                                      \
     F(CaptionSide, CaptionSide, "caption-side")                                \
     F(EmptyCells, EmptyCells, "empty-cells")                                   \
     F(TextAlign, textAlign, "text-align")                                      \
@@ -1035,6 +1044,9 @@ public:
         UnicodeBidiValueKind,
         BoxSizingValueKind,
         BoxDecorationBreakValueKind,
+
+        // Only for -webkit-box-orient
+        BoxOrientValueKind,
 
         // flex
         FlexDirectionValueKind,
@@ -1569,6 +1581,12 @@ public:
         return m_value.m_boxSizing;
     }
 
+    BoxOrientValue boxOrientValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == BoxOrientValueKind);
+        return m_value.m_boxOrient;
+    }
+
     String* attrValue() const
     {
         STARFISH_ASSERT(m_valueKind == Attr);
@@ -1816,6 +1834,7 @@ public:
         AnimationFillModeValue m_animationFillModeValue;
         BoxSizingValue m_boxSizing;
         CSSTime m_time;
+        BoxOrientValue m_boxOrient;
         FlexDirectionValue m_flexDirection;
         FlexWrapValue m_flexWrap;
         JustifyContentValue m_justifyContent;
@@ -2053,6 +2072,10 @@ public:
         }
         ValueData(BoxSizingValue v)
             : m_boxSizing(v)
+        {
+        }
+        ValueData(BoxOrientValue v)
+            : m_boxOrient(v)
         {
         }
         ValueData(FlexDirectionValue v)

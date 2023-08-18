@@ -2039,7 +2039,8 @@ public:
         }
         ComputedStyle* cs = style();
         if (cs) {
-            return cs->display() == DisplayValue::FlexDisplayValue ||
+            return cs->display() == DisplayValue::BoxDisplayValue ||
+                   cs->display() == DisplayValue::FlexDisplayValue ||
                    cs->display() == DisplayValue::GridDisplayValue;
         }
         return false;
@@ -2154,6 +2155,7 @@ public:
                (display == DisplayValue::TableColumnGroupDisplayValue) ||
                (display == DisplayValue::TableFooterGroupDisplayValue) ||
                (display == DisplayValue::TableHeaderGroupDisplayValue) ||
+               (display == DisplayValue::BoxDisplayValue) ||
                (display == DisplayValue::FlexDisplayValue) ||
                (display == DisplayValue::GridDisplayValue);
     }
@@ -2166,6 +2168,7 @@ public:
                (display == DisplayValue::InlineListItemDisplayValue) ||
                (display == DisplayValue::InlineBlockDisplayValue) ||
                (display == DisplayValue::InlineTableDisplayValue) ||
+               (display == DisplayValue::InlineBoxDisplayValue) ||
                (display == DisplayValue::InlineFlexDisplayValue) ||
                (display == DisplayValue::InlineGridDisplayValue);
     }

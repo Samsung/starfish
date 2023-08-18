@@ -2266,6 +2266,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(BoxDecorationBreak, BoxDecorationBreakValueKind,
                        boxDecorationBreak)
         ADD_VALUE_PAIR(BoxSizing, BoxSizingValueKind, boxSizing)
+        ADD_VALUE_PAIR(BoxOrient, BoxOrientValueKind, boxOrient)
         ADD_VALUE_PAIR(FlexDirection, FlexDirectionValueKind, flexDirection)
         ADD_VALUE_PAIR(FlexWrap, FlexWrapValueKind, flexWrap)
         ADD_VALUE_PAIR(Order, Int32, order)

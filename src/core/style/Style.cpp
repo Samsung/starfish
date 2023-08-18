@@ -1592,6 +1592,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("grid");
         case DisplayValue::InlineGridDisplayValue:
             return String::fromUTF8("inline-grid");
+        case DisplayValue::BoxDisplayValue:
+            return String::fromUTF8("-webkit-box");
+        case DisplayValue::InlineBoxDisplayValue:
+            return String::fromUTF8("-webkit-inline-box");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -2161,6 +2165,17 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("border-box");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::BoxOrientValueKind:
+        switch (boxOrientValue()) {
+        case BoxOrientValue::HorizontalBoxOrientValue:
+            return String::fromUTF8("horizontal");
+        case BoxOrientValue::VerticalBoxOrientValue:
+            return String::fromUTF8("vertical");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            break;
         }
         break;
     case CSSStyleValuePair::ValueKind::FlexDirectionValueKind:
@@ -5736,6 +5751,22 @@ void StyleResolver::applyProperty(
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::BoxSizingValueKind) {
             style->setBoxSizing(newCssValue.boxSizingValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::BoxOrient:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
+            style->m_boxOrient = BoxOrientValue::HorizontalBoxOrientValue;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            style->m_boxOrient = parentStyle->m_boxOrient;
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::BoxOrientValueKind) {
+            style->setBoxOrient(newCssValue.boxOrientValue());
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -9900,9 +9931,9 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
     } else if (STRING_VALUE_IS_STRING("-webkit-box")) {
-        m_value.m_display = DisplayValue::FlexDisplayValue;
+        m_value.m_display = DisplayValue::BoxDisplayValue;
     } else if (STRING_VALUE_IS_STRING("-webkit-inline-box")) {
-        m_value.m_display = DisplayValue::InlineFlexDisplayValue;
+        m_value.m_display = DisplayValue::InlineBoxDisplayValue;
 #endif
     } else if (STRING_VALUE_IS_STRING("grid")) {
         m_value.m_display = DisplayValue::GridDisplayValue;
@@ -13903,12 +13934,6 @@ bool CSSStyleValuePair::updateValueUnitFlexDirection(const CSSTokenValue& value)
     } else if (STRING_VALUE_IS_STRING("column-reverse")) {
         m_value.m_flexDirection =
             FlexDirectionValue::ColumnReverseFlexDirectionValue;
-#if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
-    } else if (STRING_VALUE_IS_STRING("horizontal")) {
-        m_value.m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("vertical")) {
-        m_value.m_flexDirection = FlexDirectionValue::ColumnFlexDirectionValue;
-#endif
     } else {
         return false;
     }
@@ -13924,6 +13949,26 @@ bool CSSStyleValuePair::updateValueFlexDirection(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     return updateValueUnitFlexDirection(value);
+}
+
+bool CSSStyleValuePair::updateValueBoxOrient(Document* document,
+                                             const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    if (value.equals("horizontal")) {
+        m_value.m_boxOrient = BoxOrientValue::HorizontalBoxOrientValue;
+    } else if (value.equals("vertical")) {
+        m_value.m_boxOrient = BoxOrientValue::VerticalBoxOrientValue;
+    } else {
+        return false;
+    }
+
+    m_valueKind = CSSStyleValuePair::ValueKind::BoxOrientValueKind;
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueUnitFlexWrap(const CSSTokenValue& value)

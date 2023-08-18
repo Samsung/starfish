@@ -153,6 +153,8 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    bool isStandardMode();
+
     static inline void fillGCDescriptor(GC_word* desc)
     {
         FrameBlockBox::fillGCDescriptor(desc);

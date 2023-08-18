@@ -688,6 +688,9 @@ void ComputedStyle::blockify(Node* current, bool force)
             case DisplayValue::InlineTableDisplayValue:
                 m_display = DisplayValue::TableDisplayValue;
                 break;
+            case DisplayValue::InlineBoxDisplayValue:
+                m_display = DisplayValue::BoxDisplayValue;
+                break;
             case DisplayValue::InlineFlexDisplayValue:
                 m_display = DisplayValue::FlexDisplayValue;
                 break;
@@ -1975,6 +1978,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newStyle->m_boxSizing != oldStyle->m_boxSizing) {
         damagedKeys[CSSStyleValuePair::KeyKind::BoxSizing] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_boxOrient != oldStyle->m_boxOrient) {
+        damagedKeys[CSSStyleValuePair::KeyKind::BoxOrient] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }

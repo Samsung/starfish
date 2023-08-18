@@ -3119,6 +3119,16 @@ public:
         return m_inheritedStyles.m_emptyCells;
     }
 
+    void setBoxOrient(BoxOrientValue value)
+    {
+        m_boxOrient = value;
+    }
+
+    BoxOrientValue boxOrient()
+    {
+        return m_boxOrient;
+    }
+
     void setTableLayout(TableLayoutValue value)
     {
         m_tableLayout = value;
@@ -4254,6 +4264,7 @@ protected:
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
         m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
+        m_boxOrient = BoxOrientValue::HorizontalBoxOrientValue;
         m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
         m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
         m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
@@ -4308,6 +4319,7 @@ protected:
     OverflowValue m_overflowY : 2;
     UnicodeBidiValue m_unicodeBidi : 2;
     BoxSizingValue m_boxSizing : 1;
+    BoxOrientValue m_boxOrient : 1;
     TableLayoutValue m_tableLayout : 1; // table
     FlexDirectionValue m_flexDirection : 2;
     FlexWrapValue m_flexWrap : 2;
