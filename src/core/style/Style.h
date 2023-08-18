@@ -2210,6 +2210,7 @@ public:
     {
     }
 
+    void* toPointerValueIfPossible() const;
     void rootPointerValue(GCVector<void*>& rooter) const;
     void unrootPointerValue(GCVector<void*>& rooter) const;
 

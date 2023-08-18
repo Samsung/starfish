@@ -80,41 +80,11 @@
 
 namespace Starfish {
 
-#define TOKEN_IS_STRING(str) \
-    (strlen(str) == strlen(token) && (memcmp(token, str, strlen(str))) == 0)
-
-#define VALUE_IS_STRING(str) \
-    (strlen(str) == strlen(value) && (memcmp(value, str, strlen(str))) == 0)
-
-#define VALUE_IS_INHERIT() VALUE_IS_STRING("inherit")
-
-#define VALUE_IS_INITIAL() VALUE_IS_STRING("initial")
-
-#define VALUE_IS_UNSET() VALUE_IS_STRING("unset")
-
-#define VALUE_IS_NONE() VALUE_IS_STRING("none")
-
-#define VALUE_IS_AUTO() VALUE_IS_STRING("auto")
-
-#define STRING_VALUE_IS_STRING(str) (value.equals(str))
-
-#define STRING_VALUE_IS_INHERIT() STRING_VALUE_IS_STRING("inherit")
-
-#define STRING_VALUE_IS_INITIAL() STRING_VALUE_IS_STRING("initial")
-
-#define STRING_VALUE_IS_UNSET() STRING_VALUE_IS_STRING("unset")
-
-#define STRING_VALUE_IS_NONE() STRING_VALUE_IS_STRING("none")
-
-#define STRING_VALUE_IS_AUTO() STRING_VALUE_IS_STRING("auto")
-
-#define CALC_FUNC_START "calc("
-#define CALC_FUNC_END ")"
-#define CALC_FUNC_START_SIZE 5
-#define CALC_FUNC_END_SIZE 1
-
-// The transform property can have matrix values with up to 16 parameters.
-#define MAX_UNITS 16
+static bool compareCString(const char* keyword, const char* value)
+{
+    return (strlen(keyword) == strlen(value) &&
+            (memcmp(value, keyword, strlen(keyword))) == 0);
+}
 
 static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v);
@@ -363,13 +333,13 @@ bool CSSTransformFunction::operator==(const CSSTransformFunction& src)
 static bool removeCalcFuncNameIfNeeds(const CSSStyleValuePair& item,
                                       NullableUTF8String& utf8String)
 {
-    if (item.varFunctionValue()->startsWith(CALC_FUNC_START,
-                                            CALC_FUNC_START_SIZE) &&
-        item.varFunctionValue()->endsWith(CALC_FUNC_END, CALC_FUNC_END_SIZE)) {
-        utf8String.m_buffer = utf8String.m_buffer + CALC_FUNC_START_SIZE;
-        utf8String.m_bufferSize -= (CALC_FUNC_START_SIZE + CALC_FUNC_END_SIZE);
+    if (item.varFunctionValue()->startsWith("calc(") &&
+        item.varFunctionValue()->endsWith(")")) {
+        utf8String.m_buffer = utf8String.m_buffer + 5;
+        utf8String.m_bufferSize -= 4;
         return true;
     }
+
     return false;
 }
 
@@ -413,8 +383,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
                     StyleResolver::resolveVarReferencedValue(
                         element, utf8String, cssCustomValues);
                 if (isRemoved) {
-                    transformFuncValue =
-                        CALC_FUNC_START + transformFuncValue + CALC_FUNC_END;
+                    transformFuncValue = "calc(" + transformFuncValue + ")";
                 }
 
                 ValueList* values = new ValueList(f.values()->separator());
@@ -682,11 +651,11 @@ bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
     }
     const char* value = tokens[0].data();
 
-    if (VALUE_IS_INHERIT()) {
+    if (compareCString("inherit", value)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
+    } else if (compareCString("initial", value)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_UNSET()) {
+    } else if (compareCString("unset", value)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Unset;
     } else {
         return false;
@@ -1399,53 +1368,66 @@ bool CSSStyleValuePair::operator==(const CSSStyleValuePair& src)
     return valueEquals(src);
 }
 
-#define ROOT_POINTER_SIMPLE()                 \
-    case StringValueKind:                     \
-    case KeywordValueKind:                    \
-    case UrlValueKind:                        \
-    case PathFunctionValueKind:               \
-    case Attr:                                \
-    case VarFunctionValueKind:                \
-        ptr = m_value.m_stringValue;          \
-        break;                                \
-    case TransformFunctions:                  \
-        ptr = m_value.m_transforms;           \
-        break;                                \
-    case CalcValueKind:                       \
-        ptr = m_value.m_calc;                 \
-        break;                                \
-    case FontFaceSrcDataValueKind:            \
-        ptr = m_value.m_fontFaceSrcData;      \
-        break;                                \
-    case RectValueKind:                       \
-        ptr = m_value.m_rect;                 \
-        break;                                \
-    case GridTemplateUnits:                   \
-        ptr = m_value.m_gridTemplateUnits;    \
-        break;                                \
-    case CounterFunctionValueKind:            \
-        ptr = m_value.m_counterFunctionValue; \
-        break;                                \
-    case TextOverflowValueKind:               \
-        ptr = m_value.m_textOverflowData;     \
-        break;                                \
-    case GradientValueKind:                   \
-        ptr = m_value.m_gradientValue;        \
-        break;                                \
-    case TimingFunctionPointerKind:           \
-        ptr = m_value.m_timingFunction;       \
-        break;                                \
-    case FilterFunctionValueKind:             \
-        ptr = m_value.m_filterFunction;       \
-        break;
-
-void CSSStyleValuePair::rootPointerValue(GCVector<void*>& rooter) const
+void* CSSStyleValuePair::toPointerValueIfPossible() const
 {
     void* ptr = nullptr;
     switch (m_valueKind) {
-        ROOT_POINTER_SIMPLE()
+    case StringValueKind:
+    case KeywordValueKind:
+    case UrlValueKind:
+    case PathFunctionValueKind:
+    case Attr:
+    case VarFunctionValueKind:
+        ptr = m_value.m_stringValue;
+        break;
+    case TransformFunctions:
+        ptr = m_value.m_transforms;
+        break;
+    case CalcValueKind:
+        ptr = m_value.m_calc;
+        break;
+    case FontFaceSrcDataValueKind:
+        ptr = m_value.m_fontFaceSrcData;
+        break;
+    case RectValueKind:
+        ptr = m_value.m_rect;
+        break;
+    case GridTemplateUnits:
+        ptr = m_value.m_gridTemplateUnits;
+        break;
+    case CounterFunctionValueKind:
+        ptr = m_value.m_counterFunctionValue;
+        break;
+    case TextOverflowValueKind:
+        ptr = m_value.m_textOverflowData;
+        break;
+    case GradientValueKind:
+        ptr = m_value.m_gradientValue;
+        break;
+    case TimingFunctionPointerKind:
+        ptr = m_value.m_timingFunction;
+        break;
+    case FilterFunctionValueKind:
+        ptr = m_value.m_filterFunction;
+        break;
     case ValuePairKind:
         ptr = m_value.m_pairValue;
+        break;
+    case ValueListKind:
+        ptr = m_value.m_multiValue;
+        break;
+    default:
+        break;
+    }
+
+    return ptr;
+}
+
+void CSSStyleValuePair::rootPointerValue(GCVector<void*>& rooter) const
+{
+    void* ptr = toPointerValueIfPossible();
+    switch (m_valueKind) {
+    case ValuePairKind:
         m_value.m_pairValue->first().rootPointerValue(rooter);
         m_value.m_pairValue->second().rootPointerValue(rooter);
         break;
@@ -1466,16 +1448,13 @@ void CSSStyleValuePair::rootPointerValue(GCVector<void*>& rooter) const
 
 void CSSStyleValuePair::unrootPointerValue(GCVector<void*>& rooter) const
 {
-    void* ptr = nullptr;
+    void* ptr = toPointerValueIfPossible();
     switch (m_valueKind) {
-        ROOT_POINTER_SIMPLE()
     case ValuePairKind:
-        ptr = m_value.m_pairValue;
         m_value.m_pairValue->first().unrootPointerValue(rooter);
         m_value.m_pairValue->second().unrootPointerValue(rooter);
         break;
     case ValueListKind:
-        ptr = m_value.m_multiValue;
         for (size_t i = 0; i < m_value.m_multiValue->size(); i++) {
             m_value.m_multiValue->at(i).unrootPointerValue(rooter);
         }
@@ -9366,10 +9345,10 @@ bool CSSStyleValuePair::updateValueCaretColor(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         CSSTokenValue token("currentcolor");
         return CSSPropertyParser::parseNamedColor(token, this);
-    } else if (STRING_VALUE_IS_STRING("transparent")) {
+    } else if (value.equals("transparent")) {
         m_value.m_color = Unit::Color(0, 0, 0, 0);
         return true;
     } else {
@@ -9391,26 +9370,25 @@ GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("hidden")) {
+    } else if (value.equals("hidden")) {
         m_value.m_borderStyle = BorderStyleValue::HiddenBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("solid") ||
-               STRING_VALUE_IS_STRING("auto")) {
+    } else if (value.equals("solid") || value.equals("auto")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("dashed")) {
+    } else if (value.equals("dashed")) {
         m_value.m_borderStyle = BorderStyleValue::DashedBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("inset")) {
+    } else if (value.equals("inset")) {
         m_value.m_borderStyle = BorderStyleValue::InsetBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("outset")) {
+    } else if (value.equals("outset")) {
         m_value.m_borderStyle = BorderStyleValue::OutsetBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("dotted")) {
+    } else if (value.equals("dotted")) {
         m_value.m_borderStyle = BorderStyleValue::DottedBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("double")) {
+    } else if (value.equals("double")) {
         m_value.m_borderStyle = BorderStyleValue::DoubleBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("groove")) {
+    } else if (value.equals("groove")) {
         m_value.m_borderStyle = BorderStyleValue::GrooveBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("ridge")) {
+    } else if (value.equals("ridge")) {
         m_value.m_borderStyle = BorderStyleValue::RidgeBorderStyleValue;
     } else {
         return false;
@@ -9442,9 +9420,9 @@ bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
         const CSSTokenValue& t = tokens[i];
         const char* value = t.data();
         CSSStyleValuePair pair;
-        if (VALUE_IS_INHERIT()) {
+        if (compareCString("inherit", value)) {
             pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
-        } else if (VALUE_IS_INITIAL()) {
+        } else if (compareCString("initial", value)) {
             pair.setValueKind(CSSStyleValuePair::ValueKind::Initial);
         } else {
             auto ret = pair.updateValueUnitLengthOrCalc(
@@ -9503,9 +9481,9 @@ bool CSSStyleValuePair::updateValueDirection(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::DirectionValueKind;
-    if (STRING_VALUE_IS_STRING("ltr")) {
+    if (value.equals("ltr")) {
         m_value.m_direction = DirectionValue::LtrDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("rtl")) {
+    } else if (value.equals("rtl")) {
         m_value.m_direction = DirectionValue::RtlDirectionValue;
     } else {
         return false;
@@ -9524,15 +9502,15 @@ bool CSSStyleValuePair::updateValueWhiteSpace(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::WhiteSpaceValueKind;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
-    } else if (STRING_VALUE_IS_STRING("nowrap")) {
+    } else if (value.equals("nowrap")) {
         m_value.m_whiteSpace = WhiteSpaceValue::NoWrapWhiteSpaceValue;
-    } else if (STRING_VALUE_IS_STRING("pre")) {
+    } else if (value.equals("pre")) {
         m_value.m_whiteSpace = WhiteSpaceValue::PreWhiteSpaceValue;
-    } else if (STRING_VALUE_IS_STRING("pre-wrap")) {
+    } else if (value.equals("pre-wrap")) {
         m_value.m_whiteSpace = WhiteSpaceValue::PreWrapWhiteSpaceValue;
-    } else if (STRING_VALUE_IS_STRING("pre-line")) {
+    } else if (value.equals("pre-line")) {
         m_value.m_whiteSpace = WhiteSpaceValue::PreLineWhiteSpaceValue;
     } else {
         return false;
@@ -9551,15 +9529,15 @@ bool CSSStyleValuePair::updateValueObjectFit(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ObjectFitValueKind;
-    if (STRING_VALUE_IS_STRING("fill")) {
+    if (value.equals("fill")) {
         m_value.m_objectFit = ObjectFitValue::FillObjectFitValue;
-    } else if (STRING_VALUE_IS_STRING("contain")) {
+    } else if (value.equals("contain")) {
         m_value.m_objectFit = ObjectFitValue::ContainObjectFitValue;
-    } else if (STRING_VALUE_IS_STRING("cover")) {
+    } else if (value.equals("cover")) {
         m_value.m_objectFit = ObjectFitValue::CoverObjectFitValue;
-    } else if (STRING_VALUE_IS_STRING("none")) {
+    } else if (value.equals("none")) {
         m_value.m_objectFit = ObjectFitValue::NoneObjectFitValue;
-    } else if (STRING_VALUE_IS_STRING("scale-down")) {
+    } else if (value.equals("scale-down")) {
         m_value.m_objectFit = ObjectFitValue::ScaledownObjectFitValue;
     } else {
         return false;
@@ -9576,27 +9554,27 @@ static bool isPositionValue(const CSSTokenVector& tokens, unsigned int idx,
     }
     const CSSTokenValue& value = tokens[idx];
     result.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
-    if (STRING_VALUE_IS_STRING("left")) {
+    if (value.equals("left")) {
         if (isXAxis) {
             return false;
         }
         result.setValue(SideValue::LeftSideValue);
         isXAxis = true;
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         if (isXAxis) {
             return false;
         }
         result.setValue(SideValue::RightSideValue);
         isXAxis = true;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         result.setValue(SideValue::CenterSideValue);
-    } else if (STRING_VALUE_IS_STRING("top")) {
+    } else if (value.equals("top")) {
         if (isYAxis) {
             return false;
         }
         result.setValue(SideValue::TopSideValue);
         isYAxis = true;
-    } else if (STRING_VALUE_IS_STRING("bottom")) {
+    } else if (value.equals("bottom")) {
         if (isYAxis) {
             return false;
         }
@@ -9841,7 +9819,7 @@ bool CSSStyleValuePair::updateValueUnitWordSpacing(const CSSTokenValue& value)
 {
     // <normal> | length | initial | inherit
     float result = 0.f;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
     } else {
@@ -9869,7 +9847,7 @@ bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
     // <normal> | length | initial | inherit
     const CSSTokenValue& value = tokens[0];
     float result = 0.f;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
     } else {
@@ -9889,57 +9867,57 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::DisplayValueKind;
-    if (STRING_VALUE_IS_STRING("block")) {
+    if (value.equals("block")) {
         m_value.m_display = DisplayValue::BlockDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline")) {
+    } else if (value.equals("inline")) {
         m_value.m_display = DisplayValue::InlineDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-list-item")) {
+    } else if (value.equals("inline-list-item")) {
         m_value.m_display = DisplayValue::InlineListItemDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("list-item")) {
+    } else if (value.equals("list-item")) {
         m_value.m_display = DisplayValue::ListItemDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-block")) {
+    } else if (value.equals("inline-block")) {
         m_value.m_display = DisplayValue::InlineBlockDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table")) {
+    } else if (value.equals("table")) {
         m_value.m_display = DisplayValue::TableDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-table")) {
+    } else if (value.equals("inline-table")) {
         m_value.m_display = DisplayValue::InlineTableDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-row-group")) {
+    } else if (value.equals("table-row-group")) {
         m_value.m_display = DisplayValue::TableRowGroupDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-header-group")) {
+    } else if (value.equals("table-header-group")) {
         m_value.m_display = DisplayValue::TableHeaderGroupDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-footer-group")) {
+    } else if (value.equals("table-footer-group")) {
         m_value.m_display = DisplayValue::TableFooterGroupDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-row")) {
+    } else if (value.equals("table-row")) {
         m_value.m_display = DisplayValue::TableRowDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-column-group")) {
+    } else if (value.equals("table-column-group")) {
         m_value.m_display = DisplayValue::TableColumnGroupDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-column")) {
+    } else if (value.equals("table-column")) {
         m_value.m_display = DisplayValue::TableColumnDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-cell")) {
+    } else if (value.equals("table-cell")) {
         m_value.m_display = DisplayValue::TableCellDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("table-caption")) {
+    } else if (value.equals("table-caption")) {
         m_value.m_display = DisplayValue::TableCaptionDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("flex")) {
+    } else if (value.equals("flex")) {
         m_value.m_display = DisplayValue::FlexDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-flex")) {
+    } else if (value.equals("inline-flex")) {
         m_value.m_display = DisplayValue::InlineFlexDisplayValue;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
-    } else if (STRING_VALUE_IS_STRING("-webkit-flex")) {
+    } else if (value.equals("-webkit-flex")) {
         m_value.m_display = DisplayValue::FlexDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("-webkit-inline-flex")) {
+    } else if (value.equals("-webkit-inline-flex")) {
         m_value.m_display = DisplayValue::InlineFlexDisplayValue;
 #endif
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_BOX_PREFIX)
-    } else if (STRING_VALUE_IS_STRING("-webkit-box")) {
+    } else if (value.equals("-webkit-box")) {
         m_value.m_display = DisplayValue::BoxDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("-webkit-inline-box")) {
+    } else if (value.equals("-webkit-inline-box")) {
         m_value.m_display = DisplayValue::InlineBoxDisplayValue;
 #endif
-    } else if (STRING_VALUE_IS_STRING("grid")) {
+    } else if (value.equals("grid")) {
         m_value.m_display = DisplayValue::GridDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-grid")) {
+    } else if (value.equals("inline-grid")) {
         m_value.m_display = DisplayValue::InlineGridDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("none")) {
+    } else if (value.equals("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {
         return false;
@@ -9975,34 +9953,34 @@ bool CSSStyleValuePair::updateValuePointerEvents(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::PointerEventsValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsNoneValue;
-    } else if (STRING_VALUE_IS_STRING("auto")) {
+    } else if (value.equals("auto")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsAutoValue;
-    } else if (STRING_VALUE_IS_STRING("visiblepainted")) {
+    } else if (value.equals("visiblepainted")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsVisiblePaintedValue;
-    } else if (STRING_VALUE_IS_STRING("visiblefill")) {
+    } else if (value.equals("visiblefill")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsVisibleFillValue;
-    } else if (STRING_VALUE_IS_STRING("visiblestroke")) {
+    } else if (value.equals("visiblestroke")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsVisibleStrokeValue;
-    } else if (STRING_VALUE_IS_STRING("visible")) {
+    } else if (value.equals("visible")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsVisibleValue;
-    } else if (STRING_VALUE_IS_STRING("painted")) {
+    } else if (value.equals("painted")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsPaintedValue;
-    } else if (STRING_VALUE_IS_STRING("fill")) {
+    } else if (value.equals("fill")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsFillValue;
-    } else if (STRING_VALUE_IS_STRING("stroke")) {
+    } else if (value.equals("stroke")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsStrokeValue;
-    } else if (STRING_VALUE_IS_STRING("all")) {
+    } else if (value.equals("all")) {
         m_value.m_pointerEventsValue =
             PointerEventsValue::PointerEventsAllValue;
     } else {
@@ -10022,11 +10000,11 @@ bool CSSStyleValuePair::updateValueFloat(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::FloatValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_float = FloatValue::NoneFloatValue;
-    } else if (STRING_VALUE_IS_STRING("left")) {
+    } else if (value.equals("left")) {
         m_value.m_float = FloatValue::LeftFloatValue;
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         m_value.m_float = FloatValue::RightFloatValue;
     } else {
         return false;
@@ -10045,13 +10023,13 @@ bool CSSStyleValuePair::updateValueClear(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ClearValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_clear = ClearValue::NoneClearValue;
-    } else if (STRING_VALUE_IS_STRING("left")) {
+    } else if (value.equals("left")) {
         m_value.m_clear = ClearValue::LeftClearValue;
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         m_value.m_clear = ClearValue::RightClearValue;
-    } else if (STRING_VALUE_IS_STRING("both")) {
+    } else if (value.equals("both")) {
         m_value.m_clear = ClearValue::BothClearValue;
     } else {
         return false;
@@ -10082,11 +10060,11 @@ bool CSSStyleValuePair::updateValueFontKerning(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::FontKerningValueKind;
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_value.m_fontKerning = FontKerningValue::FontKerningAutoValue;
-    } else if (STRING_VALUE_IS_STRING("normal")) {
+    } else if (value.equals("normal")) {
         m_value.m_fontKerning = FontKerningValue::FontKerningNormalValue;
-    } else if (STRING_VALUE_IS_STRING("none")) {
+    } else if (value.equals("none")) {
         m_value.m_fontKerning = FontKerningValue::FontKerningNoneValue;
     } else {
         return false;
@@ -10097,11 +10075,11 @@ bool CSSStyleValuePair::updateValueFontKerning(Document* document,
 bool CSSStyleValuePair::updateValueUnitFontStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_fontStyle = FontStyleValue::NormalFontStyleValue;
-    } else if (STRING_VALUE_IS_STRING("italic")) {
+    } else if (value.equals("italic")) {
         m_value.m_fontStyle = FontStyleValue::ItalicFontStyleValue;
-    } else if (STRING_VALUE_IS_STRING("oblique")) {
+    } else if (value.equals("oblique")) {
         m_value.m_fontStyle = FontStyleValue::ObliqueFontStyleValue;
     } else {
         return false;
@@ -10112,9 +10090,9 @@ bool CSSStyleValuePair::updateValueUnitFontStyle(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueUnitRepeatStyle(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::RepeatStyleValueKind;
-    if (STRING_VALUE_IS_STRING("no-repeat")) {
+    if (value.equals("no-repeat")) {
         m_value.m_repeatStyle = RepeatStyleValue::NoRepeatRepeatValue;
-    } else if (STRING_VALUE_IS_STRING("repeat")) {
+    } else if (value.equals("repeat")) {
         m_value.m_repeatStyle = RepeatStyleValue::RepeatRepeatValue;
     } else {
         return false;
@@ -10142,7 +10120,7 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatY(
 
 bool CSSStyleValuePair::updateValueUnitUrlOrNone(const CSSTokenValue& value)
 {
-    if (STRING_VALUE_IS_NONE()) {
+    if (value.equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else {
         return CSSPropertyParser::parseUrl(value.data(), this);
@@ -10572,15 +10550,15 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
         CSSStyleValuePair ret;
         if (!ret.updateValueUnitUrlOrNone(value)) {
             CSSPropertyParser parser((char*)tokens[i].data());
-            if (STRING_VALUE_IS_STRING("normal")) {
+            if (value.equals("normal")) {
                 ret.m_valueKind = CSSStyleValuePair::ValueKind::Normal;
-            } else if (STRING_VALUE_IS_STRING("open-quote")) {
+            } else if (value.equals("open-quote")) {
                 ret.setQuoteValue(QuoteValue::OpenQuoteValue);
-            } else if (STRING_VALUE_IS_STRING("close-quote")) {
+            } else if (value.equals("close-quote")) {
                 ret.setQuoteValue(QuoteValue::CloseQuoteValue);
-            } else if (STRING_VALUE_IS_STRING("no-open-quote")) {
+            } else if (value.equals("no-open-quote")) {
                 ret.setQuoteValue(QuoteValue::NoOpenQuoteValue);
-            } else if (STRING_VALUE_IS_STRING("no-close-quote")) {
+            } else if (value.equals("no-close-quote")) {
                 ret.setQuoteValue(QuoteValue::NoCloseQuoteValue);
             } else if (parser.parseContentString(
                            value.data(), value.length(),
@@ -10624,14 +10602,14 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
     for (size_t i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
         CSSStyleValuePair pair;
-        if (STRING_VALUE_IS_STRING("stretch")) {
+        if (value.equals("stretch")) {
             pair.setBorderImageRepeatValue(
                 BorderImageRepeatValue::StretchValue);
-        } else if (STRING_VALUE_IS_STRING("repeat")) {
+        } else if (value.equals("repeat")) {
             pair.setBorderImageRepeatValue(BorderImageRepeatValue::RepeatValue);
-        } else if (STRING_VALUE_IS_STRING("round")) {
+        } else if (value.equals("round")) {
             pair.setBorderImageRepeatValue(BorderImageRepeatValue::RoundValue);
-        } else if (STRING_VALUE_IS_STRING("space")) {
+        } else if (value.equals("space")) {
             pair.setBorderImageRepeatValue(BorderImageRepeatValue::SpaceValue);
         } else {
             STARFISH_UNIMPLEMENTED();
@@ -10669,12 +10647,12 @@ bool CSSStyleValuePair::updateValueUnitBorderImageSource(
 bool CSSStyleValuePair::updateValueUnitBorderWidth(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
-    if (STRING_VALUE_IS_STRING("thick")) {
+    if (value.equals("thick")) {
         m_value.m_borderWidth = BorderWidthValue::ThickBorderWidthValue;
-    } else if (STRING_VALUE_IS_STRING("thin")) {
+    } else if (value.equals("thin")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
         m_value.m_borderWidth = BorderWidthValue::ThinBorderWidthValue;
-    } else if (STRING_VALUE_IS_STRING("medium")) {
+    } else if (value.equals("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
         m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
     } else {
@@ -11140,11 +11118,11 @@ bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
 bool CSSStyleValuePair::updateValueUnitPositionX(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-    if (STRING_VALUE_IS_STRING("left")) {
+    if (value.equals("left")) {
         m_value.m_side = SideValue::LeftSideValue;
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         m_value.m_side = SideValue::RightSideValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_value.m_side = SideValue::CenterSideValue;
     } else if (updateValueUnitLengthOrCalc(
                    value, CSSPropertyParser::AllowNegative |
@@ -11158,11 +11136,11 @@ bool CSSStyleValuePair::updateValueUnitPositionX(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueUnitPositionY(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-    if (STRING_VALUE_IS_STRING("top")) {
+    if (value.equals("top")) {
         m_value.m_side = SideValue::TopSideValue;
-    } else if (STRING_VALUE_IS_STRING("bottom")) {
+    } else if (value.equals("bottom")) {
         m_value.m_side = SideValue::BottomSideValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_value.m_side = SideValue::CenterSideValue;
     } else if (updateValueUnitLengthOrCalc(
                    value, CSSPropertyParser::AllowNegative |
@@ -11199,13 +11177,13 @@ bool CSSStyleValuePair::updateValueUnitBackgroundAttachment(
     const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind;
-    if (STRING_VALUE_IS_STRING("scroll")) {
+    if (value.equals("scroll")) {
         m_value.m_backgroundAttachment =
             BackgroundAttachmentValue::ScrollBackgroundAttachmentValue;
-    } else if (STRING_VALUE_IS_STRING("fixed")) {
+    } else if (value.equals("fixed")) {
         m_value.m_backgroundAttachment =
             BackgroundAttachmentValue::FixedBackgroundAttachmentValue;
-    } else if (STRING_VALUE_IS_STRING("local")) {
+    } else if (value.equals("local")) {
         m_value.m_backgroundAttachment =
             BackgroundAttachmentValue::LocalBackgroundAttachmentValue;
     } else {
@@ -11260,11 +11238,11 @@ bool CSSStyleValuePair::updateValueBackgroundAttachment(
 bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::BoxValueKind;
-    if (STRING_VALUE_IS_STRING("border-box")) {
+    if (value.equals("border-box")) {
         m_value.m_box = BoxValue::BorderBoxBoxValue;
-    } else if (STRING_VALUE_IS_STRING("padding-box")) {
+    } else if (value.equals("padding-box")) {
         m_value.m_box = BoxValue::PaddingBoxBoxValue;
-    } else if (STRING_VALUE_IS_STRING("content-box")) {
+    } else if (value.equals("content-box")) {
         m_value.m_box = BoxValue::ContentBoxBoxValue;
     } else {
         return false;
@@ -11467,23 +11445,23 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
     // value -> medium
     //        O      |       O       |   O    |    O       |    O
     m_valueKind = CSSStyleValuePair::ValueKind::FontSizeValueKind;
-    if (STRING_VALUE_IS_STRING("xx-small")) {
+    if (value.equals("xx-small")) {
         m_value.m_fontSize = FontSizeValue::XXSmallFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("x-small")) {
+    } else if (value.equals("x-small")) {
         m_value.m_fontSize = FontSizeValue::XSmallFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("small")) {
+    } else if (value.equals("small")) {
         m_value.m_fontSize = FontSizeValue::SmallFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("medium")) {
+    } else if (value.equals("medium")) {
         m_value.m_fontSize = FontSizeValue::MediumFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("large")) {
+    } else if (value.equals("large")) {
         m_value.m_fontSize = FontSizeValue::LargeFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("x-large")) {
+    } else if (value.equals("x-large")) {
         m_value.m_fontSize = FontSizeValue::XLargeFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("xx-large")) {
+    } else if (value.equals("xx-large")) {
         m_value.m_fontSize = FontSizeValue::XXLargeFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("larger")) {
+    } else if (value.equals("larger")) {
         m_value.m_fontSize = FontSizeValue::LargerFontSizeValue;
-    } else if (STRING_VALUE_IS_STRING("smaller")) {
+    } else if (value.equals("smaller")) {
         m_value.m_fontSize = FontSizeValue::SmallerFontSizeValue;
     } else {
         return updateValueUnitLengthOrCalc(value,
@@ -11516,7 +11494,7 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
 {
     // <normal> | number | length | percentage | inherit
     float result = 0.f;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
         return true;
     } else if (CSSPropertyParser::parseNumber(value.data(), 0, &result)) {
@@ -11603,16 +11581,16 @@ bool CSSStyleValuePair::updateValueWidthHeightKeyword(
 bool CSSStyleValuePair::updateValueUnitWidthHeightKeyword(
     const CSSTokenValue& value)
 {
-    if (STRING_VALUE_IS_STRING("available")) {
+    if (value.equals("available")) {
         m_value.m_widthHeightKeywordValue =
             WidthHeightKeywordValue::AvailableValue;
-    } else if (STRING_VALUE_IS_STRING("min-content")) {
+    } else if (value.equals("min-content")) {
         m_value.m_widthHeightKeywordValue =
             WidthHeightKeywordValue::MinContentValue;
-    } else if (STRING_VALUE_IS_STRING("max-content")) {
+    } else if (value.equals("max-content")) {
         m_value.m_widthHeightKeywordValue =
             WidthHeightKeywordValue::MaxContentValue;
-    } else if (STRING_VALUE_IS_STRING("fit-content")) {
+    } else if (value.equals("fit-content")) {
         m_value.m_widthHeightKeywordValue =
             WidthHeightKeywordValue::FitContentValue;
     } else {
@@ -11700,28 +11678,28 @@ bool CSSStyleValuePair::updateValueVerticalAlign(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("baseline")) {
+    if (value.equals("baseline")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("sub")) {
+    } else if (value.equals("sub")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::SubVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("super")) {
+    } else if (value.equals("super")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::SuperVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("top")) {
+    } else if (value.equals("top")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::TopVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("text-top")) {
+    } else if (value.equals("text-top")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::TextTopVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("middle")) {
+    } else if (value.equals("middle")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("bottom")) {
+    } else if (value.equals("bottom")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::BottomVAlignValue;
-    } else if (STRING_VALUE_IS_STRING("text-bottom")) {
+    } else if (value.equals("text-bottom")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
     } else {
@@ -13009,14 +12987,14 @@ bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
         CSSPropertyParser::AllowPercent | CSSPropertyParser::AllowNegative;
     for (unsigned int i = 0; i < std::min(tokens.size(), (size_t)2); i++) {
         const CSSTokenValue& value = tokens[i];
-        if (STRING_VALUE_IS_STRING("left")) {
+        if (value.equals("left")) {
             xPair.setValue(SideValue::LeftSideValue);
-        } else if (STRING_VALUE_IS_STRING("right")) {
+        } else if (value.equals("right")) {
             xPair.setValue(SideValue::RightSideValue);
-        } else if (STRING_VALUE_IS_STRING("center")) {
-        } else if (STRING_VALUE_IS_STRING("top")) {
+        } else if (value.equals("center")) {
+        } else if (value.equals("top")) {
             yPair.setValue(SideValue::TopSideValue);
-        } else if (STRING_VALUE_IS_STRING("bottom")) {
+        } else if (value.equals("bottom")) {
             yPair.setValue(SideValue::BottomSideValue);
         } else {
             if (i == 0) {
@@ -13101,31 +13079,31 @@ bool CSSStyleValuePair::updateValueUnitFontWeight(const CSSTokenValue& value)
 
     // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 |
     // 700 | 800 | 900 | inherit // initial -> normal
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_fontWeight = FontWeightValue::NormalFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("bold")) {
+    } else if (value.equals("bold")) {
         m_value.m_fontWeight = FontWeightValue::BoldFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("bolder")) {
+    } else if (value.equals("bolder")) {
         m_value.m_fontWeight = FontWeightValue::BolderFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("lighter")) {
+    } else if (value.equals("lighter")) {
         m_value.m_fontWeight = FontWeightValue::LighterFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("100")) {
+    } else if (value.equals("100")) {
         m_value.m_fontWeight = FontWeightValue::OneHundredFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("200")) {
+    } else if (value.equals("200")) {
         m_value.m_fontWeight = FontWeightValue::TwoHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("300")) {
+    } else if (value.equals("300")) {
         m_value.m_fontWeight = FontWeightValue::ThreeHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("400")) {
+    } else if (value.equals("400")) {
         m_value.m_fontWeight = FontWeightValue::FourHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("500")) {
+    } else if (value.equals("500")) {
         m_value.m_fontWeight = FontWeightValue::FiveHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("600")) {
+    } else if (value.equals("600")) {
         m_value.m_fontWeight = FontWeightValue::SixHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("700")) {
+    } else if (value.equals("700")) {
         m_value.m_fontWeight = FontWeightValue::SevenHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("800")) {
+    } else if (value.equals("800")) {
         m_value.m_fontWeight = FontWeightValue::EightHundredsFontWeightValue;
-    } else if (STRING_VALUE_IS_STRING("900")) {
+    } else if (value.equals("900")) {
         m_value.m_fontWeight = FontWeightValue::NineHundredsFontWeightValue;
     } else {
         return false;
@@ -13183,9 +13161,9 @@ bool CSSStyleValuePair::updateValueUnitWordWrap(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::WordWrapValueKind;
 
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_wordWrap = WordWrapValue::NormalWordWrapValue;
-    } else if (STRING_VALUE_IS_STRING("break-word")) {
+    } else if (value.equals("break-word")) {
         m_value.m_wordWrap = WordWrapValue::BreakWordWordWrapValue;
     } else {
         return false;
@@ -13233,13 +13211,13 @@ bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
-    if (STRING_VALUE_IS_STRING("visible")) {
+    if (value.equals("visible")) {
         m_value.m_overflow = OverflowValue::VisibleOverflow;
-    } else if (STRING_VALUE_IS_STRING("hidden")) {
+    } else if (value.equals("hidden")) {
         m_value.m_overflow = OverflowValue::HiddenOverflow;
-    } else if (STRING_VALUE_IS_STRING("auto")) {
+    } else if (value.equals("auto")) {
         m_value.m_overflow = OverflowValue::AutoOverflow;
-    } else if (STRING_VALUE_IS_STRING("scroll")) {
+    } else if (value.equals("scroll")) {
         m_value.m_overflow = OverflowValue::ScrollOverflow;
     } else {
         return false;
@@ -13263,13 +13241,13 @@ bool CSSStyleValuePair::updateValueUnitOverflowY(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
-    if (STRING_VALUE_IS_STRING("visible")) {
+    if (value.equals("visible")) {
         m_value.m_overflow = OverflowValue::VisibleOverflow;
-    } else if (STRING_VALUE_IS_STRING("hidden")) {
+    } else if (value.equals("hidden")) {
         m_value.m_overflow = OverflowValue::HiddenOverflow;
-    } else if (STRING_VALUE_IS_STRING("auto")) {
+    } else if (value.equals("auto")) {
         m_value.m_overflow = OverflowValue::AutoOverflow;
-    } else if (STRING_VALUE_IS_STRING("scroll")) {
+    } else if (value.equals("scroll")) {
         m_value.m_overflow = OverflowValue::ScrollOverflow;
     } else {
         return false;
@@ -13290,13 +13268,13 @@ bool CSSStyleValuePair::updateValuePosition(Document* document,
     // <static> | relative | absolute | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::PositionValueKind;
 
-    if (STRING_VALUE_IS_STRING("static")) {
+    if (value.equals("static")) {
         m_value.m_position = PositionValue::StaticPositionValue;
-    } else if (STRING_VALUE_IS_STRING("relative")) {
+    } else if (value.equals("relative")) {
         m_value.m_position = PositionValue::RelativePositionValue;
-    } else if (STRING_VALUE_IS_STRING("absolute")) {
+    } else if (value.equals("absolute")) {
         m_value.m_position = PositionValue::AbsolutePositionValue;
-    } else if (STRING_VALUE_IS_STRING("fixed")) {
+    } else if (value.equals("fixed")) {
         m_value.m_position = PositionValue::FixedPositionValue;
     } else {
         return false;
@@ -13313,7 +13291,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
     if (tokens.size() == 1) {
         const CSSTokenValue& t = tokens[0];
         const char* value = t.data();
-        if (VALUE_IS_NONE()) {
+        if (compareCString("none", value)) {
             m_valueKind = CSSStyleValuePair::ValueKind::None;
         } else {
             return false;
@@ -13463,16 +13441,16 @@ bool CSSStyleValuePair::updateValueTextDecorationLine(
         const CSSTokenValue& value = tokens[i];
         TextDecorationLineValue v;
 
-        if (STRING_VALUE_IS_NONE()) {
+        if (value.equals("none")) {
             v = TextDecorationLineValue::NoneTextDecorationLineValue;
-        } else if (STRING_VALUE_IS_STRING("underline")) {
+        } else if (value.equals("underline")) {
             v = TextDecorationLineValue::UnderlineTextDecorationLineValue;
-        } else if (STRING_VALUE_IS_STRING("line-through")) {
+        } else if (value.equals("line-through")) {
             v = TextDecorationLineValue::LineThroughTextDecorationLineValue;
-        } else if (STRING_VALUE_IS_STRING("overline")) {
+        } else if (value.equals("overline")) {
             v = TextDecorationLineValue::OverlineTextDecorationLineValue;
             return false; // unsupported yet
-        } else if (STRING_VALUE_IS_STRING("blink")) {
+        } else if (value.equals("blink")) {
             v = TextDecorationLineValue::BlinkTextDecorationLineValue;
             return false; // unsupported yet
         } else {
@@ -13501,9 +13479,9 @@ bool CSSStyleValuePair::updateValueTextDecorationColor(
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
 
-    if (STRING_VALUE_IS_STRING("currentcolor")) {
+    if (value.equals("currentcolor")) {
         return CSSPropertyParser::parseNamedColor(value, this);
-    } else if (STRING_VALUE_IS_STRING("transparent")) {
+    } else if (value.equals("transparent")) {
         m_value.m_color = Unit::Color(0, 0, 0, 0);
         return true;
     } else {
@@ -13522,22 +13500,22 @@ bool CSSStyleValuePair::updateValueTextDecorationStyle(
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind;
 
-    if (STRING_VALUE_IS_STRING("solid")) {
+    if (value.equals("solid")) {
         m_value.m_textDecorationStyle =
             TextDecorationStyleValue::SolidTextDecorationStyleValue;
-    } else if (STRING_VALUE_IS_STRING("double")) {
+    } else if (value.equals("double")) {
         m_value.m_textDecorationStyle =
             TextDecorationStyleValue::DoubleTextDecorationStyleValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("dotted")) {
+    } else if (value.equals("dotted")) {
         m_value.m_textDecorationStyle =
             TextDecorationStyleValue::DottedTextDecorationStyleValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("dashed")) {
+    } else if (value.equals("dashed")) {
         m_value.m_textDecorationStyle =
             TextDecorationStyleValue::DashedTextDecorationStyleValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("wavy")) {
+    } else if (value.equals("wavy")) {
         m_value.m_textDecorationStyle =
             TextDecorationStyleValue::WavyTextDecorationStyleValue;
         return false; // unsupported yet
@@ -13557,18 +13535,18 @@ bool CSSStyleValuePair::updateValueTextUnderlinePosition(
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind;
 
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
-    } else if (STRING_VALUE_IS_STRING("under")) {
+    } else if (value.equals("under")) {
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::UnderTextUnderlinePositionValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("left")) {
+    } else if (value.equals("left")) {
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::LeftTextUnderlinePositionValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         m_value.m_textUnderlinePosition =
             TextUnderlinePositionValue::RightTextUnderlinePositionValue;
         return false; // unsupported yet
@@ -13589,21 +13567,21 @@ bool CSSStyleValuePair::updateValueResize(Document* document,
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::ResizeValueKind;
 
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_resize = ResizeValue::NoneResizeValue;
-    } else if (STRING_VALUE_IS_STRING("both")) {
+    } else if (value.equals("both")) {
         m_value.m_resize = ResizeValue::BothResizeValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("horizontal")) {
+    } else if (value.equals("horizontal")) {
         m_value.m_resize = ResizeValue::HorizontalResizeValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("vertical")) {
+    } else if (value.equals("vertical")) {
         m_value.m_resize = ResizeValue::VerticalResizeValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("block")) {
+    } else if (value.equals("block")) {
         m_value.m_resize = ResizeValue::BlockResizeValue;
         return false; // unsupported yet
-    } else if (STRING_VALUE_IS_STRING("inline")) {
+    } else if (value.equals("inline")) {
         m_value.m_resize = ResizeValue::InlineResizeValue;
         return false; // unsupported yet
     } else {
@@ -13621,22 +13599,22 @@ bool CSSStyleValuePair::updateValueTextAlign(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("start")) {
+    if (value.equals("start")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::StartTextAlignValue;
-    } else if (STRING_VALUE_IS_STRING("end")) {
+    } else if (value.equals("end")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::EndTextAlignValue;
-    } else if (STRING_VALUE_IS_STRING("left")) {
+    } else if (value.equals("left")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::LeftTextAlignValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::CenterTextAlignValue;
-    } else if (STRING_VALUE_IS_STRING("right")) {
+    } else if (value.equals("right")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
-    } else if (STRING_VALUE_IS_STRING("-starfish-center")) {
+    } else if (value.equals("-starfish-center")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::StarfishCenterTextAlignValue;
     } else {
@@ -13653,18 +13631,18 @@ bool CSSStyleValuePair::updateValueTextTransform(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
         m_value.m_textTransform = TextTransformValue::NoneTextTransformValue;
-    } else if (STRING_VALUE_IS_STRING("capitalize")) {
+    } else if (value.equals("capitalize")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
         m_value.m_textTransform =
             TextTransformValue::CapitalizeTextTransformValue;
-    } else if (STRING_VALUE_IS_STRING("uppercase")) {
+    } else if (value.equals("uppercase")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
         m_value.m_textTransform =
             TextTransformValue::UppercaseTextTransformValue;
-    } else if (STRING_VALUE_IS_STRING("lowercase")) {
+    } else if (value.equals("lowercase")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextTransformValueKind;
         m_value.m_textTransform =
             TextTransformValue::LowercaseTextTransformValue;
@@ -13716,13 +13694,13 @@ bool CSSStyleValuePair::updateValueUnicodeBidi(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
-    } else if (STRING_VALUE_IS_STRING("embed")) {
+    } else if (value.equals("embed")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
-    } else if (STRING_VALUE_IS_STRING("isolate")) {
+    } else if (value.equals("isolate")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::IsolateUnicodeBidiValue;
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
     } else {
@@ -13740,11 +13718,11 @@ bool CSSStyleValuePair::updateValueVisibility(Document* document,
 
     m_valueKind = CSSStyleValuePair::ValueKind::VisibilityValueKind;
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("visible")) {
+    if (value.equals("visible")) {
         m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
-    } else if (STRING_VALUE_IS_STRING("hidden")) {
+    } else if (value.equals("hidden")) {
         m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
-    } else if (STRING_VALUE_IS_STRING("collapse")) {
+    } else if (value.equals("collapse")) {
         m_value.m_visibility = VisibilityValue::CollapseVisibilityValue;
     } else {
         return false;
@@ -13761,12 +13739,12 @@ bool CSSStyleValuePair::updateValueImageRendering(Document* document,
 
     m_valueKind = CSSStyleValuePair::ValueKind::ImageRenderingValueKind;
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_value.m_imageRendering = ImageRenderingValue::ImageRenderingAutoValue;
-    } else if (STRING_VALUE_IS_STRING("crisp-edges")) {
+    } else if (value.equals("crisp-edges")) {
         m_value.m_imageRendering =
             ImageRenderingValue::ImageRenderingCrispEdgesValue;
-    } else if (STRING_VALUE_IS_STRING("pixelated")) {
+    } else if (value.equals("pixelated")) {
         m_value.m_imageRendering =
             ImageRenderingValue::ImageRenderingPixelatedValue;
     } else {
@@ -13782,13 +13760,13 @@ bool CSSStyleValuePair::updateValueZIndex(Document* document,
         return false;
     }
 
-    const char* token = tokens[0].data();
+    const char* value = tokens[0].data();
     int32_t val = 0;
-    if (TOKEN_IS_STRING("auto")) {
+    if (compareCString("auto", value)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
     } else {
         return CSSPropertyParser::parseInt32(
-            token, CSSPropertyParser::AllowNegative, this);
+            value, CSSPropertyParser::AllowNegative, this);
     }
 
     return true;
@@ -13803,10 +13781,10 @@ bool CSSStyleValuePair::updateValueBorderCollapse(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BorderCollapseValueKind;
-    if (STRING_VALUE_IS_STRING("separate")) {
+    if (value.equals("separate")) {
         m_value.m_borderCollapse =
             BorderCollapseValue::SeparateBorderCollapseValue;
-    } else if (STRING_VALUE_IS_STRING("collapse")) {
+    } else if (value.equals("collapse")) {
         m_value.m_borderCollapse =
             BorderCollapseValue::CollapseBorderCollapseValue;
     } else {
@@ -13854,9 +13832,9 @@ bool CSSStyleValuePair::updateValueCaptionSide(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::CaptionSideValueKind;
-    if (STRING_VALUE_IS_STRING("top")) {
+    if (value.equals("top")) {
         m_value.m_captionSide = CaptionSideValue::TopCaptionSideValue;
-    } else if (STRING_VALUE_IS_STRING("bottom")) {
+    } else if (value.equals("bottom")) {
         m_value.m_captionSide = CaptionSideValue::BottomCaptionSideValue;
     } else {
         return false;
@@ -13873,9 +13851,9 @@ bool CSSStyleValuePair::updateValueEmptyCells(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::EmptyCellsValueKind;
-    if (STRING_VALUE_IS_STRING("show")) {
+    if (value.equals("show")) {
         m_value.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
-    } else if (STRING_VALUE_IS_STRING("hide")) {
+    } else if (value.equals("hide")) {
         m_value.m_emptyCells = EmptyCellsValue::HideEmptyCellsValue;
     } else {
         return false;
@@ -13892,9 +13870,9 @@ bool CSSStyleValuePair::updateValueTableLayout(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::TableLayoutValueKind;
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_value.m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
-    } else if (STRING_VALUE_IS_STRING("fixed")) {
+    } else if (value.equals("fixed")) {
         m_value.m_tableLayout = TableLayoutValue::FixedTableLayoutValue;
     } else {
         return false;
@@ -13911,9 +13889,9 @@ bool CSSStyleValuePair::updateValueBoxSizing(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BoxSizingValueKind;
-    if (STRING_VALUE_IS_STRING("content-box")) {
+    if (value.equals("content-box")) {
         m_value.m_boxSizing = BoxSizingValue::ContentBoxBoxSizingValue;
-    } else if (STRING_VALUE_IS_STRING("border-box")) {
+    } else if (value.equals("border-box")) {
         m_value.m_boxSizing = BoxSizingValue::BorderBoxBoxSizingValue;
     } else {
         return false;
@@ -13924,14 +13902,14 @@ bool CSSStyleValuePair::updateValueBoxSizing(Document* document,
 bool CSSStyleValuePair::updateValueUnitFlexDirection(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FlexDirectionValueKind;
-    if (STRING_VALUE_IS_STRING("row")) {
+    if (value.equals("row")) {
         m_value.m_flexDirection = FlexDirectionValue::RowFlexDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("row-reverse")) {
+    } else if (value.equals("row-reverse")) {
         m_value.m_flexDirection =
             FlexDirectionValue::RowReverseFlexDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("column")) {
+    } else if (value.equals("column")) {
         m_value.m_flexDirection = FlexDirectionValue::ColumnFlexDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("column-reverse")) {
+    } else if (value.equals("column-reverse")) {
         m_value.m_flexDirection =
             FlexDirectionValue::ColumnReverseFlexDirectionValue;
     } else {
@@ -13974,11 +13952,11 @@ bool CSSStyleValuePair::updateValueBoxOrient(Document* document,
 bool CSSStyleValuePair::updateValueUnitFlexWrap(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::FlexWrapValueKind;
-    if (STRING_VALUE_IS_STRING("nowrap")) {
+    if (value.equals("nowrap")) {
         m_value.m_flexWrap = FlexWrapValue::NoWrapFlexWrapValue;
-    } else if (STRING_VALUE_IS_STRING("wrap")) {
+    } else if (value.equals("wrap")) {
         m_value.m_flexWrap = FlexWrapValue::WrapFlexWrapValue;
-    } else if (STRING_VALUE_IS_STRING("wrap-reverse")) {
+    } else if (value.equals("wrap-reverse")) {
         m_value.m_flexWrap = FlexWrapValue::WrapReverseFlexWrapValue;
     } else {
         return false;
@@ -14018,24 +13996,24 @@ bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::JustifyContentValueKind;
-    if (STRING_VALUE_IS_STRING("flex-start")) {
+    if (value.equals("flex-start")) {
         m_value.m_justifyContent =
             JustifyContentValue::FlexStartJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+    } else if (value.equals("flex-end")) {
         m_value.m_justifyContent =
             JustifyContentValue::FlexEndJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("start")) {
+    } else if (value.equals("start")) {
         m_value.m_justifyContent =
             JustifyContentValue::StartJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_value.m_justifyContent =
             JustifyContentValue::CenterJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("end")) {
+    } else if (value.equals("end")) {
         m_value.m_justifyContent = JustifyContentValue::EndJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("space-between")) {
+    } else if (value.equals("space-between")) {
         m_value.m_justifyContent =
             JustifyContentValue::SpaceBetweenJustifyContentValue;
-    } else if (STRING_VALUE_IS_STRING("space-around")) {
+    } else if (value.equals("space-around")) {
         m_value.m_justifyContent =
             JustifyContentValue::SpaceAroundJustifyContentValue;
     } else {
@@ -14047,15 +14025,15 @@ bool CSSStyleValuePair::updateValueJustifyContent(Document* document,
 bool CSSStyleValuePair::updateValueUnitAlignItem(const CSSTokenValue& value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::AlignItemValueKind;
-    if (STRING_VALUE_IS_STRING("flex-start")) {
+    if (value.equals("flex-start")) {
         m_value.m_alignItem = AlignItemValue::FlexStartAlignItemValue;
-    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+    } else if (value.equals("flex-end")) {
         m_value.m_alignItem = AlignItemValue::FlexEndAlignItemValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_value.m_alignItem = AlignItemValue::CenterAlignItemValue;
-    } else if (STRING_VALUE_IS_STRING("baseline")) {
+    } else if (value.equals("baseline")) {
         m_value.m_alignItem = AlignItemValue::BaselineAlignItemValue;
-    } else if (STRING_VALUE_IS_STRING("stretch")) {
+    } else if (value.equals("stretch")) {
         m_value.m_alignItem = AlignItemValue::StretchAlignItemValue;
     } else {
         return false;
@@ -14082,7 +14060,7 @@ bool CSSStyleValuePair::updateValueAlignSelf(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
@@ -14098,19 +14076,19 @@ bool CSSStyleValuePair::updateValueAlignContent(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::AlignContentValueKind;
-    if (STRING_VALUE_IS_STRING("flex-start")) {
+    if (value.equals("flex-start")) {
         m_value.m_alignContent = AlignContentValue::FlexStartAlignContentValue;
-    } else if (STRING_VALUE_IS_STRING("flex-end")) {
+    } else if (value.equals("flex-end")) {
         m_value.m_alignContent = AlignContentValue::FlexEndAlignContentValue;
-    } else if (STRING_VALUE_IS_STRING("center")) {
+    } else if (value.equals("center")) {
         m_value.m_alignContent = AlignContentValue::CenterAlignContentValue;
-    } else if (STRING_VALUE_IS_STRING("space-between")) {
+    } else if (value.equals("space-between")) {
         m_value.m_alignContent =
             AlignContentValue::SpaceBetweenAlignContentValue;
-    } else if (STRING_VALUE_IS_STRING("space-around")) {
+    } else if (value.equals("space-around")) {
         m_value.m_alignContent =
             AlignContentValue::SpaceAroundAlignContentValue;
-    } else if (STRING_VALUE_IS_STRING("stretch")) {
+    } else if (value.equals("stretch")) {
         m_value.m_alignContent = AlignContentValue::StretchAlignContentValue;
     } else {
         return false;
@@ -14153,7 +14131,7 @@ bool CSSStyleValuePair::updateValueFlexBasis(Document* document,
 
 bool CSSStyleValuePair::updateValueUnitFlexBasis(const CSSTokenValue& value)
 {
-    if (STRING_VALUE_IS_STRING("content")) {
+    if (value.equals("content")) {
         m_valueKind = CSSStyleValuePair::ValueKind::FlexBasisValueKind;
         m_value.m_flexBasis = FlexBasisValue::ContentFlexBasisValue;
     } else {
@@ -14209,7 +14187,7 @@ static CSSTransformFunction::Kind transformFunctionKind(
 }
 
 bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
-                                            TransformUnit units[MAX_UNITS],
+                                            TransformUnit units[],
                                             int& minArgCnt, int& maxArgCnt)
 {
     // https://drafts.csswg.org/css-transforms/#two-d-transform-functions
@@ -14225,7 +14203,7 @@ bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
             units[6] = units[7] = units[8] = units[9] = units[10] = units[11] =
                 units[12] = units[13] = units[14] = units[15] =
                     TransformUnit::Number;
-        minArgCnt = maxArgCnt = MAX_UNITS;
+        minArgCnt = maxArgCnt = 16;
         break;
     case CSSTransformFunction::Kind::Translate:
         maxArgCnt = 2;
@@ -14304,7 +14282,7 @@ bool CSSStyleValuePair::updateValueTransformFunction(
     const CSSTokenValue& transformValue, CSSTransformFunction::Kind fkind,
     bool canIgnoreUnit, ValueList* values)
 {
-    TransformUnit units[MAX_UNITS] = {
+    TransformUnit units[16] = {
         TransformUnit::Number,
     };
     int minArgCnt = 1, maxArgCnt = 1;
@@ -14429,7 +14407,7 @@ bool CSSStyleValuePair::updateValueFill(Document* document,
 {
     if (tokens.size() == 1) {
         const CSSTokenValue& value = tokens[0];
-        if (STRING_VALUE_IS_STRING("none")) {
+        if (value.equals("none")) {
             m_valueKind = CSSStyleValuePair::ValueKind::None;
             return true;
         }
@@ -14485,9 +14463,9 @@ bool CSSStyleValuePair::updateValueFillRule(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::FillRuleValueKind;
-    if (STRING_VALUE_IS_STRING("nonzero")) {
+    if (value.equals("nonzero")) {
         m_value = FillRuleValue::FillRuleNonZero;
-    } else if (STRING_VALUE_IS_STRING("evenodd")) {
+    } else if (value.equals("evenodd")) {
         m_value = FillRuleValue::FillRuleEvenOdd;
     } else {
         return false;
@@ -14500,7 +14478,7 @@ bool CSSStyleValuePair::updateValueStroke(Document* document,
 {
     if (tokens.size() == 1) {
         const CSSTokenValue& value = tokens[0];
-        if (STRING_VALUE_IS_STRING("none")) {
+        if (value.equals("none")) {
             m_valueKind = CSSStyleValuePair::ValueKind::None;
             return true;
         }
@@ -14824,7 +14802,7 @@ bool CSSStyleValuePair::updateValueUnitListStyleType(Document* document,
     STARFISH_ASSERT(document != nullptr);
 
     String* parsed = String::emptyString;
-    if (STRING_VALUE_IS_NONE()) {
+    if (value.equals("none")) {
         setValueKind(CSSStyleValuePair::None);
     } else if (CSSPropertyParser::parseContentString(value.data(),
                                                      value.length(), &parsed)) {
@@ -14846,11 +14824,11 @@ bool CSSStyleValuePair::updateValueUnitListStylePosition(
     const CSSTokenValue& value)
 {
     setValueKind(CSSStyleValuePair::ListStylePositionValueKind);
-    if (STRING_VALUE_IS_STRING("inside")) {
+    if (value.equals("inside")) {
         setValue(ListStylePositionValue::ListStylePositionInside);
         return true;
     }
-    if (STRING_VALUE_IS_STRING("outside")) {
+    if (value.equals("outside")) {
         setValue(ListStylePositionValue::ListStylePositionOutside);
         return true;
     }
@@ -14860,7 +14838,7 @@ bool CSSStyleValuePair::updateValueUnitListStylePosition(
 bool CSSStyleValuePair::updateValueUnitListStyleImage(
     const CSSTokenValue& value)
 {
-    if (STRING_VALUE_IS_NONE()) {
+    if (value.equals("none")) {
         setValueKind(CSSStyleValuePair::None);
         return true;
     }
@@ -14974,23 +14952,23 @@ bool CSSStyleValuePair::updateValueUserSelect(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::UserSelectValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_userSelect = UserSelectValue::NoneUserSelectValue;
-    } else if (STRING_VALUE_IS_STRING("text")) {
+    } else if (value.equals("text")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_userSelect = UserSelectValue::TextUserSelectValue;
         return false;
-    } else if (STRING_VALUE_IS_STRING("contain")) {
+    } else if (value.equals("contain")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_userSelect = UserSelectValue::ContainUserSelectValue;
         return false;
-    } else if (STRING_VALUE_IS_STRING("all")) {
+    } else if (value.equals("all")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_userSelect = UserSelectValue::AllUserSelectValue;
         return false;
@@ -15008,15 +14986,15 @@ bool CSSStyleValuePair::updateValueHyphens(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::HyphensValueKind;
-    if (STRING_VALUE_IS_STRING("none")) {
+    if (value.equals("none")) {
         m_value.m_hyphens = HyphensValue::NoneHyphensValue;
-    } else if (STRING_VALUE_IS_STRING("manual")) {
+    } else if (value.equals("manual")) {
         // TODO: enable the comment below when supporting this value
         // m_value.m_hyphens = HyphensValue::ManualHyphensValue;
         return false;
@@ -15034,17 +15012,17 @@ bool CSSStyleValuePair::updateValueLineBreak(Document* document,
     }
 
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;
         return true;
     }
 
     m_valueKind = CSSStyleValuePair::ValueKind::LineBreakValueKind;
-    if (STRING_VALUE_IS_STRING("loose")) {
+    if (value.equals("loose")) {
         m_value.m_lineBreak = LineBreakValue::LooseLineBreakValue;
-    } else if (STRING_VALUE_IS_STRING("normal")) {
+    } else if (value.equals("normal")) {
         m_value.m_lineBreak = LineBreakValue::NormalLineBreakValue;
-    } else if (STRING_VALUE_IS_STRING("strict")) {
+    } else if (value.equals("strict")) {
         m_value.m_lineBreak = LineBreakValue::StrictLineBreakValue;
     } else {
         return false;
@@ -15061,13 +15039,13 @@ bool CSSStyleValuePair::updateValueWordBreak(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::WordBreakValueKind;
-    if (STRING_VALUE_IS_STRING("normal")) {
+    if (value.equals("normal")) {
         m_value.m_wordBreak = WordBreakValue::NormalWordBreakValue;
-    } else if (STRING_VALUE_IS_STRING("break-all")) {
+    } else if (value.equals("break-all")) {
         m_value.m_wordBreak = WordBreakValue::BreakAllWordBreakValue;
-    } else if (STRING_VALUE_IS_STRING("keep-all")) {
+    } else if (value.equals("keep-all")) {
         m_value.m_wordBreak = WordBreakValue::KeepAllWordBreakValue;
-    } else if (STRING_VALUE_IS_STRING("break-word")) {
+    } else if (value.equals("break-word")) {
         m_value.m_wordBreak = WordBreakValue::BreakWordWordBreakValue;
         return false; // unsupported yet
     } else {
@@ -15085,9 +15063,9 @@ bool CSSStyleValuePair::updateValueAppearance(Document* document,
 
     const CSSTokenValue& value = tokens[0];
     m_valueKind = CSSStyleValuePair::ValueKind::AppearanceValueKind;
-    if (STRING_VALUE_IS_STRING("auto")) {
+    if (value.equals("auto")) {
         m_value.m_appearance = AppearanceValue::AutoAppearanceValue;
-    } else if (STRING_VALUE_IS_STRING("none")) {
+    } else if (value.equals("none")) {
         m_value.m_appearance = AppearanceValue::NoneAppearanceValue;
     } else {
         return false;
@@ -15141,10 +15119,10 @@ bool CSSStyleValuePair::updateValueBoxDecorationBreak(
         return false;
     }
     const CSSTokenValue& value = tokens[0];
-    if (STRING_VALUE_IS_STRING("clone")) {
+    if (value.equals("clone")) {
         setBoxDecorationBreakValue(CloneBoxDecorationBreakValue);
         return true;
-    } else if (STRING_VALUE_IS_STRING("slice")) {
+    } else if (value.equals("slice")) {
         setBoxDecorationBreakValue(SliceBoxDecorationBreakValue);
         return true;
     }
@@ -15399,7 +15377,7 @@ bool CSSStyleValuePair::updateValueLayerAnimationIterationCount(
 bool CSSStyleValuePair::updateValueUnitAnimationIterationCount(
     const CSSTokenValue& value)
 {
-    if (STRING_VALUE_IS_STRING("infinite")) {
+    if (value.equals("infinite")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
         m_value.m_floatValue = std::numeric_limits<float>::infinity();
     } else {
