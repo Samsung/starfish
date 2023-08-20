@@ -21,7 +21,7 @@ interface Window : EventTarget {
   [CrossOrigin] attribute DOMString name;
   [PutForwards=href, Unforgeable] readonly attribute Location location;
   [CrossOrigin] readonly attribute History history;
-  [Unimplemented] readonly attribute CustomElementRegistry customElements;
+  readonly attribute CustomElementRegistry customElements;
   [Unimplemented, Replaceable] readonly attribute BarProp locationbar;
   [Unimplemented, Replaceable] readonly attribute BarProp menubar;
   [Unimplemented, Replaceable] readonly attribute BarProp personalbar;

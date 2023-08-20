@@ -25,7 +25,7 @@
 
 namespace Starfish {
 
-class ResizeObserverCallback {
+class ResizeObserverCallback : public gc {
 public:
     static ResizeObserverCallback* toResizeObserverCallback(ScriptValue fn)
     {

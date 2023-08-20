@@ -24,6 +24,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWindowInstance.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/dom/CustomElementRegistry.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/dom/HTMLAnchorElement.h"
@@ -122,14 +123,17 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
     m_scriptBindingInstance->initBinding();
+    m_customElementRegistry = new CustomElementRegistry(executionContext());
+    m_performance = Performance::create(executionContext());
+
 #if defined(STARFISH_ENABLE_TTS)
     m_speechSynthesis = new SpeechSynthesis(m_document);
 #endif
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     ServiceWorkerProcessManager::instance()->registerActiveGlobalScope(uid(),
                                                                        this);
 #endif
-    m_performance = Performance::create(executionContext());
 }
 
 Starfish* Window::starfish() const

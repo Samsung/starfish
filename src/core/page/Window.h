@@ -47,6 +47,7 @@ class StorageNamespace;
 class WebView;
 class Scrolling;
 class LayoutUnit;
+class CustomElementRegistry;
 
 typedef void (*TimerHandler)(void* data);
 
@@ -102,6 +103,11 @@ public:
     History* history()
     {
         return m_history;
+    }
+
+    CustomElementRegistry* customElements()
+    {
+        return m_customElementRegistry;
     }
 
     Navigator* navigator()
@@ -387,6 +393,8 @@ private:
     Screen* m_screen;
     Scrolling* m_scrolling;
     Performance* m_performance;
+    CustomElementRegistry* m_customElementRegistry;
+
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
 #endif

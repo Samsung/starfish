@@ -28,7 +28,7 @@ namespace Starfish {
 struct MutationObserverInit {
 };
 
-class MutationCallback {
+class MutationCallback : public gc {
 public:
     static MutationCallback* toMutationCallback(ScriptValue fn)
     {
