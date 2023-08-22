@@ -280,6 +280,10 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMouseEvent() const override;
+    virtual uint32_t which() const
+    {
+        return buttons();
+    }
 
     void initMouseEvent(String* type, bool bubbles, bool cancelable,
                         Window* view, int32_t detail, double screenX,

@@ -7,12 +7,17 @@
 interface UIEvent : Event {
   readonly attribute Window? view;
   readonly attribute long detail;
+  // https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/which
+  // The following support legacy user agents
+  readonly attribute unsigned long which;
 };
 
 // https://w3c.github.io/uievents/#dictdef-uieventinit
 dictionary UIEventInit : EventInit {
   Window? view = null;
   long detail = 0;
+  // The following support legacy user agents
+  unsigned long which = 0;
 };
 
 // https://w3c.github.io/uievents/#dictdef-eventmodifierinit

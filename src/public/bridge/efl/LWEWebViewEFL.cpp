@@ -468,7 +468,7 @@ public:
 
             unsigned char buttons = wv->m_isMouseLbuttonDown
                                         ? MouseButtonsValue::LeftButtonDown
-                                        : 0;
+                                        : MouseButtonsValue::NoButtonDown;
             wv->FetchWebContainer()->DispatchMouseMoveEvent(
                 MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
                 wv->m_lastMouseX, wv->m_lastMouseY);
@@ -599,7 +599,7 @@ public:
             currentPosY -= y;
             unsigned char buttons = webView->m_isMouseLbuttonDown
                                         ? MouseButtonsValue::LeftButtonDown
-                                        : 0;
+                                        : MouseButtonsValue::NoButtonDown;
             webView->FetchWebContainer()->DispatchMouseMoveEvent(
                 MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
                 currentPosX, currentPosY);
