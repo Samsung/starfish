@@ -34,6 +34,7 @@ public:
         : EventInit()
         , m_view(nullptr)
         , m_detail(0)
+        , m_which(0)
     {
     }
 
@@ -41,6 +42,7 @@ public:
         : EventInit(bubbles, cancelable)
         , m_view(nullptr)
         , m_detail(0)
+        , m_which(0)
     {
     }
 
@@ -64,9 +66,20 @@ public:
         m_detail = detail;
     }
 
+    uint32_t which() const
+    {
+        return m_which;
+    }
+
+    void setWhich(uint32_t which)
+    {
+        m_which = which;
+    }
+
 private:
     Window* m_view;
     int32_t m_detail;
+    uint32_t m_which;
 };
 
 // https://w3c.github.io/uievents/#dictdef-eventmodifierinit
@@ -100,6 +113,7 @@ public:
         : Event(executionContext)
         , m_view(nullptr)
         , m_detail(0)
+        , m_which(0)
     {
     }
 
@@ -107,6 +121,7 @@ public:
         : Event(executionContext, eventType)
         , m_view(nullptr)
         , m_detail(0)
+        , m_which(0)
     {
     }
 
@@ -115,6 +130,7 @@ public:
         : Event(executionContext, eventType, init)
         , m_view(init.view())
         , m_detail(0)
+        , m_which(init.which())
     {
     }
 
@@ -142,9 +158,16 @@ public:
         m_detail = detail;
     }
 
+    virtual uint32_t which() const
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return m_which;
+    }
+
 private:
     Window* m_view;
     int32_t m_detail;
+    uint32_t m_which;
 };
 } // namespace Starfish
 

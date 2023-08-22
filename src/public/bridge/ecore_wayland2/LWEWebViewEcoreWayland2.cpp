@@ -549,7 +549,7 @@ public:
                     unsigned char buttons =
                         webView->m_isMouseLbuttonDown
                             ? MouseButtonsValue::LeftButtonDown
-                            : 0;
+                            : MouseButtonsValue::NoButtonDown;
                     webView->FetchWebContainer()->DispatchMouseMoveEvent(
                         MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
                         currentPosX, currentPosY);

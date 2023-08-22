@@ -164,19 +164,18 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action,
 {
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        MouseButtonsValue buttons = wnd->m_isMouseLbuttonDown
-                                        ? MouseButtonsValue::LeftButtonDown
-                                        : MouseButtonsValue::NoButtonDown;
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         if (action == GLFW_PRESS) {
             wnd->m_isMouseLbuttonDown = true;
             wnd->FetchWebContainer()->DispatchMouseDownEvent(
-                MouseButtonValue::NoButton, buttons, xpos, ypos);
+                MouseButtonValue::NoButton, MouseButtonsValue::LeftButtonDown,
+                xpos, ypos);
         } else {
             wnd->m_isMouseLbuttonDown = false;
             wnd->FetchWebContainer()->DispatchMouseUpEvent(
-                MouseButtonValue::NoButton, buttons, xpos, ypos);
+                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
+                xpos, ypos);
         }
     }
 }
