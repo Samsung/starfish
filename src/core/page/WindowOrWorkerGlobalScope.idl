@@ -24,8 +24,7 @@ interface WindowOrWorkerGlobalScope {
   void clearInterval(optional long handle = 0);
 
   // microtask queuing
-  // Original: undefined queueMicrotask(VoidFunction callback);
-  [CallWith=ExecutionContext,RaisesException] void queueMicrotask(Function callback);
+  [CallWith=ExecutionContext,RaisesException] undefined queueMicrotask(Function callback);
 
   // ImageBitmap
   [STARFISH_ENABLE_CANVAS, CallWith=ExecutionContext, RaisesException] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
