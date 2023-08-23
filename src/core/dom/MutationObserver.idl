@@ -7,10 +7,9 @@ interface MutationObserver {
   // constructor(MutationCallback callback);
 
   // Currently, our binding generator does not support 'undefined' keyword. I'll change 'undefined' to 'void', since It's not purpose of this PR.
-  void observe(Node target, optional MutationObserverInit options);
+  undefined observe(Node target, optional MutationObserverInit options);
 
-  [Unimplemented] void disconnect();
-  // undefined disconnect();
+  [Unimplemented] undefined disconnect();
 
   [Unimplemented] sequence<MutationRecord> takeRecords();
 };
