@@ -28,7 +28,7 @@
 
 namespace Starfish {
 
-String* RTCErrorInit::errorDetail()
+String* RTCErrorInit::errorDetail() const
 {
     switch (m_errorDetail) {
     case RTCErrorDetailType::DataChannelFailure:

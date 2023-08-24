@@ -38,7 +38,7 @@ RTCIceServer::RTCIceServer(DOMStringOrSequenceOfDOMString urls,
 {
 }
 
-DOMStringOrSequenceOfDOMString RTCIceServer::urls()
+DOMStringOrSequenceOfDOMString RTCIceServer::urls() const
 {
     return DOMStringOrSequenceOfDOMString::createSequenceOfDOMString(m_urls);
 }
@@ -60,7 +60,7 @@ void RTCIceServer::setUrls(DOMStringOrSequenceOfDOMString& value)
     }
 }
 
-String* RTCIceServer::username()
+String* RTCIceServer::username() const
 {
     if (!hasUsername()) {
         return String::emptyString;
@@ -69,7 +69,7 @@ String* RTCIceServer::username()
     return m_username;
 }
 
-String* RTCIceServer::credentialType()
+String* RTCIceServer::credentialType() const
 {
     if (!hasValidCredentialType()) {
         return String::emptyString;

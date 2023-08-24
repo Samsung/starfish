@@ -70,35 +70,42 @@ struct EffectTiming {
         m_easing = s;
     }
 
-    double delay()
+    double delay() const
     {
         return m_delay;
     }
-    double endDelay()
+
+    double endDelay() const
     {
         return m_endDelay;
     }
-    String* fill()
+
+    String* fill() const
     {
         return m_fill;
     }
-    double iterationStart()
+
+    double iterationStart() const
     {
         return m_iterationStart;
     }
-    double iterations()
+
+    double iterations() const
     {
         return m_iterations;
     }
-    double duration()
+
+    double duration() const
     {
         return m_duration;
     }
-    String* direction()
+
+    String* direction() const
     {
         return m_direction;
     }
-    String* easing()
+
+    String* easing() const
     {
         return m_easing;
     }
@@ -134,7 +141,7 @@ struct KeyframeAnimationOptions : public KeyframeEffectOptions {
         m_id = s;
     }
 
-    String* id()
+    String* id() const
     {
         return m_id;
     }

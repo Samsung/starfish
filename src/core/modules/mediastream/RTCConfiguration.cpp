@@ -33,7 +33,7 @@ RTCConfiguration::RTCConfiguration()
 {
 }
 
-String* RTCConfiguration::iceTransportPolicy()
+String* RTCConfiguration::iceTransportPolicy() const
 {
     if (!hasIceTransportPolicy()) {
         return String::createASCIIString("all");
@@ -63,7 +63,7 @@ void RTCConfiguration::setIceTransportPolicy(String* iceTransportPolicy)
     }
 }
 
-String* RTCConfiguration::bundlePolicy()
+String* RTCConfiguration::bundlePolicy() const
 {
     if (!hasBundlePolicy()) {
         return String::createASCIIString("balanced");
@@ -97,7 +97,7 @@ void RTCConfiguration::setBundlePolicy(String* bundlePolicy)
     }
 }
 
-String* RTCConfiguration::rtcpMuxPolicy()
+String* RTCConfiguration::rtcpMuxPolicy() const
 {
     if (!hasRtcpMuxPolicy()) {
         return String::createASCIIString("require");

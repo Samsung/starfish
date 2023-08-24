@@ -42,19 +42,19 @@ struct RTCIceServer : public gc {
                  String* username = String::emptyString);
     virtual ~RTCIceServer(){};
 
-    DOMStringOrSequenceOfDOMString urls();
+    DOMStringOrSequenceOfDOMString urls() const;
     void setUrls(DOMStringOrSequenceOfDOMString& value);
 
-    String* username();
+    String* username() const;
     DEFINE_SETTER_WITH_HASFLAG(String*, username, Username);
     DEFINE_HASFLAG_GETTER(Username);
 
     DEFINE_GETTER_SETTER(DOMStringOrRTCOAuthCredential, credential, Credential)
 
-    String* credentialType();
+    String* credentialType() const;
     void setCredentialType(String* type);
 
-    bool hasValidCredentialType()
+    bool hasValidCredentialType() const
     {
         return m_hasValidCredentialType;
     }
