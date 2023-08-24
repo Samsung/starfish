@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
+#if defined(STARFISH_ENABLE_WORKER) && \
     !defined(__StarfishWorkerScriptController__)
 #define __StarfishWorkerScriptController__
 
@@ -27,7 +27,7 @@ namespace Starfish {
 
 class ResourceRequest;
 class ScriptBindingInstance;
-class RegistrationStore;
+class ScriptEngineInstance;
 
 enum class ScriptLoadResult {
     NotHandled,
@@ -41,8 +41,8 @@ class WorkerScriptController : public gc {
 public:
     WorkerScriptController(ExecutionContext* executionContext);
 
-    ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
-    ScriptLoadResult loadJavaScriptFromCache(ResourceURL* resourceURL);
+    virtual ScriptLoadResult loadJavaScript(ResourceURL* resourceURL);
+
     bool evaluatefromString(String* string);
 
     ExecutionContext* executionContext()
@@ -50,21 +50,15 @@ public:
         return m_executionContext;
     }
 
-    void setRegistrationStore(RegistrationStore* registrationStore)
-    {
-        m_registrationStore = registrationStore;
-    }
+    ScriptBindingInstance* scriptBindingInstance();
 
-    Nullable<RegistrationStore*> registrationStore()
-    {
-        return m_registrationStore;
-    }
+protected:
+    template <typename ClientType, typename ControllerType>
+    ScriptLoadResult loadJavaScriptInternal(ResourceURL* resourceURL,
+                                            ControllerType* controller);
 
 private:
     ExecutionContext* m_executionContext;
-    Nullable<RegistrationStore*> m_registrationStore;
-
-    ScriptBindingInstance* scriptBindingInstance();
 };
 } // namespace Starfish
 

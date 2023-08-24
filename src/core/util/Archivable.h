@@ -22,7 +22,6 @@
 
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 

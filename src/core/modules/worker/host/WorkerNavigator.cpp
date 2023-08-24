@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "core/modules/worker/host/WorkerNavigator.h"
@@ -39,4 +39,4 @@ ScriptBindingInstance* WorkerNavigator::scriptBindingInstance()
 }
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */

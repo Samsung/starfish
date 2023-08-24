@@ -1,6 +1,6 @@
 // https://html.spec.whatwg.org/multipage/workers.html#worker-locations
 
-[STARFISH_WEBWORKER_HOST, Exposed=Worker]
+[STARFISH_ENABLE_WORKER, Exposed=Worker]
 interface WorkerLocation {
   stringifier readonly attribute USVString href;
   readonly attribute USVString origin;

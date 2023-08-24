@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingWorkerInstance.h"
@@ -32,7 +32,9 @@ namespace Starfish {
 using namespace Escargot;
 
 template class ScriptBindingWorkerInstance<DedicatedWorkerGlobalScope>;
+#if defined(STARFISH_SERVICE_WORKER_HOST)
 template class ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>;
+#endif
 
 template <typename T>
 static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
@@ -41,8 +43,7 @@ static OptionalRef<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
     STARFISH_ASSERT(state != nullptr);
     STARFISH_ASSERT(key != nullptr);
     String* name = toBrowserString(state, key);
-    auto self = static_cast<T*>(
-        state->context()->globalObject()->extraData());
+    auto self = static_cast<T*>(state->context()->globalObject()->extraData());
 
     if (name->equals("self") == true) {
         return self->scriptValue();

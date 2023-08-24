@@ -20,12 +20,13 @@
 #if !defined(__StarfishWorkerDummyClass__)
 #define __StarfishWorkerDummyClass__
 
-// These dummy classes are only needed for the process version of the worker.
+// These dummy classes are only needed for the process version of the service
+// worker.
 
 namespace Starfish {
 
 #if defined(SERVICE_WORKER_USE_SEPARATE_PROCESS) && \
-    defined(STARFISH_WEBWORKER_HOST)
+    defined(STARFISH_SERVICE_WORKER_HOST)
 
 class Element;
 class String;
@@ -88,7 +89,7 @@ public:
 
 #endif
 
-#if !defined(STARFISH_WEBWORKER_HOST)
+#if !defined(STARFISH_ENABLE_WORKER)
 
 class WorkerGlobalScope {
 public:

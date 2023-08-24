@@ -39,7 +39,6 @@
 #include "core/modules/serviceworker/ServiceWorkerRequest.h"
 #include "core/modules/serviceworker/MessageServiceWorker.h"
 #include "core/modules/serviceworker/FetchEventData.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 

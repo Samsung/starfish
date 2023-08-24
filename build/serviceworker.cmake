@@ -11,9 +11,10 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 SET (STARFISH_SERVICEWORKER_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
     ${LWE_DEFINES_ICU}
+    ${LWE_DEFINES_HOST}
+    ${LWE_DEFINES_CUSTOM}
+    ${LWE_DEFINES_MODE}
     ${SERVICE_WORKER_CXXFLAGS}
-    -DGC_DEBUG # bdwgc
-    -D_GLIBCXX_DEBUG
     -DPORT_EVENTLOOP_BACKEND_LIBUV
     -DSTARFISH_WEBWORKER_HOST
     -DSTARFISH_SERVICE_WORKER_HOST
@@ -106,6 +107,7 @@ FILE (GLOB STARFISH_SERVICEWORKER_CORE_SRC
     ${STARFISH_ROOT}/src/core/modules/threading/*.cpp
     ${STARFISH_ROOT}/src/core/modules/resource_request/*.cpp
     ${STARFISH_ROOT}/src/core/modules/networking/*.cpp
+    ${STARFISH_ROOT}/src/core/modules/worker/util/*.cpp
     ${STARFISH_ROOT}/src/core/modules/worker/host/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/*.cpp
     ${STARFISH_ROOT}/src/core/modules/serviceworker/cache/*.cpp
@@ -238,7 +240,7 @@ ADD_EXECUTABLE (starfish.serviceworker.executable
                 ${STARFISH_SERVICEWORKER_ENTRY})
 
 ADD_CUSTOM_COMMAND (TARGET starfish.serviceworker.executable POST_BUILD
-    COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${STARFISH_SERVICEWORKER_OUTPUT_NAME} ${STARFISH_ROOT}/${STARFISH_SERVICEWORKER_OUTPUT_NAME}
+    COMMAND ln -fs ${OUTPUT_DIRECTORY}/bin/${STARFISH_SERVICEWORKER_OUTPUT_NAME} ${STARFISH_ROOT}/Starfish-serviceworker
 )
 
 ADD_LIBRARY (starfish.serviceworker.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_SERVICEWORKER_OBJECT_LIBRARY}>)

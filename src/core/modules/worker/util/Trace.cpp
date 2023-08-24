@@ -18,7 +18,7 @@
  */
 #if !defined(NDEBUG)
 
-#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/worker/util/Trace.h"
 #include "StarfishBase.h"
 #include <unistd.h> // getpid()
 #include <iomanip>  // setfill and setw

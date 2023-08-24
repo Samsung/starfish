@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "core/modules/serviceworker/util/Logger.h"
+#include "core/modules/worker/util/Logger.h"
 
 class Trace : public Logger {
 public:

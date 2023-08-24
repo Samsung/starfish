@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWorkerNavigator__)
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerNavigator__)
 #define __StarfishWorkerNavigator__
 
 #include "binding/ScriptWrappable.h"

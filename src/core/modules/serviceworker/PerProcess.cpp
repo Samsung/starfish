@@ -27,7 +27,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/WorkerConfig.h"
-#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
 

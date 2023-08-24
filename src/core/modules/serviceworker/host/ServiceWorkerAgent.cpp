@@ -26,14 +26,15 @@
 
 #include "core/util/Archivable.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/worker/host/WebWorker.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
-#include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
 #include "core/modules/serviceworker/util/LocalStorageHelper.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 #include "core/modules/serviceworker/notification/NotificationService.h"
+#include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServerInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerServer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
@@ -162,8 +163,9 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
     // Let workerGlobalScope be the created object.
     WebWorker* webWorker = WebWorker::create(m_starfish, "ko-KR", "Asia/Seoul",
                                              String::emptyString);
-    auto workerGlobalScope = webWorker->createGlobalScope(
-        new ResourceURL(serviceWorker->scriptURL, serviceWorker->scopeURL));
+    auto workerGlobalScope =
+        webWorker->createGlobalScope<ServiceWorkerGlobalScope>(
+            new ResourceURL(serviceWorker->scriptURL, serviceWorker->scopeURL));
     m_webWorkerList.push_back(webWorker);
     addGlobalScope(serviceWorker->clientContextId, workerGlobalScope);
 
@@ -186,8 +188,8 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
     // task queues, queue them to serviceWorker’s event loop’s task queues
     // in the same order using their original task sources.
 
-    WorkerScriptController* workerScriptController =
-        workerGlobalScope->workerScriptController();
+    ServiceWorkerScriptController* serviceWorkerScriptController =
+        workerGlobalScope->serviceWorkerScriptController();
 
     // 4.12 Let evaluationStatus be the result of running the classic script
     // script if script is a classic script, otherwise, the result of running
@@ -196,11 +198,12 @@ void ServiceWorkerAgent::runServiceWorker(ServiceWorkerData* serviceWorker,
 
     if (forceBypassCache) {
         TRACE(HOST, "Load main script from cache");
-        evaluationStatus = workerScriptController->loadJavaScriptFromCache(
-            workerGlobalScope->executionContext()->documentURI());
+        evaluationStatus =
+            serviceWorkerScriptController->loadJavaScriptFromCache(
+                workerGlobalScope->executionContext()->documentURI());
     } else {
         TRACE(HOST, "Load main script from network");
-        evaluationStatus = workerScriptController->loadJavaScript(
+        evaluationStatus = serviceWorkerScriptController->loadJavaScript(
             workerGlobalScope->executionContext()->documentURI());
     }
 

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
@@ -30,6 +30,7 @@
 #include "core/modules/worker/host/WorkerLocation.h"
 #include "core/modules/worker/host/WorkerNavigator.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/util/Trace.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 
 #include "core/dom/ExecutionContext.h"
@@ -37,7 +38,6 @@
 #include "core/dom/DOMException.h"
 
 #include "core/page/WindowOrWorkerGlobalScope.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -230,4 +230,4 @@ Performance* WorkerGlobalScope::performance()
 
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */

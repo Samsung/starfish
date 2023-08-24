@@ -1,7 +1,7 @@
 // https://html.spec.whatwg.org/multipage/workers.html#workerglobalscope
 
 [
-  STARFISH_WEBWORKER_HOST,
+  STARFISH_ENABLE_WORKER,
   Exposed=Worker,
   NoInterfaceObject
 ]
