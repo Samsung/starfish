@@ -55,15 +55,15 @@ public:
     DEFINE_GETTER_SETTER_WITH_HASFLAG(GCVector<RTCIceServer>, iceServers,
                                       IceServers);
 
-    String* iceTransportPolicy();
+    String* iceTransportPolicy() const;
     void setIceTransportPolicy(String* iceTransportPolicy);
     DEFINE_HASFLAG_GETTER(IceTransportPolicy);
 
-    String* bundlePolicy();
+    String* bundlePolicy() const;
     void setBundlePolicy(String* bundlePolicy);
     DEFINE_HASFLAG_GETTER(BundlePolicy);
 
-    String* rtcpMuxPolicy();
+    String* rtcpMuxPolicy() const;
     void setRtcpMuxPolicy(String* rtcpMuxPolicy);
     DEFINE_HASFLAG_GETTER(RtcpMuxPolicy);
 

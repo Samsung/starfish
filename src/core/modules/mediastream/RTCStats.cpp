@@ -32,16 +32,16 @@ using namespace Escargot;
 namespace Starfish {
 
 extern ValueRef* toValueRefFromRTCPeerConnectionStats(
-    ExecutionStateRef* state, RTCPeerConnectionStats& from);
+    ExecutionStateRef* state, const RTCPeerConnectionStats& from);
 
 template <typename T>
 ScriptValue RTCStateToScriptValue(ContextRef* contextRef, T state,
-                                  ValueRef* func(ExecutionStateRef*, T&))
+                                  ValueRef* func(ExecutionStateRef*, const T&))
 {
     return Evaluator::execute(
                contextRef,
                [](ExecutionStateRef* executionStateRef, T stats,
-                  ValueRef* func(ExecutionStateRef*, T&)) -> ValueRef* {
+                  ValueRef* func(ExecutionStateRef*, const T&)) -> ValueRef* {
                    return func(executionStateRef, stats);
                },
                state, func)

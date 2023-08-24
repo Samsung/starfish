@@ -38,7 +38,7 @@ public:
         STARFISH_UNIMPLEMENTED();
     }
 
-    String* box()
+    String* box() const
     {
         STARFISH_UNIMPLEMENTED();
         return String::emptyString;

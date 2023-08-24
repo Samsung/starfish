@@ -34,7 +34,7 @@ class RTCOAuthCredential;
 extern RTCOAuthCredential toRTCOAuthCredentialFromValueRef(
     Escargot::ExecutionStateRef* state, Escargot::ValueRef* from);
 extern Escargot::ValueRef* toValueRefFromRTCOAuthCredential(
-    Escargot::ExecutionStateRef* state, RTCOAuthCredential& from);
+    Escargot::ExecutionStateRef* state, const RTCOAuthCredential& from);
 
 struct RTCOAuthCredential : public gc {
     DEFINE_GETTER_SETTER(String*, macKey, MacKey)

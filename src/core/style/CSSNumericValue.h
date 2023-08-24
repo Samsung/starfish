@@ -74,28 +74,28 @@ public:
     {
     }
 
-    int32_t length();
+    int32_t length() const;
     void setLength(int length);
 
-    int32_t angle();
+    int32_t angle() const;
     void setAngle(int angle);
 
-    int32_t time();
+    int32_t time() const;
     void setTime(int time);
 
-    int32_t frequency();
+    int32_t frequency() const;
     void setFrequency(int frequency);
 
-    int32_t resolution();
+    int32_t resolution() const;
     void setResolution(int resolution);
 
-    int32_t flex();
+    int32_t flex() const;
     void setFlex(int flex);
 
-    int32_t percent();
+    int32_t percent() const;
     void setPercent(int percent);
 
-    String* percentHint();
+    String* percentHint() const;
     void setPercentHint(String* percentHint);
 
 private:

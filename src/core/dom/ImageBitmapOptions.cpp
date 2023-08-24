@@ -157,7 +157,7 @@ ImageSmoothingQuality ImageBitmapOptions::toImageRenderingValue()
     return ret;
 }
 
-String* ImageBitmapOptions::imageOrientation()
+String* ImageBitmapOptions::imageOrientation() const
 {
     return imageOrientationToString(m_imageOrientation);
 }
@@ -170,7 +170,7 @@ void ImageBitmapOptions::setImageOrientation(String* imageOrientation)
     }
 }
 
-String* ImageBitmapOptions::premultiplyAlpha()
+String* ImageBitmapOptions::premultiplyAlpha() const
 {
     return premultiplyAlphaToString(m_premultiplyAlpha);
 }
@@ -183,7 +183,7 @@ void ImageBitmapOptions::setPremultiplyAlpha(String* premultiplyAlpha)
     }
 }
 
-String* ImageBitmapOptions::colorSpaceConversion()
+String* ImageBitmapOptions::colorSpaceConversion() const
 {
     return colorSpaceConversionToString(m_colorSpaceConversion);
 }
@@ -196,7 +196,7 @@ void ImageBitmapOptions::setColorSpaceConversion(String* colorSpaceConversion)
     }
 }
 
-String* ImageBitmapOptions::resizeQuality()
+String* ImageBitmapOptions::resizeQuality() const
 {
     return resizeQualityToString(m_resizeQuality);
 }

@@ -49,7 +49,7 @@ enum class RTCErrorDetailType {
 };
 
 struct RTCErrorInit : public gc {
-    String* errorDetail();
+    String* errorDetail() const;
     void setErrorDetail(String* errorDetail);
 
     RTCErrorDetailType m_errorDetail;

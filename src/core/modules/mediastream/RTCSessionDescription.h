@@ -60,7 +60,7 @@ public:
     RTCSessionDescriptionInit(libwebrtc::RTCSessionDescription::SdpType type,
                               std::string sdp);
 
-    String* type();
+    String* type() const;
     void setType(String* type);
     DEFINE_GETTER_SETTER(String*, sdp, Sdp);
 

@@ -60,7 +60,7 @@ RTCSessionDescriptionInit::RTCSessionDescriptionInit(
     m_sdp = String::createASCIIString(sdp.c_str(), sdp.length());
 }
 
-String* RTCSessionDescriptionInit::type()
+String* RTCSessionDescriptionInit::type() const
 {
     if (!m_type.hasValue()) {
         return String::emptyString;

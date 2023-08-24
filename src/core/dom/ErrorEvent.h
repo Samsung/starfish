@@ -37,7 +37,7 @@ public:
         , m_error(scriptUndefined())
     {
     }
-    String* message()
+    String* message() const
     {
         return m_message;
     }

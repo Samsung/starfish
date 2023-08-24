@@ -52,19 +52,19 @@ public:
     ImageSmoothingQuality toImageRenderingValue();
 
     // Interface ImageBitmapOptions
-    String* imageOrientation();
+    String* imageOrientation() const;
     void setImageOrientation(String* imageOrientation);
 
-    String* premultiplyAlpha();
+    String* premultiplyAlpha() const;
     void setPremultiplyAlpha(String* premultiplyAlpha);
 
-    String* colorSpaceConversion();
+    String* colorSpaceConversion() const;
     void setColorSpaceConversion(String* colorSpaceConversion);
 
     DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, resizeWidth, ResizeWidth);
     DEFINE_GETTER_SETTER_WITH_HASFLAG(uint32_t, resizeHeight, ResizeHeight);
 
-    String* resizeQuality();
+    String* resizeQuality() const;
     void setResizeQuality(String* resizeQuality);
 
     // Others

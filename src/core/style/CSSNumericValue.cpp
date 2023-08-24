@@ -24,7 +24,7 @@
 
 namespace Starfish {
 
-int32_t CSSNumericType::length()
+int32_t CSSNumericType::length() const
 {
     return m_length;
 }
@@ -33,7 +33,7 @@ void CSSNumericType::setLength(int length)
     m_length = length;
 }
 
-int32_t CSSNumericType::angle()
+int32_t CSSNumericType::angle() const
 {
     return m_angle;
 }
@@ -42,7 +42,7 @@ void CSSNumericType::setAngle(int angle)
     m_angle = angle;
 }
 
-int32_t CSSNumericType::time()
+int32_t CSSNumericType::time() const
 {
     return m_time;
 }
@@ -51,7 +51,7 @@ void CSSNumericType::setTime(int time)
     m_time = time;
 }
 
-int32_t CSSNumericType::frequency()
+int32_t CSSNumericType::frequency() const
 {
     return m_frequency;
 }
@@ -60,7 +60,7 @@ void CSSNumericType::setFrequency(int frequency)
     m_frequency = frequency;
 }
 
-int32_t CSSNumericType::resolution()
+int32_t CSSNumericType::resolution() const
 {
     return m_resolution;
 }
@@ -69,7 +69,7 @@ void CSSNumericType::setResolution(int resolution)
     m_resolution = resolution;
 }
 
-int32_t CSSNumericType::flex()
+int32_t CSSNumericType::flex() const
 {
     return m_flex;
 }
@@ -78,7 +78,7 @@ void CSSNumericType::setFlex(int flex)
     m_flex = flex;
 }
 
-int32_t CSSNumericType::percent()
+int32_t CSSNumericType::percent() const
 {
     return m_percent;
 }
@@ -87,7 +87,7 @@ void CSSNumericType::setPercent(int percent)
     m_percent = percent;
 }
 
-String* CSSNumericType::percentHint()
+String* CSSNumericType::percentHint() const
 {
     switch (m_percentHint) {
     case CSSNumericValue::CSSNumericBaseType::Length:
