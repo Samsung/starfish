@@ -794,7 +794,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     // of the parent block, but the content of the table is not affected by
     // <center>. To do so, Blink seems resets the text-align.
     if (m_inheritedStyles.m_textAlign ==
-        TextAlignValue::StarfishCenterTextAlignValue) {
+        TextAlignValue::WebKitCenterTextAlignValue) {
         switch (display()) {
         case DisplayValue::TableRowGroupDisplayValue:
         case DisplayValue::TableHeaderGroupDisplayValue:

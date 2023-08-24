@@ -1127,7 +1127,7 @@ public:
     TextAlignValue textAlign()
     {
         if (m_inheritedStyles.m_textAlign ==
-            TextAlignValue::StarfishCenterTextAlignValue) {
+            TextAlignValue::WebKitCenterTextAlignValue) {
             return TextAlignValue::CenterTextAlignValue;
         }
         return m_inheritedStyles.m_textAlign;
