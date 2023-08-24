@@ -224,7 +224,7 @@ enum TextAlignValue ENSURE_ENUM_UNSIGNED {
     LeftTextAlignValue,
     RightTextAlignValue,
     CenterTextAlignValue,
-    StarfishCenterTextAlignValue,
+    WebKitCenterTextAlignValue,
 };
 
 // transform-origin, background-position

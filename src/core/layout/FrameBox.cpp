@@ -554,8 +554,8 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
     LayoutUnit remainingWidth = parentContentWidth - width();
 
     if (remainingWidth > 0 && !isAbsolutePositioned() &&
-        style()->orignalTextAlign() ==
-            TextAlignValue::StarfishCenterTextAlignValue) {
+        (style()->orignalTextAlign() ==
+         TextAlignValue::WebKitCenterTextAlignValue)) {
         LayoutUnit dX;
         dX += FrameBox::marginLeft();
         dX -= FrameBox::marginRight();

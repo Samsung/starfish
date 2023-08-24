@@ -1661,8 +1661,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("right");
         case TextAlignValue::CenterTextAlignValue:
             return String::fromUTF8("center");
-        case TextAlignValue::StarfishCenterTextAlignValue:
-            return String::fromUTF8("-starfish-center");
+        case TextAlignValue::WebKitCenterTextAlignValue:
+            return String::fromUTF8("-webkit-center");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -13614,9 +13614,9 @@ bool CSSStyleValuePair::updateValueTextAlign(Document* document,
     } else if (value.equals("right")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
-    } else if (value.equals("-starfish-center")) {
+    } else if (value.equals("-webkit-center") || value.equals("-moz-center")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-        m_value.m_textAlign = TextAlignValue::StarfishCenterTextAlignValue;
+        m_value.m_textAlign = TextAlignValue::WebKitCenterTextAlignValue;
     } else {
         return false;
     }

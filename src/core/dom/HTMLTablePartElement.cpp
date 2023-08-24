@@ -70,7 +70,7 @@ bool HTMLTablePartElement::isValidAlign(String* align)
     if (align->equalsIgnoreCase("left") || align->equalsIgnoreCase("right") ||
         align->equalsIgnoreCase("middle") ||
         align->equalsIgnoreCase("center") ||
-        align->equalsIgnoreCase("-starfish-center")) {
+        align->equalsIgnoreCase("-webkit-center")) {
         return true;
     }
     return false;
@@ -86,8 +86,8 @@ TextAlignValue HTMLTablePartElement::alignValue(String* align)
     } else if (align->equalsIgnoreCase("middle") ||
                align->equalsIgnoreCase("center")) {
         return TextAlignValue::CenterTextAlignValue;
-    } else if (align->equalsIgnoreCase("-starfish-center")) {
-        return TextAlignValue::StarfishCenterTextAlignValue;
+    } else if (align->equalsIgnoreCase("-webkit-center")) {
+        return TextAlignValue::WebKitCenterTextAlignValue;
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
