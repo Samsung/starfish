@@ -30,6 +30,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 #include "core/page/WebBase.h"
+#include "core/page/GlobalScope.h"
 #include "core/dom/WebOrigin.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
@@ -192,7 +193,7 @@ void ResourceRequest::handleResponseEOFwithPreflightRequestRedirected()
 void ResourceRequest::changeReadyState(ReadyState readyState,
                                        bool isExplicitAction)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(globalScope()->isContextThread());
     if (!isError() && readyState == ReadyState::Loading &&
         m_readyState == ReadyState::Opened) {
         changeReadyState(ReadyState::HeadersReceived, true);
@@ -301,7 +302,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 void ResourceRequest::changeProgress(ProgressState progress,
                                      bool isExplicitAction)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(globalScope()->isContextThread());
     if (m_progressState != progress || (progress == ProgressState::Progress)) {
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i++) {

@@ -33,6 +33,21 @@
 
 namespace Starfish {
 
+ThreadID g_mainTid;
+
+ThreadID getCurrentThreadID()
+{
+#if defined(OS_WINDOWS)
+    return GetCurrentThreadId();
+#elif defined(STARFISH_ANDROID)
+    return gettid();
+#elif defined(SYS_gettid)
+    return syscall(SYS_gettid);
+#else
+#error "Cannot get thread id on this system"
+#endif
+}
+
 size_t numberOfCores()
 {
     size_t ret = 1;
@@ -50,46 +65,20 @@ size_t numberOfCores()
     return ret;
 }
 
-#if !defined(OS_WINDOWS)
-pid_t mainTid;
 void registerMainThread()
 {
-#ifdef SYS_gettid
-    mainTid = syscall(SYS_gettid);
-#else
-#error "SYS_gettid unavailable on this system"
-#endif
+    g_mainTid = getCurrentThreadID();
 }
 
 bool isMainThread()
 {
-#ifdef SYS_gettid
-    return syscall(SYS_gettid) == mainTid;
-#else
-    return gettid() == mainTid;
-#endif
-    return true;
-}
-size_t mainThreadID()
-{
-    return mainTid;
-}
-#else
-DWORD mainTid;
-void registerMainThread()
-{
-    mainTid = GetCurrentThreadId();
+    return g_mainTid == getCurrentThreadID();
 }
 
-bool isMainThread()
-{
-    return GetCurrentThreadId() == mainTid;
-}
 size_t mainThreadID()
 {
-    return mainTid;
+    return g_mainTid;
 }
-#endif
 
 Thread::Thread(ThreadClient* client, const char* name)
     : m_threadClient(client)

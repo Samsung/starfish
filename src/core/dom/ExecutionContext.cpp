@@ -117,7 +117,7 @@ ResourceURL* ExecutionContext::baseURL() const
 
 void ExecutionContext::addPointerInRootSet(void* ptr)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(globalScope()->isContextThread());
 
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
@@ -129,7 +129,7 @@ void ExecutionContext::addPointerInRootSet(void* ptr)
 
 void ExecutionContext::removePointerFromRootSet(void* ptr)
 {
-    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(globalScope()->isContextThread());
 
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {

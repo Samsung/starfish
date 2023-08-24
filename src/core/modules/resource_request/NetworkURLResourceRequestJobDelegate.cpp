@@ -24,6 +24,7 @@
 #include "PlatformIntegrationData.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/fetch/FetchUtils.h"
+#include "core/page/GlobalScope.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "platform/network/http/HTTPCache.h"
 #include "platform/network/http/HTTPCacheEntry.h"
@@ -214,8 +215,8 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 {
-    STARFISH_ASSERT(isMainThread());
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    STARFISH_ASSERT(nwd->request->globalScope()->isContextThread());
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
 
@@ -378,7 +379,6 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 
 void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
-    STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(m_orgProxy->url()->isHTTPFamilyURL());
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(STARFISH_WEBWORKER_HOST)
@@ -387,6 +387,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     }
 #endif
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
+    STARFISH_ASSERT(nwd->request->globalScope()->isContextThread());
 
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;
     HTTPHeaderMap headers = *(m_orgProxy->m_requestHeaders->httpHeaderMap());
