@@ -26,11 +26,18 @@ class MessageLoop;
 class Mutex;
 class Thread;
 
+#if defined(OS_WINDOWS)
+using ThreadID = DWORD;
+#else
+using ThreadID = pid_t;
+#endif
+
 typedef void* (*ThreadWorker)(void*);
 typedef void* (*StoppableThreadWorker)(void*, std::future<void>&&);
 
 void registerMainThread();
 bool isMainThread();
+ThreadID getCurrentThreadID();
 size_t mainThreadID();
 size_t numberOfCores();
 
