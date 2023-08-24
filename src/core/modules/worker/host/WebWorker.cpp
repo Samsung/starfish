@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include <EscargotPublic.h>
 
@@ -28,12 +28,12 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
-#include "core/dom/ExecutionContext.h"
-
-#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
+#include "core/modules/worker/host/WorkerGlobalScope.h"
+#include "core/modules/worker/host/DedicatedWorkerGlobalScope.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/util/Trace.h"
+#include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 
@@ -113,7 +113,8 @@ void WebWorker::removeScriptEngineInstance()
     }
 }
 
-ServiceWorkerGlobalScope* WebWorker::createGlobalScope(ResourceURL* scriptURL)
+template <typename GlobalScopeType>
+GlobalScopeType* WebWorker::createGlobalScope(ResourceURL* scriptURL)
 {
     TRACE_SCOPE(SVCWORKER);
     STARFISH_ASSERT(scriptURL != nullptr);
@@ -128,12 +129,21 @@ ServiceWorkerGlobalScope* WebWorker::createGlobalScope(ResourceURL* scriptURL)
 
     removeScriptEngineInstance();
     ensureScriptEngineInstance();
-    m_workerGlobalScope = new ServiceWorkerGlobalScope(
-        this, scriptURL, String::createASCIIString("UTF-8"));
 
-    return m_workerGlobalScope;
+    GlobalScopeType* globalScope = new GlobalScopeType(
+        this, scriptURL, String::createASCIIString("UTF-8"));
+    m_workerGlobalScope = globalScope;
+
+    return globalScope;
 }
+
+template DedicatedWorkerGlobalScope* WebWorker::createGlobalScope(
+    ResourceURL* scriptURL);
+#if defined(STARFISH_SERVICE_WORKER_HOST)
+template ServiceWorkerGlobalScope* WebWorker::createGlobalScope(
+    ResourceURL* scriptURL);
+#endif
 
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */

@@ -28,6 +28,7 @@ namespace Starfish {
 class WebWorker;
 class ServiceWorker;
 class ServiceWorkerData;
+class ServiceWorkerScriptController;
 class ResourceURL;
 class ErrorEventInit;
 class StorageNamespaceProvider;
@@ -56,6 +57,8 @@ public:
     {
         return m_serviceWorker;
     }
+
+    ServiceWorkerScriptController* serviceWorkerScriptController();
 
     CustomStorage* workerStorage();
     void initCacheStorage();

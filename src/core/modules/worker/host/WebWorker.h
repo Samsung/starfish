@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWebWorker__)
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWebWorker__)
 #define __StarfishWebWorker__
 
 #include "core/page/WebBase.h"
@@ -59,13 +59,14 @@ public:
         return m_scriptEngineInstance;
     }
 
-    ServiceWorkerGlobalScope* createGlobalScope(ResourceURL* scriptURL);
+    template <typename GlobalScopeType>
+    GlobalScopeType* createGlobalScope(ResourceURL* scriptURL);
 
 private:
     WebWorker(Starfish* starfish, const char* locale, const char* timezoneID,
               String* customUserAgentString);
 
-    ServiceWorkerGlobalScope* m_workerGlobalScope{ nullptr };
+    WorkerGlobalScope* m_workerGlobalScope{ nullptr };
     ScriptEngineInstance* m_scriptEngineInstance{ nullptr };
 
     void ensureScriptEngineInstance();

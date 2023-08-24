@@ -42,7 +42,6 @@
 #define __StarfishArchiver__
 
 #include "StarfishBase.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 

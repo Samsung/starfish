@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWorkerGlobalScope__)
+#if defined(STARFISH_ENABLE_WORKER) && !defined(__StarfishWorkerGlobalScope__)
 #define __StarfishWorkerGlobalScope__
 
 #include "core/dom/EventTarget.h"

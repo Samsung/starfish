@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
@@ -66,4 +66,4 @@ DEFINE_EVENT_LISTENER(DedicatedWorkerGlobalScope, messageerror);
 
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */

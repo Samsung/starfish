@@ -33,7 +33,7 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/networking/WebSocket.h"
-#include "core/modules/serviceworker/util/Trace.h"
+#include "core/modules/worker/util/Trace.h"
 
 namespace Starfish {
 

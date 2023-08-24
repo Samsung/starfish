@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
+#if defined(STARFISH_ENABLE_WORKER) && \
     !defined(__StarfishDedicatedWorkerGlobalScope__)
 #define __StarfishDedicatedWorkerGlobalScope__
 

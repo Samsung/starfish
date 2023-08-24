@@ -27,7 +27,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/ServiceWorkerOption.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 using namespace Starfish;
 

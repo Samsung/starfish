@@ -27,7 +27,6 @@
 #include "core/modules/serviceworker/host/ServiceWorkerAgent.h"
 #include "core/modules/serviceworker/PerProcess.h"
 #include "core/modules/threading/ThreadPool.h"
-#include "core/modules/serviceworker/util/Trace.h"
 
 namespace Starfish {
 

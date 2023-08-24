@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "core/modules/worker/host/WorkerLocation.h"
@@ -86,4 +86,4 @@ String* WorkerLocation::hash()
 }
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */

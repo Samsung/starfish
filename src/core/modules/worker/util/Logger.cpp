@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "core/modules/serviceworker/util/Logger.h"
+#include "core/modules/worker/util/Logger.h"
 
 #include <map>
 #include <thread>

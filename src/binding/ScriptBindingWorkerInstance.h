@@ -18,15 +18,13 @@
  *  USA
  */
 
-#if defined(STARFISH_WEBWORKER_HOST) && \
+#if defined(STARFISH_ENABLE_WORKER) && \
     !defined(__StarfishScriptBindingWorkerInstance__)
 #define __StarfishScriptBindingWorkerInstance__
 
 #include "binding/ScriptBindingInstance.h"
 
 namespace Starfish {
-
-class WorkerGlobalScope;
 
 template <typename T>
 class ScriptBindingWorkerInstance : public ScriptBindingInstance {

@@ -996,6 +996,9 @@ void ServiceWorkerHostJobHandler::terminateServiceWorker(
 
     // 6. Abort the script currently running in serviceWorker.
     ServiceWorkerAgent::instance()->abortServiceWorkerScript(serviceWorker);
+
+    ServiceWorkerAgent::instance()->removeGlobalScope(
+        serviceWorker->clientContextId);
 }
 
 void ServiceWorkerHostJobHandler::rejectJobPromise(ServiceWorkerJob* job,

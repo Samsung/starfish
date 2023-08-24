@@ -17,16 +17,17 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_SERVICE_WORKER_HOST
+#include <EscargotPublic.h>
 
 #include "StarfishConfig.h"
 #include "binding/ScriptBindingInstance.h"
-#include "binding/ScriptBindingWorkerInstance.h"
+#include "binding/ScriptBindingServiceWorkerInstance.h"
 #include "core/modules/worker/host/WebWorker.h"
-#include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/worker/util/Trace.h"
+#include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/serviceworker/host/ServiceWorkerGlobalScope.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/util/Trace.h"
 #include "core/modules/serviceworker/util/ParallelTask.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "binding/ScriptWrappable.h"
@@ -54,18 +55,16 @@ ServiceWorkerGlobalScope::ServiceWorkerGlobalScope(WebWorker* webWorker,
     STARFISH_ASSERT(url != nullptr);
     STARFISH_ASSERT(charSet != nullptr);
 
-    m_scriptBindingInstance =
-        new ScriptBindingWorkerInstance<ServiceWorkerGlobalScope>(
-            webWorker->scriptEngineInstance(), this);
+    m_scriptBindingInstance = new ScriptBindingServiceWorkerInstance(
+        webWorker->scriptEngineInstance(), this);
 
     initGlobalScope(url, charSet);
     initCacheStorage();
 
     ServiceWorkerHostJobHandler* jobHander =
         ServiceWorkerAgent::instance()->serviceWorkerServer()->jobHandler();
-
-    m_workerScriptController->setRegistrationStore(
-        jobHander->registrationStore());
+    m_workerScriptController = new ServiceWorkerScriptController(
+        m_executionContext, jobHander->registrationStore());
 
     m_internal = new Internal(this, m_scriptBindingInstance);
     m_internal->setUrl(url);
@@ -119,6 +118,13 @@ void ServiceWorkerGlobalScope::setServiceWorkerData(
 {
     TRACE_SCOPE(HOST);
     m_serviceWorker = serviceWorker;
+}
+
+ServiceWorkerScriptController*
+ServiceWorkerGlobalScope::serviceWorkerScriptController()
+{
+    return reinterpret_cast<ServiceWorkerScriptController*>(
+        m_workerScriptController);
 }
 
 Promise* ServiceWorkerGlobalScope::skipWaiting()
@@ -198,4 +204,4 @@ void* ServiceWorkerGlobalScope::operator new(size_t size)
 }
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_SERVICEWORKER_HOST */

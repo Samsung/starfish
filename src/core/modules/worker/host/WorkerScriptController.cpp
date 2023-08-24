@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifdef STARFISH_ENABLE_WORKER
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
 #include "core/modules/worker/host/WorkerScriptController.h"
+#include "core/modules/serviceworker/host/ServiceWorkerScriptController.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/modules/serviceworker/RegistrationStore.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 
@@ -59,17 +59,6 @@ public:
                     String::fromUTF8(response.data(), response.size());
                 if (m_workerScriptController->evaluatefromString(text)) {
                     m_scriptLoadResult = ScriptLoadResult::Success;
-                    if (m_workerScriptController->registrationStore()
-                            .hasValue()) {
-                        m_workerScriptController->registrationStore()
-                            ->saveWorkerScripts(
-                                m_workerScriptController->executionContext()
-                                    ->baseURL()
-                                    ->baseURI(),
-                                m_workerScriptController->executionContext()
-                                    ->urlString(),
-                                text);
-                    }
                 } else {
                     m_scriptLoadResult = ScriptLoadResult::ScriptError;
                 }
@@ -108,6 +97,14 @@ ScriptBindingInstance* WorkerScriptController::scriptBindingInstance()
 ScriptLoadResult WorkerScriptController::loadJavaScript(
     ResourceURL* resourceURL)
 {
+    return loadJavaScriptInternal<WorkerScriptControllerClient,
+                                  WorkerScriptController>(resourceURL, this);
+}
+
+template <typename ClientType, typename ControllerType>
+ScriptLoadResult WorkerScriptController::loadJavaScriptInternal(
+    ResourceURL* resourceURL, ControllerType* controller)
+{
     STARFISH_ASSERT(resourceURL != nullptr);
     RequestData* requestData = new RequestData();
     requestData->m_url = resourceURL;
@@ -115,8 +112,7 @@ ScriptLoadResult WorkerScriptController::loadJavaScript(
     requestData->m_syncLevel = RequestSyncLevel::AlwaysSync;
 
     ResourceRequest* resourceRequest = new ResourceRequest(executionContext());
-    WorkerScriptControllerClient* client =
-        new WorkerScriptControllerClient(this);
+    ClientType* client = new ClientType(controller);
     resourceRequest->addResourceRequestClient(client);
     resourceRequest->open(requestData, new HeadersData());
     resourceRequest->send();
@@ -124,21 +120,14 @@ ScriptLoadResult WorkerScriptController::loadJavaScript(
     return client->scriptLoadResult();
 }
 
-ScriptLoadResult WorkerScriptController::loadJavaScriptFromCache(
-    ResourceURL* resourceURL)
-{
-    auto scope = resourceURL->baseURI();
-    auto script = m_registrationStore->loadWorkerScript(scope);
-    if (!script.hasValue()) {
-        return ScriptLoadResult::FileError;
-    }
-
-    if (!evaluatefromString(script.getValue())) {
-        return ScriptLoadResult::ScriptError;
-    }
-
-    return ScriptLoadResult::Success;
-}
+template ScriptLoadResult WorkerScriptController::loadJavaScriptInternal<
+    WorkerScriptControllerClient, WorkerScriptController>(
+    ResourceURL*, WorkerScriptController*);
+#if defined(STARFISH_SERVICE_WORKER_HOST)
+template ScriptLoadResult WorkerScriptController::loadJavaScriptInternal<
+    ServiceWorkerScriptControllerClient, ServiceWorkerScriptController>(
+    ResourceURL*, ServiceWorkerScriptController*);
+#endif
 
 bool WorkerScriptController::evaluatefromString(String* string)
 {
@@ -150,4 +139,4 @@ bool WorkerScriptController::evaluatefromString(String* string)
 }
 } // namespace Starfish
 
-#endif /* STARFISH_WEBWORKER_HOST */
+#endif /* STARFISH_ENABLE_WORKER */
