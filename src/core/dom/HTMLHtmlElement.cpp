@@ -24,6 +24,8 @@
 #include "core/style/ComputedStyle.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
+#include "core/layout/FrameBox.h"
 
 namespace Starfish {
 
@@ -41,4 +43,19 @@ void HTMLHtmlElement::didComputedStyleChanged(
         document()->setNeedsPainting();
     }
 }
+
+LayoutRect HTMLHtmlElement::clientRect()
+{
+    if (!document()->inQuirksMode()) {
+        window()->browsingContext()->webView()->layoutIfNeeded(false);
+        if (document()->frame()) {
+            FrameBox* box = document()->frame()->asFrameBox();
+            return LayoutRect(box->borderLeft(), box->borderTop(),
+                              box->contentWidth() + box->paddingWidth(),
+                              box->contentHeight() + box->paddingHeight());
+        }
+    }
+    return Element::clientRect();
+}
+
 } // namespace Starfish
