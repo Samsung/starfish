@@ -438,7 +438,7 @@ protected:
 
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
-    LayoutRect clientRect();
+    virtual LayoutRect clientRect();
 
     // DO NOT MODIFY ATTRIBUTES.
     const GCVector<Attribute>* getAttributes()

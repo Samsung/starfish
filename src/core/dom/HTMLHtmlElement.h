@@ -55,6 +55,9 @@ public:
 
         return nullptr;
     }
+
+protected:
+    virtual LayoutRect clientRect() override;
 };
 } // namespace Starfish
 
