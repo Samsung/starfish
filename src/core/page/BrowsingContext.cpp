@@ -997,12 +997,8 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     }
 
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
-    if (e == m_focusedNode) {
-        // If the element is already focused.
-        return;
-    }
-
-    if (!e->isFocusable()) {
+    if (!e || e == m_focusedNode || !e->isFocusable()) {
+        // If the element already has or can't get focus.
         return;
     }
 
