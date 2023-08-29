@@ -4,7 +4,7 @@ on:
 
 jobs:
   triage:
-    runs-on: [ code-default ]
+    runs-on: [ code-default, code-linux ]
     steps:
     - uses: actions/labeler@v3
       with:

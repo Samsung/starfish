@@ -82,7 +82,7 @@ jobs:
     needs: build_x64
     timeout-minutes: 60
     # After the firewall registraion is done, a code runner should also be added to test work.
-    # runs-on: [ self-hosted, code-2xlarge ]
+    # runs-on: [ self-hosted, code-2xlarge, code-linux ]
     runs-on: [legacy-rat6]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
