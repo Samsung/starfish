@@ -6,7 +6,7 @@ on:
 jobs:
 
   build_tizen_50:
-    runs-on: [ self-hosted,code-2xlarge ]
+    runs-on: [ self-hosted,code-2xlarge, code-linux ]
     container:
       image: art.sec.samsung.net/circleci-docker/docker-gbs-base:actions
       options: --user root --privileged
