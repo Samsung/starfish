@@ -213,9 +213,12 @@ BuildRequires: pkgconfig(capi-system-device)
 BuildRequires: pkgconfig(capi-appfw-app-common)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
+BuildRequires: pkgconfig(capi-media-tool)
+%endif
+
+%if 0%{?enable_webrtc:1}
 BuildRequires: pkgconfig(capi-media-camera)
 BuildRequires: pkgconfig(capi-media-tool)
-BuildRequires: pkgconfig(capi-system-device)
 %endif
 
 BuildRequires: pkgconfig(bundle)
