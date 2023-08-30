@@ -75,11 +75,12 @@ String* TextDecoder::decode(Nullable<ArrayBufferViewOrArrayBuffer> input,
     if (input.value().isArrayBufferViewValue()) {
         ScriptArrayBufferView unwrap = input.value().getArrayBufferViewValue();
         return decode(arrayBufferViewRawData(unwrap),
-                      arrayBufferViewSize(unwrap), o);
+                      arrayBufferViewByteSize(unwrap), o);
     } else {
         STARFISH_ASSERT(input.value().isArrayBufferValue());
         ScriptArrayBuffer unwrap = input.value().getArrayBufferValue();
-        return decode(arrayBufferRawData(unwrap), arrayBufferSize(unwrap), o);
+        return decode(arrayBufferRawData(unwrap), arrayBufferByteSize(unwrap),
+                      o);
     }
 }
 

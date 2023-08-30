@@ -313,12 +313,12 @@ String* Body::extractTextFromBodyInit()
             if (byteBuffer.isArrayBufferValue()) {
                 auto arrayBuffer = byteBuffer.getArrayBufferValue();
                 auto buffer = arrayBufferRawData(arrayBuffer);
-                auto size = arrayBufferSize(arrayBuffer);
+                auto size = arrayBufferByteSize(arrayBuffer);
                 return String::fromUTF8((const char*)buffer, size);
             } else {
                 auto arrayBufferView = byteBuffer.getArrayBufferViewValue();
                 auto buffer = arrayBufferViewRawData(arrayBufferView);
-                auto size = arrayBufferViewSize(arrayBufferView);
+                auto size = arrayBufferViewByteSize(arrayBufferView);
                 return String::fromUTF8((const char*)buffer, size);
             }
         }

@@ -110,9 +110,10 @@ static std::string doComputeHash(BCRYPT_ALG_HANDLE algHandle,
 
     status = BCryptGetProperty(
         algHandle,          // Handle to a CNG object
-        BCRYPT_HASH_LENGTH, // Property name (null terminated unicode string)
-        (PBYTE)&hashLength, // Address of the output buffer which recieves the
-                            // property value
+        BCRYPT_HASH_LENGTH, // Property name (null terminated unicode
+                            // string)
+        (PBYTE)&hashLength, // Address of the output buffer which recieves
+                            // the property value
         sizeof(hashLength), // Size of the buffer in bytes
         &resultLength,      // Number of bytes that were copied into the buffer
         0);                 // Flags
@@ -308,7 +309,7 @@ std::string CryptoAlgorithmSHA512::computeHash()
 #endif
 }
 
-Crypto::Crypto(CryptoAlgorithmType hashType)
+Cryptographic::Cryptographic(CryptoAlgorithmType hashType)
 {
     switch (hashType) {
     case CryptoAlgorithmType::Sha256:
@@ -326,18 +327,19 @@ Crypto::Crypto(CryptoAlgorithmType hashType)
     }
 }
 
-Crypto::Crypto(CryptoAlgorithmType hashType, const std::string& str)
-    : Crypto(hashType)
+Cryptographic::Cryptographic(CryptoAlgorithmType hashType,
+                             const std::string& str)
+    : Cryptographic(hashType)
 {
     this->update(str);
 }
 
-void Crypto::update(const std::string& str)
+void Cryptographic::update(const std::string& str)
 {
     m_algorithm->update(str);
 }
 
-std::string Crypto::digest(
+std::string Cryptographic::digest(
     DigestEncodingType encoding /*= DigestEncodingType::None*/)
 {
     std::string output;

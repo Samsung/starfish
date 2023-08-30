@@ -27,6 +27,7 @@
 #include "core/page/WindowOrWorkerGlobalScope.h"
 #include "core/page/ScrollOptions.h"
 #include "core/extra/Performance.h"
+#include "core/modules/crypto/Crypto.h"
 
 namespace Starfish {
 
@@ -269,6 +270,14 @@ public:
 
     Performance* performance();
 
+    Crypto* crypto()
+    {
+        if (!m_crypto) {
+            m_crypto = Crypto::create(executionContext());
+        }
+        return m_crypto;
+    }
+
 #ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     Event* event();
     void setEvent(Event* e);
@@ -394,6 +403,7 @@ private:
     Scrolling* m_scrolling;
     Performance* m_performance;
     CustomElementRegistry* m_customElementRegistry;
+    Crypto* m_crypto;
 
 #if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;

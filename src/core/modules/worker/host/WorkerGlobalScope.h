@@ -24,6 +24,7 @@
 #include "core/page/GlobalScope.h"
 #include "core/fetch/Fetch.h"
 #include "core/extra/Performance.h"
+#include "core/modules/crypto/Crypto.h"
 #include "core/page/WindowOrWorkerGlobalScope.h"
 
 namespace Starfish {
@@ -75,6 +76,14 @@ public:
         return m_workerNavigator;
     }
 
+    Crypto* crypto()
+    {
+        if (!m_crypto) {
+            m_crypto = Crypto::create(executionContext());
+        }
+        return m_crypto;
+    }
+
     ScriptBindingInstance* scriptBindingInstance()
     {
         return m_scriptBindingInstance;
@@ -124,6 +133,7 @@ protected:
     WorkerScriptController* m_workerScriptController;
     WorkerLocation* m_workerLocation;
     WorkerNavigator* m_workerNavigator;
+    Crypto* m_crypto;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {

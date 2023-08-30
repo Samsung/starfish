@@ -87,6 +87,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     , m_location(nullptr)
     , m_screen(nullptr)
     , m_scrolling(new Scrolling(this))
+    , m_crypto(nullptr)
     , m_width(initialWidth)
     , m_height(initialHeight)
     , m_cssTarget(nullptr)
