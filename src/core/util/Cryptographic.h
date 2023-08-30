@@ -43,10 +43,10 @@ public:
     virtual std::string computeHash() = 0;
 };
 
-class Crypto : public gc {
+class Cryptographic : public gc {
 public:
-    Crypto(CryptoAlgorithmType hashType);
-    Crypto(CryptoAlgorithmType hashType, const std::string& str);
+    Cryptographic(CryptoAlgorithmType hashType);
+    Cryptographic(CryptoAlgorithmType hashType, const std::string& str);
 
     void update(const std::string& str);
     std::string digest(DigestEncodingType encoding = DigestEncodingType::None);

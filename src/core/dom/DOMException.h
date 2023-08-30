@@ -42,6 +42,7 @@ public:
         INVALID_MODIFICATION_ERR = 13,
         NAMESPACE_ERR = 14,
         INVALID_ACCESS_ERR = 15,
+        TYPE_MISMATCH_ERR = 17,
         SECURITY_ERR = 18,
         NETWORK_ERR = 19,
         ABORT_ERR = 20,

@@ -1348,19 +1348,24 @@ uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer)
     return buffer->rawBuffer();
 }
 
+unsigned arrayBufferByteSize(ScriptArrayBuffer buffer)
+{
+    return buffer->byteLength();
+}
+
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer)
 {
     return buffer->rawBuffer();
 }
 
-unsigned arrayBufferSize(ScriptArrayBuffer buffer)
+unsigned arrayBufferViewByteSize(ScriptArrayBufferView buffer)
 {
     return buffer->byteLength();
 }
 
 unsigned arrayBufferViewSize(ScriptArrayBufferView buffer)
 {
-    return buffer->byteLength();
+    return buffer->arrayLength();
 }
 
 void detachArrayBuffer(ScriptBindingInstance* instance,

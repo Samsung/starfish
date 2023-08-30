@@ -45,6 +45,7 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker)
     : EventTarget()
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
+    , m_crypto(nullptr)
 {
     STARFISH_ASSERT(webWorker != nullptr);
 }
@@ -54,6 +55,7 @@ WorkerGlobalScope::WorkerGlobalScope(WebWorker* webWorker, ResourceURL* url,
     : EventTarget()
     , GlobalScope(webWorker)
     , m_webWorker(webWorker)
+    , m_crypto(nullptr)
 {
     TRACE_SCOPE(HOST);
 

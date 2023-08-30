@@ -583,11 +583,12 @@ void SourceBuffer::appendBuffer(ArrayBufferViewOrArrayBuffer buffer)
     if (buffer.isArrayBufferViewValue()) {
         ScriptArrayBufferView unwrap = buffer.getArrayBufferViewValue();
         appendBuffer(arrayBufferViewRawData(unwrap),
-                     arrayBufferViewSize(unwrap), createScriptValue(unwrap));
+                     arrayBufferViewByteSize(unwrap),
+                     createScriptValue(unwrap));
     } else {
         STARFISH_ASSERT(buffer.isArrayBufferValue());
         ScriptArrayBuffer unwrap = buffer.getArrayBufferValue();
-        appendBuffer(arrayBufferRawData(unwrap), arrayBufferSize(unwrap),
+        appendBuffer(arrayBufferRawData(unwrap), arrayBufferByteSize(unwrap),
                      createScriptValue(unwrap));
     }
 }

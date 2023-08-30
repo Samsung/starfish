@@ -350,7 +350,7 @@ bool ContentSecurityPolicySourceListDirective::isScheme(String* scheme)
 static std::string getCSPHash(CryptoAlgorithmType hashType,
                               const std::string& str)
 {
-    Crypto hash(hashType, str);
+    Cryptographic hash(hashType, str);
     return hash.digest(DigestEncodingType::Base64);
 }
 

@@ -229,8 +229,9 @@ bool isNullOrUndefinedScriptValue(ScriptValue v);
 
 uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer);
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);
-unsigned arrayBufferSize(ScriptArrayBuffer buffer);
+unsigned arrayBufferByteSize(ScriptArrayBuffer buffer);
 unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
+unsigned arrayBufferViewByteSize(ScriptArrayBufferView buffer);
 
 void detachArrayBuffer(ScriptBindingInstance* instance,
                        ScriptArrayBuffer buffer);
