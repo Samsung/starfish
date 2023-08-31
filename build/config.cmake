@@ -257,6 +257,13 @@ IF (${WEBRTC} STREQUAL "1")
     )
 ENDIF()
 
+IF (${WEBGL} STREQUAL "1")
+    MESSAGE (STATUS "WEBGL Experimental Enabled")
+    SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM}
+        -DSTARFISH_ENABLE_WEBGL
+    )
+ENDIF()
+
 IF (${ENABLE_SERVICE_WORKER} STREQUAL "1")
     # * SERVICE_WORKER_USE_SEPARATE_PROCESS
     # : If defined, a service worker runs on a separate process.

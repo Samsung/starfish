@@ -17,17 +17,23 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_CANVAS
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "StarfishConfig.h"
 #include "core/dom/canvas/WebGLRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
     : WebGLRenderingContextBaseMixIn(canvasElement)
 {
+}
+
+ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
 }
 } // namespace Starfish
 

@@ -34,6 +34,7 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/CompositorFactory.h"
+#include "platform/canvas/webgl/SurfaceCreationScope.h"
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
@@ -1850,6 +1851,18 @@ public:
                 m_bufferStride = outDesc.stride * 4;
                 m_buffer = nullptr;
 #endif
+            } else if (SurfaceCreationScope::hasDelegate()) {
+                if (SurfaceCreationScope::delegate()->type() ==
+                    TextureCreationDelegate::Type::FrameBuffer) {
+                    m_isFrameBuffer = true;
+                } else {
+                    STARFISH_UNIMPLEMENTED();
+                }
+
+                m_isEGLImageExternal = false;
+                m_isEGLBufferOwner = false;
+                m_bufferStride = m_bufferWidth * sizeof(uint32_t);
+                m_buffer = nullptr;
             } else {
                 m_isEGLImageExternal = false;
                 m_isEGLBufferOwner = false;
@@ -1871,6 +1884,31 @@ public:
         m_window->glMakeCurrent();
 
         STARFISH_RELEASE_ASSERT(m_textureFragments.size() == 0);
+
+        if (m_isFrameBuffer && SurfaceCreationScope::hasDelegate()) {
+            GLuint textureId = 0;
+
+            // 1. Create a texture.
+            if (!SurfaceCreationScope::delegate()->create(
+                    m_bufferWidth, m_bufferHeight, textureId)) {
+                STARFISH_RELEASE_ASSERT(false);
+            }
+
+            // 2. Add the texture info newly created to the fragement list.
+            m_textureFragments.push_back({ .textureID = textureId,
+                                           .textureWidth = m_bufferWidth,
+                                           .textureHeight = m_bufferHeight,
+                                           .srcX = 0,
+                                           .srcY = 0,
+                                           .srcWidth = 1,
+                                           .srcHeight = 1 });
+
+            // 3. Set the dimension of the fragment list.
+            m_wTextureCount = m_hTextureCount = 1;
+
+            return;
+        }
+
         if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN) || defined(STARFISH_ANDROID)
             CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
@@ -2114,6 +2152,11 @@ public:
                                                    size_t dirtyWidth,
                                                    size_t dirtyHeight) override
     {
+        if (m_isFrameBuffer) {
+            // NOTE: Unmapping the buffer isn't needed since the frame buffer
+            // is already stored in GPU memory.
+            return;
+        }
         STARFISH_ASSERT(m_wTextureCount != 0);
         STARFISH_ASSERT(m_hTextureCount != 0);
         STARFISH_ASSERT(m_textureTileSize != 0);
@@ -2356,6 +2399,7 @@ protected:
     GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
 
+    bool m_isFrameBuffer{ false };
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
     CanvasSurfaceFlag m_flag;

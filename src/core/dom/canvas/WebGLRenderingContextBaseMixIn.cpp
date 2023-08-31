@@ -17,12 +17,15 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_CANVAS
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "StarfishConfig.h"
 #include "WebGLRenderingContextBaseMixIn.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/modules/canvas/Compositor.h"
+#include "core/page/WebView.h"
+#include "platform/canvas/webgl/GLES.h"
 
 namespace Starfish {
 
@@ -30,6 +33,7 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
     HTMLCanvasElement* ownerHTMLCanvasElement)
     : CanvasRenderingContext(ownerHTMLCanvasElement->executionContext())
     , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
+    , m_canvasSurface(nullptr)
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(
@@ -42,9 +46,57 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
         NULL, NULL, NULL);
 }
 
+static void calculateDimension(unsigned& outWidth, unsigned& outHeight,
+                               const unsigned elementWidth,
+                               const unsigned elementHeight)
+{
+    // NOTE: The following is from "CanvasRenderingContext2DMixIn::initialize".
+    // We may consider commonising it.
+    auto ow = elementWidth;
+    auto oh = elementHeight;
+    auto w = ow;
+    auto h = oh;
+
+    if (ow == 0 || isInfOrNan(ow) == true) {
+        w = 1;
+    }
+
+    if (oh == 0 || isInfOrNan(oh) == true) {
+        h = 1;
+    }
+
+    uint32_t maxTextureSize = (uint32_t)Compositor::maximumTextureSize();
+    size_t maxTextureArea = maxTextureSize * maxTextureSize;
+
+    if (ow * oh >= maxTextureArea) {
+        w = maxTextureArea * ((double)ow / (ow + oh));
+        h = maxTextureArea * ((double)oh / (ow + oh));
+    }
+
+    w = std::min(w, maxTextureSize);
+    h = std::min(h, maxTextureSize);
+
+    STARFISH_ASSERT(w != 0);
+    STARFISH_ASSERT(h != 0);
+
+    outWidth = w;
+    outHeight = h;
+}
+
 void WebGLRenderingContextBaseMixIn::initialize()
 {
-    STARFISH_UNIMPLEMENTED();
+    STARFISH_ASSERT(m_canvasSurface == nullptr);
+
+    m_framebufferTexture = std::make_shared<FramebufferTexture>();
+
+    unsigned width, height;
+    calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
+                       m_ownerHTMLCanvasElement->height());
+
+    SurfaceCreationScope scope(m_framebufferTexture);
+    m_canvasSurface = CanvasSurface::create(
+        m_ownerHTMLCanvasElement->webView()->platformWindow(), width, height, 1,
+        CanvasSurface::CanvasElement);
 }
 
 void WebGLRenderingContextBaseMixIn::finalize()
@@ -54,7 +106,6 @@ void WebGLRenderingContextBaseMixIn::finalize()
 
 void WebGLRenderingContextBaseMixIn::flush()
 {
-    STARFISH_UNIMPLEMENTED();
 }
 
 void WebGLRenderingContextBaseMixIn::onResize()
@@ -67,8 +118,11 @@ void WebGLRenderingContextBaseMixIn::onResize()
 
 CanvasSurface* WebGLRenderingContextBaseMixIn::surface()
 {
-    STARFISH_UNIMPLEMENTED();
-    return nullptr;
+    // NOTE: "FrameReplacedCanvas::willCompositeStackingContext" checks whether
+    // there is a surface on a CanvasElement. If a valid surface is returned, it
+    // requests filling the surface using 'flush()', and then unmaps the buffer
+    // of the surface.
+    return m_canvasSurface;
 }
 
 } // namespace Starfish

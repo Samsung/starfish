@@ -68,6 +68,11 @@ public:
             }
         }
 #endif
+
+#if defined(STARFISH_ENABLE_WEBGL)
+        glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+#endif
+
         m_glWindow = glfwCreateWindow(width, height, "Starfish", NULL, NULL);
         if (m_glWindow == nullptr) {
             STARFISH_LOG_ERROR(
