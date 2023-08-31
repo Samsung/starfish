@@ -4,7 +4,7 @@ on: [pull_request_target]
 
 jobs:
   build_x64_serivce_worker:
-    runs-on: [ self-hosted, code-2xlarge, code-linux ]
+    runs-on: [ legacy-rat6 ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:20.04
       credentials:
