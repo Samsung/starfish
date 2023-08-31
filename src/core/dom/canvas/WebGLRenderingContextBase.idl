@@ -503,8 +503,8 @@ interface WebGLRenderingContextBase
                                 GLenum srcAlpha, GLenum dstAlpha);
 
     [Unimplemented,WebGLHandlesContextLoss]  GLenum checkFramebufferStatus(GLenum target);
-    [Unimplemented] undefined clear(GLbitfield mask);
-    [Unimplemented] undefined clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+    undefined clear(GLbitfield mask);
+    undefined clearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
     [Unimplemented] undefined clearDepth(GLclampf depth);
     [Unimplemented] undefined clearStencil(GLint s);
     [Unimplemented] undefined colorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
@@ -642,5 +642,5 @@ interface WebGLRenderingContextBase
     [Unimplemented] undefined vertexAttribPointer(GLuint index, GLint size, GLenum type,
                                   GLboolean normalized, GLsizei stride, GLintptr offset);
 
-    [Unimplemented] undefined viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+    undefined viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 };

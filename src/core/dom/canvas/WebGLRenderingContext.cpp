@@ -35,6 +35,27 @@ ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
+
+void WebGLRenderingContext::clear(uint32_t mask)
+{
+    FBOScope scope(m_framebufferTexture->fbo());
+    glClear(mask);
+}
+
+void WebGLRenderingContext::clearColor(float red, float green, float blue,
+                                       float alpha)
+{
+    FBOScope scope(m_framebufferTexture->fbo());
+    glClearColor(red, green, blue, alpha);
+}
+
+void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
+                                     uint32_t height)
+{
+    FBOScope scope(m_framebufferTexture->fbo());
+    glViewport(x, y, width, height);
+}
+
 } // namespace Starfish
 
 #endif
