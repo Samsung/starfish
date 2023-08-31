@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,24 +17,24 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
-
-#include "StarfishConfig.h"
-#include "core/dom/canvas/WebGLRenderingContext.h"
-#include "core/dom/canvas/HTMLCanvasElement.h"
-#include "core/dom/ExecutionContext.h"
+#include "StarfishBase.h"
+#include "platform/canvas/webgl/SurfaceCreationScope.h"
 
 namespace Starfish {
 
-WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
-    : WebGLRenderingContextBaseMixIn(canvasElement)
+std::shared_ptr<TextureCreationDelegate> SurfaceCreationScope::m_delegate;
+
+SurfaceCreationScope::SurfaceCreationScope(
+    std::shared_ptr<TextureCreationDelegate> delegate)
 {
+    STARFISH_ASSERT(m_delegate == nullptr);
+    STARFISH_ASSERT(delegate != nullptr);
+    m_delegate = delegate;
 }
 
-ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
+SurfaceCreationScope::~SurfaceCreationScope()
 {
-    return executionContext()->scriptBindingInstance();
+    m_delegate.reset();
 }
+
 } // namespace Starfish
-
-#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2023-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,24 +17,18 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
+#ifndef __StarfishGLES__
+#define __StarfishGLES__
 
-#include "StarfishConfig.h"
-#include "core/dom/canvas/WebGLRenderingContext.h"
-#include "core/dom/canvas/HTMLCanvasElement.h"
-#include "core/dom/ExecutionContext.h"
-
-namespace Starfish {
-
-WebGLRenderingContext::WebGLRenderingContext(HTMLCanvasElement* canvasElement)
-    : WebGLRenderingContextBaseMixIn(canvasElement)
-{
-}
-
-ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
-{
-    return executionContext()->scriptBindingInstance();
-}
-} // namespace Starfish
+#if defined(STARFISH_EFL_CAIRO_GL)
+#error("This header can not be used in this backend now")
+// TODO: Consider using Evas_GL_GLESX_Helpers.h.
+#elif defined(STARFISH_GLFW_CAIRO_GL)
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <GLES3/gl3.h>
+#else
+#error("This header can not be used in this backend now")
+#endif
 
 #endif

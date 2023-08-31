@@ -20,9 +20,11 @@
 #ifndef __StarfishWebGLRenderingContextBaseMixIn__
 #define __StarfishWebGLRenderingContextBaseMixIn__
 
-#ifdef STARFISH_ENABLE_CANVAS
+#if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
+#include "platform/canvas/webgl/Util.h"
+#include <memory>
 
 namespace Starfish {
 
@@ -36,10 +38,10 @@ public:
     {
     }
 
-    virtual void initialize() override;
-    virtual void flush() override;
-    virtual void onResize() override;
-    virtual CanvasSurface* surface() override;
+    void initialize() override;
+    void flush() override;
+    void onResize() override;
+    CanvasSurface* surface() override;
 
     void finalize();
 
@@ -71,8 +73,12 @@ protected:
         CanvasRenderingContext::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(WebGLRenderingContextBaseMixIn,
                                         m_ownerHTMLCanvasElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(WebGLRenderingContextBaseMixIn,
+                                        m_canvasSurface));
     }
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
+    CanvasSurface* m_canvasSurface;
+    std::shared_ptr<FramebufferTexture> m_framebufferTexture;
 };
 } // namespace Starfish
 #endif

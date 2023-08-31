@@ -27,6 +27,7 @@
 #include "binding/generated/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/modules/canvas/Canvas.h"
 #include "platform/canvas/image/ImageUtils.h"
+#include "core/dom/canvas/WebGLRenderingContext.h"
 
 namespace Starfish {
 
@@ -102,7 +103,11 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
                     (ImageBitmapRenderingContext*)m_canvasRenderingContext);
         }
     } else if (contextId->equals("webgl")) {
-        // NOT SUPPORT
+#if defined(STARFISH_ENABLE_WEBGL)
+        m_canvasRenderingContext = new WebGLRenderingContext(this);
+        return RenderingContextBindindingUnion::createWebGLRenderingContext(
+            static_cast<WebGLRenderingContext*>(m_canvasRenderingContext));
+#endif
     }
     return nullptr;
 }
