@@ -2,6 +2,7 @@ P /.git
 P /.github
 P /.circleci
 
+- /.github
 - /src/public/bridge/android
 - /inspector
 - /build/windows
@@ -22,6 +23,8 @@ P /.circleci
 - /third_party/escargot/third_party/wasm/wabt/man
 - /third_party/escargot/third_party/wasm/wabt/scripts
 - /third_party/escargot/third_party/wasm/wabt/wasm2c
+- /third_party/escargot/third_party/wasm/wabt/third_party
+- /third_party/escargot/third_party/wasm/wabt/test
 - /third_party/escargot/test
 - /third_party/escargot/tools
 + /third_party/libwebsockets
@@ -33,6 +36,15 @@ P /.circleci
 - /third_party/libpng
 - /third_party/giflib
 - /third_party/libjpeg-turbo
+- /third_party/webrtc/src/libwebrtc/src
+- /third_party/webrtc/src/libwebrtc/test
+- /third_party/webrtc/src/libwebrtc/BUILD.gn
+- /third_party/webrtc/src/libwebrtc/format.sh
+- /third_party/webrtc/src/webrtc_tizen_tools
++ /third_party/webrtc/src/libwebrtc/libs/linux/x64/release/libwebrtc.so
++ /third_party/webrtc/src/libwebrtc/libs/tizen/arm64/release/libwebrtc.so
++ /third_party/webrtc/src/libwebrtc/libs/tizen/arm/release/libwebrtc.so
+
 
 - .git
 - .gitignore
