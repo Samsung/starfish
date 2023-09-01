@@ -997,7 +997,13 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     }
 
     Element* e = n->isElement() ? n->asElement() : n->parentElement();
-    if (!e || e == m_focusedNode || !e->isFocusable()) {
+
+    if (!e) {
+        // If document area is selected.
+        releaseFocusedNode(nullptr);
+        return;
+    }
+    if (e == m_focusedNode || !e->isFocusable()) {
         // If the element already has or can't get focus.
         return;
     }
@@ -1030,11 +1036,7 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
         }
     }
 
-    if (!e) {
-        // If document area is selected.
-        releaseFocusedNode(nullptr);
-        return;
-    } else if (e->isHTMLIFrameElement()) {
+    if (e->isHTMLIFrameElement()) {
         // When a child browsing context is focused, its browsing context
         // container is also focused. For example, if the user moves the focus
         // to a text field in an iframe, the iframe is the element with focus in

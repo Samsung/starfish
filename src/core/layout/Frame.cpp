@@ -1556,7 +1556,8 @@ Frame* Frame::firstLinePseudoComputedStyleOwnerFrame()
         STARFISH_ASSERT(parentFrame->isFrameBlockBox());
 
         Frame* child = parentFrame->firstChild();
-        if (child->isAnonymous() && child->firstChild()->isFrameText()) {
+        if (child && child->isAnonymous() && child->firstChild() &&
+            child->firstChild()->isFrameText()) {
             String* text = child->firstChild()->asFrameText()->text();
             if (text->containsOnlyWhitespace()) {
                 child = child->next();
