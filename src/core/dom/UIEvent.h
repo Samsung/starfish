@@ -160,7 +160,6 @@ public:
 
     virtual uint32_t which() const
     {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return m_which;
     }
 
