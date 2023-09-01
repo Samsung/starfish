@@ -42,6 +42,13 @@ bool ScriptBindingSecurity::canAccess(Document* source, Document* target)
         return true;
     }
 
+    if ((source->webOrigin()->url() &&
+         source->webOrigin()->url()->isFileURL()) ||
+        (target->webOrigin()->url() &&
+         target->webOrigin()->url()->isFileURL())) {
+        return false;
+    }
+
     // https://html.spec.whatwg.org/multipage/browsers.html#security-nav
     if (source->webOrigin()->isOpaque()) {
         BrowsingContext* c = source->browsingContext()->parentBrowsingContext();
