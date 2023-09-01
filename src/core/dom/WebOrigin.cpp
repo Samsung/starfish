@@ -110,10 +110,6 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
         return true;
     }
 
-    if ((isOpaque()) && (otherWebOrigin->isOpaque())) {
-        return true;
-    }
-
     if (isOpaque() || otherWebOrigin->isOpaque()) {
         return false;
     }
