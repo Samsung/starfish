@@ -63,7 +63,7 @@ void CastServer::destroy()
 CastServer::CastServer()
 {
     m_config = new CastConfig();
-    m_messageLoop = new MessageLoop();
+    m_messageLoop = MessageLoop::create();
     m_threadPool = new ThreadPool(CAST_SERVER_THREAD_POOL_SIZE, m_messageLoop);
 }
 

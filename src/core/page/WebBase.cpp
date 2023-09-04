@@ -35,7 +35,7 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
     : StarfishHoldable(starfish)
     , m_timezoneID(String::fromUTF8(timezoneID, strlen(timezoneID)))
     , m_customUserAgentString(customUserAgentString)
-    , m_messageLoop(new MessageLoop())
+    , m_messageLoop(MessageLoop::create())
     , m_timer(new Timer(this))
     , m_console(new Console(this))
     , m_webSecurityMode(LWE::WebSecurityMode::Enable)
