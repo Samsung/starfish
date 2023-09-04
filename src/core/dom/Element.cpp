@@ -57,6 +57,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/animation/TimingOptions.h"
+#include "core/dom/IntersectionObserver.h"
 
 #include "binding/ScriptBindingInstance.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -119,6 +120,16 @@ Scrolling* RareElementMembers::ensureScrolling(Element* self)
         m_scrolling = new Scrolling(self);
     }
     return m_scrolling;
+}
+
+GCVector<IntersectionObserverRegistration*>*
+RareElementMembers::ensureRegisteredIntersectionObservers()
+{
+    if (!m_registeredIntersectionObservers) {
+        m_registeredIntersectionObservers =
+            new (GC) GCVector<IntersectionObserverRegistration*>();
+    }
+    return m_registeredIntersectionObservers;
 }
 
 String* Element::tagName()
@@ -1625,6 +1636,45 @@ DOMRect* Element::getBoundingClientRect(bool layoutIfNeeds)
     }
 
     return rect;
+}
+
+void Element::appendIntersectionObserverRegistration(
+    IntersectionObserverRegistration* intersectionObserverRegistration)
+{
+    ensureRareElementMembers()
+        ->ensureRegisteredIntersectionObservers()
+        ->emplace_back(intersectionObserverRegistration);
+}
+
+void Element::removeIntersectionObserverRegistration(
+    IntersectionObserver* observer)
+{
+    if (ensureRareElementMembers()->m_registeredIntersectionObservers) {
+        GCVector<IntersectionObserverRegistration*>* registrations =
+            ensureRareElementMembers()->m_registeredIntersectionObservers;
+        if (registrations->size()) {
+            registrations->erase(std::remove_if(
+                registrations->begin(), registrations->end(),
+                [observer](const IntersectionObserverRegistration* item) {
+                    return item->observer == observer;
+                }));
+        }
+    }
+}
+
+IntersectionObserverRegistration* Element::findIntersectionObserverRegistration(
+    IntersectionObserver* observer)
+{
+    if (ensureRareElementMembers()->m_registeredIntersectionObservers) {
+        GCVector<IntersectionObserverRegistration*>* registrations =
+            ensureRareElementMembers()->m_registeredIntersectionObservers;
+        for (auto* registration : *registrations) {
+            if (registration->observer == observer) {
+                return registration;
+            }
+        }
+    }
+    return nullptr;
 }
 
 String* Element::innerHTML()

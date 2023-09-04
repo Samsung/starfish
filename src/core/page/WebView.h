@@ -536,6 +536,8 @@ private:
     void navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
                               ReferrerURL* referrerURL);
 
+    void updateObservation();
+
     PlatformWindow* m_platformWindow;
     BrowsingContext* m_topLevelBrowsingContext;
 

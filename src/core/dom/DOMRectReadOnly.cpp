@@ -34,8 +34,39 @@ DOMRectReadOnly::DOMRectReadOnly(ExecutionContext* executionContext, double x,
 {
 }
 
+DOMRectReadOnly::DOMRectReadOnly(ExecutionContext* executionContext,
+                                 const DOMRectInit& init)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+{
+    if (init.hasX()) {
+        m_x = init.x();
+    }
+    if (init.hasY()) {
+        m_y = init.y();
+    }
+    if (init.hasWidth()) {
+        m_width = init.width();
+    }
+    if (init.hasHeight()) {
+        m_height = init.height();
+    }
+}
+
 ScriptBindingInstance* DOMRectReadOnly::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
+
+bool DOMRectReadOnly::isEmpty()
+{
+    return m_width <= 0 || m_height <= 0;
+}
+
+bool DOMRectReadOnly::equals(const DOMRectReadOnly* other) const
+{
+    return m_x == other->m_x && m_y == other->m_y &&
+           m_width == other->m_width && m_height == other->m_height;
+}
+
 } // namespace Starfish

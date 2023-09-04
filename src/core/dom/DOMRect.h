@@ -24,16 +24,6 @@
 
 namespace Starfish {
 
-struct DOMRectInit {
-    DOMRectInit(double inX = 0, double inY = 0, double inWidth = 0,
-                double inHeight = 0);
-
-    double x;
-    double y;
-    double width;
-    double height;
-};
-
 class DOMRect : public DOMRectReadOnly {
 public:
     DOMRect(ExecutionContext* executionContext, double x = 0, double y = 0,

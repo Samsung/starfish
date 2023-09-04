@@ -20,14 +20,6 @@
 #include "core/dom/DOMRect.h"
 
 namespace Starfish {
-DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
-                         double inHeight)
-    : x(inX)
-    , y(inY)
-    , width(inWidth)
-    , height(inHeight)
-{
-}
 
 DOMRect::DOMRect(ExecutionContext* executionContext, double x, double y,
                  double width, double height)

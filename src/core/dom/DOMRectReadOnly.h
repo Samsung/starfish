@@ -21,6 +21,7 @@
 #define __StarfishDOMRectReadOnly__
 
 #include "binding/ScriptWrappable.h"
+#include "core/dom/DOMRectInit.h"
 
 namespace Starfish {
 
@@ -28,6 +29,8 @@ class DOMRectReadOnly : public ScriptWrappable {
 public:
     DOMRectReadOnly(ExecutionContext* executionContext, double x, double y,
                     double width, double height);
+    DOMRectReadOnly(ExecutionContext* executionContext,
+                    const DOMRectInit& init);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMRectReadOnly)
 
@@ -76,12 +79,16 @@ public:
         return m_executionContext;
     }
 
+    bool isEmpty();
+
+    bool equals(const DOMRectReadOnly* other) const;
+
 protected:
-    ExecutionContext* m_executionContext;
-    double m_x;
-    double m_y;
-    double m_width;
-    double m_height;
+    ExecutionContext* m_executionContext = nullptr;
+    double m_x = 0.0;
+    double m_y = 0.0;
+    double m_width = 0.0;
+    double m_height = 0.0;
 };
 } // namespace Starfish
 

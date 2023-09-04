@@ -795,6 +795,16 @@ void WebView::navigateSameDocument(ResourceURL* url, HistoryManagerAction type,
     }
 }
 
+void WebView::updateObservation()
+{
+    static const std::function<void(BrowsingContext*)> fn =
+        [](BrowsingContext* context) {
+            context->document()->updateObservation();
+        };
+    fn(m_topLevelBrowsingContext);
+    m_topLevelBrowsingContext->iterateChildContext(fn);
+}
+
 String* WebView::evaluateJavaScript(String* s)
 {
     STARFISH_ASSERT(s != nullptr);
@@ -1779,6 +1789,11 @@ RenderResult WebView::rendering(bool force)
 
     ANNOTATE_CHANNEL_END(3001);
     m_didFirstRenderingAfterWakeup = true;
+
+    if (renderResult.didPaintingOrCompositing) {
+        updateObservation();
+    }
+
     return renderResult;
 }
 

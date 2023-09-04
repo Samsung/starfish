@@ -1,5 +1,5 @@
 // https://drafts.fxtf.org/geometry/#dictdef-domrectinit
-[Unimplemented]
+
 dictionary DOMRectInit {
   unrestricted double x = 0;
   unrestricted double y = 0;

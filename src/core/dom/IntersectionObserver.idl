@@ -1,0 +1,27 @@
+// https://w3c.github.io/IntersectionObserver/#intersection-observer-interface
+
+callback IntersectionObserverCallback = undefined (sequence<IntersectionObserverEntry> entries, IntersectionObserver observer);
+
+dictionary IntersectionObserverInit {
+  (Element or Document)?  root = null;
+  DOMString rootMargin = "0px";
+
+  // binding_generator can't handle '= 0;'
+  // (double or sequence<double>) threshold = 0;
+  (double or sequence<double>) threshold;
+};
+
+[Exposed = Window,
+ ConstructorCallWith=ExecutionContext,
+ Constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options)]
+interface IntersectionObserver {
+  // constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options = {});
+  readonly attribute (Element or Document)? root;
+  readonly attribute DOMString rootMargin;
+  // Note: FrozenArray<double> -> sequence<double>;
+  readonly attribute sequence<double> thresholds;
+  undefined observe(Element target);
+  undefined unobserve(Element target);
+  undefined disconnect();
+  sequence<IntersectionObserverEntry> takeRecords();
+};
