@@ -37,6 +37,8 @@ class PseudoElement;
 class DOMStringMap;
 class Scrolling;
 class ShadowRoot;
+class IntersectionObserver;
+struct IntersectionObserverRegistration;
 
 class PseudoElementMap : public gc {
 public:
@@ -79,6 +81,7 @@ public:
         , m_dataset(nullptr)
         , m_pseudoElementMap(nullptr)
         , m_shadowRoot(nullptr)
+        , m_registeredIntersectionObservers(nullptr)
     {
     }
 
@@ -97,6 +100,9 @@ public:
 
     Scrolling* ensureScrolling(Element* self);
 
+    GCVector<IntersectionObserverRegistration*>*
+    ensureRegisteredIntersectionObservers();
+
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
     LayoutUnit m_scrollTop;
@@ -105,6 +111,8 @@ public:
     DOMStringMap* m_dataset;
     PseudoElementMap* m_pseudoElementMap;
     ShadowRoot* m_shadowRoot;
+    GCVector<IntersectionObserverRegistration*>*
+        m_registeredIntersectionObservers;
 };
 
 class Element : public Node {
@@ -429,6 +437,12 @@ public:
     Animation* animate(ExecutionContext* executionContext,
                        Nullable<GCVector<ScriptValue>>& keyframes);
     void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
+
+    void appendIntersectionObserverRegistration(
+        IntersectionObserverRegistration* intersectionObserverRegistration);
+    void removeIntersectionObserverRegistration(IntersectionObserver* observer);
+    IntersectionObserverRegistration* findIntersectionObserverRegistration(
+        IntersectionObserver* observer);
 
 protected:
     void setFocused(bool flag)

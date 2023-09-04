@@ -214,6 +214,22 @@ namespace Unit {
             setLocationAndSizeFromEdges(left, top, right, bottom);
         }
 
+        void edgeInclusiveIntersect(const Rect& other)
+        {
+            float left = std::max(x(), other.x());
+            float top = std::max(y(), other.y());
+            float right = std::min(maxX(), other.maxX());
+            float bottom = std::min(maxY(), other.maxY());
+            // Return a clean empty rectangle for non-intersecting cases.
+            if (left > right || top > bottom) {
+                left = 0;
+                top = 0;
+                right = 0;
+                bottom = 0;
+            }
+            setLocationAndSizeFromEdges(left, top, right, bottom);
+        }
+
         void scale(float sx, float sy)
         {
             m_location.setX(x() * sx);

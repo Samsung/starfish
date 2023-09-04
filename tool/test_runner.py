@@ -205,6 +205,9 @@ def wpt_pwa():
 def wpt_webrtc():
     run_test(["multi_basic", "tool/reftest/cairo/wpt/webrtc.res", "cairo", "-p1"])
 
+def wpt_intersection_observer():
+    run_test(["multi_basic", "tool/reftest/cairo/wpt/intersection-observer.res", "cairo"])
+
 def wpt_all():
     wpt_css_all()
     wpt_pwa()
@@ -213,6 +216,7 @@ def wpt_all():
     wpt_others()
     wpt_websocket()
     wpt_xhr()
+    wpt_intersection_observer()
 
 def bidi_test():
     run_test(["bidi", "tool/reftest/cairo/bidi.res", "cairo", "--font-dep"])

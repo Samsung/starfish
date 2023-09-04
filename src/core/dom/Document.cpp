@@ -67,6 +67,9 @@
 #include "core/dom/TreeWalker.h"
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/NodeFilter.h"
+#include "core/dom/IntersectionObserver.h"
+#include "core/dom/DOMRect.h"
+#include "core/dom/IntersectionObserverEntry.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -769,6 +772,13 @@ void Document::dispose()
                 v[i]->dispose();
                 v.erase(i);
             }
+        }
+    }
+
+    if (m_intersectionObservers.size()) {
+        GCVector<IntersectionObserver*> observers = m_intersectionObservers;
+        for (auto* observer : m_intersectionObservers) {
+            observer->disconnect();
         }
     }
 }
@@ -2279,6 +2289,144 @@ String* Document::urlString()
 uint64_t Document::createdTick()
 {
     return executionContext()->createdTick();
+}
+
+void Document::addIntersectionObserver(IntersectionObserver* observer)
+{
+    m_intersectionObservers.emplace_back(observer);
+}
+
+void Document::removeIntersectionObserver(IntersectionObserver* observer)
+{
+    if (m_intersectionObservers.size()) {
+        m_intersectionObservers.erase(std::remove_if(
+            m_intersectionObservers.begin(), m_intersectionObservers.end(),
+            [observer](const IntersectionObserver* item) {
+                return item == observer;
+            }));
+    }
+}
+
+void Document::updateObservation()
+{
+    if (!frame()) {
+        return;
+    }
+
+    double time = timestamp();
+    GCVector<IntersectionObserver*> observersToNotify;
+    for (auto* observer : m_intersectionObservers) {
+        for (auto* target : observer->targets()) {
+            DOMRect* rootBoundingClientRect =
+                observer->rootBoundingClientRect();
+
+            IntersectionObserverEntryInit init;
+            Unit::Rect rootRect;
+            Nullable<DOMRectInit> rootBounds;
+            if (rootBoundingClientRect) {
+                rootRect = Unit::Rect(rootBoundingClientRect->x(),
+                                      rootBoundingClientRect->y(),
+                                      rootBoundingClientRect->width(),
+                                      rootBoundingClientRect->height());
+                rootBounds =
+                    DOMRectInit({ rootRect.x(), rootRect.y(), rootRect.width(),
+                                  rootRect.height() });
+                init.setRootBounds(rootBounds);
+            }
+
+            int32_t thresholdIndex = 0;
+            Unit::Rect targetRect = { 0, 0, 0, 0 };
+            Unit::Rect intersectRect = { 0, 0, 0, 0 };
+            bool isIntersecting = false;
+            double intersectionRatio = 0;
+            bool foundThresholdIndex = false;
+            if (observer->isValidTarget(target)) {
+                DOMRect* targetBoundingClientRect =
+                    target->getBoundingClientRect();
+                targetRect = Unit::Rect(targetBoundingClientRect->x(),
+                                        targetBoundingClientRect->y(),
+                                        targetBoundingClientRect->width(),
+                                        targetBoundingClientRect->height());
+
+                // TODO: Implement Compute the intersection.
+                // (https://w3c.github.io/IntersectionObserver/#compute-the-intersection)
+                intersectRect = targetRect;
+                if (rootBoundingClientRect) {
+                    // TODO: apply rootMargin.
+                    intersectRect.edgeInclusiveIntersect(rootRect);
+                }
+
+                isIntersecting =
+                    intersectRect.width() || intersectRect.height();
+                double targetArea = targetRect.width() * targetRect.height();
+                double intersectionArea =
+                    intersectRect.width() * intersectRect.height();
+                if (targetArea) {
+                    intersectionRatio = intersectionArea / targetArea;
+                } else {
+                    intersectionRatio = isIntersecting ? 1 : 0;
+                }
+
+                GCAtomicVector<double> thresholds = observer->thresholds();
+                size_t thresholdsSize = thresholds.size();
+                for (size_t i = 0; i < thresholdsSize; i++) {
+                    if (thresholds[i] > intersectionRatio) {
+                        thresholdIndex = i;
+                        foundThresholdIndex = true;
+                        break;
+                    }
+                }
+
+                if (!foundThresholdIndex &&
+                    intersectionRatio >= thresholds[thresholdsSize - 1]) {
+                    thresholdIndex = thresholdsSize - 1;
+                }
+            }
+
+            init.setTarget(target);
+            init.setTime(time);
+            init.setBoundingClientRect({ targetRect.x(), targetRect.y(),
+                                         targetRect.width(),
+                                         targetRect.height() });
+            init.setIntersectionRect({ intersectRect.x(), intersectRect.y(),
+                                       intersectRect.width(),
+                                       intersectRect.height() });
+            init.setIsIntersecting(isIntersecting);
+            init.setIntersectionRatio(intersectionRatio);
+
+            IntersectionObserverRegistration* registration =
+                target->findIntersectionObserverRegistration(observer);
+
+            // REMOVEME(isIntersectionRectChanged): The entry should be queued
+            // properly even without this condition. it's probably a problem
+            // related to Compute the intersection or root bound calculation.
+            // Releated issue: the energy plugin
+            // (https://github.sec.samsung.net/lws/lwe_rel/issues/926),
+            // all charts in the Energy plugin must be shown properly without
+            // this condition.
+            bool isIntersectionRectChanged =
+                registration->previousIntersectRect != intersectRect;
+            if (isIntersectionRectChanged ||
+                registration->previousThresholdIndex == -1 ||
+                (thresholdIndex != registration->previousThresholdIndex) ||
+                (isIntersecting != registration->previousIsIntersecting)) {
+                IntersectionObserverEntry* entry =
+                    new IntersectionObserverEntry(executionContext(), init);
+                observer->queueIntersectionObserverEntry(entry);
+            }
+
+            registration->previousThresholdIndex = thresholdIndex;
+            registration->previousIsIntersecting = isIntersecting;
+            registration->previousIntersectRect = intersectRect;
+        }
+
+        if (observer->hasRecords()) {
+            observersToNotify.emplace_back(observer);
+        }
+    }
+    for (auto* observer : observersToNotify) {
+        observer->notify();
+    }
 }
 
 ContentSecurityPolicy* Document::contentSecurityPolicy()

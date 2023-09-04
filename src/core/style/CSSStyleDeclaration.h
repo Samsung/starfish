@@ -79,6 +79,8 @@ public:
 
     String* getPropertyValue(String* name);
     String* getPropertyPriority(String* name);
+    String* getPropertyValueInternal(CSSStyleValuePair::KeyKind keyKind);
+
     void setProperty(String* name, String* value, String* priority);
 
     String* removeProperty(String* name);
@@ -220,8 +222,6 @@ protected:
         kShorthand,
         kSticky, // This term is not used in the web standard.
     };
-
-    String* getPropertyValueInternal(CSSStyleValuePair::KeyKind keyKind);
 
     template <PropertyType type>
     String* getPropertyValueInternalFor(CSSStyleValuePair::KeyKind keyKind);

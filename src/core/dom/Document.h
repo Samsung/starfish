@@ -63,6 +63,7 @@ class DeferredSVGScriptDownloadClient;
 class PreloadScanner;
 class ContentSecurityPolicy;
 class ExecutionContext;
+class IntersectionObserver;
 
 struct GradientDrawingInfo;
 
@@ -582,6 +583,10 @@ public:
         return m_webFontResolveVersionForCanvas;
     }
 
+    void addIntersectionObserver(IntersectionObserver* observer);
+    void removeIntersectionObserver(IntersectionObserver* observer);
+    void updateObservation();
+
     bool isFullyActive();
 #define VIRTUAL
 #define OVERRIDE
@@ -721,6 +726,7 @@ protected:
                    GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_useElementListNeedUpdating));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
     }
 
     bool m_inParsing : 1;
@@ -787,6 +793,7 @@ protected:
     size_t m_webFontResolveVersionForCanvas;
     GCVector<SVGUseElement*> m_useElementListNeedUpdating;
     bool m_isMiddleOfUseElementUpdating;
+    GCVector<IntersectionObserver*> m_intersectionObservers;
 };
 } // namespace Starfish
 
