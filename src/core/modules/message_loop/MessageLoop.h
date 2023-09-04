@@ -42,29 +42,33 @@ class MessageLoop : public BASE_CLASS {
     friend class Timer;
 
 public:
-    MessageLoop();
-    size_t addIdler(GlobalScope* globalScope, void (*fn)(size_t handle, void*),
-                    void* data);
-    size_t addIdler(GlobalScope* globalScope,
-                    void (*fn)(size_t handle, void*, void*), void* data,
-                    void* data1);
-    size_t addIdler(GlobalScope* globalScope,
-                    void (*fn)(size_t handle, void*, void*, void*), void* data,
-                    void* data1, void* data2);
+    static MessageLoop* create();
 
-    size_t addIdlerWithNoGCRootingInOtherThread(GlobalScope* globalScope,
-                                                void (*fn)(size_t handle,
-                                                           void*),
-                                                void* data) override;
-    size_t addIdlerWithNoGCRootingInOtherThread(
-        GlobalScope* globalScope, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1) override;
+#if !defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    static void init();
+    static void run();
+    static void stop();
+    static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
+#endif
 
-    void removeIdler(size_t handle);
-    void removeIdlerWithNoGCRooting(size_t handle);
+    virtual size_t addIdler(GlobalScope* globalScope,
+                            void (*fn)(size_t handle, void*), void* data) = 0;
+    virtual size_t addIdler(GlobalScope* globalScope,
+                            void (*fn)(size_t handle, void*, void*), void* data,
+                            void* data1) = 0;
+    virtual size_t addIdler(GlobalScope* globalScope,
+                            void (*fn)(size_t handle, void*, void*, void*),
+                            void* data, void* data1, void* data2) = 0;
 
-    void clearPendingIdlers(
-        GlobalScope* globalScope); // give nullptr to clear every idlers
+    virtual void removeIdler(size_t handle) = 0;
+    virtual void removeIdlerWithNoGCRooting(size_t handle) = 0;
+
+    virtual void clearPendingIdlers(
+        GlobalScope* globalScope) = 0; // give nullptr to clear every idlers
+
+    virtual void destroy() = 0;
+
+    virtual void runOnMainThreadAsync(const std::function<void()>& functor) = 0;
 
     // microtask is similar with idler, but it is executed before
     // idler(microtask has higher priority)
@@ -72,15 +76,9 @@ public:
                         void (*fn)(size_t handle, void*), void* data);
     void removeMicroTask(size_t handle);
 
-    void destroy();
-
-    static void init();
-    static void run();
-    static void stop();
-    static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
-    void runOnMainThreadAsync(const std::function<void()>& functor);
-
 protected:
+    MessageLoop();
+
     bool m_inClosingState;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
@@ -100,10 +98,6 @@ protected:
     size_t m_microTaskIdler;
     GCVector<MicroTask> m_microTasks;
 
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
-    std::list<size_t> m_idlersFromOtherThreadForUV;
-    void* m_idlerThreadAsyncHandle;
-#endif
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:
     Mutex* m_countingMutex;

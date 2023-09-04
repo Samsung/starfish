@@ -21,14 +21,12 @@
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "StarfishConfig.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/page/GlobalScope.h"
-
-#include <uv.h>
+#include "platform/message_loop/MessageLoopLibUV.h"
 
 namespace Starfish {
 
@@ -49,31 +47,23 @@ struct IdlerData {
     void* m_data2;
     int m_pararmNum;
     uv_timer_t* m_idler_uv;
-    MessageLoop* m_ml;
+    MessageLoopLibUV* m_ml;
     GlobalScope* m_globalScope;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
 
-MessageLoop::MessageLoop()
-    : m_inClosingState(false)
-    , m_idlersFromOtherThreadMutex(new Mutex())
-    , m_microTaskCounter(0)
-    , m_microTaskIdler(MessageLoopInvalidID)
-#ifdef STARFISH_MESSAGELOOP_DEBUG
-    , m_countingMutex(new Mutex())
-    , m_runningThreadCount(0)
-    , m_unjoinedThreadCount(0)
-    , m_runningPoolWorkerCount(0)
-#endif
+MessageLoopLibUV::MessageLoopLibUV()
+    : MessageLoop()
 {
-    m_idlerThreadAsyncHandle = malloc(sizeof(uv_async_t));
+    m_idlerThreadAsyncHandle =
+        static_cast<uv_async_t*>(malloc(sizeof(uv_async_t)));
 
     uv_async_init(
-        uv_default_loop(), (uv_async_t*)m_idlerThreadAsyncHandle,
-        [](uv_async_t* handle) {
+        uv_default_loop(), m_idlerThreadAsyncHandle, [](uv_async_t* handle) {
             {
-                MessageLoop* ml = (MessageLoop*)handle->data;
+                MessageLoopLibUV* ml =
+                    static_cast<MessageLoopLibUV*>(handle->data);
 
                 std::list<size_t> jobs;
                 {
@@ -104,11 +94,11 @@ MessageLoop::MessageLoop()
             }
         });
 
-    ((uv_async_t*)m_idlerThreadAsyncHandle)->data = this;
+    m_idlerThreadAsyncHandle->data = this;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*), void* data)
+size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
+                                  void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
@@ -137,9 +127,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*), void* data,
-                             void* data1)
+size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
+                                  void (*fn)(size_t, void*, void*), void* data,
+                                  void* data1)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -169,9 +159,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2)
+size_t MessageLoopLibUV::addIdler(GlobalScope* globalScope,
+                                  void (*fn)(size_t, void*, void*, void*),
+                                  void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -208,7 +198,7 @@ void uv_close_cb(uv_handle_t* handle)
     delete (IdlerData*)handle->data;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopLibUV::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
@@ -225,11 +215,11 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
-    uv_async_send((uv_async_t*)m_idlerThreadAsyncHandle);
+    uv_async_send(m_idlerThreadAsyncHandle);
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopLibUV::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
@@ -248,13 +238,12 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
-    uv_async_send((uv_async_t*)m_idlerThreadAsyncHandle);
+    uv_async_send(m_idlerThreadAsyncHandle);
     return (size_t)id;
 }
 
-void MessageLoop::removeIdler(size_t handle)
+void MessageLoopLibUV::removeIdler(size_t handle)
 {
-    STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     m_idlers.erase(m_idlers.find(handle));
     uv_timer_stop(id->m_idler_uv);
@@ -262,13 +251,13 @@ void MessageLoop::removeIdler(size_t handle)
     GC_FREE(id);
 }
 
-void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
+void MessageLoopLibUV::removeIdlerWithNoGCRooting(size_t handle)
 {
     IdlerData* id = (IdlerData*)handle;
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
+void MessageLoopLibUV::clearPendingIdlers(GlobalScope* globalScope)
 {
     clearMicroTasks(globalScope);
 
@@ -296,7 +285,7 @@ void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
     }
 }
 
-void MessageLoop::destroy()
+void MessageLoopLibUV::destroy()
 {
     m_inClosingState = true;
 
@@ -361,6 +350,28 @@ void MessageLoop::destroy()
     uv_close((uv_handle_t*)m_idlerThreadAsyncHandle, on_close_handle);
 }
 
+void MessageLoopLibUV::runOnMainThreadAsync(
+    const std::function<void()>& functor)
+{
+    struct Param {
+        std::function<void()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t, void* data) {
+            Param* p = (Param*)data;
+            p->functor();
+            delete p;
+        },
+        p);
+
+    return;
+}
+
 void MessageLoop::init()
 {
     static bool needsInit = true;
@@ -421,25 +432,5 @@ size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
     return ret;
 }
 
-void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
-{
-    struct Param {
-        std::function<void()> functor;
-    };
-
-    Param* p = new Param();
-    p->functor = functor;
-
-    addIdlerWithNoGCRootingInOtherThread(
-        nullptr,
-        [](size_t, void* data) {
-            Param* p = (Param*)data;
-            p->functor();
-            delete p;
-        },
-        p);
-
-    return;
-}
 } // namespace Starfish
 #endif

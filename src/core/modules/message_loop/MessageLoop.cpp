@@ -19,6 +19,9 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/message_loop/MessageLoopEFL.h"
+#include "platform/message_loop/MessageLoopLibUV.h"
+#include "platform/message_loop/MessageLoopWindows.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
@@ -26,6 +29,33 @@
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
+
+MessageLoop* MessageLoop::create()
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    return new MessageLoopEFL();
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    return new MessageLoopLibUV();
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    return new MessageLoopWindows()
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+MessageLoop::MessageLoop()
+    : m_inClosingState(false)
+    , m_idlersFromOtherThreadMutex(new Mutex())
+    , m_microTaskCounter(0)
+    , m_microTaskIdler(MessageLoopInvalidID)
+#ifdef STARFISH_MESSAGELOOP_DEBUG
+    , m_countingMutex(new Mutex())
+    , m_runningThreadCount(0)
+    , m_unjoinedThreadCount(0)
+    , m_runningPoolWorkerCount(0)
+#endif
+{
+}
 
 size_t MessageLoop::addMicroTask(GlobalScope* globalScope,
                                  void (*fn)(size_t handle, void*), void* data)

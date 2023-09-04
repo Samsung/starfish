@@ -22,12 +22,12 @@
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
 #include "StarfishConfig.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/page/GlobalScope.h"
+#include "platform/message_loop/MessageLoopEFL.h"
 
 #include <Ecore.h>
 
@@ -37,22 +37,13 @@
 
 namespace Starfish {
 
-MessageLoop::MessageLoop()
-    : m_inClosingState(false)
-    , m_idlersFromOtherThreadMutex(new Mutex())
-    , m_microTaskCounter(0)
-    , m_microTaskIdler(MessageLoopInvalidID)
-#ifdef STARFISH_MESSAGELOOP_DEBUG
-    , m_countingMutex(new Mutex())
-    , m_runningThreadCount(0)
-    , m_unjoinedThreadCount(0)
-    , m_runningPoolWorkerCount(0)
-#endif
+MessageLoopEFL::MessageLoopEFL()
+    : MessageLoop()
 {
     ecore_animator_frametime_set(1 / 120.0);
 }
 
-void MessageLoop::destroy()
+void MessageLoopEFL::destroy()
 {
     m_inClosingState = true;
 
@@ -81,7 +72,7 @@ struct IdlerData {
     void* m_data1;
     void* m_data2;
     Ecore_Timer* m_idler;
-    MessageLoop* m_ml;
+    MessageLoopEFL* m_ml;
     GlobalScope* m_globalScope;
     volatile bool m_valid;
     bool m_isMainThreadData;
@@ -92,8 +83,8 @@ static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
     list.erase(list.find((size_t)id));
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*), void* data)
+size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
+                                void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -120,9 +111,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*), void* data,
-                             void* data1)
+size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
+                                void (*fn)(size_t, void*, void*), void* data,
+                                void* data1)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -151,9 +142,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2)
+size_t MessageLoopEFL::addIdler(GlobalScope* globalScope,
+                                void (*fn)(size_t, void*, void*, void*),
+                                void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (NoGC) IdlerData;
@@ -183,7 +174,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(!isMainThread());
@@ -225,7 +216,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopEFL::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
@@ -270,7 +261,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-void MessageLoop::removeIdler(size_t handle)
+void MessageLoopEFL::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
     if (handle == MessageLoopInvalidID) {
@@ -283,7 +274,7 @@ void MessageLoop::removeIdler(size_t handle)
     GC_FREE(id);
 }
 
-void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
+void MessageLoopEFL::removeIdlerWithNoGCRooting(size_t handle)
 {
     if (handle == MessageLoopInvalidID) {
         return;
@@ -292,7 +283,7 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_valid = false;
 }
 
-void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
+void MessageLoopEFL::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -323,6 +314,30 @@ void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
         iterOther++;
     }
     m_idlersFromOtherThreadMutex->unlock();
+}
+
+void MessageLoopEFL::runOnMainThreadAsync(const std::function<void()>& functor)
+{
+    STARFISH_ASSERT((bool)functor == true);
+
+    struct Param {
+        std::function<void()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    addIdlerWithNoGCRootingInOtherThread(
+        nullptr,
+        [](size_t, void* data) {
+            STARFISH_ASSERT(data != nullptr);
+            Param* p = (Param*)data;
+            p->functor();
+            delete p;
+        },
+        p);
+
+    return;
 }
 
 void MessageLoop::init()
@@ -366,28 +381,5 @@ size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
     return (size_t)(intptr_t)ret;
 }
 
-void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
-{
-    STARFISH_ASSERT((bool)functor == true);
-
-    struct Param {
-        std::function<void()> functor;
-    };
-
-    Param* p = new Param();
-    p->functor = functor;
-
-    addIdlerWithNoGCRootingInOtherThread(
-        nullptr,
-        [](size_t, void* data) {
-            STARFISH_ASSERT(data != nullptr);
-            Param* p = (Param*)data;
-            p->functor();
-            delete p;
-        },
-        p);
-
-    return;
-}
 } // namespace Starfish
 #endif

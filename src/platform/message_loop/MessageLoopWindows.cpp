@@ -21,12 +21,12 @@
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
 
 #include "StarfishConfig.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/page/GlobalScope.h"
+#include "platform/message_loop/MessageLoopWindows.h"
 
 #include <Windows.h>
 
@@ -41,24 +41,15 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-    MessageLoop* m_ml;
+    MessageLoopWindows* m_ml;
     GlobalScope* m_globalScope;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
     UINT_PTR m_timerID;
 };
 
-MessageLoop::MessageLoop()
-    : m_inClosingState(false)
-    , m_idlersFromOtherThreadMutex(new Mutex())
-    , m_microTaskCounter(0)
-    , m_microTaskIdler(MessageLoopInvalidID)
-#ifdef STARFISH_MESSAGELOOP_DEBUG
-    , m_countingMutex(new Mutex())
-    , m_runningThreadCount(0)
-    , m_unjoinedThreadCount(0)
-    , m_runningPoolWorkerCount(0)
-#endif
+MessageLoopWindows::MessageLoopWindows()
+    : MessageLoop()
 {
 }
 
@@ -66,7 +57,7 @@ static_assert(sizeof(size_t) == sizeof(WPARAM), "");
 
 class MessageLoopImpl {
 public:
-    static void processMessage(MessageLoop* self, const MSG& message)
+    static void processMessage(MessageLoopWindows* self, const MSG& message)
     {
         TranslateMessage(&message);
         DispatchMessage(&message);
@@ -132,12 +123,12 @@ public:
     }
 };
 
-void processMessage(MessageLoop* self, const MSG& message)
+void processMessage(MessageLoopWindows* self, const MSG& message)
 {
     MessageLoopImpl::processMessage(self, message);
 }
 
-void MessageLoop::destroy()
+void MessageLoopWindows::destroy()
 {
     m_inClosingState = true;
 
@@ -158,8 +149,8 @@ void MessageLoop::destroy()
     }
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*), void* data)
+size_t MessageLoopWindows::addIdler(GlobalScope* globalScope,
+                                    void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new (GC_MALLOC_UNCOLLECTABLE(sizeof(IdlerData))) IdlerData;
     m_idlers.insert((size_t)id);
@@ -172,9 +163,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*), void* data,
-                             void* data1)
+size_t MessageLoopWindows::addIdler(GlobalScope* globalScope,
+                                    void (*fn)(size_t, void*, void*),
+                                    void* data, void* data1)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (GC_MALLOC_UNCOLLECTABLE(sizeof(IdlerData))) IdlerData;
@@ -189,9 +180,9 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(GlobalScope* globalScope,
-                             void (*fn)(size_t, void*, void*, void*),
-                             void* data, void* data1, void* data2)
+size_t MessageLoopWindows::addIdler(GlobalScope* globalScope,
+                                    void (*fn)(size_t, void*, void*, void*),
+                                    void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = new (GC_MALLOC_UNCOLLECTABLE(sizeof(IdlerData))) IdlerData;
@@ -207,7 +198,7 @@ size_t MessageLoop::addIdler(GlobalScope* globalScope,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopWindows::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
@@ -229,7 +220,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
+size_t MessageLoopWindows::addIdlerWithNoGCRootingInOtherThread(
     GlobalScope* globalScope, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
@@ -253,20 +244,20 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     return (size_t)id;
 }
 
-void MessageLoop::removeIdler(size_t handle)
+void MessageLoopWindows::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
+void MessageLoopWindows::removeIdlerWithNoGCRooting(size_t handle)
 {
     IdlerData* id = (IdlerData*)handle;
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
+void MessageLoopWindows::clearPendingIdlers(GlobalScope* globalScope)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
 
@@ -292,6 +283,12 @@ void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
         iter2++;
     }
     STARFISH_ASSERT(_CrtCheckMemory());
+}
+
+void MessageLoopWindows::runOnMainThreadAsync(
+    const std::function<void()>& functor)
+{
+    STARFISH_UNIMPLEMENTED();
 }
 
 } // namespace Starfish

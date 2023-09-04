@@ -94,7 +94,7 @@ void PerProcess::initialize(size_t threadPoolSize, ServiceWorkerOption* option)
         ProcessResource::acquire(path);
     });
 
-    m_messageLoop = new MessageLoop();
+    m_messageLoop = MessageLoop::create();
 
     m_threadPool = new ThreadPool(threadPoolSize, m_messageLoop);
     m_ioRunnable = new IORunnable(m_messageLoop, IO_EVENT_POLLING_TIMEOUT_MS);
