@@ -23,7 +23,6 @@
 #include "WebGLRenderingContextBaseMixIn.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
-#include "core/modules/canvas/Compositor.h"
 #include "core/page/WebView.h"
 #include "platform/canvas/webgl/GLES.h"
 
@@ -46,50 +45,13 @@ WebGLRenderingContextBaseMixIn::WebGLRenderingContextBaseMixIn(
         NULL, NULL, NULL);
 }
 
-static void calculateDimension(unsigned& outWidth, unsigned& outHeight,
-                               const unsigned elementWidth,
-                               const unsigned elementHeight)
-{
-    // NOTE: The following is from "CanvasRenderingContext2DMixIn::initialize".
-    // We may consider commonising it.
-    auto ow = elementWidth;
-    auto oh = elementHeight;
-    auto w = ow;
-    auto h = oh;
-
-    if (ow == 0 || isInfOrNan(ow) == true) {
-        w = 1;
-    }
-
-    if (oh == 0 || isInfOrNan(oh) == true) {
-        h = 1;
-    }
-
-    uint32_t maxTextureSize = (uint32_t)Compositor::maximumTextureSize();
-    size_t maxTextureArea = maxTextureSize * maxTextureSize;
-
-    if (ow * oh >= maxTextureArea) {
-        w = maxTextureArea * ((double)ow / (ow + oh));
-        h = maxTextureArea * ((double)oh / (ow + oh));
-    }
-
-    w = std::min(w, maxTextureSize);
-    h = std::min(h, maxTextureSize);
-
-    STARFISH_ASSERT(w != 0);
-    STARFISH_ASSERT(h != 0);
-
-    outWidth = w;
-    outHeight = h;
-}
-
 void WebGLRenderingContextBaseMixIn::initialize()
 {
     STARFISH_ASSERT(m_canvasSurface == nullptr);
 
     m_framebufferTexture = std::make_shared<FramebufferTexture>();
 
-    unsigned width, height;
+    uint32_t width, height;
     calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
 

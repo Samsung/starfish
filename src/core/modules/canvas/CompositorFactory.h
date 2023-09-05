@@ -40,7 +40,7 @@ namespace CompositorFactory {
     CompositorContext* initCompositorContextCairo(PlatformWindow* wnd);
     void destroyCompositorContextCairo(PlatformWindow* wnd,
                                        CompositorContext* ctx);
-    size_t maximumTextureSizeCairo();
+    uint32_t maximumTextureSizeCairo();
     bool supportsFilterEffectCairo(size_t textureWidth, size_t textureHeight);
 #endif
 
@@ -51,7 +51,7 @@ namespace CompositorFactory {
     CompositorContext* initCompositorContextGl(PlatformWindow* wnd);
     void destroyCompositorContextGl(PlatformWindow* wnd,
                                     CompositorContext* ctx);
-    size_t maximumTextureSizeGl();
+    uint32_t maximumTextureSizeGl();
     bool supportsFilterEffectGl(size_t textureWidth, size_t textureHeight);
 #endif
 
@@ -62,7 +62,7 @@ namespace CompositorFactory {
     CompositorContext* initCompositorContextMock(PlatformWindow* wnd);
     void destroyCompositorContextMock(PlatformWindow* wnd,
                                       CompositorContext* ctx);
-    size_t maximumTextureSizeMock();
+    uint32_t maximumTextureSizeMock();
     bool supportsFilterEffectMock(size_t textureWidth, size_t textureHeight);
 #endif
 
@@ -73,7 +73,7 @@ namespace CompositorFactory {
     CompositorContext* initCompositorContextSkia(PlatformWindow* wnd);
     void destroyCompositorContextSkia(PlatformWindow* wnd,
                                       CompositorContext* ctx);
-    size_t maximumTextureSizeSkia();
+    uint32_t maximumTextureSizeSkia();
     bool supportsFilterEffect_skia(size_t textureWidth, size_t textureHeight);
 #endif
 

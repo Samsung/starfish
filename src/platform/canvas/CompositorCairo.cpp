@@ -407,7 +407,7 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-size_t CompositorFactory::maximumTextureSizeCairo()
+uint32_t CompositorFactory::maximumTextureSizeCairo()
 {
     return 65535;
 }

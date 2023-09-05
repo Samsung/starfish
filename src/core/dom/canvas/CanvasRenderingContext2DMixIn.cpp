@@ -37,7 +37,6 @@
 #include "core/dom/canvas/CanvasTextAlign.h"
 #include "core/dom/canvas/CanvasTextBaseline.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/Compositor.h"
 #include "core/dom/canvas/ImageSmoothingQuality.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/modules/canvas/Path.h"
@@ -354,35 +353,12 @@ void CanvasRenderingContext2DMixIn::initialize()
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(m_canvas == nullptr);
 
-    auto ow = m_ownerHTMLCanvasElement->width();
-    auto oh = m_ownerHTMLCanvasElement->height();
-    auto w = ow;
-    auto h = oh;
-
-    if (ow == 0 || isInfOrNan(ow) == true) {
-        w = 1;
-    }
-
-    if (oh == 0 || isInfOrNan(oh) == true) {
-        h = 1;
-    }
-
-    uint32_t maxTextureSize = (uint32_t)Compositor::maximumTextureSize();
-    size_t maxTextureArea = maxTextureSize * maxTextureSize;
-
-    if (ow * oh >= maxTextureArea) {
-        w = maxTextureArea * ((double)ow / (ow + oh));
-        h = maxTextureArea * ((double)oh / (ow + oh));
-    }
-
-    w = std::min(w, maxTextureSize);
-    h = std::min(h, maxTextureSize);
-
-    STARFISH_ASSERT(w != 0);
-    STARFISH_ASSERT(h != 0);
+    uint32_t width, height;
+    calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
+                       m_ownerHTMLCanvasElement->height());
 
     m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->platformWindow(), w, h, 1,
+        m_ownerHTMLCanvasElement->webView()->platformWindow(), width, height, 1,
         CanvasSurface::CanvasElement);
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,

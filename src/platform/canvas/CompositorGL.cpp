@@ -1652,7 +1652,7 @@ CompositorContext* CompositorFactory::initCompositorContextGl(
     return compositorContext;
 }
 
-size_t CompositorFactory::maximumTextureSizeGl()
+uint32_t CompositorFactory::maximumTextureSizeGl()
 {
     return g_maxTextureSize;
 }
