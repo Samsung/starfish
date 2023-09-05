@@ -4279,8 +4279,6 @@ void StyleResolver::applyProperty(
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
             uint32_t size = parentStyle->backgroundLayerSize();
             for (uint32_t i = 0; i < size; i++) {
-                style->setBackgroundPositionY(
-                    parentStyle->backgroundPositionY(i), i);
                 if (parentStyle->backgroundSizeIsLength(i)) {
                     style->setBackgroundSize(
                         parentStyle->backgroundSizeLengthValue(i), i);
