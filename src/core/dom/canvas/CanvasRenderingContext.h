@@ -65,6 +65,10 @@ protected:
     {
     }
 
+    void calculateDimension(uint32_t& outWidth, uint32_t& outHeight,
+                            const uint32_t elementWidth,
+                            const uint32_t elementHeight);
+
     ExecutionContext* m_executionContext;
     bool m_originCleanFlag;
 };

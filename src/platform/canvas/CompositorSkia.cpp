@@ -339,7 +339,7 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-size_t CompositorFactory::maximumTextureSizeSkia()
+uint32_t CompositorFactory::maximumTextureSizeSkia()
 {
     return 65535;
 }

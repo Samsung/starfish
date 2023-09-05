@@ -140,7 +140,7 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-size_t Compositor::maximumTextureSize()
+uint32_t Compositor::maximumTextureSize()
 {
     switch (static_cast<PORT_COMPOSITOR_BACKEND>(g_portCompositorBackend)) {
 #ifdef PORT_COMPOSITOR_BACKEND_CAIRO

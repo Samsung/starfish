@@ -142,7 +142,7 @@ public:
     }
 };
 
-size_t CompositorFactory::maximumTextureSizeMock()
+uint32_t CompositorFactory::maximumTextureSizeMock()
 {
     return 65535;
 }

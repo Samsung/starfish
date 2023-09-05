@@ -23,6 +23,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/modules/canvas/Compositor.h"
 
 namespace Starfish {
 
@@ -30,6 +31,43 @@ ScriptBindingInstance* CanvasRenderingContext::scriptBindingInstance()
 {
     return executionContext()->scriptBindingInstance();
 }
+
+void CanvasRenderingContext::calculateDimension(uint32_t& outWidth,
+                                                uint32_t& outHeight,
+                                                const uint32_t elementWidth,
+                                                const uint32_t elementHeight)
+{
+    uint64_t width = elementWidth;
+    uint64_t height = elementHeight;
+
+    if (elementWidth == 0 || isInfOrNan(elementWidth)) {
+        width = 1;
+    }
+
+    if (elementHeight == 0 || isInfOrNan(elementHeight)) {
+        height = 1;
+    }
+
+    uint32_t maxTextureSize = Compositor::maximumTextureSize();
+    uint64_t maxTextureArea = maxTextureSize * maxTextureSize;
+
+    if (elementWidth * elementHeight >= maxTextureArea) {
+        width = maxTextureArea * (static_cast<double>(elementWidth) /
+                                  (elementWidth + elementHeight));
+        height = maxTextureArea * (static_cast<double>(elementHeight) /
+                                   (elementWidth + elementHeight));
+    }
+
+    width = std::min(width, static_cast<uint64_t>(maxTextureSize));
+    height = std::min(height, static_cast<uint64_t>(maxTextureSize));
+
+    STARFISH_ASSERT(width != 0);
+    STARFISH_ASSERT(height != 0);
+
+    outWidth = width;
+    outHeight = height;
+}
+
 } // namespace Starfish
 
 #endif
