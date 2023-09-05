@@ -20,15 +20,18 @@
 #ifndef __StarfishGLES__
 #define __StarfishGLES__
 
-#if defined(STARFISH_EFL_CAIRO_GL)
-#error("This header can not be used in this backend now")
+#include "StarfishPlatform.h"
+
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#include <Evas_GL.h>
 // TODO: Consider using Evas_GL_GLESX_Helpers.h.
-#elif defined(STARFISH_GLFW_CAIRO_GL)
+#elif defined(PORT_WEBVIEW_BRIDGE_GLFW)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
 #else
-#error("This header can not be used in this backend now")
+// Assume GLES3/gl3.h is available as default.
+#include <GLES3/gl3.h>
 #endif
 
 #endif

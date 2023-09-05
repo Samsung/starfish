@@ -17,10 +17,10 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBGL)
+
 #include "StarfishBase.h"
 #include "platform/canvas/webgl/Util.h"
-
-#if defined(STARFISH_ENABLE_WEBGL)
 
 namespace Starfish {
 
@@ -109,6 +109,16 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
     outTextureId = m_textureId;
     return true;
 };
+
+FBOScope::FBOScope(GLuint fbo)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+}
+
+FBOScope::~FBOScope()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 } // namespace Starfish
 

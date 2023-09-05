@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBGL)
+
 #ifndef __StarfishUtil__
 #define __StarfishUtil__
 
@@ -54,14 +56,8 @@ private:
 
 class FBOScope {
 public:
-    explicit FBOScope(GLuint fbo)
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    }
-    ~FBOScope()
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+    explicit FBOScope(GLuint fbo);
+    ~FBOScope();
     FBOScope(const FBOScope& other) = delete;
     FBOScope& operator=(const FBOScope& other) = delete;
     FBOScope(FBOScope&& other) = delete;
@@ -73,3 +69,5 @@ public:
 } // namespace Starfish
 
 #endif
+
+#endif // #if defined(STARFISH_ENABLE_WEBGL)
