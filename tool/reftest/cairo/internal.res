@@ -502,6 +502,10 @@ test/cairo/internal-test/svg/svg_animatedTransformList.html
 test/cairo/internal-test/svg/svg_background_01.html
 test/cairo/internal-test/svg/svg_background_02.html
 test/cairo/internal-test/svg/svg_background_03.html
+test/cairo/internal-test/svg/svg_g_opacity_01.html
+test/cairo/internal-test/svg/svg_g_opacity_02.html
+test/cairo/internal-test/svg/svg_g_opacity_03.html
+test/cairo/internal-test/svg/svg_g_opacity_04.html
 test/cairo/internal-test/svg/svg_linearGradient01.html
 test/cairo/internal-test/svg/svg_linearGradient02.html
 test/cairo/internal-test/svg/svg_linearGradient03.html
