@@ -139,6 +139,11 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
         }
     }
 
+    float opacity = style()->opacity();
+    if (opacity != 1) {
+        ctx.m_canvas->beginOpacityLayer(opacity);
+    }
+
     if (m_hasClipPath && node()->isSVGElement() &&
         node()->asSVGElement()->clipPathElement()) {
         Frame* clipPathFrame =
@@ -165,6 +170,11 @@ void FrameSVGBox::paintContent(PaintingContext& ctx)
     paintSVG(ctx);
     ctx.m_canvas->restore();
     paintChildrenWith(ctx);
+
+    if (opacity != 1) {
+        ctx.m_canvas->endOpacityLayer();
+    }
+
     ctx.m_canvas->restore();
 }
 
@@ -526,21 +536,20 @@ void FrameSVGBox::paintSVG(PaintingContext& ctx)
             }
         }
         ctx.m_canvas->save();
-        float opacity = style()->opacity();
         if (info != nullptr) {
             ctx.m_canvas->setFillSource(info);
         } else {
             Unit::Color fillColor = style()->fill()->color();
             ctx.m_canvas->setFillColor(
                 Unit::Color(fillColor.r(), fillColor.g(), fillColor.b(),
-                            fillColor.a() * style()->fillOpacity() * opacity));
+                            fillColor.a() * style()->fillOpacity()));
             ctx.m_canvas->setFillRule(style()->fillRule());
         }
         ctx.m_canvas->fillPath(newPath);
         Unit::Color strokeColor = style()->stroke()->color();
         ctx.m_canvas->setStrokeColor(
             Unit::Color(strokeColor.r(), strokeColor.g(), strokeColor.b(),
-                        strokeColor.a() * style()->strokeOpacity() * opacity));
+                        strokeColor.a() * style()->strokeOpacity()));
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
         ctx.m_canvas->strokePath(newPath);
