@@ -221,7 +221,13 @@ Element* Window::frameElement()
     if (browsingContext()->isTopLevelBrowsingContext()) {
         return nullptr;
     }
-    return browsingContext()->sourceElement();
+
+    Document* source = document();
+    Document* target = browsingContext()->sourceElement()->document();
+    if (source && target && ScriptBindingSecurity::canAccess(source, target)) {
+        return browsingContext()->sourceElement();
+    }
+    return nullptr;
 }
 
 Storage* Window::localStorage()
