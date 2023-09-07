@@ -428,6 +428,8 @@ int main(int argc, char* argv[])
             timeout = std::atoi(argv[i] + strlen("--timeout="));
         } else if (strncmp(argv[i], "--leave-ipc-handle", MAX_INPUT) == 0) {
             GlobalOptions::instance().set("--leave-ipc-handle", true);
+        } else if (strstr(argv[i], "--ignore-ssl-verify")) {
+            Starfish::g_starfishIgnoreSSLVerify = true;
         }
     }
 

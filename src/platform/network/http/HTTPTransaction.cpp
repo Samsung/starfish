@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "Starfish.h"
 #include "HTTPHeaderMap.h"
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
@@ -78,10 +79,10 @@ void HTTPTransaction::preprocess()
     }
 #endif
 
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
-#endif
+    if (g_starfishIgnoreSSLVerify) {
+        curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    }
 #if defined(STARFISH_ANDROID)
     STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
     curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
@@ -160,10 +161,10 @@ void HTTPTransaction::start()
 
     preprocess();
 
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
-#endif
+    if (g_starfishIgnoreSSLVerify) {
+        curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    }
 #if defined(STARFISH_ANDROID)
     STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
     curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
@@ -232,13 +233,13 @@ void HTTPTransaction::start()
 
     startRequest();
 
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-    if (m_res == CURLE_RECV_ERROR) {
-        // when gives CURLOPT_SSL_VERIFYHOST to curl,
-        // we got CURLE_RECV_ERROR but connection was successful
-        m_res = CURLE_OK;
+    if (g_starfishIgnoreSSLVerify) {
+        if (m_res == CURLE_RECV_ERROR) {
+            // when gives CURLOPT_SSL_VERIFYHOST to curl,
+            // we got CURLE_RECV_ERROR but connection was successful
+            m_res = CURLE_OK;
+        }
     }
-#endif
     m_httpResponse->setResponseTime(timestamp() / 1000);
 
     updateTransactionStatus();

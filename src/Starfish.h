@@ -131,6 +131,7 @@ extern bool g_enableDumpAsText;
 extern bool g_DumpAsText_Async;
 extern int g_referenceTestState; // 0:None, 1:RunningTC, 2:RunningReference
 #endif
+extern bool g_starfishIgnoreSSLVerify;
 } // namespace Starfish
 
 #endif
