@@ -474,7 +474,7 @@ IF (${HOST} STREQUAL "tizen")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog)
     ENDIF()
     IF (${WEBRTC} STREQUAL "1")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-media-player capi-media-sound-manager capi-media-camera capi-media-tool capi-system-device capi-media-audio-io)
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM_WEBRTC REQUIRED capi-media-player capi-media-sound-manager capi-media-camera capi-media-tool capi-system-device capi-media-audio-io)
     ENDIF()
 ENDIF()
 

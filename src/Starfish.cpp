@@ -48,6 +48,11 @@ bool g_enableDumpAsText = false;
 bool g_DumpAsText_Async = false;
 int g_referenceTestState = 0;
 #endif
+#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
+bool g_starfishIgnoreSSLVerify = true;
+#else
+bool g_starfishIgnoreSSLVerify = false;
+#endif
 
 #if defined(STARFISH_EFL_CAIRO)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GB);
