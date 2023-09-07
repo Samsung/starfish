@@ -80,7 +80,8 @@ Default values are in **bold**.
   Enable debugger
 * -DTARGETNAME=[ Starfish | **lightweight-web-engine** ]<br>
   Define target output name
-
+* -DCOVERAGE=[ **0** | 1 ]<br>
+  Enable coverage measurements with gcov
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
