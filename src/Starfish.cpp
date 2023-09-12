@@ -66,6 +66,9 @@ int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_GLFW_CAIRO_GL)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
+#elif defined(STARFISH_X11_CAIRO_GL)
+int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::GL);
+int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::GL);
 #elif defined(STARFISH_EFL_HEADLESS)
 int g_portWindowBackend = static_cast<int>(PORT_WINDOW_BACKEND::HEADLESS);
 int g_portCompositorBackend = static_cast<int>(PORT_COMPOSITOR_BACKEND::MOCK);

@@ -43,7 +43,7 @@ std::shared_ptr<EGLEnv> EGLEnv::instance()
  */
 bool EGLEnv::initialize()
 {
-#if !defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#if !defined(PORT_WEBVIEW_BRIDGE_GLFW) && !defined(PORT_WEBVIEW_BRIDGE_X11)
     STARFISH_ASSERT("Not supported yet");
 #endif
 

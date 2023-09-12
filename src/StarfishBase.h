@@ -224,11 +224,13 @@ typedef unsigned int uint;
 #include <Windows.h>
 #endif
 
+#ifndef NOT_EXPOSE_GC
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil
 #endif
 #include <GCUtil.h>
 #undef ESCARGOT
+#endif // NOT_EXPOSE_GC
 
 #if defined(STARFISH_ENABLE_RUNTIME_ICU_BINDER)
 #include <RuntimeICUBinder.h>
@@ -571,6 +573,8 @@ const char* getWindowsTempDir();
 #define WARN_UNUSED_RETURN
 #endif
 
+#ifndef NOT_EXPOSE_GC
+
 #define ALLOCA(bytes, typenameWithoutPointer)                      \
     (typenameWithoutPointer*)(LIKELY(bytes < 4096) ? alloca(bytes) \
                                                    : GC_MALLOC(bytes))
@@ -781,6 +785,7 @@ inline bool operator!=(const T*& a, const Nullable<T*>& b)
 {
     return b != a;
 }
+#endif // NOT_EXPOSE_GC
 
 class StorePositiveIntergerAsOdd {
 public:
@@ -803,6 +808,8 @@ public:
 private:
     size_t m_data;
 };
+
+#ifndef NOT_EXPOSE_GC
 
 #include "core/util/Vector.h"
 #include "core/util/TightVector.h"
@@ -896,6 +903,8 @@ template <typename T, typename Hasher = std::hash<T>,
 class GCUnorderedSet : public HashSet<T, Hasher, Predicate, Allocator>,
                        public gc {
 };
+
+#endif // NOT_EXPOSE_GC
 
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
