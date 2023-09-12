@@ -23,7 +23,8 @@
 #if defined(STARFISH_ENABLE_CANVAS) && defined(STARFISH_ENABLE_WEBGL)
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "platform/canvas/webgl/Util.h"
+#include "platform/canvas/webgl/GLUtil.h"
+#include "platform/canvas/webgl/GLContext.h"
 #include <memory>
 
 namespace Starfish {
@@ -79,6 +80,7 @@ protected:
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
     CanvasSurface* m_canvasSurface;
     std::shared_ptr<FramebufferTexture> m_framebufferTexture;
+    GLContext m_context;
 };
 } // namespace Starfish
 #endif

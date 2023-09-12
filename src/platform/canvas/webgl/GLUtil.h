@@ -19,8 +19,8 @@
 
 #if defined(STARFISH_ENABLE_WEBGL)
 
-#ifndef __StarfishUtil__
-#define __StarfishUtil__
+#ifndef __StarfishGLUtil__
+#define __StarfishGLUtil__
 
 #include "platform/canvas/webgl/GLES.h"
 #include "platform/canvas/webgl/SurfaceCreationScope.h"
@@ -37,6 +37,8 @@ public:
 
     bool create(unsigned bufferWidth, unsigned bufferHeight,
                 GLuint& outTextureId) override;
+
+    bool destory() override;
 
     Type type() override
     {

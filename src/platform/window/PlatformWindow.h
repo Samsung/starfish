@@ -183,7 +183,10 @@ public:
         const std::function<void(PlatformWindow* wnd)>& cb)
     {
         m_glMakeCurrentCallback = cb;
+        onGLMakeCurrentCallbackRegistered();
     }
+
+    virtual void onGLMakeCurrentCallbackRegistered(){};
 
     void registerGLSwapBuffersCallback(
         const std::function<void(PlatformWindow* wnd, bool mayNeedsSync)>& cb)

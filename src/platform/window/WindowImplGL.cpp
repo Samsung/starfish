@@ -41,6 +41,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/window/PlatformWindowFactory.h"
+#include "platform/canvas/webgl/EGLEnv.h"
 
 namespace Starfish {
 
@@ -216,6 +217,17 @@ public:
         m_glMakeCurrentCallback(this);
         return true;
     }
+
+#if defined(STARFISH_ENABLE_WEBGL)
+    void onGLMakeCurrentCallbackRegistered() override
+    {
+        // NOTE: Should initialize GL plaform after attaching this main context.
+        glMakeCurrent();
+        if (!EGLEnv::instance()->initialize()) {
+            STARFISH_LOG_ERROR("EGLEnv initialization has failed.");
+        }
+    }
+#endif
 
     virtual void glSwapBuffers() override
     {

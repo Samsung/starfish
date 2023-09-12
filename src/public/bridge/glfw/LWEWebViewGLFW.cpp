@@ -56,6 +56,8 @@ public:
         if (!glfwInit())
             exit(-1);
 
+        STARFISH_LOG_INFO("GLFW_VERSION: %s", glfwGetVersionString());
+
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);

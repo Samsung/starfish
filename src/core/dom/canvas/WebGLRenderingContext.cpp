@@ -23,6 +23,7 @@
 #include "core/dom/canvas/WebGLRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/ExecutionContext.h"
+#include "platform/canvas/webgl/GLContext.h"
 
 namespace Starfish {
 
@@ -38,22 +39,25 @@ ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
 
 void WebGLRenderingContext::clear(uint32_t mask)
 {
-    FBOScope scope(m_framebufferTexture->fbo());
+    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
     glClear(mask);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::clearColor(float red, float green, float blue,
                                        float alpha)
 {
-    FBOScope scope(m_framebufferTexture->fbo());
+    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
     glClearColor(red, green, blue, alpha);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 void WebGLRenderingContext::viewport(uint32_t x, uint32_t y, uint32_t width,
                                      uint32_t height)
 {
-    FBOScope scope(m_framebufferTexture->fbo());
+    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
     glViewport(x, y, width, height);
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 } // namespace Starfish
