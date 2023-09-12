@@ -17,21 +17,34 @@
  *  USA
  */
 
-#ifndef __StarfishGLES__
-#define __StarfishGLES__
+#ifndef __StarfishXWindow__
+#define __StarfishXWindow__
 
 #include "StarfishPlatform.h"
+#include "public/bridge/x11/WindowBase.h"
+#include <memory>
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#include <Evas_GL.h>
-// TODO: Consider using Evas_GL_GLESX_Helpers.h.
-#elif defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(STARFISH_X11_CAIRO_GL)
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl3.h>
-#else
-// Assume GLES3/gl3.h is available as default.
-#include <GLES3/gl3.h>
-#endif
+#if defined(PORT_WEBVIEW_BRIDGE_X11)
+
+namespace LWE {
+
+class XWindow final : public WindowBase {
+public:
+    XWindow();
+    bool init(const char* appName, int width, int height) override;
+    void pollEvent() override;
+    void terminate() override;
+    void getCursorPos(double& xpos, double& ypos) override;
+    void setInitHint(int hint, int value) override;
+    NativeWindowType getNativeWindowHandle() override;
+
+private:
+    struct Internal;
+    std::shared_ptr<Internal> m_internal;
+};
+
+} // namespace LWE
+
+#endif // defined(PORT_WEBVIEW_BRIDGE_X11)
 
 #endif

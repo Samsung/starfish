@@ -60,7 +60,7 @@ extern int g_startUpFlag;
 extern int g_exitCode;
 #endif
 
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
 #include <signal.h>
 #include <future>
 #include <thread>
@@ -201,7 +201,7 @@ smaps_sizes getSmapsStats()
 }
 #endif
 
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
 static volatile sig_atomic_t g_doneFlag = 0;
 
 static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
@@ -735,7 +735,7 @@ int main(int argc, char* argv[])
             },
             nullptr);
     }
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
     std::future<int> future;
     if (timeout > 0) {
         future = std::async(std::launch::async, [timeout]() {
@@ -780,7 +780,7 @@ int main(int argc, char* argv[])
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL) || \
     defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
     ecore_main_loop_begin();
-#elif defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#elif defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(PORT_WEBVIEW_BRIDGE_X11)
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
     act.sa_sigaction = setDoneFlag;

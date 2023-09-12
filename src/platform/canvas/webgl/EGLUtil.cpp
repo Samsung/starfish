@@ -17,7 +17,9 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBGL)
+#include "StarfishPlatform.h"
+
+#if defined(PORT_WEBVIEW_BRIDGE_X11) || defined(STARFISH_ENABLE_WEBGL)
 
 #include "platform/canvas/webgl/EGLUtil.h"
 #include "platform/canvas/webgl/EGL.h"

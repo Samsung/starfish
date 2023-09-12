@@ -20,7 +20,9 @@
 #ifndef __StarfishEGLUtil__
 #define __StarfishEGLUtil__
 
-#if defined(STARFISH_ENABLE_WEBGL)
+#include "StarfishPlatform.h"
+
+#if defined(PORT_WEBVIEW_BRIDGE_X11) || defined(STARFISH_ENABLE_WEBGL)
 
 #ifndef EGLDisplay
 typedef void *EGLDisplay;

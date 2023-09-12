@@ -17,21 +17,17 @@
  *  USA
  */
 
-#ifndef __StarfishGLES__
-#define __StarfishGLES__
+#ifndef __StarfishWindowEGL__
+#define __StarfishWindowEGL__
 
-#include "StarfishPlatform.h"
+#include "public/bridge/x11/WindowType.h"
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#include <Evas_GL.h>
-// TODO: Consider using Evas_GL_GLESX_Helpers.h.
-#elif defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(STARFISH_X11_CAIRO_GL)
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <GLES3/gl3.h>
-#else
-// Assume GLES3/gl3.h is available as default.
-#include <GLES3/gl3.h>
-#endif
+struct EGLPlatform;
+
+namespace LWE {
+
+bool initEGL(const NativeWindowType window, EGLPlatform *platform = nullptr);
+
+}
 
 #endif
