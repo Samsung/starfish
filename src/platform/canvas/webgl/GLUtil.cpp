@@ -20,7 +20,7 @@
 #if defined(STARFISH_ENABLE_WEBGL)
 
 #include "StarfishBase.h"
-#include "platform/canvas/webgl/Util.h"
+#include "platform/canvas/webgl/GLUtil.h"
 
 namespace Starfish {
 
@@ -92,10 +92,7 @@ static bool createFrameBufferObject(const unsigned width, const unsigned height,
 
 FramebufferTexture::~FramebufferTexture()
 {
-    // TODO: Check if the compositor possibly uses the texture after this point.
-    glDeleteTextures(1, &m_textureId);
-    glDeleteRenderbuffers(1, &m_rbo);
-    glDeleteFramebuffers(1, &m_fbo);
+    destory();
 }
 
 bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
@@ -107,6 +104,14 @@ bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
     }
 
     outTextureId = m_textureId;
+    return true;
+};
+
+bool FramebufferTexture::destory()
+{
+    glDeleteTextures(1, &m_textureId);
+    glDeleteRenderbuffers(1, &m_rbo);
+    glDeleteFramebuffers(1, &m_fbo);
     return true;
 };
 

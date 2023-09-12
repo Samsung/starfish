@@ -25,6 +25,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
 #include "platform/canvas/webgl/GLES.h"
+#include "platform/canvas/webgl/EGLEnv.h"
 
 namespace Starfish {
 
@@ -55,15 +56,25 @@ void WebGLRenderingContextBaseMixIn::initialize()
     calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
 
-    SurfaceCreationScope scope(m_framebufferTexture);
-    m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->platformWindow(), width, height, 1,
-        CanvasSurface::CanvasElement);
+    // Create a surface for this rendering context
+    {
+        GLContextScope scope(EGLEnv::instance()->context());
+        SurfaceCreationScope surfaceScope(m_framebufferTexture);
+        m_canvasSurface = CanvasSurface::create(
+            m_ownerHTMLCanvasElement->webView()->platformWindow(), width,
+            height, 1, CanvasSurface::CanvasElement);
+    }
+
+    // Create a GL context for this rendering context
+    if (!m_context.create(true)) {
+        STARFISH_LOG_ERROR("GLContext creation has failed.");
+    }
 }
 
 void WebGLRenderingContextBaseMixIn::finalize()
 {
-    STARFISH_UNIMPLEMENTED();
+    m_framebufferTexture.reset();
+    m_context.destory();
 }
 
 void WebGLRenderingContextBaseMixIn::flush()
@@ -73,8 +84,6 @@ void WebGLRenderingContextBaseMixIn::flush()
 void WebGLRenderingContextBaseMixIn::onResize()
 {
     STARFISH_UNIMPLEMENTED();
-    finalize();
-    initialize();
     m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 

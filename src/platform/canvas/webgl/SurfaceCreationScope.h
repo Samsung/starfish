@@ -34,6 +34,7 @@ public:
 
     virtual bool create(unsigned bufferWidth, unsigned bufferHeight,
                         GLuint& outTextureId) = 0;
+    virtual bool destory() = 0;
     virtual Type type() = 0;
 };
 
