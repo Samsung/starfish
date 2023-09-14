@@ -95,6 +95,11 @@ void CanvasGradient::addColorStop(double offset, NULLABLE String* color)
     m_nativeGardient->addColorStop(offset, clr);
 }
 
+void CanvasGradient::addColorStop(double offset, const Unit::Color& color)
+{
+    m_nativeGardient->addColorStop(offset, color);
+}
+
 bool CanvasGradient::isZeroSize()
 {
     return m_nativeGardient->isZeroSize();
