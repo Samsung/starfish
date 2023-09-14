@@ -49,27 +49,34 @@ public:
     void resolvePosition(LayoutContext& ctx);
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+
     virtual void layoutSVG()
     {
     }
+
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx);
+
     virtual Path* path()
     {
         return nullptr;
     }
+
     void markHasClipPath()
     {
         m_hasClipPath = true;
     }
+
     void markHasMask()
     {
         m_hasMask = true;
     }
+
     virtual bool isVisible() override
     {
         return true;
     }
+
     virtual CanvasFillStrokeSource* makeCanvasFillStrokeSource(String* url);
 
     static std::vector<std::pair<double, double>> parsePointsFromString(

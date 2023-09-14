@@ -39,6 +39,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CanvasGradient)
 
     void addColorStop(double offset, NULLABLE String* color);
+    void addColorStop(double offset, const Unit::Color& color);
 
     std::shared_ptr<NativeGradient> nativeGradient()
     {
