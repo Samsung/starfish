@@ -17,6 +17,8 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_WEBGL)
+
 #include "platform/canvas/webgl/EGLUtil.h"
 #include "platform/canvas/webgl/EGL.h"
 #include "StarfishBase.h"
@@ -233,3 +235,4 @@ void printEGLInfo(const EGLDisplay eglDisplay, const EGLConfig eglConfig,
 }
 
 } // namespace EGLUtil
+#endif

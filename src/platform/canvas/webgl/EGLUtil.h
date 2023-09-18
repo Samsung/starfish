@@ -20,6 +20,8 @@
 #ifndef __StarfishEGLUtil__
 #define __StarfishEGLUtil__
 
+#if defined(STARFISH_ENABLE_WEBGL)
+
 #ifndef EGLDisplay
 typedef void *EGLDisplay;
 #endif
@@ -69,3 +71,4 @@ void printEGLInfo(const EGLDisplay eglDisplay, const EGLConfig eglConfig,
 } // namespace EGLUtil
 
 #endif // __StarfishUtilEGL__
+#endif
