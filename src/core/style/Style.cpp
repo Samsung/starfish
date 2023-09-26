@@ -11558,13 +11558,17 @@ GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 bool CSSStyleValuePair::updateValueMarginInlineEnd(Document* document,
                                                    const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueMarginInlineStart(
     Document* document, const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowAuto);
 }
 
 bool CSSStyleValuePair::updateValueWidthHeightKeyword(
