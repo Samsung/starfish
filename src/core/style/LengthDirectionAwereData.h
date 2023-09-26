@@ -42,7 +42,7 @@ public:
     {
     }
 
-    Length legnth() const
+    Nullable<Length> legnth() const
     {
         return m_length;
     }
@@ -83,7 +83,7 @@ public:
     }
 
 private:
-    Length m_length;
+    Nullable<Length> m_length;
     bool m_isCorrespondingLeftSet = false;
     bool m_isCorrespondingRightSet = false;
 };

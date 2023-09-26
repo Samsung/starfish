@@ -225,6 +225,8 @@ test/cairo/internal-test/css/table/table_border-spacing_01.html
 test/cairo/internal-test/css/table/table_fixed_17.html
 test/cairo/internal-test/css/margin/margin.html
 test/cairo/internal-test/css/margin/margin_with_direction-aware.html
+test/cairo/internal-test/css/margin/margin-inline_auto.html
+test/cairo/internal-test/css/margin/margin-inline_percent.html
 test/cairo/internal-test/css/clear/ignore-margin-collapse.html
 test/cairo/internal-test/css/table/table_border-spacing_02.html
 test/cairo/internal-test/css/table/table_layer_02.html

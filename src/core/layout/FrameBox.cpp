@@ -153,44 +153,49 @@ void FrameBox::applyDirectionAwareProperty()
 
     if (direction == DirectionValue::LtrDirectionValue) {
         // margin-inline
-        if (margineInlineEnd.legnth().isSpecified() &&
+        if (margineInlineEnd.legnth().hasValue() &&
             !margineInlineEnd.isCorrespondingRightSet()) {
-            comptuedStyle->setMarginRight(margineInlineEnd.legnth());
+            comptuedStyle->setMarginRight(margineInlineEnd.legnth().getValue());
         }
-        if (margineInlineStart.legnth().isSpecified() &&
+        if (margineInlineStart.legnth().hasValue() &&
             !margineInlineStart.isCorrespondingLeftSet()) {
-            comptuedStyle->setMarginLeft(margineInlineStart.legnth());
+            comptuedStyle->setMarginLeft(
+                margineInlineStart.legnth().getValue());
         }
 
         // padding-inline
-        if (paddingInlineEnd.legnth().isSpecified() &&
+        if (paddingInlineEnd.legnth().hasValue() &&
             !paddingInlineEnd.isCorrespondingRightSet()) {
-            comptuedStyle->setPaddingRight(paddingInlineEnd.legnth());
+            comptuedStyle->setPaddingRight(
+                paddingInlineEnd.legnth().getValue());
         }
-        if (paddingInlineStart.legnth().isSpecified() &&
+        if (paddingInlineStart.legnth().hasValue() &&
             !paddingInlineStart.isCorrespondingLeftSet()) {
-            comptuedStyle->setPaddingLeft(paddingInlineStart.legnth());
+            comptuedStyle->setPaddingLeft(
+                paddingInlineStart.legnth().getValue());
         }
         // TODO: padding-block, margin-block.
     } else {
         // margin-inline
-        if (margineInlineEnd.legnth().isSpecified() &&
+        if (margineInlineEnd.legnth().hasValue() &&
             !margineInlineEnd.isCorrespondingLeftSet()) {
-            comptuedStyle->setMarginLeft(margineInlineEnd.legnth());
+            comptuedStyle->setMarginLeft(margineInlineEnd.legnth().getValue());
         }
-        if (margineInlineStart.legnth().isSpecified() &&
+        if (margineInlineStart.legnth().hasValue() &&
             !margineInlineStart.isCorrespondingRightSet()) {
-            comptuedStyle->setMarginRight(margineInlineStart.legnth());
+            comptuedStyle->setMarginRight(
+                margineInlineStart.legnth().getValue());
         }
 
         // padding-inline
-        if (paddingInlineEnd.legnth().isSpecified() &&
+        if (paddingInlineEnd.legnth().hasValue() &&
             !paddingInlineEnd.isCorrespondingLeftSet()) {
-            comptuedStyle->setPaddingLeft(paddingInlineEnd.legnth());
+            comptuedStyle->setPaddingLeft(paddingInlineEnd.legnth().getValue());
         }
-        if (paddingInlineStart.legnth().isSpecified() &&
+        if (paddingInlineStart.legnth().hasValue() &&
             !paddingInlineStart.isCorrespondingRightSet()) {
-            comptuedStyle->setPaddingRight(paddingInlineStart.legnth());
+            comptuedStyle->setPaddingRight(
+                paddingInlineStart.legnth().getValue());
         }
         // TODO: padding-block, margin-block, margin-inline
     }
