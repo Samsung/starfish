@@ -3550,6 +3550,64 @@ void CSSStyleDeclaration::removeMargin()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginLeft);
 }
 
+String* CSSStyleDeclaration::MarginBlock()
+{
+    String* start = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MarginBlockStart);
+    String* end = getPropertyValueInternalFor<PropertyType::kLonghand>(
+        CSSStyleValuePair::KeyKind::MarginBlockEnd);
+
+    if (start->equals(end)) {
+        return start;
+    }
+
+    return start->concat(" ")->concat(end);
+}
+
+void CSSStyleDeclaration::setMarginBlock(const char* value, size_t len,
+                                         bool isImportant)
+{
+    if (len == 0) {
+        removeMarginBlock();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlock, v);
+    } else if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, v);
+    } else if (tokens.size() == 1 &&
+               v.updateValueMarginBlockStart(m_node->document(), tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, v);
+    } else if (tokens.size() == 2) {
+        CSSStyleValuePair start, end;
+        start.setFlagImportant(isImportant);
+        end.setFlagImportant(isImportant);
+        if (start.updateValueUnitMargin(tokens[0]) &&
+            end.updateValueUnitMargin(tokens[1])) {
+            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart,
+                            start);
+            addCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd, end);
+        }
+    }
+}
+
+void CSSStyleDeclaration::removeMarginBlock()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockEnd);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::MarginBlockStart);
+}
+
 String* CSSStyleDeclaration::MarginInline()
 {
     String* start = getPropertyValueInternalFor<PropertyType::kLonghand>(

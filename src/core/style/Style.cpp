@@ -5428,6 +5428,48 @@ void StyleResolver::applyProperty(
         ADD_RESOLVE_STYLE_MARGIN(Bottom, bottom)
         ADD_RESOLVE_STYLE_MARGIN(Left, left)
 #undef ADD_RESOLVE_STYLE_MARGIN
+    case CSSStyleValuePair::KeyKind::MarginBlockStart:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMarginBlockStart(parentStyle->marginBlockStart());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMarginBlockStart(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMarginBlockStart(length.getValue());
+            } else {
+                style->setMarginBlockStart(Length(Length::Fixed, 0));
+            }
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::MarginBlockEnd:
+        if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+            style->setMarginBlockEnd(parentStyle->marginBlockEnd());
+            element->parentNode()
+                ->style()
+                ->markSomeNonInheritMemberExplicitlyInherited();
+        } else if ((newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Initial) ||
+                   (newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::Unset)) {
+            style->setMarginBlockEnd(Length(Length::Fixed, 0));
+        } else {
+            Nullable<Length> length = convertValueToLength(
+                newCssValue.valueKind(), newCssValue.value());
+            if (length.hasValue()) {
+                style->setMarginBlockEnd(length.getValue());
+            } else {
+                style->setMarginBlockEnd(Length(Length::Fixed, 0));
+            }
+        }
+        break;
     case CSSStyleValuePair::KeyKind::MarginInlineEnd:
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             style->setMarginInlineEnd(parentStyle->marginInlineEnd());
@@ -11554,6 +11596,22 @@ GEN_FOURSIDE(UPDATE_VALUE_SIDE)
     }
 GEN_FOURSIDE(UPDATE_VALUE_MARGIN)
 #undef UPDATE_VALUE_MARGIN
+
+bool CSSStyleValuePair::updateValueMarginBlockStart(
+    Document* document, const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowAuto);
+}
+
+bool CSSStyleValuePair::updateValueMarginBlockEnd(Document* document,
+                                                  const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowAuto);
+}
 
 bool CSSStyleValuePair::updateValueMarginInlineEnd(Document* document,
                                                    const CSSTokenVector& tokens)

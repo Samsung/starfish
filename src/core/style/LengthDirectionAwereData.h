@@ -24,21 +24,15 @@ namespace Starfish {
 
 class ComputedStyle;
 
-class LengthInlineDirectionAwereData : public gc {
+class LengthDirectionAwereData : public gc {
 public:
-    LengthInlineDirectionAwereData()
+    LengthDirectionAwereData()
         : m_length(Length(Length::Fixed, 0))
-        , m_isCorrespondingLeftSet(false)
-        , m_isCorrespondingRightSet(false)
-
     {
     }
 
-    LengthInlineDirectionAwereData(Length length)
+    LengthDirectionAwereData(Length length)
         : m_length(length)
-        , m_isCorrespondingLeftSet(false)
-        , m_isCorrespondingRightSet(false)
-
     {
     }
 
@@ -50,6 +44,28 @@ public:
     void setLength(Length length)
     {
         m_length = length;
+    }
+
+protected:
+    Nullable<Length> m_length;
+};
+
+class LengthInlineDirectionAwereData : public LengthDirectionAwereData {
+public:
+    LengthInlineDirectionAwereData()
+        : LengthDirectionAwereData()
+        , m_isCorrespondingLeftSet(false)
+        , m_isCorrespondingRightSet(false)
+
+    {
+    }
+
+    LengthInlineDirectionAwereData(Length length)
+        : LengthDirectionAwereData(length)
+        , m_isCorrespondingLeftSet(false)
+        , m_isCorrespondingRightSet(false)
+
+    {
     }
 
     bool isCorrespondingLeftSet() const
@@ -83,12 +99,62 @@ public:
     }
 
 private:
-    Nullable<Length> m_length;
     bool m_isCorrespondingLeftSet = false;
     bool m_isCorrespondingRightSet = false;
 };
 
-// TODO: LengthBlockDirectionAwereData
+class LengthBlockDirectionAwereData : public LengthDirectionAwereData {
+public:
+    LengthBlockDirectionAwereData()
+        : LengthDirectionAwereData()
+        , m_isCorrespondingTopSet(false)
+        , m_isCorrespondingBottomSet(false)
+
+    {
+    }
+
+    LengthBlockDirectionAwereData(Length length)
+        : LengthDirectionAwereData(length)
+        , m_isCorrespondingTopSet(false)
+        , m_isCorrespondingBottomSet(false)
+
+    {
+    }
+
+    bool isCorrespondingTopSet() const
+    {
+        return m_isCorrespondingTopSet;
+    }
+
+    bool isCorrespondingBottomSet() const
+    {
+        return m_isCorrespondingBottomSet;
+    }
+
+    void markCorrespondingTopIsSet()
+    {
+        m_isCorrespondingTopSet = true;
+    }
+
+    void markCorrespondingBottomIsSet()
+    {
+        m_isCorrespondingBottomSet = true;
+    }
+
+    bool operator==(const LengthBlockDirectionAwereData& o)
+    {
+        return m_length == o.m_length;
+    }
+
+    bool operator!=(const LengthBlockDirectionAwereData& o)
+    {
+        return !operator==(o);
+    }
+
+private:
+    bool m_isCorrespondingTopSet = false;
+    bool m_isCorrespondingBottomSet = false;
+};
 
 } // namespace Starfish
 

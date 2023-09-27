@@ -296,6 +296,10 @@ protected:
     void setMargin(const char* value, size_t len, bool isImportant);
     void removeMargin();
 
+    String* MarginBlock();
+    void setMarginBlock(const char* value, size_t len, bool isImportant);
+    void removeMarginBlock();
+
     String* MarginInline();
     void setMarginInline(const char* value, size_t len, bool isImportant);
     void removeMarginInline();
