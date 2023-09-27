@@ -11869,9 +11869,12 @@ bool CSSStyleValuePair::updateValueClipPath(Document* document,
     return CSSPropertyParser::parseUrl(tokens[0].data(), this);
 }
 
-static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
-                        GridLength& max)
+static bool parseMinMax(CSSTokenValue& token, GridLength& min, GridLength& max)
 {
+    CSSPropertyParser parser(const_cast<char*>(token.c_str()), token.length());
+    parser.consumeString(0);
+    parser.consumeIfNext('(');
+
     bool hasPoint = false;
     if (!parser.consumeNumber(&hasPoint)) {
         return false;
@@ -11987,91 +11990,63 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v)
 {
     STARFISH_ASSERT(v != nullptr);
-
     for (size_t i = 0; i < tokens.size(); i++) {
-        auto ss = tokens[i].trim();
-        if (ss == "auto") {
-            GridTrackSize g;
-            v->push_back(g);
-            continue;
-        } else if (ss == "min-content") {
-            v->push_back(
-                GridTrackSize(GridTrackSize::GridTrackType::MinContentType));
-            continue;
-        } else if (ss == "max-content") {
-            v->push_back(
-                GridTrackSize(GridTrackSize::GridTrackType::MaxContentType));
-            continue;
-        }
+        // Trim token.
+        CSSTokenValue token = tokens[i].trim();
 
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-
-        parser.consumeWhitespaces();
-
-        if (*(parser.curPos()) == 'm') {
-            parser.consumeString(0);
-
-            if (parser.parsedString() == "minmax") {
-                if (!parser.consumeIfNext('(')) {
-                    return false;
-                }
-                GridLength min, max;
-                if (parseMinMax(parser, min, max) && parser.isEnd()) {
-                    v->push_back(GridTrackSize(
-                        min, max, GridTrackSize::GridTrackType::MinMaxType));
-                    continue;
-                }
-            }
-            return false;
-        } else if (*(parser.curPos()) == 'r') {
-            parser.consumeString(0);
-
-            if (parser.parsedString() == "repeat") {
-                if (!parser.consumeIfNext('(')) {
-                    return false;
-                }
-                if (parseRepeat(ss, v) && ss[ss.length() - 1] == ')') {
-                    continue;
-                }
-            }
-            return false;
-        }
-
-        bool hasPoint = false;
-        if (!parser.consumeNumber(&hasPoint)) {
-            return false;
-        }
-
-        float number = parser.parsedNumber();
-        parser.consumeString(CSSPropertyParser::AllowWithoutUnit |
-                             CSSPropertyParser::AllowPercent);
-        const auto& str = parser.parsedString();
-        if (str.length() != 0 && (!CSSPropertyParser::isLengthUnit(str) &&
-                                  !(str == "fr") && !(str == "%"))) {
-            return false;
-        }
-
-        // TODO : Add the GridLine, GridArea and Repeat
-        // Create GridTrack and push back into vector.
-        if (str == "fr") {
-            v->push_back(GridTrackSize(GridLength(number),
-                                       GridTrackSize::GridTrackType::FrType));
-        } else if (CSSPropertyParser::isLengthUnit(str)) {
-            v->push_back(
-                GridTrackSize(CSSLength(str, number).toLength(),
-                              GridTrackSize::GridTrackType::LengthType));
-        } else if (str == "%") {
-            v->push_back(
-                GridTrackSize(Length(Length::Percent, number / 100),
-                              GridTrackSize::GridTrackType::LengthType));
-        } else {
-            if (number == 0) {
-                v->push_back(
-                    GridTrackSize(CSSLength("px", 0).toLength(),
-                                  GridTrackSize::GridTrackType::LengthType));
-            } else {
+        // Try to parse length, calc, auto.
+        CSSStyleValuePair legnthOrCalc;
+        if (legnthOrCalc.updateValueUnitLengthOrCalc(
+                token, CSSPropertyParser::AllowNegative |
+                           CSSPropertyParser::AllowPercent |
+                           CSSPropertyParser::AllowAuto)) {
+            Nullable<Length> maybeLength = convertValueToLength(
+                legnthOrCalc.valueKind(), legnthOrCalc.value());
+            if (!maybeLength.hasValue()) {
                 return false;
             }
+            v->push_back(GridTrackSize(
+                maybeLength.value(), GridTrackSize::GridTrackType::LengthType));
+        } else if (token == "min-content") {
+            // Try to parse keyword: min-content.
+            v->push_back(
+                GridTrackSize(GridTrackSize::GridTrackType::MinContentType));
+        } else if (token == "max-content") {
+            // Try to parse keyword: max-content.
+            v->push_back(
+                GridTrackSize(GridTrackSize::GridTrackType::MaxContentType));
+        } else if (token.startsWith("minmax(") &&
+                   token[token.length() - 1] == ')') {
+            // Try to minmax().
+            GridLength min, max;
+            if (!parseMinMax(token, min, max)) {
+                return false;
+            }
+            v->push_back(GridTrackSize(
+                min, max, GridTrackSize::GridTrackType::MinMaxType));
+        } else if (token.startsWith("repeat(") &&
+                   token[token.length() - 1] == ')') {
+            // repeat().
+            if (!parseRepeat(token, v)) {
+                return false;
+            }
+        } else {
+            // fr.
+            CSSPropertyParser parser(const_cast<char*>(token.c_str()),
+                                     token.length());
+            bool hasPoint = false;
+            if (!parser.consumeNumber(&hasPoint)) {
+                return false;
+            }
+            float number = parser.parsedNumber();
+
+            parser.consumeString(0);
+            const auto& unit = parser.parsedString();
+            if (unit != "fr") {
+                return false;
+            }
+            v->push_back(GridTrackSize(GridLength(number),
+                                       GridTrackSize::GridTrackType::FrType));
         }
     }
 
@@ -12121,10 +12096,12 @@ static bool parseGridTemplateRows(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueGridTemplateColumns(
     Document* document, const CSSTokenVector& tokens)
 {
+    // https://drafts.csswg.org/css-grid/#track-sizing
+    // none | <track-list> | <auto-track-list> | subgrid <line-name-list>?
     STARFISH_ASSERT(document != nullptr);
-
-    if (!tokens.size())
+    if (!tokens.size()) {
         return false;
+    }
 
     if (tokens.size() == 1 && tokens[0].equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
@@ -12133,11 +12110,9 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
 
     GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
     ValueList* v1 = new ValueList(Separator::SpaceSeparator);
-
     if (!parseGridTemplateColumns(tokens, v)) {
         return false;
     }
-
     setGridTemplateUnits(v);
 
     return true;
