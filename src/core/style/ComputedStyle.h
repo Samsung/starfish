@@ -94,6 +94,8 @@ public:
         PaddingInlineEnd,
         PaddingInlineStart,
         Margin,
+        MarginBlockStart,
+        MarginBlockEnd,
         MarginInlineEnd,
         MarginInlineStart,
         Offset,
@@ -171,6 +173,7 @@ public:
         BorderData* m_borderData;
         BoxDecorationBreakValue m_boxDecorationBreak;
         LengthData* m_lengthData;
+        LengthBlockDirectionAwereData* m_lengthBlockDirectionAwereData;
         LengthInlineDirectionAwereData* m_lengthInlineDirectionAwereData;
         FlexBasisData* m_flexBasis;
         StyleTransformDataGroup* m_transforms;
@@ -242,6 +245,12 @@ public:
 
         RareComputedStyleValue(LengthData* lengthData)
             : m_lengthData(lengthData)
+        {
+        }
+
+        RareComputedStyleValue(
+            LengthBlockDirectionAwereData* lengthBlockDirectionAwereData)
+            : m_lengthBlockDirectionAwereData(lengthBlockDirectionAwereData)
         {
         }
 
@@ -589,6 +598,10 @@ public:
 
     GETTER_PTR(FlexBasisData, flexBasis, flexBasis, FlexBasis);
     GETTER_PTR(LengthData, lengthData, margin, Margin);
+    GETTER_PTR(LengthBlockDirectionAwereData, lengthBlockDirectionAwereData,
+               marginBlockStart, MarginBlockStart);
+    GETTER_PTR(LengthBlockDirectionAwereData, lengthBlockDirectionAwereData,
+               marginBlockEnd, MarginBlockEnd);
     GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
                marginInlineEnd, MarginInlineEnd);
     GETTER_PTR(LengthInlineDirectionAwereData, lengthInlineDirectionAwereData,
@@ -927,6 +940,16 @@ public:
     void setPaddingInlineStart(LengthInlineDirectionAwereData length)
     {
         *m_rareComputedStyleData.ensurePaddingInlineStart() = length;
+    }
+
+    void setMarginBlockStart(LengthBlockDirectionAwereData length)
+    {
+        *m_rareComputedStyleData.ensureMarginBlockStart() = length;
+    }
+
+    void setMarginBlockEnd(LengthBlockDirectionAwereData length)
+    {
+        *m_rareComputedStyleData.ensureMarginBlockEnd() = length;
     }
 
     void setMarginInlineEnd(LengthInlineDirectionAwereData length)
@@ -2567,6 +2590,11 @@ public:
     void setMarginTop(const Length& unit)
     {
         m_rareComputedStyleData.ensureMargin()->setTop(unit);
+
+        m_rareComputedStyleData.ensureMarginBlockStart()
+            ->markCorrespondingTopIsSet();
+        m_rareComputedStyleData.ensureMarginBlockEnd()
+            ->markCorrespondingTopIsSet();
     }
 
     void setMarginRight(const Length& unit)
@@ -2582,6 +2610,11 @@ public:
     void setMarginBottom(const Length& unit)
     {
         m_rareComputedStyleData.ensureMargin()->setBottom(unit);
+
+        m_rareComputedStyleData.ensureMarginBlockStart()
+            ->markCorrespondingBottomIsSet();
+        m_rareComputedStyleData.ensureMarginBlockEnd()
+            ->markCorrespondingBottomIsSet();
     }
 
     void setMarginLeft(const Length& unit)
@@ -3335,6 +3368,36 @@ public:
         }
 
         return LengthInlineDirectionAwereData();
+    }
+
+    LengthBlockDirectionAwereData marginBlockStart()
+    {
+        if (!hasRareComputeStyleData()) {
+            return LengthBlockDirectionAwereData();
+        }
+
+        LengthBlockDirectionAwereData* data =
+            m_rareComputedStyleData.marginBlockStart();
+        if (data) {
+            return *data;
+        }
+
+        return LengthBlockDirectionAwereData();
+    }
+
+    LengthBlockDirectionAwereData marginBlockEnd()
+    {
+        if (!hasRareComputeStyleData()) {
+            return LengthBlockDirectionAwereData();
+        }
+
+        LengthBlockDirectionAwereData* data =
+            m_rareComputedStyleData.marginBlockEnd();
+        if (data) {
+            return *data;
+        }
+
+        return LengthBlockDirectionAwereData();
     }
 
     LengthInlineDirectionAwereData marginInlineEnd()

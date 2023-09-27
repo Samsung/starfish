@@ -600,6 +600,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "margin-right", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginRight;
             }
+            if (memcmp(data, "margin-block", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlock;
+            }
             break;
         case 't':
             if (memcmp(data, "table-layout", 12) == 0) {
@@ -899,6 +902,10 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::ListStyleImage;
             }
             break;
+        case 'm':
+            if (memcmp(data, "margin-block-end", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlockEnd;
+            }
         }
         break;
     case 17:
@@ -974,6 +981,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Grid-Template-Rows
         // Animation-Duration
         // Padding-inline-end
+        // margin-block-start
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -1002,6 +1010,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-template-rows", 18) == 0) {
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "margin-block-start", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlockStart;
             }
             break;
         case 'p':
@@ -1742,6 +1755,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "marginRight", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::MarginRight;
             }
+            if (memcmp(data, "marginBlock", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlock;
+            }
             break;
         case 't':
             if (memcmp(data, "tableLayout", 11) == 0) {
@@ -1924,6 +1940,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::ListStyleImage;
             }
             break;
+        case 'm':
+            if (memcmp(data, "marginBlockEnd", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlockEnd;
+            }
+            break;
         case 't':
             if (memcmp(data, "textDecoration", 14) == 0) {
                 return CSSStyleValuePair::KeyKind::TextDecoration;
@@ -2070,6 +2091,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'g':
             if (memcmp(data, "gridTemplateRows", 16) == 0) {
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginBlockStart", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::MarginBlockStart;
             }
             break;
 #if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX) || \

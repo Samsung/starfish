@@ -135,7 +135,33 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(
     return l;
 }
 
-void FrameBox::applyDirectionAwareProperty()
+void FrameBox::applyBlockDirectionAwareProperty()
+{
+    // TODO: If 'writing-mode' is supported, the padding/margin value must be
+    // updated using this property.
+
+    ComputedStyle* comptuedStyle = style();
+    DirectionValue direction = comptuedStyle->direction();
+
+    LengthBlockDirectionAwereData margineBlockStart =
+        comptuedStyle->marginBlockStart();
+    LengthBlockDirectionAwereData margineBlockEnd =
+        comptuedStyle->marginBlockEnd();
+
+    // margin-block
+    if (margineBlockStart.legnth().hasValue() &&
+        !margineBlockStart.isCorrespondingTopSet()) {
+        comptuedStyle->setMarginTop(margineBlockStart.legnth().getValue());
+    }
+    if (margineBlockEnd.legnth().hasValue() &&
+        !margineBlockEnd.isCorrespondingBottomSet()) {
+        comptuedStyle->setMarginBottom(margineBlockEnd.legnth().getValue());
+    }
+
+    // TODO: padding-block
+}
+
+void FrameBox::applyInlineDirectionAwareProperty()
 {
     // TODO: If 'writing-mode' is supported, the padding/margin value must be
     // updated using this property as well as 'direction' property.
@@ -201,7 +227,13 @@ void FrameBox::applyDirectionAwareProperty()
     }
 }
 
-LayoutUnit FrameBox::resolveDirectionAwareProperty(
+void FrameBox::applyDirectionAwareProperty()
+{
+    applyBlockDirectionAwareProperty();
+    applyInlineDirectionAwareProperty();
+}
+
+LayoutUnit FrameBox::resolveInlineDirectionAwareProperty(
     CSSStyleValuePair::KeyKind keykind)
 {
     // TODO: If 'writing-mode' is supported, the resolved value must be selected
@@ -245,6 +277,23 @@ LayoutUnit FrameBox::resolveDirectionAwareProperty(
         // TODO: padding-block, margin-block.
     }
 
+    return LayoutUnit();
+}
+
+LayoutUnit FrameBox::resolveBlockDirectionAwareProperty(
+    CSSStyleValuePair::KeyKind keykind)
+{
+    // TODO: Apply writing-mode if it is supported.
+
+    // margine-block
+    if (keykind == CSSStyleValuePair::KeyKind::MarginBlockStart) {
+        return marginTop();
+    }
+    if (keykind == CSSStyleValuePair::KeyKind::MarginBlockEnd) {
+        return marginBottom();
+    }
+
+    // TODO: padding-block
     return LayoutUnit();
 }
 
