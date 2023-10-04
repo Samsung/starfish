@@ -407,7 +407,7 @@ private:
     GCVector<GridTrack> m_gridTemplateColumns;
     GCVector<GridTrack> m_gridTemplateRows;
     GCVector<GridArea> m_orderedGridArea;
-    GCUnorderedMultiMap<std::string, GridArea> m_namedAreaMap;
+    GCUnorderedMap<std::string, GCVector<GridArea>> m_namedAreaMap;
 
     LayoutUnit m_rowGap;
     LayoutUnit m_columnGap;
@@ -464,6 +464,8 @@ private:
     LayoutSize fetchFixedMargin(FrameGridBox* grid, ComputedStyle* style);
     LayoutSize fetchFixedMarginBorderPadding(FrameGridBox* grid,
                                              ComputedStyle* style);
+
+    void insertNamedGridArea(const std::pair<std::string, GridArea>& pair);
 };
 
 class FrameGridBox final : public FrameBlockBox {

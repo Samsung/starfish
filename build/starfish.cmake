@@ -36,6 +36,7 @@ SET (STARFISH_INCLUDE_DIRS
     ${GCUTIL_ROOT}/bdwgc/include
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/runtime_icu_binder
+    ${THIRD_PARTY_ROOT}/robin_map/include
     ${THIRD_PARTY_ROOT}/nanomsg/dist/include
     ${THIRD_PARTY_ROOT}/nanomsgcpp
     ${THIRD_PARTY_ROOT}/clipper/cpp

@@ -2222,7 +2222,7 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
         } else {
             m_nativeGradientCacheTotalSize -=
                 iter->second->gradientImageDataCached()->bufferSize();
-            iter->second = value;
+            iter.value() = value;
         }
         m_nativeGradientCacheLRUList.push_back(key);
         m_nativeGradientCacheTotalSize += bufferSize;

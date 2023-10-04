@@ -2444,11 +2444,11 @@ bool StackingContext::fillGraphicsBufferContents(
                     reuse = true;
                     m_rareData->m_graphicsBufferHolder =
                         iter->second.graphicsBufferHolder;
-                    iter->second.graphicsBufferHolder = nullptr;
+                    iter.value().graphicsBufferHolder = nullptr;
                 } else {
                     if (iter->second.graphicsBufferHolder) {
                         iter->second.graphicsBufferHolder->flushSurfaces();
-                        iter->second.graphicsBufferHolder = nullptr;
+                        iter.value().graphicsBufferHolder = nullptr;
                     }
                 }
             }
@@ -2464,7 +2464,7 @@ bool StackingContext::fillGraphicsBufferContents(
         auto iter =
             globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
         if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
-            iter->second.graphicsBufferHolder = nullptr;
+            iter.value().graphicsBufferHolder = nullptr;
         }
     }
 
@@ -2472,7 +2472,7 @@ bool StackingContext::fillGraphicsBufferContents(
         auto iter =
             globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
         if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
-            iter->second.graphicsBufferHolder = nullptr;
+            iter.value().graphicsBufferHolder = nullptr;
         }
         return false;
     }

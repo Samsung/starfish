@@ -951,8 +951,9 @@ public:
         if (m_activeTransitions.size() > 0) {
             m_activeTransitions.clear();
         }
-        for (auto& animations : m_activeAnimations) {
-            animations.second.clear();
+        for (auto iter = m_activeAnimations.begin();
+             iter != m_activeAnimations.end(); iter++) {
+            iter.value().clear();
         }
         m_activeAnimations.clear();
     }
@@ -995,7 +996,7 @@ public:
                     if ((*task)->targetElement() == element &&
                         (*task)->property() == p &&
                         (*task)->backgroundLayer() == layer) {
-                        task = (*animations).second.erase(task);
+                        task = animations.value().erase(task);
                     } else {
                         task++;
                     }
@@ -1032,7 +1033,7 @@ public:
         } else {
             // Because all of tasks with same property are already removed in
             // removeActiveAnimationTaskIfNeeds(), just add the task to vector.
-            iter->second.push_back(task);
+            iter.value().push_back(task);
         }
     }
 

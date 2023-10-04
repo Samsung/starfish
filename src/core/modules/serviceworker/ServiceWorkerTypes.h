@@ -72,17 +72,9 @@ using ServiceWorkerRegistrationId = Id<ServiceWorkerRegistration>;
 using RequestId = Id<ServiceWorkerRequest>;
 using PushManagerId = Id<GlobalScope>;
 
-struct ServiceWorkerRegistrationKeyComparator {
-    bool operator()(const ServiceWorkerRegistrationKey& lhs,
-                    const ServiceWorkerRegistrationKey& rhs) const
-    {
-        return lhs < rhs;
-    }
-};
-
 using ServiceWorkerRegistrationMap =
-    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
-          ServiceWorkerRegistrationKeyComparator>;
+    GCUnorderedMap<ServiceWorkerRegistrationKey,
+                   ServiceWorkerRegistrationData*>;
 
 } // namespace Starfish
 

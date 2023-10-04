@@ -7145,10 +7145,8 @@ void StyleResolver::applyProperty(
 
 void StyleResolver::collectMatchingRulesFromAuthorSheet(
     StyleResolveContext& ctx,
-    const GCUnorderedMultiMap<
-        AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
-    const GCUnorderedMultiMap<
-        AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
+    const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
+    const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end,
     CSSSelector::Type type, Element* element, AtomicString elementName,
     AtomicString elementId,
     const GCAtomicTightVector<AtomicString>& elementClasses,
@@ -7162,8 +7160,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         ctx.m_ancestorSelectorFilter->canUseAncestorSelectorFilter(element);
 
     for (auto it = begin; it != end; ++it) {
-        StyleRule* rule = it->second.first;
-        ResourceURL* url = it->second.second;
+        StyleRule* rule = it->first;
+        ResourceURL* url = it->second;
 
         if (pseudoElementType == PseudoElementType::PseudoElementNone) {
             if (type == CSSSelector::Type::Id && rule->isSimpleIDSelector()) {
@@ -7291,32 +7289,38 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     if (element->hasId()) {
         auto& rules = m_ruleSet->idRules();
-        auto range = rules.equal_range(elementId);
-        collectMatchingRulesFromAuthorSheet(
-            ctx, range.first, range.second, CSSSelector::Type::Id, element,
-            elementName, elementId, elementClasses, matchedRules, ret,
-            pseudoElementType);
+        auto iter = rules.find(elementId);
+        if (iter != rules.end()) {
+            collectMatchingRulesFromAuthorSheet(
+                ctx, iter.value().begin(), iter.value().end(),
+                CSSSelector::Type::Id, element, elementName, elementId,
+                elementClasses, matchedRules, ret, pseudoElementType);
+        }
     }
 
     if (element->hasClass()) {
         auto& rules = m_ruleSet->classRules();
         size_t classLen = elementClasses.size();
         for (unsigned k = 0; k < classLen; k++) {
-            auto range = rules.equal_range(elementClasses[k]);
-            collectMatchingRulesFromAuthorSheet(
-                ctx, range.first, range.second, CSSSelector::Type::Class,
-                element, elementName, elementId, elementClasses, matchedRules,
-                ret, pseudoElementType);
+            auto iter = rules.find(elementClasses[k]);
+            if (iter != rules.end()) {
+                collectMatchingRulesFromAuthorSheet(
+                    ctx, iter.value().begin(), iter.value().end(),
+                    CSSSelector::Type::Class, element, elementName, elementId,
+                    elementClasses, matchedRules, ret, pseudoElementType);
+            }
         }
     }
 
     {
         auto& rules = m_ruleSet->tagRules();
-        auto range = rules.equal_range(elementName);
-        collectMatchingRulesFromAuthorSheet(
-            ctx, range.first, range.second, CSSSelector::Type::Tag, element,
-            elementName, elementId, elementClasses, matchedRules, ret,
-            pseudoElementType);
+        auto iter = rules.find(elementName);
+        if (iter != rules.end()) {
+            collectMatchingRulesFromAuthorSheet(
+                ctx, iter.value().begin(), iter.value().end(),
+                CSSSelector::Type::Tag, element, elementName, elementId,
+                elementClasses, matchedRules, ret, pseudoElementType);
+        }
     }
 
     {
@@ -8637,7 +8641,7 @@ void computeAnimation(StyleResolver& resolver, Element* element,
         String* name = iter->first->m_name;
         bool needsToFireAnimationEndEvent = false;
         bool needsToFireAnimationCancelEvent = false;
-        auto& animationTasks = iter->second;
+        auto& animationTasks = iter.value();
         auto iterationCount = iter->first->m_iterationCount;
         auto direction = iter->first->m_direction;
         for (size_t i = 0; i < animationTasks.size(); i++) {
@@ -9286,7 +9290,7 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
         m_ruleSet->tagRules().insert(std::make_pair(tagName, rule));
         return;
     }
-    m_ruleSet->universalRules().insert(std::make_pair(AtomicString(), rule));
+    m_ruleSet->universalRules().push_back(rule);
 }
 
 void StyleResolver::addToKeyframesRule(StyleRuleKeyframes* rule)

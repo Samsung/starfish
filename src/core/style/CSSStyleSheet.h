@@ -38,28 +38,44 @@ class StyleRuleImport;
 class StyleRuleKeyframes;
 class URL;
 
+class RuleSetData
+    : public GCUnorderedMap<AtomicString,
+                            GCVector<std::pair<StyleRule*, ResourceURL*>>> {
+public:
+    void insert(const std::pair<AtomicString,
+                                std::pair<StyleRule*, ResourceURL*>>& pair)
+    {
+        auto iter = find(pair.first);
+        if (iter != end()) {
+            iter.value().push_back(pair.second);
+        } else {
+            GCVector<std::pair<StyleRule*, ResourceURL*>> v;
+            v.push_back(pair.second);
+            GCUnorderedMap<AtomicString,
+                           GCVector<std::pair<StyleRule*, ResourceURL*>>>::
+                insert(std::make_pair(pair.first, std::move(v)));
+        }
+    }
+};
+
 class RuleSet : public gc {
 public:
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
-    idRules()
+    RuleSetData& idRules()
     {
         return m_idRules;
     }
 
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
-    classRules()
+    RuleSetData& classRules()
     {
         return m_classRules;
     }
 
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
-    tagRules()
+    RuleSetData& tagRules()
     {
         return m_tagRules;
     }
 
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>&
-    universalRules()
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& universalRules()
     {
         return m_universalRules;
     }
@@ -78,14 +94,10 @@ public:
     }
 
 private:
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
-        m_idRules;
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
-        m_classRules;
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
-        m_tagRules;
-    GCUnorderedMultiMap<AtomicString, std::pair<StyleRule*, ResourceURL*>>
-        m_universalRules;
+    RuleSetData m_idRules;
+    RuleSetData m_classRules;
+    RuleSetData m_tagRules;
+    GCVector<std::pair<StyleRule*, ResourceURL*>> m_universalRules;
     GCVector<StyleRuleKeyframes*> m_keyframes;
 };
 

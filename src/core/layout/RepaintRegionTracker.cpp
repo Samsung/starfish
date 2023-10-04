@@ -104,10 +104,10 @@ RepaintRegionTracker::RepaintRegionTracker(
     auto iter = m_prevDrawnStackingContextInfoMap.begin();
     while (iter != m_prevDrawnStackingContextInfoMap.end()) {
         bool needsRepainting = false;
-        if (!iter->second.hasThisLayerThisTime) {
+        if (!iter.value().hasThisLayerThisTime) {
             needsRepainting = true;
             // layer disappear
-        } else if (!iter->second.isEqualsWithPrevDrawing) {
+        } else if (!iter.value().isEqualsWithPrevDrawing) {
             needsRepainting = true;
         }
 
@@ -251,8 +251,8 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             bool needToSkip = true;
             auto iter = m_prevDrawnStackingContextInfoMap.find(frame->node());
             if (iter != m_prevDrawnStackingContextInfoMap.end()) {
-                iter->second.hasThisLayerThisTime = true;
-                iter->second.isEqualsWithPrevDrawing = true;
+                iter.value().hasThisLayerThisTime = true;
+                iter.value().isEqualsWithPrevDrawing = true;
                 if (!iter->second.isVisibleBefore) {
                     needToSkip = false;
                 }
@@ -276,9 +276,9 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             }
         } else {
             if (!frame->isBoxesInvisibleFromHere()) {
-                iter->second.isVisibleBefore = true;
+                iter.value().isVisibleBefore = true;
             }
-            iter->second.hasThisLayerThisTime = true;
+            iter.value().hasThisLayerThisTime = true;
 
             bool compositedBefore = iter->second.needsGraphicsBuffer;
             bool willBeComposited = sc->needsGraphicsBuffer();
@@ -366,14 +366,14 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
             if (m_willCompositing) {
                 if (sc->needsGraphicsBuffer() &&
                     iter->second.needsGraphicsBuffer) {
-                    iter->second.isEqualsWithPrevDrawing = true;
+                    iter.value().isEqualsWithPrevDrawing = true;
                 } else if (!sc->needsGraphicsBuffer() &&
                            !iter->second.needsGraphicsBuffer) {
                     LayoutRect extentThisTime = computeBoxExtent(
                         LayoutRect(0, 0, frame->width(), frame->height()),
                         frame->computeMatrixOnGraphicsBuffer());
                     if (iter->second.extentOnGraphicsLayer == extentThisTime) {
-                        iter->second.isEqualsWithPrevDrawing = true;
+                        iter.value().isEqualsWithPrevDrawing = true;
                     }
                 }
 
@@ -381,11 +381,11 @@ void RepaintRegionTracker::trackRepaintRegion(FrameBox* frame,
                 if (sc->isIFrameStackingContext()) {
                     if (iter->second.screenExtent ==
                         sc->parent()->screenExtent()) {
-                        iter->second.isEqualsWithPrevDrawing = true;
+                        iter.value().isEqualsWithPrevDrawing = true;
                     }
                 } else {
                     if (iter->second.screenExtent == sc->screenExtent()) {
-                        iter->second.isEqualsWithPrevDrawing = true;
+                        iter.value().isEqualsWithPrevDrawing = true;
                     }
                 }
             }

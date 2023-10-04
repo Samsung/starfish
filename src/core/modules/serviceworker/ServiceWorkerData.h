@@ -39,6 +39,13 @@ class WorkerGlobalScope;
 using ScriptResourceMapKey_t = String;   // URL
 using ScriptResourceMapValue_t = String; // Responses
 
+struct ScriptResourceMapKeyHasher {
+    size_t operator()(const ScriptResourceMapKey_t*& src) const
+    {
+        return src->hashValue();
+    }
+};
+
 struct ScriptResourceMapKeyComparator {
     bool operator()(const ScriptResourceMapKey_t*& lhs,
                     const ScriptResourceMapKey_t*& rhs) const
@@ -67,8 +74,8 @@ struct ScriptResourceMapKeyComparator {
 };
 
 using ScriptResourceMap_t =
-    GCMap<ScriptResourceMapKey_t*, ScriptResourceMapValue_t*,
-          ScriptResourceMapKeyComparator>;
+    GCUnorderedMap<ScriptResourceMapKey_t*, ScriptResourceMapValue_t*,
+                   ScriptResourceMapKeyHasher, ScriptResourceMapKeyComparator>;
 
 class ScriptResource : public gc {
 public:

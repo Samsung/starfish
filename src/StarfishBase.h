@@ -77,6 +77,9 @@
 #include <random>
 #include <cfloat>
 
+#include <tsl/robin_set.h>
+#include <tsl/robin_map.h>
+
 #if defined(__clang__)
 #define COMPILER_CLANG 1
 #elif defined(_MSC_VER)
@@ -855,23 +858,6 @@ template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
 class GCDeque : public GCDequeT<T, Allocator>, public gc {
 };
 
-// typedef of GC-aware unordered_map
-template <typename Key, typename Value, typename Hasher = std::hash<Key>,
-          typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-using GCUnorderedMapT =
-    std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
-
-template <typename Key, typename Value, typename Hasher = std::hash<Key>,
-          typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-class GCUnorderedMap
-    : public GCUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
-      public gc {
-};
-
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
           typename Allocator =
@@ -888,28 +874,42 @@ class GCUnorderedMultiMap
       public gc {
 };
 
-// typedef of GC-aware map
-template <typename Key, typename Value, typename Comparator,
-          typename Allocator =
-              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-using GCMapT = std::map<Key, Value, Comparator, Allocator>;
+template <class Key, class T, class Hash = std::hash<Key>,
+          class KeyEqual = std::equal_to<Key>,
+          class Allocator = std::allocator<std::pair<Key, T>>,
+          bool StoreHash = false,
+          class GrowthPolicy = tsl::rh::power_of_two_growth_policy<2>>
+using HashMap =
+    tsl::robin_map<Key, T, Hash, KeyEqual, Allocator, StoreHash, GrowthPolicy>;
 
-template <typename Key, typename Value, typename Comparator,
+// typedef of GC-aware unordered_map
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
           typename Allocator =
               GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-class GCMap : public GCMapT<Key, Value, Comparator, Allocator>, public gc {
+using GCUnorderedMapT = HashMap<Key, Value, Hasher, Predicate, Allocator>;
+
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator =
+              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
+class GCUnorderedMap
+    : public GCUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
+      public gc {
 };
+
+template <class Key, class Hash = std::hash<Key>,
+          class KeyEqual = std::equal_to<Key>,
+          class Allocator = std::allocator<Key>, bool StoreHash = false,
+          class GrowthPolicy = tsl::rh::power_of_two_growth_policy<2>>
+using HashSet =
+    tsl::robin_set<Key, Hash, KeyEqual, Allocator, StoreHash, GrowthPolicy>;
 
 // typedef of GC-aware unordered_set
 template <typename T, typename Hasher = std::hash<T>,
           typename Predicate = std::equal_to<T>,
           typename Allocator = GCUtil::gc_malloc_allocator<T>>
-using GCUnorderedSetT = std::unordered_set<T, Hasher, Predicate, Allocator>;
-
-template <typename T, typename Hasher = std::hash<T>,
-          typename Predicate = std::equal_to<T>,
-          typename Allocator = GCUtil::gc_malloc_allocator<T>>
-class GCUnorderedSet : public GCUnorderedSetT<T, Hasher, Predicate, Allocator>,
+class GCUnorderedSet : public HashSet<T, Hasher, Predicate, Allocator>,
                        public gc {
 };
 
