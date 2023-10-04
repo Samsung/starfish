@@ -858,22 +858,6 @@ template <typename T, typename Allocator = GCUtil::gc_malloc_allocator<T>>
 class GCDeque : public GCDequeT<T, Allocator>, public gc {
 };
 
-template <typename Key, typename Value, typename Hasher = std::hash<Key>,
-          typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-using GCUnorderedMultiMapT =
-    std::unordered_multimap<Key, Value, Hasher, Predicate, Allocator>;
-
-template <typename Key, typename Value, typename Hasher = std::hash<Key>,
-          typename Predicate = std::equal_to<Key>,
-          typename Allocator =
-              GCUtil::gc_malloc_allocator<std::pair<Key const, Value>>>
-class GCUnorderedMultiMap
-    : public GCUnorderedMultiMapT<Key, Value, Hasher, Predicate, Allocator>,
-      public gc {
-};
-
 template <class Key, class T, class Hash = std::hash<Key>,
           class KeyEqual = std::equal_to<Key>,
           class Allocator = std::allocator<std::pair<Key, T>>,

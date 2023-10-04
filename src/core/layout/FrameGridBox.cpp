@@ -743,7 +743,7 @@ void GridFormattingContext::parseGridTemplateAreas()
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length());
 
-    GCUnorderedMultiMap<std::string, struct Area> collector;
+    std::unordered_multimap<std::string, Area> collector;
     SetForGrid<std::string> areaSet;
 
     for (size_t row = 0; row < tokens.size(); row++) {
@@ -761,7 +761,7 @@ void GridFormattingContext::parseGridTemplateAreas()
         CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
 
         for (size_t col = 0; col < areas.size(); col++) {
-            std::string name = areas[col];
+            const std::string& name = areas[col];
             Area area;
             area.columnStart = col + 1;
             area.columnEnd = area.columnStart + 1;

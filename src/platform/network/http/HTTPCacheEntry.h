@@ -102,7 +102,7 @@ public:
     }
     void setHTTPFreshnessInfo(HTTPFreshnessInfo& info);
 
-    EntryFileInfo entryFileInfo() const
+    const EntryFileInfo& entryFileInfo() const
     {
         return m_entryFileInfo;
     }
@@ -167,8 +167,8 @@ private:
     bool m_good;
 };
 
-typedef GCUnorderedMultiMap<size_t, RefPtr<HTTPCacheEntry>>
-    HTTPCacheEntryMultiMap;
+typedef GCUnorderedMap<size_t, GCVector<RefPtr<HTTPCacheEntry>>>
+    HTTPCacheEntryMap;
 } // namespace Starfish
 #endif
 #endif
