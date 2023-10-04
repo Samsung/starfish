@@ -83,7 +83,7 @@ bool StoragePersistent::setItem(String* key, String* value)
     if (iter == m_cache.end()) {
         m_cache.insert(std::make_pair(key, value));
     } else {
-        iter->second = value;
+        iter.value() = value;
     }
 
     m_diskWriter->setItem(m_webOrigin, key, value);

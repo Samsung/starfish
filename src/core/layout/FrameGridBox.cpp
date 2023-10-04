@@ -168,11 +168,23 @@ void GridFormattingContext::layoutGridItems()
     applyAlignItems();
 }
 
+void GridFormattingContext::insertNamedGridArea(const std::pair<std::string, GridArea>& pair)
+{
+    auto iter = m_namedAreaMap.find(pair.first);
+    if (iter != m_namedAreaMap.end()) {
+        iter.value().push_back(pair.second);
+    } else {
+        GCVector<GridArea> v;
+        v.push_back(pair.second);
+        m_namedAreaMap.insert(std::make_pair(pair.first, std::move(v)));
+    }
+}
+
 GridArea* GridFormattingContext::getNamedGridArea(String* name)
 {
-    auto it = m_namedAreaMap.find(name->toUTF8NonGCString().data());
+    auto it = m_namedAreaMap.find(name->toUTF8NonGCString());
     if (it != m_namedAreaMap.end()) {
-        return &(it->second);
+        return it.value().data();
     }
 
     return nullptr;
@@ -899,7 +911,7 @@ void GridFormattingContext::parseGridTemplateAreas()
                     struct Area area = stack.back();
                     GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
                                       area.columnStart, area.columnEnd);
-                    m_namedAreaMap.insert(std::make_pair(name, gridArea));
+                    insertNamedGridArea(std::make_pair(name, gridArea));
                 } else {
                     return;
                 }
@@ -908,7 +920,7 @@ void GridFormattingContext::parseGridTemplateAreas()
             struct Area area = stack.back();
             GridArea gridArea(nullptr, -1, area.rowStart, area.rowEnd,
                               area.columnStart, area.columnEnd);
-            m_namedAreaMap.insert(std::make_pair(name, gridArea));
+            insertNamedGridArea(std::make_pair(name, gridArea));
         }
     }
 }

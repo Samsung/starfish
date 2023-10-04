@@ -31,6 +31,8 @@ SET (STARFISH_SERVICEWORKER_INCLUDE_ADDITIONAL_DIRS
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/rapidjson/include
     ${ESCARGOT_ROOT}/third_party/runtime_icu_binder
+    ${ESCARGOT_ROOT}/third_party/rapidjson/include
+    ${THIRD_PARTY_ROOT}/robin_map/include
     ${THIRD_PARTY_ROOT}/libtuv/include
     ${THIRD_PARTY_ROOT}/libtuv/src
     ${THIRD_PARTY_ROOT}/nanomsg/dist/include
@@ -210,7 +212,7 @@ SET (STARFISH_SERVICEWORKER_LINK_LIBRARIES
 MACRO (add_js2c_target name output source license fname)
     ADD_CUSTOM_COMMAND (OUTPUT ${output}
                        COMMENT "Js2c (${name})"
-                       COMMAND tool/js2c.py -s${source} -l${license} -o${fname}
+                       COMMAND ${CMAKE_SOURCE_DIR}/tool/js2c.py -s${source} -l${license} -o${fname}
                        DEPENDS ${source}
     )
     ADD_CUSTOM_TARGET (${name} DEPENDS ${output})

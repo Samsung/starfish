@@ -123,7 +123,7 @@ void ExecutionContext::addPointerInRootSet(void* ptr)
     if (iter == m_rootMap.end()) {
         m_rootMap.insert(std::make_pair(ptr, 1));
     } else {
-        iter->second++;
+        iter.value()++;
     }
 }
 
@@ -136,7 +136,7 @@ void ExecutionContext::removePointerFromRootSet(void* ptr)
         if (iter->second == 1) {
             m_rootMap.erase(iter);
         } else {
-            iter->second--;
+            iter.value()--;
         }
     }
 }

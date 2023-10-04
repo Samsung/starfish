@@ -94,7 +94,7 @@ bool StorageMemory::setItem(String* key, String* value)
     if (iter == m_map.end()) {
         m_map.insert(std::make_pair(key, value));
     } else {
-        iter->second = value;
+        iter.value() = value;
     }
 
     return true;

@@ -1410,7 +1410,7 @@ RenderResult WebView::rendering(bool force)
                 while (iter != prevDrawnStackingContextInfo.end()) {
                     if (iter->second.graphicsBufferHolder) {
                         iter->second.graphicsBufferHolder->flushSurfaces();
-                        iter->second.graphicsBufferHolder = nullptr;
+                        iter.value().graphicsBufferHolder = nullptr;
                     }
                     iter++;
                 }
@@ -1431,9 +1431,9 @@ RenderResult WebView::rendering(bool force)
                                  ->stackingContext()
                                  ->needsGraphicsBuffer()) {
                             if (iter->second.graphicsBufferHolder) {
-                                iter->second.graphicsBufferHolder
-                                    ->flushSurfaces();
-                                iter->second.graphicsBufferHolder = nullptr;
+                                iter.value()
+                                    .graphicsBufferHolder->flushSurfaces();
+                                iter.value().graphicsBufferHolder = nullptr;
                             }
                         }
                     }
@@ -1499,8 +1499,8 @@ RenderResult WebView::rendering(bool force)
             auto iter = prevDrawnStackingContextInfo.begin();
             while (iter != prevDrawnStackingContextInfo.end()) {
                 if (iter->second.graphicsBufferHolder) {
-                    iter->second.graphicsBufferHolder->flushSurfaces();
-                    iter->second.graphicsBufferHolder = nullptr;
+                    iter.value().graphicsBufferHolder->flushSurfaces();
+                    iter.value().graphicsBufferHolder = nullptr;
                 }
                 iter++;
             }
@@ -1591,8 +1591,8 @@ RenderResult WebView::rendering(bool force)
     {
         auto iter = m_boxShadowCachePerRendering.begin();
         while (iter != m_boxShadowCachePerRendering.end()) {
-            delete iter->second;
-            iter->second = nullptr;
+            delete iter.value();
+            iter.value() = nullptr;
             iter++;
         }
         m_boxShadowCachePerRendering.clear();

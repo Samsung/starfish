@@ -3238,10 +3238,8 @@ public:
                         MatchResult& result, bool isQueryingSelector = false);
     void collectMatchingRulesFromAuthorSheet(
         StyleResolveContext& ctx,
-        const GCUnorderedMultiMap<
-            AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
-        const GCUnorderedMultiMap<
-            AtomicString, std::pair<StyleRule*, ResourceURL*>>::iterator& end,
+        const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
+        const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end,
         CSSSelector::Type type, Element* element, AtomicString elementName,
         AtomicString elementId,
         const GCAtomicTightVector<AtomicString>& elementClasses,

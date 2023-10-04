@@ -531,12 +531,13 @@ void BrowsingContext::resolveStyleIfNeeds()
         if (document()->animationExecutor()->activeAnimations().size() > 0) {
             auto& animations =
                 document()->animationExecutor()->activeAnimations();
-            for (auto& animation : animations) {
+            for (auto animationIter = animations.begin();
+                 animationIter != animations.end(); animationIter++) {
+                auto& animation = animationIter.value();
                 uint64_t currentTick = tickCount();
                 uint64_t cancelTick = 0;
                 bool canceled = false;
-                for (auto task = animation.second.begin();
-                     task != animation.second.end();) {
+                for (auto task = animation.begin(); task != animation.end();) {
                     if (((*task)->targetElement()->isInDocumentScope() ==
                          false) ||
                         ((*task)->targetElement()->style() == nullptr) ||
@@ -546,14 +547,14 @@ void BrowsingContext::resolveStyleIfNeeds()
                         (*task)->detachFromElement(nullptr);
                         float progress = (*task)->fraction(currentTick);
                         cancelTick = (*task)->duration() * progress / 1000;
-                        task = animation.second.erase(task);
+                        task = animation.erase(task);
                     } else {
                         task++;
                     }
                 }
                 if (canceled == true) {
-                    Element* e = animation.first->m_element;
-                    String* n = animation.first->m_name;
+                    Element* e = animationIter.key()->m_element;
+                    String* n = animationIter.key()->m_name;
                     document()->animationExecutor()->fireAnimationCancelEvent(
                         e, n, cancelTick);
                     document()
@@ -855,7 +856,7 @@ void BrowsingContext::dispose()
         while (iter != prevDrawnInfo.end()) {
             if (iter->second.graphicsBufferHolder) {
                 iter->second.graphicsBufferHolder->detachNativeBuffers();
-                iter->second.graphicsBufferHolder = nullptr;
+                iter.value().graphicsBufferHolder = nullptr;
             }
             iter++;
         }

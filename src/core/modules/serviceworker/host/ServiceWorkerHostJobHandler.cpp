@@ -330,7 +330,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     if (iter == m_scopeToRegistrationMap.end()) {
         m_scopeToRegistrationMap.insert(std::make_pair(scope, registration));
     } else {
-        iter->second = registration;
+        iter.value() = registration;
     }
 }
 
@@ -1287,7 +1287,7 @@ void ServiceWorkerHostJobHandler::updateServiceWorkerClient(
                 m_clientIdToRegistrationIdMap.insert(std::make_pair(
                     request->contextId, request->registrationId));
             } else {
-                iter->second = request->registrationId;
+                iter.value() = request->registrationId;
             }
         }
     } else if (request->type == ServiceWorkerClientRequestType::Unregister) {

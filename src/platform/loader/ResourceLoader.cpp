@@ -390,7 +390,7 @@ void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
     auto utf8Data = res->url()->urlString()->toUTF8NonGCString();
     auto iter = m_imageResourceCache.find(utf8Data.data());
     if (iter != m_imageResourceCache.end()) {
-        iter->second.m_lastUsedTime = tickCount();
+        iter.value().m_lastUsedTime = tickCount();
     }
 }
 
@@ -454,7 +454,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res,
                     std::make_pair(std::move(url), data));
                 m_imageResourceCacheLRUList.push_back(res);
             } else {
-                ResourceCacheData& data = iter->second;
+                ResourceCacheData& data = iter.value();
                 Resource* resourceInCache = data.m_resource;
                 data.m_lastUsedTime = tickCount();
 
@@ -483,7 +483,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res,
                 m_fontResourceCache.insert(
                     std::make_pair(std::move(url), data));
             } else {
-                ResourceCacheData& data = iter->second;
+                ResourceCacheData& data = iter.value();
                 Resource* resourceInCache = data.m_resource;
                 data.m_lastUsedTime = tickCount();
                 cacheHit(resourceInCache, res, syncLevel);
