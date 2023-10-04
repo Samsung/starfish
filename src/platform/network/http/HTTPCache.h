@@ -47,11 +47,7 @@ public:
     HTTPCache(String* cacheDirPath);
     ~HTTPCache();
     bool initFromIndexFileIfPossible();
-    HTTPCacheEntryMultiMap::iterator get(ResourceURL* url);
-    HTTPCacheEntryMultiMap::iterator end()
-    {
-        return m_cacheEntryTable->end();
-    }
+    Nullable<HTTPCacheEntry*> get(ResourceURL* url);
 
     void put(NetworkURLWorkerData* data);
     void update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry);
@@ -111,8 +107,10 @@ private:
     void clearCacheDir();
     void init();
     void removeItemInLRUList(String* url);
-    void removeItemIncacheEntryTable(String* url);
-    HTTPCacheEntryMultiMap::iterator findEntryInCacheEntryTable(String* key);
+    void insertToCacheEntryTable(
+        const std::pair<size_t, RefPtr<HTTPCacheEntry>>& pair);
+    void removeFromCacheEntryTable(HTTPCacheEntry* entry);
+    Nullable<HTTPCacheEntry*> findEntryInCacheEntryTable(String* key);
     HTTPCacheLRUList::iterator findItemInLRUList(String* item);
     void extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
                                        CacheControl& cc, HTTPContentInfo& cinfo,
@@ -120,7 +118,7 @@ private:
 
     size_t calcBlocksSize(size_t length);
     size_t calcBlocksSizeOfIndexFile();
-    HTTPCacheEntryMultiMap* m_cacheEntryTable;
+    HTTPCacheEntryMap* m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;

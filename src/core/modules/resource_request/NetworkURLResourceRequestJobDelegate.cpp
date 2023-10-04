@@ -398,11 +398,11 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (allowCache && m_orgProxy->starfish()->httpCache() &&
             m_orgProxy->requestDestination() != RequestDestination::Document) {
-            auto it =
+            auto entry =
                 m_orgProxy->starfish()->httpCache()->get(m_orgProxy->url());
 
-            if (it != m_orgProxy->starfish()->httpCache()->end()) {
-                nwd->cachedEntry = it->second.get();
+            if (entry) {
+                nwd->cachedEntry = entry.getValue();
                 nwd->cachedEntry->ref();
                 fillHeadersWithCachedEntry(headers, nwd->cachedEntry);
             }
