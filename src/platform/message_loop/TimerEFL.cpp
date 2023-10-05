@@ -78,13 +78,15 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                if (ecore_timer_freeze_get(td->m_timerID) || (!td->m_timer)) {
+                if (ecore_timer_freeze_get(td->m_timerID)) {
                     return ECORE_CALLBACK_DONE;
                 }
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
                 td->m_timer->m_webBase->messageLoop()
                     ->invokeMicroTasksIfExist();
-                td->m_handler(td->m_data);
+                if (td->m_handler && td->m_timer && td->m_id && td->m_timerID) {
+                    td->m_handler(td->m_data);
+                }
                 return ECORE_CALLBACK_RENEW;
             },
             td);
@@ -96,16 +98,19 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
                 TimeoutData* td = (TimeoutData*)data;
                 Timer* timer = td->m_timer;
                 int32_t id = td->m_id;
-                if (ecore_timer_freeze_get(td->m_timerID) || (!timer)) {
+                if (ecore_timer_freeze_get(td->m_timerID)) {
                     return ECORE_CALLBACK_DONE;
                 }
                 td->m_timer->m_webBase->messageLoop()
                     ->invokeMicroTasksIfExist();
-                td->m_handler(td->m_data);
-                auto iter = timer->m_timeoutHandler.find(id);
-                if (iter != timer->m_timeoutHandler.end()) {
-                    timer->m_timeoutHandler.erase(iter);
-                    GC_FREE(td);
+
+                if (td->m_handler && td->m_timer && td->m_id && td->m_timerID) {
+                    td->m_handler(td->m_data);
+                    auto iter = timer->m_timeoutHandler.find(id);
+                    if (iter != timer->m_timeoutHandler.end()) {
+                        timer->m_timeoutHandler.erase(iter);
+                        GC_FREE(td);
+                    }
                 }
                 return ECORE_CALLBACK_DONE;
             },

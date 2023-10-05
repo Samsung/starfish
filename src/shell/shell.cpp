@@ -196,7 +196,7 @@ smaps_sizes getSmapsStats()
             }
         }
     }
-    fclose(file);
+    pclose(file);
     return sizes;
 }
 #endif
