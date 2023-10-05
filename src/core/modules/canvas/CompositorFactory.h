@@ -74,7 +74,7 @@ namespace CompositorFactory {
     void destroyCompositorContextSkia(PlatformWindow* wnd,
                                       CompositorContext* ctx);
     uint32_t maximumTextureSizeSkia();
-    bool supportsFilterEffect_skia(size_t textureWidth, size_t textureHeight);
+    bool supportsFilterEffectSkia(size_t textureWidth, size_t textureHeight);
 #endif
 
 }; // namespace CompositorFactory

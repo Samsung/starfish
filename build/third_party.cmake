@@ -83,6 +83,10 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 # Nanomsg is used for ServiceWorker and Inspector
 IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
+    SET (NANOMSG_BUILDDIR ${OUTPUT_DIRECTORY}/nanomsg/out/${HOST}/${ARCH}/${MODE}.shared)
+    SET (NANOMSG_LOCAL_TARGET ${NANOMSG_BUILDDIR}/libnanomsg.so)
+    SET (NANOMSG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libnanomsg.so)
+
     SET (NANOMSG_CFLAGS_COMMON "-g3 -fPIC")
     IF (${CUSTOM} STREQUAL "unified_wearable")
         SET (NANOMSG_CFLAGS_CUSTOM "-Os")
@@ -101,17 +105,13 @@ IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
     ENDIF()
 
     SET (NANOMSG_CFLAGS "${NANOMSG_CFLAGS_COMMON} ${NANOMSG_CFLAGS_CUSTOM} ${NANOMSG_CFLAGS_ARCH} ${NANOMSG_CFLAGS_MODE}")
-    SET (NANOMSG_CUSTOM -DNN_ENABLE_DOC=OFF -DNN_TESTS=OFF -DNN_TOOLS=OFF -DNN_ENABLE_GETADDRINFO_A=OFF -DCMAKE_INSTALL_PREFIX=/dist)
-
-    SET (NANOMSG_BUILDDIR ${THIRD_PARTY_ROOT}/nanomsg/out/${HOST}/${ARCH}/${MODE}.shared)
-    SET (NANOMSG_LOCAL_TARGET ${NANOMSG_BUILDDIR}/libnanomsg.so)
-    SET (NANOMSG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libnanomsg.so)
+    SET (NANOMSG_CUSTOM -DNN_ENABLE_DOC=OFF -DNN_TESTS=OFF -DNN_TOOLS=OFF -DNN_ENABLE_GETADDRINFO_A=OFF -DCMAKE_INSTALL_PREFIX=${NANOMSG_BUILDDIR}/dist)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_LOCAL_TARGET}
                         COMMENT "BUILD NANOMSG"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${NANOMSG_BUILDDIR}
-                        COMMAND cd ${NANOMSG_BUILDDIR} && cmake ../../../../ -DCMAKE_C_FLAGS=${NANOMSG_CFLAGS} -DCMAKE_CXX_FLAGS=${NANOMSG_CFLAGS} ${NANOMSG_CUSTOM}
-                        COMMAND cd ${NANOMSG_BUILDDIR} && make -j
+                        COMMAND cd ${THIRD_PARTY_ROOT}/nanomsg/ && cmake -B${NANOMSG_BUILDDIR} -DCMAKE_C_FLAGS=${NANOMSG_CFLAGS} -DCMAKE_CXX_FLAGS=${NANOMSG_CFLAGS} ${NANOMSG_CUSTOM}
+                        COMMAND cd ${THIRD_PARTY_ROOT}/nanomsg/ && cmake --build ${NANOMSG_BUILDDIR} -j
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_TARGET}
@@ -119,13 +119,15 @@ IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
                         COMMENT "COPY NANOMSG"
                         COMMAND cp -P ${NANOMSG_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
                         COMMENT "INSTALL NANOMSG"
-                        COMMAND cd ${NANOMSG_BUILDDIR} && make DESTDIR=${NANOMSG_BUILDDIR}/../../../../ install
+                        COMMAND cd ${NANOMSG_BUILDDIR} && make install
     )
 
     ADD_CUSTOM_TARGET (nanomsg
                        DEPENDS ${NANOMSG_TARGET}
                        COMMAND echo "NANOMSG TARGET"
     )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${NANOMSG_BUILDDIR}/dist/include)
 ENDIF()
 
 #######################################################
@@ -138,21 +140,23 @@ file(WRITE third_party/libwebsockets/include/libwebsockets.h "${LIBWEBSOCKETS_IN
 
 IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
     SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
-    SET(LIBWEBSOCKETS_BUILD_PATH ${LIBWEBSOCKETS_DIR}/build/${HOST}/${ARCH}/${MODE})
+    SET(LIBWEBSOCKETS_BUILD_PATH ${OUTPUT_DIRECTORY}/libwebsockets/build/${HOST}/${ARCH}/${MODE})
     SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.a)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.a)
 IF (${ARCH} STREQUAL "x64")
-    SET(OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
-    SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON -DOPENSSL_ROOT_DIR=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE} -DLWS_OPENSSL_INCLUDE_DIRS=${THIRD_PARTY_ROOT}/openssl/out/${HOST}/${ARCH}/${MODE}/include)
+    SET (OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
+    SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
+
+    SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_BUILD_PATH} -DLWS_OPENSSL_INCLUDE_DIRS=${OPENSSL_BUILD_PATH}/include)
     ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
                         DEPENDS openssl
                         WORKING_DIRECTORY ${LIBWEBSOCKETS_DIR}
                         COMMENT "BUILD LIBWEBSOCKETS"
                         COMMAND echo "BUILD LIBWEBSOCKETS"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND cd ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -G Ninja ../../../../ ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
-                        COMMAND ninja
+                        COMMAND cd ${LIBWEBSOCKETS_DIR}
+                        COMMAND ${CMAKE_COMMAND} -G Ninja -B${LIBWEBSOCKETS_BUILD_PATH} ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
+                        COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_PATH} -j
     )
 ELSE()
     SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON)
@@ -161,9 +165,9 @@ ELSE()
                         COMMENT "BUILD LIBWEBSOCKETS"
                         COMMAND echo "BUILD LIBWEBSOCKETS"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND cd ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -G Ninja ../../../../ ${LIBWEBSOCKETS_BUILD_OPTION}
-                        COMMAND ninja
+                        COMMAND cd ${LIBWEBSOCKETS_DIR}
+                        COMMAND ${CMAKE_COMMAND} -G Ninja -B${LIBWEBSOCKETS_BUILD_PATH} ${LIBWEBSOCKETS_BUILD_OPTION}
+                        COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_PATH} -j
     )
 ENDIF()
 
@@ -177,6 +181,8 @@ ENDIF()
                         DEPENDS ${LIBWEBSOCKETS_TARGET}
                         COMMAND echo "LIBWEBSOCKETS TARGET"
     )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS}  ${LIBWEBSOCKETS_BUILD_PATH}/include)
 ENDIF()
 
 #######################################################
@@ -185,30 +191,16 @@ ENDIF()
 IF (${ARCH} STREQUAL "x64" AND ((${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
         OR ${ENABLE_SERVICE_WORKER} STREQUAL "1"))
     SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
-    SET (TUV_TARGET ${TUV_DIR}/build/x86_64-linux/${MODE}/lib/libtuv.a)
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET}
-                        WORKING_DIRECTORY ${TUV_DIR}
-                        COMMENT "BUILD TUV"
-                        COMMAND make clean
-                        COMMAND make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux
-    )
-
-    ADD_CUSTOM_TARGET (tuv
-                       DEPENDS ${TUV_TARGET}
-                       COMMAND echo "TUV TARGET"
-    )
-ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1"))
-    SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
-    SET (TUV_LOCAL_TARGET ${TUV_DIR}/build/noarch-tizen/${MODE}/lib/libtuv.so)
+    SET (TUV_BUILD_DIR ${OUTPUT_DIRECTORY}/libtuv)
+    SET (TUV_LOCAL_TARGET ${TUV_BUILD_DIR}/build/x86_64-linux/${MODE}/lib/libtuv.so)
     SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LOCAL_TARGET}
                         WORKING_DIRECTORY ${TUV_DIR}
                         COMMENT "BUILD TUV"
-                        COMMAND make clean
-                        COMMAND cp ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in .
-                        COMMAND make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen
+                        # we should copy tuv repo because tuv make include file inside of tuv repo.
+                        COMMAND cp -r ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND cd ${TUV_BUILD_DIR} && make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET}
@@ -222,6 +214,36 @@ ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_
                        DEPENDS ${TUV_TARGET}
                        COMMAND echo "TUV TARGET"
     )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${TUV_BUILD_DIR}/src ${TUV_BUILD_DIR}/include)
+ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "flutter" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1"))
+    SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
+    SET (TUV_BUILD_DIR ${OUTPUT_DIRECTORY}/libtuv)
+    SET (TUV_LOCAL_TARGET ${TUV_BUILD_DIR}/build/noarch-tizen/${MODE}/lib/libtuv.so)
+    SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LOCAL_TARGET}
+                        WORKING_DIRECTORY ${TUV_DIR}
+                        COMMENT "BUILD TUV"
+                        # we should copy tuv repo because tuv make include file inside of tuv repo.
+                        COMMAND cp -r ${TUV_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND cp ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in ${TUV_BUILD_DIR}
+                        COMMAND cd ${TUV_BUILD_DIR} && make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET}
+                        WORKING_DIRECTORY ${TUV_DIR}
+                        DEPENDS ${TUV_LOCAL_TARGET}
+                        COMMENT "COPY TUV"
+                        COMMAND cp ${TUV_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_TARGET (tuv
+                       DEPENDS ${TUV_TARGET}
+                       COMMAND echo "TUV TARGET"
+    )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${TUV_BUILD_DIR}/src ${TUV_BUILD_DIR}/include)
 ENDIF()
 
 #######################################################
@@ -229,14 +251,13 @@ ENDIF()
 #######################################################
 IF (${BUILD_CAIRO} STREQUAL "1")
     SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/cairo)
-    SET (CAIRO_TARGET ${CAIRO_DIR}/out/${HOST}/${ARCH}/${MODE}/lib/libcairo.a)
+    SET (CAIRO_TARGET ${OUTPUT_DIRECTORY}/cairo/out/lib/libcairo.a)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
                         WORKING_DIRECTORY ${CAIRO_DIR}
                         COMMENT "BUILD CAIRO"
-                        COMMAND mkdir -p out/${HOST}/${ARCH}/${MODE}/
                         COMMAND NOCONFIGURE=1 ./autogen.sh
-                        COMMAND ./configure --prefix=${CAIRO_DIR}/out/${HOST}/${ARCH}/${MODE}/ --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+                        COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./configure --prefix=${OUTPUT_DIRECTORY}/cairo/out --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
                         COMMAND make -j${NPROCS} V=1
                         COMMAND make install
                         COMMAND make distclean
@@ -248,6 +269,8 @@ IF (${BUILD_CAIRO} STREQUAL "1")
                        DEPENDS ${CAIRO_TARGET}
                        COMMAND echo "CAIRO TARGET"
     )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OUTPUT_DIRECTORY}/cairo/out/include ${OUTPUT_DIRECTORY}/cairo/out/include/cairo)
 ENDIF()
 
 #######################################################
@@ -271,16 +294,16 @@ IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND
         SET (SKIA_BUILD_ARGS ${SKIA_BUILD_ARGS} "is_rgba=false")
     ENDIF()
 
-    SET(SKIA_LOCAL_TARGET ${SKIA_DIR}/out/${SKIA_BUILD_TYPE}/Shared/libskia.so)
+    SET(SKIA_LOCAL_TARGET ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared/libskia.so)
     SET(SKIA_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libskia.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_LOCAL_TARGET}
                         WORKING_DIRECTORY ${SKIA_DIR}
                         COMMENT "BUILD SKIA"
                         COMMAND echo "BUILD SKIA"
-                        COMMAND bin/gn gen out/${SKIA_BUILD_TYPE}/Shared --args="${SKIA_BUILD_ARGS}"
-                        COMMAND ninja -d explain -C out/${SKIA_BUILD_TYPE}/Shared -t clean
-                        COMMAND ninja -d explain -C out/${SKIA_BUILD_TYPE}/Shared
+                        COMMAND bin/gn gen ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared --args="${SKIA_BUILD_ARGS}"
+                        COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared -t clean
+                        COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_TARGET}
@@ -340,8 +363,8 @@ ADD_SUBDIRECTORY (third_party/escargot)
 # Currently, Ubuntu 16.04 and prod_tv do not have openssl 1.1.
 IF (${HOST} STREQUAL "linux")
     SET (OPENSSL_DIR ${THIRD_PARTY_ROOT}/openssl)
-    SET (OPENSSL_BUILD_PATH out/${HOST}/${ARCH}/${MODE})
-    SET (OPENSSL_LOCAL_TARGET ${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/libssl.so)
+    SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
+    SET (OPENSSL_LOCAL_TARGET ${OPENSSL_BUILD_PATH}/libssl.so)
     SET (OPENSSL_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so)
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
@@ -350,22 +373,24 @@ IF (${HOST} STREQUAL "linux")
                         COMMAND echo "BUILDING OPENSSL"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
                         COMMAND cd ${OPENSSL_BUILD_PATH}
-                        COMMAND ../../../../config
-                        COMMAND make -j
-                        COMMAND cp -r ../../../../include .
+                        COMMAND ${OPENSSL_DIR}/config
+                        COMMAND make -j8
+                        COMMAND cp -r ${OPENSSL_DIR}/include .
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         DEPENDS ${OPENSSL_LOCAL_TARGET}
                         COMMENT "COPYING OPENSSL"
-                        COMMAND cp -P ${OPENSSL_DIR}/${OPENSSL_BUILD_PATH}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMAND cp -P ${OPENSSL_BUILD_PATH}/lib*so* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (openssl
                     DEPENDS ${OPENSSL_TARGET}
                     COMMAND echo "OPENSSL TARGET"
     )
+
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OPENSSL_BUILD_PATH}/include)
 ENDIF()
 
 #######################################################
