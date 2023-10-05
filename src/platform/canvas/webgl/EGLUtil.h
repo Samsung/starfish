@@ -61,6 +61,8 @@ bool makeCurrentEGLContext(const EGLDisplay display,
 
 bool makeCurrentEGLContext(const EGLPlatform &platform);
 
+EGLContext getCurrentContext();
+
 void resetCurrentEGLContext(const EGLDisplay display);
 
 bool resetCurrentEGLContext(const EGLPlatform &platform);
