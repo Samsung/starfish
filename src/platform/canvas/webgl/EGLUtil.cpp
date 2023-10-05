@@ -89,6 +89,11 @@ bool makeCurrentEGLContext(const EGLPlatform& platform)
     return true;
 }
 
+EGLContext getCurrentContext()
+{
+    return eglGetCurrentContext();
+}
+
 bool resetCurrentEGLContext(const EGLPlatform& platform)
 {
     eglMakeCurrent(platform.display, EGL_NO_SURFACE, EGL_NO_SURFACE,

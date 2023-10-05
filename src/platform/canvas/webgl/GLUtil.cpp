@@ -21,6 +21,7 @@
 
 #include "StarfishBase.h"
 #include "platform/canvas/webgl/GLUtil.h"
+#include "platform/canvas/webgl/GLContext.h"
 
 namespace Starfish {
 
@@ -98,6 +99,8 @@ FramebufferTexture::~FramebufferTexture()
 bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
                                 GLuint& outTextureId)
 {
+    GLRevertableContextScope scope(GLContextScope::getCurrentContext());
+
     if (!createFrameBufferObject(bufferWidth, bufferHeight, m_fbo, m_textureId,
                                  m_rbo)) {
         STARFISH_ASSERT(false);

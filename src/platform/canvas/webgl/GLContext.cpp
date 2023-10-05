@@ -93,16 +93,50 @@ bool GLContext::destory()
     return true;
 }
 
+void GLContext::reset()
+{
+    m_context = nullptr;
+}
+
+bool GLContext::isValid()
+{
+    return m_context != nullptr;
+}
+
 // GLContextScope
+
+thread_local GLContext GLContextScope::currentContext;
 
 GLContextScope::GLContextScope(GLContext context)
 {
     context.setCurrent();
+
+    STARFISH_ASSERT(currentContext.isValid() == false);
+    currentContext = context;
 }
 
 GLContextScope::~GLContextScope()
 {
     EGLUtil::resetCurrentEGLContext(EGLEnv::instance()->display());
+    currentContext.reset();
+}
+
+GLContext GLContextScope::getCurrentContext()
+{
+    return currentContext.isValid() ? currentContext : GLContext();
+}
+
+// GLRevertableContextScope
+
+GLRevertableContextScope::GLRevertableContextScope(GLContext context)
+{
+    m_previousContext = GLContext(EGLUtil::getCurrentContext());
+    context.setCurrent();
+}
+
+GLRevertableContextScope::~GLRevertableContextScope()
+{
+    m_previousContext.setCurrent();
 }
 
 // WebGLContextScope

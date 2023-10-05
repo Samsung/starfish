@@ -56,18 +56,21 @@ void WebGLRenderingContextBaseMixIn::initialize()
     calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
                        m_ownerHTMLCanvasElement->height());
 
-    // Create a surface for this rendering context
+    // Create a GL context for this rendering context
     {
         GLContextScope scope(EGLEnv::instance()->context());
+        if (!m_context.create(true)) {
+            STARFISH_LOG_ERROR("GLContext creation has failed.");
+        }
+    }
+
+    // Create a surface for this rendering context
+    {
+        GLContextScope scope(m_context);
         SurfaceCreationScope surfaceScope(m_framebufferTexture);
         m_canvasSurface = CanvasSurface::create(
             m_ownerHTMLCanvasElement->webView()->platformWindow(), width,
             height, 1, CanvasSurface::CanvasElement);
-    }
-
-    // Create a GL context for this rendering context
-    if (!m_context.create(true)) {
-        STARFISH_LOG_ERROR("GLContext creation has failed.");
     }
 }
 

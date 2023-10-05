@@ -36,6 +36,8 @@ public:
     bool destory();
     bool setCurrent();
     void resetCurrent();
+    void reset();
+    bool isValid();
 
 private:
     EGLContext m_context{ nullptr };
@@ -49,6 +51,25 @@ public:
     GLContextScope(const GLContextScope& other) = delete;
     GLContextScope& operator=(const GLContextScope& other) = delete;
     GLContextScope(GLContextScope&& other) = delete;
+
+    static GLContext getCurrentContext();
+
+private:
+    static thread_local GLContext currentContext;
+};
+
+class GLRevertableContextScope final {
+public:
+    explicit GLRevertableContextScope(GLContext context);
+    ~GLRevertableContextScope();
+
+    GLRevertableContextScope(const GLRevertableContextScope& other) = delete;
+    GLRevertableContextScope& operator=(const GLRevertableContextScope& other) =
+        delete;
+    GLRevertableContextScope(GLRevertableContextScope&& other) = delete;
+
+private:
+    GLContext m_previousContext;
 };
 
 class WebGLContextScope final {
