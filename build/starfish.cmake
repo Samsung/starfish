@@ -37,16 +37,15 @@ SET (STARFISH_INCLUDE_DIRS
     ${ESCARGOT_ROOT}/src/api
     ${ESCARGOT_ROOT}/third_party/runtime_icu_binder
     ${THIRD_PARTY_ROOT}/robin_map/include
-    ${THIRD_PARTY_ROOT}/nanomsg/dist/include
     ${THIRD_PARTY_ROOT}/nanomsgcpp
     ${THIRD_PARTY_ROOT}/clipper/cpp
     ${THIRD_PARTY_ROOT}/earcut.hpp/include/mapbox
+    ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS}
     ${STARFISH_TIZEN_CUSTOM_INCLUDE_DIRS}
     ${STARFISH_TIZEN_CUSTOM_BUNDLE_INCLUDE_DIRS}
     ${STARFISH_TIZEN_CUSTOM_VCONF_INCLUDE_DIRS}
     ${STARFISH_TIZEN_CUSTOM_WEBRTC_INCLUDE_DIRS}
     ${STARFISH_TIZEN_INCLUDE_DIRS}
-    ${STARFISH_ADDTIONAL_INCLUDE_DIRS}
 )
 
 IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb"))
@@ -54,20 +53,6 @@ IF (NOT (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND} STREQUAL "efl_skia_gb")
     ${STARFISH_INCLUDE_DIRS}
     ${THIRD_PARTY_ROOT}/skia_matrix
     ${THIRD_PARTY_ROOT}/skia_matrix/include/core)
-ENDIF()
-
-IF (${ARCH} STREQUAL "x64" OR ${HOST} STREQUAL "tizen")
-    SET (STARFISH_INCLUDE_DIRS
-    ${STARFISH_INCLUDE_DIRS}
-    ${STARFISH_LIBWEBSOCKETS_ADDITIONAL_INCLUDE_DIRS}
-    )
-ENDIF()
-
-IF (${ARCH} STREQUAL "x64")
-    SET (STARFISH_INCLUDE_DIRS
-    ${STARFISH_INCLUDE_DIRS}
-    ${STARFISH_OPENSSL_ADDITIONAL_INCLUDE_DIRS}
-    )
 ENDIF()
 
 #######################################################
@@ -157,12 +142,13 @@ SET (STARFISH_DEPENDENCIES
 ADD_DEPENDENCIES (${STARFISH_OBJECT_LIBRARY} ${STARFISH_DEPENDENCIES})
 
 
+# TODO remove this
 IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET(COPY_IMAGE_DECODER copyImageDecoder)
     ADD_CUSTOM_TARGET(copyImageDecoder
-        COMMAND cp ${STARFISH_ROOT}/third_party/libjpeg-turbo/*.so ${STARFISH_ROOT}/out_tizen/${CUSTOM}/release/lib/
-        COMMAND cp ${STARFISH_ROOT}/third_party/libpng/*.so ${STARFISH_ROOT}/out_tizen/${CUSTOM}/release/lib/
-        COMMAND cp ${STARFISH_ROOT}/third_party/giflib/*.so ${STARFISH_ROOT}/out_tizen/${CUSTOM}/release/lib/
+        COMMAND cp ${STARFISH_ROOT}/third_party/libjpeg-turbo/*.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND cp ${STARFISH_ROOT}/third_party/libpng/*.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        COMMAND cp ${STARFISH_ROOT}/third_party/giflib/*.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
     )
     ADD_DEPENDENCIES (${STARFISH_OBJECT_LIBRARY} ${COPY_IMAGE_DECODER})
 ENDIF()

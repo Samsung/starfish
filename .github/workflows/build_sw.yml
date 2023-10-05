@@ -33,9 +33,9 @@ jobs:
         run: git submodule foreach --recursive git reset --hard
       - name: Configuration
         run: |
-          cmake CMakeLists.txt -G Ninja -DTARGETNAME=Starfish \
+          cmake CMakeLists.txt -B${{ matrix.backend }}/${{ matrix.mode }} -G Ninja -DTARGETNAME=Starfish \
             -DHOST=linux -DARCH=x64 -DDOCKER=1 \
             -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
             -DENABLE_SERVICE_WORKER=1
       - name: Build
-        run: ninja starfish.${{ matrix.target }}
+        run: ninja -C ${{ matrix.backend }}/${{ matrix.mode }} starfish.${{ matrix.target }}

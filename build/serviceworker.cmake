@@ -35,7 +35,6 @@ SET (STARFISH_SERVICEWORKER_INCLUDE_ADDITIONAL_DIRS
     ${THIRD_PARTY_ROOT}/robin_map/include
     ${THIRD_PARTY_ROOT}/libtuv/include
     ${THIRD_PARTY_ROOT}/libtuv/src
-    ${THIRD_PARTY_ROOT}/nanomsg/dist/include
     ${THIRD_PARTY_ROOT}/nanomsgcpp
     ${THIRD_PARTY_ROOT}/httplib)
 SET (STARFISH_SERVICEWORKER_ENTRY ${STARFISH_ROOT}/src/launcher/ServiceWorkerEntry.cpp)
