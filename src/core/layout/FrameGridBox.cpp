@@ -168,7 +168,8 @@ void GridFormattingContext::layoutGridItems()
     applyAlignItems();
 }
 
-void GridFormattingContext::insertNamedGridArea(const std::pair<std::string, GridArea>& pair)
+void GridFormattingContext::insertNamedGridArea(
+    const std::pair<std::string, GridArea>& pair)
 {
     auto iter = m_namedAreaMap.find(pair.first);
     if (iter != m_namedAreaMap.end()) {
@@ -935,6 +936,7 @@ void GridFormattingContext::initializeGridTrackColumns(
         LayoutUnit baseSize = intMaxForLayoutUnit;
 
         if (trackSize.isLength()) {
+            // TODO: Apply other length types.
             if (gridLength.isLength() &&
                 gridLength.length().isDefinite(m_availableWidth !=
                                                intMaxForLayoutUnit)) {
@@ -1401,16 +1403,28 @@ void GridFormattingContext::applyImplicitTrackSizing()
     const GCVector<GridTrackSize>* rows =
         m_container->style()->gridTemplateRows();
 
-    if (rows) {
-        return;
-    }
-
+    GCVector<GridTrack*> autoRows;
     if (m_container->hasFixedStyleHeight()) {
-        double height = m_container->style()->height().fixed();
-        double eachRowHeight = height / (m_gridTemplateRows.size() - 1);
+        double containerHeight = m_container->style()->height().fixed();
+        double availableHeight = containerHeight;
+        size_t autoRowsNum = 0;
         for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
             GridTrack& track = m_gridTemplateRows[i];
-            track.setSize(LayoutUnit(eachRowHeight));
+            // TODO: Apply other length types.
+            if (track.isLength()) {
+                availableHeight -= track.size().toDouble();
+            } else if (track.isAuto()) {
+                autoRows.push_back(&track);
+            }
+        }
+
+        if (!autoRows.size()) {
+            return;
+        }
+
+        double eachRowHeight = availableHeight / autoRows.size();
+        for (auto* row : autoRows) {
+            row->setSize(LayoutUnit(eachRowHeight));
         }
     }
 }

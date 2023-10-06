@@ -302,6 +302,11 @@ test/cairo/internal-test/cookie/cookie-internal-test-2.html
 test/cairo/internal-test/css/grid/grid-template-columns_calc_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_02.html
+test/cairo/internal-test/css/grid/grid-template-rows_auto_01.html
+test/cairo/internal-test/css/grid/grid-template-rows_auto_02.html
+test/cairo/internal-test/css/grid/grid-template-rows_auto_03.html
+test/cairo/internal-test/css/grid/grid-template-rows_auto_04.html
+test/cairo/internal-test/css/grid/grid-template-rows_Implicit.html
 test/cairo/internal-test/css/grid/gridbox_simple_test0.html
 test/cairo/internal-test/css/grid/gridbox_simple_test1.html
 test/cairo/internal-test/css/grid/gridbox_simple_test6.html
