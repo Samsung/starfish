@@ -285,37 +285,37 @@ public:
         m_implicitLine = newLine;
     }
 
-    bool isImplicitLine()
+    bool isImplicitLine() const
     {
         return m_implicitLine;
     }
 
-    bool isLength()
+    bool isLength() const
     {
         return m_type == GridTrackType::Length;
     }
 
-    bool isFr()
+    bool isFr() const
     {
         return m_type == GridTrackType::Fr;
     }
 
-    bool isMinMax()
+    bool isMinMax() const
     {
         return m_type == GridTrackType::MinMax;
     }
 
-    bool isAuto()
+    bool isAuto() const
     {
         return m_type == GridTrackType::Auto;
     }
 
-    bool isMinContent()
+    bool isMinContent() const
     {
         return m_type == GridTrackType::MinContent;
     }
 
-    bool isMaxContent()
+    bool isMaxContent() const
     {
         return m_type == GridTrackType::MaxContent;
     }

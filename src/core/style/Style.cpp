@@ -86,8 +86,8 @@ static bool compareCString(const char* keyword, const char* value)
             (memcmp(value, keyword, strlen(keyword))) == 0);
 }
 
-static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
-                                     GCVector<GridTrackSize>* v);
+static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
+                                            GCVector<GridTrackSize>* v);
 
 static FontWeightValue lighterWeight(FontWeightValue weight)
 {
@@ -11980,7 +11980,7 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize>* v)
             CSSTokenVector tokens;
             CSSStyleDeclaration::tokenizeCSSValue(tokens, data, len);
             for (int32_t i = 0; i < count; ++i) {
-                if (!parseGridTemplateColumns(tokens, v)) {
+                if (!parseGridTemplateRowsAndColumns(tokens, v)) {
                     return false;
                 }
             }
@@ -11990,8 +11990,8 @@ static bool parseRepeat(CSSTokenValue& str, GCVector<GridTrackSize>* v)
     return false;
 }
 
-static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
-                                     GCVector<GridTrackSize>* v)
+static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
+                                            GCVector<GridTrackSize>* v)
 {
     STARFISH_ASSERT(v != nullptr);
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -12057,46 +12057,6 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
     return true;
 }
 
-static bool parseGridTemplateRows(const CSSTokenVector& tokens,
-                                  GCVector<GridTrackSize>* v)
-{
-    STARFISH_ASSERT(v != nullptr);
-
-    for (size_t i = 0; i < tokens.size(); i++) {
-        auto ss = tokens[i].trim();
-        CSSPropertyParser parser((char*)ss.data(), ss.length());
-
-        bool hasPoint = false;
-        parser.consumeWhitespaces();
-        if (!parser.consumeNumber(&hasPoint)) {
-            return false;
-        }
-
-        float number = parser.parsedNumber();
-        parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
-        const auto& str = parser.parsedString();
-        if (str.length() != 0 &&
-            (!CSSPropertyParser::isLengthUnit(str) && !(str == "fr"))) {
-            return false;
-        }
-
-        // TODO : Add the GridLine, GridArea and Repeat
-        // Create GridTrack and push back into vector.
-        if (str == "fr") {
-            v->push_back(GridTrackSize(GridLength(number),
-                                       GridTrackSize::GridTrackType::FrType));
-        } else if (CSSPropertyParser::isLengthUnit(str)) {
-            v->push_back(
-                GridTrackSize(CSSLength(str, number).toLength(),
-                              GridTrackSize::GridTrackType::LengthType));
-        } else {
-            STARFISH_UNIMPLEMENTED();
-        }
-    }
-
-    return true;
-}
-
 bool CSSStyleValuePair::updateValueGridTemplateColumns(
     Document* document, const CSSTokenVector& tokens)
 {
@@ -12114,7 +12074,7 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
 
     GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
     ValueList* v1 = new ValueList(Separator::SpaceSeparator);
-    if (!parseGridTemplateColumns(tokens, v)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v)) {
         return false;
     }
     setGridTemplateUnits(v);
@@ -12137,7 +12097,7 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
 
     GCVector<GridTrackSize>* v = new GCVector<GridTrackSize>();
 
-    if (!parseGridTemplateRows(tokens, v)) {
+    if (!parseGridTemplateRowsAndColumns(tokens, v)) {
         return false;
     }
 
