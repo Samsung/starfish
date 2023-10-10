@@ -299,6 +299,9 @@ test/cairo/internal-test/css/preferred-width/preferred-width-white-space.html
 test/cairo/internal-test/cookie/cookie-internal-test-1.html
 test/cairo/internal-test/cookie/cookie-internal-test-2.html
 #test/cairo/internal-test/css/overflow/scroll-width-height.html
+test/cairo/internal-test/css/grid/grid-template_01.html
+test/cairo/internal-test/css/grid/grid-template_02.html
+test/cairo/internal-test/css/grid/grid-template_03.html
 test/cairo/internal-test/css/grid/grid-template-columns_calc_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_01.html
 test/cairo/internal-test/css/grid/grid-template-columns_repeat_02.html

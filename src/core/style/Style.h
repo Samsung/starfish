@@ -807,6 +807,7 @@ class CSSFilterFunction;
     F(Background, background, "background")                          \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")       \
     F(BackgroundPosition, backgroundPosition, "background-position") \
+    F(GridTemplate, gridTemplate, "grid-template")                   \
     F(TextDecoration, textDecoration, "text-decoration")             \
     F(Margin, margin, "margin")                                      \
     F(MarginBlock, marginBlokc, "margin-block")                      \

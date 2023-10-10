@@ -20,45 +20,29 @@
 #ifndef __StarfishGridLength__
 #define __StarfishGridLength__
 
-#include "core/layout/LayoutUtil.h"
-
 namespace Starfish {
+
+enum class GridLengthType {
+    kLength,
+    kFlexibleLength, // https://drafts.csswg.org/css-grid/#fr-unit
+};
 
 class GridLength {
 public:
-    enum GridLengthType {
-        LengthType,
-        FrType,
-    };
+    GridLength();
 
-    GridLength()
-        : m_length(Length())
-        , m_fr(0)
-        , m_type(LengthType)
-    {
-    }
+    GridLength(const Length& length);
 
-    GridLength(const Length& length)
-        : m_length(length)
-        , m_fr(0)
-        , m_type(LengthType)
-    {
-    }
-
-    GridLength(double fr)
-        : m_fr(fr)
-        , m_type(FrType)
-    {
-    }
+    GridLength(double fr);
 
     bool isLength() const
     {
-        return m_type == LengthType;
+        return m_type == GridLengthType::kLength;
     }
 
-    bool isFr() const
+    bool isFlexibleLength() const
     {
-        return m_type == FrType;
+        return m_type == GridLengthType::kFlexibleLength;
     }
 
     const Length& length() const
@@ -78,31 +62,19 @@ public:
 
     bool isPercentage() const
     {
-        return m_type == LengthType && m_length.isPercent();
+        return m_type == GridLengthType::kLength && m_length.isPercent();
     }
 
-    bool operator==(const GridLength& o) const
-    {
-        if (m_type != o.m_type) {
-            return false;
-        }
-
-        if (m_type == LengthType) {
-            return m_length == o.length();
-        } else if (m_type == FrType) {
-            return m_fr == o.fr();
-        }
-        return false;
-    }
+    bool operator==(const GridLength& o) const;
 
     bool isFixed() const
     {
-        return m_type == LengthType && m_length.isFixed();
+        return m_type == GridLengthType::kLength && m_length.isFixed();
     }
 
     bool isAuto() const
     {
-        return m_type == LengthType && m_length.isAuto();
+        return m_type == GridLengthType::kLength && m_length.isAuto();
     }
 
     GridLengthType type() const
@@ -110,92 +82,60 @@ public:
         return m_type;
     }
 
-    String* toString()
-    {
-        StringBuilder builder;
-        if (m_type == LengthType) {
-            String* value = m_length.dumpString();
-            builder.appendString(value);
-            builder.appendString("px");
-        } else if (m_type == FrType) {
-            char temp[100];
-            snprintf(temp, sizeof(temp), "%.1f", m_fr);
-            String* value = String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
-            builder.appendString(value);
-            builder.appendString("fr");
-        }
-        return builder.finalize();
-    }
+    String* toString() const;
 
 private:
     Length m_length;
-    double m_fr;
+    double m_fr = 0.0f;
     GridLengthType m_type;
 };
 
 // from parsing css properties
+
+enum class GridTrackType {
+    kLength,
+    kFlexibleLength,
+    kMinMax,
+    kMinContent,
+    kMaxContent,
+};
+
 class GridTrackSize : public gc {
 public:
-    enum GridTrackType {
-        LengthType,
-        FrType,
-        MinMaxType,
-        MinContentType,
-        MaxContentType,
-    };
+    static String* toStringWithGridLengths(GCVector<GridTrackSize>* v);
 
-    GridTrackSize()
-        : m_data1(Length())
-        , m_data2(Length())
-        , m_type(LengthType)
-    {
-    }
+    GridTrackSize();
 
-    GridTrackSize(const GridLength& length, GridTrackType type)
-        : m_data1(length)
-        , m_data2(length)
-        , m_type(type)
-    {
-    }
+    GridTrackSize(const GridLength& length, GridTrackType type);
 
     GridTrackSize(const GridLength& min, const GridLength& max,
-                  GridTrackType type = MinMaxType)
-        : m_data1(min)
-        , m_data2(max)
-        , m_type(type)
-    {
-    }
+                  GridTrackType type = GridTrackType::kMinMax);
 
-    GridTrackSize(GridTrackType type)
-        : m_data1(Length())
-        , m_data2(Length())
-        , m_type(type)
-    {
-    }
+    GridTrackSize(GridTrackType type);
 
     bool isLength() const
     {
-        return m_type == LengthType;
+        return m_type == GridTrackType::kLength;
     }
 
-    bool isFr() const
+    bool isFlexibleLength() const
     {
-        return m_type == FrType;
+        return m_type == GridTrackType::kFlexibleLength;
     }
 
     bool isMinMax() const
     {
-        return m_type == MinMaxType;
+        return m_type == GridTrackType::kMinMax;
     }
 
     bool isMinContent() const
     {
-        return m_type == MinContentType;
+        return m_type == GridTrackType::kMinContent;
     }
 
     bool isMaxContent() const
     {
-        return m_type == MaxContentType;
+        return m_type == GridTrackType::kMaxContent;
     }
 
     const Length& length() const
@@ -225,66 +165,17 @@ public:
 
     bool isPercentage() const
     {
-        return m_type == LengthType && m_data1.length().isPercent();
+        return m_type == GridTrackType::kLength && m_data1.length().isPercent();
     }
 
-    bool operator==(const GridTrackSize& o) const
-    {
-        if (m_type != o.m_type) {
-            return false;
-        }
-
-        if (m_type == LengthType) {
-            return m_data1 == o.min();
-        } else if (m_type == FrType) {
-            return m_data1 == o.min();
-        } else if (m_type == MinMaxType) {
-            return m_data1 == o.min() && m_data2 == o.max();
-        }
-        return false;
-    }
+    bool operator==(const GridTrackSize& o) const;
 
     bool isAuto() const
     {
-        return m_type == LengthType && m_data1.length().isAuto();
+        return m_type == GridTrackType::kLength && m_data1.length().isAuto();
     }
 
-    String* toString()
-    {
-        StringBuilder builder;
-        if (m_type == LengthType) {
-            builder.appendString(m_data1.toString());
-            builder.appendString("px");
-        } else if (m_type == FrType) {
-            builder.appendString(m_data1.toString());
-            builder.appendString("fr");
-        } else if (m_type == MinMaxType) {
-            builder.appendString("minmax(");
-            builder.appendString(m_data1.toString());
-            builder.appendString(", ");
-            builder.appendString(m_data2.toString());
-            builder.appendString(")");
-        } else if (m_type == MinContentType) {
-            builder.appendString("min-content");
-        } else if (m_type == MaxContentType) {
-            builder.appendString("max-content");
-        }
-        return builder.finalize();
-    }
-
-    static String* toStringWithGridLengths(GCVector<GridTrackSize>* v)
-    {
-        StringBuilder builder;
-
-        for (size_t i = 0; i < v->size(); i++) {
-            builder.appendString((*v)[i].toString());
-            if (i != v->size() - 1) {
-                builder.appendString(" ");
-            }
-        }
-
-        return builder.finalize();
-    }
+    String* toString() const;
 
 private:
     GridLength m_data1;
