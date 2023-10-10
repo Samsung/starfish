@@ -1264,14 +1264,14 @@ static bool parseAnimationShorthand(
 
 CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
     : ScriptWrappable(this)
+    , m_node(element)
 {
-    m_node = (Node*)element;
 }
 
 CSSStyleDeclaration::CSSStyleDeclaration(Document* document)
     : ScriptWrappable(this)
+    , m_node(document)
 {
-    m_node = (Node*)document;
 }
 
 // helper function to convert Length to CSSStyleValuePair format
@@ -3885,6 +3885,140 @@ void CSSStyleDeclaration::setSrc(const char* value, size_t len,
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::Src, ret);
     }
+}
+
+String* CSSStyleDeclaration::GridTemplate()
+{
+    String* gridTemplateRows =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(
+            CSSStyleValuePair::KeyKind::GridTemplateRows);
+    String* gridTemplateColumns =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(
+            CSSStyleValuePair::KeyKind::GridTemplateColumns);
+    String* gridTemplateAreas =
+        getPropertyValueInternalFor<PropertyType::kLonghand>(
+            CSSStyleValuePair::KeyKind::GridTemplateAreas);
+
+    StringBuilder builder;
+    builder.appendString(gridTemplateRows);
+    builder.appendString(" / ");
+    builder.appendString(gridTemplateColumns);
+    builder.appendString(" / ");
+    builder.appendString(gridTemplateAreas);
+
+    return builder.finalize();
+}
+
+void CSSStyleDeclaration::setGridTemplate(const char* value, size_t len,
+                                          bool isImportant)
+{
+    if (len == 0) {
+        removeGridTemplate();
+        return;
+    }
+
+    CSSTokenVector tokens;
+    tokenizeCSSValue(tokens, value, len, "/", 1);
+
+    CSSStyleValuePair v;
+    if (v.updateValueVarReferences(tokens)) {
+        v.setValue(String::fromUTF8(value, len));
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplate, v);
+        return;
+    }
+
+    if (v.updateValueCommon(tokens)) {
+        v.setFlagImportant(isImportant);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateAreas, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateRows, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateColumns, v);
+        return;
+    }
+
+    bool seenSlash = false;
+    size_t beforeSlash = 0;
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto& token = tokens[i];
+        if (token == "/") {
+            if (seenSlash || i == 0) {
+                return;
+            }
+            seenSlash = true;
+        } else {
+            if (!seenSlash) {
+                beforeSlash++;
+            }
+        }
+    }
+
+    CSSTokenVector tokensForGridTemplateAreas;
+    CSSTokenVector tokensForGridTemplateRows;
+    bool lastIsString = false;
+    for (size_t i = 0; i < beforeSlash; i++) {
+        CSSStyleValuePair temp;
+        auto& token = tokens[i];
+        bool isString = isQuote(token[0]) && isQuote(token[token.length() - 1]);
+        if (isString) {
+            if (lastIsString) {
+                tokensForGridTemplateRows.push_back(CSSTokenValue("auto"));
+            }
+            tokensForGridTemplateAreas.push_back(tokens[i]);
+            lastIsString = true;
+        } else {
+            tokensForGridTemplateRows.push_back(tokens[i]);
+            lastIsString = false;
+        }
+    }
+
+    if (lastIsString) {
+        tokensForGridTemplateRows.push_back(CSSTokenValue("auto"));
+    }
+
+    if (!(tokensForGridTemplateAreas.size() ==
+          tokensForGridTemplateRows.size()) &&
+        !(!tokensForGridTemplateAreas.size() &&
+          tokensForGridTemplateRows.size())) {
+        return;
+    }
+    if (!tokensForGridTemplateAreas.size()) {
+        // Set default value.
+        tokensForGridTemplateAreas.push_back(CSSTokenValue("none"));
+    }
+
+    CSSTokenVector tokensForGridTemplateColumns;
+    for (size_t i = beforeSlash + 1; i < tokens.size(); i++) {
+        tokensForGridTemplateColumns.push_back(tokens[i]);
+    }
+    if (!tokensForGridTemplateColumns.size()) {
+        // Set default value.
+        tokensForGridTemplateColumns.push_back(CSSTokenValue("none"));
+    }
+
+    CSSStyleValuePair gridTemplateAreas, gridTemplateRows, gridTemplateColumns;
+    gridTemplateAreas.setFlagImportant(isImportant);
+    gridTemplateRows.setFlagImportant(isImportant);
+    gridTemplateColumns.setFlagImportant(isImportant);
+    if (gridTemplateAreas.updateValueGridTemplateAreas(
+            m_node->document(), tokensForGridTemplateAreas) &&
+        gridTemplateRows.updateValueGridTemplateRows(
+            m_node->document(), tokensForGridTemplateRows) &&
+        gridTemplateColumns.updateValueGridTemplateColumns(
+            m_node->document(), tokensForGridTemplateColumns)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateAreas,
+                        gridTemplateAreas);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateRows,
+                        gridTemplateRows);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateColumns,
+                        gridTemplateColumns);
+    }
+}
+
+void CSSStyleDeclaration::removeGridTemplate()
+{
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateAreas);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateRows);
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::GridTemplateColumns);
 }
 
 String* CSSStyleDeclaration::TextDecoration()

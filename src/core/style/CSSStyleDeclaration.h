@@ -288,6 +288,10 @@ protected:
     void setBackgroundPosition(const char* value, size_t len, bool isImportant);
     void removeBackgroundPosition();
 
+    String* GridTemplate();
+    void setGridTemplate(const char* value, size_t len, bool isImportant);
+    void removeGridTemplate();
+
     String* TextDecoration();
     void setTextDecoration(const char* value, size_t len, bool isImportant);
     void removeTextDecoration();

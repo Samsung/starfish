@@ -295,7 +295,7 @@ public:
         return m_type == GridTrackType::Length;
     }
 
-    bool isFr() const
+    bool isFlexibleLength() const
     {
         return m_type == GridTrackType::Fr;
     }

@@ -666,7 +666,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Overflow-Wrap
         // text-overflow
         // mask-position
+        // grid-template
         switch (data[0]) {
+        case 'g':
+            if (memcmp(data, "grid-template", 13) == 0) {
+                return CSSStyleValuePair::KeyKind::GridTemplate;
+            }
+            break;
         case 'p':
             if (memcmp(data, "padding-right", 13) == 0) {
                 return CSSStyleValuePair::KeyKind::PaddingRight;
@@ -1857,6 +1863,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'g':
             if (memcmp(data, "gridRowStart", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::GridRowStart;
+            }
+            if (memcmp(data, "gridTemplate", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::GridTemplate;
             }
             break;
         }

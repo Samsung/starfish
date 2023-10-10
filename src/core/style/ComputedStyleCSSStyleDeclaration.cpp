@@ -100,33 +100,40 @@ ComputedStyleCSSStyleDeclaration::RequreidStyleResolveStage
 ComputedStyleCSSStyleDeclaration::requiredStage(
     CSSStyleValuePair::KeyKind keyKind)
 {
-    RequreidStyleResolveStage result =
-        RequreidStyleResolveStage::kStayleResolution;
-
-    if (keyKind >= CSSStyleValuePair::KeyKind::PaddingTop &&
-        keyKind <= CSSStyleValuePair::KeyKind::PaddingLeft) {
-        result = RequreidStyleResolveStage::kLayout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::MarginTop &&
-               keyKind <= CSSStyleValuePair::KeyKind::MarginLeft) {
-        result = RequreidStyleResolveStage::kLayout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::BorderTopWidth &&
-               keyKind <= CSSStyleValuePair::KeyKind::BorderLeftWidth) {
-        result = RequreidStyleResolveStage::kLayout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Top &&
-               keyKind <= CSSStyleValuePair::KeyKind::Left) {
-        result = RequreidStyleResolveStage::kLayout;
-    } else if (keyKind >= CSSStyleValuePair::KeyKind::Width &&
-               keyKind <= CSSStyleValuePair::KeyKind::Height) {
-        result = RequreidStyleResolveStage::kLayout;
-    } else if (keyKind == CSSStyleValuePair::KeyKind::MinWidth ||
-               keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
-        result = RequreidStyleResolveStage::kFrameTreeBuild;
-    } else if (keyKind == CSSStyleValuePair::KeyKind::PaddingInlineEnd ||
-               keyKind == CSSStyleValuePair::KeyKind::PaddingInlineStart) {
-        result = RequreidStyleResolveStage::kLayout;
+    switch (keyKind) {
+    case CSSStyleValuePair::KeyKind::Top:
+    case CSSStyleValuePair::KeyKind::Right:
+    case CSSStyleValuePair::KeyKind::Bottom:
+    case CSSStyleValuePair::KeyKind::Left:
+    case CSSStyleValuePair::KeyKind::PaddingTop:
+    case CSSStyleValuePair::KeyKind::PaddingRight:
+    case CSSStyleValuePair::KeyKind::PaddingBottom:
+    case CSSStyleValuePair::KeyKind::PaddingLeft:
+    case CSSStyleValuePair::KeyKind::MarginTop:
+    case CSSStyleValuePair::KeyKind::MarginRight:
+    case CSSStyleValuePair::KeyKind::MarginBottom:
+    case CSSStyleValuePair::KeyKind::MarginLeft:
+    case CSSStyleValuePair::KeyKind::BorderTop:
+    case CSSStyleValuePair::KeyKind::BorderRight:
+    case CSSStyleValuePair::KeyKind::BorderBottom:
+    case CSSStyleValuePair::KeyKind::BorderLeft:
+    case CSSStyleValuePair::KeyKind::Width:
+    case CSSStyleValuePair::KeyKind::Height:
+    case CSSStyleValuePair::KeyKind::PaddingInlineEnd:
+    case CSSStyleValuePair::KeyKind::PaddingInlineStart:
+    case CSSStyleValuePair::KeyKind::MarginInlineEnd:
+    case CSSStyleValuePair::KeyKind::MarginInlineStart:
+    case CSSStyleValuePair::KeyKind::GridTemplateRows:
+    case CSSStyleValuePair::KeyKind::GridTemplateColumns:
+        return RequreidStyleResolveStage::kLayout;
+    case CSSStyleValuePair::KeyKind::MinWidth:
+    case CSSStyleValuePair::KeyKind::MinHeight:
+        return RequreidStyleResolveStage::kFrameTreeBuild;
+    default:
+        return RequreidStyleResolveStage::kStayleResolution;
     }
 
-    return result;
+    return RequreidStyleResolveStage::kStayleResolution;
 }
 
 static CSSStyleValuePair stylePaintDataToCSSStyleValue(
@@ -1761,6 +1768,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(repeatY);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateColumns: {
+        // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateColumns);
         if (style->gridTemplateColumns()) {
@@ -1824,6 +1832,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateRows: {
+        // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::GridTemplateRows);
         if (style->gridTemplateRows()) {
@@ -1873,6 +1882,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::GridTemplateAreas: {
+        // FIXME: Fill CSSStyleValuePair with the computed value of owner frame.
         CSSStyleValuePair p;
         String* areas = style->gridTemplateAreas();
         if (areas) {

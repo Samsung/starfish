@@ -950,7 +950,7 @@ void GridFormattingContext::initializeGridTrackColumns(
             } else if (gridLength.isAuto()) {
                 m_gridTemplateColumns.push_back(GridTrack(GridTrack::Auto));
             }
-        } else if (trackSize.isFr()) {
+        } else if (trackSize.isFlexibleLength()) {
             GridTrack track = GridTrack(gridLength.fr(), false);
             m_gridTemplateColumns.push_back(track);
         } else if (trackSize.isMinMax()) {
@@ -981,7 +981,7 @@ void GridFormattingContext::initializeGridTrackRows(
             } else if (gridLength.isAuto()) {
                 m_gridTemplateRows.push_back(GridTrack(GridTrack::Auto));
             }
-        } else if (trackSize.isFr()) {
+        } else if (trackSize.isFlexibleLength()) {
             GridTrack track = GridTrack(gridLength.fr(), false);
             m_gridTemplateRows.push_back(track);
         } else if (trackSize.isMinMax()) {
@@ -1172,7 +1172,7 @@ void GridFormattingContext::resolveIntrinsicColumnTrackSizes()
             if (track.max().isFixed()) {
                 track.setGrowthLimit(track.max().length().fixed());
             }
-        } else if (track.isFr()) {
+        } else if (track.isFlexibleLength()) {
             track.setSize(minContent);
         }
     }
@@ -1243,7 +1243,7 @@ bool GridFormattingContext::isFrPartOfTrack(GridArea* gridArea)
 {
     bool hasFr = false;
     for (size_t i = gridArea->columnStart(); i < gridArea->columnEnd(); i++) {
-        if (m_gridTemplateColumns[i].isFr()) {
+        if (m_gridTemplateColumns[i].isFlexibleLength()) {
             hasFr = true;
             break;
         }
@@ -1255,7 +1255,7 @@ bool GridFormattingContext::isFrPartOfRowTrack(GridArea* gridArea)
 {
     bool hasFr = false;
     for (size_t i = gridArea->rowStart(); i < gridArea->rowEnd(); i++) {
-        if (m_gridTemplateRows[i].isFr()) {
+        if (m_gridTemplateRows[i].isFlexibleLength()) {
             hasFr = true;
             break;
         }
@@ -1321,9 +1321,9 @@ void GridFormattingContext::expandFrColumnTracks()
     for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
         GridTrack& track = m_gridTemplateColumns[i];
 
-        if (track.isFr()) {
+        if (track.isFlexibleLength()) {
             sumOfFrs += track.fr();
-        } else if (track.isMinMax() && track.max().isFr()) {
+        } else if (track.isMinMax() && track.max().isFlexibleLength()) {
             sumOfFrs += LayoutUnit(track.max().fr());
         } else {
             sumOfColumnWidths += m_gridTemplateColumns[i].size();
@@ -1345,11 +1345,11 @@ void GridFormattingContext::expandFrColumnTracks()
     for (size_t i = 1; i < m_gridTemplateColumns.size(); i++) {
         GridTrack& track = m_gridTemplateColumns[i];
 
-        if (track.isFr()) {
+        if (track.isFlexibleLength()) {
             LayoutUnit width =
                 (track.fr().toDouble() / sumOfFrs) * remainingSpace;
             track.setSize(std::max(track.size(), width));
-        } else if (track.isMinMax() && track.max().isFr()) {
+        } else if (track.isMinMax() && track.max().isFlexibleLength()) {
             LayoutUnit width = (track.max().fr() / sumOfFrs) * remainingSpace;
             track.setSize(std::max(track.size(), width));
         }
@@ -1472,7 +1472,7 @@ void GridFormattingContext::resolveIntrinsicRowTrackSizes()
         if (track.isAuto() || track.isImplicitLine()) {
             track.setSize(maxContent);
             track.setGrowthLimit(maxContent);
-        } else if (track.isFr()) {
+        } else if (track.isFlexibleLength()) {
             track.setSize(maxContent);
         }
     }
@@ -1538,10 +1538,10 @@ void GridFormattingContext::expandFrRowTracks()
     for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
         GridTrack& track = m_gridTemplateRows[i];
 
-        if (track.isFr()) {
+        if (track.isFlexibleLength()) {
             sumOfFrs += track.fr();
             maxHeightSoFar = std::max(maxHeightSoFar, track.size());
-        } else if (track.isMinMax() && track.max().isFr()) {
+        } else if (track.isMinMax() && track.max().isFlexibleLength()) {
             sumOfFrs += LayoutUnit(track.max().fr());
         } else {
             sumOfRowHeights += m_gridTemplateRows[i].size();
@@ -1572,11 +1572,11 @@ void GridFormattingContext::expandFrRowTracks()
     for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
         GridTrack& track = m_gridTemplateRows[i];
 
-        if (track.isFr()) {
+        if (track.isFlexibleLength()) {
             LayoutUnit height =
                 (track.fr().toDouble() / flexFactor) * flexFraction;
             track.setSize(std::max(track.size(), height));
-        } else if (track.isMinMax() && track.max().isFr()) {
+        } else if (track.isMinMax() && track.max().isFlexibleLength()) {
             LayoutUnit height = (track.max().fr() / flexFactor) * flexFraction;
             track.setSize(std::max(track.size(), height));
         }
