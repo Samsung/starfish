@@ -36,11 +36,6 @@ cd third_party/escargot
 git submodule update --init third_party
 cd $ROOT
 
-# Patch update code for wasm
-cd third_party/escargot/third_party/wasm/wabt
-patch -p0 --forward -r /dev/null -i ../../../tools/test/wasm-js/wabt_patch
-cd $ROOT
-
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/generated
 if [ "$repo" == "lwe_rel" ]; then
 rsync -av --delete --delete-excluded --filter="merge tool/release/filter_4_lwe_rel.txt" . ../$repo

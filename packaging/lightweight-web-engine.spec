@@ -448,61 +448,6 @@ ninja starfish.serviceworker.shared_library
 %endif
 %endif
 
-%if "%{rpm}" == "prod_tv" || "%{rpm}" == "flutter"
-
-# build external image decoder
-%if "%{?use_embedded_image_decoder}" == "1"
-
-# giflib
-cd third_party/giflib
-%if "%{?force_build}" == "1"
-make clean
-%endif
-make libgif.so
-cd -
-
-# libpng
-cd third_party/libpng
-%ifarch %{arm}
-CFLAGS+=" -D_ARCH_ARM_ -mfpu=neon"
-%endif
-%cmake . -DPNG_STATIC=OFF \
-         -DSKIP_INSTALL_PROGRAMS=ON \
-         -DSKIP_INSTALL_EXPORT=ON \
-%ifarch %{arm} armv7l armv7el aarch64
-         -DPNG_ARM_NEON=on \
-%else
-         -DPNG_ARM_NEON=off \
-%endif
-         %{?ubsan: -DPNG_ARM_NEON=off}
-
-%if "%{?force_build}" == "1"
-make clean
-%endif
-
-%__make %{?_smp_mflags}
-cd -
-
-# libjpeg
-cd third_party/libjpeg-turbo
-%if "%{?force_build}" == "1"
-find . -name "CMakeCache.txt" -exec rm {} \;
-%endif
-%if "%{tizen_profile_name}" == "tv"
-echo "tizen_product_tv"
-export CFLAGS="$CFLAGS -D_TIZEN_PRODUCT_TV -D_USE_PRODUCT_TV"
-%endif
-%cmake . -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=TRUE -DENABLE_STATIC=FALSE -DLIBDIR=%{_libdir} -DINCLUDEDIR=%{_includedir} \
-%if "%{tizen_profile_name}" == "tv"
-	 -DENABLE_COLOR_PICKER=TRUE \
-%endif
-	-DWITH_JPEG8=TRUE
-%__make %{?jobs:-j%jobs}
-cd -
-
-%endif
-%endif
-
 %if "%{rpm}" == "prod_tv"
 
 %if "%{?skip_dali_build}" == "0"
