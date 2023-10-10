@@ -943,24 +943,28 @@ void GridFormattingContext::initializeGridTrackColumns(
                 baseSize = gridLength.length().specifiedValue(m_availableWidth,
                                                               m_container);
                 if (m_availableWidth == 0 && gridLength.length().isPercent()) {
-                    m_gridTemplateColumns.push_back(GridTrack(GridTrack::Auto));
+                    m_gridTemplateColumns.push_back(
+                        GridTrack(GridTrackType::kAuto));
                 } else {
                     m_gridTemplateColumns.push_back(GridTrack(baseSize));
                 }
             } else if (gridLength.isAuto()) {
-                m_gridTemplateColumns.push_back(GridTrack(GridTrack::Auto));
+                m_gridTemplateColumns.push_back(
+                    GridTrack(GridTrackType::kAuto));
             }
         } else if (trackSize.isFlexibleLength()) {
-            GridTrack track = GridTrack(gridLength.fr(), false);
+            GridTrack track = GridTrack(gridLength.flexibleLength(), false);
             m_gridTemplateColumns.push_back(track);
         } else if (trackSize.isMinMax()) {
             // TODO: support values other than fixed
             GridTrack track = GridTrack(trackSize.min(), trackSize.max());
             m_gridTemplateColumns.push_back(track);
         } else if (trackSize.isMinContent()) {
-            m_gridTemplateColumns.push_back(GridTrack(GridTrack::MinContent));
+            m_gridTemplateColumns.push_back(
+                GridTrack(GridTrackType::kMinContent));
         } else if (trackSize.isMaxContent()) {
-            m_gridTemplateColumns.push_back(GridTrack(GridTrack::MaxContent));
+            m_gridTemplateColumns.push_back(
+                GridTrack(GridTrackType::kMaxContent));
         }
     }
 }
@@ -979,18 +983,18 @@ void GridFormattingContext::initializeGridTrackRows(
                 GridTrack track = GridTrack(length.numberData());
                 m_gridTemplateRows.push_back(track);
             } else if (gridLength.isAuto()) {
-                m_gridTemplateRows.push_back(GridTrack(GridTrack::Auto));
+                m_gridTemplateRows.push_back(GridTrack(GridTrackType::kAuto));
             }
         } else if (trackSize.isFlexibleLength()) {
-            GridTrack track = GridTrack(gridLength.fr(), false);
+            GridTrack track = GridTrack(gridLength.flexibleLength(), false);
             m_gridTemplateRows.push_back(track);
         } else if (trackSize.isMinMax()) {
             GridTrack track = GridTrack(trackSize.min(), trackSize.max());
             m_gridTemplateRows.push_back(track);
         } else if (trackSize.isMinContent()) {
-            m_gridTemplateRows.push_back(GridTrack(GridTrack::MinContent));
+            m_gridTemplateRows.push_back(GridTrack(GridTrackType::kMinContent));
         } else if (trackSize.isMaxContent()) {
-            m_gridTemplateRows.push_back(GridTrack(GridTrack::MaxContent));
+            m_gridTemplateRows.push_back(GridTrack(GridTrackType::kMaxContent));
         }
     }
 }
@@ -1020,13 +1024,13 @@ void GridFormattingContext::buildGridTrackTemplate()
     initializePreferredWidths();
     resolveIntrinsicColumnTrackSizes();
     maximizeColumnTracks();
-    expandFrColumnTracks();
+    expandFlexibleColumnTracks();
     stretchAutoColumnTracks();
 
     initializeContentHeights();
     applyImplicitTrackSizing();
     resolveIntrinsicRowTrackSizes();
-    expandFrRowTracks();
+    expandFlexibleRowTracks();
     layoutGridItemFrameBoxes();
 }
 LayoutSize GridFormattingContext::fetchFixedMargin(FrameGridBox* grid,
@@ -1314,7 +1318,7 @@ void GridFormattingContext::maximizeColumnTracks()
     }
 }
 
-void GridFormattingContext::expandFrColumnTracks()
+void GridFormattingContext::expandFlexibleColumnTracks()
 {
     LayoutUnit sumOfFrs = 0;
     LayoutUnit sumOfColumnWidths = 0;
@@ -1322,9 +1326,9 @@ void GridFormattingContext::expandFrColumnTracks()
         GridTrack& track = m_gridTemplateColumns[i];
 
         if (track.isFlexibleLength()) {
-            sumOfFrs += track.fr();
+            sumOfFrs += track.flexibleLength();
         } else if (track.isMinMax() && track.max().isFlexibleLength()) {
-            sumOfFrs += LayoutUnit(track.max().fr());
+            sumOfFrs += LayoutUnit(track.max().flexibleLength());
         } else {
             sumOfColumnWidths += m_gridTemplateColumns[i].size();
         }
@@ -1347,10 +1351,11 @@ void GridFormattingContext::expandFrColumnTracks()
 
         if (track.isFlexibleLength()) {
             LayoutUnit width =
-                (track.fr().toDouble() / sumOfFrs) * remainingSpace;
+                (track.flexibleLength().toDouble() / sumOfFrs) * remainingSpace;
             track.setSize(std::max(track.size(), width));
         } else if (track.isMinMax() && track.max().isFlexibleLength()) {
-            LayoutUnit width = (track.max().fr() / sumOfFrs) * remainingSpace;
+            LayoutUnit width =
+                (track.max().flexibleLength() / sumOfFrs) * remainingSpace;
             track.setSize(std::max(track.size(), width));
         }
     }
@@ -1530,7 +1535,7 @@ void GridFormattingContext::increaseRowGridTracksForSpans(
     }
 }
 
-void GridFormattingContext::expandFrRowTracks()
+void GridFormattingContext::expandFlexibleRowTracks()
 {
     LayoutUnit sumOfFrs = 0;
     LayoutUnit sumOfRowHeights = 0;
@@ -1539,10 +1544,10 @@ void GridFormattingContext::expandFrRowTracks()
         GridTrack& track = m_gridTemplateRows[i];
 
         if (track.isFlexibleLength()) {
-            sumOfFrs += track.fr();
+            sumOfFrs += track.flexibleLength();
             maxHeightSoFar = std::max(maxHeightSoFar, track.size());
         } else if (track.isMinMax() && track.max().isFlexibleLength()) {
-            sumOfFrs += LayoutUnit(track.max().fr());
+            sumOfFrs += LayoutUnit(track.max().flexibleLength());
         } else {
             sumOfRowHeights += m_gridTemplateRows[i].size();
         }
@@ -1574,10 +1579,11 @@ void GridFormattingContext::expandFrRowTracks()
 
         if (track.isFlexibleLength()) {
             LayoutUnit height =
-                (track.fr().toDouble() / flexFactor) * flexFraction;
+                (track.flexibleLength().toDouble() / flexFactor) * flexFraction;
             track.setSize(std::max(track.size(), height));
         } else if (track.isMinMax() && track.max().isFlexibleLength()) {
-            LayoutUnit height = (track.max().fr() / flexFactor) * flexFraction;
+            LayoutUnit height =
+                (track.max().flexibleLength() / flexFactor) * flexFraction;
             track.setSize(std::max(track.size(), height));
         }
     }

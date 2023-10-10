@@ -228,17 +228,17 @@ private:
     GridLine* m_columnEndLine = new GridLine();
 };
 
+enum class GridTrackType {
+    kAuto,
+    kLength,
+    kFlexibleLength,
+    kMinMax,
+    kMinContent,
+    kMaxContent,
+};
+
 class GridTrack : public gc {
 public:
-    enum GridTrackType {
-        Auto,
-        Length,
-        Fr,
-        MinMax,
-        MinContent,
-        MaxContent,
-    };
-
     LayoutUnit size() const
     {
         return m_size; // including margin, border, and padding
@@ -254,9 +254,9 @@ public:
         m_growthLimit = growthLimit;
     }
 
-    LayoutUnit fr()
+    LayoutUnit flexibleLength()
     {
-        return m_fr;
+        return m_flexibleLength;
     }
 
     const GridLength& min() const
@@ -292,32 +292,32 @@ public:
 
     bool isLength() const
     {
-        return m_type == GridTrackType::Length;
+        return m_type == GridTrackType::kLength;
     }
 
     bool isFlexibleLength() const
     {
-        return m_type == GridTrackType::Fr;
+        return m_type == GridTrackType::kFlexibleLength;
     }
 
     bool isMinMax() const
     {
-        return m_type == GridTrackType::MinMax;
+        return m_type == GridTrackType::kMinMax;
     }
 
     bool isAuto() const
     {
-        return m_type == GridTrackType::Auto;
+        return m_type == GridTrackType::kAuto;
     }
 
     bool isMinContent() const
     {
-        return m_type == GridTrackType::MinContent;
+        return m_type == GridTrackType::kMinContent;
     }
 
     bool isMaxContent() const
     {
-        return m_type == GridTrackType::MaxContent;
+        return m_type == GridTrackType::kMaxContent;
     }
 
     GridTrack()
@@ -328,21 +328,21 @@ public:
     GridTrack(LayoutUnit size)
         : m_size(size)
         , m_growthLimit(size)
-        , m_type(GridTrackType::Length)
+        , m_type(GridTrackType::kLength)
     {
     }
 
     // The 'computed' is for the 'fr' unit.
     GridTrack(LayoutUnit fr, bool computed)
-        : m_fr(fr)
-        , m_type(GridTrackType::Fr)
+        : m_flexibleLength(fr)
+        , m_type(GridTrackType::kFlexibleLength)
     {
     }
 
     GridTrack(GridLength min, GridLength max)
         : m_min(min)
         , m_max(max)
-        , m_type(GridTrackType::MinMax)
+        , m_type(GridTrackType::kMinMax)
     {
         if (min.isLength() && min.length().isFixed()) {
             m_size = min.length().numberData();
@@ -359,11 +359,11 @@ public:
 private:
     LayoutUnit m_size;
     LayoutUnit m_growthLimit{ intMaxForLayoutUnit };
-    LayoutUnit m_fr;
+    LayoutUnit m_flexibleLength;
     GridLength m_min;
     GridLength m_max;
     bool m_implicitLine{ false };
-    GridTrackType m_type{ GridTrackType::Auto };
+    GridTrackType m_type{ GridTrackType::kAuto };
 };
 
 class GridCellTable {
@@ -442,7 +442,7 @@ private:
     bool isFrPartOfRowTrack(GridArea* gridArea);
 
     void maximizeColumnTracks();
-    void expandFrColumnTracks();
+    void expandFlexibleColumnTracks();
     void stretchAutoColumnTracks();
     void applyAlignItems();
 
@@ -451,7 +451,7 @@ private:
     void resolveIntrinsicRowTrackSizes();
     void increaseRowGridTracksForSpans(GCVector<GridArea*>& gridAreasWithSpans);
 
-    void expandFrRowTracks();
+    void expandFlexibleRowTracks();
     void layoutGridItemFrameBoxes();
     void layoutGridItemFrameBox(GridArea& gridArea, bool widthOnly);
 
