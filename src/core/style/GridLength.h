@@ -33,7 +33,7 @@ public:
 
     GridLength(const Length& length);
 
-    GridLength(double fr);
+    GridLength(double flexibleLength);
 
     bool isLength() const
     {
@@ -55,9 +55,9 @@ public:
         return m_length;
     }
 
-    double fr() const
+    double flexibleLength() const
     {
-        return m_fr;
+        return m_flexibleLength;
     }
 
     bool isPercentage() const
@@ -86,13 +86,13 @@ public:
 
 private:
     Length m_length;
-    double m_fr = 0.0f;
+    double m_flexibleLength = 0.0f;
     GridLengthType m_type;
 };
 
 // from parsing css properties
 
-enum class GridTrackType {
+enum class GridTrackSizeType {
     kLength,
     kFlexibleLength,
     kMinMax,
@@ -106,36 +106,36 @@ public:
 
     GridTrackSize();
 
-    GridTrackSize(const GridLength& length, GridTrackType type);
+    GridTrackSize(const GridLength& length, GridTrackSizeType type);
 
     GridTrackSize(const GridLength& min, const GridLength& max,
-                  GridTrackType type = GridTrackType::kMinMax);
+                  GridTrackSizeType type = GridTrackSizeType::kMinMax);
 
-    GridTrackSize(GridTrackType type);
+    GridTrackSize(GridTrackSizeType type);
 
     bool isLength() const
     {
-        return m_type == GridTrackType::kLength;
+        return m_type == GridTrackSizeType::kLength;
     }
 
     bool isFlexibleLength() const
     {
-        return m_type == GridTrackType::kFlexibleLength;
+        return m_type == GridTrackSizeType::kFlexibleLength;
     }
 
     bool isMinMax() const
     {
-        return m_type == GridTrackType::kMinMax;
+        return m_type == GridTrackSizeType::kMinMax;
     }
 
     bool isMinContent() const
     {
-        return m_type == GridTrackType::kMinContent;
+        return m_type == GridTrackSizeType::kMinContent;
     }
 
     bool isMaxContent() const
     {
-        return m_type == GridTrackType::kMaxContent;
+        return m_type == GridTrackSizeType::kMaxContent;
     }
 
     const Length& length() const
@@ -148,9 +148,9 @@ public:
         return m_data1.mutableLength();
     }
 
-    double fr() const
+    double flexibleLength() const
     {
-        return m_data1.fr();
+        return m_data1.flexibleLength();
     }
 
     const GridLength& min() const
@@ -165,14 +165,16 @@ public:
 
     bool isPercentage() const
     {
-        return m_type == GridTrackType::kLength && m_data1.length().isPercent();
+        return m_type == GridTrackSizeType::kLength &&
+               m_data1.length().isPercent();
     }
 
     bool operator==(const GridTrackSize& o) const;
 
     bool isAuto() const
     {
-        return m_type == GridTrackType::kLength && m_data1.length().isAuto();
+        return m_type == GridTrackSizeType::kLength &&
+               m_data1.length().isAuto();
     }
 
     String* toString() const;
@@ -180,7 +182,7 @@ public:
 private:
     GridLength m_data1;
     GridLength m_data2;
-    GridTrackType m_type;
+    GridTrackSizeType m_type;
 };
 } // namespace Starfish
 

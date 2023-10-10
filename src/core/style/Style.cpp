@@ -12010,13 +12010,13 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 return false;
             }
             v->push_back(
-                GridTrackSize(maybeLength.value(), GridTrackType::kLength));
+                GridTrackSize(maybeLength.value(), GridTrackSizeType::kLength));
         } else if (token == "min-content") {
             // Try to parse keyword: min-content.
-            v->push_back(GridTrackSize(GridTrackType::kMinContent));
+            v->push_back(GridTrackSize(GridTrackSizeType::kMinContent));
         } else if (token == "max-content") {
             // Try to parse keyword: max-content.
-            v->push_back(GridTrackSize(GridTrackType::kMaxContent));
+            v->push_back(GridTrackSize(GridTrackSizeType::kMaxContent));
         } else if (token.startsWith("minmax(") &&
                    token[token.length() - 1] == ')') {
             // Try to minmax().
@@ -12024,7 +12024,7 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
             if (!parseMinMax(token, min, max)) {
                 return false;
             }
-            v->push_back(GridTrackSize(min, max, GridTrackType::kMinMax));
+            v->push_back(GridTrackSize(min, max, GridTrackSizeType::kMinMax));
         } else if (token.startsWith("repeat(") &&
                    token[token.length() - 1] == ')') {
             // repeat().
@@ -12047,7 +12047,7 @@ static bool parseGridTemplateRowsAndColumns(const CSSTokenVector& tokens,
                 return false;
             }
             v->push_back(GridTrackSize(GridLength(number),
-                                       GridTrackType::kFlexibleLength));
+                                       GridTrackSizeType::kFlexibleLength));
         }
     }
 

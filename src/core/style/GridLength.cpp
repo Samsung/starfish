@@ -23,20 +23,20 @@
 namespace Starfish {
 
 GridLength::GridLength()
-    : m_fr(0)
+    : m_flexibleLength(0)
     , m_type(GridLengthType::kLength)
 {
 }
 
 GridLength::GridLength(const Length& length)
     : m_length(length)
-    , m_fr(0)
+    , m_flexibleLength(0)
     , m_type(GridLengthType::kLength)
 {
 }
 
-GridLength::GridLength(double fr)
-    : m_fr(fr)
+GridLength::GridLength(double flexibleLength)
+    : m_flexibleLength(flexibleLength)
     , m_type(GridLengthType::kFlexibleLength)
 {
 }
@@ -50,7 +50,7 @@ bool GridLength::operator==(const GridLength& o) const
     if (m_type == GridLengthType::kLength) {
         return m_length == o.length();
     } else if (m_type == GridLengthType::kFlexibleLength) {
-        return m_fr == o.fr();
+        return m_flexibleLength == o.flexibleLength();
     }
     return false;
 }
@@ -63,7 +63,7 @@ String* GridLength::toString() const
         builder.appendString(value);
     } else {
         char temp[100];
-        snprintf(temp, sizeof(temp), "%.1f", m_fr);
+        snprintf(temp, sizeof(temp), "%.1f", m_flexibleLength);
         String* value = String::fromUTF8(temp, strnlen(temp, sizeof(temp)));
         builder.appendString(value);
         builder.appendString("fr");
@@ -86,11 +86,11 @@ String* GridTrackSize::toStringWithGridLengths(GCVector<GridTrackSize>* v)
 }
 
 GridTrackSize::GridTrackSize()
-    : m_type(GridTrackType::kLength)
+    : m_type(GridTrackSizeType::kLength)
 {
 }
 
-GridTrackSize::GridTrackSize(const GridLength& length, GridTrackType type)
+GridTrackSize::GridTrackSize(const GridLength& length, GridTrackSizeType type)
     : m_data1(length)
     , m_data2(length)
     , m_type(type)
@@ -98,14 +98,14 @@ GridTrackSize::GridTrackSize(const GridLength& length, GridTrackType type)
 }
 
 GridTrackSize::GridTrackSize(const GridLength& min, const GridLength& max,
-                             GridTrackType type)
+                             GridTrackSizeType type)
     : m_data1(min)
     , m_data2(max)
     , m_type(type)
 {
 }
 
-GridTrackSize::GridTrackSize(GridTrackType type)
+GridTrackSize::GridTrackSize(GridTrackSizeType type)
     : m_type(type)
 {
 }
@@ -116,11 +116,11 @@ bool GridTrackSize::operator==(const GridTrackSize& o) const
         return false;
     }
 
-    if (m_type == GridTrackType::kLength) {
+    if (m_type == GridTrackSizeType::kLength) {
         return m_data1 == o.min();
-    } else if (m_type == GridTrackType::kFlexibleLength) {
+    } else if (m_type == GridTrackSizeType::kFlexibleLength) {
         return m_data1 == o.min();
-    } else if (m_type == GridTrackType::kMinMax) {
+    } else if (m_type == GridTrackSizeType::kMinMax) {
         return m_data1 == o.min() && m_data2 == o.max();
     }
     return false;
@@ -129,18 +129,18 @@ bool GridTrackSize::operator==(const GridTrackSize& o) const
 String* GridTrackSize::toString() const
 {
     StringBuilder builder;
-    if (m_type == GridTrackType::kLength ||
-        m_type == GridTrackType::kFlexibleLength) {
+    if (m_type == GridTrackSizeType::kLength ||
+        m_type == GridTrackSizeType::kFlexibleLength) {
         builder.appendString(m_data1.toString());
-    } else if (m_type == GridTrackType::kMinMax) {
+    } else if (m_type == GridTrackSizeType::kMinMax) {
         builder.appendString("minmax(");
         builder.appendString(m_data1.toString());
         builder.appendString(", ");
         builder.appendString(m_data2.toString());
         builder.appendString(")");
-    } else if (m_type == GridTrackType::kMinContent) {
+    } else if (m_type == GridTrackSizeType::kMinContent) {
         builder.appendString("min-content");
-    } else if (m_type == GridTrackType::kMaxContent) {
+    } else if (m_type == GridTrackSizeType::kMaxContent) {
         builder.appendString("max-content");
     }
     return builder.finalize();
