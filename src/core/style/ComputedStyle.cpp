@@ -2307,6 +2307,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    if (newStyle->pointerEvents() != oldStyle->pointerEvents()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::PointerEvents] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageInherited | damage);
+    }
+
     return damage;
 }
 
