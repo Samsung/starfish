@@ -1725,7 +1725,12 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             style->height().specifiedValue(rowTrackHeight, gridItem->node()) +
             mbp.height();
     } else {
-        height = rowTrackHeight;
+        if (m_container->style()->alignItems() ==
+            AlignItemValue::CenterAlignItemValue) {
+            height = gridArea.contentHeight();
+        } else {
+            height = rowTrackHeight;
+        }
     }
 
     LayoutUnit heightWillBe = height;
@@ -1812,7 +1817,6 @@ void GridFormattingContext::applyAlignItemsCenter()
 
     for (GridArea& area : m_orderedGridArea) {
         STARFISH_ASSERT(area.rowStart() < yOffsetsForRows.size());
-        area.box()->setHeight(area.contentHeight());
         LayoutUnit yOffset = yOffsetsForRows[area.rowStart()];
 
         LayoutUnit trackSize;
