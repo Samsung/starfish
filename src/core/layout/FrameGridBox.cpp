@@ -1606,22 +1606,28 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     LayoutSize margin = fetchFixedMargin(m_container, style);
     LayoutSize mbp = fetchFixedMarginBorderPadding(m_container, style);
 
+    // Compute column track width;
+    LayoutUnit colTrackWidth;
+    GridTrack& colTrack = m_gridTemplateColumns[gridArea.columnStart()];
+    for (size_t i = gridArea.columnStart(); i < gridArea.columnEnd(); i++) {
+        colTrackWidth += m_gridTemplateColumns[i].size();
+    }
+
+    colTrackWidth +=
+        ((gridArea.columnEnd() - gridArea.columnStart() - 1) * m_columnGap);
+
+    // Apply specified width of grid item.
     LayoutUnit width = 0;
-    if (style->width().isFixed()) {
-        width = style->width().fixed() + mbp.width();
+    if (style->width().isSpecified()) {
+        width = style->width().specifiedValue(colTrackWidth, gridItem->node()) +
+                mbp.width();
     } else {
         if (gridArea.isMarginLeftAuto() || gridArea.isMarginRightAuto()) {
             width = gridArea.preferredWidth();
         } else {
-            GridTrack& colTrack = m_gridTemplateColumns[gridArea.columnStart()];
-            for (size_t i = gridArea.columnStart(); i < gridArea.columnEnd();
-                 i++) {
-                width += m_gridTemplateColumns[i].size();
-            }
-
-            width += ((gridArea.columnEnd() - gridArea.columnStart() - 1) *
-                      m_columnGap);
+            width = colTrackWidth;
         }
+
         if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             width += mbp.width() - margin.width();
         }
@@ -1699,23 +1705,30 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         return;
     }
 
-    LayoutUnit height = 0;
-    if (style->height().isFixed()) {
-        height = style->height().fixed() + mbp.height();
-    } else {
-        GridTrack& rowTrack = m_gridTemplateRows[gridArea.rowStart()];
-        for (size_t i = gridArea.rowStart(); i < gridArea.rowEnd(); i++) {
-            height += m_gridTemplateRows[i].size();
-        }
+    // Compute row track height.
+    GridTrack& rowTrack = m_gridTemplateRows[gridArea.rowStart()];
+    LayoutUnit rowTrackHeight;
+    for (size_t i = gridArea.rowStart(); i < gridArea.rowEnd(); i++) {
+        rowTrackHeight += m_gridTemplateRows[i].size();
+    }
 
-        height += ((gridArea.rowEnd() - gridArea.rowStart() - 1) * m_rowGap);
-        if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
-            height += mbp.height() - margin.height();
-        }
+    rowTrackHeight +=
+        ((gridArea.rowEnd() - gridArea.rowStart() - 1) * m_rowGap);
+    if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
+        rowTrackHeight += mbp.height() - margin.height();
+    }
+
+    // Apply specified height of grid item.
+    LayoutUnit height = 0;
+    if (style->height().isSpecified()) {
+        height =
+            style->height().specifiedValue(rowTrackHeight, gridItem->node()) +
+            mbp.height();
+    } else {
+        height = rowTrackHeight;
     }
 
     LayoutUnit heightWillBe = height;
-
     if (style->margin().top().isAuto()) {
         style->setMarginTop(Length(Length::Fixed, 0));
     } else {
