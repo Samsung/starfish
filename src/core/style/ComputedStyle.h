@@ -4300,6 +4300,9 @@ protected:
         ComputedStyle* oldPseudoStyleIfHas, Nullable<StyleResolveContext*> ctx);
     void removeCachedPseudoStyle(PseudoElementType pid);
 
+    void applyBlockDirectionAwareProperty();
+    void applyInlineDirectionAwareProperty();
+
     InheritedStylesRareData* ensureInheritedRareData()
     {
         if (m_inheritedStyles.m_isRareDataAllocated) {

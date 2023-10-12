@@ -809,6 +809,10 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
             break;
         }
     }
+
+    // Apply direction aware propreties.
+    applyBlockDirectionAwareProperty();
+    applyInlineDirectionAwareProperty();
 }
 
 void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
@@ -2536,6 +2540,85 @@ bool ComputedStyle::isFourSideBorderStyleValueSolid()
 
     return false;
 }
+
+void ComputedStyle::applyBlockDirectionAwareProperty()
+{
+    // TODO: If 'writing-mode' is supported, the padding/margin value must be
+    // updated using this property.
+
+    ComputedStyle* comptuedStyle = this;
+
+    LengthBlockDirectionAwereData start = marginBlockStart();
+    LengthBlockDirectionAwereData end = marginBlockEnd();
+
+    // margin-block
+    if (start.legnth().hasValue() && !start.isCorrespondingTopSet()) {
+        setMarginTop(start.legnth().getValue());
+    }
+    if (end.legnth().hasValue() && !end.isCorrespondingBottomSet()) {
+        setMarginBottom(end.legnth().getValue());
+    }
+    // TODO: padding-block
+}
+
+void ComputedStyle::applyInlineDirectionAwareProperty()
+{
+    // TODO: If 'writing-mode' is supported, the padding/margin value must be
+    // updated using this property as well as 'direction' property.
+
+    DirectionValue direction = this->direction();
+    LengthInlineDirectionAwereData margineInlineEnd = this->marginInlineEnd();
+    LengthInlineDirectionAwereData margineInlineStart =
+        this->marginInlineStart();
+    LengthInlineDirectionAwereData paddingInlineEnd = this->paddingInlineEnd();
+    LengthInlineDirectionAwereData paddingInlineStart =
+        this->paddingInlineStart();
+
+    if (direction == DirectionValue::LtrDirectionValue) {
+        // margin-inline
+        if (margineInlineEnd.legnth().hasValue() &&
+            !margineInlineEnd.isCorrespondingRightSet()) {
+            setMarginRight(margineInlineEnd.legnth().getValue());
+        }
+        if (margineInlineStart.legnth().hasValue() &&
+            !margineInlineStart.isCorrespondingLeftSet()) {
+            setMarginLeft(margineInlineStart.legnth().getValue());
+        }
+
+        // padding-inline
+        if (paddingInlineEnd.legnth().hasValue() &&
+            !paddingInlineEnd.isCorrespondingRightSet()) {
+            setPaddingRight(paddingInlineEnd.legnth().getValue());
+        }
+        if (paddingInlineStart.legnth().hasValue() &&
+            !paddingInlineStart.isCorrespondingLeftSet()) {
+            setPaddingLeft(paddingInlineStart.legnth().getValue());
+        }
+        // TODO: padding-block, margin-block.
+    } else {
+        // margin-inline
+        if (margineInlineEnd.legnth().hasValue() &&
+            !margineInlineEnd.isCorrespondingLeftSet()) {
+            setMarginLeft(margineInlineEnd.legnth().getValue());
+        }
+        if (margineInlineStart.legnth().hasValue() &&
+            !margineInlineStart.isCorrespondingRightSet()) {
+            setMarginRight(margineInlineStart.legnth().getValue());
+        }
+
+        // padding-inline
+        if (paddingInlineEnd.legnth().hasValue() &&
+            !paddingInlineEnd.isCorrespondingLeftSet()) {
+            setPaddingLeft(paddingInlineEnd.legnth().getValue());
+        }
+        if (paddingInlineStart.legnth().hasValue() &&
+            !paddingInlineStart.isCorrespondingRightSet()) {
+            setPaddingRight(paddingInlineStart.legnth().getValue());
+        }
+        // TODO: padding-block, margin-block, margin-inline
+    }
+}
+
 #undef _DAMAGED_KEYS
 #undef NEED_TRANSITION
 #undef RETURN_NEED_TRANSITION
