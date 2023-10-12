@@ -438,7 +438,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
                         COMMENT "BUILD PNG"
                         COMMAND cp -r ${PNG_DIR} ${OUTPUT_DIRECTORY}
                         COMMAND cd ${PNG_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${CMAKE_COMMAND} ${PNG_OPTION}
-                        COMMAND cd ${PNG_BUILD_DIR} && ${CMAKE_COMMAND} --build . -j
+                        COMMAND cd ${PNG_BUILD_DIR} && ${CMAKE_COMMAND} --build .
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${PNG_TARGET}
@@ -510,7 +510,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
                         COMMAND rm -rf ${JPEG_BUILD_DIR}
                         COMMAND cp -r ${JPEG_DIR} ${OUTPUT_DIRECTORY}
                         COMMAND cd ${JPEG_BUILD_DIR} && CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${CMAKE_COMMAND} ${JPEG_OPTION}
-                        COMMAND cd ${JPEG_BUILD_DIR} && ${CMAKE_COMMAND} --build . -j
+                        COMMAND cd ${JPEG_BUILD_DIR} && ${CMAKE_COMMAND} --build .
     )
 
     ADD_CUSTOM_COMMAND (OUTPUT ${JPEG_TARGET}
