@@ -248,6 +248,10 @@ public:
         STARFISH_UNIMPLEMENTED();
     }
 #endif
+    bool isCanvasSurface()
+    {
+        return (m_flag & CanvasSurfaceFlag::CanvasElement);
+    }
 
 protected:
     CanvasSurface(float additionalPixelRatio)
@@ -256,6 +260,7 @@ protected:
     }
 
     float m_additionalPixelRatio;
+    CanvasSurfaceFlag m_flag = PlainElement;
 };
 
 namespace CanvasSurfaceFactory {

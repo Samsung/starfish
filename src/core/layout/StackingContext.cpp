@@ -258,7 +258,9 @@ void GraphicsBufferHolder::flushSurfaces()
 {
     for (size_t i = 0; i < m_surfaces.size(); i++) {
         if (m_surfaces[i]) {
-            m_surfaces[i]->detachNativeBuffer();
+            if (!m_surfaces[i]->isCanvasSurface()) {
+                m_surfaces[i]->detachNativeBuffer();
+            }
             m_surfaces[i] = nullptr;
         }
     }
@@ -425,16 +427,6 @@ bool StackingContext::isIFrameStackingContextOwner()
         return true;
     }
     return false;
-}
-
-void StackingContext::flushGraphicsBuffer()
-{
-    STARFISH_ASSERT(needsGraphicsBuffer());
-    STARFISH_ASSERT(!m_owner->hasOwnGraphicsBufferMethod());
-
-    if (m_rareData && m_rareData->m_graphicsBufferHolder) {
-        m_rareData->m_graphicsBufferHolder->flushSurfaces();
-    }
 }
 
 template <typename T>
