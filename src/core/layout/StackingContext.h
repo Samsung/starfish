@@ -242,7 +242,6 @@ public:
         return nullptr;
     }
     void clearGraphicsBuffer();
-    void flushGraphicsBuffer();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

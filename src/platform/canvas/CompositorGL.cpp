@@ -2402,7 +2402,6 @@ protected:
     bool m_isFrameBuffer{ false };
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
-    CanvasSurfaceFlag m_flag;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
     EvasGLImage m_eglImage;
