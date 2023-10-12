@@ -138,9 +138,7 @@ void GridFormattingContext::layoutGridItems()
             }
             xPosSoFar += margin;
         } else if (gridItem->marginLeft()) {
-            if (gridItem->width() > gridItem->mbpWidth()) {
-                xPosSoFar += gridItem->marginLeft();
-            }
+            xPosSoFar += gridItem->marginLeft();
         }
 
         LayoutUnit yPosSoFar =
