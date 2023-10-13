@@ -438,6 +438,9 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         case AlignItemValue::FlexEndAlignItemValue:
             offset = flexibleBox->contentWidth() - outerWidth();
             break;
+        default:
+            STARFISH_UNIMPLEMENTED();
+            break;
         }
     }
 
@@ -468,6 +471,9 @@ void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxVertically(
             break;
         case AlignItemValue::FlexEndAlignItemValue:
             offset = flexibleBox->contentHeight() - outerHeight();
+            break;
+        default:
+            STARFISH_UNIMPLEMENTED();
             break;
         }
     } else {
