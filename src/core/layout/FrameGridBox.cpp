@@ -478,8 +478,8 @@ void GridFormattingContext::placeGridAreasWithDefinitePositions(
 
 bool GridFormattingContext::addImplicitGridLineRows(GridArea* gridArea)
 {
-    if (GridCellTable::MAX_TRACK < gridArea->rowStart() ||
-        GridCellTable::MAX_TRACK < gridArea->rowEnd()) {
+    if (GridCellTable::kMaxTrack < gridArea->rowStart() ||
+        GridCellTable::kMaxTrack < gridArea->rowEnd()) {
         STARFISH_LOG_WARN("exceeds the max number of rows");
         return false;
     }
@@ -504,8 +504,8 @@ bool GridFormattingContext::addImplicitGridLineRows(GridArea* gridArea)
 
 bool GridFormattingContext::addImplicitGridLineColumns(GridArea* gridArea)
 {
-    if (GridCellTable::MAX_TRACK < gridArea->columnStart() ||
-        GridCellTable::MAX_TRACK < gridArea->columnEnd()) {
+    if (GridCellTable::kMaxTrack < gridArea->columnStart() ||
+        GridCellTable::kMaxTrack < gridArea->columnEnd()) {
         STARFISH_LOG_WARN("exceeds the max number of columns");
         return false;
     }
@@ -543,7 +543,7 @@ void GridFormattingContext::placeGridAreasLockedToRows(
             continue;
         }
 
-        if (GridCellTable::MAX_TRACK < gridArea->rowStart()) {
+        if (GridCellTable::kMaxTrack < gridArea->rowStart()) {
             continue;
         }
 
@@ -688,27 +688,27 @@ GridCellTable::GridCellTable()
 
 bool GridCellTable::hasFreeSlot(size_t row, size_t col)
 {
-    if (GridCellTable::MAX_TRACK <= row || GridCellTable::MAX_TRACK <= col) {
+    if (GridCellTable::kMaxTrack <= row || GridCellTable::kMaxTrack <= col) {
         return false;
     }
 
-    return !m_gridCellTable[(row * GridCellTable::MAX_TRACK) + col];
+    return !m_gridCellTable[(row * GridCellTable::kMaxTrack) + col];
 }
 
 void GridCellTable::setOccupied(size_t row, size_t col)
 {
-    if (GridCellTable::MAX_TRACK <= row || GridCellTable::MAX_TRACK <= col) {
+    if (GridCellTable::kMaxTrack <= row || GridCellTable::kMaxTrack <= col) {
         return;
     }
 
-    m_gridCellTable[(row * GridCellTable::MAX_TRACK) + col] = true;
+    m_gridCellTable[(row * GridCellTable::kMaxTrack) + col] = true;
 }
 
 std::string GridCellTable::toString()
 {
     std::string str;
-    for (size_t row = 1; row < MAX_TRACK; row++) {
-        for (size_t col = 1; col < MAX_TRACK; col++) {
+    for (size_t row = 1; row < kMaxTrack; row++) {
+        for (size_t col = 1; col < kMaxTrack; col++) {
             if (hasFreeSlot(row, col)) {
                 str += '.';
             } else {
@@ -1723,8 +1723,12 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             style->height().specifiedValue(rowTrackHeight, gridItem->node()) +
             mbp.height();
     } else {
-        if (m_container->style()->alignItems() ==
-            AlignItemValue::CenterAlignItemValue) {
+        // start, center, end are supported.
+        // align-self is overwritten by align-itmes
+        AlignItemValue align = style->alignSelf();
+        if (align == AlignItemValue::StartAlignItemValue ||
+            align == AlignItemValue::CenterAlignItemValue ||
+            align == AlignItemValue::EndAlignItemValue) {
             height = gridArea.contentHeight();
         } else {
             height = rowTrackHeight;
@@ -1795,15 +1799,7 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
 void GridFormattingContext::applyAlignItems()
 {
-    AlignItemValue alignItem = m_container->style()->alignItems();
-
-    if (alignItem == AlignItemValue::CenterAlignItemValue) {
-        applyAlignItemsCenter();
-    }
-}
-
-void GridFormattingContext::applyAlignItemsCenter()
-{
+    // Compute y-offsets.
     GCVector<LayoutUnit> yOffsetsForRows;
     LayoutUnit yOffsetForRowsSoFar = 0;
     yOffsetsForRows.push_back(yOffsetForRowsSoFar);
@@ -1823,9 +1819,25 @@ void GridFormattingContext::applyAlignItemsCenter()
         }
         trackSize += (area.rowEnd() - area.rowStart() - 1) * m_rowGap;
 
-        LayoutUnit yPos =
-            yOffset + (trackSize / 2) - (area.box()->height() / 2);
-        area.box()->setY(yPos);
+        switch (area.box()->style()->alignSelf()) {
+        case AlignItemValue::StartAlignItemValue:
+            // Do nothing.
+            break;
+        case AlignItemValue::CenterAlignItemValue: {
+            LayoutUnit yPos =
+                yOffset + (trackSize / 2) - (area.box()->height() / 2);
+            area.box()->setY(yPos);
+        } break;
+        case AlignItemValue::EndAlignItemValue: {
+            LayoutUnit yPos = yOffset + trackSize - area.box()->height() -
+                              area.box()->marginBottom();
+            area.box()->setY(yPos);
+        } break;
+        default:
+            // Other values are not supported.
+            STARFISH_UNIMPLEMENTED();
+            break;
+        }
     }
 }
 

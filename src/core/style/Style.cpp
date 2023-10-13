@@ -2209,8 +2209,12 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("flex-start");
         case FlexEndAlignItemValue:
             return String::fromUTF8("flex-end");
+        case StartAlignItemValue:
+            return String::fromUTF8("start");
         case CenterAlignItemValue:
             return String::fromUTF8("center");
+        case EndAlignItemValue:
+            return String::fromUTF8("end");
         case BaselineAlignItemValue:
             return String::fromUTF8("baseline");
         case StretchAlignItemValue:
@@ -14025,8 +14029,12 @@ bool CSSStyleValuePair::updateValueUnitAlignItem(const CSSTokenValue& value)
         m_value.m_alignItem = AlignItemValue::FlexStartAlignItemValue;
     } else if (value.equals("flex-end")) {
         m_value.m_alignItem = AlignItemValue::FlexEndAlignItemValue;
+    } else if (value.equals("start")) {
+        m_value.m_alignItem = AlignItemValue::StartAlignItemValue;
     } else if (value.equals("center")) {
         m_value.m_alignItem = AlignItemValue::CenterAlignItemValue;
+    } else if (value.equals("end")) {
+        m_value.m_alignItem = AlignItemValue::EndAlignItemValue;
     } else if (value.equals("baseline")) {
         m_value.m_alignItem = AlignItemValue::BaselineAlignItemValue;
     } else if (value.equals("stretch")) {

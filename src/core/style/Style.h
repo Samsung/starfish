@@ -190,7 +190,9 @@ enum JustifyContentValue ENSURE_ENUM_UNSIGNED {
 enum AlignItemValue ENSURE_ENUM_UNSIGNED {
     FlexStartAlignItemValue,
     FlexEndAlignItemValue,
+    StartAlignItemValue,
     CenterAlignItemValue,
+    EndAlignItemValue,
     BaselineAlignItemValue,
     StretchAlignItemValue,
 };
