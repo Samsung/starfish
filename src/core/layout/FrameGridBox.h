@@ -27,9 +27,6 @@
 namespace Starfish {
 
 class ComputedStyle;
-class FrameBox;
-class FrameGridBox;
-class LineBox;
 class GridFormattingContext;
 
 class GridLine : public gc {
@@ -368,7 +365,7 @@ private:
 
 class GridCellTable {
 public:
-    static const int MAX_TRACK = 64;
+    static const int kMaxTrack = 64;
 
     GridCellTable();
     bool hasFreeSlot(size_t row, size_t col);
@@ -376,11 +373,13 @@ public:
     std::string toString();
 
 private:
-    std::bitset<MAX_TRACK * MAX_TRACK> m_gridCellTable;
+    std::bitset<kMaxTrack * kMaxTrack> m_gridCellTable;
 };
 
 class GridFormattingContext {
 public:
+    static bool doesParticipateInGridFormattingContext(Frame* GridItem);
+
     GridFormattingContext(LayoutContext& ctx, FrameGridBox* container,
                           LayoutUnit availableWidth);
 
@@ -398,23 +397,7 @@ public:
 
     GridArea* getNamedGridArea(String* name);
 
-    static bool doesParticipateInGridFormattingContext(Frame* GridItem);
-
 private:
-    LayoutContext& m_layoutContext;
-    FrameGridBox* m_container;
-    LayoutUnit m_availableWidth;
-    GCVector<GridTrack> m_gridTemplateColumns;
-    GCVector<GridTrack> m_gridTemplateRows;
-    GCVector<GridArea> m_orderedGridArea;
-    GCUnorderedMap<std::string, GCVector<GridArea>> m_namedAreaMap;
-
-    LayoutUnit m_rowGap;
-    LayoutUnit m_columnGap;
-
-    GridCellTable m_gridCellTable;
-    GCVector<FrameBox*> m_nonGridItems;
-
     void buildGridTrackTemplate();
     void layoutGridItems();
 
@@ -456,7 +439,6 @@ private:
     void layoutGridItemFrameBox(GridArea& gridArea, bool widthOnly);
 
     void resolveMinMaxContentSize(size_t gridTrackIndex);
-    void applyAlignItemsCenter();
 
     void layoutNonGridItems();
     void repositionFixedNonGridItem(FrameBox* nonGridItem);
@@ -466,6 +448,20 @@ private:
                                              ComputedStyle* style);
 
     void insertNamedGridArea(const std::pair<std::string, GridArea>& pair);
+
+    LayoutContext& m_layoutContext;
+    FrameGridBox* m_container;
+    LayoutUnit m_availableWidth;
+    GCVector<GridTrack> m_gridTemplateColumns;
+    GCVector<GridTrack> m_gridTemplateRows;
+    GCVector<GridArea> m_orderedGridArea;
+    GCUnorderedMap<std::string, GCVector<GridArea>> m_namedAreaMap;
+
+    LayoutUnit m_rowGap;
+    LayoutUnit m_columnGap;
+
+    GridCellTable m_gridCellTable;
+    GCVector<FrameBox*> m_nonGridItems;
 };
 
 class FrameGridBox final : public FrameBlockBox {
@@ -579,5 +575,7 @@ public:
         return dataSet;
     }
 };
+
 } // namespace Starfish
+
 #endif
