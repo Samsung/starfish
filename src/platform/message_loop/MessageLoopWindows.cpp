@@ -18,6 +18,7 @@
  */
 
 #include "StarfishPlatform.h"
+
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
 
 #include "StarfishConfig.h"
@@ -123,9 +124,9 @@ public:
     }
 };
 
-void processMessage(MessageLoopWindows* self, const MSG& message)
+void processMessage(MessageLoop* self, const MSG& message)
 {
-    MessageLoopImpl::processMessage(self, message);
+    MessageLoopImpl::processMessage((MessageLoopWindows*)self, message);
 }
 
 void MessageLoopWindows::destroy()

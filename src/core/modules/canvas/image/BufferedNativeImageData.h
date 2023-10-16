@@ -30,7 +30,7 @@ class Canvas;
 class AnimatedGIFNativeImageData;
 class CompressedNativeImageData;
 class SVGNativeImageData;
-class DrawImageInfo;
+struct DrawImageInfo;
 
 class BufferedNativeImageData : public NativeImageData {
     friend class ResourceLoader;

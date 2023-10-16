@@ -12,14 +12,6 @@ IF (${HOST} STREQUAL "linux" AND (((${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BAC
         COMMAND git submodule update --init third_party
     )
 
-    # Patch wabt update
-    IF (${ENABLE_WASM} STREQUAL "1")
-        EXECUTE_PROCESS (
-            WORKING_DIRECTORY ${ESCARGOT_THIRD_PARTY_ROOT}/wasm/wabt
-            COMMAND patch -p0 --forward -r /dev/null -i ../../../tools/test/wasm-js/wabt_patch
-        )
-    ENDIF()
-
 # JS BINDING
     EXECUTE_PROCESS (
         COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding/generated

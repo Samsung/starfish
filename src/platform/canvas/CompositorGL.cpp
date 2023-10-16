@@ -1895,13 +1895,15 @@ public:
             }
 
             // 2. Add the texture info newly created to the fragement list.
-            m_textureFragments.push_back({ .textureID = textureId,
-                                           .textureWidth = m_bufferWidth,
-                                           .textureHeight = m_bufferHeight,
-                                           .srcX = 0,
-                                           .srcY = 0,
-                                           .srcWidth = 1,
-                                           .srcHeight = 1 });
+            CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
+            fragment.textureWidth = m_bufferWidth;
+            fragment.textureHeight = m_bufferHeight;
+            fragment.textureID = textureId;
+            fragment.srcX = 0;
+            fragment.srcY = 0;
+            fragment.srcWidth = 1;
+            fragment.srcHeight = 1;
+            m_textureFragments.push_back(fragment);
 
             // 3. Set the dimension of the fragment list.
             m_wTextureCount = m_hTextureCount = 1;

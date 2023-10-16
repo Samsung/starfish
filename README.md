@@ -72,8 +72,6 @@ Default values are in **bold**.
   Use either cairo, cairo_gl, skia, or dali as the backend graphics library
 * -DARCH=[ **x64** | arm ]
   Compile Starfish for either x64 or arm target
-* -DTOUCH_UI=[ 0 | **1** ]<br>
-  Enable a touch UI.
 * -DLTO=[ **0** | 1 ]<br>
   Enable complier link time optimization
 * -DENABLE_DEBUGGER=[ **0** | 1 ]<br>
@@ -120,6 +118,14 @@ Default values are in **bold**.
 
 * --define 'build_profile [ tv | mobile | headless | wearable | **all** ]'<br>
   Genereate RPMs for TV, mobile, headless and wearable platforms.
+
+### How to Compile: Windows x86
+Open Visual Studio x86 Command tools prompt
+```sh
+cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DARCH=x86 -DMODE=release -Bout_windows/ -DHOST=windows
+cmake --build out_windows --config Release -j
+msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
+```
 
 ## How to Compile: Android
 ### Prerequisite

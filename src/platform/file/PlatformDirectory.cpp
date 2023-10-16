@@ -298,6 +298,9 @@ private:
             return;
         }
 
+#if defined(STARFISH_WINDOWS)
+        STARFISH_UNIMPLEMENTED();
+#else
         int fd = dirfd(dir);
         while ((entry = readdir(dir)) != NULL) {
             // Skip entries "." and ".."
@@ -327,6 +330,7 @@ private:
             }
         }
         closedir(dir);
+#endif
     }
 };
 
