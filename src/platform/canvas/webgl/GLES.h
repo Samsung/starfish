@@ -29,6 +29,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
+#elif defined(STARFISH_WINDOWS)
+#include <GL/glew.h>
 #else
 // Assume GLES3/gl3.h is available as default.
 #include <GLES3/gl3.h>

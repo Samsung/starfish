@@ -37,7 +37,7 @@ MessageLoop* MessageLoop::create()
 #elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     return new MessageLoopLibUV();
 #elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
-    return new MessageLoopWindows()
+    return new MessageLoopWindows();
 #else
 #error "Unknown EventLoop back-end"
 #endif

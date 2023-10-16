@@ -27,6 +27,8 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Evas_GL.h>
+#elif defined(STARFISH_WINDOWS)
+#include <GL/glew.h>
 #else
 // NOTE: Due to a GC(_XGC) conflict predefined in Xlib.h, X11 is forcibly
 // disabled. Native window-related EGL APIs may not work properly. However, we
