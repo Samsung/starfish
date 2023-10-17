@@ -1,0 +1,35 @@
+name: Build Starfish (windows)
+
+on: [pull_request_target]
+
+jobs:
+  build_x64:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 60
+    steps:
+      - name: Git setup
+        run: |
+            git config --global http.proxy http://10.112.1.184:8080
+            git config --global https.proxy http://10.112.1.184:8080
+            git config --global http.sslVerify false
+            git config --global core.eol lf
+            git config --global core.autocrlf input
+      - name: Python setup
+        run: |
+            pip install Jinja2 ply --trusted-host=pypi.org --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --proxy=http://10.112.1.184:8080
+      - name: Checkout
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: "recursive"
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Add safe directory
+        run: git config --global --add safe.directory /__w/starfish/starfish
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
+      - name: Build
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat"
+          msbuild build/windows/winform_shell/StarfishWinformShell/StarfishWinformShell.sln /p:Platform="Any CPU"
+          cmake -G "Visual Studio 16 2019" -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_VERSION:STRING="10.0" -DCMAKE_SYSTEM_PROCESSOR=x86 -DCMAKE_GENERATOR_PLATFORM=Win32,version=10.0.18362.0 -DARCH=x86 -DMODE=release -Bout_windows/ -DHOST=windows
+          cmake --build out_windows --config Release -j
+        shell: cmd

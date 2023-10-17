@@ -23,7 +23,7 @@ jobs:
       - name: Checkout source..
         uses: CODE-Actions/checkout@v2
         with:
-          submodules: true
+          submodules: "recursive"
 
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
