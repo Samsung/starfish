@@ -406,3 +406,6 @@
 "q::after {"
 "    content: close-quote;"
 "}"
+"svg:not(:root) {"
+"    overflow: hidden;"
+"}"
