@@ -17,17 +17,29 @@
  *  USA
  */
 
-#ifndef __StarfishWindowEGL__
-#define __StarfishWindowEGL__
+#include "platform/canvas/webgl/XGLPlatform.h"
 
-#include "public/bridge/x11/WindowType.h"
+bool XGLPlatform::checkValid(const XGLPlatform& env)
+{
+    if (env.type == Type::UNDEFINED) {
+        return false;
+    }
 
-struct XGLPlatform;
+    if (env.type == Type::EGL) {
+        if (!env.egl.display || !env.egl.surface || !env.egl.config) {
+            return false;
+        }
+    } else if (env.type == Type::EVAS) {
+        if (!env.evasgl.object || !env.evasgl.api || !env.evasgl.surface) {
+            return false;
+        }
+    } else {
+        return false;
+    }
 
-namespace LWE {
+    if (!env.context) {
+        return false;
+    }
 
-bool initEGL(const NativeWindowType window, XGLPlatform *platform = nullptr);
-
+    return true;
 }
-
-#endif

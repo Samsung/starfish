@@ -41,7 +41,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/window/PlatformWindowFactory.h"
-#include "platform/canvas/webgl/EGLEnv.h"
+#include "platform/canvas/webgl/GLEnv.h"
 
 namespace Starfish {
 
@@ -223,8 +223,8 @@ public:
     {
         // NOTE: Should initialize GL plaform after attaching this main context.
         glMakeCurrent();
-        if (!EGLEnv::instance()->initialize()) {
-            STARFISH_LOG_ERROR("EGLEnv initialization has failed.");
+        if (!GLEnv::instance()->initialize()) {
+            STARFISH_LOG_ERROR("GLEnv initialization has failed.");
         }
     }
 #endif

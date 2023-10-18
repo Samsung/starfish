@@ -20,10 +20,10 @@
 #include "StarfishPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_X11)
-#include "platform/canvas/webgl/EGLUtil.h"
+#include "platform/canvas/webgl/XGLUtil.h"
 #include "public/bridge/x11/WindowEGL.h"
 #define NO_ESCARGOT_GC_CONFLICT_GUARD
-#include "platform/canvas/webgl/EGL.h"
+#include "platform/canvas/webgl/XGL.h"
 #define NOT_EXPOSE_GC
 #include "StarfishBase.h"
 
@@ -114,7 +114,7 @@ static bool createEGLSurface(EGLSurface& surface, const EGLDisplay& eglDisplay,
     return true;
 }
 
-bool initEGL(const NativeWindowType window, EGLPlatform* platform)
+bool initEGL(const NativeWindowType window, XGLPlatform* platform)
 {
     EGLDisplay display{ nullptr };
     EGLSurface surface{ nullptr };
@@ -123,15 +123,24 @@ bool initEGL(const NativeWindowType window, EGLPlatform* platform)
 
     if (!createEGLDisplay(display, config) ||
         !createEGLSurface(surface, display, config, window) ||
-        !EGLUtil::createEGLContext(context, display, config, nullptr)) {
+        !XGLUtil::createXGLContext(context,
+                                   { .type = XGLPlatform::Type::EGL,
+                                     .context = nullptr,
+                                     .egl{
+                                         .display = display,
+                                         .config = config,
+                                         .surface = surface,
+                                     } },
+                                   nullptr)) {
         return false;
     }
 
     if (platform) {
-        platform->display = display;
-        platform->surface = surface;
+        platform->type = XGLPlatform::Type::EGL;
+        platform->egl.display = display;
+        platform->egl.surface = surface;
+        platform->egl.config = config;
         platform->context = context;
-        platform->config = config;
     }
 
     return true;

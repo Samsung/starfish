@@ -25,7 +25,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
 #include "platform/canvas/webgl/GLES.h"
-#include "platform/canvas/webgl/EGLEnv.h"
+#include "platform/canvas/webgl/GLEnv.h"
 
 namespace Starfish {
 
@@ -58,7 +58,7 @@ void WebGLRenderingContextBaseMixIn::initialize()
 
     // Create a GL context for this rendering context
     {
-        GLContextScope scope(EGLEnv::instance()->context());
+        GLContextScope scope(GLEnv::instance()->context());
         if (!m_context.create(true)) {
             STARFISH_LOG_ERROR("GLContext creation has failed.");
         }

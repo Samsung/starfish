@@ -20,8 +20,8 @@
 #if defined(STARFISH_ENABLE_WEBGL)
 
 #include "platform/canvas/webgl/GLContext.h"
-#include "platform/canvas/webgl/EGLEnv.h"
-#include "platform/canvas/webgl/EGLUtil.h"
+#include "platform/canvas/webgl/GLEnv.h"
+#include "platform/canvas/webgl/XGLUtil.h"
 #include "StarfishBase.h"
 
 namespace Starfish {
@@ -32,7 +32,7 @@ GLContext::GLContext()
 {
 }
 
-GLContext::GLContext(EGLContext context)
+GLContext::GLContext(XGLContext context)
     : m_context(context)
 {
 }
@@ -41,19 +41,17 @@ bool GLContext::create(bool shareContext)
 {
     STARFISH_ASSERT(m_context == nullptr);
 
-    std::shared_ptr<EGLEnv> platform = EGLEnv::instance();
+    std::shared_ptr<GLEnv> env = GLEnv::instance();
 
-    if (!platform->isInitialzed()) {
+    if (!env->isInitialzed()) {
         STARFISH_LOG_ERROR("Platform is not initialzed.");
         return false;
     }
 
-    EGLDisplay display = platform->display();
-    EGLSurface config = platform->config();
-    EGLContext context = shareContext ? platform->context() : nullptr;
-    EGLContext newContext;
+    XGLContext newContext;
 
-    if (!EGLUtil::createEGLContext(newContext, display, config, context)) {
+    if (!XGLUtil::createXGLContext(newContext, env->platform(),
+                                   shareContext ? env->context() : nullptr)) {
         return false;
     }
     m_context = newContext;
@@ -64,26 +62,21 @@ bool GLContext::setCurrent()
 {
     STARFISH_ASSERT(m_context != nullptr);
 
-    EGLDisplay display = EGLEnv::instance()->display();
-    EGLSurface surface = EGLEnv::instance()->surface();
-    STARFISH_ASSERT(display != nullptr);
-    STARFISH_ASSERT(surface != nullptr);
-
-    bool result =
-        EGLUtil::makeCurrentEGLContext(display, surface, surface, m_context);
+    bool result = XGLUtil::makeCurrentXGLContext(GLEnv::instance()->platform(),
+                                                 m_context);
     STARFISH_ASSERT(result);
     return result;
 }
 
 void GLContext::resetCurrent()
 {
-    EGLUtil::resetCurrentEGLContext(EGLEnv::instance()->display());
+    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
 }
 
 bool GLContext::destory()
 {
     if (m_context) {
-        if (!EGLUtil::destroyEGLContext(EGLEnv::instance()->display(),
+        if (!XGLUtil::destroyXGLContext(GLEnv::instance()->platform(),
                                         m_context)) {
             STARFISH_LOG_WARN("Context is not destoryed.");
             return false;
@@ -117,11 +110,11 @@ GLContextScope::GLContextScope(GLContext context)
 
 GLContextScope::~GLContextScope()
 {
-    EGLUtil::resetCurrentEGLContext(EGLEnv::instance()->display());
+    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
     currentContext.reset();
 }
 
-GLContext GLContextScope::getCurrentContext()
+GLContext GLContextScope::getCurrentXGLContext()
 {
     return currentContext.isValid() ? currentContext : GLContext();
 }
@@ -130,7 +123,7 @@ GLContext GLContextScope::getCurrentContext()
 
 GLRevertableContextScope::GLRevertableContextScope(GLContext context)
 {
-    m_previousContext = GLContext(EGLUtil::getCurrentContext());
+    m_previousContext = GLContext(XGLUtil::getCurrentXGLContext());
     context.setCurrent();
 }
 
@@ -149,7 +142,7 @@ WebGLContextScope::WebGLContextScope(GLContext context, GLuint fbo)
 
 WebGLContextScope::~WebGLContextScope()
 {
-    EGLUtil::resetCurrentEGLContext(EGLEnv::instance()->display());
+    XGLUtil::resetCurrentXGLContext(GLEnv::instance()->platform());
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

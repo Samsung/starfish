@@ -17,35 +17,33 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBGL)
+#ifndef __StarfishEGLUtil__
+#define __StarfishEGLUtil__
 
-#ifndef __StarfishEGLEnv__
-#define __StarfishEGLEnv__
+#include "StarfishPlatform.h"
+#include "platform/canvas/webgl/XGLPlatform.h"
 
-#include <memory>
-#include "platform/canvas/webgl/EGLUtil.h"
+#if defined(PORT_WEBVIEW_BRIDGE_X11) || defined(STARFISH_ENABLE_WEBGL)
 
-namespace Starfish {
+namespace XGLUtil {
 
-class EGLEnv {
-public:
-    static std::shared_ptr<EGLEnv> instance();
+bool createXGLContext(XGLContext &context, const XGLPlatform &platform,
+                      const XGLContext shareContext);
 
-    bool initialize();
-    bool isInitialzed();
+bool destroyXGLContext(const XGLPlatform &platform, const XGLContext context);
 
-    EGLDisplay display();
-    EGLSurface surface();
-    EGLConfig config();
-    EGLContext context();
-    EGLPlatform platform();
+bool makeCurrentXGLContext(const XGLPlatform &platform,
+                           const XGLContext context);
 
-private:
-    EGLPlatform m_platform;
-};
+XGLContext getCurrentXGLContext();
 
-} // namespace Starfish
+bool resetCurrentXGLContext(const XGLPlatform &platform);
 
-#endif
+bool swapXGLBuffer(const XGLPlatform &platform);
 
+void printXGLInfo(const XGLPlatform &platform);
+
+} // namespace XGLUtil
+
+#endif // __StarfishUtilEGL__
 #endif

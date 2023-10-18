@@ -17,17 +17,32 @@
  *  USA
  */
 
-#ifndef __StarfishWindowEGL__
-#define __StarfishWindowEGL__
+#if defined(STARFISH_ENABLE_WEBGL)
 
-#include "public/bridge/x11/WindowType.h"
+#ifndef __StarfishGLEnv__
+#define __StarfishGLEnv__
 
-struct XGLPlatform;
+#include <memory>
+#include "platform/canvas/webgl/XGLPlatform.h"
 
-namespace LWE {
+namespace Starfish {
 
-bool initEGL(const NativeWindowType window, XGLPlatform *platform = nullptr);
+class GLEnv {
+public:
+    static std::shared_ptr<GLEnv> instance();
 
-}
+    bool initialize();
+    bool isInitialzed();
+
+    XGLContext context();
+    XGLPlatform platform();
+
+private:
+    XGLPlatform m_platform;
+};
+
+} // namespace Starfish
+
+#endif
 
 #endif

@@ -74,9 +74,8 @@ static bool createFrameBufferObject(const unsigned width, const unsigned height,
 
     // 4. Verify that setting fbo is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        STARFISH_LOG_ERROR(
-            "Error creating framebuffer, it is incomplete! (0x%x)",
-            glCheckFramebufferStatus(GL_FRAMEBUFFER));
+        STARFISH_LOG_ERROR("Error: creating framebuffer is incomplete. (0x%x)",
+                           glCheckFramebufferStatus(GL_FRAMEBUFFER));
         return false;
     }
 
@@ -99,7 +98,7 @@ FramebufferTexture::~FramebufferTexture()
 bool FramebufferTexture::create(unsigned bufferWidth, unsigned bufferHeight,
                                 GLuint& outTextureId)
 {
-    GLRevertableContextScope scope(GLContextScope::getCurrentContext());
+    GLRevertableContextScope scope(GLContextScope::getCurrentXGLContext());
 
     if (!createFrameBufferObject(bufferWidth, bufferHeight, m_fbo, m_textureId,
                                  m_rbo)) {
