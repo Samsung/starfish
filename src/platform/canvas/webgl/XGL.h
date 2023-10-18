@@ -17,13 +17,10 @@
  *  USA
  */
 
-#ifndef __StarfishEGL__
-#define __StarfishEGL__
+#ifndef __StarfishXGL__
+#define __StarfishXGL__
 
 #include "StarfishPlatform.h"
-
-// NOTE: Consider using EGLUtil.h when using a few EGL types rather than using
-// this header.
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Evas_GL.h>
@@ -45,4 +42,4 @@
 
 #endif
 
-#endif // __StarfishGLEGL__
+#endif // __StarfishXGL__

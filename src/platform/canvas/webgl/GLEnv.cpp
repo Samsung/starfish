@@ -19,21 +19,21 @@
 
 #if defined(STARFISH_ENABLE_WEBGL)
 
-#include "platform/canvas/webgl/EGLEnv.h"
-#include "platform/canvas/webgl/EGL.h"
+#include "platform/canvas/webgl/GLEnv.h"
+#include "platform/canvas/webgl/XGL.h"
 #include "platform/canvas/webgl/GLES.h"
-#include "platform/canvas/webgl/EGLUtil.h"
+#include "platform/canvas/webgl/XGLUtil.h"
 #include "StarfishBase.h"
 #include "StarfishPlatform.h"
 
 namespace Starfish {
 
-std::shared_ptr<EGLEnv> EGLEnv::instance()
+std::shared_ptr<GLEnv> GLEnv::instance()
 {
-    static std::shared_ptr<EGLEnv> instance;
+    static std::shared_ptr<GLEnv> instance;
 
     if (instance == nullptr) {
-        instance = std::make_shared<EGLEnv>();
+        instance = std::make_shared<GLEnv>();
     }
     return instance;
 }
@@ -41,12 +41,13 @@ std::shared_ptr<EGLEnv> EGLEnv::instance()
 /*
  * @brief Initialize the environment based on the current GL Context attached.
  */
-bool EGLEnv::initialize()
+bool GLEnv::initialize()
 {
-#if !defined(PORT_WEBVIEW_BRIDGE_GLFW) && !defined(PORT_WEBVIEW_BRIDGE_X11)
-    STARFISH_ASSERT("Not supported yet");
-#endif
-
+#if defined(GL_BRIDGE_EVASGL)
+    // TODO
+    STARFISH_ASSERT_NOT_REACHED();
+    return false;
+#else
     if (isInitialzed()) {
         STARFISH_LOG_WARN("Already initialzed.");
         return false;
@@ -85,47 +86,34 @@ bool EGLEnv::initialize()
         return false;
     }
 
-    m_platform.display = display;
-    m_platform.surface = draw;
-    m_platform.config = config;
+    m_platform.egl.display = display;
+    m_platform.egl.surface = draw;
+    m_platform.egl.config = config;
     m_platform.context = context;
 
-    EGLUtil::printEGLInfo(display, config, context);
+    XGLUtil::printXGLInfo(m_platform);
 
     STARFISH_ASSERT(isInitialzed());
+
+#endif
     return true;
 }
 
-bool EGLEnv::isInitialzed()
+bool GLEnv::isInitialzed()
 {
-    if (!m_platform.display || !m_platform.surface || !m_platform.config ||
-        !m_platform.context) {
+    if (!m_platform.egl.display || !m_platform.egl.surface ||
+        !m_platform.egl.config || !m_platform.context) {
         return false;
     }
     return true;
 }
 
-EGLDisplay EGLEnv::display()
-{
-    return m_platform.display;
-}
-
-EGLSurface EGLEnv::surface()
-{
-    return m_platform.surface;
-}
-
-EGLConfig EGLEnv::config()
-{
-    return m_platform.config;
-}
-
-EGLContext EGLEnv::context()
+XGLContext GLEnv::context()
 {
     return m_platform.context;
 }
 
-EGLPlatform EGLEnv::platform()
+XGLPlatform GLEnv::platform()
 {
     return m_platform;
 }

@@ -21,7 +21,10 @@
 #define __StarfishSurfaceCreationScope__
 
 #include <memory>
-#include "platform/canvas/webgl/GLES.h" // For GLuint
+
+#ifndef GLuint
+typedef unsigned int GLuint;
+#endif
 
 namespace Starfish {
 

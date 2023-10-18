@@ -23,8 +23,10 @@
 #include "StarfishPlatform.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
-#include <Evas_GL.h>
-// TODO: Consider using Evas_GL_GLESX_Helpers.h.
+#include "platform/canvas/webgl/GLES_EvasGL_GLES3_Helpers.h"
+
+EVAS_GL_GLOBAL_GLES3_DECLARE()
+
 #elif defined(PORT_WEBVIEW_BRIDGE_GLFW) || defined(STARFISH_X11_CAIRO_GL)
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>

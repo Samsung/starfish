@@ -23,14 +23,15 @@
 #define __StarfishGLContext__
 
 #include "platform/canvas/webgl/GLES.h" // For GLuint
-#include "platform/canvas/webgl/EGLUtil.h"
+#include "platform/canvas/webgl/XGLUtil.h"
+#include "platform/canvas/webgl/XGLPlatform.h"
 
 namespace Starfish {
 
 class GLContext {
 public:
     GLContext();
-    GLContext(EGLContext context);
+    GLContext(XGLContext context);
 
     bool create(bool shareContext);
     bool destory();
@@ -40,7 +41,7 @@ public:
     bool isValid();
 
 private:
-    EGLContext m_context{ nullptr };
+    XGLContext m_context{ nullptr };
 };
 
 class GLContextScope final {
@@ -52,7 +53,7 @@ public:
     GLContextScope& operator=(const GLContextScope& other) = delete;
     GLContextScope(GLContextScope&& other) = delete;
 
-    static GLContext getCurrentContext();
+    static GLContext getCurrentXGLContext();
 
 private:
     static thread_local GLContext currentContext;

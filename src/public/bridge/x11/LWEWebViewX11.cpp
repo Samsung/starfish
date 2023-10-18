@@ -21,8 +21,8 @@
 #include "LWEWebView.h"
 #include "public/bridge/x11/XWindow.h"
 #include "public/bridge/x11/WindowEGL.h"
-#include "platform/canvas/webgl/EGL.h"
-#include "platform/canvas/webgl/EGLUtil.h"
+#include "platform/canvas/webgl/XGL.h"
+#include "platform/canvas/webgl/XGLUtil.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_X11)
 
@@ -58,18 +58,19 @@ public:
 
 #if defined(STARFISH_ENABLE_TEST)
         // For screenshot
-        EGLUtil::makeCurrentEGLContext(m_eglPlatform);
-        eglSwapInterval(m_eglPlatform.display, 0);
-        EGLUtil::resetCurrentEGLContext(m_eglPlatform);
+        XGLUtil::makeCurrentXGLContext(m_eglPlatform, m_eglPlatform.context);
+        eglSwapInterval(m_eglPlatform.egl.display, 0);
+        XGLUtil::resetCurrentXGLContext(m_eglPlatform);
 #endif
 
         m_impl = WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) {
-                EGLUtil::makeCurrentEGLContext(m_eglPlatform);
+                XGLUtil::makeCurrentXGLContext(m_eglPlatform,
+                                               m_eglPlatform.context);
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
-                EGLUtil::swapGLBuffer(m_eglPlatform);
+                XGLUtil::swapXGLBuffer(m_eglPlatform);
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
@@ -185,7 +186,7 @@ public:
 private:
     bool m_isMouseLbuttonDown{ false };
     size_t m_pollTimer{ 0 };
-    EGLPlatform m_eglPlatform;
+    XGLPlatform m_eglPlatform;
     std::shared_ptr<WindowBase> m_window;
 };
 

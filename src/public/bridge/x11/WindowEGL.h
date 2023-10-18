@@ -22,11 +22,11 @@
 
 #include "public/bridge/x11/WindowType.h"
 
-struct EGLPlatform;
+struct XGLPlatform;
 
 namespace LWE {
 
-bool initEGL(const NativeWindowType window, EGLPlatform *platform = nullptr);
+bool initEGL(const NativeWindowType window, XGLPlatform *platform = nullptr);
 
 }
 

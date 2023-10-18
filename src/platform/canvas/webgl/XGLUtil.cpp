@@ -21,23 +21,25 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_X11) || defined(STARFISH_ENABLE_WEBGL)
 
-#include "platform/canvas/webgl/EGLUtil.h"
-#include "platform/canvas/webgl/EGL.h"
+#include "platform/canvas/webgl/XGLUtil.h"
+#include "platform/canvas/webgl/XGL.h"
 #include "StarfishBase.h"
 
-namespace EGLUtil {
+#if defined(GL_BRIDGE_EGL)
 
-bool createEGLContext(EGLContext& context, const EGLDisplay eglDisplay,
-                      const EGLConfig eglConfig, const EGLContext shareContext)
+namespace XGLUtil {
+
+bool createXGLContext(XGLContext& context, const XGLPlatform& platform,
+                      const XGLContext shareContext)
 {
     EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
-    EGLContext eglContext =
-        eglCreateContext(eglDisplay, eglConfig, shareContext, attributes);
+    XGLContext eglContext = eglCreateContext(
+        platform.egl.display, platform.egl.config, shareContext, attributes);
 
     if (eglContext == EGL_NO_CONTEXT) {
         EGLint attributes[] = { EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE };
-        eglContext =
-            eglCreateContext(eglDisplay, eglConfig, shareContext, attributes);
+        eglContext = eglCreateContext(platform.egl.display, platform.egl.config,
+                                      shareContext, attributes);
 
         if (eglContext == EGL_NO_CONTEXT) {
             STARFISH_LOG_ERROR("Unable to create EGL context (eglError: 0x%x)",
@@ -50,38 +52,21 @@ bool createEGLContext(EGLContext& context, const EGLDisplay eglDisplay,
     return true;
 }
 
-bool destroyEGLContext(const EGLDisplay display, const EGLContext context)
+bool destroyXGLContext(const XGLPlatform& platform, const XGLContext context)
 {
-    if (!eglDestroyContext(display, context)) {
+    if (!eglDestroyContext(platform.egl.display, context)) {
         STARFISH_LOG_ERROR("Unable to destory EGL context (eglError: 0x%x)",
                            eglGetError());
         return false;
     }
     return true;
-};
-
-bool makeCurrentEGLContext(const EGLDisplay display,
-                           const EGLSurface drawSurface,
-                           const EGLSurface readSurface,
-                           const EGLContext context)
-{
-    if (!eglMakeCurrent(display, drawSurface, readSurface, context)) {
-        STARFISH_LOG_ERROR("Failed to set current context (eglError: 0x%x)",
-                           eglGetError());
-        return false;
-    }
-    return true;
-};
-
-void resetCurrentEGLContext(const EGLDisplay display)
-{
-    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-bool makeCurrentEGLContext(const EGLPlatform& platform)
+bool makeCurrentXGLContext(const XGLPlatform& platform,
+                           const XGLContext context)
 {
-    if (!eglMakeCurrent(platform.display, platform.surface, platform.surface,
-                        platform.context)) {
+    if (!eglMakeCurrent(platform.egl.display, platform.egl.surface,
+                        platform.egl.surface, context)) {
         STARFISH_LOG_ERROR("Failed to set current context (eglError: 0x%x)",
                            eglGetError());
         return false;
@@ -89,27 +74,30 @@ bool makeCurrentEGLContext(const EGLPlatform& platform)
     return true;
 }
 
-EGLContext getCurrentContext()
+bool resetCurrentXGLContext(const XGLPlatform& platform)
 {
-    return eglGetCurrentContext();
-}
-
-bool resetCurrentEGLContext(const EGLPlatform& platform)
-{
-    eglMakeCurrent(platform.display, EGL_NO_SURFACE, EGL_NO_SURFACE,
+    eglMakeCurrent(platform.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE,
                    EGL_NO_CONTEXT);
     return true;
 }
 
-bool swapGLBuffer(const EGLPlatform& platform)
+XGLContext getCurrentXGLContext()
 {
-    eglSwapBuffers(platform.display, platform.surface);
+    return eglGetCurrentContext();
+}
+
+bool swapXGLBuffer(const XGLPlatform& platform)
+{
+    eglSwapBuffers(platform.egl.display, platform.egl.surface);
     return true;
 }
 
-void printEGLInfo(const EGLDisplay eglDisplay, const EGLConfig eglConfig,
-                  const EGLContext eglContext)
+void printXGLInfo(const XGLPlatform& platform)
 {
+    EGLDisplay eglDisplay = platform.egl.display;
+    EGLConfig eglConfig = platform.egl.config;
+    XGLContext eglContext = platform.context;
+
     STARFISH_LOG_INFO("EGL_VERSION = %s",
                       eglQueryString(eglDisplay, EGL_VERSION));
 
@@ -241,5 +229,8 @@ void printEGLInfo(const EGLDisplay eglDisplay, const EGLConfig eglConfig,
                       eglQueryString(eglDisplay, EGL_EXTENSIONS));
 }
 
-} // namespace EGLUtil
+} // namespace XGLUtil
+
+#endif // defined(GL_BRIDGE_EGL)
+
 #endif
