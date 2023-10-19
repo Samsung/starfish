@@ -454,7 +454,7 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_DEBUG(fmt, arg...)                                        \
     do {                                                                       \
         LOG_FUNCTION_TYPE(fprintf, stderr, STARFISH_LOG_TAG, "", "", fmt "\n", \
-                          , ##arg)                                             \
+                          ##arg)                                               \
     } while (0);
 #endif
 
