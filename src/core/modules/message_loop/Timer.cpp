@@ -19,10 +19,33 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "Timer.h"
+#include "platform/message_loop/TimerEFL.h"
+#include "platform/message_loop/TimerLibUV.h"
+#include "platform/message_loop/TimerWindows.h"
 #include "core/page/WebBase.h"
 
 namespace Starfish {
+
+Timer* Timer::create(WebBase* webBase)
+{
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+    return new TimerEFL(webBase);
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    return new TimerLibUV(webBase);
+#elif defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    return new TimerWindows(webBase);
+#else
+#error "Unknown EventLoop back-end"
+#endif
+}
+
+Timer::Timer(WebBase* webBase)
+    : m_webBase(webBase)
+    , m_timeoutCounter(0)
+    , m_requestAnimationFrameCounter(0)
+    , m_animationCounter(0)
+{
+}
 
 uint32_t Timer::requestAnimationFrame(GlobalScope* globalScope,
                                       TimerHandler handler, void* data)

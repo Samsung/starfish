@@ -23,25 +23,23 @@
 #include "Starfish.h"
 
 #include "core/modules/threading/Thread.h"
-#include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
+
+#include "platform/message_loop/TimerWindows.h"
 
 #include <Windows.h>
 
 namespace Starfish {
 
-Timer::Timer(WebBase* webBase)
-    : m_webBase(webBase)
+TimerWindows::TimerWindows(WebBase* webBase)
+    : Timer(webBase)
 {
-    m_timeoutCounter = 0;
-    m_requestAnimationFrameCounter = 1;
-    m_animationCounter = 0;
 }
 
 struct AnimationTickData {
-    Timer* m_timer;
+    TimerWindows* m_timer;
     int32_t m_id;
     UINT_PTR m_timerID;
     void* m_data;
@@ -50,7 +48,7 @@ struct AnimationTickData {
 };
 
 struct TimeoutData {
-    Timer* m_timer;
+    TimerWindows* m_timer;
     int32_t m_id;
     UINT_PTR m_timerID;
     GlobalScope* m_globalScope;
@@ -61,8 +59,8 @@ struct TimeoutData {
 
 __declspec(thread) std::unordered_map<size_t, size_t> g_windowsTimerData;
 
-size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
-                       TimerHandler handler, void* data, bool repetitive)
+size_t TimerWindows::addTimer(unsigned delay, GlobalScope* globalScope,
+                              TimerHandler handler, void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -98,7 +96,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeTimer(size_t reqID)
+void TimerWindows::removeTimer(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
     auto handlerData = m_timeoutHandler.find(reqID);
@@ -111,8 +109,8 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
-size_t Timer::addAnimator(GlobalScope* globalScope,
-                          GenericAnimationHandler handler, void* data)
+size_t TimerWindows::addAnimator(GlobalScope* globalScope,
+                                 GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     int32_t id = ++m_animationCounter;
@@ -144,7 +142,7 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeGenericAnimator(size_t reqID)
+void TimerWindows::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -157,7 +155,7 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear(GlobalScope* globalScope)
+void TimerWindows::clear(GlobalScope* globalScope)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
@@ -198,7 +196,7 @@ void Timer::clear(GlobalScope* globalScope)
     }
 }
 
-void Timer::destroy()
+void TimerWindows::destroy()
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {

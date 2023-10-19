@@ -23,25 +23,18 @@
 #include "Starfish.h"
 
 #include "core/modules/threading/Thread.h"
-#include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
+
+#include "platform/message_loop/TimerLibUV.h"
 
 #include <uv.h>
 
 namespace Starfish {
 
-Timer::Timer(WebBase* webBase)
-    : m_webBase(webBase)
-{
-    m_timeoutCounter = 0;
-    m_requestAnimationFrameCounter = 1;
-    m_animationCounter = 0;
-}
-
 struct AnimationTickData {
-    Timer* m_timer;
+    TimerLibUV* m_timer;
     uint64_t m_lastExecutionTick;
     size_t m_id;
     uv_timer_t* m_timerID;
@@ -51,7 +44,7 @@ struct AnimationTickData {
 };
 
 struct TimeoutData {
-    Timer* m_timer;
+    TimerLibUV* m_timer;
     size_t m_id;
     uv_timer_t* m_timerID;
     GlobalScope* m_globalScope;
@@ -64,8 +57,13 @@ static void on_close_handle(uv_handle_t* handle)
     free(handle);
 }
 
-size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
-                       TimerHandler handler, void* data, bool repetitive)
+TimerLibUV::TimerLibUV(WebBase* webBase)
+    : Timer(webBase)
+{
+}
+
+size_t TimerLibUV::addTimer(unsigned delay, GlobalScope* globalScope,
+                            TimerHandler handler, void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -120,7 +118,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeTimer(size_t reqID)
+void TimerLibUV::removeTimer(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
     auto handlerData = m_timeoutHandler.find(reqID);
@@ -139,8 +137,8 @@ void Timer::removeTimer(size_t reqID)
 
 #define MINUMUM_ANIMATOR_WAIT_TIME 3000 // us
 
-size_t Timer::addAnimator(GlobalScope* globalScope,
-                          GenericAnimationHandler handler, void* data)
+size_t TimerLibUV::addAnimator(GlobalScope* globalScope,
+                               GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -188,7 +186,7 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeGenericAnimator(size_t reqID)
+void TimerLibUV::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -203,7 +201,7 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear(GlobalScope* globalScope)
+void TimerLibUV::clear(GlobalScope* globalScope)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
@@ -248,7 +246,7 @@ void Timer::clear(GlobalScope* globalScope)
     }
 }
 
-void Timer::destroy()
+void TimerLibUV::destroy()
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {

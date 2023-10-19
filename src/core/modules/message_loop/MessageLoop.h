@@ -39,7 +39,9 @@ constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 class MessageLoop : public BASE_CLASS {
     friend class MessageLoopImpl;
     friend class MessageLoopMixin;
-    friend class Timer;
+    friend class TimerEFL;
+    friend class TimerLibUV;
+    friend class TimerWindows;
 
 public:
     static MessageLoop* create();

@@ -21,25 +21,23 @@
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
 #include "core/modules/threading/Thread.h"
-#include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/WebBase.h"
+
+#include "platform/message_loop/TimerEFL.h"
 
 #include <Ecore.h>
 
 namespace Starfish {
 
-Timer::Timer(WebBase* webBase)
-    : m_webBase(webBase)
+TimerEFL::TimerEFL(WebBase* webBase)
+    : Timer(webBase)
 {
-    m_timeoutCounter = 0;
-    m_requestAnimationFrameCounter = 1;
-    m_animationCounter = 0;
 }
 
 struct AnimationTickData : public gc {
-    Timer* m_timer;
+    TimerEFL* m_timer;
     int32_t m_id;
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Ecore_Animator* m_timerID;
@@ -52,7 +50,7 @@ struct AnimationTickData : public gc {
 };
 
 struct TimeoutData : public gc {
-    Timer* m_timer;
+    TimerEFL* m_timer;
     int32_t m_id;
     Ecore_Timer* m_timerID;
     GlobalScope* m_globalScope;
@@ -60,8 +58,8 @@ struct TimeoutData : public gc {
     TimerHandler m_handler;
 };
 
-size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
-                       TimerHandler handler, void* data, bool repetitive)
+size_t TimerEFL::addTimer(unsigned delay, GlobalScope* globalScope,
+                          TimerHandler handler, void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -96,7 +94,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                Timer* timer = td->m_timer;
+                TimerEFL* timer = td->m_timer;
                 int32_t id = td->m_id;
                 if (ecore_timer_freeze_get(td->m_timerID)) {
                     return ECORE_CALLBACK_DONE;
@@ -121,7 +119,7 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeTimer(size_t reqID)
+void TimerEFL::removeTimer(size_t reqID)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
 
@@ -136,8 +134,8 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
-size_t Timer::addAnimator(GlobalScope* globalScope,
-                          GenericAnimationHandler handler, void* data)
+size_t TimerEFL::addAnimator(GlobalScope* globalScope,
+                             GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData;
@@ -179,7 +177,7 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
     return id;
 }
 
-void Timer::removeGenericAnimator(size_t reqID)
+void TimerEFL::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -198,7 +196,7 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear(GlobalScope* globalScope)
+void TimerEFL::clear(GlobalScope* globalScope)
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
 
@@ -249,7 +247,7 @@ void Timer::clear(GlobalScope* globalScope)
     }
 }
 
-void Timer::destroy()
+void TimerEFL::destroy()
 {
     STARFISH_RELEASE_ASSERT(isMainThread());
 
