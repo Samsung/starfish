@@ -57,7 +57,7 @@ static Nullable<Angle> valueToAngle(CSSStyleValuePair::ValueKind kind,
     } else if (kind == CSSStyleValuePair::ValueKind::Number) {
         return Angle(Angle::Fixed, data.m_floatValue);
     } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-        CalcValueType type = data.m_calc->type();
+        CalcValueType type = data.m_calc->calcValueType();
         if (type.isAngle() || type.isPercentage()) {
             return Angle(data.m_calc);
         } else {

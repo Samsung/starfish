@@ -23,72 +23,73 @@
 #include "core/style/CSSAngle.h"
 #include "core/style/CSSLength.h"
 #include "core/style/CSSTime.h"
+#include <stdint.h>
 
 namespace Starfish {
 
 class CalcValueType {
 public:
-    enum ValueType ENSURE_ENUM_UNSIGNED {
-        None,
-        Invalid, // Only for type checking
-        Number,
-        Length,
-        Angle,
-        Time,
-        Percentage,
-        CalcDataValue,
+    enum class ValueKind : uint8_t {
+        kNone,
+        kInvalid, // Only for type checking
+        kNumber,
+        kLength,
+        kAngle,
+        kTime,
+        kPercentage,
+        kCalcData,
     };
 
     STARFISH_MAKE_STACK_ALLOCATED();
 
     CalcValueType()
-        : m_type(None)
+        : m_type(ValueKind::kNone)
     {
     }
 
-    CalcValueType(ValueType type)
+    CalcValueType(ValueKind type)
         : m_type(type)
     {
     }
 
     bool isNone() const
     {
-        return m_type == None;
+        return m_type == ValueKind::kNone;
     }
 
     bool isInvalid() const
     {
-        return m_type == Invalid;
+        return m_type == ValueKind::kInvalid;
     }
 
     bool isNumber() const
     {
-        return m_type == Number;
+        return m_type == ValueKind::kNumber;
     }
 
     bool isLength() const
     {
-        return m_type == Length;
+        return m_type == ValueKind::kLength;
     }
 
     bool isAngle() const
     {
-        return m_type == Angle;
+        return m_type == ValueKind::kAngle;
     }
 
     bool isTime() const
     {
-        return m_type == Time;
+        return m_type == ValueKind::kTime;
     }
 
     bool isPercentage() const
     {
-        return m_type == Percentage;
+        return m_type == ValueKind::kPercentage;
     }
 
     bool isCalcData() const
     {
-        return m_type == CalcDataValue;
+        return m_type == ValueKind::kCalcData;
     }
 
     bool operator==(const CalcValueType& other) const
@@ -101,7 +102,7 @@ public:
         return !(operator==(other));
     }
 
-    ValueType m_type : 3;
+    ValueKind m_type : 3;
 };
 
 class CalcValue {
@@ -149,7 +150,7 @@ public:
     };
 
     CalcValue()
-        : m_type(CalcValueType::None)
+        : m_type(CalcValueType::ValueKind::kNone)
         , m_data(0.f)
     {
     }
@@ -161,32 +162,32 @@ public:
     }
 
     CalcValue(float data, bool isPercentage)
-        : m_type(isPercentage ? CalcValueType::Percentage
-                              : CalcValueType::Number)
+        : m_type(isPercentage ? CalcValueType::ValueKind::kPercentage
+                              : CalcValueType::ValueKind::kNumber)
         , m_data(data)
     {
     }
 
     CalcValue(CSSLength data)
-        : m_type(CalcValueType::Length)
+        : m_type(CalcValueType::ValueKind::kLength)
         , m_data(data)
     {
     }
 
     CalcValue(CSSAngle data)
-        : m_type(CalcValueType::Angle)
+        : m_type(CalcValueType::ValueKind::kAngle)
         , m_data(data)
     {
     }
 
     CalcValue(CSSTime data)
-        : m_type(CalcValueType::Time)
+        : m_type(CalcValueType::ValueKind::kTime)
         , m_data(data)
     {
     }
 
     CalcValue(CalcData* data)
-        : m_type(CalcValueType::CalcDataValue)
+        : m_type(CalcValueType::ValueKind::kCalcData)
         , m_data(data)
     {
     }
@@ -305,9 +306,16 @@ private:
 
 class CalcData : public gc {
 public:
-    CalcData()
-    {
-    }
+    enum class Type : uint8_t {
+        kCalc,
+        kMax,
+        kMin,
+        kClamp,
+    };
+
+    CalcData();
+
+    CalcData(const std::string& type);
 
     void appendTerm(CalcTerm* term)
     {
@@ -319,110 +327,44 @@ public:
         return m_terms;
     }
 
-    CalcValueType type() const
-    {
-        auto it = m_terms.begin();
-        CalcValueType lType = (*it)->type();
-        it++;
-        while (it != m_terms.end()) {
-            CalcValueType rType = (*it)->type();
+    CalcValueType calcValueType() const;
 
-            if (lType != rType) {
-                // Percentage type overwrites length
-                if (lType.isLength() && rType.isPercentage()) {
-                    lType = rType;
-                } else if (lType.isPercentage() && rType.isLength()) {
-                } else {
-                    return CalcValueType::Invalid;
-                }
-            }
-
-            it++;
-        }
-
-        return lType;
-    }
-
-    float numberValue() const
-    {
-        auto it = m_terms.begin();
-        float n = (*it)->numberValue();
-        it++;
-        while (it != m_terms.end()) {
-            n += (*it)->numberValue();
-            it++;
-        }
-        if (!m_isPositive) {
-            n *= -1;
-        }
-        return n;
-    }
+    float numberValue() const;
 
     LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
-                              Node* n) const
-    {
-        auto it = m_terms.begin();
-        LayoutUnit l = (*it)->specifiedValue(parentContentLength, n);
-        it++;
-        while (it != m_terms.end()) {
-            l += (*it)->specifiedValue(parentContentLength, n);
-            it++;
-        }
-        if (!m_isPositive) {
-            l *= -1;
-        }
-        return l;
-    }
+                              Node* n) const;
 
-    LayoutUnit specifiedFontValue(Node* n) const
-    {
-        auto it = m_terms.begin();
-        LayoutUnit l = (*it)->specifiedFontValue(n);
-        it++;
-        while (it != m_terms.end()) {
-            l += (*it)->specifiedFontValue(n);
-            it++;
-        }
+    LayoutUnit specifiedFontValue(Node* n) const;
 
-        return l;
-    }
+    CSSAngle angleValue() const;
 
-    CSSAngle angleValue() const
-    {
-        auto it = m_terms.begin();
-        CSSAngle a = (*it)->angleValue();
-        it++;
-        while (it != m_terms.end()) {
-            a += (*it)->angleValue();
-            it++;
-        }
-
-        return a;
-    }
-
-    CSSTime timeValue() const
-    {
-        auto it = m_terms.begin();
-        CSSTime t = (*it)->timeValue();
-        it++;
-        while (it != m_terms.end()) {
-            t += (*it)->timeValue();
-            it++;
-        }
-
-        return t;
-    }
+    CSSTime timeValue() const;
 
     String* toString();
 
     bool equals(CalcData* with) const;
+
     void setSign(bool isPositive)
     {
         m_isPositive = isPositive;
     }
 
+    size_t requiredArguemntsCount();
+
+    void addArgumentsStartPostion(size_t position)
+    {
+        m_argumentsStartPostion.push_back(position);
+    }
+
+    Type type()
+    {
+        return m_type;
+    }
+
 private:
     GCVector<CalcTerm*> m_terms;
+    std::vector<size_t> m_argumentsStartPostion;
+    Type m_type = Type::kCalc;
 
     // Only supports numeric types
     bool m_isPositive = true;

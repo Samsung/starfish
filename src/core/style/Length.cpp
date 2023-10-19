@@ -85,7 +85,7 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
 
 bool Length::isCalcAndLengthOfType() const
 {
-    return isCalc() && calcData()->type().isLength();
+    return isCalc() && calcData()->calcValueType().isLength();
 }
 
 bool Length::hasPercent() const

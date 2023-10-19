@@ -108,14 +108,14 @@ CalcValueType CalcTerm::type() const
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
     if (lType.isCalcData()) {
-        lType = it->calcDataValue()->type();
+        lType = it->calcDataValue()->calcValueType();
     }
     it++;
     auto it2 = m_operators.begin();
     while (it != m_values.end()) {
         CalcValueType rType = (*it).type();
         if (rType.isCalcData()) {
-            rType = it->calcDataValue()->type();
+            rType = it->calcDataValue()->calcValueType();
         }
         bool operand = *it2;
 
@@ -123,19 +123,19 @@ CalcValueType CalcTerm::type() const
             if (lType.isNumber()) {
                 lType = rType;
             } else if (!rType.isNumber()) {
-                return CalcValueType::Invalid;
+                return CalcValueType::ValueKind::kInvalid;
             }
         } else {
             if (rType.isNumber()) {
                 if (((*it).type().isCalcData() &&
                      (*it).calcDataValue()->numberValue() == 0)) {
-                    return CalcValueType::Invalid;
+                    return CalcValueType::ValueKind::kInvalid;
                 } else if ((*it).type().isNumber() &&
                            (*it).numberValue() == 0) {
-                    return CalcValueType::Invalid;
+                    return CalcValueType::ValueKind::kInvalid;
                 }
             } else {
-                return CalcValueType::Invalid;
+                return CalcValueType::ValueKind::kInvalid;
             }
         }
 
@@ -381,6 +381,156 @@ bool CalcTerm::equals(CalcTerm* with) const
     return true;
 }
 
+CalcData::CalcData()
+    : m_type(Type::kCalc)
+{
+}
+
+CalcData::CalcData(const std::string& type)
+{
+    if (type == "max") {
+        m_type = Type::kMax;
+    } else if (type == "min") {
+        m_type = Type::kMin;
+    } else if (type == "clamp") {
+        m_type = Type::kClamp;
+    } else {
+        m_type = Type::kCalc;
+    }
+}
+
+CalcValueType CalcData::calcValueType() const
+{
+    auto it = m_terms.begin();
+    CalcValueType lType = (*it)->type();
+    it++;
+    while (it != m_terms.end()) {
+        CalcValueType rType = (*it)->type();
+
+        if (lType != rType) {
+            // Percentage type overwrites length
+            if (lType.isLength() && rType.isPercentage()) {
+                lType = rType;
+            } else if (lType.isPercentage() && rType.isLength()) {
+            } else {
+                return CalcValueType::ValueKind::kInvalid;
+            }
+        }
+
+        it++;
+    }
+
+    return lType;
+}
+
+float CalcData::numberValue() const
+{
+    auto it = m_terms.begin();
+    float n = (*it)->numberValue();
+    it++;
+    while (it != m_terms.end()) {
+        n += (*it)->numberValue();
+        it++;
+    }
+    if (!m_isPositive) {
+        n *= -1;
+    }
+    return n;
+}
+
+LayoutUnit CalcData::specifiedValue(const LayoutUnit& parentContentLength,
+                                    Node* n) const
+{
+    if (m_type == Type::kMax) {
+        STARFISH_ASSERT(m_argumentsStartPostion.size() == 2);
+        LayoutUnit frist, second;
+        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
+            frist += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        for (size_t i = m_argumentsStartPostion[1]; i < m_terms.size(); i++) {
+            second += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        return std::max(frist.toInt(), second.toInt());
+    } else if (m_type == Type::kMin) {
+        STARFISH_ASSERT(m_argumentsStartPostion.size() == 2);
+        LayoutUnit frist, second;
+        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
+            frist += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        for (size_t i = m_argumentsStartPostion[1]; i < m_terms.size(); i++) {
+            second += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        return std::min(frist.toInt(), second.toInt());
+    } else if (m_type == Type::kClamp) {
+        STARFISH_ASSERT(m_argumentsStartPostion.size() == 3);
+        LayoutUnit frist, second, third;
+        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
+            frist += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        for (size_t i = m_argumentsStartPostion[1];
+             i < m_argumentsStartPostion[2]; i++) {
+            second += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+        for (size_t i = m_argumentsStartPostion[2]; i < m_terms.size(); i++) {
+            third += m_terms[i]->specifiedValue(parentContentLength, n);
+        }
+
+        return std::max(frist.toInt(), std::min(second.toInt(), third.toInt()));
+    } else {
+        STARFISH_ASSERT(m_type == Type::kCalc);
+        auto it = m_terms.begin();
+        LayoutUnit l = (*it)->specifiedValue(parentContentLength, n);
+        it++;
+        while (it != m_terms.end()) {
+            l += (*it)->specifiedValue(parentContentLength, n);
+            it++;
+        }
+        if (!m_isPositive) {
+            l *= -1;
+        }
+        return l;
+    }
+}
+
+LayoutUnit CalcData::specifiedFontValue(Node* n) const
+{
+    auto it = m_terms.begin();
+    LayoutUnit l = (*it)->specifiedFontValue(n);
+    it++;
+    while (it != m_terms.end()) {
+        l += (*it)->specifiedFontValue(n);
+        it++;
+    }
+
+    return l;
+}
+
+CSSAngle CalcData::angleValue() const
+{
+    auto it = m_terms.begin();
+    CSSAngle a = (*it)->angleValue();
+    it++;
+    while (it != m_terms.end()) {
+        a += (*it)->angleValue();
+        it++;
+    }
+
+    return a;
+}
+
+CSSTime CalcData::timeValue() const
+{
+    auto it = m_terms.begin();
+    CSSTime t = (*it)->timeValue();
+    it++;
+    while (it != m_terms.end()) {
+        t += (*it)->timeValue();
+        it++;
+    }
+
+    return t;
+}
+
 String* CalcData::toString()
 {
     StringBuilder builder;
@@ -425,4 +575,23 @@ bool CalcData::equals(CalcData* with) const
 
     return true;
 }
+
+size_t CalcData::requiredArguemntsCount()
+{
+    size_t requiredArgc = 1;
+    switch (m_type) {
+    case Type::kMin:
+    case Type::kMax:
+        requiredArgc = 2;
+        break;
+    case Type::kClamp:
+        requiredArgc = 3;
+        break;
+    default:
+        requiredArgc = 1;
+        break;
+    }
+    return requiredArgc;
+}
+
 } // namespace Starfish

@@ -2689,7 +2689,7 @@ static Nullable<Length> convertValueToLength(const CSSStyleValuePair& property)
     } else if (kind == CSSStyleValuePair::ValueKind::Number) {
         return Length(Length::Fixed, data.m_floatValue);
     } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-        CalcValueType type = data.m_calc->type();
+        CalcValueType type = data.m_calc->calcValueType();
         if (type.isLength() || type.isPercentage() || type.isNumber()) {
             return Length(data.m_calc);
         } else {
