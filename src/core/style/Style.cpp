@@ -162,7 +162,7 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
     } else if (kind == CSSStyleValuePair::ValueKind::Number) {
         return Length(Length::Fixed, data.m_floatValue);
     } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
-        CalcValueType type = data.m_calc->type();
+        CalcValueType type = data.m_calc->calcValueType();
         if (type.isLength() || type.isPercentage() || type.isNumber()) {
             return Length(data.m_calc);
         } else {
@@ -362,7 +362,7 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             } else if (item.valueKind() ==
                        CSSStyleValuePair::ValueKind::CalcValueKind) {
                 CalcData* calcData = item.calcValue();
-                CalcValueType type = calcData->type();
+                CalcValueType type = calcData->calcValueType();
                 if (type.isAngle() == true) {
                     dValues[i] = calcData->angleValue().toDegreeValue();
                 }
@@ -2763,7 +2763,7 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::CalcValueKind: {
         CalcData* calcData = item.calcValue();
-        CalcValueType type = calcData->type();
+        CalcValueType type = calcData->calcValueType();
         if (type.isTime()) {
             style->setTransitionDuration(calcData->timeValue(), layer);
         } else {
@@ -2836,7 +2836,7 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::CalcValueKind: {
         CalcData* calcData = item.calcValue();
-        CalcValueType type = calcData->type();
+        CalcValueType type = calcData->calcValueType();
         if (type.isTime()) {
             style->setTransitionDelay(calcData->timeValue(), layer);
         } else {
@@ -2900,7 +2900,7 @@ static void applyAnimationDuration(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::CalcValueKind: {
         CalcData* calcData = item.calcValue();
-        CalcValueType type = calcData->type();
+        CalcValueType type = calcData->calcValueType();
         if (type.isTime() == true) {
             style->setAnimationDuration(calcData->timeValue(), index);
         } else {
@@ -2937,7 +2937,7 @@ static void applyAnimationDelay(Element* element, ComputedStyle* style,
         break;
     case CSSStyleValuePair::CalcValueKind: {
         CalcData* calcData = item.calcValue();
-        CalcValueType type = calcData->type();
+        CalcValueType type = calcData->calcValueType();
         if (type.isTime() == true) {
             style->setAnimationDelay(calcData->timeValue(), index);
         } else {
@@ -5236,8 +5236,8 @@ void StyleResolver::applyProperty(
             if (length.hasValue()) {
                 auto value = length.getValue();
                 if (value.isCalc() &&
-                    value.calcData()->type().m_type ==
-                        CalcValueType::CalcValueType::Number) {
+                    value.calcData()->calcValueType().m_type ==
+                        CalcValueType::ValueKind::kNumber) {
                     // The computed value should be same as the specified
                     // value.
                     style->setLineHeight(
@@ -6480,16 +6480,19 @@ void StyleResolver::applyProperty(
                                 CalcTerm* term1 = new CalcTerm();
                                 if (second.valueKind() ==
                                     CSSStyleValuePair::ValueKind::Percentage) {
-                                    val.setType(CalcValueType::Percentage);
+                                    val.setType(
+                                        CalcValueType::ValueKind::kPercentage);
                                     val.setValue(-1 * second.percentageValue());
                                 } else {
-                                    val.setType(CalcValueType::Length);
+                                    val.setType(
+                                        CalcValueType::ValueKind::kLength);
                                     val.setValue(-1 * second.cssLengthValue());
                                 }
                                 term1->appendValue(val);
 
                                 CalcTerm* term2 = new CalcTerm();
-                                val.setType(CalcValueType::Percentage);
+                                val.setType(
+                                    CalcValueType::ValueKind::kPercentage);
                                 val.setValue(1.0f);
                                 term2->appendValue(val);
 
@@ -6511,16 +6514,19 @@ void StyleResolver::applyProperty(
                                 CalcTerm* term1 = new CalcTerm();
                                 if (second.valueKind() ==
                                     CSSStyleValuePair::ValueKind::Percentage) {
-                                    val.setType(CalcValueType::Percentage);
+                                    val.setType(
+                                        CalcValueType::ValueKind::kPercentage);
                                     val.setValue(-1 * second.percentageValue());
                                 } else {
-                                    val.setType(CalcValueType::Length);
+                                    val.setType(
+                                        CalcValueType::ValueKind::kLength);
                                     val.setValue(-1 * second.cssLengthValue());
                                 }
                                 term1->appendValue(val);
 
                                 CalcTerm* term2 = new CalcTerm();
-                                val.setType(CalcValueType::Percentage);
+                                val.setType(
+                                    CalcValueType::ValueKind::kPercentage);
                                 val.setValue(1.0f);
                                 term2->appendValue(val);
 
@@ -10750,6 +10756,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
     STARFISH_ASSERT(data != nullptr);
 
     bool isPlus = true;
+    size_t currentArgc = 1;
+    // start default arguments start position
+    data->addArgumentsStartPostion(0);
     while (true) {
         CalcTerm* term = new CalcTerm();
         bool isMul = false;
@@ -10769,14 +10778,14 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             auto str = parser.parsedString();
             CalcValue val;
             if (parser.consumeIfNext('(')) {
-                CalcData* newData = new CalcData();
+                CalcData* newData = new CalcData(str);
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
                               isTimeParser, isLineheightParser, parserOption)) {
                     if (!isPlus) {
                         newData->setSign(false);
                         isPlus = true;
                     }
-                    val.setType(CalcValueType::CalcDataValue);
+                    val.setType(CalcValueType::ValueKind::kCalcData);
                     val.setValue(newData);
 
                 } else {
@@ -10791,19 +10800,19 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 if (isPlus) {
                     if (ret.valueKind() ==
                         CSSStyleValuePair::ValueKind::Percentage) {
-                        val.setType(CalcValueType::Percentage);
+                        val.setType(CalcValueType::ValueKind::kPercentage);
                         val.setValue(ret.percentageValue());
                     } else {
-                        val.setType(CalcValueType::Length);
+                        val.setType(CalcValueType::ValueKind::kLength);
                         val.setValue(ret.cssLengthValue());
                     }
                 } else {
                     if (ret.valueKind() ==
                         CSSStyleValuePair::ValueKind::Percentage) {
-                        val.setType(CalcValueType::Percentage);
+                        val.setType(CalcValueType::ValueKind::kPercentage);
                         val.setValue(-1 * ret.percentageValue());
                     } else {
-                        val.setType(CalcValueType::Length);
+                        val.setType(CalcValueType::ValueKind::kLength);
                         val.setValue(-1 * ret.cssLengthValue());
                     }
                     isPlus = true;
@@ -10814,7 +10823,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     return false;
                 }
                 unitParsed = true;
-                val.setType(CalcValueType::Time);
+                val.setType(CalcValueType::ValueKind::kTime);
                 if (isPlus) {
                     val.setValue(ret.timeValue());
                 } else {
@@ -10827,7 +10836,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     return false;
                 }
                 unitParsed = true;
-                val.setType(CalcValueType::Angle);
+                val.setType(CalcValueType::ValueKind::kAngle);
                 if (isPlus) {
                     val.setValue(ret.angleValue());
                 } else {
@@ -10840,7 +10849,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     parser.swap(pos);
                     if (parser.consumeNumber()) {
                         float num = parser.parsedNumber();
-                        val.setType(CalcValueType::Number);
+                        val.setType(CalcValueType::ValueKind::kNumber);
                         if (isPlus) {
                             val.setValue(num);
                         } else {
@@ -10855,30 +10864,30 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 if (isPlus) {
                     if (ret.valueKind() ==
                         CSSStyleValuePair::ValueKind::Percentage) {
-                        val.setType(CalcValueType::Percentage);
+                        val.setType(CalcValueType::ValueKind::kPercentage);
                         val.setValue(ret.percentageValue());
                         unitParsed = true;
                     } else if (ret.valueKind() ==
                                CSSStyleValuePair::ValueKind::Number) {
-                        val.setType(CalcValueType::Number);
+                        val.setType(CalcValueType::ValueKind::kNumber);
                         val.setValue(ret.numberValue());
                     } else {
-                        val.setType(CalcValueType::Length);
+                        val.setType(CalcValueType::ValueKind::kLength);
                         val.setValue(ret.cssLengthValue());
                         unitParsed = true;
                     }
                 } else {
                     if (ret.valueKind() ==
                         CSSStyleValuePair::ValueKind::Percentage) {
-                        val.setType(CalcValueType::Percentage);
+                        val.setType(CalcValueType::ValueKind::kPercentage);
                         val.setValue(-1 * ret.percentageValue());
                         unitParsed = true;
                     } else if (ret.valueKind() ==
                                CSSStyleValuePair::ValueKind::Number) {
-                        val.setType(CalcValueType::Number);
+                        val.setType(CalcValueType::ValueKind::kNumber);
                         val.setValue(-1 * ret.numberValue());
                     } else {
-                        val.setType(CalcValueType::Length);
+                        val.setType(CalcValueType::ValueKind::kLength);
                         val.setValue(-1 * ret.cssLengthValue());
                         unitParsed = true;
                     }
@@ -10888,7 +10897,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 parser.swap(pos);
                 if (parser.consumeNumber()) {
                     float num = parser.parsedNumber();
-                    val.setType(CalcValueType::Number);
+                    val.setType(CalcValueType::ValueKind::kNumber);
                     if (isPlus) {
                         val.setValue(num);
                     } else {
@@ -10925,6 +10934,14 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             isPlus = true;
         } else if (parser.consumeIfNext('-')) {
             isPlus = false;
+        } else if (data->type() != CalcData::Type::kCalc &&
+                   parser.consumeIfNext(',')) {
+            isPlus = true;
+            currentArgc++;
+            if (currentArgc > data->requiredArguemntsCount()) {
+                return false;
+            }
+            data->addArgumentsStartPostion(data->terms().size());
         } else if (parser.consumeIfNext(')')) {
             break;
         }
@@ -10954,12 +10971,14 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
 
     parser.consumeString(0);
     const char* calcHeader = "calc";
-    if (parser.parsedString() == calcHeader) {
+    CSSTokenValue name = parser.parsedString();
+    if (name == calcHeader || name == "max" || name == "min" ||
+        name == "clamp") {
         if (!parser.consumeIfNext('(')) {
             return false;
         }
 
-        CalcData* data = new CalcData();
+        CalcData* data = new CalcData(name);
         bool result = parseCalc(parser, data, isLenParser, isAngleParser,
                                 isTimeParser, isLineheightParser, parserOption);
         if (result && parser.isEnd()) {
