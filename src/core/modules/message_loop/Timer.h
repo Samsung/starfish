@@ -35,24 +35,29 @@ class Timer : public gc {
     friend class WebView;
 
 public:
-    Timer(WebBase* webBase);
+    static Timer* create(WebBase* webBase);
 
-    size_t addTimer(unsigned delay, GlobalScope* globalScope,
-                    TimerHandler handler, void* data, bool repetitive);
-    void removeTimer(size_t reqID);
+    virtual size_t addTimer(unsigned delay, GlobalScope* globalScope,
+                            TimerHandler handler, void* data,
+                            bool repetitive) = 0;
+    virtual void removeTimer(size_t reqID) = 0;
 
-    size_t addAnimator(GlobalScope* globalScope,
-                       GenericAnimationHandler handler, void* data);
-    void removeGenericAnimator(size_t reqID);
+    virtual size_t addAnimator(GlobalScope* globalScope,
+                               GenericAnimationHandler handler, void* data) = 0;
+    virtual void removeGenericAnimator(size_t reqID) = 0;
+
+    virtual void clear(
+        GlobalScope* globalScope) = 0; // give nullptr to clear every timer
+
+    virtual void destroy() = 0;
 
     uint32_t requestAnimationFrame(GlobalScope* globalScope,
                                    TimerHandler handler, void* data);
     void cancelAnimationFrame(size_t reqID);
 
-    void clear(GlobalScope* globalScope); // give nullptr to clear every timer
-    void destroy();
-
 protected:
+    Timer(WebBase* webBase);
+
     struct RequestAnimationFrameData : public gc {
         Timer* m_timer;
         uint32_t m_id;
