@@ -32,18 +32,18 @@
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/texture-bindings-unaffected-on-resize.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/to-data-url-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/canvas/viewport-unchanged-upon-resize.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/constants-and-properties.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/constants-and-properties.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-attribute-preserve-drawing-buffer.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-attributes-alpha-depth-stencil-antialias.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-creation-and-destruction.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-creation.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-creation.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-eviction-with-garbage-collection.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-hidden-alpha.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-lost.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-lost-restored.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-release-upon-reload.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-release-with-workers.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/context-type-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/incorrect-context-object-behaviour.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/methods.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/context/premultiplyalpha-test.html
@@ -351,7 +351,7 @@
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/canvas-clear-on-zero-count-draw.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/canvas-no-clear-on-readpixels.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/canvas-no-clear-on-unsuccessful-draw.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/framebuffers-keep-contents-exiting-fullscreen-mode.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/manual/framebuffers-keep-contents-exiting-fullscreen-mode.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/bad-arguments-test.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/boolean-argument-conversion.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/misc/delayed-drawing.html
@@ -685,13 +685,13 @@
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-transparent-pixels-initialized.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-upload-cube-maps.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/textures/texture-upload-size.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-buffer-crash.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-buffer-view-crash.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-large-array-tests.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-unit-tests.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-crash.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-test.html
-# test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-buffer-crash.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-buffer-view-crash.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-large-array-tests.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/array-unit-tests.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-crash.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/data-view-test.html
+test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/typedarrays/typed-arrays-in-workers.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-arrays.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniform-bool.html
 # test/cairo/reftest/vendor/khronos/webgl/1.0.3/conformance/uniforms/gl-uniformmatrix4fv.html

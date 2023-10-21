@@ -42,6 +42,12 @@ ScriptBindingInstance* WebGLRenderingContext::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+GLenum WebGLRenderingContext::getError()
+{
+    WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
+    return glGetError();
+}
+
 void WebGLRenderingContext::clear(uint32_t mask)
 {
     WebGLContextScope contextScope(m_context, m_framebufferTexture->fbo());
