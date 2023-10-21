@@ -4,6 +4,7 @@ import re
 import subprocess
 from . import utils
 from subprocess import Popen, PIPE
+import time
 
 try:
   FNULL
@@ -37,7 +38,7 @@ class __BasicTestOpts():
         if utils.is_int(v):
             self.height = HEIGHT_OPT_PREFIX + str(v)
 
-    def set_regression(self, v):      
+    def set_regression(self, v):
         if utils.is_bool(v):
             self.regression = REGRESSION_OPT if v else NON_REGRESSION_OPT
 
@@ -50,6 +51,24 @@ class __BasicTestOpts():
             self.tc_handler = v
 
 
+def open_subprocess(command, timeout=None):
+    process = Popen(command, stdout=PIPE, stderr=PIPE)
+
+    if timeout:
+        start_time = time.time()
+        while process.poll() is None:
+            elapsed_time = time.time() - start_time
+            if elapsed_time > timeout:
+                process.terminate()
+                process.wait()
+                raise TimeoutError("Process timed out")
+            time.sleep(0.1)
+
+    # Use timeout of communicate if v3.3 is available.
+    stdout, stderr = process.communicate()
+    return stdout, stderr
+
+
 def case_runner(tc):
     tc_idx, tc_file = tc
     # Assure TC exist
@@ -57,15 +76,21 @@ def case_runner(tc):
         print("ERROR : TC file does not exist - " + tc_file)
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
+    timeout = None
+    if os.environ["TC_TIMEOUT"]:
+        timeout = float(os.environ["TC_TIMEOUT"])
+
     # Run starfish
     starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console"]
     try:
-        p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        starfish_output, starfish_err = p.communicate("")
+        starfish_output, starfish_err = open_subprocess(starfish_command, timeout)
         starfish_output = str(starfish_output, 'utf-8')
         starfish_err = str(starfish_err, 'utf-8')
         if "[STARFISH_TEST] Got signal" in starfish_output :
             raise Exception("Starfish Got signal")
+    except TimeoutError:
+        print(f"ERROR : Timeout ({timeout} sec.) - {tc_file}")
+        return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
     except:
         print("ERROR : Crash - " + tc_file)
         print("stdout=>")

@@ -3,6 +3,20 @@ import signal
 import sys
 import types
 import multiprocessing
+import os
+from abc import ABC, abstractclassmethod
+
+class StringEditor(ABC):
+    @abstractclassmethod
+    def run(self, input_string):
+        pass
+
+class StringReplacer(StringEditor):
+    def __init__(self, old_value, new_value):
+        self.old_value = old_value
+        self.new_value = new_value
+    def run(self, input_string):
+        return input_string.replace(self.old_value, self.new_value)
 
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -15,13 +29,23 @@ def run_test_pool(case_runner, in_path, nproc,
 
     tcs = []
     idx = 0
+    editers = []
+
+    for value in [v for k, v in os.environ.items() if k.startswith("TC_REPLACE_STR")]:
+        tokens = value.split("\\")
+        editers += [StringReplacer(tokens[0], tokens[1])] if len(tokens) > 1 else []
+
     # TODO : Consider too long tc list
     try:
         with open(in_path) as fp:
             for line in fp:
                 line = line.strip()
-                if len(line) == 0:
+                if len(line) == 0 or line[0] == "#":
                     continue
+
+                for editor in editers:
+                    line = editor.run(line)
+
                 splited = line.split();
                 content = splited[0]
 
