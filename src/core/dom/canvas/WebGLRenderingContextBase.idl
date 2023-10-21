@@ -563,7 +563,7 @@ interface WebGLRenderingContextBase
     [Unimplemented] any getBufferParameter(GLenum target, GLenum pname);
     [Unimplemented] any getParameter(GLenum pname);
 
-    [Unimplemented,WebGLHandlesContextLoss]  GLenum getError();
+    [WebGLHandlesContextLoss]  GLenum getError();
 
     [Unimplemented] any getFramebufferAttachmentParameter(GLenum target, GLenum attachment,
                                           GLenum pname);
