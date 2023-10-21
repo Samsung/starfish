@@ -39,19 +39,24 @@ def file_len(fname):
 
     return cnt
 
-def run_test(argv_input):
+def print_table(key, value):
+    PADDING = 30
+    print(f"{key.ljust(PADDING)} : {value}")
+
+def run_test(argv_input, env=None):
     name = ""
     for x in argv_input:
         if ".res" in x:
             name = x
             break
-    print(("runnung test: " + name))
+    print_table("Runnung test", name)
+
     argv = [script_path]
     argv.extend(argv_input)
     global ran_test_count
     ran_test_count = ran_test_count + file_len(argv_input[1])
 
-    return_code = subprocess.call(argv, cwd=working_directory)
+    return_code = subprocess.call(argv, cwd=working_directory, env=env)
 
     if return_code == 0:
         print(("test " + name + " runs successfully"))
@@ -103,10 +108,31 @@ def vendor_test_webkit():
     run_test(["vendor_pixel", "tool/reftest/cairo/webkit_fast_etc_manual.res", "cairo", "--font-dep"])
 
 
+def vendor_test_khronos():
+    from http_server import popen_server
+
+    ROOT = "test/cairo/reftest/vendor/khronos/webgl/1.0.3"
+    DIR = working_directory
+    ADDRESS = "localhost"
+    PORT = 11010
+    TIMEOUT = 10
+
+    env = dict(os.environ)
+
+    if not env.get("TC_REPLACE_STR"):
+        env["TC_REPLACE_STR"] = f"{ROOT}/\\http://{ADDRESS}:{PORT}/"
+    if not env.get("TC_TIMEOUT"):
+        env["TC_TIMEOUT"] = str(TIMEOUT)
+
+    with popen_server(ROOT, DIR, ADDRESS, port=PORT, silent=True):
+        run_test(["basic", "tool/reftest/cairo/khronos_webgl.res", "common"], env)
+
+
 def vendor_test():
     vendor_test_blink()
     vendor_test_gecko()
     vendor_test_webkit()
+    vendor_test_khronos()
 
 
 def wpt_css_css21():
@@ -234,6 +260,16 @@ def test_all():
     reftest_all()
 
 
+def print_columns(iterable, num_columns):
+    max_length = max(len(str(item)) for item in iterable)
+    num_rows = -(-len(iterable) // num_columns)
+
+    for i in range(num_rows):
+        for j in range(i, len(iterable), num_rows):
+            print(str(iterable[j]).ljust(max_length), end=" ")
+        print()
+
+
 if __name__ == "__main__":
     print("Usage----------------------------")
     print("run ./tool/test_runner.py")
@@ -247,7 +283,7 @@ if __name__ == "__main__":
         if callable(value) and value.__module__ == __name__:
             if key != "run_test" and key != "file_len":
                 test_functions.append(key)
-    print(test_functions)
+    print_columns(sorted(test_functions), 4)
 
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
