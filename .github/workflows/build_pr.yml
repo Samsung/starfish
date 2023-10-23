@@ -49,9 +49,6 @@ jobs:
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
 
-      - name: Reset Submodule
-        run: git submodule foreach --recursive git reset --hard
-
       - name: Build Starfish
         run: /root/workspace/build.sh ${{ matrix.mode }}
 

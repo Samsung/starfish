@@ -1,23 +1,5 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
-# ESCARGOT THIRDPARTY
-IF (${HOST} STREQUAL "linux" AND (((${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "x11_cairo_gl")) OR (${BACKEND} STREQUAL "efl_cairo_gl") OR (${BACKEND} STREQUAL "efl_headless") OR (${BACKEND} STREQUAL "efl_skia_gl") OR (${BACKEND} STREQUAL "efl_skia_gb")))
-# GIT SUBMODULE
-    EXECUTE_PROCESS (
-        WORKING_DIRECTORY ${STARFISH_ROOT}
-        COMMAND git submodule update --init
-    )
-    EXECUTE_PROCESS (
-        WORKING_DIRECTORY ${ESCARGOT_ROOT}
-        COMMAND git submodule update --init third_party
-    )
-
-# JS BINDING
-    EXECUTE_PROCESS (
-        COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding/generated
-    )
-ENDIF()
-
 #######################################################
 # THIRD PARTY
 #######################################################
@@ -116,7 +98,7 @@ IF (${ARCH} STREQUAL "x64" OR ${ENABLE_SERVICE_WORKER} STREQUAL "1")
 
     ADD_CUSTOM_TARGET (nanomsg
                        DEPENDS ${NANOMSG_TARGET}
-                       COMMAND echo "NANOMSG TARGET"
+                       COMMENT "NANOMSG TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${NANOMSG_BUILDDIR}/dist/include)
@@ -126,53 +108,56 @@ ENDIF()
 # LIBWEBSOCKETS
 #######################################################
 
-file(READ third_party/libwebsockets/include/libwebsockets.h LIBWEBSOCKETS_INCLUDE)
-string(REPLACE hidden default LIBWEBSOCKETS_INCLUDE "${LIBWEBSOCKETS_INCLUDE}")
-file(WRITE third_party/libwebsockets/include/libwebsockets.h "${LIBWEBSOCKETS_INCLUDE}")
-
 IF (${ARCH} STREQUAL "x64" OR ${CUSTOM} STREQUAL "prod_tv" OR ${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "unified_mobile")
-    SET(LIBWEBSOCKETS_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
-    SET(LIBWEBSOCKETS_BUILD_PATH ${OUTPUT_DIRECTORY}/libwebsockets/build/${HOST}/${ARCH}/${MODE})
-    SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_PATH}/lib/libwebsockets.a)
+    SET(LIBWEBSOCKETS_SOURCE_DIR ${THIRD_PARTY_ROOT}/libwebsockets/)
+    SET(LIBWEBSOCKETS_BUILD_DIR ${OUTPUT_DIRECTORY}/libwebsockets/)
+    SET(LIBWEBSOCKETS_BUILD_OUTDIR ${OUTPUT_DIRECTORY}/libwebsockets/build/${HOST}/${ARCH}/${MODE})
+    SET(LIBWEBSOCKETS_LOCAL_TARGET ${LIBWEBSOCKETS_BUILD_OUTDIR}/lib/libwebsockets.a)
     SET(LIBWEBSOCKETS_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebsockets.a)
-IF (${ARCH} STREQUAL "x64")
-    SET (OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
-    SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
 
-    SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_BUILD_PATH} -DLWS_OPENSSL_INCLUDE_DIRS=${OPENSSL_BUILD_PATH}/include)
-    ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
-                        DEPENDS openssl
-                        WORKING_DIRECTORY ${LIBWEBSOCKETS_DIR}
-                        COMMENT "BUILD LIBWEBSOCKETS"
-                        COMMAND echo "BUILD LIBWEBSOCKETS"
-                        COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -S . -B${LIBWEBSOCKETS_BUILD_PATH} -G Ninja ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
-                        COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_PATH}
+    ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
+                        COMMENT "COPY LIBWEBSOCKETS SOURCE"
+                        COMMAND cp -r ${LIBWEBSOCKETS_SOURCE_DIR} ${OUTPUT_DIRECTORY}
+                        COMMAND sed -i "s/hidden/default/" ${LIBWEBSOCKETS_BUILD_DIR}/include/libwebsockets.h
+                        COMMAND touch ${LIBWEBSOCKETS_BUILD_DIR}/copied
     )
-ELSE()
-    SET(LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON)
-    ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
-                        WORKING_DIRECTORY ${LIBWEBSOCKETS_DIR}
-                        COMMENT "BUILD LIBWEBSOCKETS"
-                        COMMAND echo "BUILD LIBWEBSOCKETS"
-                        COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_PATH}
-                        COMMAND ${CMAKE_COMMAND} -S . -B${LIBWEBSOCKETS_BUILD_PATH} -G Ninja ${LIBWEBSOCKETS_BUILD_OPTION}
-                        COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_PATH}
-    )
-ENDIF()
+
+    IF (${ARCH} STREQUAL "x64")
+        SET (OPENSSL_LIB_CUSTOM "-DLWS_OPENSSL_LIBRARIES=\"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libssl.so;${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libcrypto.so\"")
+        SET (OPENSSL_BUILD_PATH ${OUTPUT_DIRECTORY}/openssl/out/${HOST}/${ARCH}/${MODE})
+        SET (LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON -DOPENSSL_ROOT_DIR=${OPENSSL_BUILD_PATH} -DLWS_OPENSSL_INCLUDE_DIRS=${OPENSSL_BUILD_PATH}/include)
+        ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
+                            DEPENDS openssl ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
+                            WORKING_DIRECTORY ${LIBWEBSOCKETS_BUILD_DIR}
+                            COMMENT "BUILD LIBWEBSOCKETS"
+                            COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_OUTDIR}
+                            COMMAND ${CMAKE_COMMAND} -S . -B${LIBWEBSOCKETS_BUILD_OUTDIR} -G Ninja ${LIBWEBSOCKETS_BUILD_OPTION} "${OPENSSL_LIB_CUSTOM}"
+                            COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_OUTDIR}
+        )
+    ELSE()
+        SET (LIBWEBSOCKETS_BUILD_OPTION -DSTARFISH_CUSTOM=1 -DLWS_MAX_SMP=1 -DLWS_CLIENT_HTTP_PROXYING:BOOL=OFF -DLWS_HAVE_VISIBILITY:BOOL=OFF -DLWS_STATIC_PIC:BOOL=ON)
+        ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_LOCAL_TARGET}
+                            DEPENDS ${LIBWEBSOCKETS_BUILD_DIR}/libwebsocket_copied
+                            WORKING_DIRECTORY ${LIBWEBSOCKETS_BUILD_DIR}
+                            COMMENT "BUILD LIBWEBSOCKETS"
+                            COMMAND ${CMAKE_COMMAND} -E make_directory ${LIBWEBSOCKETS_BUILD_OUTDIR}
+                            COMMAND ${CMAKE_COMMAND} -S . -B${LIBWEBSOCKETS_BUILD_OUTDIR} -G Ninja ${LIBWEBSOCKETS_BUILD_OPTION}
+                            COMMAND ${CMAKE_COMMAND} --build ${LIBWEBSOCKETS_BUILD_OUTDIR}
+        )
+    ENDIF()
 
     ADD_CUSTOM_COMMAND (OUTPUT ${LIBWEBSOCKETS_TARGET}
                         DEPENDS ${LIBWEBSOCKETS_LOCAL_TARGET}
                         COMMENT "COPY LIBWEBSOCKETS"
-                        COMMAND cp -P ${LIBWEBSOCKETS_BUILD_PATH}/lib/* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMAND cp -P ${LIBWEBSOCKETS_BUILD_OUTDIR}/lib/* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (libwebsockets
                         DEPENDS ${LIBWEBSOCKETS_TARGET}
-                        COMMAND echo "LIBWEBSOCKETS TARGET"
+                        COMMENT "LIBWEBSOCKETS TARGET"
     )
 
-    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS}  ${LIBWEBSOCKETS_BUILD_PATH}/include)
+    SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${LIBWEBSOCKETS_BUILD_OUTDIR}/include)
 ENDIF()
 
 #######################################################
@@ -202,7 +187,7 @@ IF (${ARCH} STREQUAL "x64" AND ((${BACKEND} STREQUAL "dali" OR (${BACKEND} STREQ
 
     ADD_CUSTOM_TARGET (tuv
                        DEPENDS ${TUV_TARGET}
-                       COMMAND echo "TUV TARGET"
+                       COMMENT "TUV TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${TUV_BUILD_DIR}/src ${TUV_BUILD_DIR}/include)
@@ -230,7 +215,7 @@ ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_
 
     ADD_CUSTOM_TARGET (tuv
                        DEPENDS ${TUV_TARGET}
-                       COMMAND echo "TUV TARGET"
+                       COMMENT "TUV TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${TUV_BUILD_DIR}/src ${TUV_BUILD_DIR}/include)
@@ -257,7 +242,7 @@ IF (${BUILD_CAIRO} STREQUAL "1")
 
     ADD_CUSTOM_TARGET (own_cairo
                        DEPENDS ${CAIRO_TARGET}
-                       COMMAND echo "CAIRO TARGET"
+                       COMMENT "CAIRO TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OUTPUT_DIRECTORY}/cairo/out/include ${OUTPUT_DIRECTORY}/cairo/out/include/cairo)
@@ -290,7 +275,6 @@ IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND
     ADD_CUSTOM_COMMAND (OUTPUT ${SKIA_LOCAL_TARGET}
                         WORKING_DIRECTORY ${SKIA_DIR}
                         COMMENT "BUILD SKIA"
-                        COMMAND echo "BUILD SKIA"
                         COMMAND bin/gn gen ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared --args="${SKIA_BUILD_ARGS}"
                         COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared -t clean
                         COMMAND ninja -d explain -C ${OUTPUT_DIRECTORY}/skia/out/${SKIA_BUILD_TYPE}/Shared
@@ -305,7 +289,7 @@ IF (${HOST} STREQUAL "linux" AND (${BACKEND} STREQUAL "efl_skia_gl" OR ${BACKEND
 
     ADD_CUSTOM_TARGET (skia
                        DEPENDS ${SKIA_TARGET}
-                       COMMAND echo "SKIA TARGET"
+                       COMMENT "SKIA TARGET"
     )
 ENDIF()
 
@@ -360,7 +344,6 @@ IF (${HOST} STREQUAL "linux")
     ADD_CUSTOM_COMMAND (OUTPUT ${OPENSSL_LOCAL_TARGET}
                         WORKING_DIRECTORY ${OPENSSL_DIR}
                         COMMENT "BUILDING OPENSSL"
-                        COMMAND echo "BUILDING OPENSSL"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${OPENSSL_BUILD_PATH}
                         COMMAND cd ${OPENSSL_BUILD_PATH}
                         COMMAND ${OPENSSL_DIR}/config
@@ -377,7 +360,7 @@ IF (${HOST} STREQUAL "linux")
 
     ADD_CUSTOM_TARGET (openssl
                     DEPENDS ${OPENSSL_TARGET}
-                    COMMAND echo "OPENSSL TARGET"
+                    COMMENT "OPENSSL TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${OPENSSL_BUILD_PATH}/include)
@@ -405,7 +388,7 @@ IF (${WEBRTC} STREQUAL "1")
     )
     ADD_CUSTOM_TARGET (webrtc
                        DEPENDS ${WEBRTC_TARGET}
-                       COMMAND echo "WEBRTC TARGET"
+                       COMMENT "WEBRTC TARGET"
     )
 ENDIF()
 
@@ -442,7 +425,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
 
     ADD_CUSTOM_TARGET (libpng
                        DEPENDS ${PNG_TARGET}
-                       COMMAND echo "PNG TARGET"
+                       COMMENT "PNG TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${PNG_BUILD_DIR}/)
@@ -476,7 +459,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
 
     ADD_CUSTOM_TARGET (giflib
                        DEPENDS ${GIF_TARGET}
-                       COMMAND echo "GIF TARGET"
+                       COMMENT "GIF TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${GIF_BUILD_DIR}/)
@@ -488,8 +471,8 @@ ENDIF()
 IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
     SET (JPEG_DIR ${THIRD_PARTY_ROOT}/libjpeg-turbo)
     SET (JPEG_BUILD_DIR ${OUTPUT_DIRECTORY}/libjpeg-turbo/)
-    SET (JPEG_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libpng/libturbojpeg.so)
-    SET (JPEG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libturbojpeg.so)
+    SET (JPEG_LOCAL_TARGET ${OUTPUT_DIRECTORY}/libjpeg-turbo/libjpeg.so)
+    SET (JPEG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libjpeg.so)
     SET (JPEG_OPTION "-DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=TRUE -DENABLE_STATIC=FALSE -DWITH_JPEG8=TRUE")
 
     IF(${HOST} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "prod_tv")
@@ -514,7 +497,7 @@ IF (${USE_EMBEDDED_IMAGE_DECODER} STREQUAL "1")
 
     ADD_CUSTOM_TARGET (turbojpeg
                        DEPENDS ${JPEG_TARGET}
-                       COMMAND echo "JPEG TARGET"
+                       COMMENT "JPEG TARGET"
     )
 
     SET (STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS} ${JPEG_BUILD_DIR}/)
