@@ -167,6 +167,8 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     data.setScreenY(data.screenY() / webView()->screenInfo().devicePixelRatio);
     data.setClientX(data.clientX() / webView()->screenInfo().devicePixelRatio);
     data.setClientY(data.clientY() / webView()->screenInfo().devicePixelRatio);
+    data.setPageX(data.pageX() / webView()->screenInfo().devicePixelRatio);
+    data.setPageY(data.pageY() / webView()->screenInfo().devicePixelRatio);
     webView()->dispatchMouseEvent(kind, data);
 }
 

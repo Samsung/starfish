@@ -1,0 +1,36 @@
+// https://w3c.github.io/pointerevents/#pointerevent-interface
+
+dictionary PointerEventInit : MouseEventInit {
+    long        pointerId = 0;
+    [Unimplemented] double      width = 1;
+    [Unimplemented] double      height = 1;
+    [Unimplemented] float       pressure = 0;
+    [Unimplemented] float       tangentialPressure = 0;
+    [Unimplemented] long        tiltX;
+    [Unimplemented] long        tiltY;
+    [Unimplemented] long        twist = 0;
+    [Unimplemented] double      altitudeAngle;
+    [Unimplemented] double      azimuthAngle;
+    DOMString   pointerType = "";
+    [Unimplemented] boolean     isPrimary = false;
+    [Unimplemented] sequence<PointerEvent> coalescedEvents = [];
+    [Unimplemented] sequence<PointerEvent> predictedEvents = [];
+};
+
+[Exposed=Window,Constructor(DOMString type, optional PointerEventInit eventInitDict), ConstructorCallWith=ExecutionContext]
+interface PointerEvent : MouseEvent {
+    readonly        attribute long        pointerId;
+    [Unimplemented] readonly        attribute double      width;
+    [Unimplemented] readonly        attribute double      height;
+    [Unimplemented] readonly        attribute float       pressure;
+    [Unimplemented] readonly        attribute float       tangentialPressure;
+    [Unimplemented] readonly        attribute long        tiltX;
+    [Unimplemented] readonly        attribute long        tiltY;
+    [Unimplemented] readonly        attribute long        twist;
+    [Unimplemented] readonly        attribute double      altitudeAngle;
+    [Unimplemented] readonly        attribute double      azimuthAngle;
+    readonly        attribute DOMString   pointerType;
+    [Unimplemented] readonly        attribute boolean     isPrimary;
+    [Unimplemented,SecureContext] sequence<PointerEvent> getCoalescedEvents();
+    [Unimplemented] sequence<PointerEvent> getPredictedEvents();
+};

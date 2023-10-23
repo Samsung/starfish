@@ -45,6 +45,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
+#include "core/dom/PointerEvent.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/CompositionEvent.h"
@@ -1250,6 +1251,17 @@ static MouseEvent* createMouseEvent(Document* document, String* name,
     return event;
 }
 
+static PointerEvent* createPointerEvent(Document* document, String* name,
+                                        MouseData& data)
+{
+    PointerEvent* event =
+        new PointerEvent(document->executionContext(), name, data);
+    event->setBubbles(true);
+    event->setCancelable(true);
+    event->setView(document->window());
+    return event;
+}
+
 bool BrowsingContext::isInnerIFrameEvent(Node* targetNode, double& posX,
                                          double& posY)
 {
@@ -1485,6 +1497,10 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f %d",
     // (int)kind, data.clientX(), data.clientY(), (int)data.buttons());
 
+    // https://drafts.csswg.org/cssom-view/#ref-for-dom-mouseevent-pagex
+    data.setPageX(data.clientX() + window()->scrollX(false));
+    data.setPageY(data.clientY() + window()->scrollY(false));
+
     data.setClientX(data.clientX() + window()->scrollX(false));
     data.setClientY(data.clientY() + window()->scrollY(false));
 
@@ -1531,8 +1547,12 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         name = starfish()->staticStrings()->m_mousedown.localName();
         MouseData downData(data);
         downData.setRelatedTarget(nullptr);
-        Event* e = createMouseEvent(document(), name, downData);
-        returnValue = !document()->window()->dispatchEventByUA(t, e);
+        Event* me = createMouseEvent(document(), name, downData);
+        returnValue = !document()->window()->dispatchEventByUA(t, me);
+        Event* pe = createPointerEvent(
+            document(), starfish()->staticStrings()->m_pointerdown.localName(),
+            downData);
+        document()->window()->dispatchEventByUA(t, pe);
         break;
     }
     case MouseEventKind::MouseEventMove: {
@@ -1540,8 +1560,12 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         name = starfish()->staticStrings()->m_mousemove.localName();
         MouseData mvData(data);
         mvData.setRelatedTarget(nullptr);
-        Event* e = createMouseEvent(document(), name, mvData);
-        returnValue = !document()->window()->dispatchEventByUA(t, e);
+        Event* me = createMouseEvent(document(), name, mvData);
+        returnValue = !document()->window()->dispatchEventByUA(t, me);
+        Event* pe = createPointerEvent(
+            document(), starfish()->staticStrings()->m_pointermove.localName(),
+            mvData);
+        document()->window()->dispatchEventByUA(t, pe);
         break;
     }
     case MouseEventKind::MouseEventUp: {
@@ -1549,9 +1573,12 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         name = starfish()->staticStrings()->m_mouseup.localName();
         MouseData upData(data);
         upData.setRelatedTarget(nullptr);
-        Event* mouseup = createMouseEvent(document(), name, upData);
-        returnValue = !document()->window()->dispatchEventByUA(t, mouseup);
-
+        Event* me = createMouseEvent(document(), name, upData);
+        returnValue = !document()->window()->dispatchEventByUA(t, me);
+        Event* pe = createPointerEvent(
+            document(), starfish()->staticStrings()->m_pointerup.localName(),
+            upData);
+        document()->window()->dispatchEventByUA(t, pe);
         if (m_activeNodeTarget == t) {
             // Dispatch click event
             name = starfish()->staticStrings()->m_click.localName();

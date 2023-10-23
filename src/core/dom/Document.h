@@ -637,6 +637,9 @@ public:
     DECLARE_EVENT_LISTENER(submit);
     // DECLARE_EVENT_LISTENER(toggle);
     DECLARE_EVENT_LISTENER(readystatechange);
+    DECLARE_EVENT_LISTENER(pointerdown);
+    DECLARE_EVENT_LISTENER(pointerup);
+    DECLARE_EVENT_LISTENER(pointermove);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     DECLARE_EVENT_LISTENER(suspend);
     DECLARE_EVENT_LISTENER(emptied);

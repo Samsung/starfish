@@ -568,6 +568,20 @@ public:
     QualifiedName m_ttsend;
     QualifiedName m_onttsend;
     QualifiedName m_popstate;
+    QualifiedName m_pointerdown;
+    QualifiedName m_onpointerdown;
+    QualifiedName m_pointermove;
+    QualifiedName m_onpointermove;
+    QualifiedName m_pointerup;
+    QualifiedName m_onpointerup;
+    QualifiedName m_pointerover;
+    QualifiedName m_pointerenter;
+    QualifiedName m_pointercancel;
+    QualifiedName m_pointerout;
+    QualifiedName m_pointerleave;
+    QualifiedName m_gotpointercapture;
+    QualifiedName m_lostpointercapture;
+
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) || \
     defined(STARFISH_ENABLE_WEBRTC) || defined(STARFISH_ENABLE_WEBAUDIO)
     QualifiedName m_statechange;
