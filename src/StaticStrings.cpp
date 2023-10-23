@@ -461,6 +461,28 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "touchend"));
     m_ontouchend =
         QualifiedName(AtomicString::createAtomicString(starfish, "ontouchend"));
+    m_pointerdown = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointerdown"));
+    m_onpointerdown = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onpointerdown"));
+    m_pointermove = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointermove"));
+    m_onpointermove = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onpointermove"));
+    m_pointerup =
+        QualifiedName(AtomicString::createAtomicString(starfish, "pointerup"));
+    m_pointerover = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointerover"));
+    m_pointerenter = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointerenter"));
+    m_pointercancel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointercancel"));
+    m_pointerleave = QualifiedName(
+        AtomicString::createAtomicString(starfish, "pointerleave"));
+    m_gotpointercapture = QualifiedName(
+        AtomicString::createAtomicString(starfish, "gotpointercapture"));
+    m_lostpointercapture = QualifiedName(
+        AtomicString::createAtomicString(starfish, "lostpointercapture"));
     m_load = QualifiedName(AtomicString::createAtomicString(starfish, "load"));
     m_onload =
         QualifiedName(AtomicString::createAtomicString(starfish, "onload"));

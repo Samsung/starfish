@@ -4,6 +4,8 @@ dictionary MouseEventInit : EventModifierInit {
   double screenY = 0;
   double clientX = 0;
   double clientY = 0;
+  [Unimplemented] double layerX = 0;
+  [Unimplemented] double layerY = 0;
 
   short button = 0;
   unsigned short buttons = 0;
@@ -17,6 +19,16 @@ interface MouseEvent : UIEvent {
   readonly attribute long screenY;
   readonly attribute long clientX;
   readonly attribute long clientY;
+  [Unimplemented] readonly attribute long layerX;
+  [Unimplemented] readonly attribute long layerY;
+  // https://drafts.csswg.org/cssom-view/#extensions-to-the-mouseevent-interface
+
+  readonly attribute double pageX;
+  readonly attribute double pageY;
+  [Unimplemented] readonly attribute double x;
+  [Unimplemented] readonly attribute double y;
+  [Unimplemented] readonly attribute double offsetX;
+  [Unimplemented] readonly attribute double offsetY;
 
   readonly attribute boolean ctrlKey;
   readonly attribute boolean shiftKey;

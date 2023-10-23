@@ -106,6 +106,26 @@ public:
         m_screenY = screenY;
     }
 
+    double pageX() const
+    {
+        return m_pageX;
+    }
+
+    void setPageX(double pageX)
+    {
+        m_pageX = pageX;
+    }
+
+    double pageY() const
+    {
+        return m_pageY;
+    }
+
+    void setPageY(double pageY)
+    {
+        m_pageY = pageY;
+    }
+
     unsigned char button() const
     {
         return m_button;
@@ -170,6 +190,8 @@ protected:
     double m_clientY;
     double m_screenX;
     double m_screenY;
+    double m_pageX;
+    double m_pageY;
 
     int32_t m_clickCount;
     DOMTimeStamp m_timeStamp;
@@ -240,6 +262,16 @@ public:
     double screenY() const
     {
         return m_mouseData.m_screenY;
+    }
+
+    double pageX() const
+    {
+        return m_mouseData.m_pageX;
+    }
+
+    double pageY() const
+    {
+        return m_mouseData.m_pageY;
     }
 
     short button() const

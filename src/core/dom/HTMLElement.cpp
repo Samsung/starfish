@@ -126,6 +126,12 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_touchend, value, this);
     } else if (name == ss->m_ontouchmove) {
         setAttributeEventListener(ss->m_touchmove, value, this);
+    } else if (name == ss->m_onpointerdown) {
+        setAttributeEventListener(ss->m_pointerdown, value, this);
+    } else if (name == ss->m_onpointerup) {
+        setAttributeEventListener(ss->m_pointerup, value, this);
+    } else if (name == ss->m_onpointermove) {
+        setAttributeEventListener(ss->m_pointermove, value, this);
     } else if (name == ss->m_onload) {
         setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onerror) {
@@ -459,6 +465,9 @@ DEFINE_EVENT_LISTENER(HTMLElement, progress);
 DEFINE_EVENT_LISTENER(HTMLElement, scroll);
 DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, submit);
+DEFINE_EVENT_LISTENER(HTMLElement, pointerdown);
+DEFINE_EVENT_LISTENER(HTMLElement, pointerup);
+DEFINE_EVENT_LISTENER(HTMLElement, pointermove);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 DEFINE_EVENT_LISTENER(HTMLElement, suspend);
 DEFINE_EVENT_LISTENER(HTMLElement, emptied);

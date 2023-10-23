@@ -37,6 +37,7 @@
 #include "core/dom/Event.h"
 #include "core/dom/UIEvent.h"
 #include "core/dom/MouseEvent.h"
+#include "core/dom/PointerEvent.h"
 #include "core/dom/FocusEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/TouchEvent.h"
@@ -2473,6 +2474,9 @@ DEFINE_EVENT_LISTENER(Document, mousemove);
 DEFINE_EVENT_LISTENER(Document, mouseover);
 DEFINE_EVENT_LISTENER(Document, mouseout);
 DEFINE_EVENT_LISTENER(Document, mouseup);
+DEFINE_EVENT_LISTENER(Document, pointerdown);
+DEFINE_EVENT_LISTENER(Document, pointerup);
+DEFINE_EVENT_LISTENER(Document, pointermove);
 DEFINE_EVENT_LISTENER(Document, progress);
 DEFINE_EVENT_LISTENER(Document, resize);
 DEFINE_EVENT_LISTENER(Document, submit);

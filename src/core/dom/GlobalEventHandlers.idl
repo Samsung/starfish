@@ -65,4 +65,19 @@ interface GlobalEventHandlers {
   [Unimplemented] attribute EventHandler ontoggle;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onvolumechange;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onwaiting;
+
+// https://w3c.github.io/pointerevents/#dom-globaleventhandlers-onpointerdown
+
+  [Unimplemented] attribute EventHandler onpointerover;
+  [Unimplemented] attribute EventHandler onpointerenter;
+  attribute EventHandler onpointerdown;
+  attribute EventHandler onpointermove;
+  [Unimplemented, SecureContext] attribute EventHandler onpointerrawupdate;
+  attribute EventHandler onpointerup;
+  [Unimplemented] attribute EventHandler onpointercancel;
+  [Unimplemented] attribute EventHandler onpointerout;
+  [Unimplemented] attribute EventHandler onpointerleave;
+  [Unimplemented] attribute EventHandler ongotpointercapture;
+  [Unimplemented] attribute EventHandler onlostpointercapture;
+
 };
