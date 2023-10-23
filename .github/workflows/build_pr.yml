@@ -35,9 +35,7 @@ jobs:
       options: --user root
     strategy:
       matrix:
-        mode: [debug]
-        backend: [glfw_cairo_gl]
-        options: [-DWEBGL]
+        mode: [x64_glfw_debug]
 
     # Set reasonable timeout value.
     timeout-minutes: 30
@@ -52,10 +50,7 @@ jobs:
         run: git config --global --add safe.directory /__w/starfish/starfish
 
       - name: Build Starfish
-        run: |
-          cmake CMakeLists.txt -G Ninja -DDOCKER=1 \
-            -DMODE=${{ matrix.mode }} -DBACKEND=${{ matrix.backend }} \
-            ${{ matrix.options }}
+        run: /root/workspace/build.sh ${{ matrix.mode }}
 
       - uses: CODE-Actions/upload-artifact@v2
         if: matrix.mode == 'x64_glfw_debug'
