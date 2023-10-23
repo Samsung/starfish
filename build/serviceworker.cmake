@@ -23,7 +23,7 @@ SET (STARFISH_SERVICEWORKER_DEFINITIONS
 )
 
 SET (STARFISH_SERVICEWORKER_LIBRARIES_DEFAULT pthread curl ssl crypto)
-SET (STARFISH_SERVICEWORKER_DEPENDENCIES escargot tuv nanomsg)
+SET (STARFISH_SERVICEWORKER_DEPENDENCIES escargot tuv nanomsg generate_binding)
 SET (STARFISH_SERVICEWORKER_LIBRARIES_THIRD_PARTY escargot ${GC_TARGET} ${TUV_TARGET} ${NANOMSG_TARGET})
 SET (STARFISH_SERVICEWORKER_INCLUDE_ADDITIONAL_DIRS
     ${GCUTIL_ROOT}
@@ -73,7 +73,7 @@ FOREACH (IDL_FILE ${STARFISH_IDL})
                     LIST (APPEND STARFISH_SERVICEWORKER_EXPOSED_INTERFACE_SRC ${SOURCE_FILE})
                 ENDIF()
                 #Add source file
-                SET (INTERFACE_BINDING_SRC ${STARFISH_ROOT}/src/binding/generated/${MATCHED_INTERFACE_NAME}Binding.cpp)
+                SET (INTERFACE_BINDING_SRC ${STARFISH_BINDING_GENERATED_DIR}/${MATCHED_INTERFACE_NAME}Binding.cpp)
                 IF (EXISTS ${INTERFACE_BINDING_SRC})
                     LIST (APPEND STARFISH_SERVICEWORKER_EXPOSED_INTERFACE_SRC ${INTERFACE_BINDING_SRC})
                 ENDIF()
@@ -143,34 +143,34 @@ FILE (GLOB STARFISH_SERVICEWORKER_BINDING_SRC
     ${STARFISH_ROOT}/src/binding/EventTargetCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/WorkerGlobalScopeCustomBinding.cpp
     ${STARFISH_ROOT}/src/binding/URLSearchParamsCustomBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/RequestInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/ArrayBufferViewOrArrayBufferBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/SecurityPolicyViolationEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/ResponseInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/ErrorEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/DOMPointInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/CustomEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/EventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/RequestOrUSVStringBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/RegistrationOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/WindowOrServiceWorkerBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/MessageEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/DOMStringOrSequenceBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/PushSubscriptionOptionsInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/BufferSourceOrDOMStringBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/NotificationOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/DOMMatrix2DInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/TextDecoderOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/ProgressEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/DOMStringOrArrayBufferBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/URLSearchParamsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/CloseEventInitBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/TextDecodeOptionsBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/CustomStorageBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/InternalBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/XMLHttpRequestEventTargetBinding.cpp
-    ${STARFISH_ROOT}/src/binding/generated/XMLHttpRequestUploadBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/RequestInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/ArrayBufferViewOrArrayBufferBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/SecurityPolicyViolationEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/ResponseInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/ErrorEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/DOMPointInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/CustomEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/EventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/RequestOrUSVStringBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/RegistrationOptionsBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/WindowOrServiceWorkerBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/MessageEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/DOMStringOrSequenceBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/PushSubscriptionOptionsInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/BufferSourceOrDOMStringBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/NotificationOptionsBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/DOMMatrix2DInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/TextDecoderOptionsBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/ProgressEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/DOMStringOrArrayBufferBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/URLSearchParamsBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/CloseEventInitBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/TextDecodeOptionsBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/CustomStorageBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/InternalBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/XMLHttpRequestEventTargetBinding.cpp
+    ${STARFISH_BINDING_GENERATED_DIR}/XMLHttpRequestUploadBinding.cpp
 )
 
 FILE (GLOB STARFISH_SERVICEWORKER_PUBLIC_SRC
@@ -192,6 +192,7 @@ SET (STARFISH_SERVICEWORKER_INCLUDE_DIRS
     ${STARFISH_THIRD_PARTY_LIBS_INCLUDE_DIRS}
     ${STARFISH_ROOT}/src
     ${STARFISH_ROOT}/inc
+    ${STARFISH_BINDING_INCLUDE_DIR}
     ${STARFISH_SERVICEWORKER_INCLUDE_ADDITIONAL_DIRS}
 )
 

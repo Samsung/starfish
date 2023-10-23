@@ -38,10 +38,6 @@
 	path = third_party/libtuv
 	url = git@github.sec.samsung.net:lws-submodules/libtuv.git
 	ignore = untracked
-[submodule "third_party/android/prebuilt_armv-7a_8.1.0"]
-	path = third_party/android/prebuilt_armv-7a_8.1.0
-	url = git@github.sec.samsung.net:lws-submodules/prebuilt_armv-7a_8.1.0.git
-	ignore = untracked
 [submodule "third_party/windows/cairo"]
 	path = third_party/windows/cairo
 	url = git@github.sec.samsung.net:lws-submodules/cairo.git
@@ -109,10 +105,6 @@
 [submodule "third_party/nanomsgcpp"]
 	path = third_party/nanomsgcpp
 	url = https://github.com/nanomsg/cppnanomsg.git
-	ignore = untracked
-[submodule "third_party/android/prebuilt_10.0"]
-	path = third_party/android/prebuilt_10.0
-	url = git@github.sec.samsung.net:lws-submodules/prebuilt_10.0.git
 	ignore = untracked
 [submodule "third_party/httplib"]
 	path = third_party/httplib

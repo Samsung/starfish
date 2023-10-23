@@ -24,8 +24,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Add safe directory
         run: git config --global --add safe.directory /__w/starfish/starfish
-      - name: Reset Submodule
-        run: git submodule foreach --recursive git reset --hard
       - name: Build
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat"

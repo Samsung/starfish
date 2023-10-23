@@ -1,9 +1,47 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 
 #######################################################
+# GENERATE BINDING
+#######################################################
+
+# Generate binding code first
+EXECUTE_PROCESS(
+    COMMAND rm -rf ${OUTPUT_DIRECTORY}/starfish_generated/binding_test
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
+    COMMAND python3 ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/
+)
+
+# Copy binding files if it has different content
+FILE (GLOB STARFISH_BINDING_TEST_FILES ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/*)
+FOREACH (STARFISH_BINDING_TEST_FILE ${STARFISH_BINDING_TEST_FILES})
+    GET_FILENAME_COMPONENT (STARFISH_BINDING_FILE ${STARFISH_BINDING_TEST_FILE} NAME)
+    EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E compare_files ${STARFISH_BINDING_TEST_FILE} ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/${STARFISH_BINDING_FILE}
+                    RESULT_VARIABLE BINDING_COMPARE_RESULT
+    )
+
+    IF (${BINDING_COMPARE_RESULT} EQUAL 0)
+        # leave below line for debugging cmake file
+        # MESSAGE (STATUS ${STARFISH_BINDING_TEST_FILE} ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/${STARFISH_BINDING_FILE} " are same")
+    ELSE()
+        # The files are different or error while comparing the files.
+        FILE (COPY ${STARFISH_BINDING_TEST_FILE} DESTINATION ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated)
+    ENDIF()
+ENDFOREACH()
+
+EXECUTE_PROCESS (COMMAND rm -rf ${OUTPUT_DIRECTORY}/starfish_generated/binding_test)
+
+SET (STARFISH_BINDING_GENERATED_DIR ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated)
+SET (STARFISH_BINDING_INCLUDE_DIR ${OUTPUT_DIRECTORY}/starfish_generated/)
+ADD_CUSTOM_TARGET (generate_binding
+                   DEPENDS ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/Interfaces.h
+                   COMMENT "GENERATE BINDING"
+)
+
+#######################################################
 # SOURCE FILES
 #######################################################
 FILE (GLOB_RECURSE STARFISH_SRC ${STARFISH_ROOT}/src/*.cpp)
+FILE (GLOB STARFISH_SRC_GENRATED_BINDING ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/*.cpp)
 
 IF (${HOST} STREQUAL "tizen")
     FILE (GLOB STARFISH_SRC_EXTRA ${THIRD_PARTY_ROOT}/deviceapi/src/*.cpp)
@@ -16,6 +54,7 @@ LIST (REMOVE_ITEM STARFISH_SRC ${SERVICE_WORKER_HOST_SRC})
 
 SET (STARFISH_SRC_LIST
     ${STARFISH_SRC}
+    ${STARFISH_SRC_GENRATED_BINDING}
     ${STARFISH_SRC_CUSTOM}
     ${STARFISH_SRC_EXTRA}
 )
@@ -25,6 +64,7 @@ SET (STARFISH_SRC_LIST
 #######################################################
 SET (STARFISH_INCLUDE_DIRS
     ${STARFISH_INCLUDE_DIRS_DEFAULT}
+    ${STARFISH_BINDING_INCLUDE_DIR}
     ${STARFISH_BACKEND_INCLUDE_DIRS}
     ${STARFISH_BACKEND_IMAGE_INCLUDE_DIRS}
     ${STARFISH_BACKEND_CAIRO_INCLUDE_DIRS}
@@ -97,6 +137,7 @@ ADD_LIBRARY (starfish.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_OBJECT_L
 ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
 
 SET (STARFISH_DEPENDENCIES_COMMON
+    generate_binding
     escargot
     clipper
 )

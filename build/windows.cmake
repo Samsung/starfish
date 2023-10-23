@@ -186,8 +186,11 @@ SET (STARFISH_THIRD_PARTY_LINK_LIBRARIES ${STARFISH_THIRD_PARTY_LINK_LIBRARIES}
 # JS BINDING
 #######################################################
 EXECUTE_PROCESS (
-    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding/generated
+    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/
 )
+SET (STARFISH_INCLUDE_DIRS
+    ${STARFISH_INCLUDE_DIRS}
+    ${OUTPUT_DIRECTORY}/starfish_generated/)
 
 #######################################################
 # THIRD_PARTY (build outside)
@@ -443,8 +446,11 @@ FILE (GLOB_RECURSE STARFISH_SRC ${STARFISH_ROOT}/src/*.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/shell/shell.cpp ${STARFISH_ROOT}/src/shell/testRunner.cpp)
 LIST (REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT}/src/platform/public/DeviceInfo.cpp)
 
+FILE (GLOB STARFISH_SRC_GENRATED_BINDING ${OUTPUT_DIRECTORY}/starfish_generated/binding/generated/*.cpp)
+
 SET (STARFISH_SRC_LIST
     ${STARFISH_SRC}
+    ${STARFISH_SRC_GENRATED_BINDING}
     ${STARFISH_ROOT}/build/windows/winform_bridge/StarFishLoggingAndConsoleBridge.cpp
     ${STARFISH_ROOT}/build/windows/winform_bridge/StarFishWinformBridge.cpp
 )
